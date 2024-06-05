@@ -1,8 +1,7 @@
-﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting;
-using Aspire.Hosting.Lifecycle;
+﻿using Aspire.Hosting.Lifecycle;
+using Raygun.Aspire.Hosting.Ollama;
 
-namespace Raygun.Aspire.Hosting.Ollama
+namespace Aspire.Hosting.ApplicationModel
 {
   public static class OllamaResourceBuilderExtensions
   {

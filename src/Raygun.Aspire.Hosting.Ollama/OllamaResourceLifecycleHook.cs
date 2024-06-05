@@ -36,7 +36,8 @@ namespace Raygun.Aspire.Hosting.Ollama
       {
         try
         {
-          var ollamaClient = new OllamaApiClient(new Uri(resource.ConnectionStringExpression.ValueExpression));
+          var connectionString = await resource.ConnectionStringExpression.GetValueAsync(cancellationToken);
+          var ollamaClient = new OllamaApiClient(new Uri(connectionString));
           var model = resource.InitialModel;
 
           await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Checking model", KnownResourceStateStyles.Info) });
@@ -44,25 +45,7 @@ namespace Raygun.Aspire.Hosting.Ollama
 
           if (!hasModel)
           {
-            await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Downloading model", KnownResourceStateStyles.Info) });
-
-            long percentage = 0;
-
-            await ollamaClient.PullModel(model, async status =>
-            {
-              var newPercentage = (long)(status.Completed / (double)status.Total * 100);
-              if (newPercentage != percentage)
-              {
-                percentage = newPercentage;
-
-                var percentageState = percentage == 0 ? "Downloading model" : $"Downloading model {percentage} percent";
-                await _notificationService.PublishUpdateAsync(resource,
-                  state => state with
-                  {
-                    State = new ResourceStateSnapshot(percentageState, KnownResourceStateStyles.Info)
-                  });
-              }
-            }, cancellationToken);
+            await PullModel(resource, ollamaClient, model, cancellationToken);
           }
 
           await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Ready", KnownResourceStateStyles.Success) });
@@ -79,6 +62,32 @@ namespace Raygun.Aspire.Hosting.Ollama
     {
       var localModels = await ollamaClient.ListLocalModels(cancellationToken);
       return localModels.Any(m => m.Name.StartsWith(model));
+    }
+
+    private async Task PullModel(OllamaResource resource, OllamaApiClient ollamaClient, string model, CancellationToken cancellationToken)
+    {
+      await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Downloading model", KnownResourceStateStyles.Info) });
+
+      long percentage = 0;
+
+      await ollamaClient.PullModel(model, async status =>
+      {
+        if (status.Total != 0)
+        {
+          var newPercentage = (long)(status.Completed / (double)status.Total * 100);
+          if (newPercentage != percentage)
+          {
+            percentage = newPercentage;
+
+            var percentageState = percentage == 0 ? "Downloading model" : $"Downloading model {percentage} percent";
+            await _notificationService.PublishUpdateAsync(resource,
+              state => state with
+              {
+                State = new ResourceStateSnapshot(percentageState, KnownResourceStateStyles.Info)
+              });
+          }
+        }
+      }, cancellationToken);
     }
 
     public ValueTask DisposeAsync()
