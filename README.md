@@ -6,7 +6,7 @@ An Aspire component leveraging the Ollama container with support for downloading
 
 ## 1. Install the NuGet package
 
-Install the (Raygun.Aspire.Hosting.Ollama)[https://www.nuget.org/packages/Raygun.Aspire.Hosting.Ollama] NuGet package into the Aspire orchestration project (AppHost). Either use the NuGet package management GUI in the IDE you use, OR use the below dotnet command.
+Install the [Raygun.Aspire.Hosting.Ollama](https://www.nuget.org/packages/Raygun.Aspire.Hosting.Ollama) NuGet package into the Aspire orchestration project (AppHost). Either use the NuGet package management GUI in the IDE you use, OR use the below dotnet command.
 
 ```bash
 dotnet add package Raygun.Aspire.Hosting.Ollama
@@ -54,4 +54,4 @@ Note that if you changed the name of the Ollama component via the `name` argumen
 var connectionString = builder.Configuration.GetConnectionString("Ollama");
 ```
 
-You can then call any of the Ollama endpoints through this connection string. We recommend using the (OllamaSharp)[https://www.nuget.org/packages/OllamaSharp] client to do this.
+You can then call any of the Ollama endpoints through this connection string. We recommend using the [OllamaSharp](https://www.nuget.org/packages/OllamaSharp) client to do this.
