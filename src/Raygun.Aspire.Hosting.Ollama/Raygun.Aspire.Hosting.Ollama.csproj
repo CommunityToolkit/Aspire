@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Raygun.Aspire.Hosting.Ollama</Title>
+    <Company>Raygun</Company>
+    <Authors>Raygun</Authors>
+    <Description>An Aspire component leveraging the Ollama container with support for downloading a model on startup.</Description>
+    <PackageId>Raygun.Aspire.Hosting.Ollama</PackageId>
+    <IsPackable>true</IsPackable>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>128x128-transparent.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>https://github.com/MindscapeHQ/Raygun.Aspire.Hosting.Ollama/blob/main/CHANGE-LOG.md</PackageReleaseNotes>
+    <PackageTags>aspire;ollama</PackageTags>
+    <RepositoryUrl>https://github.com/MindscapeHQ/Raygun.Aspire.Hosting.Ollama</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="128x128-transparent.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" Version="8.0.1" />
+    <PackageReference Include="OllamaSharp" Version="1.1.12" />
+  </ItemGroup>
+
+</Project>

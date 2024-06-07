@@ -19,3 +19,20 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+------------------------------------------------------------------------------
+
+Additional Licenses:
+
+1. This Aspire component references the Ollama Docker container.
+The license (MIT) for Ollama itself can be found in full here:
+https://github.com/ollama/ollama/blob/main/LICENSE
+
+2. This Aspire component will pull the Llama3 model by default.
+The license for the Llama3 model can be found in full here:
+https://ollama.com/library/llama3/blobs/4fa551d4f938
+
+3. You can configure this Aspire component to pull other models supported by Ollama.
+The license for each model can be found by selecting the model within the link below
+and then clicking the "license" row of the details table.
+https://ollama.com/library
