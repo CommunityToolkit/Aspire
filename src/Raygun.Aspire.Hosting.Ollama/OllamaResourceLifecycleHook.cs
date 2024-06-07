@@ -27,7 +27,7 @@ namespace Raygun.Aspire.Hosting.Ollama
 
     private void DownloadModel(OllamaResource resource, CancellationToken cancellationToken)
     {
-      if (string.IsNullOrWhiteSpace(resource.InitialModel))
+      if (string.IsNullOrWhiteSpace(resource.ModelName))
       {
         return;
       }
@@ -38,7 +38,7 @@ namespace Raygun.Aspire.Hosting.Ollama
         {
           var connectionString = await resource.ConnectionStringExpression.GetValueAsync(cancellationToken);
           var ollamaClient = new OllamaApiClient(new Uri(connectionString));
-          var model = resource.InitialModel;
+          var model = resource.ModelName;
 
           await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Checking model", KnownResourceStateStyles.Info) });
           var hasModel = await HasModelAsync(ollamaClient, model, cancellationToken);
@@ -48,7 +48,7 @@ namespace Raygun.Aspire.Hosting.Ollama
             await PullModel(resource, ollamaClient, model, cancellationToken);
           }
 
-          await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Ready", KnownResourceStateStyles.Success) });
+          await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Running", KnownResourceStateStyles.Success) });
         }
         catch (Exception ex)
         {
