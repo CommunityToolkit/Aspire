@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: aspire-contribs
+services:  
+  app:
+    language: dotnet
+    project: .\src\Aspire.Contribs.AppHost\Aspire.Contribs.AppHost.csproj
+    host: containerapp

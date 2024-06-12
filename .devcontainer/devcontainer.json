@@ -1,0 +1,53 @@
+{
+    "name": "Dev Container - AspireContrib",
+  
+    "image": "mcr.microsoft.com/devcontainers/dotnet:8.0-jammy",
+  
+    "features": {
+      "ghcr.io/azure/azure-dev/azd:latest": {},
+      "ghcr.io/devcontainers/features/common-utils:latest": {
+        "configureZshAsDefaultShell": true
+      },
+      "ghcr.io/devcontainers/features/dotnet:latest": {
+        "version": "6.0",
+        "additionalVersions": "7.0"
+      },
+      "ghcr.io/devcontainers/features/github-cli:latest": {},
+      "ghcr.io/devcontainers/features/java:latest": {
+        "installGradle": true,
+        "installMaven": true
+      },
+      "ghcr.io/devcontainers/features/node:latest": {},
+      "ghcr.io/devcontainers/features/powershell:latest": {}
+    },
+  
+    "overrideFeatureInstallOrder": [
+      "ghcr.io/devcontainers/features/common-utils"
+    ],
+  
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "EditorConfig.EditorConfig",
+          "GitHub.copilot",
+          "GitHub.copilot-chat",
+          "GitHub.vscode-github-actions",
+          "ms-dotnettools.csdevkit",
+          "ms-vscode.powershell",
+          "vscjava.vscode-java-pack"
+        ],
+  
+        "settings": {
+          "terminal.integrated.fontFamily": "CaskaydiaCove Nerd Font"
+        }
+      }
+    },
+  
+    "onCreateCommand": "/usr/bin/zsh ./.devcontainer/on-create.sh > ~/on-create.log",
+  
+    "remoteUser": "vscode",
+  
+    "hostRequirements": {
+      "memory": "8gb"
+    }
+  }

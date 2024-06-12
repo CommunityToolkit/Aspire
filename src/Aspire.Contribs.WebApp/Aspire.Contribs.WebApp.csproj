@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>Aspire.Contribs.WebApp</AssemblyName>
+    <RootNamespace>Aspire.Contribs.WebApp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aspire.Contribs.ServiceDefaults\Aspire.Contribs.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
