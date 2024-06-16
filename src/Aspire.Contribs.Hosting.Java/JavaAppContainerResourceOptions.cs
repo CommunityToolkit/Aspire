@@ -8,7 +8,7 @@ public class JavaAppContainerResourceOptions
     /// <summary>
     /// Gets or sets the container registry. Default is <c>docker.io</c>.
     /// </summary>
-    public string? ContainerRegistry { get; set; } = "docker.io";
+    public string? ContainerRegistry { get; set; } = null;
 
     /// <summary>
     /// Gets or sets the container image name.

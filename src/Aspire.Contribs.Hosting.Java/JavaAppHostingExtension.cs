@@ -20,7 +20,7 @@ public static class JavaAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<JavaAppContainerResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, JavaAppContainerResourceOptions options)
     {
-        if (string.IsNullOrWhiteSpace(options.ContainerImageName))
+        if (string.IsNullOrWhiteSpace(options.ContainerImageName) == true)
         {
             throw new ArgumentException("Container image name must be specified.", nameof(options));
         }
@@ -28,7 +28,7 @@ public static class JavaAppHostingExtension
         var resource = new JavaAppContainerResource(name);
 
         var rb = builder.AddResource(resource);
-        if (options.ContainerRegistry is not null)
+        if (string.IsNullOrWhiteSpace(options.ContainerRegistry) == false)
         {
             rb.WithImageRegistry(options.ContainerRegistry);
         }

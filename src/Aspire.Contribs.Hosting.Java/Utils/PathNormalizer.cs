@@ -12,7 +12,7 @@ internal static class PathNormalizer
     /// <returns>Returns the normalized path value for the current platform.</returns>
     public static string NormalizePathForCurrentPlatform(this string path)
     {
-        if (string.IsNullOrEmpty(path))
+        if (string.IsNullOrWhiteSpace(path) == true)
         {
             return path;
         }
