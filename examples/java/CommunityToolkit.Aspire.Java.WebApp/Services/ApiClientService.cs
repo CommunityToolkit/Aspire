@@ -1,7 +1,7 @@
-﻿using CommunityToolkit.Aspire.WebApp.Clients;
-using CommunityToolkit.Aspire.WebApp.Models;
+﻿using CommunityToolkit.Aspire.Java.WebApp.Clients;
+using CommunityToolkit.Aspire.Java.WebApp.Models;
 
-namespace CommunityToolkit.Aspire.WebApp.Services;
+namespace CommunityToolkit.Aspire.Java.WebApp.Services;
 
 public interface IApiClientService
 {
@@ -14,7 +14,7 @@ public class ApiClientService(IEnumerable<IApiClient> clients) : IApiClientServi
 
     public async Task<IEnumerable<WeatherForecast>> GetWeatherForecastAsync(string clientName)
     {
-        var client = this._clients.SingleOrDefault(p => p.Name.Equals(clientName, StringComparison.InvariantCultureIgnoreCase));
+        var client = _clients.SingleOrDefault(p => p.Name.Equals(clientName, StringComparison.InvariantCultureIgnoreCase));
         if (client is null)
         {
             throw new ArgumentException("No API client found.");

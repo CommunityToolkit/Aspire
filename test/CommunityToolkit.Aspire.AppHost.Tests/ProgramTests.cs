@@ -10,7 +10,7 @@ public class ProgramTests
     public async Task Given_Container_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_AppHost>();
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_AppHost>();
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
@@ -28,7 +28,7 @@ public class ProgramTests
     public async Task Given_Executable_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_AppHost>();
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_AppHost>();
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 

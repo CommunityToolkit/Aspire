@@ -24,6 +24,7 @@
         "GitHub.copilot-chat",
         "GitHub.vscode-github-actions",
         "GitHub.vscode-pull-request-github",
+        "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
         "vscjava.vscode-java-pack",
         "esbenp.prettier-vscode",

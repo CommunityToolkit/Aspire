@@ -3,8 +3,8 @@
   <PropertyGroup>
     <IsAspireSharedProject>true</IsAspireSharedProject>
 
-    <AssemblyName>CommunityToolkit.Aspire.ServiceDefaults</AssemblyName>
-    <RootNamespace>CommunityToolkit.Aspire.ServiceDefaults</RootNamespace>
+    <AssemblyName>CommunityToolkit.Aspire.Java.ServiceDefaults</AssemblyName>
+    <RootNamespace>CommunityToolkit.Aspire.Java.ServiceDefaults</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

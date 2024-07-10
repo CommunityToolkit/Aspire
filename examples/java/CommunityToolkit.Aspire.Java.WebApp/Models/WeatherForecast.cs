@@ -1,4 +1,4 @@
-﻿namespace CommunityToolkit.Aspire.WebApp.Models;
+﻿namespace CommunityToolkit.Aspire.Java.WebApp.Models;
 
 public class WeatherForecast
 {

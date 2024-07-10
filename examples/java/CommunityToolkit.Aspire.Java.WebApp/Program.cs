@@ -1,6 +1,6 @@
-using CommunityToolkit.Aspire.WebApp.Clients;
-using CommunityToolkit.Aspire.WebApp.Components;
-using CommunityToolkit.Aspire.WebApp.Services;
+using CommunityToolkit.Aspire.Java.WebApp.Clients;
+using CommunityToolkit.Aspire.Java.WebApp.Services;
+using CommunityToolkit.Aspire.Java.WebApp.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

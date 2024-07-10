@@ -2,7 +2,7 @@ using CommunityToolkit.Aspire.Hosting.Java;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var apiapp = builder.AddProject<Projects.CommunityToolkit_Aspire_ApiApp>("apiapp");
+var apiapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Java_ApiApp>("apiapp");
 var containerapp = builder.AddSpringApp("containerapp",
                                      new JavaAppContainerResourceOptions()
                                      {
@@ -23,7 +23,7 @@ if (builder.ExecutionContext.IsPublishMode == false)
                                          });
 }
 
-var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_WebApp>("webapp")
+var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Java_WebApp>("webapp")
                     .WithExternalHttpEndpoints()
                     .WithReference(containerapp)
                     .WithReference(apiapp);

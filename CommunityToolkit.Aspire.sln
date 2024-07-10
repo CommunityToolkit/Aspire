@@ -13,15 +13,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8519CC01-1370-47C8-AD94-B0F326B1563F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.ApiApp", "examples\java\CommunityToolkit.Aspire.ApiApp\CommunityToolkit.Aspire.ApiApp.csproj", "{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.ApiApp", "examples\java\CommunityToolkit.Aspire.Java.ApiApp\CommunityToolkit.Aspire.Java.ApiApp.csproj", "{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "java", "java", "{F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.AppHost", "examples\java\CommunityToolkit.Aspire.AppHost\CommunityToolkit.Aspire.AppHost.csproj", "{55AC8E7E-DA0A-489D-8059-4E7190C9EEBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.AppHost", "examples\java\CommunityToolkit.Aspire.Java.AppHost\CommunityToolkit.Aspire.Java.AppHost.csproj", "{55AC8E7E-DA0A-489D-8059-4E7190C9EEBF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.ServiceDefaults", "examples\java\CommunityToolkit.Aspire.ServiceDefaults\CommunityToolkit.Aspire.ServiceDefaults.csproj", "{BBAFA814-1026-4A39-AA28-BCAE3951A224}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.ServiceDefaults", "examples\java\CommunityToolkit.Aspire.Java.ServiceDefaults\CommunityToolkit.Aspire.Java.ServiceDefaults.csproj", "{BBAFA814-1026-4A39-AA28-BCAE3951A224}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.WebApp", "examples\java\CommunityToolkit.Aspire.WebApp\CommunityToolkit.Aspire.WebApp.csproj", "{3D767C8C-7E04-4264-B4E9-13600650D2B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.WebApp", "examples\java\CommunityToolkit.Aspire.Java.WebApp\CommunityToolkit.Aspire.Java.WebApp.csproj", "{3D767C8C-7E04-4264-B4E9-13600650D2B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

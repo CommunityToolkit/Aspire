@@ -10,7 +10,7 @@ builder.AddSpringApp("containerapp",
                      });
 
 builder.AddSpringApp("executableapp",
-                     workingDirectory: "../../src/CommunityToolkit.Aspire.Spring.Maven",
+                     workingDirectory: "../../examples/java/CommunityToolkit.Aspire.Java.Spring.Maven",
                      new JavaAppExecutableResourceOptions()
                      {
                          ApplicationName = "target/spring-maven-0.0.1-SNAPSHOT.jar",

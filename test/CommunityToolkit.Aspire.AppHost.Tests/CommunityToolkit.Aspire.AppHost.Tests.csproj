@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\java\CommunityToolkit.Aspire.AppHost\CommunityToolkit.Aspire.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\java\CommunityToolkit.Aspire.Java.AppHost\CommunityToolkit.Aspire.Java.AppHost.csproj" />
   </ItemGroup>
 
   <ItemGroup>
