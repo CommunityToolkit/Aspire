@@ -3,3 +3,4 @@ obj
 .vs
 *.suo
 *.user
+.azure

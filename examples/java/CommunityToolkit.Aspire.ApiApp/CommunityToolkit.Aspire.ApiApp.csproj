@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>CommunityToolkit.Aspire.ApiApp</AssemblyName>
+    <RootNamespace>CommunityToolkit.Aspire.ApiApp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="$(AspNetCoreVersion)" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="$(SwashbuckleVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.ServiceDefaults\CommunityToolkit.Aspire.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

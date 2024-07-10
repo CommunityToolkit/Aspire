@@ -1,0 +1,12 @@
+﻿@page "/weather"
+@using CommunityToolkit.Aspire.WebApp.Components.UI
+
+<PageTitle>Weather</PageTitle>
+
+<WeatherComponent Source="WebApi" />
+<WeatherComponent Source="Spring Container" />
+
+@if (bool.TryParse(Environment.GetEnvironmentVariable("USE_EXECUTABLE"), out var result) && result)
+{
+    <WeatherComponent Source="Spring Executable" />
+}

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+
+    <AssemblyName>CommunityToolkit.Aspire.Hosting.Java</AssemblyName>
+    <RootNamespace>CommunityToolkit.Aspire.Hosting.Java</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" Version="$(AspireVersion)" />
+  </ItemGroup>
+
+</Project>
