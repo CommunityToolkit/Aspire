@@ -23,13 +23,18 @@
         "GitHub.copilot",
         "GitHub.copilot-chat",
         "GitHub.vscode-github-actions",
+        "GitHub.vscode-pull-request-github",
         "ms-dotnettools.csdevkit",
-        "vscjava.vscode-java-pack"
+        "vscjava.vscode-java-pack",
+        "esbenp.prettier-vscode",
+        "redhat.vscode-yaml"
       ]
     }
   },
 
   "remoteUser": "vscode",
+
+  "onCreateCommand": "./.devcontainer/post-create.sh > ~/on-create.log",
 
   "hostRequirements": {
     "memory": "8gb"
