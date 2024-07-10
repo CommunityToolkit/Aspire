@@ -21,10 +21,12 @@ jobs:
           dotnet-version: 8.0.x
       - uses: actions/setup-java@v4
         with:
-          distribution: 'microsoft'
-          java-version: '21'
+          distribution: "microsoft"
+          java-version: "21"
       - name: Install Aspire workload
         run: dotnet workload install aspire
+      - name: Setup .NET dev certs
+        run: dotnet dev-certs https --trust
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
