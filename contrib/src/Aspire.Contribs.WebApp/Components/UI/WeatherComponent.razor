@@ -1,0 +1,50 @@
+﻿@using Aspire.Contribs.WebApp.Clients
+@using Aspire.Contribs.WebApp.Models
+@using Aspire.Contribs.WebApp.Services
+@attribute [StreamRendering]
+@inject IApiClientService Api
+
+<h1>Weather from @Source</h1>
+
+<p>This component demonstrates showing data fetched from @Source.</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<WeatherForecast>? forecasts;
+
+    [Parameter]
+    public string? Source { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await this.Api.GetWeatherForecastAsync(Source);
+    }
+}
