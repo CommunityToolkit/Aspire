@@ -16,6 +16,9 @@ insert_final_newline = false
 [*.sh]
 end_of_line = lf
 
+[*.{yml,yaml}]
+indent_size = 2
+
 # Code files
 [*.sln]
 indent_size = 4
