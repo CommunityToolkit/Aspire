@@ -13,7 +13,8 @@
     "ghcr.io/devcontainers/features/java:latest": {
       "installGradle": true,
       "installMaven": true
-    }
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker": {}
   },
 
   "customizations": {
