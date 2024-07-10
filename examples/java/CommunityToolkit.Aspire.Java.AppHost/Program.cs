@@ -14,12 +14,12 @@ IResourceBuilder<JavaAppExecutableResource>? executableapp = default;
 if (builder.ExecutionContext.IsPublishMode == false)
 {
     executableapp = builder.AddSpringApp("executableapp",
-                                         workingDirectory: "../CommunityToolkit.Aspire.Spring.Maven",
+                                         workingDirectory: "../CommunityToolkit.Aspire.Java.Spring.Maven",
                                          new JavaAppExecutableResourceOptions()
                                          {
                                              ApplicationName = "target/spring-maven-0.0.1-SNAPSHOT.jar",
                                              Port = 8085,
-                                             OtelAgentPath = "../../agents",
+                                             OtelAgentPath = "../../../agents",
                                          });
 }
 

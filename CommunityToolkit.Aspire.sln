@@ -3,25 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35101.237
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{899F0713-7FC6-4750-BAFC-AC650B35B453}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{414151D4-7009-4E78-A5C6-D99EBD1E67D1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Java", "src\CommunityToolkit.Aspire.Hosting.Java\CommunityToolkit.Aspire.Hosting.Java.csproj", "{DAA67050-44B3-458F-9818-5877D606866A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.AppHost.Tests", "test\CommunityToolkit.Aspire.AppHost.Tests\CommunityToolkit.Aspire.AppHost.Tests.csproj", "{E2905A71-E25D-46FC-A128-D6A366D4D751}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Java.Tests", "test\CommunityToolkit.Aspire.Hosting.Java.Tests\CommunityToolkit.Aspire.Hosting.Java.Tests.csproj", "{2EA0F32C-F21B-4D29-8018-7E96363E4548}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8519CC01-1370-47C8-AD94-B0F326B1563F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.ApiApp", "examples\java\CommunityToolkit.Aspire.Java.ApiApp\CommunityToolkit.Aspire.Java.ApiApp.csproj", "{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "java", "java", "{F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.WebApp", "examples\java\CommunityToolkit.Aspire.Java.WebApp\CommunityToolkit.Aspire.Java.WebApp.csproj", "{3D767C8C-7E04-4264-B4E9-13600650D2B1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.ApiApp", "examples\java\CommunityToolkit.Aspire.Java.ApiApp\CommunityToolkit.Aspire.Java.ApiApp.csproj", "{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.AppHost", "examples\java\CommunityToolkit.Aspire.Java.AppHost\CommunityToolkit.Aspire.Java.AppHost.csproj", "{55AC8E7E-DA0A-489D-8059-4E7190C9EEBF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.ServiceDefaults", "examples\java\CommunityToolkit.Aspire.Java.ServiceDefaults\CommunityToolkit.Aspire.Java.ServiceDefaults.csproj", "{BBAFA814-1026-4A39-AA28-BCAE3951A224}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Java.WebApp", "examples\java\CommunityToolkit.Aspire.Java.WebApp\CommunityToolkit.Aspire.Java.WebApp.csproj", "{3D767C8C-7E04-4264-B4E9-13600650D2B1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{899F0713-7FC6-4750-BAFC-AC650B35B453}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.AppHost.Tests", "test\CommunityToolkit.Aspire.AppHost.Tests\CommunityToolkit.Aspire.AppHost.Tests.csproj", "{E2905A71-E25D-46FC-A128-D6A366D4D751}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,14 +33,10 @@ Global
 		{DAA67050-44B3-458F-9818-5877D606866A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAA67050-44B3-458F-9818-5877D606866A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAA67050-44B3-458F-9818-5877D606866A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2EA0F32C-F21B-4D29-8018-7E96363E4548}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2EA0F32C-F21B-4D29-8018-7E96363E4548}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2EA0F32C-F21B-4D29-8018-7E96363E4548}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2EA0F32C-F21B-4D29-8018-7E96363E4548}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -53,22 +49,22 @@ Global
 		{BBAFA814-1026-4A39-AA28-BCAE3951A224}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BBAFA814-1026-4A39-AA28-BCAE3951A224}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BBAFA814-1026-4A39-AA28-BCAE3951A224}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3D767C8C-7E04-4264-B4E9-13600650D2B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2905A71-E25D-46FC-A128-D6A366D4D751}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{E2905A71-E25D-46FC-A128-D6A366D4D751} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
-		{2EA0F32C-F21B-4D29-8018-7E96363E4548} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
-		{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D} = {F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}
+		{DAA67050-44B3-458F-9818-5877D606866A} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{3D767C8C-7E04-4264-B4E9-13600650D2B1} = {F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}
+		{34602A2D-24B2-47C0-9678-F1F7CD6C8C6D} = {F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}
 		{55AC8E7E-DA0A-489D-8059-4E7190C9EEBF} = {F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}
 		{BBAFA814-1026-4A39-AA28-BCAE3951A224} = {F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}
-		{3D767C8C-7E04-4264-B4E9-13600650D2B1} = {F120E99A-FB2A-4C3B-B588-9B7ED1CD4E8A}
+		{E2905A71-E25D-46FC-A128-D6A366D4D751} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

@@ -4,23 +4,31 @@ This is a collection of community contributed libraries for .NET Aspire
 
 ## Prerequisites
 
--   [JDK 17+](https://learn.microsoft.com/java/openjdk/download)
--   [Springboot CLI](https://docs.spring.io/spring-boot/installing.html#getting-started.installing.cli)
--   [Apache Maven](https://maven.apache.org)
--   [Docker](https://docs.docker.com/get-docker/)
+- [JDK 17+](https://learn.microsoft.com/java/openjdk/download)
+- [Springboot CLI](https://docs.spring.io/spring-boot/installing.html#getting-started.installing.cli)
+- [Apache Maven](https://maven.apache.org)
+- [Docker](https://docs.docker.com/get-docker/)
 
-## For Java App
+## Quickstart
 
-1. First of all, you should have [OpenTelemetry Agent for Java](https://opentelemetry.io/docs/zero-code/java/agent/). You can download it to your local machine by running the following commands:
+1. Run .NET Aspire dashboard:
 
     ```bash
-    # Bash
+    dotnet watch run --project ./examples/java/CommunityToolkit.Aspire.Java.AppHost
+    ```
+
+## More detailed steps (Optional)
+
+1. Download [OpenTelemetry Agent for Java](https://opentelemetry.io/docs/zero-code/java/agent/) to your local machine by running the following commands:
+
+    ```bash
+    # bash/zsh
     mkdir -p ./agents
     wget -P ./agents \
         https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
 
     # PowerShell
-    New-item -type Directory -Path ./downloaded -Force
+    New-item -type Directory -Path ./agents -Force
     Invoke-WebRequest `
         -OutFile "./agents/opentelemetry-javaagent.jar" `
         -Uri "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar"
@@ -29,7 +37,7 @@ This is a collection of community contributed libraries for .NET Aspire
 1. Build the Spring app with Maven:
 
     ```bash
-    pushd ./src/CommunityToolkit.Aspire.Spring.Maven
+    pushd ./examples/java/CommunityToolkit.Aspire.Java.Spring.Maven
 
     ./mvnw clean package
 
@@ -39,27 +47,23 @@ This is a collection of community contributed libraries for .NET Aspire
 1. Build a container image for the Spring app:
 
     ```bash
-    pushd ./src/CommunityToolkit.Aspire.Spring.Maven
+    pushd ./examples/java/CommunityToolkit.Aspire.Java.Spring.Maven
 
     docker build . -t aspire-spring-maven-sample:latest
 
     popd
     ```
 
-1. Push the container image to [Docker Hub](https://hub.docker.com) under your organisation. This sample uses `aliencube`:
+1. Push the container image to [Docker Hub](https://hub.docker.com) under your organisation, `contoso` for example:
 
     ```bash
-    docker tag aspire-spring-maven-sample:latest aliencube/aspire-spring-maven-sample:latest
-    docker push aliencube/aspire-spring-maven-sample:latest
+    docker tag aspire-spring-maven-sample:latest contoso/aspire-spring-maven-sample:latest
+    docker push contoso/aspire-spring-maven-sample:latest
     ```
 
     > **NOTE**: You need to log in to Docker Hub before pushing the image.
 
-1. Run .NET Aspire dashboard:
-
-    ```bash
-    dotnet watch run --project ./src/CommunityToolkit.Aspire.AppHost
-    ```
+## Dashboard
 
 1. Check the dashboard that both containerised app and executable app are up and running.
 
@@ -70,6 +74,12 @@ This is a collection of community contributed libraries for .NET Aspire
     ![Weather Page](../../images/java/weather.png)
 
 ## Deployment to Azure
+
+1. Change the directory to `examples/java`.
+
+    ```bash
+    cd ./examples/java
+    ```
 
 1. Get the Azure environment name ready:
 

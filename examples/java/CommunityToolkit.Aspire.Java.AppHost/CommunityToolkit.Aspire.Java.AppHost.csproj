@@ -8,6 +8,8 @@
 
     <AssemblyName>CommunityToolkit.Aspire.Java.AppHost</AssemblyName>
     <RootNamespace>CommunityToolkit.Aspire.Java.AppHost</RootNamespace>
+
+    <JavaAppRoot>$(MSBuildProjectDirectory)/../CommunityToolkit.Aspire.Java.Spring.Maven</JavaAppRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,5 +21,10 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Java.ApiApp\CommunityToolkit.Aspire.Java.ApiApp.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Java.WebApp\CommunityToolkit.Aspire.Java.WebApp.csproj" />
   </ItemGroup>
+
+  <Target Name="PublishRunWebpack" AfterTargets="Build">
+    <!-- As part of publishing, ensure the Java app is freshly built -->
+    <Exec WorkingDirectory="$(JavaAppRoot)" Command="./mvnw clean package" />
+  </Target>
 
 </Project>
