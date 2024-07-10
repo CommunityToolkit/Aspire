@@ -1,6 +1,6 @@
-# Aspire Contribs
+# CommunityToolkit.Aspire.Hosting.Java
 
-This is a collection of community contributed libraries for .NET Aspire
+This enables either containerised or executable Java app to be integrated with .NET Aspire.
 
 ## Prerequisites
 
