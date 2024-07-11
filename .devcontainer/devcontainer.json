@@ -36,7 +36,7 @@
 
   "remoteUser": "vscode",
 
-  "postCreateCommand": "./.devcontainer/post-create.sh > ~/on-create.log",
+  "postCreateCommand": "./.devcontainer/post-create.sh > ~/post-create.log",
 
   "hostRequirements": {
     "memory": "8gb"
