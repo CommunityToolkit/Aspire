@@ -13,7 +13,8 @@
     "ghcr.io/devcontainers/features/java:latest": {
       "installGradle": true,
       "installMaven": true
-    }
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker": {}
   },
 
   "customizations": {
@@ -35,9 +36,10 @@
 
   "remoteUser": "vscode",
 
-  "onCreateCommand": "./.devcontainer/post-create.sh > ~/on-create.log",
+  "postCreateCommand": "./.devcontainer/post-create.sh > ~/on-create.log",
 
   "hostRequirements": {
     "memory": "8gb"
   }
 }
+
