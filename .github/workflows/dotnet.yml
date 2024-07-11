@@ -27,15 +27,12 @@ jobs:
         run: dotnet workload install aspire
       - name: Setup .NET dev certs
         run: |
-          mkdir $RUNNER_TEMP/devcert-scripts
-          cd $RUNNER_TEMP/devcert-scripts
-          wget https://raw.githubusercontent.com/BorisWilhelms/create-dotnet-devcert/main/scripts/ubuntu-create-dotnet-devcert.sh
-          wget https://raw.githubusercontent.com/BorisWilhelms/create-dotnet-devcert/main/scripts/common.sh
-          chmod +x ubuntu-create-dotnet-devcert.sh
-          ./ubuntu-create-dotnet-devcert.sh
+          dotnet tool update -g linux-dev-certs
+          dotnet linux-dev-certs install
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore
       - name: Test
         run: dotnet test --no-build --verbosity normal
+
