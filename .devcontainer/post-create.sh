@@ -8,5 +8,9 @@ sudo apt-get update && \
 sudo dotnet workload install aspire
 sudo dotnet workload update --from-previous-sdk
 
+## Install dev certs
+dotnet tool update -g linux-dev-certs
+dotnet linux-dev-certs install
+
 ## Install Spring Boot CLI
 # sdk install springboot
