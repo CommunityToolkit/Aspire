@@ -6,7 +6,7 @@ namespace CommunityToolkit.Aspire.AppHost.Tests;
 
 public class ProgramTests
 {
-    [Fact]
+    [Fact/*(Skip = "Unable to run on CI. Waiting to find out how to get better diagnostics.")*/]
     public async Task Given_Container_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
@@ -14,17 +14,18 @@ public class ProgramTests
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
-        Thread.Sleep(5000);
-
         // Act
         var httpClient = app.CreateHttpClient("containerapp");
+
+        await Task.Delay(TimeSpan.FromSeconds(30));
+
         var response = await httpClient.GetAsync("/");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "Unable to run on CI. Waiting to find out how to get better diagnostics.")]
+    [Fact]
     public async Task Given_Executable_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
