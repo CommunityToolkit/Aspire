@@ -1,8 +1,7 @@
 using System.Net;
-
 using FluentAssertions;
 
-namespace CommunityToolkit.Aspire.AppHost.Tests;
+namespace CommunityToolkit.Aspire.Java.Hosting.EndToEndTests;
 
 public class ProgramTests
 {
@@ -10,7 +9,7 @@ public class ProgramTests
     public async Task Given_Container_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_AppHost>();
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_Hosting_EndToEndTests>();
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
@@ -29,7 +28,7 @@ public class ProgramTests
     public async Task Given_Executable_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_AppHost>();
+        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_Hosting_EndToEndTests>();
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
