@@ -7,19 +7,17 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
-    <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\java\CommunityToolkit.Aspire.Java.AppHost\CommunityToolkit.Aspire.Java.AppHost.csproj" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Aspire.Hosting.Testing" />
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.csproj" />
   </ItemGroup>
 
 </Project>
