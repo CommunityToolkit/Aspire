@@ -6,7 +6,7 @@ namespace CommunityToolkit.Aspire.AppHost.Tests;
 
 public class ProgramTests
 {
-    [Fact/*(Skip = "Unable to run on CI. Waiting to find out how to get better diagnostics.")*/]
+    [Fact]
     public async Task Given_Container_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
