@@ -2,11 +2,7 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
-
     <IsTestProject>true</IsTestProject>
-
-    <AssemblyName>CommunityToolkit.Aspire.AppHost.Tests</AssemblyName>
-    <RootNamespace>CommunityToolkit.Aspire.AppHost.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
