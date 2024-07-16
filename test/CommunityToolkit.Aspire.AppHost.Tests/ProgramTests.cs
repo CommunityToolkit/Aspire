@@ -32,8 +32,6 @@ public class ProgramTests
         await using var app = await appHost.BuildAsync();
         await app.StartAsync();
 
-        Thread.Sleep(10000);
-
         // Act
         var httpClient = app.CreateHttpClient("executableapp");
         var response = await httpClient.GetAsync("/");
