@@ -34,6 +34,9 @@ public class ProgramTests
 
         // Act
         var httpClient = app.CreateHttpClient("executableapp");
+
+        await Task.Delay(TimeSpan.FromSeconds(30));
+
         var response = await httpClient.GetAsync("/");
 
         // Assert
