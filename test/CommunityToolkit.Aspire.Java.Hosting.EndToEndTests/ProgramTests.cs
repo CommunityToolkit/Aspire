@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Java.Hosting.EndToEndTests;
 
 public class ProgramTests
 {
-    [Fact(Skip = "Unable to run on CI. Waiting to find out how to get better diagnostics.")]
+    [Fact]
     public async Task Given_Container_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange
@@ -24,7 +24,7 @@ public class ProgramTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "Unable to run on CI. Waiting to find out how to get better diagnostics.")]
+    [Fact]
     public async Task Given_Executable_Resource_When_Invoked_Then_Root_Returns_OK()
     {
         // Arrange

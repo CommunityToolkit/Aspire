@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DCP_PRESERVE_EXECUTABLE_LOGS: true
+      DCP_DIAGNOSTICS_LOG_FOLDER: ${{ github.workspace }}/diagnostics
 
     steps:
       - uses: actions/checkout@v4
@@ -35,4 +38,10 @@ jobs:
         run: dotnet build --no-restore
       - name: Test
         run: dotnet test --no-build --verbosity normal
-
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: build-output
+          path: |
+            ${{ github.workspace }}/diagnostics/**
