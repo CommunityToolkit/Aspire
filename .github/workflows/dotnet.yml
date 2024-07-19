@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DCP_PRESERVE_EXECUTABLE_LOGS: true
+      DCP_PRESERVE_EXECUTABLE_LOGS: "yes"
       DCP_DIAGNOSTICS_LOG_FOLDER: ${{ github.workspace }}/diagnostics
 
     steps:
