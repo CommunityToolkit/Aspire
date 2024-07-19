@@ -16,7 +16,7 @@ public class ProgramTests
         // Act
         var httpClient = app.CreateHttpClient("containerapp");
 
-        await Task.Delay(TimeSpan.FromSeconds(30));
+        // await Task.Delay(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
@@ -35,7 +35,7 @@ public class ProgramTests
         // Act
         var httpClient = app.CreateHttpClient("executableapp");
 
-        await Task.Delay(TimeSpan.FromSeconds(30));
+        // await Task.Delay(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
