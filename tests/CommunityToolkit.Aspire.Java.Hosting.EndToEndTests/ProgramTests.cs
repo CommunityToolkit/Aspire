@@ -1,5 +1,6 @@
 using System.Net;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Java.Hosting.EndToEndTests;
 
@@ -11,12 +12,13 @@ public class ProgramTests
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_AppHost>();
         await using var app = await appHost.BuildAsync();
+        var resourceNotificationService = app.Services.GetRequiredService<ResourceNotificationService>();
         await app.StartAsync();
 
         // Act
         var httpClient = app.CreateHttpClient("containerapp");
 
-        // await Task.Delay(TimeSpan.FromSeconds(30));
+        await resourceNotificationService.WaitForResourceAsync("containerapp", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
@@ -30,12 +32,13 @@ public class ProgramTests
         // Arrange
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.CommunityToolkit_Aspire_Java_AppHost>();
         await using var app = await appHost.BuildAsync();
+        var resourceNotificationService = app.Services.GetRequiredService<ResourceNotificationService>();
         await app.StartAsync();
 
         // Act
         var httpClient = app.CreateHttpClient("executableapp");
 
-        // await Task.Delay(TimeSpan.FromSeconds(30));
+        await resourceNotificationService.WaitForResourceAsync("executableapp", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
