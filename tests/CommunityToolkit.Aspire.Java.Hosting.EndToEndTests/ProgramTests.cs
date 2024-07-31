@@ -20,8 +20,7 @@ public class ProgramTests(ITestOutputHelper testOutput)
                 builder.AddXUnit(testOutput);
                 builder.SetMinimumLevel(LogLevel.Trace);
             })
-            // .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler())
-            ;
+            .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 
         await using var app = await appHost.BuildAsync();
         var resourceNotificationService = app.Services.GetRequiredService<ResourceNotificationService>();
@@ -50,8 +49,7 @@ public class ProgramTests(ITestOutputHelper testOutput)
                 builder.AddXUnit(testOutput);
                 builder.SetMinimumLevel(LogLevel.Trace);
             })
-            // .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler())
-            ;
+            .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 
         await using var app = await appHost.BuildAsync();
         var resourceNotificationService = app.Services.GetRequiredService<ResourceNotificationService>();
