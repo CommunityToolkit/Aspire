@@ -20,7 +20,7 @@
       ModelName = modelName;
     }
 
-    internal string ModelName { get; set; }
+    public string ModelName { get; internal set; }
 
     /// <summary>
     /// Gets the endpoint for the Ollama server.
