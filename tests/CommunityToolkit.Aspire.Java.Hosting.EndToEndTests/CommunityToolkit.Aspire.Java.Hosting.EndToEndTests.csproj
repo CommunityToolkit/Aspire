@@ -6,21 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" />
-    <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="MartinCostello.Logging.XUnit" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\examples\java\CommunityToolkit.Aspire.Java.AppHost\CommunityToolkit.Aspire.Java.AppHost.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Using Include="Aspire.Hosting.Testing" />
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 
 </Project>
