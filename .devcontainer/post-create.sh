@@ -14,3 +14,5 @@ dotnet linux-dev-certs install
 
 ## Install Spring Boot CLI
 # sdk install springboot
+
+npm install -g @azure/static-web-apps-cli
