@@ -14,6 +14,7 @@ public class SwaHostingComponentTests(ITestOutputHelper testOutput) : AspireInte
         var httpClient = app.CreateHttpClient("swa");
 
         await ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await ResourceNotificationService.WaitForResourceAsync("web", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
@@ -26,6 +27,8 @@ public class SwaHostingComponentTests(ITestOutputHelper testOutput) : AspireInte
         var httpClient = app.CreateHttpClient("swa");
 
         await ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await ResourceNotificationService.WaitForResourceAsync("web", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await ResourceNotificationService.WaitForResourceAsync("api", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/api/weather");
 
