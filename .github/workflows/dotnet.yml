@@ -26,12 +26,18 @@ jobs:
         with:
           distribution: "microsoft"
           java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
       - name: Install Aspire workload
         run: dotnet workload install aspire
       - name: Setup .NET dev certs
         run: |
           dotnet tool update -g linux-dev-certs
           dotnet linux-dev-certs install
+      - name: Install SWA emulator
+        run: |
+          npm install -g @azure/static-web-apps-cli
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
