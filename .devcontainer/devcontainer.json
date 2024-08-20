@@ -14,7 +14,8 @@
       "installGradle": true,
       "installMaven": true
     },
-    "ghcr.io/devcontainers/features/docker-in-docker": {}
+    "ghcr.io/devcontainers/features/docker-in-docker": {},
+    "ghcr.io/devcontainers/features/node:latest": {}
   },
 
   "customizations": {
@@ -40,6 +41,12 @@
 
   "hostRequirements": {
     "memory": "8gb"
+  },
+
+  "portsAttributes": {
+    "4280": {
+      "label": "SWA Emulator",
+      "onAutoForward": "notify"
+    }
   }
 }
-
