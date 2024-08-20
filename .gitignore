@@ -6,3 +6,5 @@ obj
 .azure
 appsettings.*.json
 *.orig
+test-results
+TestResults

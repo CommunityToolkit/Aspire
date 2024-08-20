@@ -13,8 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DCP_PRESERVE_EXECUTABLE_LOGS: "yes"
-      DCP_DIAGNOSTICS_LOG_FOLDER: ${{ github.workspace }}/diagnostics
+      DOTNET_CONFIGURATION: Release
 
     steps:
       - uses: actions/checkout@v4
@@ -23,12 +22,30 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - uses: actions/setup-java@v4
+        name: Set up Java
         with:
           distribution: "microsoft"
           java-version: "21"
       - uses: actions/setup-node@v4
+        name: Set up Node.js
         with:
           node-version: "latest"
+
+      - uses: actions/cache@v4
+        name: Cache NuGet packages
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - uses: actions/cache@v4
+        name: Cache Java Docker images
+        with:
+          path: /var/lib/docker/image
+          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Java.Spring.Maven/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
       - name: Install Aspire workload
         run: dotnet workload install aspire
       - name: Setup .NET dev certs
@@ -40,16 +57,18 @@ jobs:
           npm install -g @azure/static-web-apps-cli
           cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
           npm ci
+
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
-        run: dotnet test --no-build --verbosity normal
-      - name: Upload build artifact
+        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+
+      - name: Upload test results
         uses: actions/upload-artifact@v3
-        if: failure()
+        continue-on-error: true
         with:
-          name: build-output
+          name: test-results
           path: |
-            ${{ github.workspace }}/diagnostics/**
+            ${{ github.workspace }}/test-results/**

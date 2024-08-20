@@ -21,7 +21,10 @@ public abstract class AspireIntegrationTest<T>(ITestOutputHelper testOutput) : I
             .AddLogging(builder =>
             {
                 builder.AddXUnit(testOutput);
-                builder.SetMinimumLevel(LogLevel.Trace);
+                if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null or "1")
+                    builder.SetMinimumLevel(LogLevel.Trace);
+                else
+                    builder.SetMinimumLevel(LogLevel.Information);
             })
             .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 
