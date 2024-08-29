@@ -7,8 +7,10 @@ namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
 public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>>
 {
-    [Fact]
-    public async Task EmulatorLaunchesOnDefaultPort()
+    [Theory]
+    [InlineData("web")]
+    [InlineData("api")]
+    public async Task CanAccessEndpointSuccessfully(string resourceName)
     {
         var httpClient = fixture.CreateHttpClient("swa");
 
@@ -16,26 +18,21 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
         await fixture.ResourceNotificationService.WaitForResourceAsync("web", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
         await fixture.ResourceNotificationService.WaitForResourceAsync("api", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
-        var response = await httpClient.GetAsync("/");
+        if (resourceName == "web")
+        {
+            var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-    }
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+        else if (resourceName == "api")
+        {
+            var response = await httpClient.GetAsync("/api/weather");
 
-    [Fact]
-    public async Task CanAccessApi()
-    {
-        var httpClient = fixture.CreateHttpClient("swa");
-
-        await fixture.ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
-        await fixture.ResourceNotificationService.WaitForResourceAsync("web", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
-        await fixture.ResourceNotificationService.WaitForResourceAsync("api", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
-
-        var response = await httpClient.GetAsync("/api/weather");
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var forecasts = await response.Content.ReadFromJsonAsync<WeatherForecast[]>();
-        Assert.NotNull(forecasts);
-        forecasts.Length.Should().Be(6);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var forecasts = await response.Content.ReadFromJsonAsync<WeatherForecast[]>();
+            Assert.NotNull(forecasts);
+            forecasts.Length.Should().Be(6);
+        }
     }
 
     record WeatherForecast(DateTime Date, int TemperatureC, string Summary);
