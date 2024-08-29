@@ -24,7 +24,7 @@
 
   <Target Name="PublishRunWebpack" AfterTargets="Build">
     <!-- As part of publishing, ensure the Java app is freshly built -->
-    <Exec WorkingDirectory="$(JavaAppRoot)" Command="./mvnw clean package" />
+    <Exec WorkingDirectory="$(JavaAppRoot)" Command="./mvnw --quiet clean package" />
   </Target>
 
 </Project>
