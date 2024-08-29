@@ -5,7 +5,6 @@ using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
-[Collection("Integration Tests")]
 public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>>
 {
     [Fact]

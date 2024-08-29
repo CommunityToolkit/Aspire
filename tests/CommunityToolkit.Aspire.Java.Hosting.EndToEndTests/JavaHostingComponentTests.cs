@@ -4,7 +4,6 @@ using FluentAssertions;
 
 namespace CommunityToolkit.Aspire.Java.Hosting.EndToEndTests;
 
-[Collection("Integration Tests")]
 public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Java_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Java_AppHost>>
 {
     [Fact]
