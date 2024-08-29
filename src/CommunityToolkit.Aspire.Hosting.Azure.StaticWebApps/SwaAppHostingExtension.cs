@@ -36,6 +36,9 @@ public static class SwaAppHostingExtension
 
                 ctx.Args.Add("--port");
                 ctx.Args.Add(port.ToString());
+
+                ctx.Args.Add("--devserver-timeout");
+                ctx.Args.Add("60");
             })
             .ExcludeFromManifest();
     }
