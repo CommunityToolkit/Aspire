@@ -8,6 +8,8 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
 {
     public ResourceNotificationService ResourceNotificationService => App.Services.GetRequiredService<ResourceNotificationService>();
 
+    public DistributedApplication App { get; private set; } = null!;
+
     protected override void OnBuilt(DistributedApplication application)
     {
         App = application;
@@ -28,8 +30,6 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
 
         base.OnBuilderCreated(applicationBuilder);
     }
-
-    public DistributedApplication App { get; private set; } = null!;
 
     public async Task InitializeAsync() => await StartAsync();
 
