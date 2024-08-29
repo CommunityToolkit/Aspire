@@ -4,22 +4,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 namespace CommunityToolkit.Aspire.Testing;
 
-public class AspireIntegrationTestFixture<T> : IAsyncLifetime
-    where T : class
+public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
 {
-    private DistributedApplication app = null!;
-
-    public DistributedApplication App => app;
     public ResourceNotificationService ResourceNotificationService => App.Services.GetRequiredService<ResourceNotificationService>();
 
-    public async Task DisposeAsync() => await app.DisposeAsync();
-
-    public async Task InitializeAsync()
+    protected override void OnBuilt(DistributedApplication application)
     {
-        var appHost = await DistributedApplicationTestingBuilder.CreateAsync<T>();
+        App = application;
+        base.OnBuilt(application);
+    }
 
-        appHost.Services
-            .AddLogging(builder =>
+    protected override void OnBuilderCreated(DistributedApplicationBuilder applicationBuilder)
+    {
+        applicationBuilder.Services.AddLogging(builder =>
             {
                 builder.AddXUnit();
                 if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null or "1")
@@ -29,7 +26,12 @@ public class AspireIntegrationTestFixture<T> : IAsyncLifetime
             })
             .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 
-        app = await appHost.BuildAsync();
-        await app.StartAsync();
+        base.OnBuilderCreated(applicationBuilder);
     }
+
+    public DistributedApplication App { get; private set; } = null!;
+
+    public async Task InitializeAsync() => await StartAsync();
+
+    async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync();
 }

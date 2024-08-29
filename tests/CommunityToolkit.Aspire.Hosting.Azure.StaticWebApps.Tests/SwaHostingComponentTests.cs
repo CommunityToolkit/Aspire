@@ -10,7 +10,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
     [Fact]
     public async Task EmulatorLaunchesOnDefaultPort()
     {
-        var httpClient = fixture.App.CreateHttpClient("swa");
+        var httpClient = fixture.CreateHttpClient("swa");
 
         await fixture.ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
         await fixture.ResourceNotificationService.WaitForResourceAsync("web", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
@@ -24,7 +24,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
     [Fact]
     public async Task CanAccessApi()
     {
-        var httpClient = fixture.App.CreateHttpClient("swa");
+        var httpClient = fixture.CreateHttpClient("swa");
 
         await fixture.ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
         await fixture.ResourceNotificationService.WaitForResourceAsync("web", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
