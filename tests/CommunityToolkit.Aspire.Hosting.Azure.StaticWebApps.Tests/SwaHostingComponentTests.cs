@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
+[Collection("Integration Tests")]
 public class SwaHostingComponentTests(ITestOutputHelper testOutput) : AspireIntegrationTest<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>(testOutput)
 {
     [Fact]
@@ -15,6 +16,7 @@ public class SwaHostingComponentTests(ITestOutputHelper testOutput) : AspireInte
 
         await ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
         await ResourceNotificationService.WaitForResourceAsync("web", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await ResourceNotificationService.WaitForResourceAsync("api", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
