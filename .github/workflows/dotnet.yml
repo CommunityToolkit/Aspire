@@ -63,7 +63,7 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
-        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx -parallel none
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
