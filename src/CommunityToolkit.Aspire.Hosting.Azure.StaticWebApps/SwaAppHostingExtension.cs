@@ -10,14 +10,24 @@ public static class SwaAppHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This resource will not be included in the published manifest.</remarks>
-    public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, string name, int port = 4280)
+    public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, string name) =>
+        builder.AddSwaEmulator(name, new SwaResourceOptions());
+
+    /// <summary>
+    /// Adds a Static Web Apps emulator to the application.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="options">The <see cref="SwaResourceOptions"/> to configure the SWA CLI.</param>"
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This resource will not be included in the published manifest.</remarks>
+    public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, string name, SwaResourceOptions options)
     {
         var resource = new SwaResource(name, Environment.CurrentDirectory);
         return builder.AddResource(resource)
-            .WithHttpEndpoint(isProxied: false, port: port)
+            .WithHttpEndpoint(isProxied: false, port: options.Port)
             .WithArgs(ctx =>
             {
                 ctx.Args.Add("start");
@@ -35,10 +45,10 @@ public static class SwaAppHostingExtension
                 }
 
                 ctx.Args.Add("--port");
-                ctx.Args.Add(port.ToString());
+                ctx.Args.Add(options.Port.ToString());
 
                 ctx.Args.Add("--devserver-timeout");
-                ctx.Args.Add("60");
+                ctx.Args.Add(options.DevServerTimeout.ToString());
             })
             .ExcludeFromManifest();
     }
@@ -60,4 +70,10 @@ public static class SwaAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<SwaResource> WithApiResource(this IResourceBuilder<SwaResource> builder, IResourceBuilder<IResourceWithEndpoints> apiResource) =>
         builder.WithAnnotation<SwaApiEndpointAnnotation>(new(apiResource), ResourceAnnotationMutationBehavior.Replace);
+}
+
+public class SwaResourceOptions
+{
+    public int Port { get; set; } = 4280;
+    public int DevServerTimeout { get; set; } = 60;
 }

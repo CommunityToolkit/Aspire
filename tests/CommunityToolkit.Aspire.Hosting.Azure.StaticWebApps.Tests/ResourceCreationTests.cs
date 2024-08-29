@@ -33,7 +33,8 @@ public class ResourceCreationTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddSwaEmulator("swa", port: 1234);
+        SwaResourceOptions options = new() { Port = 1234 };
+        builder.AddSwaEmulator("swa", options);
 
         using var app = builder.Build();
 
@@ -46,7 +47,7 @@ public class ResourceCreationTests
         Assert.Equal("swa", resource.Name);
 
         var httpEndpoint = resource.GetEndpoint("http");
-        Assert.Equal(1234, httpEndpoint.TargetPort);
+        Assert.Equal(options.Port, httpEndpoint.TargetPort);
     }
 
     [Fact]
