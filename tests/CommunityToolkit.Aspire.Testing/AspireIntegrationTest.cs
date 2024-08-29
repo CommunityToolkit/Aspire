@@ -2,14 +2,15 @@
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit.Abstractions;
 namespace CommunityToolkit.Aspire.Testing;
 
-public abstract class AspireIntegrationTest<T>(ITestOutputHelper testOutput) : IAsyncLifetime
+public class AspireIntegrationTestFixture<T> : IAsyncLifetime
     where T : class
 {
-    protected DistributedApplication app = null!;
-    protected ResourceNotificationService ResourceNotificationService => app.Services.GetRequiredService<ResourceNotificationService>();
+    private DistributedApplication app = null!;
+
+    public DistributedApplication App => app;
+    public ResourceNotificationService ResourceNotificationService => App.Services.GetRequiredService<ResourceNotificationService>();
 
     public async Task DisposeAsync() => await app.DisposeAsync();
 
@@ -20,7 +21,7 @@ public abstract class AspireIntegrationTest<T>(ITestOutputHelper testOutput) : I
         appHost.Services
             .AddLogging(builder =>
             {
-                builder.AddXUnit(testOutput);
+                builder.AddXUnit();
                 if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null or "1")
                     builder.SetMinimumLevel(LogLevel.Trace);
                 else
