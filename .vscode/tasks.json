@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "docfx: serve",
+      "command": "docfx docs/docfx.json --serve",
+      "problemMatcher": []
+    }
+  ]
+}

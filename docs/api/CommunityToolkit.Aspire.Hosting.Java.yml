@@ -1,0 +1,91 @@
+### YamlMime:ManagedReference
+items:
+- uid: CommunityToolkit.Aspire.Hosting.Java
+  commentId: N:CommunityToolkit.Aspire.Hosting.Java
+  id: CommunityToolkit.Aspire.Hosting.Java
+  children:
+  - CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResource
+  - CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResourceOptions
+  - CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResource
+  - CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResourceOptions
+  - CommunityToolkit.Aspire.Hosting.Java.JavaAppHostingExtension
+  langs:
+  - csharp
+  - vb
+  name: CommunityToolkit.Aspire.Hosting.Java
+  nameWithType: CommunityToolkit.Aspire.Hosting.Java
+  fullName: CommunityToolkit.Aspire.Hosting.Java
+  type: Namespace
+  assemblies:
+  - CommunityToolkit.Aspire.Hosting.Java
+references:
+- uid: CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResource
+  commentId: T:CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResource
+  href: CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResource.html
+  name: JavaAppContainerResource
+  nameWithType: JavaAppContainerResource
+  fullName: CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResource
+- uid: CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResourceOptions
+  commentId: T:CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResourceOptions
+  parent: CommunityToolkit.Aspire.Hosting.Java
+  href: CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResourceOptions.html
+  name: JavaAppContainerResourceOptions
+  nameWithType: JavaAppContainerResourceOptions
+  fullName: CommunityToolkit.Aspire.Hosting.Java.JavaAppContainerResourceOptions
+- uid: CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResource
+  commentId: T:CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResource
+  href: CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResource.html
+  name: JavaAppExecutableResource
+  nameWithType: JavaAppExecutableResource
+  fullName: CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResource
+- uid: CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResourceOptions
+  commentId: T:CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResourceOptions
+  parent: CommunityToolkit.Aspire.Hosting.Java
+  href: CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResourceOptions.html
+  name: JavaAppExecutableResourceOptions
+  nameWithType: JavaAppExecutableResourceOptions
+  fullName: CommunityToolkit.Aspire.Hosting.Java.JavaAppExecutableResourceOptions
+- uid: CommunityToolkit.Aspire.Hosting.Java.JavaAppHostingExtension
+  commentId: T:CommunityToolkit.Aspire.Hosting.Java.JavaAppHostingExtension
+  href: CommunityToolkit.Aspire.Hosting.Java.JavaAppHostingExtension.html
+  name: JavaAppHostingExtension
+  nameWithType: JavaAppHostingExtension
+  fullName: CommunityToolkit.Aspire.Hosting.Java.JavaAppHostingExtension
+- uid: CommunityToolkit.Aspire.Hosting.Java
+  commentId: N:CommunityToolkit.Aspire.Hosting.Java
+  href: CommunityToolkit.html
+  name: CommunityToolkit.Aspire.Hosting.Java
+  nameWithType: CommunityToolkit.Aspire.Hosting.Java
+  fullName: CommunityToolkit.Aspire.Hosting.Java
+  spec.csharp:
+  - uid: CommunityToolkit
+    name: CommunityToolkit
+    href: CommunityToolkit.html
+  - name: .
+  - uid: CommunityToolkit.Aspire
+    name: Aspire
+    href: CommunityToolkit.Aspire.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting
+    name: Hosting
+    href: CommunityToolkit.Aspire.Hosting.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting.Java
+    name: Java
+    href: CommunityToolkit.Aspire.Hosting.Java.html
+  spec.vb:
+  - uid: CommunityToolkit
+    name: CommunityToolkit
+    href: CommunityToolkit.html
+  - name: .
+  - uid: CommunityToolkit.Aspire
+    name: Aspire
+    href: CommunityToolkit.Aspire.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting
+    name: Hosting
+    href: CommunityToolkit.Aspire.Hosting.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting.Java
+    name: Java
+    href: CommunityToolkit.Aspire.Hosting.Java.html

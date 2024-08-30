@@ -1,0 +1,98 @@
+### YamlMime:ManagedReference
+items:
+- uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  commentId: N:CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  id: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  children:
+  - CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaApiEndpointAnnotation
+  - CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppEndpointAnnotation
+  - CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppHostingExtension
+  - CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResource
+  - CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResourceOptions
+  langs:
+  - csharp
+  - vb
+  name: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  nameWithType: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  fullName: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  type: Namespace
+  assemblies:
+  - CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+references:
+- uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaApiEndpointAnnotation
+  commentId: T:CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaApiEndpointAnnotation
+  href: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaApiEndpointAnnotation.html
+  name: SwaApiEndpointAnnotation
+  nameWithType: SwaApiEndpointAnnotation
+  fullName: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaApiEndpointAnnotation
+- uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppEndpointAnnotation
+  commentId: T:CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppEndpointAnnotation
+  href: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppEndpointAnnotation.html
+  name: SwaAppEndpointAnnotation
+  nameWithType: SwaAppEndpointAnnotation
+  fullName: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppEndpointAnnotation
+- uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppHostingExtension
+  commentId: T:CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppHostingExtension
+  href: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppHostingExtension.html
+  name: SwaAppHostingExtension
+  nameWithType: SwaAppHostingExtension
+  fullName: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaAppHostingExtension
+- uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResourceOptions
+  commentId: T:CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResourceOptions
+  parent: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  href: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResourceOptions.html
+  name: SwaResourceOptions
+  nameWithType: SwaResourceOptions
+  fullName: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResourceOptions
+- uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResource
+  commentId: T:CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResource
+  href: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResource.html
+  name: SwaResource
+  nameWithType: SwaResource
+  fullName: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.SwaResource
+- uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  commentId: N:CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  href: CommunityToolkit.html
+  name: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  nameWithType: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  fullName: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+  spec.csharp:
+  - uid: CommunityToolkit
+    name: CommunityToolkit
+    href: CommunityToolkit.html
+  - name: .
+  - uid: CommunityToolkit.Aspire
+    name: Aspire
+    href: CommunityToolkit.Aspire.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting
+    name: Hosting
+    href: CommunityToolkit.Aspire.Hosting.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting.Azure
+    name: Azure
+    href: CommunityToolkit.Aspire.Hosting.Azure.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+    name: StaticWebApps
+    href: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.html
+  spec.vb:
+  - uid: CommunityToolkit
+    name: CommunityToolkit
+    href: CommunityToolkit.html
+  - name: .
+  - uid: CommunityToolkit.Aspire
+    name: Aspire
+    href: CommunityToolkit.Aspire.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting
+    name: Hosting
+    href: CommunityToolkit.Aspire.Hosting.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting.Azure
+    name: Azure
+    href: CommunityToolkit.Aspire.Hosting.Azure.html
+  - name: .
+  - uid: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
+    name: StaticWebApps
+    href: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.html
