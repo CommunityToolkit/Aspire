@@ -2,18 +2,18 @@ using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
-public class SwaHostingComponentTests(ITestOutputHelper testOutput) : AspireIntegrationTest<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>(testOutput)
+#pragma warning disable CTASPIRESRC001
+public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>>
 {
     [Fact]
-    public async Task EmulatorLaunchesOnDefaultPort()
+    public async Task CanAccessFrontendSuccessfully()
     {
-        var httpClient = app.CreateHttpClient("swa");
+        var httpClient = fixture.CreateHttpClient("swa");
 
-        await ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.App.WaitForTextAsync("Azure Static Web Apps emulator started", "swa").WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
@@ -21,11 +21,11 @@ public class SwaHostingComponentTests(ITestOutputHelper testOutput) : AspireInte
     }
 
     [Fact]
-    public async Task CanAccessApi()
+    public async Task CanAccessApiSuccessfully()
     {
-        var httpClient = app.CreateHttpClient("swa");
+        var httpClient = fixture.CreateHttpClient("swa");
 
-        await ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.App.WaitForTextAsync("Azure Static Web Apps emulator started", "swa").WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/api/weather");
 
