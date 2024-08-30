@@ -4,6 +4,7 @@ using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CommunityToolkit.Aspire.Testing;
 
@@ -17,6 +18,10 @@ public static class LoggerNotificationExtensions
     /// <param name="resourceName">An optional resource name to filter the logs for.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// This has been copied from the Aspire.Hosting.Tests project and will likely be removed in the future.
+    /// </remarks>
+    [Experimental("CTASPIRESRC001", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     public static Task WaitForTextAsync(this DistributedApplication app, string logText, string? resourceName = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -33,6 +38,10 @@ public static class LoggerNotificationExtensions
     /// <param name="resourceName">An optional resource name to filter the logs for.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// This has been copied from the Aspire.Hosting.Tests project and will likely be removed in the future.
+    /// </remarks>
+    [Experimental("CTASPIRESRC001", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     public static Task WaitForTextAsync(this DistributedApplication app, IEnumerable<string> logTexts, string? resourceName = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -49,6 +58,10 @@ public static class LoggerNotificationExtensions
     /// <param name="resourceName">An optional resource name to filter the logs for.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// This has been copied from the Aspire.Hosting.Tests project and will likely be removed in the future.
+    /// </remarks>
+    [Experimental("CTASPIRESRC001", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     public static Task WaitForTextAsync(this DistributedApplication app, Predicate<string> predicate, string? resourceName = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -73,6 +86,10 @@ public static class LoggerNotificationExtensions
     /// <param name="resourceName">An optional resource name to filter the logs for.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// This has been copied from the Aspire.Hosting.Tests project and will likely be removed in the future.
+    /// </remarks>
+    [Experimental("CTASPIRESRC001", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     public static async Task WaitForAllTextAsync(this DistributedApplication app, IEnumerable<string> logTexts, string? resourceName = null, CancellationToken cancellationToken = default)
     {
         var table = logTexts.ToList();
