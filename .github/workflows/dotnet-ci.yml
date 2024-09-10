@@ -1,13 +1,12 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: .NET CI
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
+    paths:
+      - "src/**"
+      - "examples/**"
+      - "tests/**"
 
 jobs:
   build:
@@ -64,6 +63,18 @@ jobs:
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
         run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+
+      - name: Publish NuGet package
+        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:VersionSuffix='alpha.${{ github.run_number }}'
+
+      - name: Publish NuGet packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./nuget
+
+      - name: Publish to GitHub packages
+        run: dotnet nuget push ./nuget/*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
