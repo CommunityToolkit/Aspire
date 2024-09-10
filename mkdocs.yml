@@ -10,6 +10,7 @@ nav:
   - Contributing: contributing.md
   - Versioning and Releases: versioning.md
   - Diagnostics: diagnostics.md
+  - FAQ: faq.md
 
 plugins:
   - glightbox
