@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting" />
-  </ItemGroup>
+  <PropertyGroup>
+    <PackageReadmeFile>hosting-azure-static-web-apps.md</PackageReadmeFile>
+  </PropertyGroup>
 </Project>
