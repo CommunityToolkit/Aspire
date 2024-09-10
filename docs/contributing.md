@@ -1,4 +1,4 @@
-Anyone can contribute to the .NET Aspire Community Toolkit and before you get started, be sure to read the [Contributing Guide](../../../CONTRIBUTING.md) to learn how to contribute to the project. In this section, we will expand a bit deeper on to the expectations and guidelines for contributing a new integration.
+Anyone can contribute to the .NET Aspire Community Toolkit and before you get started, be sure to read the [Contributing Guide](https://github.com/CommunityToolkit/aspire/tree/main/CONTRIBUTING.md) to learn how to contribute to the project. In this section, we will expand a bit deeper on to the expectations and guidelines for contributing a new integration.
 
 ## Prerequisites
 
@@ -18,11 +18,11 @@ If you prefer not to use the devcontainer, you can manually set up your developm
 
 There are four main directories in the repository:
 
--  `src`: Contains the source code for the toolkit.
--  `docs`: Contains the documentation for the toolkit.
--  `examples`: Contains sample applications that demonstrate how to use the toolkit.
--  `tests`: Contains the test projects for the toolkit.
+-   `src`: Contains the source code for the toolkit.
+-   `docs`: Contains the documentation for the toolkit.
+-   `examples`: Contains sample applications that demonstrate how to use the toolkit.
+-   `tests`: Contains the test projects for the toolkit.
 
 ## Contributing a New Integration
 
-There are three 
+There are three

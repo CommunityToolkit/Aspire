@@ -2,5 +2,5 @@ The Community Toolkit is designed to be a collection of integrations and extensi
 
 ## Available Integrations
 
--   [CommunityToolkit.Aspire.Hosting.Java](integrations/Hosting.Java.md)
--   [CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](integrations/Hosting.Azure.StaticWebApps.md)
+-   [CommunityToolkit.Aspire.Hosting.Java](integrations/hosting-java.md)
+-   [CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](integrations/hosting-azure-static-web-apps.md)

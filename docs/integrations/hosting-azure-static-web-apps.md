@@ -17,7 +17,28 @@ It provides support for proxying both the static frontend and the API backend us
 > This integration requires the Azure Static Web Apps CLI to be installed. You can install it using the following command:
 > `npm install -g @azure/static-web-apps-cli`
 
-[!code-csharp[](../../../examples/swa/CommunityToolkit.Aspire.StaticWebApps.AppHost/Program.cs)]
+```csharp
+using CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps;
+
+var builder = DistributedApplication.CreateBuilder(args);
+
+// Define the API resource
+var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiApp>("api");
+
+// Define the frontend resource
+var web = builder
+    .AddNpmApp("web", Path.Combine("..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"), "dev")
+    .WithHttpEndpoint(env: "PORT")
+    .WithExternalHttpEndpoints();
+
+// Create a SWA emulator with the frontend and API resources
+_ = builder
+    .AddSwaEmulator("swa")
+    .WithAppResource(web)
+    .WithApiResource(api);
+
+builder.Build().Run();
+```
 
 ### Configuration
 
