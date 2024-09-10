@@ -1,0 +1,54 @@
+site_name: .NET Aspire Community Toolkit
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Integrations:
+      - Hosting.Azure.StaticWebApps: integrations/hosting-azure-static-web-apps.md
+      - Hosting.Java: integrations/hosting-java.md
+  - Contributing: contributing.md
+
+plugins:
+  - glightbox
+
+theme:
+  name: material
+  # logo: media/favicon.png
+  # favicon: media/favicon.png
+  features:
+    - navigation.instant
+    - navigation.footer
+    - content.code.copy
+  # Change Font: https://squidfunk.github.io/mkdocs-material/setup/changing-the-fonts/?h=fonts
+  # Google Fonts Supported By Default: https://fonts.google.com/
+  font:
+    code: Roboto Mono #Monospaced
+    text: Roboto #Regular
+  # logo: docs/media/azure-ai-studio.svg
+  palette:
+    - scheme: default # Light Mode
+      primary: black
+      accent: pink
+      toggle:
+        icon: material/brightness-2
+        name: Switch to dark mode
+    - scheme: slate # Dark Mode
+      primary: amber
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 0
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - attr_list
+  # - pymdownx.emoji:
+  # emoji_index: !!python/name:material.extensions.emoji.twemoji
+  # emoji_generator: !!python/name:material.extensions.emoji.to_svg

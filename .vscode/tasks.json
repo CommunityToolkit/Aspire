@@ -3,8 +3,8 @@
   "tasks": [
     {
       "type": "shell",
-      "label": "docfx: serve",
-      "command": "docfx docs/docfx.json --serve",
+      "label": "docs: serve",
+      "command": "python -m mkdocs serve",
       "problemMatcher": []
     }
   ]
