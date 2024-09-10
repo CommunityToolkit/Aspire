@@ -25,3 +25,8 @@ sudo apt-get install libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0
 # Install the npm packages for the SWA sample
 cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
 npm ci
+cd ../../../
+
+# Install mkdocs
+python -m pip install -r docs/requirements.txt
+
