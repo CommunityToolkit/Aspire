@@ -16,7 +16,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResource.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: JavaAppExecutableResource
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResource.cs
@@ -65,7 +65,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResource.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: .ctor
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResource.cs

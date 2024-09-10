@@ -19,7 +19,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: JavaAppExecutableResourceOptions
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
@@ -56,7 +56,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: ApplicationName
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
@@ -87,7 +87,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: Port
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
@@ -118,7 +118,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: OtelAgentPath
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
@@ -149,7 +149,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: Args
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppExecutableResourceOptions.cs

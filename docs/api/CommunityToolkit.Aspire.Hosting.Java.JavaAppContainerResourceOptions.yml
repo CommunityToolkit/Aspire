@@ -22,7 +22,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: JavaAppContainerResourceOptions
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
@@ -59,7 +59,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: ContainerRegistry
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
@@ -90,7 +90,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: ContainerImageName
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
@@ -121,7 +121,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: ContainerImageTag
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
@@ -152,7 +152,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: Port
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
@@ -183,7 +183,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: TargetPort
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
@@ -214,7 +214,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: OtelAgentPath
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
@@ -245,7 +245,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: Args
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppContainerResourceOptions.cs

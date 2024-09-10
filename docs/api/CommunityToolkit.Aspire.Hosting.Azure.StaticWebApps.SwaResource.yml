@@ -16,7 +16,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaResource.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: SwaResource
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaResource.cs
@@ -62,7 +62,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaResource.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: .ctor
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaResource.cs

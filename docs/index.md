@@ -1,11 +1,10 @@
----
-_layout: landing
----
+# .NET Aspire Community Toolkit
 
-# This is the **HOMEPAGE**.
+[!INCLUDE [intro](snippets/intro.md)]
 
-Refer to [Markdown](http://daringfireball.net/projects/markdown/) for how to write markdown files.
+## Getting Started
 
-## Quick Start Notes:
+The Community Toolkit consists of a collection of NuGet packages that can be added to your .NET project, each representing an individual .NET Aspire component. The following packages are available:
 
-1. Add images to the *images* folder if the file is referencing an image.
+-   [CommunityToolkit.Aspire.Hosting.Java](~/docs/integrations/Hosting.Java.md)
+-   [CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](~/docs/integrations/Hosting.Azure.StaticWebApps.md)

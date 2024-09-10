@@ -1,4 +1,15 @@
-- name: Introduction
-  href: introduction.md
+- name: Overview
+  href: ../index.md
+
 - name: Getting Started
   href: getting-started.md
+
+- name: Integrations
+  items:
+    - name: Hosting.Azure.StaticWebApps
+      href: integrations/Hosting.Azure.StaticWebApps.md
+    - name: Hosting.Java
+      href: integrations/Hosting.Java.md
+
+- name: Contributing
+  href: contributing/

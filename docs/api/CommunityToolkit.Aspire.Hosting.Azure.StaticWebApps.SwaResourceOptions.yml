@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: SwaResourceOptions
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
@@ -52,7 +52,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: Port
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
@@ -81,7 +81,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: DevServerTimeout
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs

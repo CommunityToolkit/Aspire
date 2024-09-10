@@ -14,21 +14,23 @@
     "content": [
       {
         "files": ["**/*.{md,yml}"],
-        "exclude": ["_site/**", "examples/**"]
+        "exclude": ["_site/**", "examples/**", "obj/**"]
       }
     ],
     "resource": [
       {
-        "files": ["images/**"]
+        "files": ["**/images/**"],
+        "exclude": ["_site/**", "obj/**"]
       }
     ],
     "output": "_site",
-    "template": ["default", "modern"],
+    "template": ["default", "modern", "template"],
     "globalMetadata": {
       "_appName": ".NET Aspire Community Toolkit",
       "_appTitle": ".NET Aspire Community Toolkit",
       "_enableSearch": true,
       "pdf": true
-    }
+    },
+    "postProcessors": ["ExtractSearchIndex"]
   }
 }

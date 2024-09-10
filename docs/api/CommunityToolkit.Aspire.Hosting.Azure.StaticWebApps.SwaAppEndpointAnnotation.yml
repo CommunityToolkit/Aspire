@@ -17,7 +17,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppEndpointAnnotation.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: SwaAppEndpointAnnotation
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppEndpointAnnotation.cs
@@ -54,7 +54,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppEndpointAnnotation.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: .ctor
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppEndpointAnnotation.cs
@@ -86,7 +86,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppEndpointAnnotation.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: Endpoint
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppEndpointAnnotation.cs

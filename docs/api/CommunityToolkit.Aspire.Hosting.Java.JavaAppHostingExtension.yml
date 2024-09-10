@@ -19,7 +19,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: JavaAppHostingExtension
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
@@ -57,7 +57,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: AddJavaApp
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
@@ -102,7 +102,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: AddSpringApp
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
@@ -147,7 +147,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: AddJavaApp
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
@@ -195,7 +195,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: AddSpringApp
     path: ../src/CommunityToolkit.Aspire.Hosting.Java/JavaAppHostingExtension.cs

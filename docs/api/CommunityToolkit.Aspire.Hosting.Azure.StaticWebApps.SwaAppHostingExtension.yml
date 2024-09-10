@@ -19,7 +19,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: SwaAppHostingExtension
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
@@ -55,7 +55,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: AddSwaEmulator
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
@@ -98,7 +98,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: AddSwaEmulator
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
@@ -144,7 +144,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: WithAppResource
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
@@ -186,7 +186,7 @@ items:
   source:
     remote:
       path: src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
-      branch: main
+      branch: doc-guidance
       repo: https://github.com/CommunityToolkit/Aspire.git
     id: WithApiResource
     path: ../src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/SwaAppHostingExtension.cs
