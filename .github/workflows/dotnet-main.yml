@@ -107,3 +107,31 @@ jobs:
           name: ".NET Tests"
           path: "*.trx"
           reporter: dotnet-trx
+
+  publish-nuget:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: nuget
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Publish to NuGet
+        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_API_KEY }}
+
+  publish-github-packages:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-packages
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Publish to GitHub packages
+        run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
