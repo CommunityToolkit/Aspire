@@ -1,6 +1,6 @@
 # CommunityToolkit.Hosting.Azure.StaticWebApps
 
-<!-- Badges go here -->
+[![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps)](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/) | [![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps (latest)](https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps?label=nuget%20(preview))](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/absoluteLatest)
 
 ## Overview
 
