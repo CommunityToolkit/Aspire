@@ -8,6 +8,7 @@ nav:
       - Hosting.Java: integrations/hosting-java.md
   - Contributing: contributing.md
   - Versioning and Releases: versioning.md
+  - Diagnostics: diagnostics.md
 
 plugins:
   - glightbox
@@ -53,3 +54,4 @@ markdown_extensions:
   # - pymdownx.emoji:
   # emoji_index: !!python/name:material.extensions.emoji.twemoji
   # emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
