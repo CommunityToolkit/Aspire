@@ -73,9 +73,6 @@ jobs:
           name: nuget-packages
           path: ./nuget
 
-      - name: Publish to GitHub packages
-        run: dotnet nuget push ./nuget/*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
