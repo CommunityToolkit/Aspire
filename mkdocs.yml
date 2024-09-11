@@ -7,6 +7,7 @@ nav:
       - Hosting.Azure.StaticWebApps: integrations/hosting-azure-static-web-apps.md
       - Hosting.Java: integrations/hosting-java.md
   - Contributing: contributing.md
+  - Versioning and Releases: versioning.md
 
 plugins:
   - glightbox

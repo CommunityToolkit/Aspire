@@ -1,0 +1,118 @@
+name: .NET CI
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "src/**"
+      - "examples/**"
+      - "tests/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CONFIGURATION: Release
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-java@v4
+        name: Set up Java
+        with:
+          distribution: "microsoft"
+          java-version: "21"
+      - uses: actions/setup-node@v4
+        name: Set up Node.js
+        with:
+          node-version: "latest"
+
+      - uses: actions/cache@v4
+        name: Cache NuGet packages
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+      - uses: actions/cache@v4
+        name: Cache Java Docker images
+        with:
+          path: /var/lib/docker/image
+          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Java.Spring.Maven/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Install Aspire workload
+        run: dotnet workload install aspire
+      - name: Setup .NET dev certs
+        run: |
+          dotnet tool update -g linux-dev-certs
+          dotnet linux-dev-certs install
+      - name: Setup Node projects
+        run: |
+          npm install -g @azure/static-web-apps-cli
+          cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
+          npm ci
+
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
+      - name: Test
+        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+
+      - name: Publish NuGet package
+        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:VersionSuffix='alpha.${{ github.run_number }}'
+
+      - name: Publish NuGet packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./nuget
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            ${{ github.workspace }}/test-results/**
+
+  test-reporting:
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ always() }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: ".NET Tests"
+          path: "*.trx"
+          reporter: dotnet-trx
+
+  publish-github-packages:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-packages
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Publish to GitHub packages
+        run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}

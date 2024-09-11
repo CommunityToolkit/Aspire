@@ -10,5 +10,7 @@
     <AspireVersion>8.2.0</AspireVersion>
     <AspNetCoreVersion>8.0.7</AspNetCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
+
+    <IsPackable>false</IsPackable>
 </PropertyGroup>
 </Project>

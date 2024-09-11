@@ -1,13 +1,13 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: .NET CI
+name: .NET release
 
 on:
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    tags:
+      - "v*"
+    paths:
+      - "src/**"
+      - "examples/**"
+      - "tests/**"
 
 jobs:
   build:
@@ -64,6 +64,14 @@ jobs:
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
         run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+      - name: Publish NuGet package
+        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget
+
+      - name: Publish NuGet packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./nuget
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -94,3 +102,48 @@ jobs:
           name: ".NET Tests"
           path: "*.trx"
           reporter: dotnet-trx
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./*.nupkg
+
+  publish-nuget:
+    needs: release
+    runs-on: ubuntu-latest
+    environment:
+      name: nuget
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Publish to NuGet
+        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_API_KEY }}
+
+  publish-github-packages:
+    needs: release
+    runs-on: ubuntu-latest
+    environment:
+      name: github-packages
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Publish to GitHub packages
+        run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
