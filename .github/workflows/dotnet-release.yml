@@ -64,6 +64,8 @@ jobs:
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
         run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+      - name: Publish NuGet package
+        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget
 
       - name: Publish NuGet packages as artifacts
         uses: actions/upload-artifact@v4
