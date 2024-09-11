@@ -4,7 +4,7 @@ using FluentAssertions;
 
 namespace CommunityToolkit.Aspire.Java.Hosting.EndToEndTests;
 
-#pragma warning disable CTASPIRESRC001
+#pragma warning disable CTASPIRE001
 public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Java_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Java_AppHost>>
 {
     [Theory]
