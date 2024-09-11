@@ -22,6 +22,7 @@
 
     <DocsPath>../../docs/integrations</DocsPath>
     <PackageOutputPath>../../nuget</PackageOutputPath>
+    <PackageTags>aspire integration communitytoolkit dotnetcommunitytoolkit $(AdditionalPackageTags)</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
