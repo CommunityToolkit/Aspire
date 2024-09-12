@@ -14,7 +14,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     {
         var httpClient = fixture.CreateHttpClient(appName);
 
-        await fixture.App.WaitForTextAsync("VITE v", appName).WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.App.WaitForTextAsync("VITE", appName).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
