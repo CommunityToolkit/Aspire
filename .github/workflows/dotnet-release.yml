@@ -31,6 +31,12 @@ jobs:
         with:
           node-version: "latest"
 
+      - uses: pnpm/action-setup@v4
+        name: Setup pnpm
+        with:
+          version: 9
+          run_install: false
+
       - uses: actions/cache@v4
         name: Cache NuGet packages
         with:
@@ -147,3 +153,4 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+
