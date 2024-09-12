@@ -4,6 +4,12 @@ using Aspire.Hosting.Lifecycle;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 
+/// <summary>
+/// An <see cref="IDistributedApplicationLifecycleHook"/> that installs Node.js packages using the pnpm package manager before the Node.js resource starts.
+/// </summary>
+/// <param name="loggerService">The <see cref="ResourceLoggerService"/> to use for logging.</param>
+/// <param name="notificationService">The <see cref="ResourceNotificationService"/> to use for notifications to Aspire on install progress.</param>
+/// <param name="context">The <see cref="DistributedApplicationExecutionContext"/> to use for determining if the application is in publish mode.</param>
 internal class PnpmPackageInstallerLifecycleHook(
     ResourceLoggerService loggerService,
     ResourceNotificationService notificationService,
@@ -11,6 +17,7 @@ internal class PnpmPackageInstallerLifecycleHook(
 {
     private readonly NodePackageInstaller _installer = new("pnpm", loggerService, notificationService);
 
+    /// <inheritdoc />
     public Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
     {
         if (context.IsPublishMode)
