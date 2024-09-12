@@ -11,7 +11,7 @@
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/CommunityToolkit/Aspire</PackageProjectUrl>
-    <!-- <PackageIcon>logo.jpeg</PackageIcon> -->
+    <PackageIcon>nuget.png</PackageIcon>
     <RepositoryUrl>https://github.com/CommunityToolkit/Aspire</RepositoryUrl>
     <VersionPrefix>$(AspireVersion).0</VersionPrefix>
 
@@ -38,6 +38,10 @@
 
   <ItemGroup>
     <None Include="$(DocsPath)/$(PackageReadmeFile)">
+      <Pack>true</Pack>
+      <PackagePath>/</PackagePath>
+    </None>
+    <None Include="../../docs/images/nuget.png">
       <Pack>true</Pack>
       <PackagePath>/</PackagePath>
     </None>
