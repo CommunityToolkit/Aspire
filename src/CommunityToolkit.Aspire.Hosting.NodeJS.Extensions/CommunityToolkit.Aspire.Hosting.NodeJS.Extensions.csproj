@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageReadmeFile>hosting-nodejs-extensions.md</PackageReadmeFile>
+    <AdditionalPackageTags>hosting nodejs vite yarn pnpm npm</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.NodeJS" />
+  </ItemGroup>
+
+</Project>

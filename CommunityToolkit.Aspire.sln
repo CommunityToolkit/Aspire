@@ -37,6 +37,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Sta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults", "examples\swa\CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults\CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults.csproj", "{83FF8083-7EE2-4196-86A8-239F921B443C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.NodeJS.Extensions", "src\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.csproj", "{1F299343-30DF-4599-A95D-BCFB1754DA48}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nodejs-ext", "nodejs-ext", "{261AC321-8982-4C3A-8DBF-DAFC95F97697}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost", "examples\nodejs-ext\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost.csproj", "{D3F5EF2B-CE37-4339-A8BD-50E6C5B2AFA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests", "tests\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests.csproj", "{E8F93376-1367-4A7B-A729-116199804356}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +99,18 @@ Global
 		{83FF8083-7EE2-4196-86A8-239F921B443C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83FF8083-7EE2-4196-86A8-239F921B443C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83FF8083-7EE2-4196-86A8-239F921B443C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F299343-30DF-4599-A95D-BCFB1754DA48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F299343-30DF-4599-A95D-BCFB1754DA48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F299343-30DF-4599-A95D-BCFB1754DA48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F299343-30DF-4599-A95D-BCFB1754DA48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3F5EF2B-CE37-4339-A8BD-50E6C5B2AFA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3F5EF2B-CE37-4339-A8BD-50E6C5B2AFA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3F5EF2B-CE37-4339-A8BD-50E6C5B2AFA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3F5EF2B-CE37-4339-A8BD-50E6C5B2AFA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8F93376-1367-4A7B-A729-116199804356}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8F93376-1367-4A7B-A729-116199804356}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8F93376-1367-4A7B-A729-116199804356}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8F93376-1367-4A7B-A729-116199804356}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -110,6 +130,10 @@ Global
 		{C083A377-13CA-47C1-8B17-1FE353EA76F0} = {564FA6A0-EC54-41C6-A35F-89890E1D06E3}
 		{BAEA0F6F-39E9-4893-8787-C4D292D3B169} = {564FA6A0-EC54-41C6-A35F-89890E1D06E3}
 		{83FF8083-7EE2-4196-86A8-239F921B443C} = {564FA6A0-EC54-41C6-A35F-89890E1D06E3}
+		{1F299343-30DF-4599-A95D-BCFB1754DA48} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{261AC321-8982-4C3A-8DBF-DAFC95F97697} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{D3F5EF2B-CE37-4339-A8BD-50E6C5B2AFA1} = {261AC321-8982-4C3A-8DBF-DAFC95F97697}
+		{E8F93376-1367-4A7B-A729-116199804356} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

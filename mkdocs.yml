@@ -6,6 +6,7 @@ nav:
   - Integrations:
       - Hosting.Azure.StaticWebApps: integrations/hosting-azure-static-web-apps.md
       - Hosting.Java: integrations/hosting-java.md
+      - Hosting.NodeJS.Extensions: integrations/hosting-nodejs-extensions.md
   - Contributing: contributing.md
   - Versioning and Releases: versioning.md
   - Diagnostics: diagnostics.md

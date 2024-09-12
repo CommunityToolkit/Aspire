@@ -9,3 +9,4 @@ appsettings.*.json
 test-results
 TestResults
 nuget
+.pnpm-store
