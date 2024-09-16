@@ -1,4 +1,4 @@
-Anyone can contribute to the .NET Aspire Community Toolkit and before you get started, be sure to read the [Contributing Guide](https://github.com/CommunityToolkit/aspire/tree/main/CONTRIBUTING.md) to learn how to contribute to the project. In this section, we will expand a bit deeper on to the expectations and guidelines for contributing a new integration.
+Anyone can contribute to the .NET Aspire Community Toolkit. Before you get started, be sure to read the [Contributing Guide](https://github.com/CommunityToolkit/aspire/tree/main/CONTRIBUTING.md) to learn how to contribute to the project. In this section, we will expand a bit deeper on to the expectations and guidelines for contributing a new integration.
 
 ## Prerequisites
 
