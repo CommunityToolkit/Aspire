@@ -4,5 +4,6 @@ Each integration is a separate NuGet package that you can add to your project. A
 
 ## Available Integrations
 
--   [CommunityToolkit.Aspire.Hosting.Java](integrations/hosting-java.md)
 -   [CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](integrations/hosting-azure-static-web-apps.md)
+-   [CommunityToolkit.Aspire.Hosting.Java](integrations/hosting-java.md)
+-   [CommunityToolkit.Aspire.Hosting.NodeJS.Extensions](integrations/hosting-nodejs-extensions.md)
