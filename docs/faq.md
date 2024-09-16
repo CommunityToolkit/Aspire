@@ -21,3 +21,7 @@ Anyone can contribute to the .NET Aspire Community Toolkit and before you get st
 If you have an idea for a new integration, you should propose it here on the .NET Aspire Community Toolkit repository, rather than [`dotnet/aspire`](https://github.com/dotnet/aspire), as the official .NET Aspire project is focused on the core functionality of the .NET Aspire project.
 
 If you have previously proposed an integration on the `dotnet/aspire` repository, you can still propose it here, but link to the existing issue on the `dotnet/aspire` repository to provide context.
+
+## Finding Community Toolkit Integrations
+
+Integrations from the .NET Aspire Community Toolkit will appear in the "Add Aspire Integration" dialog in Visual Studio under the namespace `CommunityToolkit.Aspire.*`.
