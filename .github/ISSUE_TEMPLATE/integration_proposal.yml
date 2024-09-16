@@ -1,7 +1,7 @@
-name: Feature request
-description: Propose a new feature
+name: Integration Proposal
+description: Propose a new Integration
 labels:
-  - "feature request :mailbox_with_mail:"
+  - "integration request :mailbox_with_mail:"
 body:
   - type: markdown
     attributes:
@@ -11,23 +11,13 @@ body:
         🚨 **Please do not skip instructions** 🚨
 
         This info is essential to properly review your proposal. Proposals with missing information may be closed without investigation. Please make sure to look for existing proposals about the same thing before opening a new one. If you're uncertain about the problem you're trying to solve, [find or start a discussion](https://github.com/CommunityToolkit/aspire/discussions), where you can get insight from the community regarding your proposal.
-  - type: dropdown
-    id: is-existing-integration
-    validations:
-      required: true
-    attributes:
-      label: Related to an existing integration?
-      description: Is this related to an existing integration?
-      options:
-        - "Yes"
-        - "No"
   - type: input
-    id: existing-integration
+    id: aspire-core-issue-link
     validations:
       required: false
     attributes:
-      label: Existing integration
-      description: Provide the name of the existing integration this is relevant to (if applicable).
+      label: .NET Aspire issue link
+      description: If this was discussed in the .NET Aspire repository, please provide a link to the issue/discussion.
   - type: textarea
     id: description
     validations:
@@ -59,24 +49,6 @@ body:
     attributes:
       label: Usage example
       description: An example of of the new API would be used in practice.
-  - type: dropdown
-    id: breaking-change
-    validations:
-      required: true
-    attributes:
-      label: Breaking change?
-      description: Is the proposed change going to break existing APIs?
-      options:
-        - "Yes"
-        - "No"
-        - I'm not sure
-  - type: textarea
-    id: alternatives
-    validations:
-      required: true
-    attributes:
-      label: Alternatives
-      description: An example of alternative approaches that can currently be used, if any.
   - type: textarea
     id: additional-context
     attributes:
