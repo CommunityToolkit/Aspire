@@ -19,8 +19,8 @@ body:
       label: New integration?
       description: Is this a new integration with another service or platform?
       options:
-        - Yes
-        - No
+        - 'Yes'
+        - 'No'
   - type: input
     id: aspire-core-issue-link
     validations:
