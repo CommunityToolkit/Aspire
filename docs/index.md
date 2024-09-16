@@ -6,7 +6,7 @@ Welcome to the .NET Aspire Community Toolkit, a collection of integrations and e
 
 ## Getting Started
 
-The Community Toolkit consists of a collection of NuGet packages that can be added to your .NET project, each representing an individual .NET Aspire component. The following packages are available:
+The Community Toolkit consists of a collection of NuGet packages that can be added to your .NET project, each representing an individual [.NET Aspire integration](https://learn.microsoft.com/dotnet/aspire/fundamentals/integrations-overview). The following packages are available:
 
 -   [CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](integrations/hosting-azure-static-web-apps.md)
 -   [CommunityToolkit.Aspire.Hosting.Java](integrations/hosting-java.md)
