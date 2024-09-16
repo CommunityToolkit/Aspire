@@ -1,0 +1,50 @@
+name: Docs Issue
+description: Let's improve the documentation
+labels:
+  - "docs :page_with_curl:"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Before you begin
+
+        🚨 **Please do not skip instructions** 🚨
+
+        This info is essential for investigating your bug report. Issues with missing information may be closed without investigation. Please make sure to look for existing issues about the same problem before opening a new one. If you're uncertain about the problem, [find or start a discussion](https://github.com/CommunityToolkit/aspire/discussions), where you can get insight from the community regarding your issue.
+  - type: input
+    id: page-url
+    validations:
+      required: true
+    attributes:
+      label: Page URL
+      description: The URL of the page you're suggesting a change for.
+  - type: textarea
+    id: description
+    validations:
+      required: true
+    attributes:
+      label: Describe the issue
+      description: A clear and concise description of what the issue is.
+  - type: textarea
+    id: suggestion
+    validations:
+      required: true
+    attributes:
+      label: Suggestion
+      description: A clear and concise description of what you suggest should be changed.
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
+  - type: dropdown
+    id: contribution
+    validations:
+      required: true
+    attributes:
+      label: Help us help you
+      description: Would you like to contribute a solution to this issue?
+      options:
+        - Yes, I'd like to be assigned to work on this item
+        - Yes, but only if others can assist
+        - No, just wanted to report this

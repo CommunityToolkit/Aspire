@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Question or discussion
-    url: https://github.com/CommunityToolkit/dotnet/discussions/new
+    url: https://github.com/CommunityToolkit/aspire/discussions/new
     about: I have a question about how to use something in the toolkit
   - name: Documentation
-    url: https://github.com/MicrosoftDocs/CommunityToolkit/issues/new
+    url: https://github.com/CommunityToolkit/Aspire/issues/new?assignees=&labels=docs+%3Apage_with_curl%3A&projects=&template=docs.yml
     about: I have a documentation suggestion or question
