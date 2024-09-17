@@ -1,6 +1,4 @@
-using Aspire.Hosting.ApplicationModel;
-
-namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps;
+namespace Aspire.Hosting.ApplicationModel;
 
 public class SwaApiEndpointAnnotation(IResourceBuilder<IResourceWithEndpoints> resource) : IResourceAnnotation
 {
