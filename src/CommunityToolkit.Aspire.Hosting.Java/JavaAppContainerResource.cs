@@ -1,7 +1,4 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-
-namespace CommunityToolkit.Aspire.Hosting.Java;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a Java application.

@@ -1,4 +1,4 @@
-﻿namespace CommunityToolkit.Aspire.Hosting.Java;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// This represents the options entity for configuring a Java application running in a container.

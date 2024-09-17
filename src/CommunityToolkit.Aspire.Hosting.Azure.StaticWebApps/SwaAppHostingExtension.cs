@@ -1,7 +1,6 @@
-using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
-namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps;
+namespace Aspire.Hosting;
 
 public static class SwaAppHostingExtension
 {
@@ -70,10 +69,4 @@ public static class SwaAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<SwaResource> WithApiResource(this IResourceBuilder<SwaResource> builder, IResourceBuilder<IResourceWithEndpoints> apiResource) =>
         builder.WithAnnotation<SwaApiEndpointAnnotation>(new(apiResource), ResourceAnnotationMutationBehavior.Replace);
-}
-
-public class SwaResourceOptions
-{
-    public int Port { get; set; } = 4280;
-    public int DevServerTimeout { get; set; } = 60;
 }

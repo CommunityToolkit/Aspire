@@ -1,5 +1,3 @@
-using CommunityToolkit.Aspire.Hosting.Java;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var apiapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Java_ApiApp>("apiapp");

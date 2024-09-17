@@ -1,10 +1,9 @@
 ﻿using System.Globalization;
 
 using CommunityToolkit.Aspire.Hosting.Java.Utils;
-using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
-namespace CommunityToolkit.Aspire.Hosting.Java;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for adding Java applications to an <see cref="IDistributedApplicationBuilder"/>.

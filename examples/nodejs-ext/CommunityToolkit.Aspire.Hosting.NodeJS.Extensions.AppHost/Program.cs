@@ -1,5 +1,3 @@
-using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddViteApp("vite-demo")
