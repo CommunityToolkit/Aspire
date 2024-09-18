@@ -1,4 +1,4 @@
-namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
+namespace Aspire.Hosting.Utils;
 
 // Copied from https://github.com/dotnet/aspire/blob/50ca9fa670af5c70782dc75d2961956b06f1a403/src/Shared/PathNormalizer.cs
 internal static class PathNormalizer

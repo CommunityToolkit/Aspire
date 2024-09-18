@@ -1,5 +1,3 @@
-using CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiApp>("api");

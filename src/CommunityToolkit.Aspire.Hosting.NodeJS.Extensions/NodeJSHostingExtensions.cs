@@ -1,9 +1,10 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
+using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 using Microsoft.Extensions.Hosting;
 
-namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
+namespace Aspire.Hosting;
 
 public static class NodeJSHostingExtensions
 {

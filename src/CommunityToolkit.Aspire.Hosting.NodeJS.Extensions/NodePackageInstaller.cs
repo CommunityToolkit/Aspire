@@ -5,14 +5,13 @@ using System.Diagnostics;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 
-
 /// <summary>
 /// Represents a Node package installer.
 /// </summary>
 /// <param name="packageManager">The package manager to use.</param>
 /// <param name="loggerService">The logger service to use.</param>
 /// <param name="notificationService">The notification service to use.</param>
-class NodePackageInstaller(string packageManager, ResourceLoggerService loggerService, ResourceNotificationService notificationService)
+internal class NodePackageInstaller(string packageManager, ResourceLoggerService loggerService, ResourceNotificationService notificationService)
 {
     /// <summary>
     /// Finds the Node.js resources using the specified package manager and installs the packages.
