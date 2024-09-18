@@ -1,6 +1,7 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using OllamaSharp;
+using OllamaSharp.Models;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama;
 internal class OllamaResourceLifecycleHook(ResourceNotificationService notificationService) : IDistributedApplicationLifecycleHook, IAsyncDisposable
@@ -71,8 +72,13 @@ internal class OllamaResourceLifecycleHook(ResourceNotificationService notificat
 
         long percentage = 0;
 
-        await ollamaClient.PullModel(model, async status =>
+        await foreach (PullModelResponse? status in ollamaClient.PullModel(model, cancellationToken))
         {
+            if (status == null)
+            {
+                continue;
+            }
+
             if (status.Total != 0)
             {
                 var newPercentage = (long)(status.Completed / (double)status.Total * 100);
@@ -88,7 +94,7 @@ internal class OllamaResourceLifecycleHook(ResourceNotificationService notificat
                     });
                 }
             }
-        }, cancellationToken);
+        }
     }
 
     public ValueTask DisposeAsync()
