@@ -11,6 +11,7 @@ The Community Toolkit consists of a collection of NuGet packages that can be add
 -   [CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](integrations/hosting-azure-static-web-apps.md)
 -   [CommunityToolkit.Aspire.Hosting.Java](integrations/hosting-java.md)
 -   [CommunityToolkit.Aspire.Hosting.NodeJS.Extensions](integrations/hosting-nodejs-extensions.md)
+-   [CommunityToolkit.Aspire.Hosting.Ollama](integrations/hosting-ollama.md)
 
 ## .NET Aspire and the Community Toolkit
 
