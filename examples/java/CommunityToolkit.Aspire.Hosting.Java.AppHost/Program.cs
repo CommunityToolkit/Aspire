@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var apiapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Java_ApiApp>("apiapp");
+var apiapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_ApiApp>("apiapp");
 var containerapp = builder.AddSpringApp("containerapp",
                                      new JavaAppContainerResourceOptions()
                                      {
@@ -12,7 +12,7 @@ IResourceBuilder<JavaAppExecutableResource>? executableapp = default;
 if (builder.ExecutionContext.IsPublishMode == false)
 {
     executableapp = builder.AddSpringApp("executableapp",
-                                         workingDirectory: "../CommunityToolkit.Aspire.Java.Spring.Maven",
+                                         workingDirectory: "../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven",
                                          new JavaAppExecutableResourceOptions()
                                          {
                                              ApplicationName = "target/spring-maven-0.0.1-SNAPSHOT.jar",
@@ -21,7 +21,7 @@ if (builder.ExecutionContext.IsPublishMode == false)
                                          });
 }
 
-var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Java_WebApp>("webapp")
+var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_WebApp>("webapp")
                     .WithExternalHttpEndpoints()
                     .WithReference(containerapp)
                     .WithReference(apiapp);

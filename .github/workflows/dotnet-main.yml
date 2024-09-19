@@ -47,7 +47,7 @@ jobs:
         name: Cache Java Docker images
         with:
           path: /var/lib/docker/image
-          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Java.Spring.Maven/Dockerfile') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven/Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-docker-
 
@@ -136,3 +136,4 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+
