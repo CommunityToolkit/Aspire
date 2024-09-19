@@ -10,4 +10,8 @@
     <PackageReference Include="OllamaSharp"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+  </ItemGroup>
+
 </Project>

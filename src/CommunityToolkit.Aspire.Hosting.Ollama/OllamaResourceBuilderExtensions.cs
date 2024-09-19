@@ -1,5 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Ollama;
 
 namespace Aspire.Hosting;
@@ -20,12 +21,30 @@ public static class OllamaResourceBuilderExtensions
     public static IResourceBuilder<OllamaResource> AddOllama(this IDistributedApplicationBuilder builder,
       string name = "Ollama", int? port = null, string modelName = "llama3")
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
         builder.Services.TryAddLifecycleHook<OllamaResourceLifecycleHook>();
         var resource = new OllamaResource(name, modelName);
         return builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
-          .WithVolume("ollama", "/root/.ollama")
           .ExcludeFromManifest();
+    }
+
+    /// <summary>
+    /// Adds a data volume to the Ollama container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
+    /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
+    /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<OllamaResource> WithDataVolume(this IResourceBuilder<OllamaResource> builder, string? name = null, bool isReadOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+#pragma warning disable CTASPIRE001
+        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "ollama"), "/root/.ollama", isReadOnly);
+#pragma warning restore CTASPIRE001
     }
 }
