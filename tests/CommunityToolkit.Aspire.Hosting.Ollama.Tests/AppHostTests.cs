@@ -9,6 +9,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task ResourceStartsAndRespondsOk()
     {
         var httpClient = fixture.CreateHttpClient("ollama");
+        await fixture.ResourceNotificationService.WaitForResourceAsync("ollama", KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/");
 
