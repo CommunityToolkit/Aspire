@@ -14,9 +14,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<OllamaResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
 
         Assert.Equal("ollama", resource.Name);
 
@@ -33,9 +31,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<OllamaResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
 
         Assert.Equal("ollama", resource.Name);
 
@@ -52,13 +48,11 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<OllamaResource>().SingleOrDefault();
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
 
-        Assert.NotNull(resource);
+        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
 
-        var httpEndpoint = resource.GetEndpoint("ollama");
-
-        Assert.Equal(11434, httpEndpoint.TargetPort);
+        Assert.Equal(11434, endpoint.TargetPort);
     }
 
     [Fact]
@@ -71,12 +65,10 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<OllamaResource>().SingleOrDefault();
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
 
-        Assert.NotNull(resource);
+        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
 
-        var httpEndpoint = resource.GetEndpoint("ollama");
-
-        Assert.Equal(12345, httpEndpoint.Port);
+        Assert.Equal(12345, endpoint.Port);
     }
 }
