@@ -21,9 +21,9 @@ public static class OllamaResourceBuilderExtensions
       string name = "Ollama", int? port = null, string modelName = "llama3")
     {
         builder.Services.TryAddLifecycleHook<OllamaResourceLifecycleHook>();
-        var raygun = new OllamaResource(name, modelName);
-        return builder.AddResource(raygun)
-          .WithAnnotation(new ContainerImageAnnotation { Image = "ollama/ollama", Tag = "latest" })
+        var resource = new OllamaResource(name, modelName);
+        return builder.AddResource(resource)
+          .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port, 11434, OllamaResource.OllamaEndpointName)
           .WithVolume("ollama", "/root/.ollama")
           .ExcludeFromManifest()
