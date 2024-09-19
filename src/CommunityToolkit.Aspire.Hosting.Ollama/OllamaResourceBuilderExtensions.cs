@@ -26,7 +26,6 @@ public static class OllamaResourceBuilderExtensions
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
           .WithVolume("ollama", "/root/.ollama")
-          .ExcludeFromManifest()
-          .PublishAsContainer();
+          .ExcludeFromManifest();
     }
 }
