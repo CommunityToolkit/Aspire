@@ -111,7 +111,6 @@ jobs:
 
   release:
     needs: build
-    if: github.repository_owner == 'CommunityToolkit'
     runs-on: ubuntu-latest
     environment:
       name: release
@@ -129,7 +128,6 @@ jobs:
 
   publish-nuget:
     needs: release
-    if: github.repository_owner == 'CommunityToolkit'
     runs-on: ubuntu-latest
     environment:
       name: nuget
@@ -144,7 +142,6 @@ jobs:
 
   publish-github-packages:
     needs: release
-    if: github.repository_owner == 'CommunityToolkit'
     runs-on: ubuntu-latest
     environment:
       name: github-packages

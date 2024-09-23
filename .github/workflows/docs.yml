@@ -22,7 +22,6 @@ concurrency:
 jobs:
   # Build job
   build:
-    if: github.repository_owner == 'CommunityToolkit'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,7 +39,6 @@ jobs:
 
   # Deployment job
   deploy:
-    if: github.repository_owner == 'CommunityToolkit'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
