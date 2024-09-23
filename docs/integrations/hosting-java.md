@@ -10,14 +10,16 @@ It provides support for both container options and executable options for the Ja
 
 ## Prerequisites
 
-- This integration requires the [OpenTelemetry Agent for Java](https://opentelemetry.io/docs/zero-code/java/agent/) to be downloaded and placed in the `agents` directory in the root of the project.
+- This integration requires the [OpenTelemetry Agent for Java](https://opentelemetry.io/docs/zero-code/java/agent/) to be downloaded and placed in the `agents` directory in the root of the project. Depending on your preferred shell, use either of the following commands to download the agent:
 
     ```bash
     # bash/zsh
     mkdir -p ./agents
     wget -P ./agents \
         https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
-    
+    ```
+
+    ```powershell
     # PowerShell
     New-item -type Directory -Path ./agents -Force
     Invoke-WebRequest `
