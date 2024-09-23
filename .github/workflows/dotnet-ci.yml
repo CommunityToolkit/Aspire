@@ -111,6 +111,7 @@ jobs:
 
   publish-github-packages:
     needs: build
+    if: github.repository_owner == 'CommunityToolkit'
     runs-on: ubuntu-latest
     environment:
       name: github-packages
