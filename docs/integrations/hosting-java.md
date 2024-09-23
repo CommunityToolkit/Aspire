@@ -34,11 +34,11 @@ It provides support for both container options and executable options for the Ja
 ## Usage
 
 !!! note
-    This integration requires the your Java/Spring application to be compiled and build through Maven, Gradle or any other build tool that generates a JAR file.
+    This integration requires your Java/Spring application to be compiled and built through Maven, Gradle or any other build tool that generates a JAR file.
 
 ### Use the containerized Spring app
 
-There are high chances that your Spring apps have already been containerized. In this case, you can use the `JavaAppContainerResourceOptions` to define the containerized Spring app.
+There are chances that your Spring apps have already been containerized. In this case, use the `JavaAppContainerResourceOptions` to define the containerized Spring app.
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
@@ -73,7 +73,7 @@ Here are the details of `JavaAppContainerResourceOptions`:
 
 ### Use the executable Spring app
 
-If you want to directly use the JAR file to run the Spring app, you can use the `JavaAppExecutableResourceOptions` to define the executable Spring app. Make sure to add the `PublishAsDockerFile` option to publish the app using `Dockerfile` for the executable Spring app.
+If you want to directly use the JAR file to run the Spring app, use the `JavaAppExecutableResourceOptions` to define the executable Spring app. Make sure to add the `PublishAsDockerFile` option to publish the app using `Dockerfile` for the executable Spring app.
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
