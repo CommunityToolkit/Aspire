@@ -41,8 +41,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 var containerapp = builder.AddSpringApp("containerapp",
                            new JavaAppContainerResourceOptions()
                            {
-                               ContainerImageName = "aliencube/aspire-spring-maven-sample",
-                               OtelAgentPath = "/agents"
+                               ContainerImageName = "<repository>/<image>",
+                               OtelAgentPath = "<agent-path>"
                            });
 
 // Add reference to the web app
@@ -52,6 +52,18 @@ var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_We
 
 builder.Build().Run();
 ```
+
+#### `JavaAppContainerResourceOptions` details
+
+Here are the details of `JavaAppContainerResourceOptions`:
+
+- `ContainerRegistry`: The container registry URL. Default is `docker.io`.
+- `ContainerImageName`: The name of the container image that contains the Spring app. It should include the repository name and the image name.
+- `ContainerImageTag`: The tag of the container image. Default is `latest`.
+- `Port`: The port number that the Spring app listens on. Default is `8080`.
+- `TargetPort`: The port number that the Spring app listens on inside the container. Default is `8080`.
+- `OtelAgentPath`: The path to the OpenTelemetry Java agent in the container image, relative to the project root.
+- `Args`: The arguments to pass to the Java/Spring application.
 
 ### Use the executable Spring app
 
@@ -65,13 +77,13 @@ var executableapp = builder.AddSpringApp("executableapp",
                            workingDirectory: "../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven",
                            new JavaAppExecutableResourceOptions()
                            {
-                               ApplicationName = "target/spring-maven-0.0.1-SNAPSHOT.jar",
+                               ApplicationName = "target/app.jar",
                                Port = 8085,
                                OtelAgentPath = "../../../agents",
                            })
                            .PublishAsDockerFile(
                            [
-                               new DockerBuildArg("JAR_NAME", "spring-maven-0.0.1-SNAPSHOT.jar"),
+                               new DockerBuildArg("JAR_NAME", "app.jar"),
                                new DockerBuildArg("AGENT_PATH", "/agents"),
                                new DockerBuildArg("SERVER_PORT", "8085"),
                            ]);
@@ -84,7 +96,18 @@ var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_We
 builder.Build().Run();
 ```
 
-The `Dockerfile` might vary depending on your Spring app, but at least those three build arguments should be defined: `JAR_NAME`, `AGENT_PATH`, and `SERVER_PORT`.
+#### `JavaAppExecutableResourceOptions` details
+
+Here are the details of `JavaAppExecutableResourceOptions`:
+
+- `ApplicationName`: The name of the JAR file that contains the Spring app. Default is `target/app.jar`.
+- `Port`: The port number that the Spring app listens on. Default is `8080`.
+- `OtelAgentPath`: The path to the OpenTelemetry Java agent in the container image, relative to the Java/Spring app directory.
+- `Args`: The arguments to pass to the Java/Spring application.
+
+#### When using `PublishAsDockerFile`
+
+When using the `PublishAsDockerFile` method, you should define the `Dockerfile` for the executable Spring app. The `Dockerfile` might vary depending on your Spring app, but at least those three build arguments should be defined: `JAR_NAME`, `AGENT_PATH`, and `SERVER_PORT`.
 
 ```dockerfile
 ...
