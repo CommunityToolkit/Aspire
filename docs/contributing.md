@@ -41,7 +41,7 @@ Integration tests should use the sample application that is provided for the int
 Here is an example of an integration test:
 
 ```csharp
-public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>> {
+public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_StaticWebApps_AppHost>> {
     // Write tests here
 }
 ```
@@ -63,4 +63,3 @@ All new integrations should have documentation that explains how to use the inte
 -   Overview: A brief overview of the integration.
 -   Configuration: A list of all the configuration parameters that are available for the integration.
 -   Usage: A guide on how to use the integration in an AppHost project.
-

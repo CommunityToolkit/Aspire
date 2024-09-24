@@ -52,7 +52,7 @@ var containerapp = builder.AddSpringApp("containerapp",
                            });
 
 // Add reference to the web app
-var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_WebApp>("webapp")
+var webapp = builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_Java_WebApp>("webapp")
                     .WithExternalHttpEndpoints()
                     .WithReference(containerapp);
 
@@ -95,7 +95,7 @@ var executableapp = builder.AddSpringApp("executableapp",
                            ]);
 
 // Add reference to the web app
-var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_WebApp>("webapp")
+var webapp = builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_Java_WebApp>("webapp")
                     .WithExternalHttpEndpoints()
                     .WithReference(executableapp);
 
@@ -143,4 +143,3 @@ EXPOSE ${SERVER_PORT}
 
 ...
 ```
-

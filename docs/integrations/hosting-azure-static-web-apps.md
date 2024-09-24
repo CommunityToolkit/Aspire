@@ -26,7 +26,7 @@ using Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps;
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Define the API resource
-var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiApp>("api");
+var api = builder.AddProject<Projects.Aspire_CommunityToolkit_StaticWebApps_ApiApp>("api");
 
 // Define the frontend resource
 var web = builder
@@ -47,4 +47,3 @@ builder.Build().Run();
 
 -   `Port` - The port to run the emulator on. Defaults to `4280`.
 -   `DevServerTimeout` - The timeout (in seconds) for the frontend dev server. Defaults to `60`.
-

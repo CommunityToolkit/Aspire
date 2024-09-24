@@ -4,7 +4,7 @@ using FluentAssertions;
 namespace Aspire.CommunityToolkit.Hosting.Java.Tests;
 
 #pragma warning disable CTASPIRE001
-public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Java_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Java_AppHost>>
+public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Java_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Java_AppHost>>
 {
     [Theory]
     [InlineData("containerapp")]

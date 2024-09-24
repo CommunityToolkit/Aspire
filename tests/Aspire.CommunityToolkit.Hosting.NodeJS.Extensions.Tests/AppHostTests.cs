@@ -4,7 +4,7 @@ using FluentAssertions;
 namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions.Tests;
 
 #pragma warning disable CTASPIRE001
-public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_NodeJS_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_NodeJS_Extensions_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_NodeJS_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_NodeJS_Extensions_AppHost>>
 {
     [Theory]
     [InlineData("vite-demo")]
