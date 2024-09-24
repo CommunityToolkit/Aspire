@@ -14,7 +14,7 @@ This enables either containerised or executable Java app to be integrated with .
 1. Run .NET Aspire dashboard:
 
     ```bash
-    dotnet watch run --project ./examples/java/CommunityToolkit.Aspire.Java.AppHost
+    dotnet watch run --project ./examples/java/CommunityToolkit.Aspire.Hosting.Java.AppHost
     ```
 
 ## More detailed steps (Optional)
@@ -37,7 +37,7 @@ This enables either containerised or executable Java app to be integrated with .
 1. Build the Spring app with Maven:
 
     ```bash
-    pushd ./examples/java/CommunityToolkit.Aspire.Java.Spring.Maven
+    pushd ./examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven
 
     ./mvnw clean package
 
@@ -47,7 +47,7 @@ This enables either containerised or executable Java app to be integrated with .
 1. Build a container image for the Spring app:
 
     ```bash
-    pushd ./examples/java/CommunityToolkit.Aspire.Java.Spring.Maven
+    pushd ./examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven
 
     docker build . -t aspire-spring-maven-sample:latest
 
