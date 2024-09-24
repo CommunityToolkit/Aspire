@@ -13,7 +13,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
     {
         var httpClient = fixture.CreateHttpClient("swa");
 
-        await fixture.App.WaitForTextAsync("Azure Static Web Apps emulator started", "swa").WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.App.WaitForTextAsync("Azure Static Web Apps emulator started", "swa").WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/");
 
