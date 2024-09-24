@@ -15,6 +15,7 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | [`Hosting.Azure.StaticWebApps`][swa-integration-docs]      | [![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps][swa-shields]][swa-nuget]     | [![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps][swa-shields-preview]][swa-nuget-preview]             | A hosting integration for the [Azure Static Web Apps emulator](https://learn.microsoft.com/azure/static-web-apps/static-web-apps-cli-overview) (Note: this does not support deployment of a project to Azure Static Web Apps). |
 | [`Hosting.Java`][java-integration-docs]                    | [![CommunityToolkit.Aspire.Hosting.Java][java-shields]][java-nuget]                  | [![CommunityToolkit.Aspire.Hosting.Java][java-shields-preview]][java-nuget-preview]                          | A integration for running Java code in .NET Aspire either using the local JDK or using a container.                                                                                                                            |
 | [`Hosting.NodeJS.Extensions`][nodejs-ext-integration-docs] | [![CommunityToolkit.Aspire.NodeJS.Extensions][nodejs-ext-shields]][nodejs-ext-nuget] | [![CommunityToolkit.Aspire.Hosting.NodeJS.Extensions][nodejs-ext-shields-preview]][nodejs-ext-nuget-preview] | An integration that contains some additional extensions for running Node.js applications                                                                                                                                       |
+| [`Hosting.Ollama`][ollama-integration-docs]                | [![CommunityToolkit.Aspire.Ollama][ollama-shields]][ollama-nuget]                    | [![CommunityToolkit.Aspire.Hosting.Ollama][ollama-shields-preview]][ollama-nuget-preview]                    | An Aspire component leveraging the [Ollama](https://ollama.com) container with support for downloading a model on startup.                                                                                                     |
 
 ## 🙌 Getting Started
 
@@ -51,4 +52,8 @@ Made with [contrib.rocks](https://contrib.rocks).
 [nodejs-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/
 [nodejs-ext-shields-preview]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions?label=nuget%20(preview)
 [nodejs-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/absoluteLatest
-
+[ollama-integration-docs]: https://communitytoolkit.github.io/aspire/integrations/hosting-ollama
+[ollama-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Ollama
+[ollama-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Ollama/
+[ollama-shields-preview]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Ollama?label=nuget%20(preview)
+[ollama-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Ollama/absoluteLatest
