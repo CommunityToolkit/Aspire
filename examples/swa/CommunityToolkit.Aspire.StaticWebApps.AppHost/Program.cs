@@ -8,10 +8,7 @@ var web = builder
     .WithExternalHttpEndpoints();
 
 _ = builder
-    .AddSwaEmulator("swa", new()
-    {
-        DevServerTimeout = TimeSpan.FromMinutes(5).Seconds,
-    })
+    .AddSwaEmulator("swa")
     .WithAppResource(web)
     .WithApiResource(api);
 

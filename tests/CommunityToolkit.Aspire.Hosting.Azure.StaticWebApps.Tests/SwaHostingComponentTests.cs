@@ -1,3 +1,4 @@
+#if NET8_0
 using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 using System.Net;
@@ -37,3 +38,4 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
 
     record WeatherForecast(DateTime Date, int TemperatureC, string Summary);
 }
+#endif
