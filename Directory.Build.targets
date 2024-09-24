@@ -1,5 +1,5 @@
 <Project>
-  <Target Name="_SetVSTestLogger" BeforeTargets="VSTest" Condition="'$(CI)' == 'true'">
+  <Target Name="_SetVSTestLogger" BeforeTargets="VSTest" Condition=" '$(TrxLogFileNameSuffix)' != '' ">
   <PropertyGroup>
     <VSTestLogger>trx%3BLogFileName=$(AssemblyName)-$(TargetFramework).trx</VSTestLogger>
   </PropertyGroup>
