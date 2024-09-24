@@ -4,9 +4,4 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults\CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
 </Project>
