@@ -12,7 +12,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [
+          windows-latest
+          , ubuntu-latest
+          #, macos-latest
+          ]
+
     runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
