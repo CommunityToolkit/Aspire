@@ -1,8 +1,8 @@
 # Default owner
 * @aaronpowell
 
-# CommunityToolkit.Aspire.Hosting.Java
+# Aspire.CommunityToolkit.Hosting.Java
 /docs/integrations/hosting-java/* @justinyoo
 /examples/java/* @justinyoo
-/src/CommunityToolkit.Aspire.Hosting.Java/* @justinyoo
-/tests/CommunityToolkit.Aspire.Hosting.Java/* @justinyoo
+/src/Aspire.CommunityToolkit.Hosting.Java/* @justinyoo
+/tests/Aspire.CommunityToolkit.Hosting.Java/* @justinyoo

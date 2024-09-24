@@ -6,7 +6,7 @@ using OllamaSharp;
 using OllamaSharp.Models;
 using System.Globalization;
 
-namespace CommunityToolkit.Aspire.Hosting.Ollama;
+namespace Aspire.CommunityToolkit.Hosting.Ollama;
 internal class OllamaResourceLifecycleHook(
     ResourceLoggerService loggerService,
     ResourceNotificationService notificationService,

@@ -6,7 +6,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults.csproj" />
+    <ProjectReference Include="../Aspire.CommunityToolkit.Hosting.Java.ServiceDefaults/Aspire.CommunityToolkit.Hosting.Java.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

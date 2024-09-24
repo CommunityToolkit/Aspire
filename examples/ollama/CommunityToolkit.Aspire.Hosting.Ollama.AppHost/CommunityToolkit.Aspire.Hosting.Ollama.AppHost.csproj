@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Ollama.Web\CommunityToolkit.Aspire.Hosting.Ollama.Web.csproj" />
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Ollama\CommunityToolkit.Aspire.Hosting.Ollama.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.Ollama.Web\Aspire.CommunityToolkit.Hosting.Ollama.Web.csproj" />
+    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.Ollama\Aspire.CommunityToolkit.Hosting.Ollama.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <ItemGroup>

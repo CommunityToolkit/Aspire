@@ -2,7 +2,7 @@
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-namespace CommunityToolkit.Aspire.Testing;
+namespace Aspire.CommunityToolkit.Testing;
 
 public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
 {

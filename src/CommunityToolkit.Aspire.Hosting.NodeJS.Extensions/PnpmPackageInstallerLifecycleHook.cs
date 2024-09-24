@@ -2,7 +2,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 
-namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
+namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
 
 /// <summary>
 /// An <see cref="IDistributedApplicationLifecycleHook"/> that installs Node.js packages using the pnpm package manager before the Node.js resource starts.

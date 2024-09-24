@@ -1,20 +1,20 @@
-# CommunityToolkit.Aspire.Hosting.Java
+# Aspire.CommunityToolkit.Hosting.Java
 
 This enables either containerised or executable Java app to be integrated with .NET Aspire.
 
 ## Prerequisites
 
-- [JDK 17+](https://learn.microsoft.com/java/openjdk/download)
-- [Springboot CLI](https://docs.spring.io/spring-boot/installing.html#getting-started.installing.cli)
-- [Apache Maven](https://maven.apache.org)
-- [Docker](https://docs.docker.com/get-docker/)
+-   [JDK 17+](https://learn.microsoft.com/java/openjdk/download)
+-   [Springboot CLI](https://docs.spring.io/spring-boot/installing.html#getting-started.installing.cli)
+-   [Apache Maven](https://maven.apache.org)
+-   [Docker](https://docs.docker.com/get-docker/)
 
 ## Quickstart
 
 1. Run .NET Aspire dashboard:
 
     ```bash
-    dotnet watch run --project ./examples/java/CommunityToolkit.Aspire.Hosting.Java.AppHost
+    dotnet watch run --project ./examples/java/Aspire.CommunityToolkit.Hosting.Java.AppHost
     ```
 
 ## More detailed steps (Optional)
@@ -37,7 +37,7 @@ This enables either containerised or executable Java app to be integrated with .
 1. Build the Spring app with Maven:
 
     ```bash
-    pushd ./examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven
+    pushd ./examples/java/Aspire.CommunityToolkit.Hosting.Java.Spring.Maven
 
     ./mvnw clean package
 
@@ -47,7 +47,7 @@ This enables either containerised or executable Java app to be integrated with .
 1. Build a container image for the Spring app:
 
     ```bash
-    pushd ./examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven
+    pushd ./examples/java/Aspire.CommunityToolkit.Hosting.Java.Spring.Maven
 
     docker build . -t aspire-spring-maven-sample:latest
 
@@ -98,3 +98,4 @@ This enables either containerised or executable Java app to be integrated with .
     ```
 
     Follow the instruction for the rest of the deployment process.
+

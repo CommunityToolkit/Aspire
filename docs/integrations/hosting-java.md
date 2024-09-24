@@ -1,6 +1,6 @@
-# CommunityToolkit.Aspire.Hosting.Java
+# Aspire.CommunityToolkit.Hosting.Java
 
-[![CommunityToolkit.Aspire.Hosting.Azure.Java](https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Azure.Java)](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Java/) | [![CommunityToolkit.Aspire.Hosting.Azure.Java (latest)](https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.Java?label=nuget%20(preview))](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Java/absoluteLatest)
+[![Aspire.CommunityToolkit.Hosting.Azure.Java](https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Azure.Java)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.Java/) | [![Aspire.CommunityToolkit.Hosting.Azure.Java (latest)](<https://img.shields.io/nuget/vpre/Aspire.CommunityToolkit.Hosting.Azure.Java?label=nuget%20(preview)>)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.Java/absoluteLatest)
 
 ## Overview
 
@@ -10,9 +10,9 @@ It provides support for both container options and executable options for the Ja
 
 ## Prerequisites
 
-- This integration requires the [OpenTelemetry Agent for Java](https://opentelemetry.io/docs/zero-code/java/agent/) to be downloaded and placed in the `agents` directory in the root of the project. Depending on your preferred shell, use either of the following commands to download the agent:
+-   This integration requires the [OpenTelemetry Agent for Java](https://opentelemetry.io/docs/zero-code/java/agent/) to be downloaded and placed in the `agents` directory in the root of the project. Depending on your preferred shell, use either of the following commands to download the agent:
 
-  **For bash/zsh**
+    **For bash/zsh**
 
     ```bash
     # bash/zsh
@@ -21,7 +21,7 @@ It provides support for both container options and executable options for the Ja
         https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
     ```
 
-  **For PowerShell**
+    **For PowerShell**
 
     ```powershell
     # PowerShell
@@ -34,7 +34,7 @@ It provides support for both container options and executable options for the Ja
 ## Usage
 
 !!! note
-    This integration requires your Java/Spring application to be compiled and built through Maven, Gradle or any other build tool that generates a JAR file.
+This integration requires your Java/Spring application to be compiled and built through Maven, Gradle or any other build tool that generates a JAR file.
 
 ### Use the containerized Spring app
 
@@ -63,13 +63,13 @@ builder.Build().Run();
 
 Here are the details of `JavaAppContainerResourceOptions`:
 
-- `ContainerRegistry`: The container registry URL. Default is `docker.io`.
-- `ContainerImageName`: The name of the container image that contains the Spring app. It should include the repository name and the image name.
-- `ContainerImageTag`: The tag of the container image. Default is `latest`.
-- `Port`: The port number that the Spring app listens on. Default is `8080`.
-- `TargetPort`: The port number that the Spring app listens on inside the container. Default is `8080`.
-- `OtelAgentPath`: The path to the OpenTelemetry Java agent in the container image, relative to the project root.
-- `Args`: The arguments to pass to the Java/Spring application.
+-   `ContainerRegistry`: The container registry URL. Default is `docker.io`.
+-   `ContainerImageName`: The name of the container image that contains the Spring app. It should include the repository name and the image name.
+-   `ContainerImageTag`: The tag of the container image. Default is `latest`.
+-   `Port`: The port number that the Spring app listens on. Default is `8080`.
+-   `TargetPort`: The port number that the Spring app listens on inside the container. Default is `8080`.
+-   `OtelAgentPath`: The path to the OpenTelemetry Java agent in the container image, relative to the project root.
+-   `Args`: The arguments to pass to the Java/Spring application.
 
 ### Use the executable Spring app
 
@@ -80,7 +80,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // Define the executable Spring app directly from the JAR file
 var executableapp = builder.AddSpringApp("executableapp",
-                           workingDirectory: "../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven",
+                           workingDirectory: "../Aspire.CommunityToolkit.Hosting.Java.Spring.Maven",
                            new JavaAppExecutableResourceOptions()
                            {
                                ApplicationName = "target/app.jar",
@@ -106,10 +106,10 @@ builder.Build().Run();
 
 Here are the details of `JavaAppExecutableResourceOptions`:
 
-- `ApplicationName`: The name of the JAR file that contains the Spring app. Default is `target/app.jar`.
-- `Port`: The port number that the Spring app listens on. Default is `8080`.
-- `OtelAgentPath`: The path to the OpenTelemetry Java agent in the container image, relative to the Java/Spring app directory.
-- `Args`: The arguments to pass to the Java/Spring application.
+-   `ApplicationName`: The name of the JAR file that contains the Spring app. Default is `target/app.jar`.
+-   `Port`: The port number that the Spring app listens on. Default is `8080`.
+-   `OtelAgentPath`: The path to the OpenTelemetry Java agent in the container image, relative to the Java/Spring app directory.
+-   `Args`: The arguments to pass to the Java/Spring application.
 
 #### When using `PublishAsDockerFile`
 
@@ -143,3 +143,4 @@ EXPOSE ${SERVER_PORT}
 
 ...
 ```
+

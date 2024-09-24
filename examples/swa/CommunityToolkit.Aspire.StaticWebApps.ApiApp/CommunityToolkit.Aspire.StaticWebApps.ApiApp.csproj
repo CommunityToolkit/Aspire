@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults\CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.StaticWebApps.ServiceDefaults\Aspire.CommunityToolkit.StaticWebApps.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

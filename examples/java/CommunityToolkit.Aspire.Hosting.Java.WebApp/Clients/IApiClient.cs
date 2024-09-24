@@ -1,6 +1,6 @@
-﻿using CommunityToolkit.Aspire.Hosting.Java.WebApp.Models;
+﻿using Aspire.CommunityToolkit.Hosting.Java.WebApp.Models;
 
-namespace CommunityToolkit.Aspire.Hosting.Java.WebApp.Clients;
+namespace Aspire.CommunityToolkit.Hosting.Java.WebApp.Clients;
 
 public interface IApiClient
 {

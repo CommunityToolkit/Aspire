@@ -1,7 +1,7 @@
-using CommunityToolkit.Aspire.Testing;
+using Aspire.CommunityToolkit.Testing;
 using FluentAssertions;
 
-namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
+namespace Aspire.CommunityToolkit.Hosting.Java.Tests;
 
 #pragma warning disable CTASPIRE001
 public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Java_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Java_AppHost>>

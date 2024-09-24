@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.Ollama.ServiceDefaults\Aspire.CommunityToolkit.Hosting.Ollama.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

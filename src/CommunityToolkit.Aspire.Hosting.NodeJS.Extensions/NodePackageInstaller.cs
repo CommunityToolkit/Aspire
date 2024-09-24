@@ -3,7 +3,7 @@ using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
+namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
 
 /// <summary>
 /// Represents a Node package installer.

@@ -7,7 +7,7 @@
     <Authors>Microsoft</Authors>
     <Owners>Microsoft</Owners>
     <NeutralLanguage>en</NeutralLanguage>
-    <Product>CommunityToolkit.Aspire ($(NetVersion))</Product>
+    <Product>Aspire.CommunityToolkit ($(NetVersion))</Product>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/CommunityToolkit/Aspire</PackageProjectUrl>

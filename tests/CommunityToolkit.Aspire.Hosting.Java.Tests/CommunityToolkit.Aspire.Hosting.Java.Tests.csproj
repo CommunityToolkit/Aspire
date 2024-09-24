@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../examples/java/CommunityToolkit.Aspire.Hosting.Java.AppHost/CommunityToolkit.Aspire.Hosting.Java.AppHost.csproj" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="../../examples/java/Aspire.CommunityToolkit.Hosting.Java.AppHost/Aspire.CommunityToolkit.Hosting.Java.AppHost.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
   </ItemGroup>
 
 </Project>

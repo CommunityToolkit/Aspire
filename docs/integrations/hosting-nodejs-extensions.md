@@ -1,6 +1,6 @@
-# CommunityToolkit.Aspire.Hosting.NodeJS.Extensions
+# Aspire.CommunityToolkit.Hosting.NodeJS.Extensions
 
-[![CommunityToolkit.Aspire.Hosting.NodeJS.Extensions](https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions)](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/) | [![CommunityToolkit.Aspire.Hosting.NodeJS.Extensions (latest)](<https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions?label=nuget%20(preview)>)](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/absoluteLatest)
+[![Aspire.CommunityToolkit.Hosting.NodeJS.Extensions](https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions/) | [![Aspire.CommunityToolkit.Hosting.NodeJS.Extensions (latest)](<https://img.shields.io/nuget/vpre/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions?label=nuget%20(preview)>)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions/absoluteLatest)
 
 ## Overview
 
@@ -13,7 +13,7 @@ This package provides some extensions on the .NET Aspire [NodeJS hosting package
 ## Usage
 
 ```csharp
-using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
+using Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -28,3 +28,4 @@ builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
 
 builder.Build().Run();
 ```
+

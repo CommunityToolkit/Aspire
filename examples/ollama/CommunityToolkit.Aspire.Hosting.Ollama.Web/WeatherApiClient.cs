@@ -1,4 +1,4 @@
-namespace CommunityToolkit.Aspire.Hosting.Ollama.Web;
+namespace Aspire.CommunityToolkit.Hosting.Ollama.Web;
 
 public class WeatherApiClient(HttpClient httpClient)
 {

@@ -28,15 +28,15 @@ There are four main directories in the repository:
 
 ### Naming Convention
 
-When creating a new integration, the project should be prefixed with `CommunityToolkit.Aspire` and the name should then follow a similar design as the .NET Aspire integrations. For example, with the `CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps` integration, the integration is a hosting integration (meaning it's used in the AppHost project), it's specific for Azure, and related to the Static Web Apps service. In contrast, the `CommunityToolkit.Aspire.Hosting.Java` integration is a hosting integration, but it's specific for Java applications but not related to any specific cloud provider.
+When creating a new integration, the project should be prefixed with `Aspire.CommunityToolkit` and the name should then follow a similar design as the .NET Aspire integrations. For example, with the `Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps` integration, the integration is a hosting integration (meaning it's used in the AppHost project), it's specific for Azure, and related to the Static Web Apps service. In contrast, the `Aspire.CommunityToolkit.Hosting.Java` integration is a hosting integration, but it's specific for Java applications but not related to any specific cloud provider.
 
 ### Tests
 
-All new integrations should have a test project that covers the integration. The test project should be named `CommunityToolkit.Aspire.Hosting.<Integration>.Tests` and should be located in the `tests` directory. The test project should contain both unit and integration tests. The testing framework of choice is xUnit and will be automatically added to the test project.
+All new integrations should have a test project that covers the integration. The test project should be named `Aspire.CommunityToolkit.Hosting.<Integration>.Tests` and should be located in the `tests` directory. The test project should contain both unit and integration tests. The testing framework of choice is xUnit and will be automatically added to the test project.
 
 For unit tests, it should cover all the configuration parameters that are available for configuring the integration on the AppHost.
 
-Integration tests should use the sample application that is provided for the integration and launch AppHost project using the [.NET Aspire testing framework](https://learn.microsoft.com/dotnet/aspire/fundamentals/testing?pivots=xunit). To simplify this, an [xUnit collection feature](https://xunit.net/docs/shared-context#collection-fixture), `AspireIntegrationTestFixture<TAppHostProject>` has been created in the `CommunityToolkit.Aspire.Testing` project that will launch the AppHost project once for all the tests in the collection.
+Integration tests should use the sample application that is provided for the integration and launch AppHost project using the [.NET Aspire testing framework](https://learn.microsoft.com/dotnet/aspire/fundamentals/testing?pivots=xunit). To simplify this, an [xUnit collection feature](https://xunit.net/docs/shared-context#collection-fixture), `AspireIntegrationTestFixture<TAppHostProject>` has been created in the `Aspire.CommunityToolkit.Testing` project that will launch the AppHost project once for all the tests in the collection.
 
 Here is an example of an integration test:
 
@@ -48,7 +48,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
 
 #### Test Helpers
 
-The `CommunityToolkit.Aspire.Testing` project contains some helpers for writing tests.
+The `Aspire.CommunityToolkit.Testing` project contains some helpers for writing tests.
 
 -   `WaitForTextAsync`: A helper that waits for a specific text to appear in the logs of the resource started by the AppHost project.
 
@@ -63,3 +63,4 @@ All new integrations should have documentation that explains how to use the inte
 -   Overview: A brief overview of the integration.
 -   Configuration: A list of all the configuration parameters that are available for the integration.
 -   Usage: A guide on how to use the integration in an AppHost project.
+

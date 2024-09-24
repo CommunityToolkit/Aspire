@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 
-namespace CommunityToolkit.Aspire.Testing;
+namespace Aspire.CommunityToolkit.Testing;
 
 public static class LoggerNotificationExtensions
 {

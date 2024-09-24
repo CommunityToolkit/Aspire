@@ -1,5 +1,5 @@
-using CommunityToolkit.Aspire.Hosting.Ollama.Web;
-using CommunityToolkit.Aspire.Hosting.Ollama.Web.Components;
+using Aspire.CommunityToolkit.Hosting.Ollama.Web;
+using Aspire.CommunityToolkit.Hosting.Ollama.Web.Components;
 using OllamaSharp;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -47,7 +47,7 @@ jobs:
         name: Cache Java Docker images
         with:
           path: /var/lib/docker/image
-          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven/Dockerfile') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/Aspire.CommunityToolkit.Hosting.Java.Spring.Maven/Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-docker-
 
@@ -60,7 +60,7 @@ jobs:
       - name: Setup Node projects
         run: |
           npm install -g @azure/static-web-apps-cli
-          cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
+          cd examples/swa/Aspire.CommunityToolkit.StaticWebApps.WebApp
           npm ci
 
       - name: Restore dependencies

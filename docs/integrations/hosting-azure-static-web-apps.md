@@ -1,6 +1,6 @@
 # CommunityToolkit.Hosting.Azure.StaticWebApps
 
-[![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps)](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/) | [![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps (latest)](https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps?label=nuget%20(preview))](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/absoluteLatest)
+[![Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps](https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps/) | [![Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps (latest)](<https://img.shields.io/nuget/vpre/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps?label=nuget%20(preview)>)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps/absoluteLatest)
 
 ## Overview
 
@@ -9,19 +9,19 @@ This is a .NET Aspire Integration for using the [Azure Static Web App CLI](https
 It provides support for proxying both the static frontend and the API backend using resources defined in the AppHost project.
 
 !!! note
-    This does not support deployment to Azure Static Web Apps.
+This does not support deployment to Azure Static Web Apps.
 
 ## Usage
 
 !!! note
-    This integration requires the Azure Static Web Apps CLI to be installed. You can install it using the following command:
+This integration requires the Azure Static Web Apps CLI to be installed. You can install it using the following command:
 
     ```bash
     npm install -g @azure/static-web-apps-cli
     ```
 
 ```csharp
-using CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps;
+using Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -30,7 +30,7 @@ var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiA
 
 // Define the frontend resource
 var web = builder
-    .AddNpmApp("web", Path.Combine("..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"), "dev")
+    .AddNpmApp("web", Path.Combine("..", "Aspire.CommunityToolkit.StaticWebApps.WebApp"), "dev")
     .WithHttpEndpoint(env: "PORT")
     .WithExternalHttpEndpoints();
 
@@ -47,3 +47,4 @@ builder.Build().Run();
 
 -   `Port` - The port to run the emulator on. Defaults to `4280`.
 -   `DevServerTimeout` - The timeout (in seconds) for the frontend dev server. Defaults to `60`.
+

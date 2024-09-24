@@ -44,7 +44,7 @@ body:
       description: A complete API breakdown of the new proposed feature or change.
       placeholder: |
         ```csharp
-        namespace CommunityToolkit.Aspire.SomePackage;
+        namespace Aspire.CommunityToolkit.SomePackage;
 
         public class MyProposedClass
         {
@@ -93,3 +93,4 @@ body:
         - Yes, I'd like to be assigned to work on this item
         - Yes, but only if others can assist
         - No, just wanted to propose this
+

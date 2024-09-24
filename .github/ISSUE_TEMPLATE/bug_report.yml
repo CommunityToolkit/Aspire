@@ -77,8 +77,8 @@ body:
       label: Nuget packages
       description: Which NuGet packages have you used? Include the version number.
       options:
-        - label: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
-        - label: CommunityToolkit.Aspire.Hosting.Java
+        - label: Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps
+        - label: Aspire.CommunityToolkit.Hosting.Java
   - type: input
     id: nuget-package-version
     validations:
