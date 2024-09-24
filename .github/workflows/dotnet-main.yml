@@ -17,7 +17,7 @@ jobs:
           , ubuntu-latest
           #, macos-latest
           ]
-
+      fail-fast: false
     runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
