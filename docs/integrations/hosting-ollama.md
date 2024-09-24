@@ -13,7 +13,7 @@ Use the static `AddOllama` method to add this container component to the applica
 ```csharp
 // The distributed application builder is created here
 
-var ollama = builder.AddOllama();
+var ollama = builder.AddOllama("ollama");
 
 // The builder is used to build and run the app somewhere down here
 ```
