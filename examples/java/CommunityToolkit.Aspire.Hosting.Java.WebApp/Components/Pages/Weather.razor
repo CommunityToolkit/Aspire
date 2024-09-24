@@ -5,8 +5,4 @@
 
 <WeatherComponent Source="WebApi" />
 <WeatherComponent Source="Spring Container" />
-
-@if (bool.TryParse(Environment.GetEnvironmentVariable("USE_EXECUTABLE"), out var result) && result)
-{
-    <WeatherComponent Source="Spring Executable" />
-}
+<WeatherComponent Source="Spring Executable" />
