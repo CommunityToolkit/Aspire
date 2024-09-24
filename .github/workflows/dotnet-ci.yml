@@ -10,7 +10,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
 
@@ -70,12 +73,14 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
-        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx /p:TrxLogFileNameSuffix=${{ matrix.os }}
 
       - name: Publish NuGet package
         run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:VersionSuffix='alpha.${{ github.run_number }}'
 
+        ## Only publish NuGet packages on Ubuntu, since we don't need to publish them on every OS
       - name: Publish NuGet packages as artifacts
+        if: ${{ runner.os == 'ubuntu-latest' }}
         uses: actions/upload-artifact@v4
         with:
           name: nuget-packages
@@ -102,4 +107,3 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
-
