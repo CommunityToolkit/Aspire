@@ -19,7 +19,7 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Java\CommunityToolkit.Aspire.Hosting.Java.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
-  <Target Name="PublishRunMaven" AfterTargets="Build">
+  <Target Name="PublishRunMaven" AfterTargets="Build" Condition="'$(TargetFramework)' == 'net8.0'">
     <!-- As part of publishing, ensure the Java app is freshly built -->
     <Exec WorkingDirectory="$(JavaAppRoot)" Command="./mvnw --quiet clean package" />
   </Target>
