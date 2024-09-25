@@ -21,7 +21,8 @@ public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.Asp
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact]
+    [ConditionalFact]
+    [OSSkipCondition(OperatingSystems.Windows)]
     public async Task ExecutableAppResourceWillRespondWithOk()
     {
         var resourceName = "executableapp";
