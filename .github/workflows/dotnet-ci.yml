@@ -23,13 +23,6 @@ jobs:
       DOTNET_CONFIGURATION: Release
 
     steps:
-      - name: Docker Info on Windows
-        if: ${{ matrix.os == 'windows-latest' }}
-        shell: pwsh
-        run: |
-          Get-Command docker
-          docker info
-
       - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
