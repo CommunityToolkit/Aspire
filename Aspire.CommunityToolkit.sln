@@ -57,6 +57,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Ollama.Web", "examples\ollama\Aspire.CommunityToolkit.Hosting.Ollama.Web\Aspire.CommunityToolkit.Hosting.Ollama.Web.csproj", "{0A17021E-5F10-429B-88C8-E4073EADACB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder", "src\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.csproj", "{BAF22B80-2937-4695-A613-F170D8FB9020}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +145,10 @@ Global
 		{0A17021E-5F10-429B-88C8-E4073EADACB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0A17021E-5F10-429B-88C8-E4073EADACB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0A17021E-5F10-429B-88C8-E4073EADACB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAF22B80-2937-4695-A613-F170D8FB9020}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAF22B80-2937-4695-A613-F170D8FB9020}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAF22B80-2937-4695-A613-F170D8FB9020}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAF22B80-2937-4695-A613-F170D8FB9020}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -172,6 +178,7 @@ Global
 		{F4602DC8-3C17-4834-B640-9A3B27FE278A} = {14BD8AE7-C8DF-4C7C-8244-7F74C101569D}
 		{2F037600-2002-4A13-9359-98FB0D2416BE} = {14BD8AE7-C8DF-4C7C-8244-7F74C101569D}
 		{0A17021E-5F10-429B-88C8-E4073EADACB6} = {14BD8AE7-C8DF-4C7C-8244-7F74C101569D}
+		{BAF22B80-2937-4695-A613-F170D8FB9020} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
