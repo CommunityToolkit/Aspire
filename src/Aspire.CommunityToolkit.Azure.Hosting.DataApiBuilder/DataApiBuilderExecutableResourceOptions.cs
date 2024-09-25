@@ -1,4 +1,4 @@
-﻿namespace CommunityToolkit.Aspire.Hosting.DataApiBuilder;
+﻿namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
 
 /// <summary>
 /// This represents the options entity for configuring an Data Api Builder.
@@ -15,9 +15,4 @@ public class DataApiBuilderExecutableResourceOptions
     /// </summary>
     public int Port { get; set; } = 5000;
 
-
-    /// <summary>
-    /// Gets or sets the arguments to pass to the DataApiBuilder api.
-    /// </summary>
-    public string[]? Args { get; set; } = null;
 }

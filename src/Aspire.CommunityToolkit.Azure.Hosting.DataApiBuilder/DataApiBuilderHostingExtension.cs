@@ -1,10 +1,10 @@
 ﻿using System.Globalization;
 
-using CommunityToolkit.Aspire.Hosting.DataApiBuilder.Utils;
+using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
-namespace CommunityToolkit.Aspire.Hosting.DataApiBuilder;
+namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
 
 /// <summary>
 /// Provides extension methods for adding DataApiBuilder api to an <see cref="IDistributedApplicationBuilder"/>.
@@ -36,12 +36,6 @@ public static class DataApiBuilderHostingExtension
           .WithImageTag(options.ContainerImageTag)
           .WithHttpEndpoint(port: options.Port, targetPort: options.TargetPort, name: DataApiBuilderContainerResource.HttpEndpointName)
           .WithDataApiBuilderDefaults(options);
-        if (options.Args is { Length: > 0 })
-        {
-#pragma warning disable CS8604 // Possible null reference argument.
-            rb.WithArgs(options.Args);
-#pragma warning restore CS8604 // Possible null reference argument.
-        }
 
         if(string.IsNullOrWhiteSpace(options.ConfigFilePath) == false)
         {
@@ -79,8 +73,7 @@ public static class DataApiBuilderHostingExtension
 
         return builder.AddResource(resource)
                       .WithDataApiBuilderDefaults(options)
-                      .WithHttpEndpoint(port: options.Port, name: DataApiBuilderContainerResource.HttpEndpointName, isProxied: false)
-                      .WithArgs(allArgs);
+                      .WithHttpEndpoint(port: options.Port, name: DataApiBuilderContainerResource.HttpEndpointName, isProxied: false);
     }
 
     /// <summary>
@@ -107,7 +100,6 @@ public static class DataApiBuilderHostingExtension
         this IResourceBuilder<DataApiBuilderExecutableResource> builder,
         DataApiBuilderExecutableResourceOptions options) =>
         builder.WithOtlpExporter()
-               .WithEnvironment("DATAAPIBUILDER_TOOL_OPTIONS", $"-dabagent:{options.OtelAgentPath?.TrimEnd('/')}/opentelemetry-dabagent.jar")
                .WithEnvironment("SERVER_PORT", options.Port.ToString(CultureInfo.InvariantCulture))
                ;
 }
