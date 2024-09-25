@@ -9,12 +9,12 @@ This is a .NET Aspire Integration for using the [Azure Static Web App CLI](https
 It provides support for proxying both the static frontend and the API backend using resources defined in the AppHost project.
 
 !!! note
-This does not support deployment to Azure Static Web Apps.
+    This does not support deployment to Azure Static Web Apps.
 
 ## Usage
 
 !!! note
-This integration requires the Azure Static Web Apps CLI to be installed. You can install it using the following command:
+    This integration requires the Azure Static Web Apps CLI to be installed. You can install it using the following command:
 
     ```bash
     npm install -g @azure/static-web-apps-cli

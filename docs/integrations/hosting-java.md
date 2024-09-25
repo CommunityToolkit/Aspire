@@ -34,7 +34,7 @@ It provides support for both container options and executable options for the Ja
 ## Usage
 
 !!! note
-This integration requires your Java/Spring application to be compiled and built through Maven, Gradle or any other build tool that generates a JAR file.
+    This integration requires your Java/Spring application to be compiled and built through Maven, Gradle or any other build tool that generates a JAR file.
 
 ### Use the containerized Spring app
 
