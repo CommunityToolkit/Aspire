@@ -13,9 +13,9 @@ jobs:
     strategy:
       matrix:
         os: [
-          windows-latest
-          , ubuntu-latest
-          #, macos-latest
+            windows-latest,
+            ubuntu-latest,
+            #, macos-latest
           ]
       fail-fast: false
     runs-on: "${{ matrix.os }}"
@@ -23,6 +23,13 @@ jobs:
       DOTNET_CONFIGURATION: Release
 
     steps:
+      - name: Docker Info on Windows
+        if: ${{ runner.os == 'windows-latest' }}
+        shell: pwsh
+        run: |
+          Get-Command docker
+          docker --version
+
       - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
