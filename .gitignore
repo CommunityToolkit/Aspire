@@ -10,3 +10,5 @@ test-results
 TestResults
 nuget
 .pnpm-store
+
+*.binlog

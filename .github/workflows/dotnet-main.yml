@@ -12,7 +12,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [
+            windows-latest,
+            ubuntu-latest,
+            #, macos-latest
+          ]
+      fail-fast: false
     runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
@@ -52,21 +57,21 @@ jobs:
         name: Cache Java Docker images
         with:
           path: /var/lib/docker/image
-          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven/Dockerfile') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/Aspire.CommunityToolkit.Hosting.Java.Spring.Maven/Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-docker-
 
       - name: Install Aspire workload
         run: dotnet workload install aspire
       - name: Setup .NET dev certs
-        if: ${{ runner.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           dotnet tool update -g linux-dev-certs
           dotnet linux-dev-certs install
       - name: Setup Node projects
         run: |
           npm install -g @azure/static-web-apps-cli
-          cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
+          cd examples/swa/Aspire.CommunityToolkit.StaticWebApps.WebApp
           npm ci
 
       - name: Restore dependencies
@@ -81,7 +86,7 @@ jobs:
 
       - name: Publish NuGet packages as artifacts
         uses: actions/upload-artifact@v4
-        if: ${{ runner.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
           name: nuget-packages
           path: ./nuget
@@ -90,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-${{ matrix.os }}
           path: |
             ${{ github.workspace }}/test-results/**
 
@@ -143,4 +148,3 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
-

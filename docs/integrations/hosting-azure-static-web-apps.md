@@ -1,6 +1,6 @@
 # CommunityToolkit.Hosting.Azure.StaticWebApps
 
-[![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps](https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps)](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/) | [![CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps (latest)](https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps?label=nuget%20(preview))](https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/absoluteLatest)
+[![Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps](https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps/) | [![Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps (latest)](<https://img.shields.io/nuget/vpre/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps?label=nuget%20(preview)>)](https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps/absoluteLatest)
 
 ## Overview
 
@@ -21,16 +21,16 @@ It provides support for proxying both the static frontend and the API backend us
     ```
 
 ```csharp
-using CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps;
+using Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Define the API resource
-var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiApp>("api");
+var api = builder.AddProject<Projects.Aspire_CommunityToolkit_StaticWebApps_ApiApp>("api");
 
 // Define the frontend resource
 var web = builder
-    .AddNpmApp("web", Path.Combine("..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"), "dev")
+    .AddNpmApp("web", Path.Combine("..", "Aspire.CommunityToolkit.StaticWebApps.WebApp"), "dev")
     .WithHttpEndpoint(env: "PORT")
     .WithExternalHttpEndpoints();
 

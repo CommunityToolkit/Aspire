@@ -1,6 +1,6 @@
-# CommunityToolkit.Aspire.Hosting.Ollama
+# Aspire.CommunityToolkit.Hosting.Ollama
 
-[![CommunityToolkit.Aspire.Ollama](https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Ollama)](https://nuget.org/packages/CommunityToolkit.Aspire.Ollama/) | [![CommunityToolkit.Aspire.Ollama (latest)](<https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Ollama?label=nuget%20(preview)>)](https://nuget.org/packages/CommunityToolkit.Aspire.Ollama/absoluteLatest)
+[![Aspire.CommunityToolkit.Ollama](https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Ollama)](https://nuget.org/packages/Aspire.CommunityToolkit.Ollama/) | [![Aspire.CommunityToolkit.Ollama (latest)](<https://img.shields.io/nuget/vpre/Aspire.CommunityToolkit.Ollama?label=nuget%20(preview)>)](https://nuget.org/packages/Aspire.CommunityToolkit.Ollama/absoluteLatest)
 
 ## Overview
 
@@ -49,3 +49,4 @@ var connectionString = builder.Configuration.GetConnectionString("Ollama");
 ```
 
 You can then call any of the Ollama endpoints through this connection string. We recommend using the [OllamaSharp](https://www.nuget.org/packages/OllamaSharp) client to do this.
+
