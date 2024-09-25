@@ -1,4 +1,4 @@
-﻿namespace CommunityToolkit.Aspire.Hosting.DataApiBuilder.Utils;
+﻿namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
 
 /// <summary>
 /// This represents the utility entity for normalizing paths.

@@ -1,4 +1,4 @@
-# CommunityToolkit.Aspire.Hosting.DataApiBuilder
+# Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder
 
 This enables a containerised Data Api Builder to be integrated with .NET Aspire.
 
