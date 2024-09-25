@@ -60,7 +60,7 @@ internal class NodePackageInstaller(string packageManager, ResourceLoggerService
 
         logger.LogInformation("Installing {PackageManager} packages in {WorkingDirectory}", packageManager, resource.WorkingDirectory);
 
-        var packageInstaller = new Process
+        var packageInstaller = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? => new Process
         {
             StartInfo = new ProcessStartInfo
             {
@@ -69,51 +69,64 @@ internal class NodePackageInstaller(string packageManager, ResourceLoggerService
                 WorkingDirectory = resource.WorkingDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                UseShellExecute = true,
+            }
+            : new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd",
+                    Arguments = $"/c {packageManager} install",
+                    WorkingDirectory = resource.WorkingDirectory,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                }
             }
         };
 
-        packageInstaller.OutputDataReceived += async (sender, args) =>
+    packageInstaller.OutputDataReceived += async(sender, args) =>
         {
             if (!string.IsNullOrWhiteSpace(args.Data))
             {
                 await notificationService.PublishUpdateAsync(resource, state => state with
                 {
-                    State = new(args.Data, KnownResourceStates.Starting)
+        State = new(args.Data, KnownResourceStates.Starting)
                 }).ConfigureAwait(false);
 
-                logger.LogInformation("{Data}", args.Data);
+    logger.LogInformation("{Data}", args.Data);
             }
         };
 
-        packageInstaller.ErrorDataReceived += async (sender, args) =>
+packageInstaller.ErrorDataReceived += async (sender, args) =>
+{
+    if (!string.IsNullOrWhiteSpace(args.Data))
+    {
+        await notificationService.PublishUpdateAsync(resource, state => state with
         {
-            if (!string.IsNullOrWhiteSpace(args.Data))
-            {
-                await notificationService.PublishUpdateAsync(resource, state => state with
-                {
-                    State = new(args.Data, KnownResourceStates.FailedToStart)
-                }).ConfigureAwait(false);
+            State = new(args.Data, KnownResourceStates.FailedToStart)
+        }).ConfigureAwait(false);
 
-                logger.LogError("{Data}", args.Data);
-            }
-        };
+        logger.LogError("{Data}", args.Data);
+    }
+};
 
-        packageInstaller.Start();
-        packageInstaller.BeginOutputReadLine();
-        packageInstaller.BeginErrorReadLine();
+packageInstaller.Start();
+packageInstaller.BeginOutputReadLine();
+packageInstaller.BeginErrorReadLine();
 
-        packageInstaller.WaitForExit();
+packageInstaller.WaitForExit();
 
-        if (packageInstaller.ExitCode != 0)
-        {
-            await notificationService.PublishUpdateAsync(resource, state => state with
-            {
-                State = new($"{packageManager} exited with {packageInstaller.ExitCode}", KnownResourceStates.FailedToStart)
-            }).ConfigureAwait(false);
+if (packageInstaller.ExitCode != 0)
+{
+    await notificationService.PublishUpdateAsync(resource, state => state with
+    {
+        State = new($"{packageManager} exited with {packageInstaller.ExitCode}", KnownResourceStates.FailedToStart)
+    }).ConfigureAwait(false);
 
-            throw new InvalidOperationException($"{packageManager} install failed with exit code {packageInstaller.ExitCode}");
-        }
+    throw new InvalidOperationException($"{packageManager} install failed with exit code {packageInstaller.ExitCode}");
+}
     }
 }
