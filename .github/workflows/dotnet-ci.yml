@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Docker Info on Windows
-        if: ${{ runner.os == 'windows-latest' }}
+        if: ${{ matrix.os == 'windows-latest' }}
         shell: pwsh
         run: |
           Get-Command docker
