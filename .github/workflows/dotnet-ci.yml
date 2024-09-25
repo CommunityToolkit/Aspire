@@ -28,7 +28,7 @@ jobs:
         shell: pwsh
         run: |
           Get-Command docker
-          docker --version
+          docker info
 
       - uses: actions/checkout@v4
       - name: Setup .NET
