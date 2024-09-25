@@ -13,6 +13,7 @@
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.7.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <!-- OpenTelemetry packages -->
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
@@ -27,5 +28,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
     <PackageVersion Include="xunit" Version="2.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!-- External packages -->
+    <PackageVersion Include="OllamaSharp" Version="3.0.7" />
   </ItemGroup>
 </Project>

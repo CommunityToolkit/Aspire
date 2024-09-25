@@ -8,4 +8,7 @@ appsettings.*.json
 *.orig
 test-results
 TestResults
-_site
+nuget
+.pnpm-store
+
+*.binlog

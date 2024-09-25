@@ -1,6 +1,0 @@
-@CommunityToolkit.Aspire.ApiApp_HostAddress = http://localhost:5236
-
-GET {{CommunityToolkit.Aspire.ApiApp_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

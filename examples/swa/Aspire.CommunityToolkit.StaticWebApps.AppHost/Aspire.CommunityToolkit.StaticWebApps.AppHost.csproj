@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>217620e8-b99b-48de-a85a-cb33d49baa25</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.NodeJS" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aspire.CommunityToolkit.StaticWebApps.ApiApp\Aspire.CommunityToolkit.StaticWebApps.ApiApp.csproj" />
+    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

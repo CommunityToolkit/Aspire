@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../examples/java/Aspire.CommunityToolkit.Hosting.Java.AppHost/Aspire.CommunityToolkit.Hosting.Java.AppHost.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

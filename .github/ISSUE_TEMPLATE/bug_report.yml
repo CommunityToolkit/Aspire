@@ -10,7 +10,7 @@ body:
 
         🚨 **Please do not skip instructions** 🚨
 
-        This info is essential for investigating your bug report. Issues with missing information may be closed without investigation. Please make sure to look for existing issues about the same problem before opening a new one. If you're uncertain about the problem, [find or start a discussion](https://github.com/CommunityToolkit/dotnet/discussions), where you can get insight from the community regarding your issue.
+        This info is essential for investigating your bug report. Issues with missing information may be closed without investigation. Please make sure to look for existing issues about the same problem before opening a new one. If you're uncertain about the problem, [find or start a discussion](https://github.com/CommunityToolkit/aspire/discussions), where you can get insight from the community regarding your issue.
   - type: textarea
     id: description
     validations:
@@ -23,7 +23,6 @@ body:
     attributes:
       label: Regression
       description: If this is a regression, what toolkit version did you last see it work?
-      placeholder:
     validations:
       required: false
   - type: textarea
@@ -74,14 +73,14 @@ body:
       description: What's the exact build number of your IDE? (For Visual Studio, go to Help -> About Microsoft Visual Studio)
   - type: checkboxes
     id: nuget-packages
-    validations:
-      required: true
     attributes:
       label: Nuget packages
       description: Which NuGet packages have you used? Include the version number.
       options:
-        - label: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
-        - label: CommunityToolkit.Aspire.Hosting.Java
+        - label: Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps
+        - label: Aspire.CommunityToolkit.Hosting.Java
+        - label: Aspire.CommunityToolkit.Hosting.NodeJS.Extensions
+        - label: Aspire.CommunityToolkit.Hosting.Ollama
   - type: input
     id: nuget-package-version
     validations:

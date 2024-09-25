@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsAspireHost>true</IsAspireHost>
+
+    <UserSecretsId>8b981031-6978-4b8e-b276-711918308102</UserSecretsId>
+
+    <JavaAppRoot>$(MSBuildProjectDirectory)/../Aspire.CommunityToolkit.Hosting.Java.Spring.Maven</JavaAppRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Aspire.CommunityToolkit.Hosting.Java.ApiApp/Aspire.CommunityToolkit.Hosting.Java.ApiApp.csproj" />
+    <ProjectReference Include="../Aspire.CommunityToolkit.Hosting.Java.WebApp/Aspire.CommunityToolkit.Hosting.Java.WebApp.csproj" />
+    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.Java\Aspire.CommunityToolkit.Hosting.Java.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <Target Name="PublishRunMaven" AfterTargets="Build">
+    <!-- As part of publishing, ensure the Java app is freshly built -->
+    <Exec WorkingDirectory="$(JavaAppRoot)" Command="./mvnw --quiet clean package" />
+  </Target>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\nodejs-ext\Aspire.CommunityToolkit.Hosting.NodeJS.Extensions.AppHost\Aspire.CommunityToolkit.Hosting.NodeJS.Extensions.AppHost.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
