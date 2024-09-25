@@ -13,9 +13,9 @@ jobs:
     strategy:
       matrix:
         os: [
-          windows-latest
-          , ubuntu-latest
-          #, macos-latest
+            windows-latest,
+            ubuntu-latest,
+            #, macos-latest
           ]
       fail-fast: false
     runs-on: "${{ matrix.os }}"
@@ -64,7 +64,7 @@ jobs:
       - name: Install Aspire workload
         run: dotnet workload install aspire
       - name: Setup .NET dev certs
-        if: ${{ runner.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           dotnet tool update -g linux-dev-certs
           dotnet linux-dev-certs install
@@ -86,7 +86,7 @@ jobs:
 
       - name: Publish NuGet packages as artifacts
         uses: actions/upload-artifact@v4
-        if: ${{ runner.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
           name: nuget-packages
           path: ./nuget
