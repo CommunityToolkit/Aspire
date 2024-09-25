@@ -79,6 +79,8 @@ body:
       options:
         - label: Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps
         - label: Aspire.CommunityToolkit.Hosting.Java
+        - label: Aspire.CommunityToolkit.Hosting.NodeJS.Extensions
+        - label: Aspire.CommunityToolkit.Hosting.Ollama
   - type: input
     id: nuget-package-version
     validations:
@@ -102,4 +104,3 @@ body:
         - Yes, I'd like to be assigned to work on this item
         - Yes, but only if others can assist
         - No, just wanted to report this
-

@@ -36,23 +36,6 @@ body:
       label: Overview
       description: A clear and concise overview of the problem this proposal would solve.
   - type: textarea
-    id: api-breakdown
-    validations:
-      required: true
-    attributes:
-      label: API breakdown
-      description: A complete API breakdown of the new proposed feature or change.
-      placeholder: |
-        ```csharp
-        namespace Aspire.CommunityToolkit.SomePackage;
-
-        public class MyProposedClass
-        {
-            public void MyProposedApi();
-            // Other APIs and types as needed...
-        }
-        ```
-  - type: textarea
     id: usage-example
     validations:
       required: true
@@ -93,4 +76,3 @@ body:
         - Yes, I'd like to be assigned to work on this item
         - Yes, but only if others can assist
         - No, just wanted to propose this
-

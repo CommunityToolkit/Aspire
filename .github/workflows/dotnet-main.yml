@@ -10,7 +10,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
 
@@ -19,7 +22,9 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            9.0.x
       - uses: actions/setup-java@v4
         name: Set up Java
         with:
@@ -54,6 +59,7 @@ jobs:
       - name: Install Aspire workload
         run: dotnet workload install aspire
       - name: Setup .NET dev certs
+        if: ${{ runner.os == 'ubuntu-latest' }}
         run: |
           dotnet tool update -g linux-dev-certs
           dotnet linux-dev-certs install
@@ -68,13 +74,14 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
-        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx
+        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx /p:TrxLogFileNameSuffix=${{ matrix.os }}
 
       - name: Publish NuGet package
         run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:VersionSuffix='beta.${{ github.run_number }}'
 
       - name: Publish NuGet packages as artifacts
         uses: actions/upload-artifact@v4
+        if: ${{ runner.os == 'ubuntu-latest' }}
         with:
           name: nuget-packages
           path: ./nuget
