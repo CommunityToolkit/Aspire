@@ -71,7 +71,7 @@ internal class NodePackageInstaller(string packageManager, ResourceLoggerService
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
-                UseShellExecute = true,
+                UseShellExecute = false,
             }
         }
         : new Process
