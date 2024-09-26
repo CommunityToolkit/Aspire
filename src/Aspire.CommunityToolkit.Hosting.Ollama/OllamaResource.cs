@@ -8,13 +8,25 @@
 /// </remarks>
 /// <param name="name">The name for the resource.</param>
 /// <param name="modelName">The LLM to download on initial startup.</param>
-public class OllamaResource(string name, string modelName) : ContainerResource(name), IResourceWithConnectionString
+public class OllamaResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string OllamaEndpointName = "ollama";
 
+    private readonly List<string> _models = [];
+
+    private string? _defaultModel = null;
+
     private EndpointReference? _endpointReference;
 
-    public string ModelName { get; internal set; } = modelName;
+    /// <summary>
+    /// Adds a model to the list of models to download on initial startup.
+    /// </summary>
+    public IReadOnlyList<string> Models => _models;
+
+    /// <summary>
+    /// The default model to be configured on the Ollama server.
+    /// </summary>
+    public string? DefaultModel => _defaultModel;
 
     /// <summary>
     /// Gets the endpoint for the Ollama server.
@@ -28,4 +40,35 @@ public class OllamaResource(string name, string modelName) : ContainerResource(n
       ReferenceExpression.Create(
         $"http://{Endpoint.Property(EndpointProperty.Host)}:{Endpoint.Property(EndpointProperty.Port)}"
       );
+
+    /// <summary>
+    ///     Adds a model to the list of models to download on initial startup.
+    /// </summary>
+    /// <param name="modelName">The name of the model</param>
+    public void AddModel(string modelName)
+    {
+        ArgumentNullException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
+        if (!_models.Contains(modelName))
+        {
+            _models.Add(modelName);
+        }
+    }
+
+    /// <summary>
+    /// Sets the default model to be configured on the Ollama server.
+    /// </summary>
+    /// <param name="modelName">The name of the model.</param>
+    /// <remarks>
+    /// If the model does not exist in the list of models, it will be added.
+    /// </remarks>
+    public void SetDefaultModel(string modelName)
+    {
+        ArgumentNullException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
+        _defaultModel = modelName;
+
+        if (!_models.Contains(modelName))
+        {
+            AddModel(modelName);
+        }
+    }
 }

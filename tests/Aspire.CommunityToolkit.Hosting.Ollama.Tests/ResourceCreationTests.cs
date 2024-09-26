@@ -8,7 +8,7 @@ public class ResourceCreationTests
     public void VerifyDefaultModel()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama");
+        builder.AddOllama("ollama", port: null).AddModel("llama3").WithDefaultModel("llama3");
 
         using var app = builder.Build();
 
@@ -18,14 +18,14 @@ public class ResourceCreationTests
 
         Assert.Equal("ollama", resource.Name);
 
-        Assert.Equal("llama3", resource.ModelName);
+        Assert.Equal("llama3", resource.DefaultModel);
     }
 
     [Fact]
     public void VerifyCustomModel()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", modelName: "custom");
+        builder.AddOllama("ollama", port: null).AddModel("custom");
 
         using var app = builder.Build();
 
@@ -35,14 +35,14 @@ public class ResourceCreationTests
 
         Assert.Equal("ollama", resource.Name);
 
-        Assert.Equal("custom", resource.ModelName);
+        Assert.Contains("custom", resource.Models);
     }
 
     [Fact]
     public void VerifyDefaultPort()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama");
+        builder.AddOllama("ollama", port: null);
 
         using var app = builder.Build();
 
@@ -70,5 +70,25 @@ public class ResourceCreationTests
         var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
 
         Assert.Equal(12345, endpoint.Port);
+    }
+
+    [Fact]
+    public void CanSetMultpleModels()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddOllama("ollama", port: null)
+            .AddModel("llama3")
+            .AddModel("phi3");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.Equal("ollama", resource.Name);
+
+        Assert.Contains("llama3", resource.Models);
+        Assert.Contains("phi3", resource.Models);
     }
 }

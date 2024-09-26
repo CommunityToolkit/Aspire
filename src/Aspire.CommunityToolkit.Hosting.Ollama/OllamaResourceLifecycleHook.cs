@@ -33,52 +33,50 @@ internal class OllamaResourceLifecycleHook(
 
     private void DownloadModel(OllamaResource resource, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(resource.ModelName))
-        {
-            return;
-        }
-
         var logger = loggerService.GetLogger(resource);
 
         _ = Task.Run(async () =>
         {
-            try
+            foreach (string model in resource.Models)
             {
-                var connectionString = await resource.ConnectionStringExpression.GetValueAsync(cancellationToken).ConfigureAwait(false);
-
-                if (string.IsNullOrWhiteSpace(connectionString))
+                try
                 {
-                    await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("No connection string", KnownResourceStateStyles.Error) });
-                    return;
+                    var connectionString = await resource.ConnectionStringExpression.GetValueAsync(cancellationToken).ConfigureAwait(false);
+
+                    if (string.IsNullOrWhiteSpace(connectionString))
+                    {
+                        await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("No connection string", KnownResourceStateStyles.Error) });
+                        return;
+                    }
+
+                    var ollamaClient = new OllamaApiClient(new Uri(connectionString));
+
+                    await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Checking model", KnownResourceStateStyles.Info) });
+                    var hasModel = await HasModelAsync(ollamaClient, model, cancellationToken);
+
+                    if (!hasModel)
+                    {
+                        logger.LogInformation("{TimeStamp}: [{Model}] needs to be downloaded for {ResourceName}",
+                            DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
+                            model,
+                            resource.Name);
+                        await PullModel(resource, ollamaClient, model, logger, cancellationToken);
+                    }
+                    else
+                    {
+                        logger.LogInformation("{TimeStamp}: [{Model}] already exists for {ResourceName}",
+                            DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
+                            model,
+                            resource.Name);
+                    }
+
+                    await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Running", KnownResourceStateStyles.Success) });
                 }
-
-                var ollamaClient = new OllamaApiClient(new Uri(connectionString));
-                var model = resource.ModelName;
-
-                await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Checking model", KnownResourceStateStyles.Info) });
-                var hasModel = await HasModelAsync(ollamaClient, model, cancellationToken);
-
-                if (!hasModel)
+                catch (Exception ex)
                 {
-                    logger.LogInformation("{TimeStamp}: [{Model}] needs to be downloaded for {ResourceName}",
-                        DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
-                        resource.ModelName,
-                        resource.Name);
-                    await PullModel(resource, ollamaClient, model, logger, cancellationToken);
+                    await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot(ex.Message, KnownResourceStateStyles.Error) });
+                    break;
                 }
-                else
-                {
-                    logger.LogInformation("{TimeStamp}: [{Model}] already exists for {ResourceName}",
-                        DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
-                        resource.ModelName,
-                        resource.Name);
-                }
-
-                await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Running", KnownResourceStateStyles.Success) });
-            }
-            catch (Exception ex)
-            {
-                await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot(ex.Message, KnownResourceStateStyles.Error) });
             }
 
         }, cancellationToken).ConfigureAwait(false);
