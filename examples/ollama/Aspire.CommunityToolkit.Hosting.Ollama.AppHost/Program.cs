@@ -1,6 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var ollama = builder.AddOllama("ollama", modelName: "phi3");
+var ollama = builder.AddOllama("ollama", port: null)
+    .AddModel("phi3")
+    .WithDefaultModel("phi3");
 
 builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_Ollama_Web>("webfrontend")
     .WithExternalHttpEndpoints()
