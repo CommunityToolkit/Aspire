@@ -19,27 +19,21 @@ public static class JavaAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<JavaAppContainerResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, JavaAppContainerResourceOptions options)
     {
-        if (string.IsNullOrWhiteSpace(options.ContainerImageName) == true)
-        {
-            throw new ArgumentException("Container image name must be specified.", nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.ContainerImageName, nameof(options.ContainerImageName));
 
         var resource = new JavaAppContainerResource(name);
 
-        var rb = builder.AddResource(resource);
-        if (string.IsNullOrWhiteSpace(options.ContainerRegistry) == false)
-        {
-            rb.WithImageRegistry(options.ContainerRegistry);
-        }
-        rb.WithImage(options.ContainerImageName)
-          .WithImageTag(options.ContainerImageTag)
+        var rb = builder.AddResource(resource)
+          .WithAnnotation(new ContainerImageAnnotation { Image = options.ContainerImageName, Tag = options.ContainerImageTag, Registry = options.ContainerRegistry })
           .WithHttpEndpoint(port: options.Port, targetPort: options.TargetPort, name: JavaAppContainerResource.HttpEndpointName)
           .WithJavaDefaults(options);
+
         if (options.Args is { Length: > 0 })
         {
-#pragma warning disable CS8604 // Possible null reference argument.
             rb.WithArgs(options.Args);
-#pragma warning restore CS8604 // Possible null reference argument.
         }
 
         return rb;
@@ -52,10 +46,8 @@ public static class JavaAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<JavaAppContainerResource> AddSpringApp(this IDistributedApplicationBuilder builder, string name, JavaAppContainerResourceOptions options)
-    {
-        return builder.AddJavaApp(name, options);
-    }
+    public static IResourceBuilder<JavaAppContainerResource> AddSpringApp(this IDistributedApplicationBuilder builder, string name, JavaAppContainerResourceOptions options) =>
+        builder.AddJavaApp(name, options);
 
     /// <summary>
     /// Adds a Java application to the application model. Executes the executable Java app.
@@ -67,6 +59,11 @@ public static class JavaAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, JavaAppExecutableResourceOptions options)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
+        ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory, nameof(workingDirectory));
+
 #pragma warning disable CS8601 // Possible null reference assignment.
         string[] allArgs = options.Args is { Length: > 0 }
             ? ["-jar", options.ApplicationName, .. options.Args]
@@ -90,10 +87,8 @@ public static class JavaAppHostingExtension
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
     /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<JavaAppExecutableResource> AddSpringApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, JavaAppExecutableResourceOptions options)
-    {
-        return builder.AddJavaApp(name, workingDirectory, options);
-    }
+    public static IResourceBuilder<JavaAppExecutableResource> AddSpringApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, JavaAppExecutableResourceOptions options) =>
+        builder.AddJavaApp(name, workingDirectory, options);
 
     private static IResourceBuilder<JavaAppContainerResource> WithJavaDefaults(
         this IResourceBuilder<JavaAppContainerResource> builder,
