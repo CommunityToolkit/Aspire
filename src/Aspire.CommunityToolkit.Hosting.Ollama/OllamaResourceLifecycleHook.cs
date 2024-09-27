@@ -51,7 +51,7 @@ internal class OllamaResourceLifecycleHook(
 
                     var ollamaClient = new OllamaApiClient(new Uri(connectionString));
 
-                    await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Checking model", KnownResourceStateStyles.Info) });
+                    await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot($"Checking {model}", KnownResourceStateStyles.Info) });
                     var hasModel = await HasModelAsync(ollamaClient, model, cancellationToken);
 
                     if (!hasModel)
@@ -108,7 +108,7 @@ internal class OllamaResourceLifecycleHook(
         logger.LogInformation("{TimeStamp}: Pulling ollama model {Model}...",
             DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
             model);
-        await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot("Downloading model", KnownResourceStateStyles.Info) });
+        await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot($"Downloading {model}", KnownResourceStateStyles.Info) });
 
         long percentage = 0;
 
@@ -126,7 +126,7 @@ internal class OllamaResourceLifecycleHook(
                 {
                     percentage = newPercentage;
 
-                    var percentageState = percentage == 0 ? "Downloading model" : $"Downloading model {percentage} percent";
+                    var percentageState = $"Downloading {model}{(percentage > 0 ? $" {percentage} percent" : "")}";
                     await _notificationService.PublishUpdateAsync(resource,
                     state => state with
                     {
