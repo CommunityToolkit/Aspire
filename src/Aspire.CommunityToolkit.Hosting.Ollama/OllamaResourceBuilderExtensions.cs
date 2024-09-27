@@ -72,7 +72,7 @@ public static class OllamaResourceBuilderExtensions
     public static IResourceBuilder<OllamaResource> AddModel(this IResourceBuilder<OllamaResource> builder, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
 
         builder.Resource.AddModel(modelName);
         return builder;
@@ -87,7 +87,7 @@ public static class OllamaResourceBuilderExtensions
     public static IResourceBuilder<OllamaResource> WithDefaultModel(this IResourceBuilder<OllamaResource> builder, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
 
         builder.Resource.SetDefaultModel(modelName);
         return builder;
