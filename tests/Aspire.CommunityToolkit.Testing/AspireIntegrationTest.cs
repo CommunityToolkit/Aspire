@@ -40,7 +40,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
         {
             await DisposeAsync();
         }
-        catch (AggregateException)
+        catch (Exception)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
             {
