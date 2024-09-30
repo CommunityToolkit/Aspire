@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "microsoft.visualstudio.slngen.tool": {
+      "version": "11.2.6",
+      "commands": ["slngen"]
+    }
+  }
+}
