@@ -27,15 +27,10 @@ public static class DataApiBuilderHostingExtension
 
         var resource = new DataApiBuilderContainerResource(name);
 
-        var rb = builder.AddResource(resource);
-        if (string.IsNullOrWhiteSpace(options.ContainerRegistry) == false)
-        {
-            rb.WithImageRegistry(options.ContainerRegistry);
-        }
-        rb.WithImage(options.ContainerImageName)
-          .WithImageTag(options.ContainerImageTag)
-          .WithHttpEndpoint(port: options.Port, targetPort: options.TargetPort, name: DataApiBuilderContainerResource.HttpEndpointName)
-          .WithDataApiBuilderDefaults(options);
+        var rb = builder.AddResource(resource)
+            .WithAnnotation(new ContainerImageAnnotation { Image = options.ContainerImageName, Tag = options.ContainerImageTag, Registry = options.ContainerRegistry })
+            .WithHttpEndpoint(port: options.Port, targetPort: options.TargetPort, name: DataApiBuilderContainerResource.HttpEndpointName)
+            .WithDataApiBuilderDefaults(options);
 
         if(string.IsNullOrWhiteSpace(options.ConfigFilePath))
         {

@@ -8,12 +8,12 @@ public class DataApiBuilderContainerResourceOptions
     /// <summary>
     /// Gets or sets the container registry. Default is <c>mcr.microsoft.com</c>.
     /// </summary>
-    public string? ContainerRegistry { get; set; } = null;
+    public string? ContainerRegistry { get; set; } = "mcr.microsoft.com";
 
     /// <summary>
     /// Gets or sets the container image name. Dafault is <c>azure-databases/data-api-builder</c>.
     /// </summary>
-    public string? ContainerImageName { get; set; } = "mcr.microsoft.com/azure-databases/data-api-builder";
+    public string? ContainerImageName { get; set; } = "azure-databases/data-api-builder";
 
     /// <summary>
     /// Gets or sets the container image tag. Default is <c>latest</c>.
