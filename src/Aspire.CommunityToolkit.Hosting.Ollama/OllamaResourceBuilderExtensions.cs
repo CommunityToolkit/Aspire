@@ -92,4 +92,61 @@ public static class OllamaResourceBuilderExtensions
         builder.Resource.SetDefaultModel(modelName);
         return builder;
     }
+
+
+    /// <summary>
+    /// Adds an administration web UI Ollama to the application model using Attu. This version the package defaults to the main tag of the Open WebUI container image
+    /// </summary>
+    /// <example>
+    /// Use in application host with an Ollama resource
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var ollama = builder.AddOllama("ollama")
+    ///   .WithOpenWebUI();
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
+    ///   .WithReference(ollama);
+    ///  
+    /// builder.Build().Run(); 
+    /// </code>
+    /// </example>
+    /// <param name="builder">The Ollama resource builder.</param>
+    /// <param name="configureContainer">Configuration callback for Open WebUI container resource.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>See https://openwebui.com for more information about Open WebUI</remarks>
+    public static IResourceBuilder<T> WithOpenWebUI<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<OpenWebUIResource>>? configureContainer = null, string? containerName = null) where T : OllamaResource
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        if (builder.ApplicationBuilder.Resources.OfType<OpenWebUIResource>().SingleOrDefault() is { } existingOpenWebUIResource)
+        {
+            var builderForExistingResource = builder.ApplicationBuilder.CreateResourceBuilder(existingOpenWebUIResource);
+            configureContainer?.Invoke(builderForExistingResource);
+            return builder;
+        }
+
+        containerName ??= $"{builder.Resource.Name}-openwebui";
+
+        var openWebUI = new OpenWebUIResource(containerName);
+        var resourceBuilder = builder.ApplicationBuilder.AddResource(openWebUI)
+                                                        .WithImage(OllamaContainerImageTags.OpenWebUIImage, OllamaContainerImageTags.OpenWebUITag)
+                                                        .WithImageRegistry(OllamaContainerImageTags.OpenWebUIRegistry)
+                                                        .WithHttpEndpoint(targetPort: 8080, name: "http")
+                                                        .WithVolume("open-webui", "/app/backend/data")
+                                                        .WithEnvironment(context => ConfigureOpenWebUIContainer(context, builder.Resource))
+                                                        .ExcludeFromManifest();
+
+        configureContainer?.Invoke(resourceBuilder);
+
+        return builder;
+    }
+
+    private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
+    {
+        context.EnvironmentVariables.Add("ENABLE_SIGNUP", "false");
+        context.EnvironmentVariables.Add("ENABLE_COMMUNITY_SHARING", "false"); // by default don't enable sharing
+        context.EnvironmentVariables.Add("WEBUI_AUTH", "false"); // https://docs.openwebui.com/#quick-start-with-docker--recommended
+        context.EnvironmentVariables.Add("OLLAMA_BASE_URL", $"{resource.PrimaryEndpoint.Scheme}://{resource.PrimaryEndpoint.ContainerHost}:{resource.PrimaryEndpoint.Port}");
+    }
 }
