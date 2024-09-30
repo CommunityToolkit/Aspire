@@ -22,7 +22,7 @@ public static class DataApiBuilderHostingExtension
     {
         if (string.IsNullOrWhiteSpace(options.ContainerImageName) == true)
         {
-            throw new ArgumentException("Container image name must be specified.", nameof(options));
+            throw new ArgumentNullException("Container image name must be specified.", nameof(options));
         }
 
         var resource = new DataApiBuilderContainerResource(name);
@@ -53,7 +53,7 @@ public static class DataApiBuilderHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="options">The <see cref="DataApiBuilderContainerResourceOptions"/> to configure the DataApiBuilder api.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilderApp(this IDistributedApplicationBuilder builder, string name, DataApiBuilderContainerResourceOptions options = null)
+    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, DataApiBuilderContainerResourceOptions? options = null)
     {
         options ??= new DataApiBuilderContainerResourceOptions();
         return builder.AddDataApiBuilder(name, options);
