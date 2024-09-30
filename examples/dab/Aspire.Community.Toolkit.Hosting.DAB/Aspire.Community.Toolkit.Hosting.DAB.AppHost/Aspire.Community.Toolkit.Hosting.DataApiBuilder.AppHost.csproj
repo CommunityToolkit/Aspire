@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>1c9fa7d8-d1d4-49e6-94fc-068bd00b671e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+</Project>
