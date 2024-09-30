@@ -61,11 +61,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Azu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dab", "dab", "{2B60C5B7-7502-448E-8881-3DD29C1DE999}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aspire.Community.Toolkit.Hosting.DAB", "Aspire.Community.Toolkit.Hosting.DAB", "{984FFEF0-2172-4269-9D2D-22A54F8E8CBA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Aspire.CommunityToolkit.Hosting.DAB", "Aspire.CommunityToolkit.Hosting.DAB", "{984FFEF0-2172-4269-9D2D-22A54F8E8CBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.Community.Toolkit.Hosting.DataApiBuilder.ServiceDefaults", "examples\dab\Aspire.Community.Toolkit.Hosting.DAB\Aspire.Community.Toolkit.Hosting.DAB.ServiceDefaults\Aspire.Community.Toolkit.Hosting.DataApiBuilder.ServiceDefaults.csproj", "{A3D98318-2F08-44A4-A6FD-4EE16BC8761B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests", "tests\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests.csproj", "{9D79154C-E503-4D6C-BCED-EEC82E314FBE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.Community.Toolkit.Hosting.DataApiBuilder.AppHost", "examples\dab\Aspire.Community.Toolkit.Hosting.DAB\Aspire.Community.Toolkit.Hosting.DAB.AppHost\Aspire.Community.Toolkit.Hosting.DataApiBuilder.AppHost.csproj", "{BA825DC5-B990-4D14-88F6-6A6F871D4380}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost", "examples\dab\Aspire.CommunityToolkit.Hosting.DAB\Aspire.CommunityToolkit.Hosting.DAB.AppHost\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost.csproj", "{408E9E40-984C-47D1-840F-64A71C1197D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults", "examples\dab\Aspire.CommunityToolkit.Hosting.DAB\Aspire.CommunityToolkit.Hosting.DAB.ServiceDefaults\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults.csproj", "{DECF9529-E9AB-45BD-896B-4EC5A31C3A18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -157,14 +159,18 @@ Global
 		{BAF22B80-2937-4695-A613-F170D8FB9020}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAF22B80-2937-4695-A613-F170D8FB9020}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAF22B80-2937-4695-A613-F170D8FB9020}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A3D98318-2F08-44A4-A6FD-4EE16BC8761B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A3D98318-2F08-44A4-A6FD-4EE16BC8761B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A3D98318-2F08-44A4-A6FD-4EE16BC8761B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A3D98318-2F08-44A4-A6FD-4EE16BC8761B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BA825DC5-B990-4D14-88F6-6A6F871D4380}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BA825DC5-B990-4D14-88F6-6A6F871D4380}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BA825DC5-B990-4D14-88F6-6A6F871D4380}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BA825DC5-B990-4D14-88F6-6A6F871D4380}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D79154C-E503-4D6C-BCED-EEC82E314FBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D79154C-E503-4D6C-BCED-EEC82E314FBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D79154C-E503-4D6C-BCED-EEC82E314FBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D79154C-E503-4D6C-BCED-EEC82E314FBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{408E9E40-984C-47D1-840F-64A71C1197D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{408E9E40-984C-47D1-840F-64A71C1197D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{408E9E40-984C-47D1-840F-64A71C1197D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{408E9E40-984C-47D1-840F-64A71C1197D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DECF9529-E9AB-45BD-896B-4EC5A31C3A18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DECF9529-E9AB-45BD-896B-4EC5A31C3A18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DECF9529-E9AB-45BD-896B-4EC5A31C3A18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DECF9529-E9AB-45BD-896B-4EC5A31C3A18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -197,8 +203,9 @@ Global
 		{BAF22B80-2937-4695-A613-F170D8FB9020} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{2B60C5B7-7502-448E-8881-3DD29C1DE999} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{984FFEF0-2172-4269-9D2D-22A54F8E8CBA} = {2B60C5B7-7502-448E-8881-3DD29C1DE999}
-		{A3D98318-2F08-44A4-A6FD-4EE16BC8761B} = {984FFEF0-2172-4269-9D2D-22A54F8E8CBA}
-		{BA825DC5-B990-4D14-88F6-6A6F871D4380} = {984FFEF0-2172-4269-9D2D-22A54F8E8CBA}
+		{9D79154C-E503-4D6C-BCED-EEC82E314FBE} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{408E9E40-984C-47D1-840F-64A71C1197D1} = {984FFEF0-2172-4269-9D2D-22A54F8E8CBA}
+		{DECF9529-E9AB-45BD-896B-4EC5A31C3A18} = {984FFEF0-2172-4269-9D2D-22A54F8E8CBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\dab\Aspire.CommunityToolkit.Hosting.DAB\Aspire.CommunityToolkit.Hosting.DAB.AppHost\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
