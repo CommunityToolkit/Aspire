@@ -57,7 +57,5 @@ public static class DataApiBuilderHostingExtension
     private static IResourceBuilder<DataApiBuilderContainerResource> WithDataApiBuilderDefaults(
         this IResourceBuilder<DataApiBuilderContainerResource> builder,
         DataApiBuilderContainerResourceOptions options) =>
-        builder.WithOtlpExporter()
-               .WithEnvironment("DATAAPIBUILDER_TOOL_OPTIONS", $"-dabagent:{"options.OtelAgentPath"?.TrimEnd('/')}/opentelemetry-dabagent.jar")
-               ;
+        builder.WithOtlpExporter();
 }
