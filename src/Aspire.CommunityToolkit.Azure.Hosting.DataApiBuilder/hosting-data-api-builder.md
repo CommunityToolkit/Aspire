@@ -1,6 +1,6 @@
 # Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder
 
-This enables a containerised Data Api Builder to be integrated with .NET Aspire.
+This enables a containerized Data Api Builder to be integrated with .NET Aspire.
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ This enables a containerised Data Api Builder to be integrated with .NET Aspire.
 
 ## Dashboard
 
-1. Check the dashboard that both containerised API and executable app are up and running.
+1. Check the dashboard that both containerized API and executable app are up and running.
 
  
 
