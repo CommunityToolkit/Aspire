@@ -1,3 +1,5 @@
+[<img src="https://raw.githubusercontent.com/dotnet-foundation/swag/master/logo/dotnetfoundation_v4.svg" alt=".NET Foundation" width=100>](https://dotnetfoundation.org)
+
 # .NET Aspire Community Toolkit
 
 [![CI](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-ci.yml) | [![main branch](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-main.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-main.yml) | [![Latest Release](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-release.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-release.yml)
@@ -37,6 +39,14 @@ Check out our [Contributing guide](./CONTRIBUTING.md) to learn more about contri
 
 Made with [contrib.rocks](https://contrib.rocks).
 
+## Code of Conduct
+
+As a part of the .NET Foundation, we have adopted the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct). Please familiarize yourself with that before participating with this repository. Thanks!
+
+## .NET Foundation
+
+This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
+
 [swa-integration-docs]: https://communitytoolkit.github.io/aspire/integrations/hosting-azure-static-web-apps
 [swa-shields]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps
 [swa-nuget]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps/
@@ -57,4 +67,3 @@ Made with [contrib.rocks](https://contrib.rocks).
 [ollama-nuget]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Ollama/
 [ollama-shields-preview]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Ollama?label=nuget%20(preview)
 [ollama-nuget-preview]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Ollama/absoluteLatest
-
