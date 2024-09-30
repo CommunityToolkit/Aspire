@@ -44,7 +44,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
             {
-                // GitHub Actions Windows runners don't support Docker, which can result in a bunch of false errors, even if we try to skip the test run, so we only really want to throw
+                // GitHub Actions Windows runners don't support Linux Docker containers, which can result in a bunch of false errors, even if we try to skip the test run, so we only really want to throw
                 // if we're on a non-Windows runner or if we're on a Windows runner but not in a CI environment
                 throw;
             }
