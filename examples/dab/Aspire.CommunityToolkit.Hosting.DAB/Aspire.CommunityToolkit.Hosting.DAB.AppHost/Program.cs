@@ -4,7 +4,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var sql = builder.AddConnectionString("sqldb");
 
-var containerapp = builder.AddDataAPIBuilderApp("containerapp")
+var dab = builder.AddDataAPIBuilder("dab")
     .WithReference(sql);
 
 builder.Build().Run();
