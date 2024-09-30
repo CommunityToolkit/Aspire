@@ -119,6 +119,13 @@ public static class OllamaResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
+        if (builder.ApplicationBuilder.Resources.OfType<OpenWebUIResource>().SingleOrDefault() is { } existingOpenWebUIResource)
+        {
+            var builderForExistingResource = builder.ApplicationBuilder.CreateResourceBuilder(existingOpenWebUIResource);
+            configureContainer?.Invoke(builderForExistingResource);
+            return builder;
+        }
+
         containerName ??= $"{builder.Resource.Name}-openwebui";
 
         var openWebUI = new OpenWebUIResource(containerName);
@@ -140,6 +147,6 @@ public static class OllamaResourceBuilderExtensions
         context.EnvironmentVariables.Add("ENABLE_SIGNUP", "false");
         context.EnvironmentVariables.Add("ENABLE_COMMUNITY_SHARING", "false"); // by default don't enable sharing
         context.EnvironmentVariables.Add("WEBUI_AUTH", "false"); // https://docs.openwebui.com/#quick-start-with-docker--recommended
-        context.EnvironmentVariables.Add("OLLAMA_BASE_URL", $"{resource.Endpoint.Scheme}://{resource.Endpoint.ContainerHost}:{resource.Endpoint.Port}");
+        context.EnvironmentVariables.Add("OLLAMA_BASE_URL", $"{resource.PrimaryEndpoint.Scheme}://{resource.PrimaryEndpoint.ContainerHost}:{resource.PrimaryEndpoint.Port}");
     }
 }
