@@ -4,13 +4,13 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var sqlPassword = builder.AddParameter("sql-password");
 var sqlServer = builder
-    .AddSqlServer("sql", sqlPassword, port: 1234)
+    .AddSqlServer("sql", sqlPassword, port: 1433)
     .WithDataVolume("MyDataVolume")
     .WithHealthCheck();
-var sqlDatabase = sqlServer.AddDatabase("Database");
+var sqlDatabase = sqlServer.AddDatabase("trek");
 
 var sqlShell = "./sql-server";
-var sqlScript = "../Database";
+var sqlScript = "../Database/sql";
 sqlServer
     .WithBindMount(sqlShell, target: "/usr/config")
     .WithBindMount(sqlScript, target: "/docker-entrypoint-initdb.d")
