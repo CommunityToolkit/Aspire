@@ -115,55 +115,7 @@
             }
           ]
         }
-      ],
-      "relationships": {
-        "series": {
-          "cardinality": "many",
-          "target.entity": "Series",
-          "source.fields": [
-            "Id"
-          ],
-          "target.fields": [
-            "Id"
-          ],
-          "linking.object": "[dbo].[Series_Character]",
-          "linking.source.fields": [
-            "CharacterId"
-          ],
-          "linking.target.fields": [
-            "SeriesId"
-          ]
-        },
-        "species": {
-          "cardinality": "many",
-          "target.entity": "Species",
-          "source.fields": [
-            "Id"
-          ],
-          "target.fields": [
-            "Id"
-          ],
-          "linking.object": "[dbo].[Character_Species]",
-          "linking.source.fields": [
-            "CharacterId"
-          ],
-          "linking.target.fields": [
-            "SpeciesId"
-          ]
-        },
-        "actor": {
-          "cardinality": "many",
-          "target.entity": "Actor",
-          "source.fields": [
-            "ActorId"
-          ],
-          "target.fields": [
-            "Id"
-          ],
-          "linking.source.fields": [],
-          "linking.target.fields": []
-        }
-      }
+      ]
     },
     "Series": {
       "source": {
@@ -201,26 +153,7 @@
             }
           ]
         }
-      ],
-      "relationships": {
-        "character": {
-          "cardinality": "many",
-          "target.entity": "Character",
-          "source.fields": [
-            "Id"
-          ],
-          "target.fields": [
-            "Id"
-          ],
-          "linking.object": "dbo.series_character",
-          "linking.source.fields": [
-            "SeriesId"
-          ],
-          "linking.target.fields": [
-            "CharacterId"
-          ]
-        }
-      }
+      ]
     },
     "Species": {
       "source": {
@@ -258,26 +191,7 @@
             }
           ]
         }
-      ],
-      "relationships": {
-        "character": {
-          "cardinality": "many",
-          "target.entity": "Character",
-          "source.fields": [
-            "Id"
-          ],
-          "target.fields": [
-            "Id"
-          ],
-          "linking.object": "dbo.character_species",
-          "linking.source.fields": [
-            "SpeciesId"
-          ],
-          "linking.target.fields": [
-            "CharacterId"
-          ]
-        }
-      }
+      ]
     },
     "Series_Character": {
       "source": {
