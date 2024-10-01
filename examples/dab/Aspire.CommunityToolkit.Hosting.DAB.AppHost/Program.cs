@@ -20,5 +20,8 @@ sqlServer
 var dab = builder.AddDataAPIBuilder("dab")
     .WithReference(sqlDatabase)
     .WaitFor(sqlServer);
+
+builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_DAB_BlazorApp>("blazorApp")
+        .WithReference(dab);
     
 builder.Build().Run();

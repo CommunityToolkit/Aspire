@@ -1,7 +1,28 @@
 ﻿@page "/"
+@inject TrekApiClientClass trekClient;
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+@if (series != null)
+{
+    <ul>
+        @foreach(var s in series)
+        {
+            <li>@s.Name</li>
+        }
+    </ul>
+}
+
+
+@code{
+    private List<Series>? series;
+
+    protected override async Task OnInitializedAsync()
+    {
+        series = await trekClient.GetSeriesAsync();
+    }
+}

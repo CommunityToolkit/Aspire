@@ -1,12 +1,23 @@
+using Aspire.CommunityToolkit.Hosting.DAB.BlazorApp;
 using Aspire.CommunityToolkit.Hosting.DAB.BlazorApp.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
+
+
+builder.Services.AddHttpClient<TrekApiClientClass>(client => {
+    client.BaseAddress = new("https+http://dab");
+});
+
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

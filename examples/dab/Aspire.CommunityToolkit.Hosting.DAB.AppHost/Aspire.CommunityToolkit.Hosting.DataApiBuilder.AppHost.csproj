@@ -18,5 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DAB.BlazorApp\Aspire.CommunityToolkit.Hosting.DAB.BlazorApp.csproj" />
   </ItemGroup>
 </Project>
