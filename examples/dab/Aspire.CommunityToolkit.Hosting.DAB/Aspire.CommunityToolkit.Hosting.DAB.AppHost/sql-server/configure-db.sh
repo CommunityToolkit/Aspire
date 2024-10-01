@@ -17,7 +17,7 @@ end_by=$((start_time + 60))
 echo "Starting check for SQL Server start-up at $start_time, will end at $end_by"
 
 while [[ $SECONDS -lt $end_by && ( $errcode -ne 0 || ( -z "$dbstatus" || $dbstatus -ne 0 ) ) ]]; do
-    dbstatus="$(/opt/mssql-tools/bin/sqlcmd -h -1 -t 1 -U sa -P "$MSSQL_SA_PASSWORD" -Q "SET NOCOUNT ON; Select SUM(state) from sys.databases")"
+    dbstatus="$(/opt/mssql-tools18/bin/sqlcmd -h -1 -t 1 -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "SET NOCOUNT ON; Select SUM(state) from sys.databases")"
     errcode=$?
     sleep 1
 done
@@ -34,15 +34,15 @@ fi
 
 # Loop through the .sql files in the root of /docker-entrypoint-initdb.d and execute them with sqlcmd
 for f in $(find /docker-entrypoint-initdb.d -maxdepth 1 -type f -name "*.sql" | sort); do
-    echo "Processing $f file..."
-    /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d master -i "$f"
+    echo "- A -=- Processing $f file..."
+    /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -d master -i "$f"
 done
 
 # Loop through each subdirectory in /docker-entrypoint-initdb.d
 for dir in $(find /docker-entrypoint-initdb.d -mindepth 1 -maxdepth 1 -type d | sort); do
     # Loop through the .sql files in each subdirectory and execute them with sqlcmd
     for f in $(find "$dir" -maxdepth 1 -type f -name "*.sql" | sort); do
-        echo "Processing $f file in directory $dir..."
-        /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -d master -i "$f"
+        echo "- B -=- Processing $f file in directory $dir..."
+        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -d master -i "$f"
     done
 done
