@@ -142,7 +142,7 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     environment:
-      name: nuget
+      name: nuget-stable
     steps:
       - name: Download package
         uses: actions/download-artifact@v4
