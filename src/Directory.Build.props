@@ -4,16 +4,17 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
 
-    <Authors>Microsoft.Toolkit,dotnetfoundation</Authors>
-    <Owners>Microsoft</Owners>
+    <Authors>Microsoft.Toolkit,dotnetfoundation,Community Toolkit</Authors>
+    <Company>.NET Foundation</Company>
+    <Copyright>(c) .NET Foundation and Contributors. All rights reserved.</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <Product>Aspire.CommunityToolkit ($(NetVersion))</Product>
-    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/CommunityToolkit/Aspire</PackageProjectUrl>
     <PackageIcon>nuget.png</PackageIcon>
     <RepositoryUrl>https://github.com/CommunityToolkit/Aspire</RepositoryUrl>
     <VersionPrefix>$(AspireVersion).0</VersionPrefix>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
