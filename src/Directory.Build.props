@@ -4,7 +4,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
 
-    <Authors>Microsoft</Authors>
+    <Authors>Microsoft.Toolkit,dotnetfoundation</Authors>
     <Owners>Microsoft</Owners>
     <NeutralLanguage>en</NeutralLanguage>
     <Product>Aspire.CommunityToolkit ($(NetVersion))</Product>
