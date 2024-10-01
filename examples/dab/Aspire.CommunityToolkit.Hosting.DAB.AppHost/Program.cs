@@ -13,12 +13,12 @@ var sqlDatabase = sqlServer.AddDatabase("trek");
 // Populate the database with the schema and data
 sqlServer
     .WithBindMount("./sql-server", target: "/usr/config")
-    .WithBindMount("../Database/sql", target: "/docker-entrypoint-initdb.d")
+    .WithBindMount("../database", target: "/docker-entrypoint-initdb.d")
     .WithEntrypoint("/usr/config/entrypoint.sh");
 
 // Add Data API Builder using dab-config.json 
 var dab = builder.AddDataAPIBuilder("dab")
-    .WithReference(sqlServer)
-    .WaitFor(sqlDatabase);
+    .WithReference(sqlDatabase)
+    .WaitFor(sqlServer);
     
 builder.Build().Run();
