@@ -18,7 +18,7 @@ public static class DataApiBuilderHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="options">The <see cref="DataApiBuilderContainerResourceOptions"/> to configure the DataApiBuilder api.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataApiBuilder(this IDistributedApplicationBuilder builder, string name, DataApiBuilderContainerResourceOptions options)
+    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, DataApiBuilderContainerResourceOptions options)
     {
         if (string.IsNullOrWhiteSpace(options.ContainerImageName) == true)
         {
