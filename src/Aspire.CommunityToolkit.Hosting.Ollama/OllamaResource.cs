@@ -10,13 +10,13 @@
 /// <param name="modelName">The LLM to download on initial startup.</param>
 public class OllamaResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
-    internal const string OllamaEndpointName = "ollama";
+    internal const string OllamaEndpointName = "http";
 
     private readonly List<string> _models = [];
 
     private string? _defaultModel = null;
 
-    private EndpointReference? _endpointReference;
+    private EndpointReference? _primaryEndpointReference;
 
     /// <summary>
     /// Adds a model to the list of models to download on initial startup.
@@ -31,14 +31,14 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
     /// <summary>
     /// Gets the endpoint for the Ollama server.
     /// </summary>
-    public EndpointReference Endpoint => _endpointReference ??= new(this, OllamaEndpointName);
+    public EndpointReference PrimaryEndpoint => _primaryEndpointReference ??= new(this, OllamaEndpointName);
 
     /// <summary>
     /// Gets the connection string expression for the Ollama server.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
       ReferenceExpression.Create(
-        $"http://{Endpoint.Property(EndpointProperty.Host)}:{Endpoint.Property(EndpointProperty.Port)}"
+        $"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}"
       );
 
     /// <summary>
@@ -47,7 +47,7 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
     /// <param name="modelName">The name of the model</param>
     public void AddModel(string modelName)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
+        ArgumentException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
         if (!_models.Contains(modelName))
         {
             _models.Add(modelName);
@@ -63,7 +63,7 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
     /// </remarks>
     public void SetDefaultModel(string modelName)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
+        ArgumentException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
         _defaultModel = modelName;
 
         if (!_models.Contains(modelName))
