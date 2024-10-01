@@ -1,20 +1,45 @@
 package main
 
 import (
+	"context"
+	"log"
+	"main/otelx"
 	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var db = make(map[string]string)
 
+var (
+	name                  = os.Getenv("OTEL_SERVICE_NAME")
+	otelTarget            = strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"), "https://")[1]
+	headers               = map[string]string{strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS"), "=")[0]: strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS"), "=")[1]}
+	tracer                trace.Tracer
+	meter                 metric.Meter
+	metricRequestTotal    metric.Int64Counter
+	responseTimeHistogram metric.Int64Histogram
+)
+
 func setupRouter() *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
+
 	r := gin.Default()
+	r.Use(otelgin.Middleware(name))
+	r.Use(monitorInterceptor())
 
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
+		// _, span := tracer.Start(c.Request.Context(), "ping")
+		// defer span.End()
 		c.String(http.StatusOK, "pong")
 	})
 
@@ -68,7 +93,63 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	// Initialize OpenTelemetry
+	err := otelx.SetupOTelSDK(context.Background(), otelTarget, headers, name)
+	if err != nil {
+		log.Printf("Failed to initialize OpenTelemetry: %v", err)
+		return
+	}
+	defer func() {
+		err = otelx.Shutdown(context.Background())
+		if err != nil {
+			log.Printf("Failed to shutdown OpenTelemetry: %v", err)
+		}
+	}()
+
+	// Create a tracer and a meter
+	tracer = otel.Tracer(name)
+	meter = otel.Meter(name)
+	initGinMetrics()
+
 	r := setupRouter()
+
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
+}
+
+func initGinMetrics() {
+
+	metricRequestTotal, _ = meter.Int64Counter("gin_request_total",
+		metric.WithDescription("all the server received request num."),
+	)
+
+	// Create a histogram to measure response time
+	responseTimeHistogram, _ = meter.Int64Histogram("gin_response_time",
+		metric.WithDescription("The distribution of response times."),
+	)
+}
+
+// monitorInterceptor as gin monitor middleware.
+func monitorInterceptor() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		startTime := time.Now()
+
+		ctx, span := tracer.Start(c.Request.Context(), c.FullPath())
+		defer span.End()
+
+		// execute normal process.
+		c.Next()
+
+		// after request
+		ginMetricHandle(ctx, startTime)
+	}
+}
+
+func ginMetricHandle(c context.Context, start time.Time) {
+	// set request total
+	metricRequestTotal.Add(c, 1)
+
+	// Record the response time
+	duration := time.Since(start)
+	responseTimeHistogram.Record(c, duration.Milliseconds())
 }
