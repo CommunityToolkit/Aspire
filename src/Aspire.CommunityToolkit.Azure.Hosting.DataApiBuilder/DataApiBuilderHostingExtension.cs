@@ -41,18 +41,18 @@ public static class DataApiBuilderHostingExtension
         return rb;
     }
 
-    /// <summary>
-    /// Adds a DataAPIBuilder application to the application model. Executes the containerized DataAPIBuilder app.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="options">The <see cref="DataApiBuilderContainerResourceOptions"/> to configure the DataApiBuilder api.</param>"
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, DataApiBuilderContainerResourceOptions? options = null)
-    {
-        options ??= new DataApiBuilderContainerResourceOptions();
-        return builder.AddDataApiBuilder(name, options);
-    }
+    // /// <summary>
+    // /// Adds a DataAPIBuilder application to the application model. Executes the containerized DataAPIBuilder app.
+    // /// </summary>
+    // /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    // /// <param name="name">The name of the resource.</param>
+    // /// <param name="options">The <see cref="DataApiBuilderContainerResourceOptions"/> to configure the DataApiBuilder api.</param>"
+    // /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    // public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, DataApiBuilderContainerResourceOptions? options = null)
+    // {
+    //     options ??= new DataApiBuilderContainerResourceOptions();
+    //     return builder.AddDataApiBuilder(name, options);
+    // }
 
     /// <summary>
     /// Adds a DataAPIBuilder application to the application model. Executes the containerized DataAPIBuilder app.
