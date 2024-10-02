@@ -9,7 +9,7 @@ public class TrekApiClientClass(HttpClient httpClient)
     public async Task<List<Series>> GetSeriesAsync()
     {
         var result = await httpClient.GetFromJsonAsync<SeriesList>($"api/series");
-        return result.value;
+        return result?.value ?? new List<Series>();
     }
 }
 
