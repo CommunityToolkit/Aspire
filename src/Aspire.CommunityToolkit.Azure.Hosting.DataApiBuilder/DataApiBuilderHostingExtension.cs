@@ -1,10 +1,7 @@
-﻿using System.Globalization;
-
-using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
-using Aspire.Hosting;
+﻿using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
 using Aspire.Hosting.ApplicationModel;
 
-namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for adding DataApiBuilder api to an <see cref="IDistributedApplicationBuilder"/>.
