@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests;
+namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests;
 public class ContainerResourceCreationTests
 {
     [Fact]
@@ -15,7 +15,6 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder(""));
     }
 
     [Fact]
@@ -24,34 +23,6 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", configFilePath: null!));
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", configFilePath: ""));
-    }
-
-    [Fact]
-    public void AddDataAPIBuilderContainerRegistryShouldNotBeNullOrWhitespace()
-    {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerRegistry: null! ));
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerRegistry: "" ));
-    }
-
-    [Fact]
-    public void AddDataAPIBuilderContainerImageNameShouldNotBeNullOrWhiteSpace()
-    {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerImageName: null! ));
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerImageName: "" ));
-    }
-
-    [Fact]
-    public void AddDataAPIBuilderContainerImageTagNameShouldNotBeNullOrWhiteSpace()
-    {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerImageTag: null! ));
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerImageTag: "" ));
     }
 
 

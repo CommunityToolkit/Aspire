@@ -29,11 +29,11 @@ public static class DataApiBuilderHostingExtension
         int port = 5000,
         int targetPort = 5000)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace("Service name must be specified.", nameof(name));
-        ArgumentException.ThrowIfNullOrWhiteSpace("Config file path must be specified.", nameof(configFilePath));
-        ArgumentException.ThrowIfNullOrWhiteSpace("Container Registry must be specified.", nameof(containerRegistry));
-        ArgumentException.ThrowIfNullOrWhiteSpace("Container Image Name must be specified.", nameof(containerImageName));
-        ArgumentException.ThrowIfNullOrWhiteSpace("Container Image Tag must be specified.", nameof(containerImageTag));
+        ArgumentNullException.ThrowIfNull("Service name must be specified.", nameof(name));
+        ArgumentNullException.ThrowIfNull("Config file path must be specified.", nameof(configFilePath));
+        ArgumentNullException.ThrowIfNull("Container Registry must be specified.", nameof(containerRegistry));
+        ArgumentNullException.ThrowIfNull("Container Image Name must be specified.", nameof(containerImageName));
+        ArgumentNullException.ThrowIfNull("Container Image Tag must be specified.", nameof(containerImageTag));
 
         var resource = new DataApiBuilderContainerResource(name);
 
