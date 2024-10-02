@@ -29,10 +29,11 @@ public static class DataApiBuilderHostingExtension
         int port = 5000,
         int targetPort = 5000)
     {
-        if (string.IsNullOrWhiteSpace(containerImageName) == true)
-        {
-            throw new ArgumentNullException("Container image name must be specified.", nameof(containerImageName));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace("Service name must be specified.", nameof(name));
+        ArgumentException.ThrowIfNullOrWhiteSpace("Config file path must be specified.", nameof(configFilePath));
+        ArgumentException.ThrowIfNullOrWhiteSpace("Container Registry must be specified.", nameof(containerRegistry));
+        ArgumentException.ThrowIfNullOrWhiteSpace("Container Image Name must be specified.", nameof(containerImageName));
+        ArgumentException.ThrowIfNullOrWhiteSpace("Container Image Tag must be specified.", nameof(containerImageTag));
 
         var resource = new DataApiBuilderContainerResource(name);
 
@@ -41,10 +42,6 @@ public static class DataApiBuilderHostingExtension
             .WithHttpEndpoint(port: port, targetPort: targetPort, name: DataApiBuilderContainerResource.HttpEndpointName)
             .WithDataApiBuilderDefaults();
 
-        if(string.IsNullOrWhiteSpace(configFilePath))
-        {
-            throw new ArgumentException("The DataApiBuilder configuration file must be specified.", nameof(configFilePath));
-        }
         rb.WithBindMount(PathNormalizer.NormalizePathForCurrentPlatform(configFilePath), "/App/dab-config.json", true);
 
         return rb;
