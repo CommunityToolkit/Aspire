@@ -15,7 +15,25 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder(null!));
-        Assert.Throws<ArgumentException>(() => builder.AddDataAPIBuilder(""));
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder(""));
+    }
+
+    [Fact]
+    public void AddDataApiBuilderConfigFilePathShouldNotBeNullOrWhiteSpace()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", configFilePath: null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", configFilePath: ""));
+    }
+
+    [Fact]
+    public void AddDataAPIBuilderContainerRegistryShouldNotBeNullOrWhitespace()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerRegistry: null! ));
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerRegistry: "" ));
     }
 
     [Fact]
@@ -28,11 +46,12 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
-    public void AddDataAPIBuilderContainerResourceOptionsCanBeNull()
+    public void AddDataAPIBuilderContainerImageTagNameShouldNotBeNullOrWhiteSpace()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        Assert.NotNull(() => builder.AddDataAPIBuilder("dab", null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerImageTag: null! ));
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", containerImageTag: "" ));
     }
 
 
