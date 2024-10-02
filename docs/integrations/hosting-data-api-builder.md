@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a .NET Aspire Integration to run [Data API Builder](https://learn.microsoft.com/en-us/azure/data-api-builder/overview) as container.
+This is a .NET Aspire Integration to run [Data API Builder](https://learn.microsoft.com/en-us/azure/data-api-builder/overview) as container. Data API Builder generate REST and GraphQL endpoints performing CRUD (Create, Read, Update, Delete) operations against a database. 
 
 ## Usage
 
