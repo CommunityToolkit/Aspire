@@ -2,7 +2,7 @@ using Aspire.Hosting;
 
 namespace Aspire.CommunityToolkit.Hosting.Ollama.Tests;
 
-public class ResourceCreationTests
+public class AddOllamaTests
 {
     [Fact]
     public void VerifyDefaultModel()
@@ -144,5 +144,21 @@ public class ResourceCreationTests
         Assert.Throws<ArgumentException>(() => ollama.WithDefaultModel(""));
         Assert.Throws<ArgumentException>(() => ollama.WithDefaultModel(" "));
         Assert.Throws<ArgumentNullException>(() => ollama.WithDefaultModel(null!));
+    }
+
+    [Fact]
+    public void OpenWebUIConfigured()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.Equal("ollama-openwebui", resource.Name);
+        Assert.Equal("http", resource.PrimaryEndpoint.EndpointName);
     }
 }

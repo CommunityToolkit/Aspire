@@ -191,7 +191,7 @@ jobs:
     needs: sign
     runs-on: ubuntu-latest
     environment:
-      name: nuget
+      name: nuget-stable
     steps:
       - name: Download package
         uses: actions/download-artifact@v4
@@ -214,3 +214,4 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+

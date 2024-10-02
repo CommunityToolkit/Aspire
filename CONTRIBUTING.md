@@ -44,3 +44,13 @@ Also, familiarise yourself with the [versioning](./docs/versioning.md) and [diag
 ## 💙 Thank You
 
 **Thank you so much for contributing to this amazing project. We hope you will continue to add value and find yourself as a highly reliable source to the .NET Aspire Community Toolkit.**
+
+## Code of Conduct
+
+Please see our [Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
+
+As should be clear by now: we assume everyone tries to do their best, everyone should be treated with respect and equally.
+
+In the unfortunate event that doesn't happen, please feel free to report it to any of the team members or reach out to [Gerald](mailto:gerald.versluis@microsoft.com) directly.
+
+We will take appropriate actions and measures if necessary.
