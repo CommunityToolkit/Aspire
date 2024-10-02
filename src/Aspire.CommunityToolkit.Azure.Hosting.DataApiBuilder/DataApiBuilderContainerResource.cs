@@ -1,7 +1,4 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-
-namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents Data Api Builder.
