@@ -19,8 +19,9 @@ var db = make(map[string]string)
 
 var (
 	name                  = os.Getenv("OTEL_SERVICE_NAME")
-	otelTarget            = strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"), "https://")[1]
-	headers               = map[string]string{strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS"), "=")[0]: strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS"), "=")[1]}
+	isInsecure            bool
+	otelTarget            string
+	headers               map[string]string
 	meter                 metric.Meter
 	metricRequestTotal    metric.Int64Counter
 	responseTimeHistogram metric.Int64Histogram
@@ -91,8 +92,20 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	otelEndpoint := strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"), "https://")
+	if len(otelEndpoint) > 1 {
+		isInsecure = false
+		otelTarget = otelEndpoint[1]
+	} else {
+		isInsecure = true
+		otelTarget = strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"), "http://")[1]
+	}
+	otelHeaders := strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS"), "=")
+	if len(otelHeaders) > 1 {
+		headers = map[string]string{otelHeaders[0]: otelHeaders[1]}
+	}
 	// Initialize OpenTelemetry
-	err := otelx.SetupOTelSDK(context.Background(), otelTarget, headers, name)
+	err := otelx.SetupOTelSDK(context.Background(), otelTarget, isInsecure, headers, name)
 	if err != nil {
 		log.Printf("Failed to initialize OpenTelemetry: %v", err)
 		return
