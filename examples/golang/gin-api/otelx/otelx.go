@@ -8,6 +8,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
@@ -16,13 +17,14 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var Shutdown = func(context.Context) error {
 	return nil
 }
 
-func SetupOTelSDK(ctx context.Context, target string, headers map[string]string, name string) (err error) {
+func SetupOTelSDK(ctx context.Context, target string, isInsecure bool, headers map[string]string, name string) (err error) {
 	var shutdownFuncs []func(context.Context) error
 	Shutdown = func(ctx context.Context) error {
 		for _, fn := range shutdownFuncs {
@@ -35,16 +37,16 @@ func SetupOTelSDK(ctx context.Context, target string, headers map[string]string,
 	if err != nil {
 		return fmt.Errorf("failed to create resource: %w", err)
 	}
-	conn, err := initConn(target)
+	conn, err := initConn(target, isInsecure)
 	if err != nil {
 		return err
 	}
-	tracerProvider, err := newTracer(ctx, res, conn, headers)
+	tracerProvider, err := newTracer(ctx, res, conn, headers, isInsecure)
 	if err != nil {
 		return err
 	}
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
-	meterProvider, err := newMeter(ctx, res, conn, headers)
+	meterProvider, err := newMeter(ctx, res, conn, headers, isInsecure)
 	if err != nil {
 		return err
 	}
@@ -52,8 +54,16 @@ func SetupOTelSDK(ctx context.Context, target string, headers map[string]string,
 	return nil
 }
 
-func initConn(target string) (*grpc.ClientConn, error) {
-	conn, err := grpc.NewClient(target, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+func initConn(target string, isInsecure bool) (*grpc.ClientConn, error) {
+	var conn *grpc.ClientConn
+	var err error
+	if isInsecure {
+		conn, err = grpc.NewClient(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	} else {
+		conn, err = grpc.NewClient(target, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gRPC client: %w", err)
 	}
@@ -65,10 +75,17 @@ func newTracer(
 	res *resource.Resource,
 	conn *grpc.ClientConn,
 	headers map[string]string,
+	isInsecure bool,
 ) (*sdktrace.TracerProvider, error) {
-	exporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn), otlptracegrpc.WithHeaders(headers))
+	var exporter *otlptrace.Exporter
+	var err error
+	if isInsecure {
+		exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+	} else {
+		exporter, err = otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn), otlptracegrpc.WithHeaders(headers))
+	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to create the Jaeger exporter: %w", err)
+		return nil, fmt.Errorf("failed to create the OTLP exporter: %w", err)
 	}
 	processor := sdktrace.NewBatchSpanProcessor(exporter)
 	provider := sdktrace.NewTracerProvider(
@@ -89,8 +106,15 @@ func newMeter(
 	res *resource.Resource,
 	conn *grpc.ClientConn,
 	headers map[string]string,
-) (p *sdkmetric.MeterProvider, err error) {
-	exporter, err := otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn), otlpmetricgrpc.WithHeaders(headers))
+	isInsecure bool,
+) (*sdkmetric.MeterProvider, error) {
+	var exporter *otlpmetricgrpc.Exporter
+	var err error
+	if isInsecure {
+		exporter, err = otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn))
+	} else {
+		exporter, err = otlpmetricgrpc.New(ctx, otlpmetricgrpc.WithGRPCConn(conn), otlpmetricgrpc.WithHeaders(headers))
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create the OTLP exporter: %w", err)
 	}
