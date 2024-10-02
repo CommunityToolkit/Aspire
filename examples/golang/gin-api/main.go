@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/trace"
 )
 
 var db = make(map[string]string)
@@ -22,7 +21,6 @@ var (
 	name                  = os.Getenv("OTEL_SERVICE_NAME")
 	otelTarget            = strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"), "https://")[1]
 	headers               = map[string]string{strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS"), "=")[0]: strings.Split(os.Getenv("OTEL_EXPORTER_OTLP_HEADERS"), "=")[1]}
-	tracer                trace.Tracer
 	meter                 metric.Meter
 	metricRequestTotal    metric.Int64Counter
 	responseTimeHistogram metric.Int64Histogram
@@ -107,7 +105,6 @@ func main() {
 	}()
 
 	// Create a tracer and a meter
-	tracer = otel.Tracer(name)
 	meter = otel.Meter(name)
 	initGinMetrics()
 
@@ -134,14 +131,11 @@ func monitorInterceptor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		startTime := time.Now()
 
-		ctx, span := tracer.Start(c.Request.Context(), c.FullPath())
-		defer span.End()
-
 		// execute normal process.
 		c.Next()
 
 		// after request
-		ginMetricHandle(ctx, startTime)
+		ginMetricHandle(c.Request.Context(), startTime)
 	}
 }
 
