@@ -1,5 +1,3 @@
-using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add a SQL Server container

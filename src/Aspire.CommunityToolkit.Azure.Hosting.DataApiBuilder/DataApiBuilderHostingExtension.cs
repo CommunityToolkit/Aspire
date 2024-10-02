@@ -1,10 +1,7 @@
-﻿using System.Globalization;
-
-using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
-using Aspire.Hosting;
+﻿using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
 using Aspire.Hosting.ApplicationModel;
 
-namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for adding DataApiBuilder api to an <see cref="IDistributedApplicationBuilder"/>.
@@ -12,41 +9,16 @@ namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
 public static class DataApiBuilderHostingExtension
 {
     /// <summary>
-    /// Adds a DataApiBuilder api to the application model. Executes the containerized DataApiBuilder api.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="options">The <see cref="DataApiBuilderContainerResourceOptions"/> to configure the DataApiBuilder api.</param>"
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, DataApiBuilderContainerResourceOptions options)
-    {
-        if (string.IsNullOrWhiteSpace(options.ContainerImageName) == true)
-        {
-            throw new ArgumentNullException("Container image name must be specified.", nameof(options));
-        }
-
-        var resource = new DataApiBuilderContainerResource(name);
-
-        var rb = builder.AddResource(resource)
-            .WithAnnotation(new ContainerImageAnnotation { Image = options.ContainerImageName, Tag = options.ContainerImageTag, Registry = options.ContainerRegistry })
-            .WithHttpEndpoint(port: options.Port, targetPort: options.TargetPort, name: DataApiBuilderContainerResource.HttpEndpointName)
-            .WithDataApiBuilderDefaults(options);
-
-        if(string.IsNullOrWhiteSpace(options.ConfigFilePath))
-        {
-            throw new ArgumentException("The DataApiBuilder configuration file must be specified.", nameof(options));
-        }
-        rb.WithBindMount(PathNormalizer.NormalizePathForCurrentPlatform(options.ConfigFilePath), "/App/dab-config.json", true);
-
-        return rb;
-    }
-
-    /// <summary>
     /// Adds a DataAPIBuilder application to the application model. Executes the containerized DataAPIBuilder app.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="configFilePath">The path to the config file for Data API Builder.</param>"
+    /// <param name="containerRegistry">The container registry for the Data API Builder image.</param>"
+    /// <param name="containerImageName">The name of the Data API Builder image.</param>"
+    /// <param name="containerImageTag">The tag of the Data API Builder image.</param>"
+    /// <param name="port">The port number for the Data API Builder container.</param>"
+    /// <param name="targetPort">The target port number for the Data API Builder container.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, 
         string name, 
@@ -57,20 +29,25 @@ public static class DataApiBuilderHostingExtension
         int port = 5000,
         int targetPort = 5000)
     {
-        var options = new DataApiBuilderContainerResourceOptions
-        {
-            ContainerRegistry = containerRegistry,
-            ContainerImageName = containerImageName,
-            ContainerImageTag = containerImageTag,
-            Port = port,
-            TargetPort = targetPort,
-            ConfigFilePath = configFilePath
-        };
-        return builder.AddDataAPIBuilder(name, options);
+        ArgumentNullException.ThrowIfNull("Service name must be specified.", nameof(name));
+        ArgumentNullException.ThrowIfNull("Config file path must be specified.", nameof(configFilePath));
+        ArgumentNullException.ThrowIfNull("Container Registry must be specified.", nameof(containerRegistry));
+        ArgumentNullException.ThrowIfNull("Container Image Name must be specified.", nameof(containerImageName));
+        ArgumentNullException.ThrowIfNull("Container Image Tag must be specified.", nameof(containerImageTag));
+
+        var resource = new DataApiBuilderContainerResource(name);
+
+        var rb = builder.AddResource(resource)
+            .WithAnnotation(new ContainerImageAnnotation { Image = containerImageName, Tag = containerImageTag, Registry = containerRegistry })
+            .WithHttpEndpoint(port: port, targetPort: targetPort, name: DataApiBuilderContainerResource.HttpEndpointName)
+            .WithDataApiBuilderDefaults();
+
+        rb.WithBindMount(PathNormalizer.NormalizePathForCurrentPlatform(configFilePath), "/App/dab-config.json", true);
+
+        return rb;
     }
 
     private static IResourceBuilder<DataApiBuilderContainerResource> WithDataApiBuilderDefaults(
-        this IResourceBuilder<DataApiBuilderContainerResource> builder,
-        DataApiBuilderContainerResourceOptions options) =>
+        this IResourceBuilder<DataApiBuilderContainerResource> builder) =>
         builder.WithOtlpExporter();
 }

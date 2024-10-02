@@ -61,7 +61,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Azu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dab", "dab", "{2B60C5B7-7502-448E-8881-3DD29C1DE999}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests", "tests\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests.csproj", "{9D79154C-E503-4D6C-BCED-EEC82E314FBE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests", "tests\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests\Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests.csproj", "{9D79154C-E503-4D6C-BCED-EEC82E314FBE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost", "examples\dab\Aspire.CommunityToolkit.Hosting.DAB.AppHost\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost.csproj", "{A2419B54-5E7C-4FA0-B82A-7E15E4D29AD1}"
 EndProject

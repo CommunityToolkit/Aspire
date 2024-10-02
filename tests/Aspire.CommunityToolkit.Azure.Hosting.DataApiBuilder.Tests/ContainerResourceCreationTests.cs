@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests;
+namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests;
 public class ContainerResourceCreationTests
 {
     [Fact]
@@ -15,44 +15,29 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder(null!));
-        Assert.Throws<ArgumentException>(() => builder.AddDataAPIBuilder(""));
-    }
-
-
-
-    [Fact]
-    public void AddDataAPIBuilderContainerImageNameShouldNotBeNullOrWhiteSpace()
-    {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", new DataApiBuilderContainerResourceOptions { ContainerImageName = null! }));
-        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", new DataApiBuilderContainerResourceOptions { ContainerImageName = "" }));
     }
 
     [Fact]
-    public void AddDataAPIBuilderContainerResourceOptionsCanBeNull()
+    public void AddDataApiBuilderConfigFilePathShouldNotBeNullOrWhiteSpace()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        Assert.NotNull(() => builder.AddDataAPIBuilder("dab", null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddDataAPIBuilder("dab", configFilePath: null!));
     }
 
 
     [Fact]
-    public async Task AddDataAPIBuilderContainerDetailsSetOnResource()
+    public void AddDataAPIBuilderContainerDetailsSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        var options = new DataApiBuilderContainerResourceOptions
-        {
-            ContainerImageName = "azure-databases/data-api-builder",
-            ContainerRegistry = "mcr.microsoft.com",
-            ContainerImageTag = "latest",
-            Port = 5000,
-            TargetPort = 5000
-        };
+        var containerImageName = "azure-databases/data-api-builder";
+        var containerRegistry = "mcr.microsoft.com";
+        var containerImageTag = "latest";
+        var port = 5000;
+        var targetPort = 5000;
 
-        builder.AddDataAPIBuilder("dab", options);
+        builder.AddDataAPIBuilder("dab", containerRegistry: containerRegistry, containerImageName: containerImageName, containerImageTag: containerImageTag, port: port, targetPort: targetPort);
 
         using var app = builder.Build();
 
@@ -64,12 +49,12 @@ public class ContainerResourceCreationTests
         Assert.Equal("dab", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal(options.ContainerImageName, imageAnnotations.Image);
-        Assert.Equal(options.ContainerRegistry, imageAnnotations.Registry);
-        Assert.Equal(options.ContainerImageTag, imageAnnotations.Tag);
+        Assert.Equal(containerImageName, imageAnnotations.Image);
+        Assert.Equal(containerRegistry, imageAnnotations.Registry);
+        Assert.Equal(containerImageTag, imageAnnotations.Tag);
 
         Assert.True(resource.TryGetLastAnnotation(out EndpointAnnotation? httpEndpointAnnotations));
-        Assert.Equal(options.Port, httpEndpointAnnotations.Port);
-        Assert.Equal(options.TargetPort, httpEndpointAnnotations.TargetPort);
+        Assert.Equal(port, httpEndpointAnnotations.Port);
+        Assert.Equal(targetPort, httpEndpointAnnotations.TargetPort);
     }
 }
