@@ -6,7 +6,7 @@
 
 The .NET Aspire Community Toolkit is a collection of common components and extensions for development with .NET Aspire.
 
-All features are contributed by you, our amazing .NET community, and maintained by a core set of maintainers.
+All features are contributed by you, our amazing .NET community, and maintained by a core set of maintainers. Check out our [FAQ](./docs/faq.md) for more information.
 
 ## 👀 What does this repo contain?
 
@@ -24,7 +24,7 @@ Each of the integrations in the toolkit is available as a NuGet package, and can
 
 ## 📃 Documentation
 
-Documentation for the .NET Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/communitytoolkit/aspire/).
+Documentation for the .NET Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/aspire/community-toolkit/).
 
 ## 🚀 Contribution
 
@@ -46,22 +46,22 @@ As a part of the .NET Foundation, we have adopted the [.NET Foundation Code of C
 
 This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
 
-[swa-integration-docs]: https://learn.microsoft.com/dotnet/communitytoolkit/aspire/integrations/hosting-azure-static-web-apps
+[swa-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-azure-static-web-apps
 [swa-shields]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps
 [swa-nuget]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps/
 [swa-shields-preview]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps?label=nuget%20(preview)
 [swa-nuget-preview]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps/absoluteLatest
-[java-integration-docs]: https://learn.microsoft.com/dotnet/communitytoolkit/aspire/integrations/hosting-java
+[java-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-java
 [java-shields]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Java
 [java-nuget]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Java/
 [java-shields-preview]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Java?label=nuget%20(preview)
 [java-nuget-preview]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Java/absoluteLatest
-[nodejs-ext-integration-docs]: https://learn.microsoft.com/dotnet/communitytoolkit/aspire/integrations/hosting-nodejs-extensions
+[nodejs-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-nodejs-extensions
 [nodejs-ext-shields]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions
 [nodejs-ext-nuget]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions/
 [nodejs-ext-shields-preview]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions?label=nuget%20(preview)
 [nodejs-ext-nuget-preview]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.NodeJS.Extensions/absoluteLatest
-[ollama-integration-docs]: https://learn.microsoft.com/dotnet/communitytoolkit/aspire/integrations/hosting-ollama
+[ollama-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-ollama
 [ollama-shields]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Ollama
 [ollama-nuget]: https://nuget.org/packages/Aspire.CommunityToolkit.Hosting.Ollama/
 [ollama-shields-preview]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.Hosting.Ollama?label=nuget%20(preview)
