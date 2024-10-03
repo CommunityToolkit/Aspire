@@ -10,6 +10,7 @@
     <!-- AspNetCore packages -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.2" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.7.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="8.0.2" />
@@ -31,5 +32,6 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.1" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
+    <PackageVersion Include="Marten" Version="7.29.0" />
   </ItemGroup>
 </Project>
