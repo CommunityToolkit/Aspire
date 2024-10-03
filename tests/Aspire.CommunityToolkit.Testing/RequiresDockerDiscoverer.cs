@@ -14,7 +14,7 @@ public class RequiresDockerDiscoverer : ITraitDiscoverer
     {
         if (!RequiresDockerAttribute.IsSupported)
         {
-            yield return new KeyValuePair<string, string>("category", "failing");
+            yield return new KeyValuePair<string, string>("category", "unsupported-platform");
         }
     }
 }
