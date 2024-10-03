@@ -31,26 +31,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
         base.OnBuilderCreated(applicationBuilder);
     }
 
-    public async Task InitializeAsync()
-    {
-        if (RequiresDockerAttribute.IsSupported)
-            await StartAsync();
-    }
+    public Task InitializeAsync() => StartAsync();
 
-    async Task IAsyncLifetime.DisposeAsync()
-    {
-        try
-        {
-            await DisposeAsync();
-        }
-        catch (Exception)
-        {
-            if (RequiresDockerAttribute.IsSupported)
-            {
-                // GitHub Actions Windows runners don't support Linux Docker containers, which can result in a bunch of false errors, even if we try to skip the test run, so we only really want to throw
-                // if we're on a non-Windows runner or if we're on a Windows runner but not in a CI environment
-                throw;
-            }
-        }
-    }
+    async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync();
 }
