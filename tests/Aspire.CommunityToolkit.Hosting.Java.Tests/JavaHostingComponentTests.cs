@@ -1,14 +1,14 @@
 using Aspire.CommunityToolkit.Testing;
 using FluentAssertions;
-using Microsoft.TestUtilities;
+using Aspire.Components.Common.Tests;
 
 namespace Aspire.CommunityToolkit.Hosting.Java.Tests;
 
 #pragma warning disable CTASPIRE001
+[RequiresDocker]
 public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Java_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Java_AppHost>>
 {
-    [ConditionalTheory]
-    [OSSkipCondition(OperatingSystems.Windows)]
+    [Theory]
     [InlineData("containerapp")]
     [InlineData("executableapp")]
     public async Task AppResourceWillRespondWithOk(string resourceName)

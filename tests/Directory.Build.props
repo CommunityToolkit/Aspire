@@ -19,4 +19,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <RunSettingsFilePath>..\.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+
 </Project>

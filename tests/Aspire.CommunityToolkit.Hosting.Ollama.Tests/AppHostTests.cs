@@ -1,13 +1,13 @@
 using Aspire.CommunityToolkit.Testing;
+using Aspire.Components.Common.Tests;
 using FluentAssertions;
-using Microsoft.TestUtilities;
 
 namespace Aspire.CommunityToolkit.Hosting.Ollama.Tests;
 
+[RequiresDocker]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Ollama_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Ollama_AppHost>>
 {
-    [ConditionalTheory]
-    [OSSkipCondition(OperatingSystems.Windows)]
+    [Theory]
     [InlineData("ollama")]
     [InlineData("ollama-openwebui")]
     public async Task ResourceStartsAndRespondsOk(string resourceName)
