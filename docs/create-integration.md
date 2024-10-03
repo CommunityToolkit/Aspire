@@ -101,7 +101,7 @@ public async Task ResourceStartsAndRespondsOk(string appName)
 
 #### Docker and CI
 
-GitHub Actions Windows runners do not support Linux container images, so if your integration will require a container image to be pulled from a public registry it will either need to support Windows Containers, or you can add a `[OSSkipCondition(OperationSystems.Windows)]` attribute to the test method to skip the test on Windows and change the `Fact` or `Theory` to `ConditionalFact` or `ConditionalTheory`.
+GitHub Actions Windows runners do not support Linux container images, so if your integration will require a container image it needs to be marked with a `[RequiresDocker]` attribute. This will dynamically add a _Trait_ (category) to the test that can be used to filter tests in the CI pipeline.
 
 #### Waiting for the resource to start
 

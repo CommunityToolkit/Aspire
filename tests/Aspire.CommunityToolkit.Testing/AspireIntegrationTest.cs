@@ -1,8 +1,7 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Aspire.Components.Common.Tests;
+using Aspire.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Runtime.InteropServices;
+
 namespace Aspire.CommunityToolkit.Testing;
 
 public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
@@ -32,22 +31,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
         base.OnBuilderCreated(applicationBuilder);
     }
 
-    public async Task InitializeAsync() => await StartAsync();
+    public Task InitializeAsync() => StartAsync();
 
-    async Task IAsyncLifetime.DisposeAsync()
-    {
-        try
-        {
-            await DisposeAsync();
-        }
-        catch (Exception)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
-            {
-                // GitHub Actions Windows runners don't support Linux Docker containers, which can result in a bunch of false errors, even if we try to skip the test run, so we only really want to throw
-                // if we're on a non-Windows runner or if we're on a Windows runner but not in a CI environment
-                throw;
-            }
-        }
-    }
+    async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync();
 }
