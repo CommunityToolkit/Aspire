@@ -26,3 +26,21 @@ builder.Build().Run();
 - `containerImageTag` - The tag of the Data API Builder image. Defaults to `latest`.
 - `port` - The port number for the Data API Builder container. Defaults to `5000`.
 - `targetPort` - The target port number for the Data API Builder container. Defaults to `5000`.
+
+
+### Database Configuration
+
+In the example we are using a generated password for the database and are not persisting the data. In a production scenario, you probably want to specify the password and persist the data so it does not get lost when the container is restarted.
+Here is an example of how you can configure the database:
+
+```csharp
+// Add a SQL Server container
+var sqlPassword = builder.AddParameter("sql-password");
+var sqlServer = builder
+    .AddSqlServer("sql", sqlPassword)
+    .WithHealthCheck();
+    .WithDataVolume("MyDataVolume");
+
+var sqlDatabase = sqlServer.AddDatabase("your-database-name");
+
+```
