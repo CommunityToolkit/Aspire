@@ -4,8 +4,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 var sqlPassword = builder.AddParameter("sql-password");
 var sqlServer = builder
     .AddSqlServer("sql", sqlPassword)
-    //.WithDataVolume("MyDataVolume") // Uncomment to persist the data into volume
     .WithHealthCheck();
+    //.WithDataVolume("MyDataVolume") // Uncomment to persist the data into volume
 var sqlDatabase = sqlServer.AddDatabase("trek");
 
 // Populate the database with the schema and data
@@ -16,10 +16,10 @@ sqlServer
 
 // Add Data API Builder using dab-config.json 
 var dab = builder.AddDataAPIBuilder("dab")
-    .WithReference(sqlDatabase)
-    .WaitFor(sqlServer);
+    .WaitFor(sqlServer)
+    .WithReference(sqlDatabase);
 
-builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_DAB_BlazorApp>("blazorApp")
-        .WithReference(dab);
-    
+builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_BlazorApp>("blazorApp")
+    .WithReference(dab);
+
 builder.Build().Run();

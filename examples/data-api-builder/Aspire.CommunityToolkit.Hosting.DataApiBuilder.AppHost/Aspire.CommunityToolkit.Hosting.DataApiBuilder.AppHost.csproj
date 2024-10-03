@@ -13,10 +13,11 @@
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.SqlServer" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+    <PackageReference Include="Jerry.WaitForDependencies.Aspire.Hosting" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.csproj" IsAspireProjectResource="false" />
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DAB.BlazorApp\Aspire.CommunityToolkit.Hosting.DAB.BlazorApp.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp.csproj" />
   </ItemGroup>
 </Project>
