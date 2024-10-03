@@ -35,7 +35,5 @@
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
-
-    <PackageVersion Include="Jerry.WaitForDependencies.Aspire.Hosting" Version="0.0.1" />
   </ItemGroup>
 </Project>
