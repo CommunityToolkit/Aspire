@@ -1,11 +1,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add a SQL Server container
-var sqlPassword = builder.AddParameter("sql-password");
 var sqlServer = builder
-    .AddSqlServer("sql", sqlPassword)
+    .AddSqlServer("sql")
     .WithHealthCheck();
-    //.WithDataVolume("MyDataVolume") // Uncomment to persist the data into volume
+
 var sqlDatabase = sqlServer.AddDatabase("trek");
 
 // Populate the database with the schema and data
