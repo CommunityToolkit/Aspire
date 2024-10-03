@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp.csproj" />
     <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
   </ItemGroup>
 
