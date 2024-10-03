@@ -33,6 +33,5 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.1" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
-    <PackageVersion Include="Jerry.WaitForDependencies.Aspire.Hosting" Version="0.0.1" />
   </ItemGroup>
 </Project>
