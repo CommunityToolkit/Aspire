@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\dab\Aspire.CommunityToolkit.Hosting.DAB.AppHost\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost.csproj" />
     <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
   </ItemGroup>
 

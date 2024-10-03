@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <ItemGroup>
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DAB.ServiceDefaults\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults.csproj" />
+  </ItemGroup>
 
 </Project>
