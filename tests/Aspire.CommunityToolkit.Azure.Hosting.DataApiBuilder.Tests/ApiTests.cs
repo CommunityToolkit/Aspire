@@ -18,8 +18,6 @@ public class ApiTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityTool
         
         var httpClient = fixture.CreateHttpClient("dab");
 
-        //Error: Unable to find config file: dab-config.json does not exist.
-
         var response = await httpClient.GetAsync("/api/series");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
