@@ -9,7 +9,7 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddHttpClient<TrekApiClientClass>(client => {
+builder.Services.AddHttpClient<TrekApiClient>(client => {
     client.BaseAddress = new("https+http://dab");
 });
 
