@@ -20,4 +20,11 @@
     <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update=".\dab-config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
