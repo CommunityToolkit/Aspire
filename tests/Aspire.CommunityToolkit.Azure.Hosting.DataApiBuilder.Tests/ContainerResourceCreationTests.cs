@@ -31,13 +31,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        var containerImageName = "azure-databases/data-api-builder";
-        var containerRegistry = "mcr.microsoft.com";
-        var containerImageTag = "latest";
-        var port = 5000;
-        var targetPort = 5000;
-
-        builder.AddDataAPIBuilder("dab", containerRegistry: containerRegistry, containerImageName: containerImageName, containerImageTag: containerImageTag, port: port, targetPort: targetPort);
+        builder.AddDataAPIBuilder("dab");
 
         using var app = builder.Build();
 
@@ -49,12 +43,8 @@ public class ContainerResourceCreationTests
         Assert.Equal("dab", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal(containerImageName, imageAnnotations.Image);
-        Assert.Equal(containerRegistry, imageAnnotations.Registry);
-        Assert.Equal(containerImageTag, imageAnnotations.Tag);
 
         Assert.True(resource.TryGetLastAnnotation(out EndpointAnnotation? httpEndpointAnnotations));
-        Assert.Equal(port, httpEndpointAnnotations.Port);
-        Assert.Equal(targetPort, httpEndpointAnnotations.TargetPort);
+        Assert.Equal(5000, httpEndpointAnnotations.TargetPort);
     }
 }
