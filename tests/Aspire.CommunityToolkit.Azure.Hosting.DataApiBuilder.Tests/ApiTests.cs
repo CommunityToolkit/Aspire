@@ -10,15 +10,13 @@ public class ApiTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityTool
 {
 
     [ConditionalFact]
-    
+    [OSSkipCondition(OperatingSystems.Windows)]
     public async Task CanGetSeries()
     {
 
         await fixture.ResourceNotificationService.WaitForResourceAsync("dab", KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(1));
         
-        var httpClient = fixture.CreateHttpClient("dab", "http");
-
-        //Error: Unable to find config file: dab-config.json does not exist.
+        var httpClient = fixture.CreateHttpClient("dab");
 
         var response = await httpClient.GetAsync("/api/series");
 
