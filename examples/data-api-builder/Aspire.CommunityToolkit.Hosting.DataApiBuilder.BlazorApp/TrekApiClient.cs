@@ -5,12 +5,12 @@ using System.Text.Json;
 
 namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
 
-public class TrekApiClientClass
+public class TrekApiClient
 {
     private readonly HttpClient httpClient;
-    private readonly ILogger<TrekApiClientClass> logger;
+    private readonly ILogger<TrekApiClient> logger;
 
-    public TrekApiClientClass(HttpClient httpClient, ILogger<TrekApiClientClass> logger)
+    public TrekApiClient(HttpClient httpClient, ILogger<TrekApiClient> logger)
     {
         this.httpClient = httpClient;
         this.logger = logger;
