@@ -1,4 +1,4 @@
-﻿using Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
+using Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
 using Aspire.CommunityToolkit.Testing;
 using FluentAssertions;
 using Microsoft.TestUtilities;
