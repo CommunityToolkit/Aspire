@@ -1,4 +1,5 @@
 ﻿using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
+using Aspire.CommunityToolkit.Hosting.DataApiBuilder;
 using Aspire.Hosting.ApplicationModel;
 
 namespace Aspire.Hosting;
@@ -22,24 +23,17 @@ public static class DataApiBuilderHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, 
         string name, 
-        string configFilePath = "./dab-config.json", 
-        string containerRegistry = "mcr.microsoft.com", 
-        string containerImageName = "azure-databases/data-api-builder",
-        string containerImageTag = "latest",
-        int port = 5000,
-        int targetPort = 5000)
+        string configFilePath = "./dab-config.json",
+        int? port = null)
     {
         ArgumentNullException.ThrowIfNull("Service name must be specified.", nameof(name));
         ArgumentNullException.ThrowIfNull("Config file path must be specified.", nameof(configFilePath));
-        ArgumentNullException.ThrowIfNull("Container Registry must be specified.", nameof(containerRegistry));
-        ArgumentNullException.ThrowIfNull("Container Image Name must be specified.", nameof(containerImageName));
-        ArgumentNullException.ThrowIfNull("Container Image Tag must be specified.", nameof(containerImageTag));
 
         var resource = new DataApiBuilderContainerResource(name);
 
         var rb = builder.AddResource(resource)
-            .WithAnnotation(new ContainerImageAnnotation { Image = containerImageName, Tag = containerImageTag, Registry = containerRegistry })
-            .WithHttpEndpoint(port: port, targetPort: targetPort, name: DataApiBuilderContainerResource.HttpEndpointName)
+            .WithAnnotation(new ContainerImageAnnotation { Image = DataApiBuilderContainerImageTags.Image, Tag = DataApiBuilderContainerImageTags.Tag, Registry = DataApiBuilderContainerImageTags.Registry })
+            .WithHttpEndpoint(port: port, targetPort: 5000, name: DataApiBuilderContainerResource.HttpEndpointName)
             .WithDataApiBuilderDefaults();
 
         rb.WithBindMount(PathNormalizer.NormalizePathForCurrentPlatform(configFilePath), "/App/dab-config.json", true);

@@ -10,8 +10,8 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_Community
     [OSSkipCondition(OperatingSystems.Windows)]
     public async Task ResourceStartsAndRespondsOk()
     {
-        await fixture.ResourceNotificationService.WaitForResourceAsync("dab", KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient("dab");
+        await fixture.ResourceNotificationService.WaitForResourceAsync("dab", KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(1));
+        var httpClient = fixture.CreateHttpClient("dab", "http");
 
         var response = await httpClient.GetAsync("/");
 
