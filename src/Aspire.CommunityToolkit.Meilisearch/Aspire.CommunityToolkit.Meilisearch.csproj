@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+    <PackageTags>Meilisearch</PackageTags>
+    <Description>A Meilisearch client that integrates with Aspire, including health checks, logging, and telemetry.</Description>
+    <!-- Disable package validation as this package hasn't shipped yet. -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+    <!-- MeiliSearch package is not signed -->
+    <EnablePackageValidation>false</EnablePackageValidation>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <MinCodeCoverage>80</MinCodeCoverage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MeiliSearch" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
+    <Compile Include="..\ConfigurationSchemaAttributes.cs" Link="Utils\ConfigurationSchemaAttributes.cs" />
+  </ItemGroup>
+
+</Project>
