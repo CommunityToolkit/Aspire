@@ -8,7 +8,7 @@ namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests;
 
 public class ApiTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_AppHost>>
 {
-
+    [Fact]
     [RequiresDocker]
     public async Task CanGetSeries()
     {
