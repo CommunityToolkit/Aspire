@@ -1,4 +1,4 @@
-using Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
+﻿using Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
 using Aspire.CommunityToolkit.Testing;
 using Aspire.Components.Common.Tests;
 using FluentAssertions;
@@ -6,10 +6,10 @@ using System.Net.Http.Json;
 
 namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests;
 
+[RequiresDocker]
 public class ApiTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_AppHost>>
 {
     [Fact]
-    [RequiresDocker]
     public async Task CanGetSeries()
     {
 
