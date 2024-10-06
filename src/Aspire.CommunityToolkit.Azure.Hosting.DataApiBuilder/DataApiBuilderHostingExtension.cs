@@ -15,9 +15,6 @@ public static class DataApiBuilderHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="configFilePath">The path to the config file for Data API Builder.</param>"
-    /// <param name="containerRegistry">The container registry for the Data API Builder image.</param>"
-    /// <param name="containerImageName">The name of the Data API Builder image.</param>"
-    /// <param name="containerImageTag">The tag of the Data API Builder image.</param>"
     /// <param name="port">The port number for the Data API Builder container.</param>"
     /// <param name="targetPort">The target port number for the Data API Builder container.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
