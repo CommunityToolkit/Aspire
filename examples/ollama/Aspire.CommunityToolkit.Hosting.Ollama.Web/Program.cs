@@ -1,5 +1,6 @@
 using Aspire.CommunityToolkit.Hosting.Ollama.Web;
 using Aspire.CommunityToolkit.Hosting.Ollama.Web.Components;
+using Aspire.CommunityToolkit.OllamaSharp;
 using OllamaSharp;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,10 +14,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.Services.AddScoped((_) => new OllamaApiClient(builder.Configuration["ConnectionStrings:ollama"]!)
-{
-    SelectedModel = builder.Configuration["ollama:model"]!
-});
+builder.AddOllamaApiClient("ollama");
 
 var app = builder.Build();
 
