@@ -1,5 +1,4 @@
-﻿using Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Utils;
-using Aspire.CommunityToolkit.Hosting.DataApiBuilder;
+﻿using Aspire.CommunityToolkit.Hosting.DataApiBuilder;
 using Aspire.Hosting.ApplicationModel;
 
 namespace Aspire.Hosting;
@@ -32,7 +31,7 @@ public static class DataApiBuilderHostingExtension
             .WithHttpEndpoint(port: port, targetPort: 5000, name: DataApiBuilderContainerResource.HttpEndpointName)
             .WithDataApiBuilderDefaults();
 
-        rb.WithBindMount(PathNormalizer.NormalizePathForCurrentPlatform(configFilePath), "/App/dab-config.json", true);
+        rb.WithBindMount(configFilePath, "/App/dab-config.json", true);
 
         return rb;
     }
