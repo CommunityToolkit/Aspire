@@ -1,5 +1,5 @@
 ﻿@page "/"
-@using OllamaSharp
+@using global::OllamaSharp
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
@@ -15,7 +15,7 @@
     private string _response = "";
 
     [Inject]
-    public required OllamaApiClient OllamaClient { get; set; }
+    public required IOllamaApiClient OllamaClient { get; set; }
 
     private async Task GetPrompt()
     {
