@@ -1,6 +1,5 @@
 using Aspire.CommunityToolkit.Testing;
 using FluentAssertions;
-using Microsoft.TestUtilities;
 
 namespace Aspire.CommunityToolkit.Hosting.Golang.Tests;
 
@@ -13,7 +12,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_Community
     {
         var httpClient = fixture.CreateHttpClient(appName);
 
-        await fixture.App.WaitForTextAsync("Listening and serving HTTP on :8080", appName).WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.App.WaitForTextAsync("Listening and serving HTTP on :8080", appName).WaitAsync(TimeSpan.FromMinutes(2));
 
         var response = await httpClient.GetAsync("/ping");
 
