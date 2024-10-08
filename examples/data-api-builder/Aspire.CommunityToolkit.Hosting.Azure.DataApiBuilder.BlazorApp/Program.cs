@@ -1,5 +1,5 @@
-using Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
-using Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp.Components;
+using Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp;
+using Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +9,8 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddHttpClient<TrekApiClient>(client => {
+builder.Services.AddHttpClient<TrekApiClient>(client =>
+{
     client.BaseAddress = new("https+http://dab");
 });
 

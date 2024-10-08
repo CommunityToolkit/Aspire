@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests;
+namespace Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests;
 public class ContainerResourceCreationTests
 {
     [Fact]

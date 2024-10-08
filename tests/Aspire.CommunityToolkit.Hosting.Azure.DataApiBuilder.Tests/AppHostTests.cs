@@ -1,13 +1,13 @@
-using Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
+using Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp;
 using Aspire.CommunityToolkit.Testing;
 using Aspire.Components.Common.Tests;
 using FluentAssertions;
 using System.Net.Http.Json;
 
-namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests;
+namespace Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests;
 
 [RequiresDocker]
-public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Azure_DataApiBuilder_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Azure_DataApiBuilder_AppHost>>
 {
     [Fact]
     public async Task ResourceStartsAndRespondsOk()

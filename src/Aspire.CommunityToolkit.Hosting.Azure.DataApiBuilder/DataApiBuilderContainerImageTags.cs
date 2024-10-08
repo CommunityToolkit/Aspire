@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder;
+namespace Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder;
 
 internal static class DataApiBuilderContainerImageTags
 {

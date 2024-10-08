@@ -71,17 +71,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Oll
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.OllamaSharp.Tests", "tests\Aspire.CommunityToolkit.OllamaSharp.Tests\Aspire.CommunityToolkit.OllamaSharp.Tests.csproj", "{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder", "src\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.csproj", "{BAF22B80-2937-4695-A613-F170D8FB9020}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder", "src\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.csproj", "{BAF22B80-2937-4695-A613-F170D8FB9020}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data-api-builder", "data-api-builder", "{2B60C5B7-7502-448E-8881-3DD29C1DE999}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests", "tests\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.Tests\Aspire.CommunityToolkit.Hosting.DataApiBuilder.Tests.csproj", "{9D79154C-E503-4D6C-BCED-EEC82E314FBE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests", "tests\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests.csproj", "{9D79154C-E503-4D6C-BCED-EEC82E314FBE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost\Aspire.CommunityToolkit.Hosting.DataApiBuilder.AppHost.csproj", "{A2419B54-5E7C-4FA0-B82A-7E15E4D29AD1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.AppHost", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.AppHost\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.AppHost.csproj", "{A2419B54-5E7C-4FA0-B82A-7E15E4D29AD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults.csproj", "{0A667FDF-DD10-4CA5-8C71-DBA5AEED1D63}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.ServiceDefaults", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.ServiceDefaults\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.ServiceDefaults.csproj", "{0A667FDF-DD10-4CA5-8C71-DBA5AEED1D63}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp.csproj", "{B42EFEB5-6196-4D8C-A46C-671D339B3C15}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp.csproj", "{B42EFEB5-6196-4D8C-A46C-671D339B3C15}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
