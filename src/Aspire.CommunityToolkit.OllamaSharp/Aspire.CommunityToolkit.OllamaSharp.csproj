@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageReadmeFile>ollamasharp.md</PackageReadmeFile>
+    <Description>A .NET Aspire client integration for the OllamaSharp library.</Description>
+    <AdditionalPackageTags>ollama ai ollamasharp</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OllamaSharp" />
+  </ItemGroup>
+
+</Project>
