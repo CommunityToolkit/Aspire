@@ -29,8 +29,7 @@
         "ms-dotnettools.csdevkit",
         "vscjava.vscode-java-pack",
         "esbenp.prettier-vscode",
-        "redhat.vscode-yaml",
-        "golang.go"
+        "redhat.vscode-yaml"
       ]
     }
   },
