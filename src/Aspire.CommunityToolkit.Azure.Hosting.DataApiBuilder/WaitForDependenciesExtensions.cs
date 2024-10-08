@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
@@ -8,11 +9,15 @@ using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Retry;
 
-namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for adding DataApiBuilder api to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
+/// <remarks>
+/// This has been copied from the David Fowler davidfowl/WaitForDependenciesAspire project and will likely be removed in the future.
+/// </remarks>
+[Experimental("CTASPIRE002", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
 public static class WaitForDependenciesExtensions
 {
 	/// <summary>

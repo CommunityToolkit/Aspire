@@ -1,8 +1,13 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using HealthChecks.Uris;
+using System.Diagnostics.CodeAnalysis;
 
-namespace Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder;
+namespace Aspire.Hosting;
 
+/// <remarks>
+/// This has been copied from the David Fowler davidfowl/WaitForDependenciesAspire project and will likely be removed in the future.
+/// </remarks>
+[Experimental("CTASPIRE002", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
 public static class HttpEndpointHealthCheckExtensions
 {
     /// <summary>

@@ -15,7 +15,7 @@ sqlServer
 
 // Add Data API Builder using dab-config.json 
 var dab = builder.AddDataAPIBuilder("dab")
-    .WaitFor(sqlServer)
+    .WaitFor(sqlDatabase)
     .WithReference(sqlDatabase);
 
 builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_BlazorApp>("blazorApp")
