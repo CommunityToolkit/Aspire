@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder\Aspire.CommunityToolkit.Azure.Hosting.DataApiBuilder.csproj" IsAspireProjectResource="false" />
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp.csproj" />
+    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

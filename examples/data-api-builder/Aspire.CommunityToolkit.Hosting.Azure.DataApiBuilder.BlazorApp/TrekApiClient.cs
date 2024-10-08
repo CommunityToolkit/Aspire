@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 
 
-namespace Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp;
+namespace Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.BlazorApp;
 
 public class TrekApiClient
 {

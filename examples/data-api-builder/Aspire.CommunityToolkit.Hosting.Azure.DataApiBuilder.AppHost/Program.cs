@@ -18,7 +18,7 @@ var dab = builder.AddDataAPIBuilder("dab")
     .WaitFor(sqlServer)
     .WithReference(sqlDatabase);
 
-builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_DataApiBuilder_BlazorApp>("blazorApp")
+builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_Azure_DataApiBuilder_BlazorApp>("blazorApp")
     .WithReference(dab);
 
 builder.Build().Run();

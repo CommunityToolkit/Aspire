@@ -1,4 +1,4 @@
-﻿using Aspire.CommunityToolkit.Hosting.DataApiBuilder;
+﻿using Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder;
 using Aspire.Hosting.ApplicationModel;
 
 namespace Aspire.Hosting;
@@ -16,8 +16,8 @@ public static class DataApiBuilderHostingExtension
     /// <param name="configFilePath">The path to the config file for Data API Builder.</param>"
     /// <param name="port">The port number for the Data API Builder container.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, 
-        string name, 
+    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder,
+        string name,
         string configFilePath = "./dab-config.json",
         int? port = null)
     {

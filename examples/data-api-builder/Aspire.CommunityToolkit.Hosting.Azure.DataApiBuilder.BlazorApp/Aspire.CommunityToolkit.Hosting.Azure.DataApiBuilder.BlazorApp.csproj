@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.ServiceDefaults\Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
