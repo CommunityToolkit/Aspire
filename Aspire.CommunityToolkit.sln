@@ -68,6 +68,16 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults\Aspire.CommunityToolkit.Hosting.DataApiBuilder.ServiceDefaults.csproj", "{0A667FDF-DD10-4CA5-8C71-DBA5AEED1D63}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp", "examples\data-api-builder\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp\Aspire.CommunityToolkit.Hosting.DataApiBuilder.BlazorApp.csproj", "{B42EFEB5-6196-4D8C-A46C-671D339B3C15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang", "src\Aspire.CommunityToolkit.Hosting.Golang\Aspire.CommunityToolkit.Hosting.Golang.csproj", "{93789F1B-0539-49B5-A585-9F6EF9E88264}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "golang", "golang", "{03950661-2B1F-48F4-91D2-1E6395B710C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.AppHost", "examples\golang\Aspire.CommunityToolkit.Hosting.Golang.AppHost\Aspire.CommunityToolkit.Hosting.Golang.AppHost.csproj", "{3A03552A-252D-4E86-A8D7-135579AAEB85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults", "examples\golang\Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults\Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults.csproj", "{C60BCC90-BAEE-4678-ACC9-11553AA64249}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.Tests", "tests\Aspire.CommunityToolkit.Hosting.Golang.Tests\Aspire.CommunityToolkit.Hosting.Golang.Tests.csproj", "{0294714B-A1CC-4F8E-8935-315B3499638F}"
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.OllamaSharp", "src\Aspire.CommunityToolkit.OllamaSharp\Aspire.CommunityToolkit.OllamaSharp.csproj", "{22D81BC2-2659-483A-B7AC-8FCA086A99A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.OllamaSharp.Tests", "tests\Aspire.CommunityToolkit.OllamaSharp.Tests\Aspire.CommunityToolkit.OllamaSharp.Tests.csproj", "{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}"
@@ -178,6 +188,22 @@ Global
 		{B42EFEB5-6196-4D8C-A46C-671D339B3C15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B42EFEB5-6196-4D8C-A46C-671D339B3C15}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B42EFEB5-6196-4D8C-A46C-671D339B3C15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{22D81BC2-2659-483A-B7AC-8FCA086A99A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{22D81BC2-2659-483A-B7AC-8FCA086A99A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22D81BC2-2659-483A-B7AC-8FCA086A99A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -221,6 +247,11 @@ Global
 		{A2419B54-5E7C-4FA0-B82A-7E15E4D29AD1} = {2B60C5B7-7502-448E-8881-3DD29C1DE999}
 		{0A667FDF-DD10-4CA5-8C71-DBA5AEED1D63} = {2B60C5B7-7502-448E-8881-3DD29C1DE999}
 		{B42EFEB5-6196-4D8C-A46C-671D339B3C15} = {2B60C5B7-7502-448E-8881-3DD29C1DE999}
+		{93789F1B-0539-49B5-A585-9F6EF9E88264} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{03950661-2B1F-48F4-91D2-1E6395B710C2} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{3A03552A-252D-4E86-A8D7-135579AAEB85} = {03950661-2B1F-48F4-91D2-1E6395B710C2}
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249} = {03950661-2B1F-48F4-91D2-1E6395B710C2}
+		{0294714B-A1CC-4F8E-8935-315B3499638F} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{22D81BC2-2659-483A-B7AC-8FCA086A99A7} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
