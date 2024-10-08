@@ -3,4 +3,7 @@
     <PackageReadmeFile>hosting-azure-static-web-apps.md</PackageReadmeFile>
     <AdditionalPackageTags>azure staticwebapps hosting</AdditionalPackageTags>
   </PropertyGroup>
+  <ItemGroup>
+    <AdditionalFiles Remove="PublicAPI.Shipped.txt" />
+  </ItemGroup>
 </Project>

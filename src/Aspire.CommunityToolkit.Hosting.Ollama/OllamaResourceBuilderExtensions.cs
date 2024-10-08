@@ -34,23 +34,6 @@ public static class OllamaResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Adds the Ollama container to the application model.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
-    /// <param name="port">An optional fixed port to bind to the Ollama container. This will be provided randomly by Aspire if not set.</param>
-    /// <param name="modelName">The name of the LLM to download on initial startup. llama3 by default. This can be set to null to not download any models.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>This is to maintain compatibility with the Raygun.Aspire.Hosting.Ollama package and will be removed in the next major release.</remarks>
-    [Obsolete("Use AddOllama without a model name, and then the AddModel extension method to add models.")]
-    public static IResourceBuilder<OllamaResource> AddOllama(this IDistributedApplicationBuilder builder,
-      string name = "Ollama", int? port = null, string modelName = "llama3")
-    {
-        return builder.AddOllama(name, port)
-          .AddModel(modelName);
-    }
-
-    /// <summary>
     /// Adds a data volume to the Ollama container.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
