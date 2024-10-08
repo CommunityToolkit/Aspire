@@ -3,4 +3,11 @@
     <PackageReadmeFile>hosting-data-api-builder.md</PackageReadmeFile>
     <AdditionalPackageTags>api dataapibuilder hosting</AdditionalPackageTags>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" />
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+    <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" />
+  </ItemGroup>
 </Project>
