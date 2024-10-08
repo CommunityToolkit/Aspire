@@ -1,5 +1,4 @@
-﻿using Aspire.CommunityToolkit.Hosting.Golang.Utils;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
 
 namespace Aspire.Hosting;
 
@@ -27,7 +26,7 @@ public static class GolangAppHostingExtension
             ? ["run", ".", .. args] 
             : ["run", ".",];
 
-        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
+        workingDirectory = Path.Combine(builder.AppHostDirectory, workingDirectory);
         var resource = new GolangAppExecutableResource(name, workingDirectory);
 
         return builder.AddResource(resource)
