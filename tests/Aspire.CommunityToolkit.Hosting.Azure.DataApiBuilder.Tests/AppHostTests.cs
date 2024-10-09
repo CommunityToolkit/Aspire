@@ -32,7 +32,8 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_Community
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var series = await response.Content.ReadFromJsonAsync<SeriesList>();
-        series.Should().NotBeNull();
+        // Using "standard" assertions because that cascades nullability state whereas FluentAssertions does not
+        Assert.NotNull(series);
         series.value.Should().NotBeNull();
         series.value.Should().HaveCount(5);
     }
