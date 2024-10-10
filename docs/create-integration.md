@@ -38,10 +38,7 @@ To create a new integration, you'll need to create a new project in the `src/` d
 
 To improve discovery of the integration when someone consumes the NuGet package, extension methods for adding the integration should be placed in the `Aspire.Hosting` for hosting integrations or `Microsoft.Extensions.Hosting` for client integrations. For custom resources created in hosting integrations, use the `Aspire.Hosting.ApplicationModel` namespace.
 
-## Container Usage
-
-If your integration will be pulling a container image from a registry, you should specify a specific tag for the image to pull, and not use the `latest` tag. This will ensure that the integration is stable and not affected by changes to the image. If the image is not versioned, you should use the `sha256` digest of the image.
-
+If your integration will be pulling a container image from a registry, you should specify a specific tag for the image in a `major.minor` format to pull, and not use the `latest` tag. This will ensure that the integration is stable and not affected by changes to the image. If the image is not versioned, you should use the `sha256` digest of the image.
 ## 🪧 Example application
 
 To demonstrate how to use the integration, you should create an example application in the `examples/` directory. This should be a simple application that demonstrates the minimal usage of the integration. At minimum there will need to be an AppHost project which uses the integration. This example application will also be used in the integration tests if it's a hosting integration.
