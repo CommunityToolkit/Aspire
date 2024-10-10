@@ -6,7 +6,7 @@ namespace Aspire.CommunityToolkit.Hosting.Golang.Tests;
 #pragma warning disable CTASPIRE001
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Golang_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Golang_AppHost>>
 {
-    [Theory]
+    [Theory(Skip = "https://github.com/CommunityToolkit/Aspire/issues/85")]
     [InlineData("golang")]
     public async Task ResourceStartsAndRespondsOk(string appName)
     {
