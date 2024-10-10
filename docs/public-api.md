@@ -44,9 +44,9 @@ If you're using nullable reference types, then add the following line at the top
 
     Warnings issued by the Microsoft.CodeAnalysis.PublicApiAnalyzers package:
 
-    ![](/images/public-api-warning-example.png)
+    ![Example warning from analyzer](/images/public-api-warning-example.png)
     
-    You can use `. + Ctrl` to open intellisense and see the available options. In this case, the warning is suggesting that we should add the `MyClass` type to the `PublicAPI.*.txt` files.
+    You can use `. + Ctrl` to open the code actions and see the available options. In this case, the warning is suggesting that we should add the `MyClass` type to the `PublicAPI.*.txt` files.
 3. **Update Existing Public API**:
    - If you modify existing public API members, update the `PublicAPI.Unshipped.txt` file accordingly.
    - Ensure that the changes reflect the new API surface.
