@@ -1,0 +1,15 @@
+GET http://localhost:8080/ping
+
+###
+
+GET http://localhost:8080/user/foo
+
+###
+
+POST http://localhost:8080/admin
+Content-Type: application/json
+Authorization: Basic Zm9vOmJhcg==
+
+{
+    "value": "bar"
+}
