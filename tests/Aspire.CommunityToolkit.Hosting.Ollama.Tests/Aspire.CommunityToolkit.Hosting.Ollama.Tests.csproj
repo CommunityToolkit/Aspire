@@ -6,9 +6,4 @@
     <ProjectReference Include="..\..\examples\ollama\Aspire.CommunityToolkit.Hosting.Ollama.AppHost\Aspire.CommunityToolkit.Hosting.Ollama.AppHost.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
-
 </Project>

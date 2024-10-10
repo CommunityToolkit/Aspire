@@ -4,14 +4,12 @@
 
 # Aspire.CommunityToolkit.Hosting.Java
 
-/docs/integrations/hosting-java/_ @justinyoo
 /examples/java/_ @justinyoo
 /src/Aspire.CommunityToolkit.Hosting.Java/_ @justinyoo
 /tests/Aspire.CommunityToolkit.Hosting.Java/_ @justinyoo
 
 # Aspire.CommunityToolkit.Hosting.Golang
 
-/docs/integrations/hosting-golang* @tommasodotNET
-/examples/golang/* @tommasodotNET
+/examples/golang/_ @tommasodotNET
 /src/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
 /tests/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
