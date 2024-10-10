@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageReadmeFile>hosting-golang.md</PackageReadmeFile>
     <AdditionalPackageTags>hosting golang</AdditionalPackageTags>
   </PropertyGroup>
 </Project>

@@ -1,101 +1,43 @@
-# Aspire.CommunityToolkit.Hosting.Java
+# Aspire.CommunityToolkit.Hosting.Java library
 
-This enables either containerised or executable Java app to be integrated with .NET Aspire.
+Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Java/Spring applications either using either the JDK or a container and configuring the OpenTelemetry agent for Java.
 
-## Prerequisites
+## Getting Started
 
--   [JDK 17+](https://learn.microsoft.com/java/openjdk/download)
--   [Springboot CLI](https://docs.spring.io/spring-boot/installing.html#getting-started.installing.cli)
--   [Apache Maven](https://maven.apache.org)
--   [Docker](https://docs.docker.com/get-docker/)
+### Install the package
 
-## Quickstart
+In your AppHost project, install the package using the following command:
 
-1. Run .NET Aspire dashboard:
+```dotnetcli
+dotnet add package Aspire.CommunityToolkit.Hosting.Java
+```
 
-    ```bash
-    dotnet watch run --project ./examples/java/Aspire.CommunityToolkit.Hosting.Java.AppHost
-    ```
+### Example usage
 
-## More detailed steps (Optional)
+Then, in the _Program.cs_ file of `AppHost`, define a Java resource, then call `AddJavaApp` or `AddSpringApp`:
 
-1. Download [OpenTelemetry Agent for Java](https://opentelemetry.io/docs/zero-code/java/agent/) to your local machine by running the following commands:
+```csharp
+// Define the Java container app resource
+var containerapp = builder.AddSpringApp("containerapp",
+                           new JavaAppContainerResourceOptions()
+                           {
+                               ContainerImageName = "<repository>/<image>",
+                               OtelAgentPath = "<agent-path>"
+                           });
 
-    ```bash
-    # bash/zsh
-    mkdir -p ./agents
-    wget -P ./agents \
-        https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+// Define the Java executable app resource
+var executableapp = builder.AddSpringApp("executableapp",
+                           new JavaAppExecutableResourceOptions()
+                           {
+                               ApplicationName = "target/app.jar",
+                               OtelAgentPath = "../../../agents"
+                           });
+```
 
-    # PowerShell
-    New-item -type Directory -Path ./agents -Force
-    Invoke-WebRequest `
-        -OutFile "./agents/opentelemetry-javaagent.jar" `
-        -Uri "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar"
-    ```
+## Additional Information
 
-1. Build the Spring app with Maven:
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-java
 
-    ```bash
-    pushd ./examples/java/Aspire.CommunityToolkit.Hosting.Java.Spring.Maven
+## Feedback & contributing
 
-    ./mvnw clean package
-
-    popd
-    ```
-
-1. Build a container image for the Spring app:
-
-    ```bash
-    pushd ./examples/java/Aspire.CommunityToolkit.Hosting.Java.Spring.Maven
-
-    docker build . -t aspire-spring-maven-sample:latest
-
-    popd
-    ```
-
-1. Push the container image to [Docker Hub](https://hub.docker.com) under your organisation, `contoso` for example:
-
-    ```bash
-    docker tag aspire-spring-maven-sample:latest contoso/aspire-spring-maven-sample:latest
-    docker push contoso/aspire-spring-maven-sample:latest
-    ```
-
-    > **NOTE**: You need to log in to Docker Hub before pushing the image.
-
-## Dashboard
-
-1. Check the dashboard that both containerised app and executable app are up and running.
-
-    ![Aspire Dashboard](../../images/java/dashboard.png)
-
-1. Open the web app in your browser and navigate to the `/weather` page and see the weather information from ASP.NET Core Web API app, Spring container app and Spring executable app.
-
-    ![Weather Page](../../images/java/weather.png)
-
-## Deployment to Azure
-
-1. Change the directory to `examples/java`.
-
-    ```bash
-    cd ./examples/java
-    ```
-
-1. Get the Azure environment name ready:
-
-    ```bash
-    # Bash
-    AZURE_ENV_NAME="contribs$((RANDOM%9000+1000))"
-
-    # PowerShell
-    $AZURE_ENV_NAME="contribs$((Get-Random -Minimum 1000 -Maximum 9999))"
-    ```
-
-1. Run the following command to deploy the app to Azure:
-
-    ```bash
-    azd up -e $AZURE_ENV_NAME
-    ```
-
-    Follow the instruction for the rest of the deployment process.
-
+https://github.com/CommunityToolkit/Aspire
