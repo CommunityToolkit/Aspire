@@ -24,6 +24,8 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
     <RunSettingsFilePath>..\.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
