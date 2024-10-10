@@ -37,7 +37,7 @@ Check out our [Contributing guide](./CONTRIBUTING.md) to learn more about contri
 
 ## 🏆 Contributors
 
-[![Toolkit Contributors](https://contrib.rocks/image?repo=CommunityToolkit/aspire)](https://github.com/CommunityToolkit/aspire/graphs/contributors)
+[![Toolkit Contributors](https://contrib.rocks/image?repo=CommunityToolkit/Aspire)](https://github.com/CommunityToolkit/Aspire/graphs/contributors)
 
 Made with [contrib.rocks](https://contrib.rocks).
 
@@ -78,3 +78,4 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [ollamasharp-nuget]: https://nuget.org/packages/Aspire.CommunityToolkit.OllamaSharp/
 [ollamasharp-shields-preview]: https://img.shields.io/nuget/v/Aspire.CommunityToolkit.OllamaSharp?label=nuget%20(preview)
 [ollamasharp-nuget-preview]: https://nuget.org/packages/Aspire.CommunityToolkit.OllamaSharp/absoluteLatest
+
