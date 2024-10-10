@@ -1,33 +1,43 @@
-# Aspire.CommunityTools.OllamaSharp
+# Aspire.CommunityToolkit.OllamaSharp library
 
-[![Aspire.CommunityToolkit.OllamaSharp](https://img.shields.io/nuget/v/Aspire.CommunityToolkit.OllamaSharp)](https://nuget.org/packages/Aspire.CommunityToolkit.OllamaSharp/) | [![Aspire.CommunityToolkit.OllamaSharp (latest)](<https://img.shields.io/nuget/vpre/Aspire.CommunityToolkit.OllamaSharp?label=nuget%20(preview)>)](https://nuget.org/packages/Aspire.CommunityToolkit.OllamaSharp/absoluteLatest)
+Registers `IOllamaClientApi` in the DI container to interact with the [Ollama](https://ollama.com) API.
 
-## Overview
+## Getting Started
 
-A .NET Aspire client integration that uses the [OllamaSharp](https://www.nuget.org/packages/OllamaSharp) client to interact with the Ollama container.
+### Prerequisites
 
-## Usage
+-   Ollama HTTP(S) endpoint
 
-Use the static `AddOllamaClientApi` method to add this client integration to the application builder of your client application. A callback can be provided to the `AddOllamaClientApi` method to configure the settings of the Ollama client.
+### Install the package
+
+Install the .NET Aspire OllamaSharp library using the following command:
+
+```dotnetcli
+dotnet add package Aspire.CommunityToolkit.OllamaSharp
+```
+
+### Example usage
+
+In the _Program.cs_ file of your project, call the `AddOllamaClientApi` extension method to register the `IOllamaClientApi` in the DI container. This method takes the connection name as a parameter:
 
 ```csharp
 builder.AddOllamaClientApi("ollama");
 ```
 
-Then you can inject the `IOllamaClientApi`` into your client application and use it to interact with the Ollama container.
+Then, in your service, inject `IOllamaClientApi` and use it to interact with the Ollama API:
 
 ```csharp
 public class MyService(IOllamaClientApi ollamaClientApi)
 {
-    public async Task DoSomething()
-    {
-        var chat = new Chat(ollamaClientApi);
-        while (true)
-        {
-            var message = Console.ReadLine();
-            await foreach (var answerToken in chat.Send(message))
-                Console.Write(answerToken);
-        }
-    }
+    // ...
 }
 ```
+
+## Additional documentation
+
+-   https://github.com/awaescher/OllamaSharp
+-   https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-ollama
+
+## Feedback & contributing
+
+https://github.com/dotnet/aspire

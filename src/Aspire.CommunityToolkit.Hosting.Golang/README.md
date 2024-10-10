@@ -1,25 +1,29 @@
-# CommunityToolkit.Hosting.Golang
+# Aspire.CommunityToolkit.Hosting.Golang library
 
-## Overview
+Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Golang applications.
 
-This is a .NET Aspire Integration for [Go](https://go.dev/) applications.
+## Getting Started
 
-## Usage
+### Install the package
 
-```csharp
-var builder = DistributedApplication.CreateBuilder(args);
+In your AppHost project, install the package using the following command:
 
-var golang = builder.AddGolangApp("golang", "../gin-api");
-
-builder.Build().Run();
+```dotnetcli
+dotnet add package Aspire.CommunityToolkit.Hosting.Golang
 ```
 
-### Configuration
-- `name`- The name of the resource.
-- `workingDirectory`- The working directory to use for the command. If null, the working directory of the current process is used.
-- `port`- This is the port that will be given to other resource to communicate with this resource. Deafults to `8080`.
-- `args`- The optinal arguments to be passed to the executable when it is started.
+### Example usage
 
-### OpenTelemetry Configuration
+Then, in the _Program.cs_ file of `AppHost`, define a Golang resource, then call `AddGolangApp`:
 
-In the [example](../../examples/golang/) folder, you can find an example of how to configure OpenTelemetry in the Go application to use the Aspire dashboard.
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api");
+```
+
+## Additional Information
+
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-golang
+
+## Feedback & contributing
+
+https://github.com/CommunityToolkit/Aspire
