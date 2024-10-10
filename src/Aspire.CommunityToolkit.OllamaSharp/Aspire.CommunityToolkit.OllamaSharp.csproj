@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageReadmeFile>ollamasharp.md</PackageReadmeFile>
     <Description>A .NET Aspire client integration for the OllamaSharp library.</Description>
     <AdditionalPackageTags>ollama ai ollamasharp</AdditionalPackageTags>
   </PropertyGroup>
