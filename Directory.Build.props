@@ -1,4 +1,7 @@
 <Project>
+  <Import Project="eng\apicompat\PublicApiAnalyzer.props" />
+  <Import Project="eng\apicompat\PublicApiAnalyzer.targets" />
+  
   <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -12,5 +15,7 @@
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
 
     <IsPackable>false</IsPackable>
+    <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 </PropertyGroup>
 </Project>

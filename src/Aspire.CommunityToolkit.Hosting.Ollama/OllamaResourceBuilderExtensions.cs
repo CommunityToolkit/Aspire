@@ -43,6 +43,7 @@ public static class OllamaResourceBuilderExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This is to maintain compatibility with the Raygun.Aspire.Hosting.Ollama package and will be removed in the next major release.</remarks>
     [Obsolete("Use AddOllama without a model name, and then the AddModel extension method to add models.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters", Justification = "<Pending>")]
     public static IResourceBuilder<OllamaResource> AddOllama(this IDistributedApplicationBuilder builder,
       string name = "Ollama", int? port = null, string modelName = "llama3")
     {

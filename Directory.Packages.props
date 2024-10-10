@@ -31,5 +31,8 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.1" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
+    <!-- Build dependencies -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
+
   </ItemGroup>
 </Project>
