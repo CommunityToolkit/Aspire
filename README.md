@@ -27,7 +27,7 @@ Each of the integrations in the toolkit is available as a NuGet package, and can
 
 ## 📃 Documentation
 
-Documentation for the .NET Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/aspire/community-toolkit/).
+Documentation for the .NET Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/aspire/community-toolkit/overview).
 
 ## 🚀 Contribution
 
