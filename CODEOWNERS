@@ -13,3 +13,9 @@
 /examples/golang/_ @tommasodotNET
 /src/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
 /tests/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
+
+# Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder
+
+/examples/data-api-builder/_ @tommasodotNET @FBoucher
+/src/Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder/_ @tommasodotNET @FBoucher
+/tests/Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests/_ @tommasodotNET @FBoucher
