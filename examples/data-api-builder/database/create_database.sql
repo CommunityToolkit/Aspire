@@ -1,3 +1,7 @@
+-- This script creates a database with tables and data for a Star Trek database
+-- Based on the SQL script of Jerry Nixon in his project sqlcmd-startrek
+-- available at: https://github.com/JerryNixon/sqlcmd-startrek
+
 
 USE [master]
 GO
