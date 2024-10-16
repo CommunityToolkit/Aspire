@@ -10,7 +10,6 @@
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
     <!-- AspNetCore packages -->
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.2" />
-    <PackageVersion Include="Jerry.WaitForDependencies.Aspire.Hosting" Version="0.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.8" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />

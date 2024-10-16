@@ -2,8 +2,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // Add a SQL Server container
 var sqlServer = builder
-    .AddSqlServer("sql")
-    .WithHealthCheck();
+    .AddSqlServer("sql");
 
 var sqlDatabase = sqlServer.AddDatabase("trek");
 

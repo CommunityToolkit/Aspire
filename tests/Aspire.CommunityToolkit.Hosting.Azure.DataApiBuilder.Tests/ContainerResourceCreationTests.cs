@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+
 namespace Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests;
 public class ContainerResourceCreationTests
 {

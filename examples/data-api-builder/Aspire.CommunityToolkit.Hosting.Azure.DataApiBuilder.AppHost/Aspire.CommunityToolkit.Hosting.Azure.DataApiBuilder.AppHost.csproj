@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -13,7 +14,6 @@
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.SqlServer" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
-    <PackageReference Include="Jerry.WaitForDependencies.Aspire.Hosting" />
   </ItemGroup>
 
   <ItemGroup>
