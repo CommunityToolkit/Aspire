@@ -5,7 +5,7 @@ sudo apt-get update && \
     sudo rm -rf /var/lib/apt/lists/*
 
 ## Install .NET Aspire workload
-sudo dotnet workload install aspire
+sudo dotnet workload update && dotnet workload install aspire
 sudo dotnet workload update --from-previous-sdk
 
 ## Install dev certs
