@@ -21,7 +21,7 @@
     <DebugType>embedded</DebugType>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 
-    <DocsPath>../../docs/integrations</DocsPath>
+    <DocsPath>README.md</DocsPath>
     <PackageOutputPath>../../nuget</PackageOutputPath>
     <PackageTags>aspire integration communitytoolkit dotnetcommunitytoolkit $(AdditionalPackageTags)</PackageTags>
   </PropertyGroup>
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(DocsPath)/$(PackageReadmeFile)">
+    <None Include="$(DocsPath)">
       <Pack>true</Pack>
       <PackagePath>/</PackagePath>
     </None>

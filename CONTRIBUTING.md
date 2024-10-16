@@ -29,11 +29,17 @@ The .NET Aspire Community Toolkit also has a list of issues that are labeled as 
 
 ## 📝 Add or Improve Documentation <a name="docs"></a>
 
-The documentation for the .NET Aspire Community Toolkit is available on the [GitHub Pages site](https://communitytoolkit.github.io/aspire/). If you find any issues with the documentation or want to add more information, you can contribute by submitting a PR.
+The documentation for the .NET Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/aspire/community-toolkit/). If you find any issues with the documentation or want to add more information, you can contribute by submitting a PR to [the documentation repository](https://github.com/dotnet/docs-aspire).
 
 ## 🚀 Create, Submit or Review Pull Request <a name="pr"></a>
 
 Anyone can create a Pull Request by forking the .NET Aspire Community Toolkit Repository. Here is how you can [Create a Pull Request from fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork). Once you fork the .NET Aspire Community Toolkit repo, it is essential to create all changes in the feature branch of your forked repository. If you have the changes in the forked feature branch, you can then create a Pull Request in the main .NET Aspire Community Toolkit.
+
+### 📦 Add New Integration <a name="integration"></a>
+
+For more detailed information on how to add a new integration, refer to the [building an integration](./docs/create-integration.md) documentation.
+
+Also, familiarise yourself with the [versioning](./docs/versioning.md) and [diagnostics](./docs/diagnostics.md) documentation to understand the process of adding new integrations and APIs.
 
 ## 💙 Thank You
 
