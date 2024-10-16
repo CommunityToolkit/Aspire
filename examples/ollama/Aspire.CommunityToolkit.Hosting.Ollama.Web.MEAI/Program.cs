@@ -1,7 +1,5 @@
-using Aspire.CommunityToolkit.Hosting.Ollama.Web;
-//using Aspire.CommunityToolkit.Hosting.Ollama.Web.Components;
-using Aspire.CommunityToolkit.OllamaSharp;
-using OllamaSharp;
+using Aspire.CommunityToolkit.Hosting.Ollama.Web.MEAI.Components;
+using Microsoft.Extensions.AI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +13,12 @@ builder.Services.AddRazorComponents()
 builder.Services.AddOutputCache();
 
 builder.AddOllamaApiClient("ollama");
+
+builder.Services.AddChatClient(
+    builder => 
+        {
+            return new OllamaChatClient(new Uri("http://localhost:11434/"), modelId: "phi3.5");
+        });
 
 var app = builder.Build();
 
@@ -37,12 +41,12 @@ app.MapRazorComponents<App>()
 
 app.MapDefaultEndpoints();
 
-app.Services.AddChatClient(builder => builder
-  .UseLogging()
-    .UseFunctionInvocation()
-    .UseDistributedCache()
-    .UseOpenTelemetry()
-  .Use(
-    new OllamaChatClient(new Uri("http://localhost:11434/"), "llama3.2").AsChatClient());
+
+//app.Services.AddChatClient(builder => builder
+//    .UseLogging()
+//    .UseFunctionInvocation()
+//    .UseDistributedCache()
+//    .UseOpenTelemetry()
+//    .Use(new OllamaChatClient(new Uri("http://localhost:11434/"), "llama3.2").AsChatClient());
 
 app.Run();

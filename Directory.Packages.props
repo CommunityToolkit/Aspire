@@ -9,6 +9,7 @@
     <PackageVersion Include="Aspire.Hosting.NodeJS" Version="$(AspireVersion)" />
     <!-- AspNetCore packages -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="9.0.0-preview.9.24507.7" />
     <PackageVersion Include="Microsoft.Extensions.AI.Ollama" Version="9.0.0-preview.9.24507.7" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <!-- .NET packages -->
