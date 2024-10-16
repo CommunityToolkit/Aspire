@@ -21,11 +21,20 @@ builder.Build().Run();
 
 - `name` - The name of the resource.
 - `configFilePath` - The path to the config file for Data API Builder. Defaults to `dab-config.json`.
-- `containerRegistry` - The container registry for the Data API Builder image. Defaults to `mcr.microsoft.com`.
-- `containerImageName` - The name of the Data API Builder image. Defaults to `azure-data-api-builder`.
-- `containerImageTag` - The tag of the Data API Builder image. Defaults to `latest`.
-- `port` - The port number for the Data API Builder container. Defaults to `5000`.
-- `targetPort` - The target port number for the Data API Builder container. Defaults to `5000`.
+- `port` - The port number for the Data API Builder container. Defaults to `null` so that Aspire can assign a random port.
+
+### Data API Builder Container Image Configuration
+
+The default Data API Builder container image is `mcr.microsoft.com/azure-data-api-builder/azure-data-api-builder:1.2.11`.
+
+You can specify a different registry/image/tag by using the `WithImageRegistry`/`WithImage`/`WithImageTag` methods:
+
+```csharp
+var dab = builder.AddDataAPIBuilder("dab")
+    .WithImageRegistry("mcr.microsoft.com")
+    .WithImage("azure-databases/data-api-builder")
+    .WithImageTag("latest");
+```
 
 
 ### Database Configuration
@@ -38,9 +47,7 @@ Here is an example of how you can configure the database:
 var sqlPassword = builder.AddParameter("sql-password");
 var sqlServer = builder
     .AddSqlServer("sql", sqlPassword)
-    .WithHealthCheck();
     .WithDataVolume("MyDataVolume");
 
 var sqlDatabase = sqlServer.AddDatabase("your-database-name");
-
 ```

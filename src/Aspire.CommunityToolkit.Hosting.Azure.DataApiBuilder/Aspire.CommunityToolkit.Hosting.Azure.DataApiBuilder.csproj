@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageReadmeFile>hosting-data-api-builder.md</PackageReadmeFile>
+    <Description>An Aspire component leveraging the Data API Builder container.</Description>
     <AdditionalPackageTags>api dataapibuilder hosting</AdditionalPackageTags>
   </PropertyGroup>
 </Project>
