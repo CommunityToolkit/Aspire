@@ -10,8 +10,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <AspireVersion>9.0.0-rc.1.24509.13</AspireVersion>
-    <AspireAppHostSdkVersion>9.0.0-rc.1.24509.13</AspireAppHostSdkVersion>
+    <AspireVersion>9.0.0-rc.1.24511.1</AspireVersion>
+    <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>8.0.7</AspNetCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
 
