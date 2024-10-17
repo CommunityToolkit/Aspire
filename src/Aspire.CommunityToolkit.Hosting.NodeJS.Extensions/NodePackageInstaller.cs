@@ -12,8 +12,10 @@ namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
 /// <param name="packageManager">The package manager to use.</param>
 /// <param name="loggerService">The logger service to use.</param>
 /// <param name="notificationService">The notification service to use.</param>
-internal class NodePackageInstaller(string packageManager, ResourceLoggerService loggerService, ResourceNotificationService notificationService)
+internal class NodePackageInstaller(string packageManager, string installCommand, string lockfile, ResourceLoggerService loggerService, ResourceNotificationService notificationService)
 {
+    private readonly bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
     /// <summary>
     /// Finds the Node.js resources using the specified package manager and installs the packages.
     /// </summary>
@@ -42,16 +44,16 @@ internal class NodePackageInstaller(string packageManager, ResourceLoggerService
     {
         var logger = loggerService.GetLogger(resource);
 
-        var packageJsonPath = Path.Combine(resource.WorkingDirectory, "package.json");
+        var packageJsonPath = Path.Combine(resource.WorkingDirectory, lockfile);
 
         if (!File.Exists(packageJsonPath))
         {
             await notificationService.PublishUpdateAsync(resource, state => state with
             {
-                State = new($"No package.json file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
+                State = new($"No {lockfile} file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
             }).ConfigureAwait(false);
 
-            throw new InvalidOperationException($"No package.json file found in {resource.WorkingDirectory}");
+            throw new InvalidOperationException($"No {lockfile} file found in {resource.WorkingDirectory}");
         }
 
         await notificationService.PublishUpdateAsync(resource, state => state with
@@ -61,25 +63,12 @@ internal class NodePackageInstaller(string packageManager, ResourceLoggerService
 
         logger.LogInformation("Installing {PackageManager} packages in {WorkingDirectory}", packageManager, resource.WorkingDirectory);
 
-        var packageInstaller = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new Process
+        var packageInstaller = new Process
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = packageManager,
-                Arguments = "install",
-                WorkingDirectory = resource.WorkingDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-            }
-        }
-        : new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "cmd",
-                Arguments = $"/c {packageManager} install",
+                FileName = isWindows ? "cmd" : packageManager,
+                Arguments = isWindows ? $"/c {packageManager} {installCommand}" : installCommand,
                 WorkingDirectory = resource.WorkingDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -118,7 +107,7 @@ internal class NodePackageInstaller(string packageManager, ResourceLoggerService
         packageInstaller.BeginOutputReadLine();
         packageInstaller.BeginErrorReadLine();
 
-        packageInstaller.WaitForExit();
+        await packageInstaller.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
         if (packageInstaller.ExitCode != 0)
         {

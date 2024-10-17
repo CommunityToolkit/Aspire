@@ -13,9 +13,13 @@ namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
 /// <param name="loggerService">The logger service used for logging.</param>
 /// <param name="notificationService">The notification service used for sending notifications.</param>
 /// <param name="context">The execution context of the distributed application.</param>
-internal class NpmPackageInstallerLifecycleHook(ResourceLoggerService loggerService, ResourceNotificationService notificationService, DistributedApplicationExecutionContext context) : IDistributedApplicationLifecycleHook
+internal class NpmPackageInstallerLifecycleHook(
+    bool useCI,
+    ResourceLoggerService loggerService,
+    ResourceNotificationService notificationService,
+    DistributedApplicationExecutionContext context) : IDistributedApplicationLifecycleHook
 {
-    private readonly NodePackageInstaller _installer = new("npm", loggerService, notificationService);
+    private readonly NodePackageInstaller _installer = new("npm", useCI ? "ci" : "install", "package-lock.json", loggerService, notificationService);
 
     /// <inheritdoc />
     public Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)

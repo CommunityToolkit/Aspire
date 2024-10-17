@@ -15,7 +15,7 @@ internal class YarnPackageInstallerLifecycleHook(
     ResourceNotificationService notificationService,
     DistributedApplicationExecutionContext context) : IDistributedApplicationLifecycleHook
 {
-    private readonly NodePackageInstaller _installer = new("yarn", loggerService, notificationService);
+    private readonly NodePackageInstaller _installer = new("yarn", "install", "yarn.lock", loggerService, notificationService);
 
     /// <inheritdoc />
     public Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
