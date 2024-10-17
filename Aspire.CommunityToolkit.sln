@@ -66,6 +66,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults", "examples\golang\Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults\Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults.csproj", "{C60BCC90-BAEE-4678-ACC9-11553AA64249}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.Tests", "tests\Aspire.CommunityToolkit.Hosting.Golang.Tests\Aspire.CommunityToolkit.Hosting.Golang.Tests.csproj", "{0294714B-A1CC-4F8E-8935-315B3499638F}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.OllamaSharp", "src\Aspire.CommunityToolkit.OllamaSharp\Aspire.CommunityToolkit.OllamaSharp.csproj", "{22D81BC2-2659-483A-B7AC-8FCA086A99A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.OllamaSharp.Tests", "tests\Aspire.CommunityToolkit.OllamaSharp.Tests\Aspire.CommunityToolkit.OllamaSharp.Tests.csproj", "{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}"
