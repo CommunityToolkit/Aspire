@@ -11,7 +11,7 @@ public static class SwaAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This resource will not be included in the published manifest.</remarks>
-    public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, string name) =>
+    public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, [ResourceName] string name) =>
         builder.AddSwaEmulator(name, new SwaResourceOptions());
 
     /// <summary>
@@ -22,7 +22,7 @@ public static class SwaAppHostingExtension
     /// <param name="options">The <see cref="SwaResourceOptions"/> to configure the SWA CLI.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This resource will not be included in the published manifest.</remarks>
-    public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, string name, SwaResourceOptions options)
+    public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, [ResourceName] string name, SwaResourceOptions options)
     {
         var resource = new SwaResource(name, Environment.CurrentDirectory);
         return builder.AddResource(resource)
