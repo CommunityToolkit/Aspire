@@ -32,7 +32,7 @@ public class MeilisearchFunctionalTests
            .AddRetry(new() { MaxRetryAttempts = 10, Delay = TimeSpan.FromSeconds(10) })
            .Build();
 
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var meilisearch = builder.AddMeilisearch("meilisearch");
 
@@ -80,7 +80,7 @@ public class MeilisearchFunctionalTests
 
         try
         {
-            var builder1 = DistributedApplication.CreateBuilder();
+            using var builder1 = TestDistributedApplicationBuilder.Create();
 
             var meilisearch1 = builder1.AddMeilisearch("meilisearch");
 
@@ -136,7 +136,7 @@ public class MeilisearchFunctionalTests
                 }
             }
 
-            var builder2 = DistributedApplication.CreateBuilder();
+            using var builder2 = TestDistributedApplicationBuilder.Create();
             var masterkeyParameter2 = builder2.AddParameter("masterkey");
             builder2.Configuration["Parameters:masterkey"] = masterKey;
             var meilisearch2 = builder2.AddMeilisearch("meilisearch", masterkeyParameter2);
@@ -217,7 +217,7 @@ public class MeilisearchFunctionalTests
     //public async Task VerifyWaitForOnMeilisearchBlocksDependentResources()
     //{
     //    var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-    //    var builder = DistributedApplication.CreateBuilder();
+    //    using var builder = TestDistributedApplicationBuilder.Create();
 
     //    var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
     //    builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () =>

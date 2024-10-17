@@ -5,8 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsTestProject>false</IsTestProject>
+    <IsAspireHost>true</IsAspireHost>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" IsAspireProjectResource="false" />
+  </ItemGroup>
+  
   <ItemGroup>
     <!--
       This intentionally does not reference 'xunit', 'xunit.core', or any runner packages.
