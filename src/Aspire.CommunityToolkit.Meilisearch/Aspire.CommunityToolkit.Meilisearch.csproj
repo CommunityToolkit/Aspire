@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <Compile Include="..\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
-    <Compile Include="..\ConfigurationSchemaAttributes.cs" Link="Utils\ConfigurationSchemaAttributes.cs" />
   </ItemGroup>
 
 </Project>
