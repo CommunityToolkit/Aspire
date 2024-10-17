@@ -1,27 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
-    <PackageTags>Meilisearch</PackageTags>
+    <AdditionalPackageTags>Meilisearch</AdditionalPackageTags>
     <Description>A Meilisearch client that integrates with Aspire, including health checks, logging, and telemetry.</Description>
-    <!-- Disable package validation as this package hasn't shipped yet. -->
-    <NoWarn>$(NoWarn);CS8002</NoWarn>
-    <!-- MeiliSearch package is not signed -->
-    <EnablePackageValidation>false</EnablePackageValidation>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <MinCodeCoverage>80</MinCodeCoverage>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Remove="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Remove="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="PublicAPI.Shipped.txt" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MeiliSearch" />

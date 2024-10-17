@@ -10,4 +10,5 @@ Aspire.CommunityToolkit.Meilisearch.MeilisearchClientSettings.MasterKey.get -> s
 Aspire.CommunityToolkit.Meilisearch.MeilisearchClientSettings.MasterKey.set -> void
 Aspire.CommunityToolkit.Meilisearch.MeilisearchClientSettings.MeilisearchClientSettings() -> void
 Microsoft.Extensions.Hosting.AspireMeilisearchExtensions
+static Microsoft.Extensions.Hosting.AspireMeilisearchExtensions.AddKeyedMeilisearchClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<Aspire.CommunityToolkit.Meilisearch.MeilisearchClientSettings!>? configureSettings = null) -> void
 static Microsoft.Extensions.Hosting.AspireMeilisearchExtensions.AddMeilisearchClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<Aspire.CommunityToolkit.Meilisearch.MeilisearchClientSettings!>? configureSettings = null) -> void
