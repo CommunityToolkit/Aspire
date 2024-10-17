@@ -17,7 +17,7 @@ public static class DataApiBuilderHostingExtension
     /// <param name="port">The port number for the Data API Builder container.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder,
-        string name,
+        [ResourceName] string name,
         string configFilePath = "./dab-config.json",
         int? port = null)
     {

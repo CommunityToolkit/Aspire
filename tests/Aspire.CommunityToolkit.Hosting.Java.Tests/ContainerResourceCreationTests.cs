@@ -25,7 +25,8 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp(null!, new JavaAppContainerResourceOptions()));
-        Assert.Throws<ArgumentException>(() => builder.AddJavaApp("", new JavaAppContainerResourceOptions()));
+        const string name = "";
+        Assert.Throws<ArgumentException>(() => builder.AddJavaApp(name, new JavaAppContainerResourceOptions()));
     }
 
     [Fact]
@@ -34,7 +35,8 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddSpringApp(null!, new JavaAppContainerResourceOptions()));
-        Assert.Throws<ArgumentException>(() => builder.AddSpringApp("", new JavaAppContainerResourceOptions()));
+        const string name = "";
+        Assert.Throws<ArgumentException>(() => builder.AddSpringApp(name, new JavaAppContainerResourceOptions()));
     }
 
     [Fact]
