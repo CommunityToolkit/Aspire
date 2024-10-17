@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+
 namespace Aspire.CommunityToolkit.Hosting.Java.Tests;
 
 public class ExecutableResourceCreationTests

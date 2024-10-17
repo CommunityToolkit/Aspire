@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 

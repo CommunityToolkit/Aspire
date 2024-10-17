@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+
 namespace Aspire.CommunityToolkit.Hosting.Golang.Extensions.Tests;
 
 public class ResourceCreationTests
