@@ -34,13 +34,13 @@ public class ConformanceTests : ConformanceTests<MeilisearchClient, MeilisearchC
     {
         var connectionString = RequiresDockerAttribute.IsSupported ?
           $"{_containerFixture.GetConnectionString()}" :
-          "http://localhost:27017";
+          "Endpoint=http://localhost:27017;MasterKey=p@ssw0rd1";
 
         configuration.AddInMemoryCollection(
             [
                 new KeyValuePair<string, string?>(CreateConfigKey("Aspire:Meilisearch:Client", key, "Endpoint"), GetConnectionStringKeyValue(connectionString,"Endpoint")),
                 new KeyValuePair<string, string?>(CreateConfigKey("Aspire:Meilisearch:Client", key, "MasterKey"), GetConnectionStringKeyValue(connectionString,"MasterKey")),
-                new KeyValuePair<string, string?>($"ConnectionStrings:{key}", $"Endpoint={connectionString}")
+                new KeyValuePair<string, string?>($"ConnectionStrings:{key}", $"{connectionString}")
             ]);
     }
 
