@@ -1,6 +1,10 @@
 <Project>
   <Import Project="..\Directory.Build.props" />
 
+  <PropertyGroup>
+    <UsePublicApiAnalyzers>false</UsePublicApiAnalyzers>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" />
     <PackageReference Include="coverlet.collector" />
@@ -20,6 +24,8 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
     <RunSettingsFilePath>..\.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 

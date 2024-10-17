@@ -1,10 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps.csproj" />
     <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />

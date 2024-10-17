@@ -61,6 +61,20 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aspire.CommunityToolkit.Hos
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aspire.CommunityToolkit.Meilisearch", "src\Aspire.CommunityToolkit.Meilisearch\Aspire.CommunityToolkit.Meilisearch.csproj", "{93031B72-2045-48C6-9585-DC7FA0BA967B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang", "src\Aspire.CommunityToolkit.Hosting.Golang\Aspire.CommunityToolkit.Hosting.Golang.csproj", "{93789F1B-0539-49B5-A585-9F6EF9E88264}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "golang", "golang", "{03950661-2B1F-48F4-91D2-1E6395B710C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.AppHost", "examples\golang\Aspire.CommunityToolkit.Hosting.Golang.AppHost\Aspire.CommunityToolkit.Hosting.Golang.AppHost.csproj", "{3A03552A-252D-4E86-A8D7-135579AAEB85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults", "examples\golang\Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults\Aspire.CommunityToolkit.Hosting.Golang.ServiceDefaults.csproj", "{C60BCC90-BAEE-4678-ACC9-11553AA64249}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.Hosting.Golang.Tests", "tests\Aspire.CommunityToolkit.Hosting.Golang.Tests\Aspire.CommunityToolkit.Hosting.Golang.Tests.csproj", "{0294714B-A1CC-4F8E-8935-315B3499638F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.OllamaSharp", "src\Aspire.CommunityToolkit.OllamaSharp\Aspire.CommunityToolkit.OllamaSharp.csproj", "{22D81BC2-2659-483A-B7AC-8FCA086A99A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aspire.CommunityToolkit.OllamaSharp.Tests", "tests\Aspire.CommunityToolkit.OllamaSharp.Tests\Aspire.CommunityToolkit.OllamaSharp.Tests.csproj", "{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -155,6 +169,30 @@ Global
 		{93031B72-2045-48C6-9585-DC7FA0BA967B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93031B72-2045-48C6-9585-DC7FA0BA967B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93031B72-2045-48C6-9585-DC7FA0BA967B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93789F1B-0539-49B5-A585-9F6EF9E88264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A03552A-252D-4E86-A8D7-135579AAEB85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0294714B-A1CC-4F8E-8935-315B3499638F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22D81BC2-2659-483A-B7AC-8FCA086A99A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22D81BC2-2659-483A-B7AC-8FCA086A99A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22D81BC2-2659-483A-B7AC-8FCA086A99A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22D81BC2-2659-483A-B7AC-8FCA086A99A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -186,6 +224,13 @@ Global
 		{0A17021E-5F10-429B-88C8-E4073EADACB6} = {14BD8AE7-C8DF-4C7C-8244-7F74C101569D}
 		{7BE7C12A-AE0A-4D0B-A076-325AD6E02475} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{93031B72-2045-48C6-9585-DC7FA0BA967B} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{93789F1B-0539-49B5-A585-9F6EF9E88264} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{03950661-2B1F-48F4-91D2-1E6395B710C2} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{3A03552A-252D-4E86-A8D7-135579AAEB85} = {03950661-2B1F-48F4-91D2-1E6395B710C2}
+		{C60BCC90-BAEE-4678-ACC9-11553AA64249} = {03950661-2B1F-48F4-91D2-1E6395B710C2}
+		{0294714B-A1CC-4F8E-8935-315B3499638F} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{22D81BC2-2659-483A-B7AC-8FCA086A99A7} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

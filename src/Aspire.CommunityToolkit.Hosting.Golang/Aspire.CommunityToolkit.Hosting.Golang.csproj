@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting golang</AdditionalPackageTags>
+  </PropertyGroup>
+</Project>
