@@ -15,6 +15,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AdditionalFiles Remove="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Remove="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="PublicAPI.Shipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MeiliSearch" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
