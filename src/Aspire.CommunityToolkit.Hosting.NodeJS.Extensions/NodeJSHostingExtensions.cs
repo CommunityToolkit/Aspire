@@ -97,6 +97,7 @@ public static class NodeJSHostingExtensions
     /// Ensures the Node.js packages are installed before the application starts using npm as the package manager.
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
+    /// <param name="useCI">When true use <code>npm ci</code> otherwise use <code>npm install</code> when installing packages.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, bool useCI = false)
     {
