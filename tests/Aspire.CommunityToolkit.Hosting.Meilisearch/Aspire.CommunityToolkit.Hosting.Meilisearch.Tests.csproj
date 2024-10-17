@@ -7,6 +7,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\examples\meilisearch\Aspire.CommunityToolkit.Hosting.Meilisearch.AppHost\Aspire.CommunityToolkit.Hosting.Meilisearch.AppHost.csproj" />
     <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.Hosting.Meilisearch\Aspire.CommunityToolkit.Hosting.Meilisearch.csproj" />
     <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.Meilisearch\Aspire.CommunityToolkit.Meilisearch.csproj" />
     <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
