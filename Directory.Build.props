@@ -17,5 +17,7 @@
     <IsPackable>false</IsPackable>
     <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
 </PropertyGroup>
 </Project>

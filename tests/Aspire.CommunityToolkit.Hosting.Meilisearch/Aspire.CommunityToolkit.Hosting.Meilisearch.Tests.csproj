@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Aspire.CommunityToolkit.Hosting.Meilisearch\MeilisearchContainerImageTags.cs" />
+    <Compile Include="$(RepoRoot)src\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.Hosting.Meilisearch\Aspire.CommunityToolkit.Hosting.Meilisearch.csproj" />
+    <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.Meilisearch\Aspire.CommunityToolkit.Meilisearch.csproj" />
+    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
+  </ItemGroup>
+  
+</Project>
