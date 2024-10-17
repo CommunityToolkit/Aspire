@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest,ubuntu-latest]
+        os: [windows-latest, ubuntu-latest]
       fail-fast: false
     runs-on: "${{ matrix.os }}"
     env:
@@ -115,4 +115,3 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
-

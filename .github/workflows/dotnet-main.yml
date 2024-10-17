@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-go@v5
         name: Set up Go
         with:
-          go-version: '^1.22.1'
+          go-version: "^1.22.1"
           cache-dependency-path: |
             ./**/go.sum
       - uses: actions/setup-java@v4
@@ -152,3 +152,4 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+
