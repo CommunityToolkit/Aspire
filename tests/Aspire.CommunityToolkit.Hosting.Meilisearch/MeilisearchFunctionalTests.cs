@@ -13,7 +13,7 @@ using Aspire.CommunityToolkit.Testing;
 namespace Aspire.CommunityToolkit.Hosting.Meilisearch.Tests;
 
 [RequiresDocker]
-public class MeilisearchFunctionalTests
+public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     private const string IndexName = "movies";
     private static readonly Movie[] s_data = [
@@ -32,7 +32,7 @@ public class MeilisearchFunctionalTests
            .AddRetry(new() { MaxRetryAttempts = 10, Delay = TimeSpan.FromSeconds(10) })
            .Build();
 
-        using var builder = TestDistributedApplicationBuilder.Create();
+        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var meilisearch = builder.AddMeilisearch("meilisearch");
 
@@ -79,7 +79,7 @@ public class MeilisearchFunctionalTests
 
         try
         {
-            using var builder1 = TestDistributedApplicationBuilder.Create();
+            using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
             var meilisearch1 = builder1.AddMeilisearch("meilisearch");
 
@@ -135,7 +135,7 @@ public class MeilisearchFunctionalTests
                 }
             }
 
-            using var builder2 = TestDistributedApplicationBuilder.Create();
+            using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
             var masterkeyParameter2 = builder2.AddParameter("masterkey");
             builder2.Configuration["Parameters:masterkey"] = masterKey;
             var meilisearch2 = builder2.AddMeilisearch("meilisearch", masterkeyParameter2);
@@ -215,7 +215,7 @@ public class MeilisearchFunctionalTests
     //public async Task VerifyWaitForOnMeilisearchBlocksDependentResources()
     //{
     //    var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-    //    using var builder = TestDistributedApplicationBuilder.Create();
+    //    using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
     //    var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
     //    builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () =>

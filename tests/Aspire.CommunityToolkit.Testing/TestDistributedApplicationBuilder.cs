@@ -1,3 +1,4 @@
+// Copied from aspire
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
@@ -55,9 +56,6 @@ public sealed class TestDistributedApplicationBuilder : IDistributedApplicationB
         return new TestDistributedApplicationBuilder(configureOptions, testOutputHelper);
     }
 
-    //public static TestDistributedApplicationBuilder CreateWithTestContainerRegistry(ITestOutputHelper testOutputHelper) =>
-    //    Create(o => o.ContainerRegistryOverride = TestConstants.AspireTestContainerRegistry, testOutputHelper);
-
     private TestDistributedApplicationBuilder(Action<DistributedApplicationOptions>? configureOptions, ITestOutputHelper? testOutputHelper = null)
     {
         var appAssembly = typeof(TestDistributedApplicationBuilder).Assembly;
@@ -65,19 +63,12 @@ public sealed class TestDistributedApplicationBuilder : IDistributedApplicationB
 
         _innerBuilder = BuilderInterceptor.CreateBuilder(Configure);
 
-        //_innerBuilder.Services.Configure<DashboardOptions>(o =>
-        //{
-        //    // Make sure we have a dashboard URL and OTLP endpoint URL (but don't overwrite them if they're already set)
-        //    o.DashboardUrl ??= "http://localhost:8080";
-        //    o.OtlpGrpcEndpointUrl ??= "http://localhost:4317";
-        //});
-
         _innerBuilder.Services.AddHttpClient();
         _innerBuilder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler());
-        //if (testOutputHelper is not null)
-        //{
-        //    WithTestAndResourceLogging(testOutputHelper);
-        //}
+        if (testOutputHelper is not null)
+        {
+            WithTestAndResourceLogging(testOutputHelper);
+        }
 
         void Configure(DistributedApplicationOptions applicationOptions, HostApplicationBuilderSettings hostBuilderOptions)
         {
@@ -97,13 +88,17 @@ public sealed class TestDistributedApplicationBuilder : IDistributedApplicationB
         }
     }
 
-    //public TestDistributedApplicationBuilder WithTestAndResourceLogging(ITestOutputHelper testOutputHelper)
-    //{
-    //    Services.AddXunitLogging(testOutputHelper);
-    //    Services.AddHostedService<ResourceLoggerForwarderService>();
-    //    Services.AddLogging(builder => builder.AddFilter("Aspire.Hosting", LogLevel.Trace));
-    //    return this;
-    //}
+    public TestDistributedApplicationBuilder WithTestAndResourceLogging(ITestOutputHelper testOutputHelper)
+    {
+        Services.AddHostedService<ResourceLoggerForwarderService>();
+        Services.AddLogging(builder =>
+        {
+            builder.AddXUnit(testOutputHelper);
+            builder.AddFilter("Aspire.Hosting", LogLevel.Trace);
+            builder.AddFilter("Aspire.CommunityToolkit.Hosting", LogLevel.Trace);
+        });
+        return this;
+    }
 
     public ConfigurationManager Configuration => _innerBuilder.Configuration;
 
