@@ -3,6 +3,7 @@ using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
@@ -96,10 +97,12 @@ public static class NodeJSHostingExtensions
     /// Ensures the Node.js packages are installed before the application starts using npm as the package manager.
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
+    /// <param name="useCI">When true use <code>npm ci</code> otherwise use <code>npm install</code> when installing packages.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
+    public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, bool useCI = false)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<NpmPackageInstallerLifecycleHook>();
+        resource.ApplicationBuilder.Services.TryAddLifecycleHook<NpmPackageInstallerLifecycleHook>(sp =>
+            new(useCI, sp.GetRequiredService<ResourceLoggerService>(), sp.GetRequiredService<ResourceNotificationService>(), sp.GetRequiredService<DistributedApplicationExecutionContext>()));
         return resource;
     }
 
