@@ -6,8 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
-    <!--<Compile Include="$(ComponentsDir)Aspire.Meilisearch\MeilisearchHealthCheck.cs" Link="MeilisearchHealthCheck.cs"></Compile>-->    
+    <Compile Include="$(RepoRoot)src\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,6 +12,7 @@ using Aspire.Hosting.Utils;
 using Aspire.CommunityToolkit.Testing;
 namespace Aspire.CommunityToolkit.Hosting.Meilisearch.Tests;
 
+[RequiresDocker]
 public class MeilisearchFunctionalTests
 {
     private const string IndexName = "movies";
@@ -24,7 +25,6 @@ public class MeilisearchFunctionalTests
                 new() { Id = "6", Title = "Philadelphia", Genres = ["Drama"] }
             ];
     [Fact]
-    [RequiresDocker]
     public async Task VerifyMeilisearchResource()
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
@@ -67,7 +67,6 @@ public class MeilisearchFunctionalTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    [RequiresDocker]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
@@ -213,7 +212,6 @@ public class MeilisearchFunctionalTests
     //following commented section need to aspire 9.0.
 
     //[Fact]
-    //[RequiresDocker]
     //public async Task VerifyWaitForOnMeilisearchBlocksDependentResources()
     //{
     //    var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));

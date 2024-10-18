@@ -8,10 +8,10 @@ namespace Aspire.CommunityToolkit.Hosting.Meilisearch.Tests;
 [RequiresDocker]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Meilisearch_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Meilisearch_AppHost>>
 {
-    [Theory]
-    [InlineData("meilisearch")]
-    public async Task ResourceStartsAndRespondsOk(string resourceName)
+    [Fact]
+    public async Task ResourceStartsAndRespondsOk()
     {
+        var resourceName = "meilisearch";
         await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(1));
         var httpClient = fixture.CreateHttpClient(resourceName);
 

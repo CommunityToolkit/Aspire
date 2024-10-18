@@ -42,6 +42,6 @@
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
-    <PackageVersion Include="Testcontainers" Version="$(TestcontainersVersion)" />
+    <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
   </ItemGroup>
 </Project>

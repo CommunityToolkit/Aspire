@@ -11,19 +11,12 @@ using Xunit;
 
 namespace Aspire.CommunityToolkit.Meilisearch.Tests;
 
-public class AspireMeilisearchClientExtensionsTest : IClassFixture<MeilisearchContainerFixture>
+public class AspireMeilisearchClientExtensionsTest(MeilisearchContainerFixture containerFixture) : IClassFixture<MeilisearchContainerFixture>
 {
     private const string DefaultConnectionName = "meilisearch";
 
-    private readonly MeilisearchContainerFixture _containerFixture;
-
-    public AspireMeilisearchClientExtensionsTest(MeilisearchContainerFixture containerFixture)
-    {
-        _containerFixture = containerFixture;
-    }
-
     private string DefaultConnectionString =>
-            RequiresDockerAttribute.IsSupported ? _containerFixture.GetConnectionString() : "http://localhost:27011";
+            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "http://localhost:27011";
 
     [Theory]
     [InlineData(true)]
