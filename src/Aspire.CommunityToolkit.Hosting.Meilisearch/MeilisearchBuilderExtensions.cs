@@ -15,15 +15,14 @@ public static class MeilisearchBuilderExtensions
 
     /// <summary>
     /// Adds an Meilisearch container resource to the application model.
-    /// </summary>
-    /// <remarks>
     /// The default image is <inheritdoc cref="MeilisearchContainerImageTags.Image"/> and the tag is <inheritdoc cref="MeilisearchContainerImageTags.Tag"/>.
-    /// </remarks>
+    /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="port">The host port to bind the underlying container to.</param>
     /// <param name="masterKey">The parameter used to provide the master key for the Meilisearch. If <see langword="null"/> a random master key will be generated.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
     /// <example>
     /// Add an Meilisearch container to the application model and reference it in a .NET project.
     /// <code lang="csharp">
@@ -36,6 +35,7 @@ public static class MeilisearchBuilderExtensions
     /// builder.Build().Run(); 
     /// </code>
     /// </example>
+    /// </remarks>
     public static IResourceBuilder<MeilisearchResource> AddMeilisearch(
         this IDistributedApplicationBuilder builder,
         string name,
@@ -78,7 +78,7 @@ public static class MeilisearchBuilderExtensions
              {
                  context.EnvironmentVariables["MEILI_MASTER_KEY"] = meilisearch.MasterKeyParameter;
              });
-             //.WithHealthCheck(healthCheckKey);
+        //.WithHealthCheck(healthCheckKey);
     }
 
     /// <summary>
@@ -87,6 +87,7 @@ public static class MeilisearchBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
     /// <example>
     /// Add an Meilisearch container to the application model and reference it in a .NET project. Additionally, in this
     /// example a data volume is added to the container to allow data to be persisted across container restarts.
@@ -101,6 +102,7 @@ public static class MeilisearchBuilderExtensions
     /// builder.Build().Run(); 
     /// </code>
     /// </example>
+    /// </remarks>
     public static IResourceBuilder<MeilisearchResource> WithDataVolume(this IResourceBuilder<MeilisearchResource> builder, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -116,6 +118,7 @@ public static class MeilisearchBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
     /// <example>
     /// Add an Meilisearch container to the application model and reference it in a .NET project. Additionally, in this
     /// example a bind mount is added to the container to allow data to be persisted across container restarts.
@@ -130,6 +133,7 @@ public static class MeilisearchBuilderExtensions
     /// builder.Build().Run(); 
     /// </code>
     /// </example>
+    /// </remarks>
     public static IResourceBuilder<MeilisearchResource> WithDataBindMount(this IResourceBuilder<MeilisearchResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
