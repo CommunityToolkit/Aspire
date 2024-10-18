@@ -7,6 +7,9 @@ on:
       - "src/**"
       - "examples/**"
       - "tests/**"
+      - ".github/workflows/dotnet-main.yml"
+env:
+  DEFAULT_DOTNET_VERSION: "8.0.x"
 
 jobs:
   build:
@@ -28,12 +31,12 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
-            8.0.x
+            ${{ env.DEFAULT_DOTNET_VERSION }}
             9.0.x
       - uses: actions/setup-go@v5
         name: Set up Go
         with:
-          go-version: '^1.22.1'
+          go-version: "^1.22.1"
           cache-dependency-path: |
             ./**/go.sum
       - uses: actions/setup-java@v4
@@ -127,8 +130,54 @@ jobs:
           path: "*.trx"
           reporter: dotnet-trx
 
-  publish-nuget:
+  sign:
     needs: build
+    runs-on: windows-latest
+    permissions:
+      id-token: write # Required for requesting the JWT
+
+    steps:
+      - name: Install .NET SDK v${{ env.DEFAULT_DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DEFAULT_DOTNET_VERSION }}
+
+      - name: Download Package List
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./
+
+      - name: Install Signing Tool
+        run: dotnet tool install --tool-path ./tools sign --version 0.9.1-beta.23356.1
+
+      - name: Sign Packages
+        run: >
+          ./tools/sign code azure-key-vault
+          **/*.nupkg
+          --base-directory "${{ github.workspace }}/packages"
+          --file-list "${{ github.workspace }}/SignClientFileList.txt"
+          --timestamp-url "http://timestamp.digicert.com"
+          --publisher-name ".NET Foundation"
+          --description ".NET Aspire Community Toolkit"
+          --description-url "https://github.com/CommunityToolkit/Aspire"
+          --azure-key-vault-url "${{ secrets.SIGN_KEY_VAULT_URL }}"
+          --azure-key-vault-client-id ${{ secrets.SIGN_CLIENT_ID }}
+          --azure-key-vault-client-secret "${{ secrets.SIGN_CLIENT_SECRET }}"
+          --azure-key-vault-tenant-id ${{ secrets.SIGN_TENANT_ID }}
+          --azure-key-vault-certificate "${{ secrets.SIGN_CERTIFICATE }}"
+          --verbosity Information
+
+      - name: Upload Signed Packages as Artifacts (for release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-nuget-packages
+          if-no-files-found: error
+          path: |
+            ${{ github.workspace }}/packages/**/*.nupkg
+
+  publish-nuget:
+    needs: sign
     runs-on: ubuntu-latest
     environment:
       name: nuget-beta
@@ -136,13 +185,13 @@ jobs:
       - name: Download package
         uses: actions/download-artifact@v4
         with:
-          name: nuget-packages
+          name: signed-nuget-packages
 
       - name: Publish to NuGet
         run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
 
   publish-github-packages:
-    needs: build
+    needs: sign
     runs-on: ubuntu-latest
     environment:
       name: github-packages
@@ -150,7 +199,7 @@ jobs:
       - name: Download package
         uses: actions/download-artifact@v4
         with:
-          name: nuget-packages
+          name: signed-nuget-packages
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
