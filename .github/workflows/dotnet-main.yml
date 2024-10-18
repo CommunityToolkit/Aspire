@@ -100,6 +100,14 @@ jobs:
           name: nuget-packages
           path: ./nuget
 
+      - name: Upload Package List
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-list
+          if-no-files-found: error
+          path: |
+            ${{ github.workspace }}/.github/workflows/SignClientFileList.txt
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -146,7 +154,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nuget-packages
-          path: ./
+          path: ${{ github.workspace }}/packages
+
+      - name: Download NuGet package list
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-list
+          path: ${{ github.workspace }}
 
       - name: Install Signing Tool
         run: dotnet tool install --tool-path ./tools sign --version 0.9.1-beta.23356.1
@@ -203,3 +217,4 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+
