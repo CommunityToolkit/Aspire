@@ -124,7 +124,7 @@ jobs:
 
   publish-azure-artifacts:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     environment:
       name: azure-artifacts
     steps:
@@ -133,7 +133,18 @@ jobs:
         with:
           name: nuget-packages
 
-      - name: Push Packages
-        run: |
-          dotnet nuget add source https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json --name MainLatest --username dummy --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
-          dotnet nuget push "./*.nupkg" --api-key dummy --source MainLatest --skip-duplicate
+      - name: Add AzDO NuGet feed
+        run: >
+          dotnet nuget add source 
+          https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json 
+          --name MainLatest
+          --username dummy
+          --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
+
+      - name: Push signed packages to AzDO
+        run: >
+          dotnet nuget push 
+          "${{ github.workspace }}/**/*.nupkg" 
+          --api-key dummy 
+          --source MainLatest 
+          --skip-duplicate

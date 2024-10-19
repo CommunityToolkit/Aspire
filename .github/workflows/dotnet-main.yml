@@ -220,17 +220,28 @@ jobs:
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
 
   publish-azure-artifacts:
-    needs: sign
-    runs-on: ubuntu-latest
+    needs: build
+    runs-on: windows-latest
     environment:
       name: azure-artifacts
     steps:
       - name: Download package
         uses: actions/download-artifact@v4
         with:
-          name: signed-nuget-packages
+          name: nuget-packages
 
-      - name: Push Signed Packages
-        run: |
-          dotnet nuget add source https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json --name MainLatest --username dummy --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
-          dotnet nuget push "**/*.nupkg" --api-key dummy --source MainLatest --skip-duplicate
+      - name: Add AzDO NuGet feed
+        run: >
+          dotnet nuget add source 
+          https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json 
+          --name MainLatest
+          --username dummy
+          --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
+
+      - name: Push signed packages to AzDO
+        run: >
+          dotnet nuget push 
+          "${{ github.workspace }}/**/*.nupkg" 
+          --api-key dummy 
+          --source MainLatest 
+          --skip-duplicate
