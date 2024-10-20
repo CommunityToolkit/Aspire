@@ -137,7 +137,7 @@ jobs:
         run: >
           dotnet nuget add source 
           https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-PullRequests/nuget/v3/index.json
-          --name MainLatest
+          --name PullRequests
           --username dummy
           --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
 
@@ -146,5 +146,5 @@ jobs:
           dotnet nuget push 
           "${{ github.workspace }}/**/*.nupkg" 
           --api-key dummy 
-          --source MainLatest 
+          --source PullRequests 
           --skip-duplicate

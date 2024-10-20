@@ -233,7 +233,7 @@ jobs:
       - name: Add AzDO NuGet feed
         run: >
           dotnet nuget add source 
-          https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json 
+          https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-MainLatest/nuget/v3/index.json
           --name MainLatest
           --username dummy
           --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
