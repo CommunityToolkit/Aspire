@@ -11,8 +11,8 @@ using Microsoft.Extensions.Logging;
 using Json.Schema;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using Microsoft.TestUtilities;
 using Xunit.Sdk;
+using Microsoft.DotNet.XUnitExtensions;
 
 namespace Aspire.Components.ConformanceTests;
 
@@ -90,7 +90,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (typeof(TOptions) == typeof(object))
         {
-            throw SkipException.ForSkip("Not implemented yet");
+            throw new SkipTestException("Not implemented yet");
         }
 
         Assert.True(typeof(TOptions).IsSealed);
@@ -319,7 +319,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Contains(healthReport.Entries, entry => entry.Value.Status == expected);
     }
 
-    [Fact]
+    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/112")]
     public void ConfigurationSchemaValidJsonConfigTest()
     {
         var schema = JsonSchema.FromFile(JsonSchemaPath);
@@ -330,7 +330,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.True(results.IsValid);
     }
 
-    [Fact]
+    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/112")]
     public void ConfigurationSchemaInvalidJsonConfigTest()
     {
         var schema = JsonSchema.FromFile(JsonSchemaPath);
@@ -480,7 +480,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!HealthChecksAreSupported)
         {
-            throw SkipException.ForSkip("Health checks aren't supported.");
+            throw new SkipTestException("Health checks aren't supported.");
         }
     }
 
@@ -488,7 +488,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (useKey && !SupportsKeyedRegistrations)
         {
-            throw SkipException.ForSkip("Does not support Keyed Services");
+            throw new SkipTestException("Does not support Keyed Services");
         }
     }
 
@@ -496,7 +496,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!TracingIsSupported)
         {
-            throw SkipException.ForSkip("Tracing is not supported.");
+            throw new SkipTestException("Tracing is not supported.");
         }
     }
 
@@ -504,7 +504,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!MetricsAreSupported)
         {
-            throw SkipException.ForSkip("Metrics are not supported.");
+            throw new SkipTestException("Metrics are not supported.");
         }
     }
 
@@ -512,7 +512,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!CanCreateClientWithoutConnectingToServer && !CanConnectToServer)
         {
-            throw SkipException.ForSkip("Unable to connect to the server.");
+            throw new SkipTestException("Unable to connect to the server.");
         }
     }
 
@@ -520,7 +520,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!CanConnectToServer)
         {
-            throw SkipException.ForSkip("Unable to connect to the server.");
+            throw new SkipTestException("Unable to connect to the server.");
         }
     }
 
@@ -528,7 +528,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!SupportsNamedConfig || ConfigurationSectionName is null)
         {
-            throw SkipException.ForSkip("Named configuration is not supported.");
+            throw new SkipTestException("Named configuration is not supported.");
         }
     }
 
