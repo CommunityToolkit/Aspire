@@ -98,6 +98,15 @@ jobs:
           name: nuget-packages
           path: ./nuget
 
+      - name: Upload Package List
+        uses: actions/upload-artifact@v4
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        with:
+          name: nuget-list
+          if-no-files-found: error
+          path: |
+            ${{ github.workspace }}/.github/workflows/SignedPackageFileList.txt
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -128,25 +137,8 @@ jobs:
           path: "*.trx"
           reporter: dotnet-trx
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: release
-    steps:
-      - name: Download package
-        uses: actions/download-artifact@v4
-        with:
-          name: nuget-packages
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ./*.nupkg
-
   sign:
-    needs: release
+    needs: build
     runs-on: windows-latest
     permissions:
       id-token: write # Required for requesting the JWT
@@ -161,7 +153,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nuget-packages
-          path: ./
+          path: ${{ github.workspace }}/packages
+
+      - name: Download NuGet package list
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-list
+          path: ${{ github.workspace }}
 
       - name: Install Signing Tool
         run: dotnet tool install --tool-path ./tools sign --version 0.9.1-beta.23356.1
@@ -191,6 +189,23 @@ jobs:
           path: |
             ${{ github.workspace }}/packages/**/*.nupkg
 
+  release:
+    needs: sign
+    runs-on: ubuntu-latest
+    environment:
+      name: release
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-nuget-packages
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./*.nupkg
+
   publish-nuget:
     needs: sign
     runs-on: ubuntu-latest
@@ -203,7 +218,7 @@ jobs:
           name: signed-nuget-packages
 
       - name: Publish to NuGet
-        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
 
   publish-github-packages:
     needs: sign
@@ -218,4 +233,3 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
-
