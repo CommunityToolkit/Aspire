@@ -2,7 +2,7 @@
 
 ## What is the purpose of this project?
 
-The goal of the project is to be a centralised home for extensions and integrations for [.NET Aspire](/dotnet/aspire), helping to provide consistency in the way that integrations are built and maintained, as well as easier discoverability for users.
+The goal of the project is to be a centralised home for extensions and integrations for [.NET Aspire](https://aka.ms/dotnet/aspire), helping to provide consistency in the way that integrations are built and maintained, as well as easier discoverability for users.
 
 ## How is this project different from the official .NET Aspire project?
 
@@ -10,7 +10,7 @@ The .NET Aspire Community Toolkit is a community-driven project that is maintain
 
 ## How can I contribute to the project?
 
-Anyone can contribute to the .NET Aspire Community Toolkit and before you get started, be sure to read the [Contributing Guide](https://github.com/CommunityToolkit/Aspire/blob/main/CONTRIBUTING.md) to learn how to contribute to the project.
+Anyone can contribute to the .NET Aspire Community Toolkit and before you get started, be sure to read the [Contributing Guide](../CONTRIBUTING.md) to learn how to contribute to the project.
 
 ## Should I propose a new integration here on or the `dotnet/aspire` repo?
 

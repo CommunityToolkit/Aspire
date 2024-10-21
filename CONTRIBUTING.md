@@ -41,6 +41,10 @@ For more detailed information on how to add a new integration, refer to the [bui
 
 Also, familiarise yourself with the [versioning](./docs/versioning.md) and [diagnostics](./docs/diagnostics.md) documentation to understand the process of adding new integrations and APIs.
 
+### 🥽 Previewing Packages
+
+Each PR that builds successfully will have a preview package created. You can find the preview package in the [Azure Artifacts](https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-PullRequests/nuget/v3/index.json) feed and as artifacts attached to the build.
+
 ## 💙 Thank You
 
 **Thank you so much for contributing to this amazing project. We hope you will continue to add value and find yourself as a highly reliable source to the .NET Aspire Community Toolkit.**
@@ -51,6 +55,6 @@ Please see our [Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
 
 As should be clear by now: we assume everyone tries to do their best, everyone should be treated with respect and equally.
 
-In the unfortunate event that doesn't happen, please feel free to report it to any of the team members or reach out to [Gerald](mailto:gerald.versluis@microsoft.com) directly.
+In the unfortunate event that doesn't happen, please feel free to report it to any of the team members or reach out to [Aaron](mailto:aaron.powell@microsoft.com) directly.
 
 We will take appropriate actions and measures if necessary.

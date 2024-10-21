@@ -15,7 +15,7 @@ internal class PnpmPackageInstallerLifecycleHook(
     ResourceNotificationService notificationService,
     DistributedApplicationExecutionContext context) : IDistributedApplicationLifecycleHook
 {
-    private readonly NodePackageInstaller _installer = new("pnpm", loggerService, notificationService);
+    private readonly NodePackageInstaller _installer = new("pnpm", "install", "pnpm-lock.yaml", loggerService, notificationService);
 
     /// <inheritdoc />
     public Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)

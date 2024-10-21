@@ -39,6 +39,7 @@ To create a new integration, you'll need to create a new project in the `src/` d
 To improve discovery of the integration when someone consumes the NuGet package, extension methods for adding the integration should be placed in the `Aspire.Hosting` for hosting integrations or `Microsoft.Extensions.Hosting` for client integrations. For custom resources created in hosting integrations, use the `Aspire.Hosting.ApplicationModel` namespace.
 
 If your integration will be pulling a container image from a registry, you should specify a specific tag for the image in a `major.minor` format to pull, and not use the `latest` tag. This will ensure that the integration is stable and not affected by changes to the image. If the image is not versioned, you should use the `sha256` digest of the image.
+
 ## 🪧 Example application
 
 To demonstrate how to use the integration, you should create an example application in the `examples/` directory. This should be a simple application that demonstrates the minimal usage of the integration. At minimum there will need to be an AppHost project which uses the integration. This example application will also be used in the integration tests if it's a hosting integration.
@@ -120,7 +121,22 @@ Lastly, update the `README.md` in the root of this repository to include your ne
 
 Your integration will be automatically packaged as a NuGet package when a PR is created and added as an artifact to the CI job (assuming it builds!), allowing you to test it in other projects while it is being reviewed. Once reviewed it will move through the release workflow that the maintainers have set up. You can learn more about that in the [versioning documentation](./versioning.md).
 
+### 💡 NuGet Package metadata
+
+Most of the NuGet metadata will be automatically added to the generated nuspec file during the packaging process in the CI pipeline but there are two pieces of metadata that you will need to add manually to the csproj file for your integration:
+
+-   `Description` - A short description of the integration.
+-   `AdditionalTags` - A comma-separated list of tags that describe the integration (some tags are added by default, such as `aspire`, use this to add more specific tags for your integration).
+
+Here's an example from the OllamaSharp integration:
+
+```xml
+  <PropertyGroup>
+    <Description>A .NET Aspire client integration for the OllamaSharp library.</Description>
+    <AdditionalPackageTags>ollama ai ollamasharp</AdditionalPackageTags>
+  </PropertyGroup>
+```
+
 ## 🎉 You're done
 
 That's it! You've created a new integration for the .NET Aspire Community Toolkit. If you have any questions or need help, feel free to reach out to the maintainers or the community on GitHub Discussions.
-

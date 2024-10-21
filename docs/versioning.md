@@ -14,4 +14,4 @@ Releases are automated using GitHub Actions, each release will be tagged in the 
 
 ## Preview and Pull Request Builds
 
-Preview builds are created for each pull request and are available as assets of the workflow run, as well as via GitHub Packages (where applicable). These builds are not intended for production use and may contain bugs or incomplete features, so will be marked with pre-release tags.
+Preview builds are created for each pull request and are available as assets of the workflow run, as well as via Azure Artifacts (where applicable). These builds are not intended for production use and may contain bugs or incomplete features, so will be marked with pre-release tags.
