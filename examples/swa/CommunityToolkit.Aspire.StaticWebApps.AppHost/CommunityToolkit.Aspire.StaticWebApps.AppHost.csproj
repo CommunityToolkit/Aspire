@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Aspire.CommunityToolkit.StaticWebApps.ApiApp\Aspire.CommunityToolkit.StaticWebApps.ApiApp.csproj" />
-    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.StaticWebApps.ApiApp\CommunityToolkit.Aspire.StaticWebApps.ApiApp.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

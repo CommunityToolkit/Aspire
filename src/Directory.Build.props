@@ -8,7 +8,7 @@
     <Company>.NET Foundation</Company>
     <Copyright>(c) .NET Foundation and Contributors. All rights reserved.</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
-    <Product>Aspire.CommunityToolkit ($(NetVersion))</Product>
+    <Product>CommunityToolkit.Aspire ($(NetVersion))</Product>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/CommunityToolkit/Aspire</PackageProjectUrl>
     <PackageIcon>nuget.png</PackageIcon>

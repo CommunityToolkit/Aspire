@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.Hosting.Ollama;
+namespace CommunityToolkit.Aspire.Hosting.Ollama;
 
 internal static class OllamaContainerImageTags
 {

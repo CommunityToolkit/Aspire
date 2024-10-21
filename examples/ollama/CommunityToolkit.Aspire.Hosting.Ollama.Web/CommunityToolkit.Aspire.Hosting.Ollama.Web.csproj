@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Hosting.Ollama.ServiceDefaults\Aspire.CommunityToolkit.Hosting.Ollama.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.OllamaSharp\Aspire.CommunityToolkit.OllamaSharp.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.OllamaSharp\CommunityToolkit.Aspire.OllamaSharp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

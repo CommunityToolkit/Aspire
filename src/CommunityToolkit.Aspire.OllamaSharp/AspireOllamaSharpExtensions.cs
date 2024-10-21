@@ -1,4 +1,4 @@
-using Aspire.CommunityToolkit.OllamaSharp;
+using CommunityToolkit.Aspire.OllamaSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;

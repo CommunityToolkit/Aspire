@@ -1,8 +1,8 @@
-using Aspire.CommunityToolkit.Testing;
+using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 using Aspire.Components.Common.Tests;
 
-namespace Aspire.CommunityToolkit.Hosting.Java.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
 
 #pragma warning disable CTASPIRE001
 [RequiresDocker]

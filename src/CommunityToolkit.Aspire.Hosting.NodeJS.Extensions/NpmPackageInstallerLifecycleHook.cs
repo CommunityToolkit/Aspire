@@ -2,7 +2,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 
-namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
+namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 
 /// <summary>
 /// Represents a lifecycle hook for installing packages using npm as the package manager.

@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.Hosting.Golang.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Golang.Extensions.Tests;
 
 public class ResourceCreationTests
 {

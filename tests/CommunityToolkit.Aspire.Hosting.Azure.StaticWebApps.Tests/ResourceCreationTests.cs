@@ -1,9 +1,9 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using Aspire.CommunityToolkit.Testing;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
 public class ResourceCreationTests
 {

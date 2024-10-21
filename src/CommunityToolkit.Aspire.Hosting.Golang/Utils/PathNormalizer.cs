@@ -1,4 +1,4 @@
-﻿namespace Aspire.CommunityToolkit.Hosting.Golang.Utils;
+﻿namespace CommunityToolkit.Aspire.Hosting.Golang.Utils;
 
 /// <summary>
 /// This represents the utility entity for normalizing paths.

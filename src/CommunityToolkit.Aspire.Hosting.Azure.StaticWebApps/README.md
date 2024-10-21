@@ -1,4 +1,4 @@
-# Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps library
+# CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps library
 
 Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Azure Static Web Apps locally using the emulator using the [Azure Static Web App CLI](https://learn.microsoft.com/azure/static-web-apps/local-development).
 
@@ -9,7 +9,7 @@ Provides extensions methods and resource definitions for the .NET Aspire AppHost
 In your AppHost project, install the package using the following command:
 
 ```dotnetcli
-dotnet add package Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps
+dotnet add package CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
 ```
 
 ### Example usage
@@ -24,7 +24,7 @@ var api = builder.AddProject<Projects.Aspire_CommunityToolkit_StaticWebApps_ApiA
 
 // Define the frontend resource
 var web = builder
-    .AddNpmApp("web", Path.Combine("..", "Aspire.CommunityToolkit.StaticWebApps.WebApp"), "dev")
+    .AddNpmApp("web", Path.Combine("..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"), "dev")
     .WithHttpEndpoint(env: "PORT")
     .WithExternalHttpEndpoints();
 
@@ -44,3 +44,4 @@ https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-azure-static
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
+

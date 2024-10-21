@@ -2,14 +2,14 @@
 
 -   @aaronpowell
 
-# Aspire.CommunityToolkit.Hosting.Java
+# CommunityToolkit.Aspire.Hosting.Java
 
 /examples/java/_ @justinyoo
-/src/Aspire.CommunityToolkit.Hosting.Java/_ @justinyoo
-/tests/Aspire.CommunityToolkit.Hosting.Java/_ @justinyoo
+/src/CommunityToolkit.Aspire.Hosting.Java/_ @justinyoo
+/tests/CommunityToolkit.Aspire.Hosting.Java/_ @justinyoo
 
-# Aspire.CommunityToolkit.Hosting.Golang
+# CommunityToolkit.Aspire.Hosting.Golang
 
 /examples/golang/_ @tommasodotNET
-/src/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
-/tests/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
+/src/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
+/tests/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET

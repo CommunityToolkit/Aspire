@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.OllamaSharp;
+namespace CommunityToolkit.Aspire.OllamaSharp;
 
 /// <summary>
 /// Represents the settings for OllamaSharp.

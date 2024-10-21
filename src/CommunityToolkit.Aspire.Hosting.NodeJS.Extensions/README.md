@@ -1,4 +1,4 @@
-# Aspire.CommunityToolkit.Hosting.NodeJS.Extensions library
+# CommunityToolkit.Aspire.Hosting.NodeJS.Extensions library
 
 This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.NodeJs) for .NET Aspire, including support for alternative package managers (yarn and pnpm), as well as developer workflow improvements.
 
@@ -9,7 +9,7 @@ This integration contains extensions for the [Node.js hosting package](https://n
 In your AppHost project, install the package using the following command:
 
 ```dotnetcli
-dotnet add package Aspire.CommunityToolkit.Hosting.NodeJS.Extensions
+dotnet add package CommunityToolkit.Aspire.Hosting.NodeJS.Extensions
 ```
 
 ### Example usage
@@ -31,3 +31,4 @@ https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-nodejs-exten
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
+

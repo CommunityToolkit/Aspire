@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.OllamaSharp\Aspire.CommunityToolkit.OllamaSharp.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.OllamaSharp\CommunityToolkit.Aspire.OllamaSharp.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

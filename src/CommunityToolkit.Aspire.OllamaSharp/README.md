@@ -1,4 +1,4 @@
-# Aspire.CommunityToolkit.OllamaSharp library
+# CommunityToolkit.Aspire.OllamaSharp library
 
 Registers `IOllamaClientApi` in the DI container to interact with the [Ollama](https://ollama.com) API.
 
@@ -13,7 +13,7 @@ Registers `IOllamaClientApi` in the DI container to interact with the [Ollama](h
 Install the .NET Aspire OllamaSharp library using the following command:
 
 ```dotnetcli
-dotnet add package Aspire.CommunityToolkit.OllamaSharp
+dotnet add package CommunityToolkit.Aspire.OllamaSharp
 ```
 
 ### Example usage
@@ -41,3 +41,4 @@ public class MyService(IOllamaClientApi ollamaClientApi)
 ## Feedback & contributing
 
 https://github.com/dotnet/aspire
+

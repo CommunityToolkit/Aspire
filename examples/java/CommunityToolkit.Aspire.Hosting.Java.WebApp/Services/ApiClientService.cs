@@ -1,7 +1,7 @@
-﻿using Aspire.CommunityToolkit.Hosting.Java.WebApp.Clients;
-using Aspire.CommunityToolkit.Hosting.Java.WebApp.Models;
+﻿using CommunityToolkit.Aspire.Hosting.Java.WebApp.Clients;
+using CommunityToolkit.Aspire.Hosting.Java.WebApp.Models;
 
-namespace Aspire.CommunityToolkit.Hosting.Java.WebApp.Services;
+namespace CommunityToolkit.Aspire.Hosting.Java.WebApp.Services;
 
 public interface IApiClientService
 {

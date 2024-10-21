@@ -1,7 +1,7 @@
-using Aspire.CommunityToolkit.Testing;
+using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 
-namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
 #pragma warning disable CTASPIRE001
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_NodeJS_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_NodeJS_Extensions_AppHost>>

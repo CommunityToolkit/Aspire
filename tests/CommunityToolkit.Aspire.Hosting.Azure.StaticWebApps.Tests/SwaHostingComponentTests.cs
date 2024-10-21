@@ -1,9 +1,9 @@
-using Aspire.CommunityToolkit.Testing;
+using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 using System.Net;
 using System.Net.Http.Json;
 
-namespace Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
 #pragma warning disable CTASPIRE001
 public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_StaticWebApps_AppHost>>

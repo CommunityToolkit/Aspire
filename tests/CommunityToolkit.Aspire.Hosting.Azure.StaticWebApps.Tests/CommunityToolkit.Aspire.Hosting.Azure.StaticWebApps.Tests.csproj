@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps\Aspire.CommunityToolkit.Hosting.Azure.StaticWebApps.csproj" />
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
-    <ProjectReference Include="..\..\examples\swa\Aspire.CommunityToolkit.StaticWebApps.AppHost\Aspire.CommunityToolkit.StaticWebApps.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="..\..\examples\swa\CommunityToolkit.Aspire.StaticWebApps.AppHost\CommunityToolkit.Aspire.StaticWebApps.AppHost.csproj" />
   </ItemGroup>
 
 </Project>

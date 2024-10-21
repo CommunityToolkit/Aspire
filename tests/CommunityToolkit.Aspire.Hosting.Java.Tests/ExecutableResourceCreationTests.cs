@@ -1,4 +1,4 @@
-namespace Aspire.CommunityToolkit.Hosting.Java.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
 
 public class ExecutableResourceCreationTests
 {

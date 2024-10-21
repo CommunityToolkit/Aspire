@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\golang\Aspire.CommunityToolkit.Hosting.Golang.AppHost\Aspire.CommunityToolkit.Hosting.Golang.AppHost.csproj" />
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
+    <ProjectReference Include="..\..\examples\golang\CommunityToolkit.Aspire.Hosting.Golang.AppHost\CommunityToolkit.Aspire.Hosting.Golang.AppHost.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
-using Aspire.CommunityToolkit.Hosting.Ollama;
+using CommunityToolkit.Aspire.Hosting.Ollama;
 
 namespace Aspire.Hosting;
 

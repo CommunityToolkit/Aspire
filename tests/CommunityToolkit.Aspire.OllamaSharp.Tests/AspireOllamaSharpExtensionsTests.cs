@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using OllamaSharp;
 
-namespace Aspire.CommunityToolkit.OllamaSharp.Tests;
+namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 
 public class AspireOllamaSharpExtensionsTests
 {

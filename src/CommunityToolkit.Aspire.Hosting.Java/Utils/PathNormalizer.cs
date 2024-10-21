@@ -1,4 +1,4 @@
-﻿namespace Aspire.CommunityToolkit.Hosting.Java.Utils;
+﻿namespace CommunityToolkit.Aspire.Hosting.Java.Utils;
 
 /// <summary>
 /// This represents the utility entity for normalizing paths.

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions;
+namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 
 /// <summary>
 /// Represents a Node package installer.

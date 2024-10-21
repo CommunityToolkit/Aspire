@@ -6,7 +6,7 @@
 
     <UserSecretsId>8b981031-6978-4b8e-b276-711918308102</UserSecretsId>
 
-    <JavaAppRoot>$(MSBuildProjectDirectory)/../Aspire.CommunityToolkit.Hosting.Java.Spring.Maven</JavaAppRoot>
+    <JavaAppRoot>$(MSBuildProjectDirectory)/../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven</JavaAppRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,9 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Aspire.CommunityToolkit.Hosting.Java.ApiApp/Aspire.CommunityToolkit.Hosting.Java.ApiApp.csproj" />
-    <ProjectReference Include="../Aspire.CommunityToolkit.Hosting.Java.WebApp/Aspire.CommunityToolkit.Hosting.Java.WebApp.csproj" />
-    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.Java\Aspire.CommunityToolkit.Hosting.Java.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Java.ApiApp/CommunityToolkit.Aspire.Hosting.Java.ApiApp.csproj" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Java.WebApp/CommunityToolkit.Aspire.Hosting.Java.WebApp.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Java\CommunityToolkit.Aspire.Hosting.Java.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <Target Name="PublishRunMaven" AfterTargets="Build">

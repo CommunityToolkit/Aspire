@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.NodeJS.Extensions\Aspire.CommunityToolkit.Hosting.NodeJS.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <Target Name="CleanNodeModules" AfterTargets="Build">

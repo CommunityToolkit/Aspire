@@ -9,7 +9,7 @@ var containerapp = builder.AddSpringApp("containerapp",
                                OtelAgentPath = "/agents"
                            });
 var executableapp = builder.AddSpringApp("executableapp",
-                           workingDirectory: "../Aspire.CommunityToolkit.Hosting.Java.Spring.Maven",
+                           workingDirectory: "../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven",
                            new JavaAppExecutableResourceOptions()
                            {
                                ApplicationName = "target/spring-maven-0.0.1-SNAPSHOT.jar",

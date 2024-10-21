@@ -10,7 +10,7 @@ using Xunit.Sdk;
 namespace Microsoft.TestUtilities;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-[XunitTestCaseDiscoverer("Microsoft.TestUtilities." + nameof(ConditionalFactDiscoverer), "Aspire.CommunityToolkit.Testing")]
+[XunitTestCaseDiscoverer("Microsoft.TestUtilities." + nameof(ConditionalFactDiscoverer), "CommunityToolkit.Aspire.Testing")]
 public class ConditionalFactAttribute : FactAttribute
 {
 }

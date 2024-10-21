@@ -1,8 +1,8 @@
-using Aspire.CommunityToolkit.Testing;
+using CommunityToolkit.Aspire.Testing;
 using Aspire.Components.Common.Tests;
 using FluentAssertions;
 
-namespace Aspire.CommunityToolkit.Hosting.Ollama.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
 [RequiresDocker]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Ollama_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Ollama_AppHost>>

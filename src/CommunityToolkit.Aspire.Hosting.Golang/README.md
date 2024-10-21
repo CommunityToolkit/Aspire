@@ -1,4 +1,4 @@
-# Aspire.CommunityToolkit.Hosting.Golang library
+# CommunityToolkit.Aspire.Hosting.Golang library
 
 Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Golang applications.
 
@@ -9,7 +9,7 @@ Provides extensions methods and resource definitions for the .NET Aspire AppHost
 In your AppHost project, install the package using the following command:
 
 ```dotnetcli
-dotnet add package Aspire.CommunityToolkit.Hosting.Golang
+dotnet add package CommunityToolkit.Aspire.Hosting.Golang
 ```
 
 ### Example usage
@@ -27,3 +27,4 @@ https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-golang
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
+

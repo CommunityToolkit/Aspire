@@ -1,4 +1,4 @@
-# Aspire.CommunityToolkit.Hosting.Ollama library
+# CommunityToolkit.Aspire.Hosting.Ollama library
 
 Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [Ollama](https://ollama.com) containers with support for downloading a model on startup.
 
@@ -11,7 +11,7 @@ It also provides support for running [Open WebUI](https://openwebui.com) to inte
 In your AppHost project, install the package using the following command:
 
 ```dotnetcli
-dotnet add package Aspire.CommunityToolkit.Hosting.Ollama
+dotnet add package CommunityToolkit.Aspire.Hosting.Ollama
 ```
 
 ### Example usage
@@ -31,3 +31,4 @@ https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-ollama
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
+

@@ -1,6 +1,6 @@
-﻿using Aspire.CommunityToolkit.Hosting.Java.WebApp.Models;
+﻿using CommunityToolkit.Aspire.Hosting.Java.WebApp.Models;
 
-namespace Aspire.CommunityToolkit.Hosting.Java.WebApp.Clients;
+namespace CommunityToolkit.Aspire.Hosting.Java.WebApp.Clients;
 
 public class SpringContainerClient(HttpClient http) : IApiClient
 {

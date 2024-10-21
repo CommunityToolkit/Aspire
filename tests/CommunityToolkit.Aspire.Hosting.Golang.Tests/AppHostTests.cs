@@ -1,7 +1,7 @@
-using Aspire.CommunityToolkit.Testing;
+using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 
-namespace Aspire.CommunityToolkit.Hosting.Golang.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Golang.Tests;
 
 #pragma warning disable CTASPIRE001
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Golang_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Golang_AppHost>>

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 
-namespace Aspire.CommunityToolkit.Hosting.NodeJS.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
 public class ResourceCreationTests
 {

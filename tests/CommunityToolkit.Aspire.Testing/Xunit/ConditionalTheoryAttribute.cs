@@ -10,7 +10,7 @@ using Xunit.Sdk;
 namespace Microsoft.TestUtilities;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-[XunitTestCaseDiscoverer("Microsoft.TestUtilities." + nameof(ConditionalTheoryDiscoverer), "Aspire.CommunityToolkit.Testing")]
+[XunitTestCaseDiscoverer("Microsoft.TestUtilities." + nameof(ConditionalTheoryDiscoverer), "CommunityToolkit.Aspire.Testing")]
 public class ConditionalTheoryAttribute : TheoryAttribute
 {
 }

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Aspire.CommunityToolkit.Hosting.Golang\Aspire.CommunityToolkit.Hosting.Golang.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Golang\CommunityToolkit.Aspire.Hosting.Golang.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
   
 </Project>
