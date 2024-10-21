@@ -4,6 +4,6 @@ name: aspire-contribs
 services:
   app:
     language: dotnet
-    project: ./Aspire.CommunityToolkit.Hosting.Java.AppHost/Aspire.CommunityToolkit.Hosting.Java.AppHost.csproj
+    project: ./CommunityToolkit.Aspire.Hosting.Java.AppHost/CommunityToolkit.Aspire.Hosting.Java.AppHost.csproj
     host: containerapp
 
