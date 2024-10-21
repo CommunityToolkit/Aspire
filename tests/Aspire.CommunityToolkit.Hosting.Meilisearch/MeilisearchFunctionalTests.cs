@@ -10,6 +10,7 @@ using Xunit.Abstractions;
 using Meilisearch;
 using Aspire.Hosting.Utils;
 using Aspire.CommunityToolkit.Testing;
+using YamlDotNet.Core.Tokens;
 namespace Aspire.CommunityToolkit.Hosting.Meilisearch.Tests;
 
 [RequiresDocker]
@@ -27,11 +28,6 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task VerifyMeilisearchResource()
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-        var pipeline = new ResiliencePipelineBuilder()
-           .AddRetry(new() { MaxRetryAttempts = 10, Delay = TimeSpan.FromSeconds(10) })
-           .Build();
-
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var meilisearch = builder.AddMeilisearch("meilisearch");
@@ -54,14 +50,9 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await host.StartAsync();
 
-        await pipeline.ExecuteAsync(
-            async token =>
-            {
+        var meilisearchClient = host.Services.GetRequiredService<MeilisearchClient>();
 
-                var meilisearchClient = host.Services.GetRequiredService<MeilisearchClient>();
-
-                await CreateTestData(meilisearchClient);
-            }, cts.Token);
+        await CreateTestData(meilisearchClient);
     }
 
     [Theory]
@@ -69,11 +60,6 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-        var pipeline = new ResiliencePipelineBuilder()
-           .AddRetry(new() { MaxRetryAttempts = 10, Delay = TimeSpan.FromSeconds(10) })
-           .Build();
-
         string? volumeName = null;
         string? bindMountPath = null;
 
@@ -106,7 +92,9 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
             {
                 await app.StartAsync();
 
-                //await app.WaitForTextAsync("Server listening", meilisearch1.Resource.Name);
+#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                await app.WaitForTextAsync("Server listening", meilisearch1.Resource.Name);
+#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
                 try
                 {
@@ -120,12 +108,8 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
                     {
                         await host.StartAsync();
 
-                        await pipeline.ExecuteAsync(
-                            async token =>
-                            {
-                                var meilisearchClient = host.Services.GetRequiredService<MeilisearchClient>();
-                                await CreateTestData(meilisearchClient);
-                            }, cts.Token);
+                        var meilisearchClient = host.Services.GetRequiredService<MeilisearchClient>();
+                        await CreateTestData(meilisearchClient);
                     }
                 }
                 finally
@@ -168,15 +152,11 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
                     using (var host = hb.Build())
                     {
                         await host.StartAsync();
-                        await pipeline.ExecuteAsync(
-                            async token =>
-                            {
-                                var meilisearchClient = host.Services.GetRequiredService<MeilisearchClient>();
-                                var index = meilisearchClient.Index(IndexName);
-                                var document = await index.GetDocumentAsync<Movie>("1", cancellationToken: token);
-                                Assert.NotNull(document);
-                                Assert.Equal(document.Title, s_data[0].Title);
-                            }, cts.Token);
+                        var meilisearchClient = host.Services.GetRequiredService<MeilisearchClient>();
+                        var index = meilisearchClient.Index(IndexName);
+                        var document = await index.GetDocumentAsync<Movie>("1");
+                        Assert.NotNull(document);
+                        Assert.Equal(document.Title, s_data[0].Title);
 
                     }
                 }
