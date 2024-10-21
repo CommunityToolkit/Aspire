@@ -13,3 +13,12 @@
 /examples/golang/_ @tommasodotNET
 /src/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
 /tests/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
+
+# Aspire.CommunityToolkit.Meilisearch
+# Aspire.CommunityToolkit.Hosting.Meilisearch
+
+/examples/meilisearch/_ @alirexaa
+/src/Aspire.CommunityToolkit.Hosting.Meilisearch/_ @alirexaa
+/tests/Aspire.CommunityToolkit.Hosting.Meilisearch/_ @alirexaa
+/src/Aspire.CommunityToolkit.Meilisearch/_ @alirexaa
+/tests/Aspire.CommunityToolkit.Meilisearch/_ @alirexaa
