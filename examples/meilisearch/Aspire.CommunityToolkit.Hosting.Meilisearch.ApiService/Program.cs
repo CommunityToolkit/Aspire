@@ -39,6 +39,9 @@ app.MapGet("/create", async (MeilisearchClient meilisearch) =>
 
     // If the index 'movies' does not exist, Meilisearch creates it when you first add the documents.
     var task = await index.AddDocumentsAsync<Movie>(documents);
+
+    // Wait for the task to ensure the document is added. this line is necessary for passing tests.
+    var response = await index.WaitForTaskAsync(task.TaskUid);
     return task;
 });
 

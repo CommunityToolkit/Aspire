@@ -35,7 +35,7 @@
     <PackageVersion Include="xunit" Version="2.9.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.1" />
-    <PackageVersion Include="Xunit.SkippableFact" Version="1.4.13" />
+    <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="8.0.0-beta.24516.1" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
     <PackageVersion Include="MeiliSearch" Version="0.15.3" />

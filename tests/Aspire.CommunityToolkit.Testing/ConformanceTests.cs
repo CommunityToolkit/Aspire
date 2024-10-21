@@ -11,9 +11,8 @@ using Microsoft.Extensions.Logging;
 using Json.Schema;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using Microsoft.TestUtilities;
 using Xunit.Sdk;
-using SkipException = Xunit.SkipException;
+using Microsoft.DotNet.XUnitExtensions;
 
 namespace Aspire.Components.ConformanceTests;
 
@@ -86,18 +85,18 @@ public abstract class ConformanceTests<TService, TOptions>
     /// </summary>
     protected abstract void SetMetrics(TOptions options, bool enabled);
 
-    [SkippableFact]
+    [ConditionalFact]
     public void OptionsTypeIsSealed()
     {
         if (typeof(TOptions) == typeof(object))
         {
-            throw new SkipException("Not implemented yet");
+            throw new SkipTestException("Not implemented yet");
         }
 
         Assert.True(typeof(TOptions).IsSealed);
     }
 
-    [SkippableTheory]
+    [ConditionalTheory]
     [InlineData(true)]
     [InlineData(false)]
     public void HealthChecksRegistersHealthCheckService(bool enabled)
@@ -111,7 +110,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Equal(enabled, healthCheckService is not null);
     }
 
-    [SkippableFact]
+    [ConditionalFact]
     public async Task EachKeyedComponentRegistersItsOwnHealthCheck()
     {
         SkipIfHealthChecksAreNotSupported();
@@ -134,7 +133,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.All(registeredNames, name => Assert.True(name.Contains(key1) || name.Contains(key2), $"{name} did not contain the key."));
     }
 
-    [SkippableTheory]
+    [ConditionalTheory]
     [InlineData(true)]
     [InlineData(false)]
     public void TracingRegistersTraceProvider(bool enabled)
@@ -149,7 +148,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Equal(enabled, tracer is not null);
     }
 
-    [SkippableTheory]
+    [ConditionalTheory]
     [InlineData(true)]
     [InlineData(false)]
     public void MetricsRegistersMeterProvider(bool enabled)
@@ -163,7 +162,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Equal(enabled, meter is not null);
     }
 
-    [SkippableTheory]
+    [ConditionalTheory]
     [InlineData(true)]
     [InlineData(false)]
     public void ServiceLifetimeIsAsExpected(bool useKey)
@@ -214,7 +213,7 @@ public abstract class ConformanceTests<TService, TOptions>
                 : serviceProvider.GetKeyedService<TService>(key);
     }
 
-    [SkippableFact]
+    [ConditionalFact]
     public void CanRegisterMultipleInstancesUsingDifferentKeys()
     {
         SkipIfKeyedRegistrationIsNotSupported();
@@ -230,7 +229,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.NotSame(serviceForKey1, serviceForKey2);
     }
 
-    [SkippableFact]
+    [ConditionalFact]
     public void WhenKeyedRegistrationIsUsedThenItsImpossibleToResolveWithoutKey()
     {
         SkipIfKeyedRegistrationIsNotSupported();
@@ -250,7 +249,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Throws<InvalidOperationException>(host.Services.GetRequiredService<TService>);
     }
 
-    [SkippableTheory]
+    [ConditionalTheory]
     [InlineData(true, true)]
     [InlineData(true, false)]
     [InlineData(false, true)]
@@ -299,7 +298,7 @@ public abstract class ConformanceTests<TService, TOptions>
         }
     }
 
-    [SkippableTheory]
+    [ConditionalTheory]
     [InlineData(null)]
     [InlineData("key")]
     public async Task HealthCheckReportsExpectedStatus(string? key)
@@ -351,7 +350,7 @@ public abstract class ConformanceTests<TService, TOptions>
     /// Ensures that when the connection information is missing, an exception isn't thrown before the host
     /// is built, so any exception can be logged with ILogger.
     /// </summary>
-    [SkippableTheory]
+    [ConditionalTheory]
     [InlineData(true)]
     [InlineData(false)]
     public void ConnectionInformationIsDelayValidated(bool useKey)
@@ -371,7 +370,7 @@ public abstract class ConformanceTests<TService, TOptions>
                 : host.Services.GetRequiredKeyedService<TService>(key));
     }
 
-    [SkippableFact]
+    [ConditionalFact]
     public void FavorsNamedConfigurationOverTopLevelConfigurationWhenBothProvided_DisableTracing()
     {
         SkipIfNamedConfigNotSupported();
@@ -393,7 +392,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Null(host.Services.GetService<TracerProvider>());
     }
 
-    [SkippableFact]
+    [ConditionalFact]
     public void FavorsNamedConfigurationOverTopLevelConfigurationWhenBothProvided_DisableHealthChecks()
     {
         SkipIfNamedConfigNotSupported();
@@ -481,7 +480,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!HealthChecksAreSupported)
         {
-            throw new SkipException("Health checks aren't supported.");
+            throw new SkipTestException("Health checks aren't supported.");
         }
     }
 
@@ -489,7 +488,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (useKey && !SupportsKeyedRegistrations)
         {
-            throw new SkipException("Does not support Keyed Services");
+            throw new SkipTestException("Does not support Keyed Services");
         }
     }
 
@@ -497,7 +496,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!TracingIsSupported)
         {
-            throw new SkipException("Tracing is not supported.");
+            throw new SkipTestException("Tracing is not supported.");
         }
     }
 
@@ -505,7 +504,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!MetricsAreSupported)
         {
-            throw new SkipException("Metrics are not supported.");
+            throw new SkipTestException("Metrics are not supported.");
         }
     }
 
@@ -513,7 +512,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!CanCreateClientWithoutConnectingToServer && !CanConnectToServer)
         {
-            throw new SkipException("Unable to connect to the server.");
+            throw new SkipTestException("Unable to connect to the server.");
         }
     }
 
@@ -521,7 +520,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!CanConnectToServer)
         {
-            throw new SkipException("Unable to connect to the server.");
+            throw new SkipTestException("Unable to connect to the server.");
         }
     }
 
@@ -529,7 +528,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!SupportsNamedConfig || ConfigurationSectionName is null)
         {
-            throw new SkipException("Named configuration is not supported.");
+            throw new SkipTestException("Named configuration is not supported.");
         }
     }
 
