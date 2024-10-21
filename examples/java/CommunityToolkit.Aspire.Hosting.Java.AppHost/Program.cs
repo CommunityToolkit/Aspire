@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var apiapp = builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_Java_ApiApp>("apiapp");
+var apiapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_ApiApp>("apiapp");
 
 var containerapp = builder.AddSpringApp("containerapp",
                            new JavaAppContainerResourceOptions()
@@ -23,7 +23,7 @@ var executableapp = builder.AddSpringApp("executableapp",
                                new DockerBuildArg("SERVER_PORT", "8085"),
                            ]);
 
-var webapp = builder.AddProject<Projects.Aspire_CommunityToolkit_Hosting_Java_WebApp>("webapp")
+var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_WebApp>("webapp")
                     .WithExternalHttpEndpoints()
                     .WithReference(containerapp)
                     .WithReference(executableapp)

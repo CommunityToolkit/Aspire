@@ -5,7 +5,7 @@ using FluentAssertions;
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
 [RequiresDocker]
-public class AppHostTests(AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Ollama_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Aspire_CommunityToolkit_Hosting_Ollama_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Ollama_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Ollama_AppHost>>
 {
     [Theory]
     [InlineData("ollama")]

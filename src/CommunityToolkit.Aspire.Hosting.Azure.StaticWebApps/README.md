@@ -20,7 +20,7 @@ Then, in the _Program.cs_ file of `AppHost`, define a frontend and backend resou
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Define the API resource
-var api = builder.AddProject<Projects.Aspire_CommunityToolkit_StaticWebApps_ApiApp>("api");
+var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiApp>("api");
 
 // Define the frontend resource
 var web = builder
@@ -44,4 +44,3 @@ https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-azure-static
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
-
