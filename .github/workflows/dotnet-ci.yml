@@ -122,3 +122,29 @@ jobs:
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
 
+  publish-azure-artifacts:
+    needs: build
+    runs-on: windows-latest
+    environment:
+      name: azure-artifacts
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Add AzDO NuGet feed
+        run: >
+          dotnet nuget add source 
+          https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-PullRequests/nuget/v3/index.json
+          --name PullRequests
+          --username dummy
+          --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
+
+      - name: Push signed packages to AzDO
+        run: >
+          dotnet nuget push 
+          "${{ github.workspace }}/**/*.nupkg" 
+          --api-key dummy 
+          --source PullRequests 
+          --skip-duplicate

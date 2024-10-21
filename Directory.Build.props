@@ -20,4 +20,9 @@
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
 </PropertyGroup>
+
+  <PropertyGroup>
+    <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
 </Project>
