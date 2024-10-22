@@ -1,0 +1,11 @@
+﻿CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.ConnectionString.get -> string?
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.ConnectionString.set -> void
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Models.get -> System.Collections.Generic.IReadOnlyList<string!>!
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Models.set -> void
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.OllamaSharpSettings() -> void
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.SelectedModel.get -> string?
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.SelectedModel.set -> void
+Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddKeyedOllamaApiClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddOllamaApiClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void

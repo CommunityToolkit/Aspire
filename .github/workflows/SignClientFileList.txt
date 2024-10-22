@@ -1,1 +1,1 @@
-**/Aspire.CommunityToolkit.*
+**/CommunityToolkit.Aspire.*

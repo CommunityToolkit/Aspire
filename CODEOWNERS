@@ -2,20 +2,20 @@
 
 -   @aaronpowell
 
-# Aspire.CommunityToolkit.Hosting.Java
+# CommunityToolkit.Aspire.Hosting.Java
 
 /examples/java/_ @justinyoo
-/src/Aspire.CommunityToolkit.Hosting.Java/_ @justinyoo
-/tests/Aspire.CommunityToolkit.Hosting.Java/_ @justinyoo
+/src/CommunityToolkit.Aspire.Hosting.Java/_ @justinyoo
+/tests/CommunityToolkit.Aspire.Hosting.Java/\_ @justinyoo
 
-# Aspire.CommunityToolkit.Hosting.Golang
+# CommunityToolkit.Aspire.Hosting.Golang
 
 /examples/golang/_ @tommasodotNET
-/src/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
-/tests/Aspire.CommunityToolkit.Hosting.Golang/_ @tommasodotNET
+/src/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
+/tests/CommunityToolkit.Aspire.Hosting.Golang/\_ @tommasodotNET
 
-# Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder
+# CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
 
 /examples/data-api-builder/_ @tommasodotNET @FBoucher
-/src/Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder/_ @tommasodotNET @FBoucher
-/tests/Aspire.CommunityToolkit.Hosting.Azure.DataApiBuilder.Tests/_ @tommasodotNET @FBoucher
+/src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/_ @tommasodotNET @FBoucher
+/tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/\_ @tommasodotNET @FBoucher
