@@ -114,17 +114,17 @@ public static class MartenApplicationBuilderExtensions
                 serviceKey is null ? "Aspire.Marten" : $"Aspire.Marten_{connectionName}",
                 sp => new NpgSqlHealthCheck(
                     new NpgSqlHealthCheckOptions(serviceKey is null
-                        ? sp.GetRequiredService<NpgsqlDataSource>()
-                        : sp.GetRequiredKeyedService<NpgsqlDataSource>(serviceKey))),
+                        ? sp.GetRequiredKeyedService<NpgsqlDataSource>("Aspire.Marten")
+                        : sp.GetRequiredKeyedService<NpgsqlDataSource>($"Aspire.Marten_{connectionName}"))),
                 failureStatus: default,
                 tags: default,
-                timeout: default));
+                timeout: settings.HealthCheckTimeout > 0 ? TimeSpan.FromMilliseconds(settings.HealthCheckTimeout.Value) : null));
         }
     }
 
     private static void RegisterMartenServices(this IHostApplicationBuilder builder, MartenSettings settings, string configurationSectionName, string connectionName, object? serviceKey, Action<StoreOptions>? configureStoreOptions)
     {
-        
+
         builder.Services.AddKeyedSingleton<NpgsqlDataSource>(serviceKey is null ? "Aspire.Marten" : $"Aspire.Marten_{connectionName}", (serviceProvider, _) =>
         {
             ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
@@ -174,7 +174,7 @@ public static class MartenApplicationBuilderExtensions
             {
                 return sp.GetRequiredService<DocumentStore>().LightweightSession();
             });
-            builder.Services.AddKeyedScoped<IQuerySession>(serviceKey,(sp,_) =>
+            builder.Services.AddKeyedScoped<IQuerySession>(serviceKey, (sp, _) =>
             {
                 return sp.GetRequiredService<DocumentStore>().QuerySession();
             });
