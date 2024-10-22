@@ -39,5 +39,10 @@
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="8.0.0-beta.24516.1" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
+    <PackageVersion Include="MeiliSearch" Version="0.15.3" />
+    <!-- Build dependencies -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
+    <!-- Testcontainers packages -->
+    <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
   </ItemGroup>
 </Project>
