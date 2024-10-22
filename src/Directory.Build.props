@@ -8,7 +8,7 @@
     <Company>.NET Foundation</Company>
     <Copyright>(c) .NET Foundation and Contributors. All rights reserved.</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
-    <Product>Aspire.CommunityToolkit ($(NetVersion))</Product>
+    <Product>CommunityToolkit.Aspire ($(NetVersion))</Product>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/CommunityToolkit/Aspire</PackageProjectUrl>
     <PackageIcon>nuget.png</PackageIcon>
@@ -22,6 +22,7 @@
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 
     <DocsPath>README.md</DocsPath>
+    <PackageReadmeFile>$(DocsPath)</PackageReadmeFile>
     <PackageOutputPath>../../nuget</PackageOutputPath>
     <PackageTags>aspire integration communitytoolkit dotnetcommunitytoolkit $(AdditionalPackageTags)</PackageTags>
   </PropertyGroup>
@@ -47,4 +48,13 @@
       <PackagePath>/</PackagePath>
     </None>
   </ItemGroup>
+
+  <!--
+    Create local branding
+  -->
+  <PropertyGroup Condition=" '$(ContinuousIntegrationBuild)' == 'false' AND  '$(VersionSuffix)' == ''  ">
+    <_VersionSuffix>$([System.DateTime]::Now.ToString(yyMMdd-HHmm))</_VersionSuffix>
+    <VersionSuffix>dev.$(_VersionSuffix)</VersionSuffix>
+    <PackageVersion>$(VersionPrefix)-$(VersionSuffix)</PackageVersion>
+  </PropertyGroup>
 </Project>

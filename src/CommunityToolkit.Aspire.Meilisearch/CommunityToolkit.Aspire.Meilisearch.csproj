@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>Meilisearch</AdditionalPackageTags>
+    <Description>A Meilisearch client that integrates with Aspire, including health checks, logging, and telemetry.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MeiliSearch" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
+  </ItemGroup>
+
+</Project>

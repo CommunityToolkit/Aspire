@@ -1,4 +1,4 @@
-# Versioning and Releases
+# Overview
 
 The .NET Aspire Community Toolkit follows the [Semantic Versioning 2.0.0](https://semver.org/) specification and aims to keep in sync with the .NET Aspire version numbers to a minor version level. This means that the major version of the toolkit will be the same as the major version of the .NET Aspire framework.
 
@@ -14,4 +14,4 @@ Releases are automated using GitHub Actions, each release will be tagged in the 
 
 ## Preview and Pull Request Builds
 
-Preview builds are created for each pull request and are available as assets of the workflow run, as well as via GitHub Packages (where applicable). These builds are not intended for production use and may contain bugs or incomplete features, so will be marked with pre-release tags.
+Preview builds are created for each pull request and are available as assets of the workflow run, as well as via Azure Artifacts (where applicable). These builds are not intended for production use and may contain bugs or incomplete features, so will be marked with pre-release tags.

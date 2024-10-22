@@ -1,4 +1,7 @@
 <Project>
+  <Import Project="eng\apicompat\PublicApiAnalyzer.props" />
+  <Import Project="eng\apicompat\PublicApiAnalyzer.targets" />
+  
   <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -10,7 +13,16 @@
     <AspireVersion>8.2.0</AspireVersion>
     <AspNetCoreVersion>8.0.7</AspNetCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
-
+    <TestContainersVersion>3.10.0</TestContainersVersion>
     <IsPackable>false</IsPackable>
+    <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
 </PropertyGroup>
+
+  <PropertyGroup>
+    <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
 </Project>

@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting golang</AdditionalPackageTags>
+    <Description>A .NET Aspire for hosting Golang apps.</Description>
+  </PropertyGroup>
+</Project>

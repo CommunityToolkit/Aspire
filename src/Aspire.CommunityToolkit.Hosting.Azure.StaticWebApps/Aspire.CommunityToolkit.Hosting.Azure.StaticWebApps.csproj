@@ -1,6 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <PackageReadmeFile>hosting-azure-static-web-apps.md</PackageReadmeFile>
-    <AdditionalPackageTags>azure staticwebapps hosting</AdditionalPackageTags>
-  </PropertyGroup>
-</Project>

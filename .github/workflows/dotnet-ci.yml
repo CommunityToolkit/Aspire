@@ -2,11 +2,13 @@ name: .NET CI
 
 on:
   pull_request:
-    branches: ["main"]
+    branches: ["*"]
     paths:
       - "src/**"
       - "examples/**"
       - "tests/**"
+      - Directory.Build.props
+      - ".github/workflows/**"
 
 jobs:
   build:
@@ -30,6 +32,12 @@ jobs:
           dotnet-version: |
             8.0.x
             9.0.x
+      - uses: actions/setup-go@v5
+        name: Set up Go
+        with:
+          go-version: "^1.22.1"
+          cache-dependency-path: |
+            ./**/go.sum
       - uses: actions/setup-java@v4
         name: Set up Java
         with:
@@ -57,12 +65,12 @@ jobs:
         name: Cache Java Docker images
         with:
           path: /var/lib/docker/image
-          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/Aspire.CommunityToolkit.Hosting.Java.Spring.Maven/Dockerfile') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven/Dockerfile') }}
           restore-keys: |
             ${{ runner.os }}-docker-
 
       - name: Install Aspire workload
-        run: dotnet workload install aspire
+        run: dotnet workload update && dotnet workload install aspire
       - name: Setup .NET dev certs
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
@@ -71,7 +79,7 @@ jobs:
       - name: Setup Node projects
         run: |
           npm install -g @azure/static-web-apps-cli
-          cd examples/swa/Aspire.CommunityToolkit.StaticWebApps.WebApp
+          cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
           npm ci
 
       - name: Restore dependencies
@@ -113,3 +121,31 @@ jobs:
 
       - name: Publish to GitHub packages
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+
+  publish-azure-artifacts:
+    needs: build
+    runs-on: windows-latest
+    environment:
+      name: azure-artifacts
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+
+      - name: Add AzDO NuGet feed
+        run: >
+          dotnet nuget add source 
+          https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-PullRequests/nuget/v3/index.json
+          --name PullRequests
+          --username dummy
+          --password ${{ secrets.DEVOPS_PACKAGE_PUSH_TOKEN }}
+
+      - name: Push signed packages to AzDO
+        run: >
+          dotnet nuget push 
+          "${{ github.workspace }}/**/*.nupkg" 
+          --api-key dummy 
+          --source PullRequests 
+          --skip-duplicate
+

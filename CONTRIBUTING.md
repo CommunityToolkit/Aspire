@@ -29,11 +29,21 @@ The .NET Aspire Community Toolkit also has a list of issues that are labeled as 
 
 ## 📝 Add or Improve Documentation <a name="docs"></a>
 
-The documentation for the .NET Aspire Community Toolkit is available on the [GitHub Pages site](https://communitytoolkit.github.io/aspire/). If you find any issues with the documentation or want to add more information, you can contribute by submitting a PR.
+The documentation for the .NET Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/aspire/community-toolkit/). If you find any issues with the documentation or want to add more information, you can contribute by submitting a PR to [the documentation repository](https://github.com/dotnet/docs-aspire).
 
 ## 🚀 Create, Submit or Review Pull Request <a name="pr"></a>
 
 Anyone can create a Pull Request by forking the .NET Aspire Community Toolkit Repository. Here is how you can [Create a Pull Request from fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork). Once you fork the .NET Aspire Community Toolkit repo, it is essential to create all changes in the feature branch of your forked repository. If you have the changes in the forked feature branch, you can then create a Pull Request in the main .NET Aspire Community Toolkit.
+
+### 📦 Add New Integration <a name="integration"></a>
+
+For more detailed information on how to add a new integration, refer to the [building an integration](./docs/create-integration.md) documentation.
+
+Also, familiarise yourself with the [versioning](./docs/versioning.md) and [diagnostics](./docs/diagnostics.md) documentation to understand the process of adding new integrations and APIs.
+
+### 🥽 Previewing Packages
+
+Each PR that builds successfully will have a preview package created. You can find the preview package in the [Azure Artifacts](https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-PullRequests/nuget/v3/index.json) feed and as artifacts attached to the build.
 
 ## 💙 Thank You
 
@@ -45,6 +55,6 @@ Please see our [Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
 
 As should be clear by now: we assume everyone tries to do their best, everyone should be treated with respect and equally.
 
-In the unfortunate event that doesn't happen, please feel free to report it to any of the team members or reach out to [Gerald](mailto:gerald.versluis@microsoft.com) directly.
+In the unfortunate event that doesn't happen, please feel free to report it to any of the team members or reach out to [Aaron](mailto:aaron.powell@microsoft.com) directly.
 
 We will take appropriate actions and measures if necessary.
