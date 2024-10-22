@@ -30,7 +30,7 @@ And of course, an editor such as Visual Studio, JetBrains Rider or emacs.
 
 ## 🚀 Getting Started
 
-To create a new integration, you'll need to create a new project in the `src/` directory. The project needs to be prefixed with `Aspire.CommunityToolkit.` and should be named after the integration you're creating, using the naming guidelines from the .NET Aspire team. For example, if you're creating a **Hosting** integration, then the project name should be `Aspire.CommunityToolkit.Hosting.MyIntegration`, whereas if you're creating a **Client** integration, then the project name should be `Aspire.CommunityToolkit.MyIntegration`.
+To create a new integration, you'll need to create a new project in the `src/` directory. The project needs to be prefixed with `CommunityToolkit.Aspire.` and should be named after the integration you're creating, using the naming guidelines from the .NET Aspire team. For example, if you're creating a **Hosting** integration, then the project name should be `CommunityToolkit.Aspire.Hosting.MyIntegration`, whereas if you're creating a **Client** integration, then the project name should be `CommunityToolkit.Aspire.MyIntegration`.
 
 > Note: All integration packages will have the `Aspire.Hosting` NuGet package added as a dependency, as well as some standard MSBuild properties. You can see what is pre-configured in the `Directory.Build.props` file.
 
@@ -46,7 +46,7 @@ To demonstrate how to use the integration, you should create an example applicat
 
 ## 🧪 Testing
 
-The testing framework used is [`xunit`](https://xunit.net/), and you'll need to create a new test project in the `tests/` directory. The test project should be named `Aspire.CommunityToolkit.Hosting.MyIntegration.Tests` or `Aspire.CommunityToolkit.MyIntegration.Tests` following the same naming guidelines as the integration project. It's easiest to create a **Class Library** project as the `Directory.Build.props` will automatically add the necessary test dependencies.
+The testing framework used is [`xunit`](https://xunit.net/), and you'll need to create a new test project in the `tests/` directory. The test project should be named `CommunityToolkit.Aspire.Hosting.MyIntegration.Tests` or `CommunityToolkit.Aspire.MyIntegration.Tests` following the same naming guidelines as the integration project. It's easiest to create a **Class Library** project as the `Directory.Build.props` will automatically add the necessary test dependencies.
 
 Asserts can be written using the `Assert` type or `FluentAssertions` if that is your preferred style, both are supported.
 
@@ -140,3 +140,4 @@ Here's an example from the OllamaSharp integration:
 ## 🎉 You're done
 
 That's it! You've created a new integration for the .NET Aspire Community Toolkit. If you have any questions or need help, feel free to reach out to the maintainers or the community on GitHub Discussions.
+

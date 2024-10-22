@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Aspire.CommunityToolkit.Hosting.Ollama\Aspire.CommunityToolkit.Hosting.Ollama.csproj" />
-    <ProjectReference Include="..\Aspire.CommunityToolkit.Testing\Aspire.CommunityToolkit.Testing.csproj" />
-    <ProjectReference Include="..\..\examples\ollama\Aspire.CommunityToolkit.Hosting.Ollama.AppHost\Aspire.CommunityToolkit.Hosting.Ollama.AppHost.csproj" />
-  </ItemGroup>
-
-</Project>
