@@ -14,11 +14,11 @@
 /src/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
 /tests/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
 
-# Aspire.CommunityToolkit.Meilisearch
-# Aspire.CommunityToolkit.Hosting.Meilisearch
+# CommunityToolkit.Aspire.Meilisearch
+# CommunityToolkit.Aspire.Hosting.Meilisearch
 
 /examples/meilisearch/_ @alirexaa
-/src/Aspire.CommunityToolkit.Hosting.Meilisearch/_ @alirexaa
-/tests/Aspire.CommunityToolkit.Hosting.Meilisearch/_ @alirexaa
-/src/Aspire.CommunityToolkit.Meilisearch/_ @alirexaa
-/tests/Aspire.CommunityToolkit.Meilisearch/_ @alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @alirexaa
+/src/CommunityToolkit.Aspire.Meilisearch/_ @alirexaa
+/tests/CommunityToolkit.Aspire.Meilisearch/_ @alirexaa
