@@ -13,11 +13,13 @@
     <AspireVersion>8.2.0</AspireVersion>
     <AspNetCoreVersion>8.0.7</AspNetCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
-
+    <TestContainersVersion>3.10.0</TestContainersVersion>
     <IsPackable>false</IsPackable>
     <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
+
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+</PropertyGroup>
 
   <PropertyGroup>
     <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>

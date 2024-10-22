@@ -40,5 +40,5 @@ public class MyService(IOllamaClientApi ollamaClientApi)
 
 ## Feedback & contributing
 
-https://github.com/dotnet/aspire
+https://github.com/CommunityToolkit/Aspire
 
