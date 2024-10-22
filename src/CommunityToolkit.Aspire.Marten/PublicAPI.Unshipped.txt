@@ -1,0 +1,15 @@
+CommunityToolkit.Aspire.Marten.MartenSettings
+CommunityToolkit.Aspire.Marten.MartenSettings.ConnectionString.get -> string?
+CommunityToolkit.Aspire.Marten.MartenSettings.ConnectionString.set -> void
+CommunityToolkit.Aspire.Marten.MartenSettings.DisableHealthChecks.get -> bool
+CommunityToolkit.Aspire.Marten.MartenSettings.DisableHealthChecks.set -> void
+CommunityToolkit.Aspire.Marten.MartenSettings.DisableMetrics.get -> bool
+CommunityToolkit.Aspire.Marten.MartenSettings.DisableMetrics.set -> void
+CommunityToolkit.Aspire.Marten.MartenSettings.DisableTracing.get -> bool
+CommunityToolkit.Aspire.Marten.MartenSettings.DisableTracing.set -> void
+CommunityToolkit.Aspire.Marten.MartenSettings.HealthCheckTimeout.get -> int?
+CommunityToolkit.Aspire.Marten.MartenSettings.HealthCheckTimeout.set -> void
+CommunityToolkit.Aspire.Marten.MartenSettings.MartenSettings() -> void
+Microsoft.Extensions.Hosting.MartenApplicationBuilderExtensions
+static Microsoft.Extensions.Hosting.MartenApplicationBuilderExtensions.AddKeyedMartenClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.Marten.MartenSettings!>? configureSettings = null, System.Action<Marten.StoreOptions!>? configureStoreOptions = null) -> void
+static Microsoft.Extensions.Hosting.MartenApplicationBuilderExtensions.AddMartenClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.Marten.MartenSettings!>? configureSettings = null, System.Action<Marten.StoreOptions!>? configureStoreOptions = null) -> void

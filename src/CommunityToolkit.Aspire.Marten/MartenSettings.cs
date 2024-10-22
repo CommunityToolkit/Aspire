@@ -1,4 +1,4 @@
-﻿namespace Aspire.CommunityToolkit.Marten;
+﻿namespace CommunityToolkit.Aspire.Marten;
 
 /// <summary>
 /// Provides the client configuration settings for connecting to a PostgreSQL database using Marten.

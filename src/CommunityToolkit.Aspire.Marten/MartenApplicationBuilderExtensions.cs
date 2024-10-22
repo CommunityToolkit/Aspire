@@ -1,14 +1,12 @@
 ﻿using Aspire;
-using Aspire.CommunityToolkit.Marten;
+using CommunityToolkit.Aspire.Marten;
 using HealthChecks.NpgSql;
 using Marten;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using Weasel.Core;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -139,12 +137,24 @@ public static class MartenApplicationBuilderExtensions
 
         if (serviceKey is null)
         {
-            builder.Services.AddMarten(storeOption =>
+            builder.Services.AddSingleton<DocumentStore>(sp =>
             {
-                ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
+                var store = DocumentStore.For((storeOption) =>
+                {
+                    ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
 
-                configureStoreOptions?.Invoke(storeOption);
-                storeOption.Connection(settings.ConnectionString!);
+                    configureStoreOptions?.Invoke(storeOption);
+                    storeOption.Connection(settings.ConnectionString!);
+                });
+                return store;
+            });
+            builder.Services.AddSingleton<IDocumentSession>(sp =>
+            {
+                return sp.GetRequiredService<DocumentStore>().LightweightSession();
+            });
+            builder.Services.AddScoped<IQuerySession>(sp =>
+            {
+                return sp.GetRequiredService<DocumentStore>().QuerySession();
             });
         }
         else
@@ -164,7 +174,7 @@ public static class MartenApplicationBuilderExtensions
             {
                 return sp.GetRequiredService<DocumentStore>().LightweightSession();
             });
-            builder.Services.AddScoped<IQuerySession>((sp) =>
+            builder.Services.AddKeyedScoped<IQuerySession>(serviceKey,(sp,_) =>
             {
                 return sp.GetRequiredService<DocumentStore>().QuerySession();
             });

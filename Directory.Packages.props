@@ -40,6 +40,7 @@
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
     <PackageVersion Include="MeiliSearch" Version="0.15.3" />
+    <PackageVersion Include="Marten" Version="7.29.0" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
