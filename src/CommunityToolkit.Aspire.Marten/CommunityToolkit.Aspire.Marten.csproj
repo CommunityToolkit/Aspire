@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>postgres marten</AdditionalPackageTags>
+    <Description>A .NET Aspire client integration for the Marten library.</Description>
   </PropertyGroup>
 
   <ItemGroup>
