@@ -1,0 +1,50 @@
+# This workflow warns and then closes issues and PRs that have had no activity for a specified amount of time.
+#
+# You can adjust the behavior by modifying this file.
+# For more information, see:
+# https://github.com/actions/stale
+name: Mark stale issues and pull requests
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 21
+          days-before-close: 14
+          enable-statistics: true
+          any-of-labels: "Awaiting Response"
+          remove-stale-when-updated: true
+          stale-issue-message: "We have noticed this issue has not been updated within 21 days.  If there is no action on this issue in the next 14 days, we will automatically close it."
+          stale-pr-message: "We have noticed this PR has not been updated within 21 days.  If there is no action on this PR in the next 14 days, we will automatically close it."
+          close-issue-message: "This issue has been stale for 5 weeks and has been automatically closed."
+          close-pr-message: "This PR has been stale for 5 weeks and has been automatically closed."
+          stale-issue-label: "stale"
+          stale-pr-label: "stale"
+
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 5
+          days-before-close: 2
+          enable-statistics: true
+          only-issue-labels: "Question,Resolved"
+          remove-stale-when-updated: true
+          stale-issue-message: "We have noticed this issue has been resolved for 5 days.  If there is not action on this issue in the next 2 days, we will automatically close it."
+          stale-issue-label: "stale"
