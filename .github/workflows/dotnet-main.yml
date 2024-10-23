@@ -8,6 +8,8 @@ on:
       - "examples/**"
       - "tests/**"
       - ".github/workflows/dotnet-main.yml"
+  workflow_dispatch:
+
 env:
   DEFAULT_DOTNET_VERSION: "8.0.x"
 
@@ -218,7 +220,7 @@ jobs:
         run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
 
   publish-azure-artifacts:
-    needs: build
+    needs: sign
     runs-on: windows-latest
     environment:
       name: azure-artifacts
@@ -226,7 +228,7 @@ jobs:
       - name: Download package
         uses: actions/download-artifact@v4
         with:
-          name: nuget-packages
+          name: signed-nuget-packages
 
       - name: Add AzDO NuGet feed
         run: >
@@ -243,4 +245,3 @@ jobs:
           --api-key dummy 
           --source MainLatest 
           --skip-duplicate
-

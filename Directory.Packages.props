@@ -13,6 +13,8 @@
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.8" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(AspNetCoreVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="8.7.0" />
@@ -36,9 +38,13 @@
     <PackageVersion Include="xunit" Version="2.9.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.1" />
+    <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="8.0.0-beta.24516.1" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.7" />
+    <PackageVersion Include="MeiliSearch" Version="0.15.3" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
+    <!-- Testcontainers packages -->
+    <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
   </ItemGroup>
 </Project>

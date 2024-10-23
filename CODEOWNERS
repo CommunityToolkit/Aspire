@@ -19,3 +19,12 @@
 /examples/data-api-builder/_ @tommasodotNET @FBoucher
 /src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/_ @tommasodotNET @FBoucher
 /tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/\_ @tommasodotNET @FBoucher
+
+# CommunityToolkit.Aspire.Meilisearch
+# CommunityToolkit.Aspire.Hosting.Meilisearch
+
+/examples/meilisearch/_ @alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @alirexaa
+/src/CommunityToolkit.Aspire.Meilisearch/_ @alirexaa
+/tests/CommunityToolkit.Aspire.Meilisearch/_ @alirexaa

@@ -90,7 +90,7 @@ internal class OllamaResourceLifecycleHook(
             try
             {
                 var localModels = await ollamaClient.ListLocalModels(cancellationToken);
-                return localModels.Any(m => m.Name.StartsWith(model));
+                return localModels.Any(m => m.Name.Equals(model, StringComparison.OrdinalIgnoreCase));
             }
             catch (TaskCanceledException)
             {

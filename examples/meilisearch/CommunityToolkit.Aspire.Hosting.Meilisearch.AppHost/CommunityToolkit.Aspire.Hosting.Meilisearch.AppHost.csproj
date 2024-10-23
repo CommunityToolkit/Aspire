@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>6adfc361-47fd-4c05-88de-c95763714bb0</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService\CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService.csproj" />
+  </ItemGroup>
+
+</Project>
