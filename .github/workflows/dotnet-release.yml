@@ -112,7 +112,7 @@ jobs:
           name: nuget-list
           if-no-files-found: error
           path: |
-            ${{ github.workspace }}/.github/workflows/SignedPackageFileList.txt
+            ${{ github.workspace }}/.github/workflows/SignClientFileList.txt
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -226,4 +226,3 @@ jobs:
 
       - name: Publish to NuGet
         run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
-
