@@ -4,4 +4,8 @@
     <VSTestLogger>trx%3BLogFileName=$(AssemblyName)-$(TargetFramework).trx</VSTestLogger>
   </PropertyGroup>
   </Target>
+
+  <Target Name="FailBuildIfReleaseVersionWrong" BeforeTargets="Pack" Condition=" $(ReleaseBuild) == 'true' ">
+    <Error Text="The supplied Version for packaging does not match what version has been used. Expected: '$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)', received: '$(PackageVersion)'" Condition="'$(PackageVersion)' != '$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)'" />
+  </Target>
 </Project>
