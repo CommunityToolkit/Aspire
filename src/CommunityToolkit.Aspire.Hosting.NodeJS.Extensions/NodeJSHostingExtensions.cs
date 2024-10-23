@@ -30,6 +30,7 @@ public static class NodeJSHostingExtensions
         {
             "yarn" => builder.AddYarnApp(name, wd, "dev"),
             "pnpm" => builder.AddPnpmApp(name, wd, "dev"),
+            "deno" => builder.AddDenoApp(name, wd, "dev"),
             _ => builder.AddNpmApp(name, wd, "dev")
         };
 
@@ -87,20 +88,37 @@ public static class NodeJSHostingExtensions
 
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
         var resource = new NodeAppResource(name, "pnpm", workingDirectory);
-
         return builder.AddResource(resource)
                       .WithNodeDefaults()
                       .WithArgs(allArgs);
     }
 
+    /// <summary>
+    /// Adds a deno app to the distributed application builder 
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="taskName">The deno task to execute. Defaults to "start".</param>
+    /// <param name="args">The arguments to pass to the command.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<NodeAppResource> AddDenoApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string taskName = "start", string[]? args = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(workingDirectory);
         ArgumentNullException.ThrowIfNull(taskName);
-        ArgumentNullException.ThrowIfNull(args);
-        throw new NotImplementedException();
+
+        string[] allArgs = args is { Length: > 0 }
+            ? ["task", taskName, "--", .. args]
+            : ["task", taskName];
+
+        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
+        var resource = new NodeAppResource(name, "deno", workingDirectory);
+
+        return builder.AddResource(resource)
+              .WithNodeDefaults()
+              .WithArgs(allArgs);
     }
 
     /// <summary>
@@ -135,6 +153,17 @@ public static class NodeJSHostingExtensions
     public static IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
     {
         resource.ApplicationBuilder.Services.TryAddLifecycleHook<PnpmPackageInstallerLifecycleHook>();
+        return resource;
+    }
+
+    /// <summary>
+    /// Ensures the Node.js packages are installed before the application starts using deno as the package manager.
+    /// </summary>
+    /// <param name="resource">The Node.js app resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<NodeAppResource> WithDenoPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
+    {
+        resource.ApplicationBuilder.Services.TryAddLifecycleHook<DenoPackageInstallerLifecycleHook>();
         return resource;
     }
 

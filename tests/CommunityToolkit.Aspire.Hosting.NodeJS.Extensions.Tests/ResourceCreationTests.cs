@@ -99,6 +99,7 @@ public class ResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
+    [InlineData("deno")]
     public void ViteAppUsesSpecifiedPackageManager(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -137,26 +138,6 @@ public class ResourceCreationTests
     }
 
     [Fact]
-    public void DenoAppHasExposedHttpEndpoints()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddDenoApp("deno", Environment.CurrentDirectory);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = appModel.Resources.OfType<NodeAppResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
-
-        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
-
-        Assert.Contains(endpoints, e => e.UriScheme == "http");
-    }
-
-    [Fact]
     public void ViteAppHasExposedExternalHttpEndpoints()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -176,23 +157,4 @@ public class ResourceCreationTests
         Assert.Contains(endpoints, e => e.IsExternal);
     }
 
-    [Fact]
-    public void DenoAppHasExposedExternalHttpEndpoints()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddDenoApp("deno", Environment.CurrentDirectory);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = appModel.Resources.OfType<NodeAppResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
-
-        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
-
-        Assert.Contains(endpoints, e => e.IsExternal);
-    }
 }

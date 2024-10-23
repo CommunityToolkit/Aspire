@@ -10,6 +10,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [InlineData("vite-demo")]
     [InlineData("yarn-demo")]
     [InlineData("pnpm-demo")]
+    [InlineData("deno-demo")]
     public async Task ResourceStartsAndRespondsOk(string appName)
     {
         var httpClient = fixture.CreateHttpClient(appName);
