@@ -221,17 +221,3 @@ jobs:
 
       - name: Publish to NuGet
         run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
-
-  publish-github-packages:
-    needs: sign
-    runs-on: ubuntu-latest
-    environment:
-      name: github-packages
-    steps:
-      - name: Download package
-        uses: actions/download-artifact@v4
-        with:
-          name: signed-nuget-packages
-
-      - name: Publish to GitHub packages
-        run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
