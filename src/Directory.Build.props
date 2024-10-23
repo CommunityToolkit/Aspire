@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/CommunityToolkit/Aspire</PackageProjectUrl>
     <PackageIcon>nuget.png</PackageIcon>
     <RepositoryUrl>https://github.com/CommunityToolkit/Aspire</RepositoryUrl>
-    <VersionPrefix>$(AspireVersion).0</VersionPrefix>
+    <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
