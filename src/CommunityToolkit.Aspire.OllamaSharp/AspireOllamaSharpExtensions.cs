@@ -2,6 +2,7 @@ using CommunityToolkit.Aspire.OllamaSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
+using System.Web;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -54,11 +55,16 @@ public static class AspireOllamaSharpExtensions
             throw new UriFormatException("No endpoint for Ollama defined.");
         }
 
-        OllamaApiClient client = new(new HttpClient { BaseAddress = new Uri(settings.ConnectionString) });
+        Uri connectionStringUri = new Uri(settings.ConnectionString);
+        OllamaApiClient client = new(new HttpClient { BaseAddress = connectionStringUri });
 
         if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
         {
             client.SelectedModel = settings.SelectedModel;
+        }
+        else if (HttpUtility.ParseQueryString(connectionStringUri.Query).GetValues("Model") is [string model])
+        {
+            client.SelectedModel = model;
         }
 
         if (!string.IsNullOrEmpty(serviceKey))

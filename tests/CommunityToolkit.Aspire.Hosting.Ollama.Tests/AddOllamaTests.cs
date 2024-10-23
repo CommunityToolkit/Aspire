@@ -8,7 +8,7 @@ public class AddOllamaTests
     public void VerifyDefaultModel()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: null).AddModel("llama3").WithDefaultModel("llama3");
+        builder.AddOllama("ollama", port: null).WithDefaultModel("llama3");
 
         using var app = builder.Build();
 
@@ -25,17 +25,22 @@ public class AddOllamaTests
     public void VerifyCustomModel()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: null).AddModel("custom");
+        var ollama = builder.AddOllama("ollama", port: null);
+        var model = ollama.AddModel("custom:tag");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var ollamaResource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
 
-        Assert.Equal("ollama", resource.Name);
+        Assert.Equal("ollama", ollamaResource.Name);
+        Assert.Contains("custom:tag", ollamaResource.Models);
 
-        Assert.Contains("custom", resource.Models);
+        Assert.Equal("ollama-custom", modelResource.Name);
+        Assert.Equal("custom:tag", modelResource.ModelName);
+        Assert.Equal(ollamaResource, modelResource.Parent);
     }
 
     [Fact]
@@ -76,27 +81,44 @@ public class AddOllamaTests
     public void CanSetMultpleModels()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: null)
-            .AddModel("llama3")
-            .AddModel("phi3");
+        var ollama = builder.AddOllama("ollama", port: null);
+
+        var llama3 = ollama.AddModel("llama3");
+        var phi3 = ollama.AddModel("phi3");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var ollamaResource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
 
-        Assert.Equal("ollama", resource.Name);
+        var modelResources = appModel.Resources.OfType<OllamaModelResource>();
 
-        Assert.Contains("llama3", resource.Models);
-        Assert.Contains("phi3", resource.Models);
+        Assert.Equal("ollama", ollamaResource.Name);
+
+        Assert.Contains("llama3", ollamaResource.Models);
+        Assert.Contains("phi3", ollamaResource.Models);
+
+        Assert.Collection(modelResources,
+        model =>
+        {
+            Assert.Equal("ollama-llama3", model.Name);
+            Assert.Equal("llama3", model.ModelName);
+            Assert.Equal(ollamaResource, model.Parent);
+        },
+        model =>
+        {
+            Assert.Equal("ollama-phi3", model.Name);
+            Assert.Equal("phi3", model.ModelName);
+            Assert.Equal(ollamaResource, model.Parent);
+        });
     }
 
     [Fact]
     public void DefaultModelAddedToModelList()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: null).AddModel("llama3").WithDefaultModel("llama3");
+        builder.AddOllama("ollama", port: null).WithDefaultModel("llama3");
 
         using var app = builder.Build();
 
