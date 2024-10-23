@@ -8,6 +8,8 @@ on:
       - "examples/**"
       - "tests/**"
       - ".github/workflows/dotnet-main.yml"
+  workflow_dispatch:
+
 env:
   DEFAULT_DOTNET_VERSION: "8.0.x"
 
@@ -245,4 +247,3 @@ jobs:
           --api-key dummy 
           --source MainLatest 
           --skip-duplicate
-
