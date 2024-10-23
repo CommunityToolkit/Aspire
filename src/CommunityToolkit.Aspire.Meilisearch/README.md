@@ -55,7 +55,7 @@ The .NET Aspire Meilisearch Client component supports [Microsoft.Extensions.Conf
   "Aspire": {
     "Meilisearch": {
       "Client": {
-        "Endpoint": "http://localhost:19530/"
+        "Endpoint": "http://localhost:19530/",
         "MasterKey": "123456!@#$%"
       }
     }
