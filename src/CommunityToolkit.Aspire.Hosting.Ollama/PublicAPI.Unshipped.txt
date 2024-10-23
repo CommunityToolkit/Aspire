@@ -1,1 +1,2 @@
 #nullable enable
+*REMOVED*static Aspire.Hosting.OllamaResourceBuilderExtensions.AddOllama(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name = "Ollama", int? port = null, string! modelName = "llama3") -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
