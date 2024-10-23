@@ -93,7 +93,7 @@ jobs:
 
       - name: Get git tag
         id: git_tag
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/tags/v}
+        run: "echo tag=${GITHUB_REF#refs/tags/v} >> $GITHUB_OUTPUT"
 
       - name: Publish NuGet package
         run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:PackageVersion=${{ steps.git_tag.outputs.tag }}
