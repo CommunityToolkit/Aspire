@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var ollama = builder.AddOllama("ollama", port: null)
+var ollama = builder.AddOllama("ollama")
     .AddModel("phi3")
     .WithDefaultModel("phi3")
     .WithOpenWebUI();
