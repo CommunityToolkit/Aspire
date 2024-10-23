@@ -93,6 +93,16 @@ public static class NodeJSHostingExtensions
                       .WithArgs(allArgs);
     }
 
+    public static IResourceBuilder<NodeAppResource> AddDenoApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string taskName = "start", string[]? args = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(workingDirectory);
+        ArgumentNullException.ThrowIfNull(taskName);
+        ArgumentNullException.ThrowIfNull(args);
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Ensures the Node.js packages are installed before the application starts using npm as the package manager.
     /// </summary>
