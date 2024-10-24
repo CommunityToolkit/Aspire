@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AdditionalPackageTags>integration hosting meilisearch</AdditionalPackageTags>
+    <AdditionalPackageTags>hosting meilisearch</AdditionalPackageTags>
     <Description>Meilisearch support for .NET Aspire.</Description>
   </PropertyGroup>
 
