@@ -9,5 +9,4 @@ builder.AddViteApp("yarn-demo", packageManager: "yarn")
 builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
     .WithPnpmPackageInstallation();
 
-
 builder.Build().Run();
