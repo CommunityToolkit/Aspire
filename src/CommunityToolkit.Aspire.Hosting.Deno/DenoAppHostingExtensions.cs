@@ -5,6 +5,9 @@ using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Deno;
+/// <summary>
+/// Extension methods to support adding Deno to the <see cref="IDistributedApplicationBuilder"/>.
+/// </summary>
 public static class DenoAppHostingExtensions
 {
     /// <summary>
