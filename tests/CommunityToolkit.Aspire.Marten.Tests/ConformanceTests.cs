@@ -6,7 +6,6 @@ using Aspire.Components.ConformanceTests;
 using CommunityToolkit.Aspire.Marten;
 using CommunityToolkit.Aspire.Marten.Tests;
 using Marten;
-using Microsoft.DotNet.RemoteExecutor;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

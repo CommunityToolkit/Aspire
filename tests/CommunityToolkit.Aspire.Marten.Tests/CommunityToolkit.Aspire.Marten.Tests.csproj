@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\examples\marten\CommunityToolkit.Aspire.Marten.AppHost\CommunityToolkit.Aspire.Marten.AppHost.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Marten\CommunityToolkit.Aspire.Marten.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
