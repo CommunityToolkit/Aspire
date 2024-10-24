@@ -36,7 +36,7 @@ public static class AspireMeilisearchExtensions
     }
 
     /// <summary>
-    /// Registers <see cref="Meilisearch" /> as a keyed singleton for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
+    /// Registers <see cref="MeilisearchClient" /> as a keyed singleton for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>

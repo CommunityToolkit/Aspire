@@ -10,7 +10,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <AspireVersion>9.0.0-rc.1.24511.1</AspireVersion>
+    <AspireMajorVersion>9</AspireMajorVersion>
+    <AspireVersion>$(AspireMajorVersion).0.0-rc.1.24511.1</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>8.0.10</AspNetCoreVersion>
 
@@ -21,6 +22,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+
+    <ToolkitMinorVersion>3</ToolkitMinorVersion>
+    <ToolkitPatchVersion>0</ToolkitPatchVersion>
 </PropertyGroup>
 
   <PropertyGroup>
