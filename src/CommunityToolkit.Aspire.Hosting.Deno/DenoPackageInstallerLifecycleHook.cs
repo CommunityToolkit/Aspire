@@ -17,7 +17,7 @@ internal class DenoPackageInstallerLifecycleHook(
     ResourceNotificationService notificationService,
     DistributedApplicationExecutionContext context) : IDistributedApplicationLifecycleHook
 {
-    private readonly DenoPackageInstaller _installer = new("deno", "install", "deno.lock", loggerService, notificationService);
+    private readonly DenoPackageInstaller _installer = new("deno", loggerService, notificationService);
 
     /// <inheritdoc />
     public Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)

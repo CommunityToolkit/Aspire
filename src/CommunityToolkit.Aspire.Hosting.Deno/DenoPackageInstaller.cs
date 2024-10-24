@@ -11,7 +11,7 @@ namespace CommunityToolkit.Aspire.Hosting.Deno;
 /// <param name="packageManager">The package manager to use.</param>
 /// <param name="loggerService">The logger service to use.</param>
 /// <param name="notificationService">The notification service to use.</param>
-internal class DenoPackageInstaller(string packageManager, string installCommand, string lockfile, ResourceLoggerService loggerService, ResourceNotificationService notificationService)
+internal class DenoPackageInstaller(string packageManager, ResourceLoggerService loggerService, ResourceNotificationService notificationService)
 {
     private readonly bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
@@ -43,16 +43,16 @@ internal class DenoPackageInstaller(string packageManager, string installCommand
     {
         var logger = loggerService.GetLogger(resource);
 
-        var packageJsonPath = Path.Combine(resource.WorkingDirectory, lockfile);
+        var packageJsonPath = Path.Combine(resource.WorkingDirectory, "deno.lock");
 
         if (!File.Exists(packageJsonPath))
         {
             await notificationService.PublishUpdateAsync(resource, state => state with
             {
-                State = new($"No {lockfile} file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
+                State = new($"No deno.lock file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
             }).ConfigureAwait(false);
 
-            throw new InvalidOperationException($"No {lockfile} file found in {resource.WorkingDirectory}");
+            throw new InvalidOperationException($"No deno.lock file found in {resource.WorkingDirectory}");
         }
 
         await notificationService.PublishUpdateAsync(resource, state => state with
@@ -67,7 +67,7 @@ internal class DenoPackageInstaller(string packageManager, string installCommand
             StartInfo = new ProcessStartInfo
             {
                 FileName = isWindows ? "cmd" : packageManager,
-                Arguments = isWindows ? $"/c {packageManager} {installCommand}" : installCommand,
+                Arguments = isWindows ? $"/c {packageManager} install" : "install",
                 WorkingDirectory = resource.WorkingDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
