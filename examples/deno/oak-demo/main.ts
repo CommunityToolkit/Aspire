@@ -4,6 +4,8 @@ import {
   Router,
 } from "https://deno.land/x/oak@v12.4.0/mod.ts";
 
+const port = parseInt(Deno.env.get('PORT') || '8000');
+
 const router = new Router();
 
 interface Weather {
@@ -29,4 +31,5 @@ const app = new Application();
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-await app.listen({ port: 8000 });
+console.log(`Server listening on port ${port}`);
+await app.listen({ port: port });
