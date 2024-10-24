@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -18,10 +18,9 @@
   </ItemGroup>
 
   <Target Name="CleanNodeModules" AfterTargets="Build">
-    <Exec WorkingDirectory="../vite-demo" Command="rm -r node_modules" Condition="Exists('../vite-demo/node_modules')" />
-    <Exec WorkingDirectory="../deno-demo" Command="rm -r node_modules" Condition="Exists('../deno-demo/node_modules')" />
-    <Exec WorkingDirectory="../pnpm-demo" Command="rm -r node_modules" Condition="Exists('../pnpm-demo/node_modules')" />
-    <Exec WorkingDirectory="../yarn-demo" Command="rm -r node_modules" Condition="Exists('../yarn-demo/node_modules')" />
+    <Delete Files="../vite-demo/node_modules/**"  Condition="Exists('../vite-demo/node_modules')" />
+    <Delete Files="../pnpm-demo/node_modules/**"  Condition="Exists('../pnpm-demo/node_modules')" />
+    <Delete Files="../yarn-demo/node_modules/**"  Condition="Exists('../yarn-demo/node_modules')" />
   </Target>
 
 </Project>
