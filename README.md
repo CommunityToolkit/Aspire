@@ -20,6 +20,9 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`Hosting.NodeJS.Extensions`][nodejs-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.NodeJS.Extensions][nodejs-ext-shields]][nodejs-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.NodeJS.Extensions][nodejs-ext-shields-preview]][nodejs-ext-nuget-preview] | An integration that contains some additional extensions for running Node.js applications                                                                                                                                       |
 | - **Learn More**: [`Hosting.Ollama`][ollama-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Ollama][ollama-shields]][ollama-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Ollama][ollama-shields-preview]][ollama-nuget-preview]                                              | An Aspire hosting integration leveraging the [Ollama](https://ollama.com) container with support for downloading a model on startup.                                                                                           |
 | - **Learn More**: [`OllamaSharp`][ollama-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.OllamaSharp][ollamasharp-shields]][ollamasharp-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.OllamaSharp][ollamasharp-shields-preview]][ollama-nuget-preview]                                        | An Aspire client integration for the [OllamaSharp](https://github.com/awaescher/OllamaSharp) package.                                                                                                                          |
+| - **Learn More**: [`Hosting.Meilisearch`][meilisearch-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Meilisearch][meilisearch-shields]][meilisearch-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Meilisearch][meilisearch-shields-preview]][meilisearch-nuget-preview]      | An Aspire hosting integration leveraging the [Meilisearch](https://meilisearch.com) container.                                                                                           |
+| - **Learn More**: [`Meilisearch`][meilisearch-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Meilisearch][meilisearch-client-shields]][meilisearch-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Meilisearch][meilisearch-client-shields-preview]][meilisearch-client-nuget-preview]  | An Aspire client integration for the [Meilisearch](https://github.com/meilisearch/meilisearch-dotnet) package.                                                                                                                          |
+
 
 ## 🙌 Getting Started
 
@@ -89,4 +92,14 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [ollamasharp-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.OllamaSharp/
 [ollamasharp-shields-preview]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.OllamaSharp?label=nuget%20(preview)
 [ollamasharp-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.OllamaSharp/absoluteLatest
+
+[meilisearch-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-meilisearch
+[meilisearch-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Meilisearch
+[meilisearch-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Meilisearch/
+[meilisearch-shields-preview]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Meilisearch?label=nuget%20(preview)
+[meilisearch-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Meilisearch/absoluteLatest
+[meilisearch-client-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Meilisearch
+[meilisearch-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Meilisearch/
+[meilisearch-client-shields-preview]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Meilisearch?label=nuget%20(preview)
+[meilisearch-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Meilisearch/absoluteLatest
 

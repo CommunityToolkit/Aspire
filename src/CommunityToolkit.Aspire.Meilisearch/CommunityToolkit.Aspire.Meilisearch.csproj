@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AdditionalPackageTags>Meilisearch</AdditionalPackageTags>
+    <AdditionalPackageTags>Meilisearch client</AdditionalPackageTags>
     <Description>A Meilisearch client that integrates with Aspire, including health checks, logging, and telemetry.</Description>
   </PropertyGroup>
 
