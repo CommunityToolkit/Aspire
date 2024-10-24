@@ -3,9 +3,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 builder.AddViteApp("vite-demo")
     .WithNpmPackageInstallation();
 
-builder.AddViteApp("deno-demo", packageManager: "deno")
-    .WithDenoPackageInstallation();
-
 builder.AddViteApp("yarn-demo", packageManager: "yarn")
     .WithYarnPackageInstallation();
 

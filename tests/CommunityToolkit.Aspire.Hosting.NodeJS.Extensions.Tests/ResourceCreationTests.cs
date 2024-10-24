@@ -24,24 +24,6 @@ public class ResourceCreationTests
     }
 
     [Fact]
-    public void DenoAppUsesDenoCommand()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddDenoApp("deno", Environment.CurrentDirectory);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = appModel.Resources.OfType<NodeAppResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
-
-        Assert.Equal("deno", resource.Command);
-    }
-
-    [Fact]
     public void YarnAppUsesYarnCommand()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -99,7 +81,6 @@ public class ResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
-    [InlineData("deno")]
     public void ViteAppUsesSpecifiedPackageManager(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
