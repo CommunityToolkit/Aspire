@@ -137,5 +137,4 @@ public class ResourceCreationTests
 
         Assert.Contains(endpoints, e => e.IsExternal);
     }
-
 }
