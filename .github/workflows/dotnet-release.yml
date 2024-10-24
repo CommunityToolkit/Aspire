@@ -94,8 +94,15 @@ jobs:
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
       - name: Test
         run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx /p:TrxLogFileNameSuffix=${{ matrix.os }}
+
+      - name: Get git tag
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        id: git_tag
+        run: "echo tag=${GITHUB_REF#refs/tags/v} >> $GITHUB_OUTPUT"
+
       - name: Publish NuGet package
-        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:PackageVersion=${{ steps.git_tag.outputs.tag }} /p:ReleaseBuild=true
 
       - name: Publish NuGet packages as artifacts
         uses: actions/upload-artifact@v4
@@ -111,7 +118,7 @@ jobs:
           name: nuget-list
           if-no-files-found: error
           path: |
-            ${{ github.workspace }}/.github/workflows/SignedPackageFileList.txt
+            ${{ github.workspace }}/.github/workflows/SignClientFileList.txt
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -225,17 +232,3 @@ jobs:
 
       - name: Publish to NuGet
         run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
-
-  publish-github-packages:
-    needs: sign
-    runs-on: ubuntu-latest
-    environment:
-      name: github-packages
-    steps:
-      - name: Download package
-        uses: actions/download-artifact@v4
-        with:
-          name: signed-nuget-packages
-
-      - name: Publish to GitHub packages
-        run: dotnet nuget push ./*.nupkg --source "https://nuget.pkg.github.com/communitytoolkit/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
