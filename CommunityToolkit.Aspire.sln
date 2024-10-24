@@ -22,9 +22,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults", "examples\java\CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults.csproj", "{BBAFA814-1026-4A39-AA28-BCAE3951A224}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{899F0713-7FC6-4750-BAFC-AC650B35B453}"
-	ProjectSection(SolutionItems) = preProject
-		src\CommunityToolkit.Aspire.Hosting.Deno\CommunityToolkit.Aspire.Hosting.Deno.csproj = src\CommunityToolkit.Aspire.Hosting.Deno\CommunityToolkit.Aspire.Hosting.Deno.csproj
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Java.Tests", "tests\CommunityToolkit.Aspire.Hosting.Java.Tests\CommunityToolkit.Aspire.Hosting.Java.Tests.csproj", "{E2905A71-E25D-46FC-A128-D6A366D4D751}"
 EndProject
@@ -96,7 +93,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Deno", "src\CommunityToolkit.Aspire.Hosting.Deno\CommunityToolkit.Aspire.Hosting.Deno.csproj", "{259D0D48-C856-47C8-8014-66CE9A7C353F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Deno.Apphost", "examples\deno\CommunityToolkit.Aspire.Hosting.Deno.Apphost\CommunityToolkit.Aspire.Hosting.Deno.Apphost.csproj", "{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Deno.AppHost", "examples\deno\CommunityToolkit.Aspire.Hosting.Deno.Apphost\CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj", "{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
