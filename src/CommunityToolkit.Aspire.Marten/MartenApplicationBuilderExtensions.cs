@@ -11,19 +11,21 @@ using Npgsql;
 namespace Microsoft.Extensions.Hosting;
 
 /// <summary>
-/// TODO
+/// Provides extension methods for adding and configuring Marten in an <see cref="IHostApplicationBuilder"/>.
 /// </summary>
 public static class MartenApplicationBuilderExtensions
 {
     private const string DefaultConfigSectionName = "Aspire:Marten";
 
     /// <summary>
-    /// TODO
+    /// Registers <see cref="DocumentStore" /> as a singleton in the services provided by the <paramref name="builder"/>.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="connectionName"></param>
-    /// <param name="configureSettings"></param>
-    /// <param name="configureStoreOptions"></param>
+    /// <remarks>Reads the configuration from "Aspire:Marten" section.</remarks>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
+    /// <param name="connectionName">The connection name to use to find a connection string.</param>
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="MartenSettings"/>. It's invoked after the settings are read from the configuration.</param>
+    /// <param name="configureStoreOptions">An optional action to configure <see cref="StoreOptions"/>.</param>
+    /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section</exception>
     public static void AddMartenClient(
         this IHostApplicationBuilder builder,
         string connectionName,
@@ -38,12 +40,15 @@ public static class MartenApplicationBuilderExtensions
     }
 
     /// <summary>
-    /// TOOD
+    /// Registers <see cref="DocumentStore" /> as a keyed singleton for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <param name="configureSettings"></param>
-    /// <param name="configureStoreOptions"></param>
+    /// <remarks>Reads the configuration from "Aspire:Marten" section.</remarks>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
+    /// <param name="name">The connection name to use to find a connection string.</param>
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="MartenSettings"/>. It's invoked after the settings are read from the configuration.</param>
+    /// <param name="configureStoreOptions">An optional action to configure <see cref="StoreOptions"/>.</param>
+    /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section</exception>
+
     public static void AddKeyedMartenClient(
         this IHostApplicationBuilder builder,
         string name,
@@ -61,6 +66,15 @@ public static class MartenApplicationBuilderExtensions
             serviceKey: name);
     }
 
+    /// <summary>
+    /// Adds a Marten client to the application builder with the specified configuration.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder"/> to add the Marten client to.</param>
+    /// <param name="configurationSectionName">The name of the configuration section to use.</param>
+    /// <param name="configureSettings">An optional action to configure <see cref="MartenSettings"/>.</param>
+    /// <param name="configureStoreOptions">An optional action to configure <see cref="StoreOptions"/>.</param>
+    /// <param name="connectionName">The name of the connection string to use.</param>
+    /// <param name="serviceKey">An optional service key for the Marten client.</param>
     private static void AddMartenClient(
         this IHostApplicationBuilder builder,
         string configurationSectionName,
@@ -84,7 +98,6 @@ public static class MartenApplicationBuilderExtensions
         configureSettings?.Invoke(settings);
 
         builder.RegisterMartenServices(settings, configurationSectionName, connectionName, serviceKey, configureStoreOptions);
-
 
         if (!settings.DisableTracing)
         {
@@ -118,9 +131,17 @@ public static class MartenApplicationBuilderExtensions
         }
     }
 
+    /// <summary>
+    /// Registers Marten services with the specified settings and configuration.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder"/> to register the services with.</param>
+    /// <param name="settings">The <see cref="MartenSettings"/> to use.</param>
+    /// <param name="configurationSectionName">The name of the configuration section to use.</param>
+    /// <param name="connectionName">The name of the connection string to use.</param>
+    /// <param name="serviceKey">An optional service key for the Marten client.</param>
+    /// <param name="configureStoreOptions">An optional action to configure <see cref="StoreOptions"/>.</param>
     private static void RegisterMartenServices(this IHostApplicationBuilder builder, MartenSettings settings, string configurationSectionName, string connectionName, object? serviceKey, Action<StoreOptions>? configureStoreOptions)
     {
-
         builder.Services.AddKeyedSingleton<NpgsqlDataSource>(serviceKey is null ? "Aspire.Marten" : $"Aspire.Marten_{connectionName}", (serviceProvider, _) =>
         {
             ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
@@ -177,6 +198,13 @@ public static class MartenApplicationBuilderExtensions
         }
     }
 
+    /// <summary>
+    /// Validates the specified connection string.
+    /// </summary>
+    /// <param name="connectionString">The connection string to validate.</param>
+    /// <param name="connectionName">The name of the connection string.</param>
+    /// <param name="defaultConfigSectionName">The default configuration section name.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the connection string is null or whitespace.</exception>
     private static void ValidateConnectionString(string? connectionString, string connectionName, string defaultConfigSectionName)
     {
         if (string.IsNullOrWhiteSpace(connectionString))

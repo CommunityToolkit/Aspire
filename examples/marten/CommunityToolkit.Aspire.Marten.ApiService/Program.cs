@@ -2,6 +2,8 @@ using CommunityToolkit.Aspire.Marten.ApiService;
 using Marten;
 using Marten.Services;
 
+#pragma warning disable CTASPIREMARTEN001
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();

@@ -4,6 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>
+      $(NoWarn);
+      CTASPIREMARTEN001;
+    </NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
