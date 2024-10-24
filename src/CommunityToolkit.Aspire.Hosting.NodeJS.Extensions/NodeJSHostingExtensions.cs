@@ -52,7 +52,6 @@ public static class NodeJSHostingExtensions
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(workingDirectory);
         ArgumentNullException.ThrowIfNull(scriptName);
-        builder.AddNodeApp
         string[] allArgs = args is { Length: > 0 }
             ? ["run", scriptName, "--", .. args]
             : ["run", scriptName];
