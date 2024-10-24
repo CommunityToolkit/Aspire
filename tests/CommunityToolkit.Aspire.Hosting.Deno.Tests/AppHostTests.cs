@@ -19,10 +19,10 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Theory]
-    [InlineData("oak-demo")]
-    public async Task ApiResourceStartsAndRespondsOk(string appName)
+    [Fact]
+    public async Task ApiResourceStartsAndRespondsOk()
     {
+        var appName = "oak-demo";
         var httpClient = fixture.CreateHttpClient(appName);
 
         await fixture.App.WaitForTextAsync("Server listening on port ", appName).WaitAsync(TimeSpan.FromSeconds(30));
