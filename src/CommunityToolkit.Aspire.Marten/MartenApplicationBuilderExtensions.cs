@@ -92,19 +92,15 @@ public static class MartenApplicationBuilderExtensions
                 .WithTracing(tracing =>
                 {
                     tracing.AddSource("Marten");
-                })
-                .WithMetrics(metrics =>
-                {
-                    metrics.AddMeter("Marten");
                 });
         }
 
         if (!settings.DisableMetrics)
         {
             builder.Services.AddOpenTelemetry()
-                .WithTracing(tracing =>
+                .WithMetrics(metrics =>
                 {
-                    tracing.AddSource("Marten");
+                    metrics.AddMeter("Marten");
                 });
         }
 
