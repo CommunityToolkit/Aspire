@@ -89,7 +89,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Marten", "src\CommunityToolkit.Aspire.Marten\CommunityToolkit.Aspire.Marten.csproj", "{DFF1D3F3-31D3-44EA-ADB9-4BD7F7AF626D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Marten.Tests", "tests\CommunityToolkit.Aspire.Marten.Tests\CommunityToolkit.Aspire.Marten.Tests.csproj", "{8FC3E08E-8CEF-4D9A-9013-0B6AFE1BB05B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Marten.Tests", "tests\CommunityToolkit.Aspire.Marten.Tests\CommunityToolkit.Aspire.Marten.Tests.csproj", "{8FC3E08E-8CEF-4D9A-9013-0B6AFE1BB05B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "marten", "marten", "{89330EB0-DD97-43F1-93AE-8CAAD820F3D5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Marten.AppHost", "examples\marten\CommunityToolkit.Aspire.Marten.AppHost\CommunityToolkit.Aspire.Marten.AppHost.csproj", "{49669F3F-A5E4-4ABD-8CAE-C14E9D5C70B3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Marten.ApiService", "examples\marten\CommunityToolkit.Aspire.Marten.ApiService\CommunityToolkit.Aspire.Marten.ApiService.csproj", "{E022414D-36D8-436A-A66A-BEE337FEA712}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Marten.ServiceDefaults", "examples\marten\CommunityToolkit.Aspire.Marten.ServiceDefaults\CommunityToolkit.Aspire.Marten.ServiceDefaults.csproj", "{67CEEED4-72DA-4B09-93CE-D4313E3F410D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -237,6 +245,18 @@ Global
 		{8FC3E08E-8CEF-4D9A-9013-0B6AFE1BB05B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FC3E08E-8CEF-4D9A-9013-0B6AFE1BB05B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FC3E08E-8CEF-4D9A-9013-0B6AFE1BB05B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49669F3F-A5E4-4ABD-8CAE-C14E9D5C70B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49669F3F-A5E4-4ABD-8CAE-C14E9D5C70B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49669F3F-A5E4-4ABD-8CAE-C14E9D5C70B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49669F3F-A5E4-4ABD-8CAE-C14E9D5C70B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E022414D-36D8-436A-A66A-BEE337FEA712}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E022414D-36D8-436A-A66A-BEE337FEA712}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E022414D-36D8-436A-A66A-BEE337FEA712}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E022414D-36D8-436A-A66A-BEE337FEA712}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67CEEED4-72DA-4B09-93CE-D4313E3F410D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67CEEED4-72DA-4B09-93CE-D4313E3F410D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67CEEED4-72DA-4B09-93CE-D4313E3F410D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67CEEED4-72DA-4B09-93CE-D4313E3F410D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -283,6 +303,10 @@ Global
 		{F6A9CC5C-91A2-4AAB-AEC9-8007A62A081E} = {561CEB82-3D97-49D0-932E-664E6779FC61}
 		{DFF1D3F3-31D3-44EA-ADB9-4BD7F7AF626D} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{8FC3E08E-8CEF-4D9A-9013-0B6AFE1BB05B} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{89330EB0-DD97-43F1-93AE-8CAAD820F3D5} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{49669F3F-A5E4-4ABD-8CAE-C14E9D5C70B3} = {89330EB0-DD97-43F1-93AE-8CAAD820F3D5}
+		{E022414D-36D8-436A-A66A-BEE337FEA712} = {89330EB0-DD97-43F1-93AE-8CAAD820F3D5}
+		{67CEEED4-72DA-4B09-93CE-D4313E3F410D} = {89330EB0-DD97-43F1-93AE-8CAAD820F3D5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

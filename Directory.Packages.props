@@ -7,6 +7,7 @@
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.NodeJS" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="8.2.2" />
     <PackageVersion Include="JsonSchema.Net" Version="7.2.3" />
     <!-- AspNetCore packages -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(AspNetCoreVersion)" />
@@ -37,6 +38,7 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.2" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="8.0.0-beta.24516.1" />
+    <PackageVersion Include="Microsoft.DotNet.RemoteExecutor" Version="8.0.0-beta.24516.1" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="3.0.15" />
     <PackageVersion Include="MeiliSearch" Version="0.15.3" />
