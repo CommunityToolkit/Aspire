@@ -59,7 +59,7 @@ jobs:
 
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: vx.x.x
+          deno-version: v2.x
 
       - uses: actions/cache@v4
         name: Cache NuGet packages
