@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\data-api-builder\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.AppHost\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\data-api-builder\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -19,7 +19,7 @@ public static class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="port">An optional fixed port to bind to the Ollama container. This will be provided randomly by Aspire if not set.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaResource> AddOllama(this IDistributedApplicationBuilder builder, string name, int? port = null)
+    public static IResourceBuilder<OllamaResource> AddOllama(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
@@ -31,24 +31,6 @@ public static class OllamaResourceBuilderExtensions
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
           .ExcludeFromManifest();
-    }
-
-    /// <summary>
-    /// Adds the Ollama container to the application model.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
-    /// <param name="port">An optional fixed port to bind to the Ollama container. This will be provided randomly by Aspire if not set.</param>
-    /// <param name="modelName">The name of the LLM to download on initial startup. llama3 by default. This can be set to null to not download any models.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>This is to maintain compatibility with the Raygun.Aspire.Hosting.Ollama package and will be removed in the next major release.</remarks>
-    [Obsolete("Use AddOllama without a model name, and then the AddModel extension method to add models.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters", Justification = "<Pending>")]
-    public static IResourceBuilder<OllamaResource> AddOllama(this IDistributedApplicationBuilder builder,
-      string name = "Ollama", int? port = null, string modelName = "llama3")
-    {
-        return builder.AddOllama(name, port)
-          .AddModel(modelName);
     }
 
     /// <summary>

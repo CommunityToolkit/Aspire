@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+
 namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
 
 public class ExecutableResourceCreationTests
@@ -24,7 +26,9 @@ public class ExecutableResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp(null!, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
-        Assert.Throws<ArgumentException>(() => builder.AddJavaApp("", Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
+
+        const string name = "";
+        Assert.Throws<ArgumentException>(() => builder.AddJavaApp(name, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
     }
 
     [Fact]
@@ -33,7 +37,9 @@ public class ExecutableResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddSpringApp(null!, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
-        Assert.Throws<ArgumentException>(() => builder.AddSpringApp("", Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
+
+        const string name = "";
+        Assert.Throws<ArgumentException>(() => builder.AddSpringApp(name, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
     }
 
     [Fact]
