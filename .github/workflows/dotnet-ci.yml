@@ -109,7 +109,7 @@ jobs:
             ${{ github.workspace }}/test-results/**
 
   publish-azure-artifacts:
-    if: github.actor != 'dependabot[bot]'
+    if: github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
     needs: build
     runs-on: windows-latest
     environment:
@@ -135,3 +135,4 @@ jobs:
           --api-key dummy 
           --source PullRequests 
           --skip-duplicate
+
