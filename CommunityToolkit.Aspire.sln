@@ -98,6 +98,13 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Marten.ApiService", "examples\marten\CommunityToolkit.Aspire.Marten.ApiService\CommunityToolkit.Aspire.Marten.ApiService.csproj", "{E022414D-36D8-436A-A66A-BEE337FEA712}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Marten.ServiceDefaults", "examples\marten\CommunityToolkit.Aspire.Marten.ServiceDefaults\CommunityToolkit.Aspire.Marten.ServiceDefaults.csproj", "{67CEEED4-72DA-4B09-93CE-D4313E3F410D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deno", "deno", "{B63EBC68-9A38-41C0-826E-95CD14B067A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Deno.Tests", "tests\CommunityToolkit.Aspire.Hosting.Deno.Tests\CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj", "{A92E70F9-8028-4E0C-B167-884E1E56854F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Deno", "src\CommunityToolkit.Aspire.Hosting.Deno\CommunityToolkit.Aspire.Hosting.Deno.csproj", "{259D0D48-C856-47C8-8014-66CE9A7C353F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Deno.AppHost", "examples\deno\CommunityToolkit.Aspire.Hosting.Deno.AppHost\CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj", "{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -257,6 +264,18 @@ Global
 		{67CEEED4-72DA-4B09-93CE-D4313E3F410D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67CEEED4-72DA-4B09-93CE-D4313E3F410D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67CEEED4-72DA-4B09-93CE-D4313E3F410D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -307,6 +326,10 @@ Global
 		{49669F3F-A5E4-4ABD-8CAE-C14E9D5C70B3} = {89330EB0-DD97-43F1-93AE-8CAAD820F3D5}
 		{E022414D-36D8-436A-A66A-BEE337FEA712} = {89330EB0-DD97-43F1-93AE-8CAAD820F3D5}
 		{67CEEED4-72DA-4B09-93CE-D4313E3F410D} = {89330EB0-DD97-43F1-93AE-8CAAD820F3D5}
+		{B63EBC68-9A38-41C0-826E-95CD14B067A4} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{A92E70F9-8028-4E0C-B167-884E1E56854F} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{259D0D48-C856-47C8-8014-66CE9A7C353F} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC} = {B63EBC68-9A38-41C0-826E-95CD14B067A4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
