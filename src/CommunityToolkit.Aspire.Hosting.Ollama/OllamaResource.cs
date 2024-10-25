@@ -7,7 +7,6 @@
 /// Constructs an <see cref="OllamaResource"/>.
 /// </remarks>
 /// <param name="name">The name for the resource.</param>
-/// <param name="modelName">The LLM to download on initial startup.</param>
 public class OllamaResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string OllamaEndpointName = "http";

@@ -10,6 +10,7 @@ namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 /// <remarks>
 /// Initializes a new instance of the <see cref="NpmPackageInstallerLifecycleHook"/> class with the specified logger service, notification service, and execution context.
 /// </remarks>
+/// <param name="useCI">Indicates if the installer is to use the <code>npm ci</code> or <code>npm install</code> command.</param>
 /// <param name="loggerService">The logger service used for logging.</param>
 /// <param name="notificationService">The notification service used for sending notifications.</param>
 /// <param name="context">The execution context of the distributed application.</param>
