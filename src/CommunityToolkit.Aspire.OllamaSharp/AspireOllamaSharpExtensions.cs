@@ -5,6 +5,9 @@ using OllamaSharp;
 
 namespace Microsoft.Extensions.Hosting;
 
+/// <summary>
+/// Extension methods for setting up OllamaSharp client in an <see cref="IHostApplicationBuilder"/>.
+/// </summary>
 public static class AspireOllamaSharpExtensions
 {
     private const string DefaultConfigSectionName = "Aspire:OllamaSharp";

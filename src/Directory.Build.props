@@ -1,6 +1,5 @@
 <Project>
   <Import Project="..\Directory.Build.props" />
-
   <PropertyGroup>
     <IsPackable>true</IsPackable>
 
@@ -58,4 +57,8 @@
     <PackageVersion>$(VersionPrefix)-$(VersionSuffix)</PackageVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591;CS1573;CS1712</WarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
 </Project>
