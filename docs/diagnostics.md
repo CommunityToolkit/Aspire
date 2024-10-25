@@ -10,3 +10,6 @@ In these cases, refer to the `<remarks>` docs section of the API for more inform
 
 Once a release of .NET Aspire with that API is available, the API in the .NET Aspire Community Toolkit will be marked as obsolete and will be removed in a future release.
 
+## CTASPIREMARTEN001
+
+The `CommunityToolkit.Aspire.Marten` package may introduce significant or breaking changes in its feature versions, as it does not encompass all `Marten` functionalities, including features like `AsyncDaemon`.

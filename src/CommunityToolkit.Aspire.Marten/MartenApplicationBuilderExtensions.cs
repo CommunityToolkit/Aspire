@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -26,6 +27,7 @@ public static class MartenApplicationBuilderExtensions
     /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="MartenSettings"/>. It's invoked after the settings are read from the configuration.</param>
     /// <param name="configureStoreOptions">An optional action to configure <see cref="StoreOptions"/>.</param>
     /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section</exception>
+    [Experimental("CTASPIREMARTEN001", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     public static void AddMartenClient(
         this IHostApplicationBuilder builder,
         string connectionName,
@@ -49,6 +51,7 @@ public static class MartenApplicationBuilderExtensions
     /// <param name="configureStoreOptions">An optional action to configure <see cref="StoreOptions"/>.</param>
     /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section</exception>
 
+    [Experimental("CTASPIREMARTEN001", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     public static void AddKeyedMartenClient(
         this IHostApplicationBuilder builder,
         string name,
