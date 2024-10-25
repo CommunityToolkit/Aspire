@@ -17,16 +17,20 @@
     <TestContainersVersion>3.10.0</TestContainersVersion>
     <IsPackable>false</IsPackable>
     <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
 
     <ToolkitMinorVersion>3</ToolkitMinorVersion>
     <ToolkitPatchVersion>0</ToolkitPatchVersion>
-</PropertyGroup>
+  </PropertyGroup>
 
   <PropertyGroup>
     <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
