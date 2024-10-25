@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting deno</AdditionalPackageTags>
+    <Description>A .NET Aspire for hosting Deno apps.</Description>
+  </PropertyGroup>
+
+
+</Project>

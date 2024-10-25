@@ -57,6 +57,10 @@ jobs:
           version: 9
           run_install: false
 
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - uses: actions/cache@v4
         name: Cache NuGet packages
         with:
