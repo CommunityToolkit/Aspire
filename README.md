@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-ci.yml) | [![main branch](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-main.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-main.yml) | [![Latest Release](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-release.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-release.yml)
 
-The .NET Aspire Community Toolkit is a collection of common components and extensions for development with .NET Aspire.
+The .NET Aspire Community Toolkit is a collection of common integrations and extensions for developing with .NET Aspire.
 
 All features are contributed by you, our amazing .NET community, and maintained by a core set of maintainers. Check out our [FAQ](./docs/faq.md) for more information.
 
