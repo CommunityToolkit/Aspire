@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
+/// <summary>
+/// Provides extension methods for adding Node.js applications to the distributed application builder.
+/// </summary>
 public static class NodeJSHostingExtensions
 {
     /// <summary>
