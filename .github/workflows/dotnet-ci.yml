@@ -176,7 +176,7 @@ jobs:
           hide_complexity: false
           indicators: true
           output: both
-          thresholds: "10 30"
+          thresholds: "50 75"
 
       - name: Upload combined coverage markdown
         uses: actions/upload-artifact@v4
@@ -191,3 +191,4 @@ jobs:
         with:
           recreate: true
           path: ${{ github.workspace }}/code-coverage-results.md
+
