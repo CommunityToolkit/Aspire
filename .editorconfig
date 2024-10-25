@@ -254,3 +254,11 @@ dotnet_naming_style.begins_with_i.required_prefix = I
 dotnet_naming_style.begins_with_i.required_suffix =
 dotnet_naming_style.begins_with_i.word_separator =
 dotnet_naming_style.begins_with_i.capitalization = pascal_case
+
+# Diagnostic controls
+
+## XML docs
+
+dotnet_diagnostic.CS1573.severity = error
+dotnet_diagnostic.CS1591.severity = error
+dotnet_diagnostic.CS1712.severity = error
