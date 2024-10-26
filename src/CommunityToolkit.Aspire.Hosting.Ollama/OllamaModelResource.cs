@@ -11,6 +11,9 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="parent">The <see cref="OllamaResource"/> parent.</param>
 public class OllamaModelResource(string name, string modelName, OllamaResource parent) : Resource(name), IResourceWithParent<OllamaResource>, IResourceWithConnectionString
 {
+    /// <summary>
+    /// Gets the parent Ollama container resource.
+    /// </summary>
     public OllamaResource Parent { get; } = ThrowIfNull(parent);
 
     /// <summary>

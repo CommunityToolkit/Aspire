@@ -106,6 +106,7 @@ public static class OllamaResourceBuilderExtensions
     /// Adds a model from Hugging Face to the Ollama container.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM from Hugging Face to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, string name, string modelName)
@@ -177,23 +178,6 @@ public static class OllamaResourceBuilderExtensions
             }
         });
     }
-
-    public static IResourceBuilder<T> WithReference<T>(this IResourceBuilder<T> builder, IResourceBuilder<OllamaModelResource> ollamaModel) where T : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNull(ollamaModel, nameof(ollamaModel));
-
-        var resource = (IResourceWithConnectionString)ollamaModel.Resource;
-        return builder.WithEnvironment(context =>
-        {
-            var connectionStringName = resource.ConnectionStringEnvironmentVariable ?? $"{ConnectionStringEnvironmentName}{resource.Name}";
-
-            context.EnvironmentVariables[connectionStringName] = new ConnectionStringReference(resource, optional: false);
-
-            context.EnvironmentVariables[$"Aspire__OllamaSharp__{resource.Name}__SelectedModel"] = ollamaModel.Resource.ModelName;
-        });
-    }
-
 
     /// <summary>
     /// Adds an administration web UI Ollama to the application model using Attu. This version the package defaults to the main tag of the Open WebUI container image
