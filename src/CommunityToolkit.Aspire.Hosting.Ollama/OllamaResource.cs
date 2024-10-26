@@ -35,10 +35,21 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
     /// <summary>
     /// Gets the connection string expression for the Ollama server.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression =>
-      ReferenceExpression.Create(
-        $"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}"
-      );
+    public ReferenceExpression ConnectionStringExpression => BuildConnectionString(true);
+
+    internal ReferenceExpression BuildConnectionString(bool includeDefaultModel = false)
+    {
+        var builder = new ReferenceExpressionBuilder();
+        builder.AppendLiteral($"Endpoint=");
+        builder.Append($"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+
+        if (includeDefaultModel && !string.IsNullOrEmpty(DefaultModel))
+        {
+            builder.AppendLiteral($";Model={DefaultModel}");
+        }
+
+        return builder.Build();
+    }
 
     /// <summary>
     ///     Adds a model to the list of models to download on initial startup.

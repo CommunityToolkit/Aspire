@@ -10,8 +10,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class OllamaResourceBuilderExtensions
 {
-    private const string ConnectionStringEnvironmentName = "ConnectionStrings__";
-
     /// <summary>
     /// Adds the Ollama container to the application model.
     /// </summary>
@@ -142,41 +140,6 @@ public static class OllamaResourceBuilderExtensions
 
         builder.Resource.SetDefaultModel(modelName);
         return builder;
-    }
-
-    /// <summary>
-    /// Adds a reference to an Ollama resource to the application model.
-    /// </summary>
-    /// <typeparam name="T">The type of the resource to add Ollama to.</typeparam>
-    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
-    /// <param name="ollama">The Ollama resource to add as a reference.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>
-    /// This method adds the connection string and model references to the application model.
-    /// </remarks>
-    public static IResourceBuilder<T> WithReference<T>(this IResourceBuilder<T> builder, IResourceBuilder<OllamaResource> ollama) where T : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNull(ollama, nameof(ollama));
-
-        var resource = (IResourceWithConnectionString)ollama.Resource;
-        return builder.WithEnvironment(context =>
-        {
-            var connectionStringName = resource.ConnectionStringEnvironmentVariable ?? $"{ConnectionStringEnvironmentName}{resource.Name}";
-
-            context.EnvironmentVariables[connectionStringName] = new ConnectionStringReference(resource, optional: false);
-
-            for (int i = 0; i < ollama.Resource.Models.Count; i++)
-            {
-                var model = ollama.Resource.Models[i];
-                context.EnvironmentVariables[$"Aspire__OllamaSharp__{resource.Name}__Models__{i}"] = model;
-
-                if (model == ollama.Resource.DefaultModel)
-                {
-                    context.EnvironmentVariables[$"Aspire__OllamaSharp__{resource.Name}__SelectedModel"] = model;
-                }
-            }
-        });
     }
 
     /// <summary>

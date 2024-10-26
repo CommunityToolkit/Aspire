@@ -2,7 +2,7 @@ using CommunityToolkit.Aspire.OllamaSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
-using System.Web;
+using System.Data.Common;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.Hosting;
 /// </summary>
 public static class AspireOllamaSharpExtensions
 {
-    private const string DefaultConfigSectionName = "Aspire:OllamaSharp";
+    private const string DefaultConfigSectionName = "Aspire:Ollama";
 
     /// <summary>
     /// Adds <see cref="OllamaApiClient"/> services to the container.
@@ -51,6 +51,24 @@ public static class AspireOllamaSharpExtensions
             settings.ConnectionString = connectionString;
         }
 
+        if (!Uri.TryCreate(settings.ConnectionString, UriKind.Absolute, out var endpoint))
+        {
+            var connectionBuilder = new DbConnectionStringBuilder
+            {
+                ConnectionString = settings.ConnectionString
+            };
+
+            if (connectionBuilder.ContainsKey("Endpoint") && Uri.TryCreate(connectionBuilder["Endpoint"].ToString(), UriKind.Absolute, out endpoint))
+            {
+                settings.ConnectionString = endpoint.ToString();
+            }
+
+            if (connectionBuilder.ContainsKey("Model"))
+            {
+                settings.SelectedModel = connectionBuilder["Model"].ToString();
+            }
+        }
+
         configureSettings?.Invoke(settings);
 
         if (string.IsNullOrWhiteSpace(settings.ConnectionString))
@@ -58,16 +76,11 @@ public static class AspireOllamaSharpExtensions
             throw new UriFormatException("No endpoint for Ollama defined.");
         }
 
-        Uri connectionStringUri = new Uri(settings.ConnectionString);
-        OllamaApiClient client = new(new HttpClient { BaseAddress = connectionStringUri });
+        OllamaApiClient client = new(new HttpClient { BaseAddress = new Uri(settings.ConnectionString) });
 
         if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
         {
             client.SelectedModel = settings.SelectedModel;
-        }
-        else if (HttpUtility.ParseQueryString(connectionStringUri.Query).GetValues("Model") is [string model])
-        {
-            client.SelectedModel = model;
         }
 
         if (!string.IsNullOrEmpty(serviceKey))

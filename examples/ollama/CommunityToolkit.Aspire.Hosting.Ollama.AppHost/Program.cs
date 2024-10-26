@@ -2,6 +2,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var ollama = builder.AddOllama("ollama", port: null)
     .WithDefaultModel("phi:chat")
+    .WithDataVolume()
     .WithOpenWebUI();
 
 var llama = ollama.AddHuggingFaceModel("llama", "bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS");

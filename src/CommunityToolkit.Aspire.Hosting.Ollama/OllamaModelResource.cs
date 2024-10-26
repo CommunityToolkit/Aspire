@@ -19,7 +19,7 @@ public class OllamaModelResource(string name, string modelName, OllamaResource p
     /// <summary>
     /// Gets the connection string expression for the Ollama model.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"{Parent}?Model={ModelName}");
+    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"{Parent.BuildConnectionString()};Model={ModelName}");
 
     /// <summary>
     /// Gets the model name.
