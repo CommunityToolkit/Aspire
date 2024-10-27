@@ -4,6 +4,7 @@ using Aspire.Hosting.Lifecycle;
 using Microsoft.Extensions.Logging;
 using OllamaSharp;
 using OllamaSharp.Models;
+using System.Data.Common;
 using System.Globalization;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama;
@@ -44,6 +45,19 @@ internal class OllamaModelResourceLifecycleHook(
             {
                 await _notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot("No connection string", KnownResourceStateStyles.Error) });
                 return;
+            }
+
+            if (!Uri.TryCreate(connectionString, UriKind.Absolute, out _))
+            {
+                var connectionBuilder = new DbConnectionStringBuilder
+                {
+                    ConnectionString = connectionString
+                };
+
+                if (connectionBuilder.ContainsKey("Endpoint") && Uri.TryCreate(connectionBuilder["Endpoint"].ToString(), UriKind.Absolute, out var endpoint))
+                {
+                    connectionString = endpoint.ToString();
+                }
             }
 
             var ollamaClient = new OllamaApiClient(new Uri(connectionString));
