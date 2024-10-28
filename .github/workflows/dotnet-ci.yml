@@ -73,6 +73,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docker-
 
+      - name: Get NPM package root
+        id: npm-root
+        run: "echo echo tag=$(npm root -g) >> $GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        name: Cache global npm packages
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('.github/workflows/dotnet-ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
       - name: Install Aspire workload
         run: dotnet workload update && dotnet workload install aspire
       - name: Setup .NET dev certs
@@ -139,4 +151,3 @@ jobs:
           --api-key dummy 
           --source PullRequests 
           --skip-duplicate
-
