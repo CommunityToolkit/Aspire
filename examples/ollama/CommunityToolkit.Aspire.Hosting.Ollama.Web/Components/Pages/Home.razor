@@ -6,34 +6,62 @@
 
 <h1>Ollama demo</h1>
 
-<p>Welcome to the OllamaOld demo!</p>
+<p>Welcome to the Ollama demo!</p>
+
+<fieldset>
+    <legend>Model</legend>
+    <InputRadioGroup @bind-Value="_selectedClient">
+        <div>
+            <label>
+                <InputRadio Value="ServiceKeys.Phi3" />
+                @OllamaClient1.SelectedModel
+            </label>
+        </div>
+        <div>
+            <label>
+                <InputRadio Value="ServiceKeys.Llama" />
+                @OllamaClient2.SelectedModel
+            </label>
+        </div>
+    </InputRadioGroup>
+</fieldset>
+
 <p><input type="text" @bind-value="_prompt" />&nbsp;<button @onclick="GetPrompt">Ask</button></p>
 <p>@_response</p>
-
-<p>Welcome to the Ollama model reference demo!</p>
-<p><input type="text" @bind-value="_chatprompt" />&nbsp;<button @onclick="GetPrompt2">Ask</button></p>
-<p>@_chatresponse</p>
 
 @code {
     private string _prompt = "";
     private string _response = "";
 
-    private string _chatprompt = "";
-    private string _chatresponse = "";
+    private string? _selectedClient;
 
-    [Inject(Key ="ollama")]
-    public required IOllamaApiClient OllamaOldClient { get; set; }
+    [Inject(Key = ServiceKeys.Phi3)]
+    public required IOllamaApiClient OllamaClient1 { get; set; }
 
-    [Inject(Key ="llama")]
-    public required IOllamaApiClient OllamaModelReferenceClient { get; set; }
+    [Inject(Key = ServiceKeys.Llama)]
+    public required IOllamaApiClient OllamaClient2 { get; set; }
 
     private async Task GetPrompt()
     {
+        var client = _selectedClient switch
+        {
+            ServiceKeys.Phi3 => OllamaClient1,
+            ServiceKeys.Llama => OllamaClient2,
+            _ => null
+        };
+
         if (!string.IsNullOrWhiteSpace(_prompt))
         {
+            if (client is null)
+            {
+                _response = "No model selected";
+                return;
+            }
+
             bool gotResponse = false;
             _response = "Asking Ollama...";
-            Chat chat = new(OllamaOldClient, "You are a demo application. Your name is ");
+
+            Chat chat = new(client, "You are a demo application.");
             await foreach (string answerToken in chat.Send(_prompt))
             {
                 if (!gotResponse)
@@ -43,27 +71,6 @@
                 }
 
                 _response += answerToken;
-                StateHasChanged();
-            }
-        }
-    }
-
-    private async Task GetPrompt2()
-    {
-        if (!string.IsNullOrWhiteSpace(_chatprompt))
-        {
-            bool gotResponse = false;
-            _chatresponse = "Asking Ollama...";
-            Chat chat = new(OllamaModelReferenceClient, "You are a demo application. Your name is ");
-            await foreach (string answerToken in chat.Send(_chatprompt))
-            {
-                if (!gotResponse)
-                {
-                    _chatresponse = "";
-                    gotResponse = true;
-                }
-
-                _chatresponse += answerToken;
                 StateHasChanged();
             }
         }

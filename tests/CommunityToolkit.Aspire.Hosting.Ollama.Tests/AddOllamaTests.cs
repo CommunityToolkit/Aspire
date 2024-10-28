@@ -1,26 +1,7 @@
-using Aspire.Hosting;
-
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
 public class AddOllamaTests
 {
-    [Fact]
-    public void VerifyDefaultModel()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: null).WithDefaultModel("llama3");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.Equal("ollama", resource.Name);
-
-        Assert.Equal("llama3", resource.DefaultModel);
-    }
-
     [Fact]
     public void VerifyCustomModel()
     {
@@ -115,24 +96,6 @@ public class AddOllamaTests
     }
 
     [Fact]
-    public void DefaultModelAddedToModelList()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: null).WithDefaultModel("llama3");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.Equal("ollama", resource.Name);
-
-        Assert.Single(resource.Models);
-        Assert.Contains("llama3", resource.Models);
-    }
-
-    [Fact]
     public void DistributedApplicationBuilderCannotBeNull()
     {
         Assert.Throws<ArgumentNullException>(() => DistributedApplication.CreateBuilder().AddOllama(null!, port: null));
@@ -155,17 +118,6 @@ public class AddOllamaTests
         Assert.Throws<ArgumentException>(() => ollama.AddModel(""));
         Assert.Throws<ArgumentException>(() => ollama.AddModel(" "));
         Assert.Throws<ArgumentNullException>(() => ollama.AddModel(null!));
-    }
-
-    [Fact]
-    public void DefaultModelCannotBeOmitted()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var ollama = builder.AddOllama("ollama", port: null);
-
-        Assert.Throws<ArgumentException>(() => ollama.WithDefaultModel(""));
-        Assert.Throws<ArgumentException>(() => ollama.WithDefaultModel(" "));
-        Assert.Throws<ArgumentNullException>(() => ollama.WithDefaultModel(null!));
     }
 
     [Fact]

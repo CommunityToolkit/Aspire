@@ -11,7 +11,7 @@ namespace Microsoft.Extensions.Hosting;
 /// </summary>
 public static class AspireOllamaSharpExtensions
 {
-    private const string DefaultConfigSectionName = "Aspire:Ollama";
+    private const string DefaultConfigSectionName = "Aspire:OllamaSharp";
 
     /// <summary>
     /// Adds <see cref="OllamaApiClient"/> services to the container.

@@ -56,7 +56,8 @@ public static class OllamaResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
 
-        string resourceName = $"{builder.Resource.Name}-{modelName.Split(':')[0].Split('/').Last().Replace('.', '-')}";
+        string sanitizedModelName = modelName.Split(':')[0].Split('/').Last().Replace('.', '-');
+        string resourceName = $"{builder.Resource.Name}-{sanitizedModelName}";
 
         return AddModel(builder, resourceName, modelName);
     }
@@ -82,11 +83,11 @@ public static class OllamaResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a model from Hugging Face to the Ollama container.
+    /// Adds a model from Hugging Face to the Ollama container. Only models in GGUF format are supported.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="modelName">The name of the LLM from Hugging Face to download on initial startup.</param>
+    /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, string name, string modelName)
     {
@@ -100,27 +101,7 @@ public static class OllamaResourceBuilderExtensions
             modelName = "hf.co/" + modelName;
         }
 
-        builder.Resource.AddModel(modelName);
-        var modelResource = new OllamaModelResource(name, modelName, builder.Resource);
-
-        return builder.ApplicationBuilder.AddResource(modelResource);
-    }
-
-    /// <summary>
-    /// Adds and sets the default model to be configured on the Ollama server.
-    /// </summary>
-    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
-    /// <param name="modelName">The name of the model.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaResource> WithDefaultModel(this IResourceBuilder<OllamaResource> builder, string modelName)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
-
-        builder.AddModel(modelName);
-
-        builder.Resource.SetDefaultModel(modelName);
-        return builder;
+        return AddModel(builder, name, modelName);
     }
 
     /// <summary>

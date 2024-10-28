@@ -1,3 +1,4 @@
+using CommunityToolkit.Aspire.Hosting.Ollama.Web;
 using CommunityToolkit.Aspire.Hosting.Ollama.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +12,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.AddKeyedOllamaApiClient("ollama");
-builder.AddKeyedOllamaApiClient("llama");
+builder.AddKeyedOllamaApiClient(ServiceKeys.Phi3);
+builder.AddKeyedOllamaApiClient(ServiceKeys.Llama);
 
 var app = builder.Build();
 
