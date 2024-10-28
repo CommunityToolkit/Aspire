@@ -69,6 +69,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docker-
 
+      - name: Get NPM package root
+        id: npm-root
+        run: "echo path=$(npm root -g) >> $GITHUB_OUTPUT"
+        shell: bash
+
+      - uses: actions/cache@v4
+        name: Cache global npm packages
+        with:
+          path: ${{ steps.npm-root.outputs.path }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('.github/workflows/dotnet-ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
       - name: Setup .NET dev certs
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
