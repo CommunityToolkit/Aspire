@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using OllamaSharp;
 
 namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 
@@ -20,19 +20,21 @@ public class AspireOllamaSharpExtensionsTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaApiClient("Ollama");
+            builder.AddKeyedOllamaSharpClient("Ollama");
         }
         else
         {
-            builder.AddOllamaApiClient("Ollama");
+            builder.AddOllamaSharpClient("Ollama");
         }
 
         using var host = builder.Build();
 
         var client = useKeyed ?
-            (OllamaApiClient)host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama") :
-            (OllamaApiClient)host.Services.GetRequiredService<IOllamaApiClient>();
-        Assert.Equal(Endpoint, client.Config.Uri.ToString());
+            host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
+            host.Services.GetRequiredService<IChatClient>();
+
+        Assert.NotNull(client.Metadata.ProviderUri);
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri.ToString());
     }
 
     [Theory]
@@ -47,20 +49,21 @@ public class AspireOllamaSharpExtensionsTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaApiClient("Ollama", settings => settings.ConnectionString = Endpoint);
+            builder.AddKeyedOllamaSharpClient("Ollama", settings => settings.ConnectionString = Endpoint);
         }
         else
         {
-            builder.AddOllamaApiClient("Ollama", settings => settings.ConnectionString = Endpoint);
+            builder.AddOllamaSharpClient("Ollama", settings => settings.ConnectionString = Endpoint);
         }
 
         using var host = builder.Build();
         var client = useKeyed ?
-            (OllamaApiClient)host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama") :
-            (OllamaApiClient)host.Services.GetRequiredService<IOllamaApiClient>();
+            host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
+            host.Services.GetRequiredService<IChatClient>();
 
-        Assert.Equal(Endpoint, client.Config.Uri.ToString());
-        Assert.DoesNotContain("http://not-used", client.Config.Uri.ToString());
+        Assert.NotNull(client.Metadata.ProviderUri);
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri.ToString());
+        Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
     }
 
     [Theory]
@@ -76,20 +79,21 @@ public class AspireOllamaSharpExtensionsTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaApiClient("Ollama");
+            builder.AddKeyedOllamaSharpClient("Ollama");
         }
         else
         {
-            builder.AddOllamaApiClient("Ollama");
+            builder.AddOllamaSharpClient("Ollama");
         }
 
         using var host = builder.Build();
         var client = useKeyed ?
-            (OllamaApiClient)host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama") :
-            (OllamaApiClient)host.Services.GetRequiredService<IOllamaApiClient>();
+            host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
+            host.Services.GetRequiredService<IChatClient>();
 
-        Assert.Equal(Endpoint, client.Config.Uri.ToString());
-        Assert.DoesNotContain("http://not-used", client.Config.Uri.ToString());
+        Assert.NotNull(client.Metadata.ProviderUri);
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri.ToString());
+        Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
     }
 
     [Fact]
@@ -102,18 +106,18 @@ public class AspireOllamaSharpExtensionsTests
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "https://localhost:5003/")
         ]);
 
-        builder.AddOllamaApiClient("Ollama");
-        builder.AddKeyedOllamaApiClient("Ollama2");
-        builder.AddKeyedOllamaApiClient("Ollama3");
+        builder.AddOllamaSharpClient("Ollama");
+        builder.AddKeyedOllamaSharpClient("Ollama2");
+        builder.AddKeyedOllamaSharpClient("Ollama3");
 
         using var host = builder.Build();
-        var client = (OllamaApiClient)host.Services.GetRequiredService<IOllamaApiClient>();
-        var client2 = (OllamaApiClient)host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama2");
-        var client3 = (OllamaApiClient)host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama3");
+        var client = host.Services.GetRequiredService<IChatClient>();
+        var client2 = host.Services.GetRequiredKeyedService<IChatClient>("Ollama2");
+        var client3 = host.Services.GetRequiredKeyedService<IChatClient>("Ollama3");
 
-        Assert.Equal(Endpoint, client.Config.Uri.ToString());
-        Assert.Equal("https://localhost:5002/", client2.Config.Uri.ToString());
-        Assert.Equal("https://localhost:5003/", client3.Config.Uri.ToString());
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri?.ToString());
+        Assert.Equal("https://localhost:5002/", client2.Metadata.ProviderUri?.ToString());
+        Assert.Equal("https://localhost:5003/", client3.Metadata.ProviderUri?.ToString());
 
         Assert.NotEqual(client, client2);
         Assert.NotEqual(client, client3);
