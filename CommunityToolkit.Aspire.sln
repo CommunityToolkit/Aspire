@@ -109,6 +109,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects", "src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj", "{AADE70FC-9F6D-47EC-8141-A30F6EFF8095}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sql-database-projects", "sql-database-projects", "{4AE83D68-EA10-473D-BD26-19C5928A8620}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost", "examples\sql-database-projects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj", "{79EF8E85-1DFC-42B5-BDE3-72639F25848C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -283,6 +287,10 @@ Global
 		{AADE70FC-9F6D-47EC-8141-A30F6EFF8095}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AADE70FC-9F6D-47EC-8141-A30F6EFF8095}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AADE70FC-9F6D-47EC-8141-A30F6EFF8095}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79EF8E85-1DFC-42B5-BDE3-72639F25848C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79EF8E85-1DFC-42B5-BDE3-72639F25848C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79EF8E85-1DFC-42B5-BDE3-72639F25848C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79EF8E85-1DFC-42B5-BDE3-72639F25848C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -338,6 +346,8 @@ Global
 		{259D0D48-C856-47C8-8014-66CE9A7C353F} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC} = {B63EBC68-9A38-41C0-826E-95CD14B067A4}
 		{AADE70FC-9F6D-47EC-8141-A30F6EFF8095} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{4AE83D68-EA10-473D-BD26-19C5928A8620} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{79EF8E85-1DFC-42B5-BDE3-72639F25848C} = {4AE83D68-EA10-473D-BD26-19C5928A8620}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
