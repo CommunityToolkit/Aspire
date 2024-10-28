@@ -73,15 +73,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docker-
 
-      - name: Get NPM package root (linux)
-        if: runner.os == 'ubuntu-latest'
+      - name: Get NPM package root
         id: npm-root
         run: "echo path=$(npm root -g) >> $GITHUB_OUTPUT"
-
-      - name: Get NPM package root (windows)
-        if: runner.os == 'windows-latest'
-        id: npm-root
-        run: "echo path=$(npm root -g) >> $ENV:GITHUB_OUTPUT"
+        shell: bash
 
       - uses: actions/cache@v4
         name: Cache global npm packages
