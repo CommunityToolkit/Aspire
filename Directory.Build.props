@@ -10,7 +10,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <AspireMajorVersion>8</AspireMajorVersion>
+    <AspireMajorVersion>8.2.1</AspireMajorVersion>
     <AspireVersion>$(AspireMajorVersion).2.1</AspireVersion>
     <AspNetCoreVersion>8.0.10</AspNetCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
