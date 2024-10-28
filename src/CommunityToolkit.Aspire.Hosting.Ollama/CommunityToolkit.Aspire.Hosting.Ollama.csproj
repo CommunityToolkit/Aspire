@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire component leveraging the Ollama container with support for downloading a model on startup.</Description>
+    <Description>An Aspire integration leveraging the Ollama container with support for downloading a model on startup.</Description>
     <AdditionalPackageTags>hosting ollama ai</AdditionalPackageTags>
   </PropertyGroup>
 
