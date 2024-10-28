@@ -250,3 +250,9 @@ jobs:
           --api-key dummy 
           --source MainLatest 
           --skip-duplicate
+
+  publish-coverage:
+    if: github.actor != 'dependabot[bot]'
+    needs: build
+    uses: ./.github/workflows/code-coverage.yml
+    secrets: inherit
