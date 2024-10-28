@@ -8,7 +8,7 @@ public sealed class OllamaSharpSettings
     /// <summary>
     /// Gets or sets the connection string.
     /// </summary>
-    public string? ConnectionString { get; set; }
+    public string? Endpoint { get; set; }
 
     /// <summary>
     /// Gets or sets the selected model.
@@ -19,4 +19,17 @@ public sealed class OllamaSharpSettings
     /// Gets or sets the list of models to available.
     /// </summary>
     public IReadOnlyList<string> Models { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether the Meilisearch health check is disabled or not.
+    /// </summary>
+    /// <value>
+    /// The default value is <see langword="false"/>.
+    /// </value>
+    public bool DisableHealthChecks { get; set; }
+
+    /// <summary>
+    /// Gets or sets a integer value that indicates the Meilisearch health check timeout in milliseconds.
+    /// </summary>
+    public int? HealthCheckTimeout { get; set; }
 }

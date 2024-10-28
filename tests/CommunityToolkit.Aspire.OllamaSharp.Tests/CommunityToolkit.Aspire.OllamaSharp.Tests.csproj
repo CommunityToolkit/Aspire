@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Testcontainers" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.OllamaSharp\CommunityToolkit.Aspire.OllamaSharp.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.Ollama\OllamaContainerImageTags.cs" />
+  </ItemGroup>
 
 </Project>

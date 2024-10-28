@@ -1,8 +1,11 @@
+using Aspire;
 using CommunityToolkit.Aspire.OllamaSharp;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OllamaSharp;
+using System.Security.Cryptography;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -25,7 +28,7 @@ public static class AspireOllamaSharpExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        AddOllamaClientInternal(builder, connectionName, configureSettings: configureSettings);
+        AddOllamaClientInternal(builder, DefaultConfigSectionName, connectionName, configureSettings: configureSettings);
     }
 
     /// <summary>
@@ -40,7 +43,7 @@ public static class AspireOllamaSharpExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        AddOllamaClientInternal(builder, connectionName, serviceKey: connectionName, configureSettings: configureSettings);
+        AddOllamaClientInternal(builder, $"{DefaultConfigSectionName}:{connectionName}", connectionName, serviceKey: connectionName, configureSettings: configureSettings);
     }
 
     /// <summary>
@@ -54,7 +57,7 @@ public static class AspireOllamaSharpExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        AddOllamaClientInternal(builder, connectionName, configureSettings: configureSettings, enableChatClient: true);
+        AddOllamaClientInternal(builder, DefaultConfigSectionName, connectionName, configureSettings: configureSettings, enableChatClient: true);
     }
 
     /// <summary>
@@ -68,48 +71,89 @@ public static class AspireOllamaSharpExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        AddOllamaClientInternal(builder, connectionName, serviceKey: connectionName, configureSettings: configureSettings, enableChatClient: true);
+        AddOllamaClientInternal(builder, $"{DefaultConfigSectionName}:{connectionName}", connectionName, serviceKey: connectionName, configureSettings: configureSettings, enableChatClient: true);
     }
 
-    private static void AddOllamaClientInternal(IHostApplicationBuilder builder, string connectionName, string? serviceKey = null, Action<OllamaSharpSettings>? configureSettings = null, bool enableChatClient = false)
+    private static void AddOllamaClientInternal(
+        IHostApplicationBuilder builder,
+        string configurationSectionName,
+        string connectionName,
+        string? serviceKey = null,
+        Action<OllamaSharpSettings>? configureSettings = null,
+        bool enableChatClient = false)
     {
         OllamaSharpSettings settings = new();
-        builder.Configuration.GetSection($"{DefaultConfigSectionName}:{connectionName}").Bind(settings);
+        builder.Configuration.GetSection(configurationSectionName).Bind(settings);
 
         if (builder.Configuration.GetConnectionString(connectionName) is string connectionString)
         {
-            settings.ConnectionString = connectionString;
+            settings.Endpoint = connectionString;
         }
 
         configureSettings?.Invoke(settings);
 
-        if (string.IsNullOrWhiteSpace(settings.ConnectionString))
+        if (serviceKey is not null)
         {
-            throw new UriFormatException("No endpoint for Ollama defined.");
-        }
-
-        OllamaApiClient client = new(new HttpClient { BaseAddress = new Uri(settings.ConnectionString) });
-
-        if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
-        {
-            client.SelectedModel = settings.SelectedModel;
-        }
-
-        if (!string.IsNullOrEmpty(serviceKey))
-        {
-            builder.Services.AddKeyedSingleton<IOllamaApiClient>(serviceKey, client);
+            builder.Services.AddKeyedSingleton(serviceKey, (sp, _) => ConfigureOllamaClient(sp));
             if (enableChatClient)
             {
-                builder.Services.AddKeyedSingleton<IChatClient>(serviceKey, client);
+                builder.Services.AddKeyedSingleton(serviceKey, (sp, _) => ConfigureOllamaChatClient(sp, serviceKey));
             }
         }
         else
         {
-            builder.Services.AddSingleton<IOllamaApiClient>(client);
+            builder.Services.AddSingleton(ConfigureOllamaClient);
             if (enableChatClient)
             {
-                builder.Services.AddSingleton<IChatClient>(client);
+                builder.Services.AddSingleton(sp => ConfigureOllamaChatClient(sp));
             }
+        }
+
+        if (!settings.DisableHealthChecks)
+        {
+            var healthCheckName = serviceKey is null ? "OllamaSharp" : $"OllamaSharp_{connectionName}";
+
+            builder.TryAddHealthCheck(new HealthCheckRegistration(
+                healthCheckName,
+                sp => new OllamaHealthCheck(serviceKey is null ?
+                    sp.GetRequiredService<IOllamaApiClient>() :
+                    sp.GetRequiredKeyedService<IOllamaApiClient>(serviceKey)),
+                failureStatus: null,
+                tags: null,
+                timeout: settings.HealthCheckTimeout > 0 ? TimeSpan.FromMilliseconds(settings.HealthCheckTimeout.Value) : null
+                ));
+        }
+
+        IOllamaApiClient ConfigureOllamaClient(IServiceProvider serviceProvider)
+        {
+            if (settings.Endpoint is not null)
+            {
+                var client = new OllamaApiClient(new HttpClient { BaseAddress = new Uri(settings.Endpoint) });
+                if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
+                {
+                    client.SelectedModel = settings.SelectedModel;
+                }
+
+                return client;
+            }
+
+            throw new InvalidOperationException(
+                        $"An OllamaApiClient could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or either " +
+                        $"{nameof(settings.Endpoint)} must be provided " +
+                        $"in the '{configurationSectionName}' configuration section.");
+        }
+
+        IChatClient ConfigureOllamaChatClient(IServiceProvider serviceProvider, string? serviceKey = null)
+        {
+            var ollamaClient = serviceKey is null ?
+                serviceProvider.GetRequiredService<IOllamaApiClient>() :
+                serviceProvider.GetRequiredKeyedService<IOllamaApiClient>(serviceKey);
+            if (ollamaClient is IChatClient chatClient)
+            {
+                return chatClient;
+            }
+
+            throw new InvalidOperationException("The Ollama client does not implement IChatClient.");
         }
     }
 }

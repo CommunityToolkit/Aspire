@@ -49,11 +49,11 @@ public class AspireOllamaSharpExtensionsTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpClient("Ollama", settings => settings.ConnectionString = Endpoint);
+            builder.AddKeyedOllamaSharpClient("Ollama", settings => settings.Endpoint = Endpoint);
         }
         else
         {
-            builder.AddOllamaSharpClient("Ollama", settings => settings.ConnectionString = Endpoint);
+            builder.AddOllamaSharpClient("Ollama", settings => settings.Endpoint = Endpoint);
         }
 
         using var host = builder.Build();
