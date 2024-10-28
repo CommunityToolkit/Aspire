@@ -1,4 +1,4 @@
-# CommunityToolkit.Hosting.Azure.StaticWebApps
+# CommunityToolkit.Hosting.Azure.DataApiBuilder
 
 ## Overview
 
