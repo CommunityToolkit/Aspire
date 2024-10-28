@@ -10,6 +10,8 @@ namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 /// Represents a Node package installer.
 /// </summary>
 /// <param name="packageManager">The package manager to use.</param>
+/// <param name="installCommand">The install command to use.</param>
+/// <param name="lockfile">The name of the lockfile to use.</param>
 /// <param name="loggerService">The logger service to use.</param>
 /// <param name="notificationService">The notification service to use.</param>
 internal class NodePackageInstaller(string packageManager, string installCommand, string lockfile, ResourceLoggerService loggerService, ResourceNotificationService notificationService)

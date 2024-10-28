@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
+/// <summary>
+/// Provides extension methods for adding Node.js applications to the distributed application builder.
+/// </summary>
 public static class NodeJSHostingExtensions
 {
     /// <summary>
@@ -52,7 +55,6 @@ public static class NodeJSHostingExtensions
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(workingDirectory);
         ArgumentNullException.ThrowIfNull(scriptName);
-
         string[] allArgs = args is { Length: > 0 }
             ? ["run", scriptName, "--", .. args]
             : ["run", scriptName];
@@ -87,7 +89,6 @@ public static class NodeJSHostingExtensions
 
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
         var resource = new NodeAppResource(name, "pnpm", workingDirectory);
-
         return builder.AddResource(resource)
                       .WithNodeDefaults()
                       .WithArgs(allArgs);

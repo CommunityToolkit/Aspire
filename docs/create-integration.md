@@ -126,7 +126,7 @@ Your integration will be automatically packaged as a NuGet package when a PR is 
 Most of the NuGet metadata will be automatically added to the generated nuspec file during the packaging process in the CI pipeline but there are two pieces of metadata that you will need to add manually to the csproj file for your integration:
 
 -   `Description` - A short description of the integration.
--   `AdditionalTags` - A comma-separated list of tags that describe the integration (some tags are added by default, such as `aspire`, use this to add more specific tags for your integration).
+-   `AdditionalTags` - A space-separated list of tags that describe the integration (some tags are added by default, such as `aspire`, use this to add more specific tags for your integration). Ensure to add the integration type (`client` or `hosting`) as a tag so the integration can be easily discovered in the Visual Studio tooling for .NET Aspire.
 
 Here's an example from the OllamaSharp integration:
 
@@ -140,4 +140,3 @@ Here's an example from the OllamaSharp integration:
 ## 🎉 You're done
 
 That's it! You've created a new integration for the .NET Aspire Community Toolkit. If you have any questions or need help, feel free to reach out to the maintainers or the community on GitHub Discussions.
-

@@ -2,6 +2,9 @@ using Aspire.Hosting.ApplicationModel;
 
 namespace Aspire.Hosting;
 
+/// <summary>
+/// Provides extension methods for adding and configuring Static Web Apps emulator.
+/// </summary>
 public static class SwaAppHostingExtension
 {
     /// <summary>

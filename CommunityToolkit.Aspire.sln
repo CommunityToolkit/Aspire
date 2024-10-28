@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{414151D4-700
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Java", "src\CommunityToolkit.Aspire.Hosting.Java\CommunityToolkit.Aspire.Hosting.Java.csproj", "{DAA67050-44B3-458F-9818-5877D606866A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps", "src\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.csproj", "{125DFA83-328D-4F8B-91EC-3057FFF410BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps", "src\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps\CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.csproj", "{125DFA83-328D-4F8B-91EC-3057FFF410BE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8519CC01-1370-47C8-AD94-B0F326B1563F}"
 EndProject
@@ -77,13 +77,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Oll
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.Tests", "tests\CommunityToolkit.Aspire.Hosting.Meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj", "{C715669D-FBDE-4BFF-B9A3-75615D3C179A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Meilisearch.Tests", "tests\CommunityToolkit.Aspire.Meilisearch.Tests\CommunityToolkit.Aspire.Meilisearch.Tests.csproj", "{0AACC135-9624-423D-8988-69701C0FE428}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Meilisearch.Tests", "tests\CommunityToolkit.Aspire.Meilisearch.Tests\CommunityToolkit.Aspire.Meilisearch.Tests.csproj", "{0AACC135-9624-423D-8988-69701C0FE428}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "meilisearch", "meilisearch", "{561CEB82-3D97-49D0-932E-664E6779FC61}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost", "examples\meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost\CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost.csproj", "{6B9357F7-014F-4725-AF3E-0B8EA17B62C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost", "examples\meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost\CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost.csproj", "{6B9357F7-014F-4725-AF3E-0B8EA17B62C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults", "examples\meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults.csproj", "{E4E93A24-0A97-419F-836C-EAA23D0FFF81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults", "examples\meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults.csproj", "{E4E93A24-0A97-419F-836C-EAA23D0FFF81}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService", "examples\meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService\CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService.csproj", "{F6A9CC5C-91A2-4AAB-AEC9-8007A62A081E}"
 EndProject
@@ -98,6 +98,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.ServiceDefaults", "examples\data-api-builder\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.ServiceDefaults.csproj", "{0A667FDF-DD10-4CA5-8C71-DBA5AEED1D63}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp", "examples\data-api-builder\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.csproj", "{B42EFEB5-6196-4D8C-A46C-671D339B3C15}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deno", "deno", "{B63EBC68-9A38-41C0-826E-95CD14B067A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Deno.Tests", "tests\CommunityToolkit.Aspire.Hosting.Deno.Tests\CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj", "{A92E70F9-8028-4E0C-B167-884E1E56854F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Deno", "src\CommunityToolkit.Aspire.Hosting.Deno\CommunityToolkit.Aspire.Hosting.Deno.csproj", "{259D0D48-C856-47C8-8014-66CE9A7C353F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Deno.AppHost", "examples\deno\CommunityToolkit.Aspire.Hosting.Deno.AppHost\CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj", "{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -257,6 +265,18 @@ Global
 		{F6A9CC5C-91A2-4AAB-AEC9-8007A62A081E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6A9CC5C-91A2-4AAB-AEC9-8007A62A081E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6A9CC5C-91A2-4AAB-AEC9-8007A62A081E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A92E70F9-8028-4E0C-B167-884E1E56854F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{259D0D48-C856-47C8-8014-66CE9A7C353F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -307,6 +327,10 @@ Global
 		{6B9357F7-014F-4725-AF3E-0B8EA17B62C5} = {561CEB82-3D97-49D0-932E-664E6779FC61}
 		{E4E93A24-0A97-419F-836C-EAA23D0FFF81} = {561CEB82-3D97-49D0-932E-664E6779FC61}
 		{F6A9CC5C-91A2-4AAB-AEC9-8007A62A081E} = {561CEB82-3D97-49D0-932E-664E6779FC61}
+		{B63EBC68-9A38-41C0-826E-95CD14B067A4} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{A92E70F9-8028-4E0C-B167-884E1E56854F} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{259D0D48-C856-47C8-8014-66CE9A7C353F} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{6DFA84B9-71DB-4EDC-AA71-C0542D6ECCCC} = {B63EBC68-9A38-41C0-826E-95CD14B067A4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
