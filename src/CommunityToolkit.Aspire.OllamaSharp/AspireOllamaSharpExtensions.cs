@@ -1,4 +1,5 @@
 using CommunityToolkit.Aspire.OllamaSharp;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
@@ -19,6 +20,7 @@ public static class AspireOllamaSharpExtensions
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
     /// <param name="configureSettings">An optional delegate that can be used for customizing options. It's invoked after the settings are read from the configuration.</param>
     /// <exception cref="UriFormatException">Thrown when no Ollama endpoint is provided.</exception>
+    [Obsolete("This method is obsolete. Use AddOllamaSharpClient instead.")]
     public static void AddOllamaApiClient(this IHostApplicationBuilder builder, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
@@ -33,6 +35,7 @@ public static class AspireOllamaSharpExtensions
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
     /// <param name="configureSettings">An optional delegate that can be used for customizing options. It's invoked after the settings are read from the configuration.</param>
     /// <exception cref="UriFormatException">Thrown when no Ollama endpoint is provided.</exception>
+    [Obsolete("This method is obsolete. Use AddKeyedOllamaSharpClient instead.")]
     public static void AddKeyedOllamaApiClient(this IHostApplicationBuilder builder, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
@@ -40,7 +43,35 @@ public static class AspireOllamaSharpExtensions
         AddOllamaClientInternal(builder, connectionName, serviceKey: connectionName, configureSettings: configureSettings);
     }
 
-    private static void AddOllamaClientInternal(IHostApplicationBuilder builder, string connectionName, string? serviceKey = null, Action<OllamaSharpSettings>? configureSettings = null)
+    /// <summary>
+    /// Adds <see cref="OllamaApiClient"/> and <see cref="IChatClient"/> services to the container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
+    /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
+    /// <param name="configureSettings">An optional delegate that can be used for customizing options. It's invoked after the settings are read from the configuration.</param>
+    /// <exception cref="UriFormatException">Thrown when no Ollama endpoint is provided.</exception>
+    public static void AddOllamaSharpClient(this IHostApplicationBuilder builder, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        AddOllamaClientInternal(builder, connectionName, configureSettings: configureSettings, enableChatClient: true);
+    }
+
+    /// <summary>
+    /// Adds <see cref="OllamaApiClient"/> and <see cref="IChatClient"/> services to the container using the <paramref name="connectionName"/> as the service key. 
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
+    /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
+    /// <param name="configureSettings">An optional delegate that can be used for customizing options. It's invoked after the settings are read from the configuration.</param>
+    /// <exception cref="UriFormatException">Thrown when no Ollama endpoint is provided.</exception>
+    public static void AddKeyedOllamaSharpClient(this IHostApplicationBuilder builder, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        AddOllamaClientInternal(builder, connectionName, serviceKey: connectionName, configureSettings: configureSettings, enableChatClient: true);
+    }
+
+    private static void AddOllamaClientInternal(IHostApplicationBuilder builder, string connectionName, string? serviceKey = null, Action<OllamaSharpSettings>? configureSettings = null, bool enableChatClient = false)
     {
         OllamaSharpSettings settings = new();
         builder.Configuration.GetSection($"{DefaultConfigSectionName}:{connectionName}").Bind(settings);
@@ -67,10 +98,18 @@ public static class AspireOllamaSharpExtensions
         if (!string.IsNullOrEmpty(serviceKey))
         {
             builder.Services.AddKeyedSingleton<IOllamaApiClient>(serviceKey, client);
+            if (enableChatClient)
+            {
+                builder.Services.AddKeyedSingleton<IChatClient>(serviceKey, client);
+            }
         }
         else
         {
             builder.Services.AddSingleton<IOllamaApiClient>(client);
+            if (enableChatClient)
+            {
+                builder.Services.AddSingleton<IChatClient>(client);
+            }
         }
     }
 }

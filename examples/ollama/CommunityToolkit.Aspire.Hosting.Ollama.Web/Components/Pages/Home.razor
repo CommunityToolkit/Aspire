@@ -1,5 +1,5 @@
 ﻿@page "/"
-@using global::OllamaSharp
+@using Microsoft.Extensions.AI
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
@@ -15,7 +15,7 @@
     private string _response = "";
 
     [Inject]
-    public required IOllamaApiClient OllamaClient { get; set; }
+    public required IChatClient OllamaClient { get; set; }
 
     private async Task GetPrompt()
     {
@@ -23,8 +23,10 @@
         {
             bool gotResponse = false;
             _response = "Asking Ollama...";
-            Chat chat = new(OllamaClient, "You are a demo application");
-            await foreach (string answerToken in chat.Send(_prompt))
+
+            var stream = OllamaClient.CompleteStreamingAsync(_prompt);
+
+            await foreach (var answerToken in stream)
             {
                 if (!gotResponse)
                 {
@@ -32,7 +34,7 @@
                     gotResponse = true;
                 }
 
-                _response += answerToken;
+                _response += answerToken.Text;
                 StateHasChanged();
             }
         }

@@ -14,7 +14,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.AddOllamaApiClient("ollama");
+builder.AddOllamaSharpClient("ollama");
 
 var app = builder.Build();
 

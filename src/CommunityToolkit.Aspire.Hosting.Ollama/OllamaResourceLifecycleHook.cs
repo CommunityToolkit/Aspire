@@ -89,7 +89,7 @@ internal class OllamaResourceLifecycleHook(
         {
             try
             {
-                var localModels = await ollamaClient.ListLocalModels(cancellationToken);
+                var localModels = await ollamaClient.ListLocalModelsAsync(cancellationToken);
                 return localModels.Any(m => m.Name.Equals(model, StringComparison.OrdinalIgnoreCase));
             }
             catch (TaskCanceledException)
@@ -112,7 +112,7 @@ internal class OllamaResourceLifecycleHook(
 
         long percentage = 0;
 
-        await foreach (PullModelResponse? status in ollamaClient.PullModel(model, cancellationToken))
+        await foreach (PullModelResponse? status in ollamaClient.PullModelAsync(model, cancellationToken))
         {
             if (status is null)
             {
