@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire integration capable of deploying SQL Server Database Projects as part of your AppHost.</Description>
+    <Description>An Aspire hosting integration capable of deploying SQL Server Database Projects as part of your AppHost.</Description>
     <AdditionalPackageTags>hosting sql sqlproj</AdditionalPackageTags>
   </PropertyGroup>
 
