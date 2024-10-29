@@ -10,8 +10,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <AspireMajorVersion>8</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).2.2</AspireVersion>
+    <AspireMajorVersion>9</AspireMajorVersion>
+    <AspireVersion>$(AspireMajorVersion).0.0-rc.1.24511.1</AspireVersion>
+    <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>8.0.10</AspNetCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
     <TestContainersVersion>3.10.0</TestContainersVersion>

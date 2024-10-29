@@ -89,8 +89,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      - name: Install Aspire workload
-        run: dotnet workload update && dotnet workload install aspire
       - name: Setup .NET dev certs
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |

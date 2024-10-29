@@ -1,0 +1,5 @@
+#nullable enable
+Aspire.Hosting.ApplicationModel.DataApiBuilderContainerResource
+Aspire.Hosting.ApplicationModel.DataApiBuilderContainerResource.DataApiBuilderContainerResource(string! name, string? entrypoint = null) -> void
+Aspire.Hosting.DataApiBuilderHostingExtension
+static Aspire.Hosting.DataApiBuilderHostingExtension.AddDataAPIBuilder(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! configFilePath = "./dab-config.json", int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DataApiBuilderContainerResource!>!
