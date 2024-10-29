@@ -31,9 +31,8 @@ public static class SwaAppHostingExtension
     public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, [ResourceName] string name, SwaResourceOptions options)
     {
         var resource = new SwaResource(name, Environment.CurrentDirectory);
-        var healthCheckNames = builder.ResgisterHealthChecks(name, resource);
 
-        var rb = builder.AddResource(resource)
+        return builder.AddResource(resource)
             .WithHttpEndpoint(isProxied: false, port: options.Port)
             .WithArgs(ctx =>
             {
@@ -57,48 +56,8 @@ public static class SwaAppHostingExtension
                 ctx.Args.Add("--devserver-timeout");
                 ctx.Args.Add(options.DevServerTimeout.ToString());
             })
+            .WithHttpHealthCheck("/.auth/me")
             .ExcludeFromManifest();
-
-        foreach (var healthCheckName in healthCheckNames)
-        {
-            rb.WithHealthCheck(healthCheckName);
-        }
-
-        return rb;
-    }
-
-    private static string[] ResgisterHealthChecks(this IDistributedApplicationBuilder builder, string name, SwaResource resource)
-    {
-        List<string> healthCheckNames = [];
-
-        builder.Services.AddHealthChecks()
-            .Add(new HealthCheckRegistration(
-                    name: $"{name}_swa_check_app",
-                    new AppResourceHealthCheck(resource),
-                    failureStatus: HealthStatus.Unhealthy,
-                    tags: [])
-            );
-        healthCheckNames.Add($"{name}_swa_check_app");
-
-        builder.Services.AddHealthChecks()
-            .Add(new HealthCheckRegistration(
-                    name: $"{name}_swa_check_api",
-                    new ApiResourceHealthCheck(resource),
-                    failureStatus: HealthStatus.Unhealthy,
-                    tags: [])
-            );
-        healthCheckNames.Add($"{name}_swa_check_api");
-
-        builder.Services.AddHealthChecks()
-            .Add(new HealthCheckRegistration(
-                    name: $"{name}_swa_check_emulator",
-                    new SwaEmulatorHealthCheck(resource),
-                    failureStatus: HealthStatus.Unhealthy,
-                    tags: [])
-            );
-        healthCheckNames.Add($"{name}_swa_check_emulator");
-
-        return [.. healthCheckNames];
     }
 
     /// <summary>
