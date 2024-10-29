@@ -189,46 +189,44 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    //following commented section need to aspire 9.0.
+    [Fact]
+    public async Task VerifyWaitForOnMeilisearchBlocksDependentResources()
+    {
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
-    //[Fact]
-    //public async Task VerifyWaitForOnMeilisearchBlocksDependentResources()
-    //{
-    //    var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-    //    using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+        var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
+        builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () =>
+        {
+            return healthCheckTcs.Task;
+        });
 
-    //    var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
-    //    builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () =>
-    //    {
-    //        return healthCheckTcs.Task;
-    //    });
+        var resource = builder.AddMeilisearch("resource")
+                              .WithHealthCheck("blocking_check");
 
-    //    var resource = builder.AddMeilisearch("resource")
-    //                          .WithHealthCheck("blocking_check");
+        var dependentResource = builder.AddMeilisearch("dependentresource")
+                                       .WaitFor(resource);
 
-    //    var dependentResource = builder.AddMeilisearch("dependentresource")
-    //                                   .WaitFor(resource);
+        using var app = builder.Build();
 
-    //    using var app = builder.Build();
+        var pendingStart = app.StartAsync(cts.Token);
 
-    //    var pendingStart = app.StartAsync(cts.Token);
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-    //    var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+        await rns.WaitForResourceAsync(resource.Resource.Name, KnownResourceStates.Running, cts.Token);
 
-    //    await rns.WaitForResourceAsync(resource.Resource.Name, KnownResourceStates.Running, cts.Token);
+        await rns.WaitForResourceAsync(dependentResource.Resource.Name, KnownResourceStates.Waiting, cts.Token);
 
-    //    await rns.WaitForResourceAsync(dependentResource.Resource.Name, KnownResourceStates.Waiting, cts.Token);
+        healthCheckTcs.SetResult(HealthCheckResult.Healthy());
 
-    //    healthCheckTcs.SetResult(HealthCheckResult.Healthy());
+        await rns.WaitForResourceAsync(resource.Resource.Name, re => re.Snapshot.HealthStatus == HealthStatus.Healthy, cts.Token);
 
-    //    await rns.WaitForResourceAsync(resource.Resource.Name, re => re.Snapshot.HealthStatus == HealthStatus.Healthy, cts.Token);
+        await rns.WaitForResourceAsync(dependentResource.Resource.Name, KnownResourceStates.Running, cts.Token);
 
-    //    await rns.WaitForResourceAsync(dependentResource.Resource.Name, KnownResourceStates.Running, cts.Token);
+        await pendingStart;
 
-    //    await pendingStart;
-
-    //    await app.StopAsync();
-    //}
+        await app.StopAsync();
+    }
 
     private static async Task CreateTestData(MeilisearchClient meilisearchClient)
     {
