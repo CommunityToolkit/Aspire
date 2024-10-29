@@ -1,3 +1,5 @@
+using Aspire.Hosting;
+
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
 public class AddOllamaTests
