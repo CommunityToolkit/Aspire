@@ -11,7 +11,7 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>8</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).2.1</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).2.2</AspireVersion>
     <AspNetCoreVersion>8.0.10</AspNetCoreVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
     <TestContainersVersion>3.10.0</TestContainersVersion>
