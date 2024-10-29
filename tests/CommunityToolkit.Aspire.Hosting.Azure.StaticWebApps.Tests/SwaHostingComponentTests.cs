@@ -1,11 +1,9 @@
 using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
-using System.Net;
 using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
-#pragma warning disable CTASPIRE001
 public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>>
 {
     [Fact]
@@ -13,7 +11,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
     {
         var httpClient = fixture.CreateHttpClient("swa");
 
-        await fixture.App.WaitForTextAsync("Azure Static Web Apps emulator started", "swa").WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/");
 
@@ -25,7 +23,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
     {
         var httpClient = fixture.CreateHttpClient("swa");
 
-        await fixture.App.WaitForTextAsync("Azure Static Web Apps emulator started", "swa").WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/api/weather");
 
