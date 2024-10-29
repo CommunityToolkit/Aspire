@@ -21,7 +21,7 @@
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
 
-    <ToolkitMinorVersion>3</ToolkitMinorVersion>
+    <ToolkitMinorVersion>0</ToolkitMinorVersion>
     <ToolkitPatchVersion>0</ToolkitPatchVersion>
   </PropertyGroup>
 
