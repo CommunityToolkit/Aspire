@@ -28,7 +28,6 @@ public static class SwaAppHostingExtension
     public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, [ResourceName] string name, SwaResourceOptions options)
     {
         var resource = new SwaResource(name, Environment.CurrentDirectory);
-
         return builder.AddResource(resource)
             .WithHttpEndpoint(isProxied: false, port: options.Port)
             .WithArgs(ctx =>
