@@ -189,8 +189,6 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    //following commented section need to aspire 9.0.
-
     [Fact]
     public async Task VerifyWaitForOnMeilisearchBlocksDependentResources()
     {
