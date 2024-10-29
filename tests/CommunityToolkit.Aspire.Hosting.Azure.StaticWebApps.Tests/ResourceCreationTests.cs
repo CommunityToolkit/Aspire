@@ -177,4 +177,29 @@ public class ResourceCreationTests
         Assert.Contains("--port", args);
         Assert.Contains("4280", args);
     }
+
+    [Fact]
+    public void SwaResourceHasHealthCheck()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddSwaEmulator("swa");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<SwaResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.Equal("swa", resource.Name);
+
+        var result = resource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations);
+
+        Assert.True(result);
+        Assert.NotNull(annotations);
+
+        Assert.Single(annotations);
+    }
 }
