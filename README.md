@@ -22,7 +22,8 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`OllamaSharp`][ollama-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.OllamaSharp][ollamasharp-shields]][ollamasharp-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.OllamaSharp][ollamasharp-shields-preview]][ollama-nuget-preview]                                        | An Aspire client integration for the [OllamaSharp](https://github.com/awaescher/OllamaSharp) package.                                                                                                                          |
 | - **Learn More**: [`Hosting.Meilisearch`][meilisearch-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Meilisearch][meilisearch-shields]][meilisearch-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Meilisearch][meilisearch-shields-preview]][meilisearch-nuget-preview]      | An Aspire hosting integration leveraging the [Meilisearch](https://meilisearch.com) container.                                                                                                                                 |
 | - **Learn More**: [`Meilisearch`][meilisearch-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Meilisearch][meilisearch-client-shields]][meilisearch-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Meilisearch][meilisearch-client-shields-preview]][meilisearch-client-nuget-preview]  | An Aspire client integration for the [Meilisearch](https://github.com/meilisearch/meilisearch-dotnet) package.                                                                                                                 |
-
+| - **Learn More**: [`Hosting.Azure.DataApiBuilder`][dab-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder][dab-shields]][dab-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder][dab-shields-preview]][dab-nuget-preview]                   | A hosting integration for the [Azure Data API builder](https://learn.microsoft.com/en-us/azure/data-api-builder/overview).                                                                       |
+| - **Learn More**: [`Hosting.Deno`][deno-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Deno][deno-shields]][deno-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Deno][deno-shields-preview]][deno-nuget-preview]                                                              | A hosting integration for the Deno apps.                                                                       |
 ## 🙌 Getting Started
 
 Each of the integrations in the toolkit is available as a NuGet package, and can be added to your .NET project. Refer to the table above for the available integrations and the documentation on how to use them.
@@ -100,4 +101,13 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [meilisearch-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Meilisearch/
 [meilisearch-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Meilisearch?label=nuget%20(preview)
 [meilisearch-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Meilisearch/absoluteLatest
-
+[dab-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-data-api-builder
+[dab-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
+[dab-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/
+[dab-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder?label=nuget%20(preview)
+[dab-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/absoluteLatest
+[deno-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-deno
+[deno-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Deno
+[deno-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Deno/
+[deno-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Deno?label=nuget%20(preview)
+[deno-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Deno/absoluteLatest
