@@ -69,7 +69,7 @@ public static class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, string name, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
@@ -89,7 +89,7 @@ public static class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, string name, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
