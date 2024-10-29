@@ -39,6 +39,7 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.2" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="8.0.0-beta.24525.2" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="4.0.4" />
     <PackageVersion Include="MeiliSearch" Version="0.15.3" />

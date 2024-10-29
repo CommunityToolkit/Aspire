@@ -12,6 +12,17 @@ namespace Aspire.Hosting;
 public static class SqlProjectBuilderExtensions
 {
     /// <summary>
+    /// Static constructor to ensure that MSBuild assemblies are properly loaded.
+    /// </summary>
+    static SqlProjectBuilderExtensions()
+    {
+        if (!MSBuildLocator.IsRegistered)
+        {
+            MSBuildLocator.RegisterDefaults();
+        }
+    }
+
+    /// <summary>
     /// Adds a SQL Server Database Project resource to the application based on a referenced MSBuild.Sdk.SqlProj project.
     /// </summary>
     /// <typeparam name="TProject">Type that represents the project that produces the .dacpac file.</typeparam>
@@ -21,11 +32,6 @@ public static class SqlProjectBuilderExtensions
     public static IResourceBuilder<SqlProjectResource> AddSqlProject<TProject>(this IDistributedApplicationBuilder builder, string name)
         where TProject : IProjectMetadata, new()
     {
-        if (!MSBuildLocator.IsRegistered)
-        {
-            MSBuildLocator.RegisterDefaults();
-        }
-
         var resource = new SqlProjectResource(name);
         
         return builder.AddResource(resource)
