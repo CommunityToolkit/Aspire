@@ -1,22 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
-  
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireVersion)" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
-    <UserSecretsId>74bb8b50-6a10-4a22-a62c-fcfa3b498473</UserSecretsId>
+    <UserSecretsId>e290de9f-eab3-428b-bd01-f53b072f8406</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SdkProject\SdkProject.csproj" />
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" IsAspireProjectResource="false" />
+    <PackageReference Include="Aspire.Hosting.AppHost" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" IsAspireProjectResource="False" />
+    <ProjectReference Include="..\SdkProject\SdkProject.csproj" />
   </ItemGroup>
 
 </Project>

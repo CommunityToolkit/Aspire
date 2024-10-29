@@ -1,5 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddSqlProject<Projects.SdkProject>("SdkProject");
+var server = builder.AddSqlServer("sql")
+                    .AddDatabase("TargetDatabase");
+
+builder.AddSqlProject<Projects.SdkProject>("SdkProject")
+       .PublishTo(server);
 
 builder.Build().Run();
