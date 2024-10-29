@@ -1,4 +1,5 @@
-﻿Aspire.Hosting.ApplicationModel.JavaAppContainerResource
+#nullable enable
+Aspire.Hosting.ApplicationModel.JavaAppContainerResource
 Aspire.Hosting.ApplicationModel.JavaAppContainerResource.JavaAppContainerResource(string! name, string? entrypoint = null) -> void
 Aspire.Hosting.ApplicationModel.JavaAppContainerResourceOptions
 Aspire.Hosting.ApplicationModel.JavaAppContainerResourceOptions.Args.get -> string![]?
