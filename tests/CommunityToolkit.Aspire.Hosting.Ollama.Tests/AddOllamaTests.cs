@@ -104,9 +104,14 @@ public class AddOllamaTests
     [Fact]
     public void ResourceNameCannotBeOmitted()
     {
-        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllama("", port: null));
-        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllama(" ", port: null));
-        Assert.Throws<ArgumentNullException>(() => DistributedApplication.CreateBuilder().AddOllama(null!, port: null));
+        string name = "";
+        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllama(name, port: null));
+
+        name = " ";
+        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllama(name, port: null));
+
+        name = null!;
+        Assert.Throws<ArgumentNullException>(() => DistributedApplication.CreateBuilder().AddOllama(name, port: null));
     }
 
     [Fact]
@@ -115,9 +120,14 @@ public class AddOllamaTests
         var builder = DistributedApplication.CreateBuilder();
         var ollama = builder.AddOllama("ollama", port: null);
 
-        Assert.Throws<ArgumentException>(() => ollama.AddModel(""));
-        Assert.Throws<ArgumentException>(() => ollama.AddModel(" "));
-        Assert.Throws<ArgumentNullException>(() => ollama.AddModel(null!));
+        string name = "";
+        Assert.Throws<ArgumentException>(() => ollama.AddModel(name));
+
+        name = " ";
+        Assert.Throws<ArgumentException>(() => ollama.AddModel(name));
+
+        name = null!;
+        Assert.Throws<ArgumentNullException>(() => ollama.AddModel(name));
     }
 
     [Fact]

@@ -14,11 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [
-            windows-latest,
-            ubuntu-latest,
-            #, macos-latest
-          ]
+        os: [windows-latest, ubuntu-latest]
       fail-fast: false
     runs-on: "${{ matrix.os }}"
     env:
@@ -73,8 +69,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docker-
 
-      - name: Install Aspire workload
-        run: dotnet workload update && dotnet workload install aspire
+      - name: Get NPM package root
+        id: npm-root
+        run: "echo path=$(npm root -g) >> $GITHUB_OUTPUT"
+        shell: bash
+
+      - uses: actions/cache@v4
+        name: Cache global npm packages
+        with:
+          path: ${{ steps.npm-root.outputs.path }}
+          key: ${{ runner.os }}-npm-${{ hashFiles('.github/workflows/dotnet-ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
       - name: Setup .NET dev certs
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
@@ -140,3 +147,8 @@ jobs:
           --source PullRequests 
           --skip-duplicate
 
+  publish-coverage:
+    if: github.actor != 'dependabot[bot]'
+    needs: build
+    uses: ./.github/workflows/code-coverage.yml
+    secrets: inherit

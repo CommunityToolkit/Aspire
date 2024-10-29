@@ -1,4 +1,5 @@
-﻿CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings
+#nullable enable
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.ConnectionString.get -> string?
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.ConnectionString.set -> void
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Models.get -> System.Collections.Generic.IReadOnlyList<string!>!
