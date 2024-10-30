@@ -66,6 +66,7 @@ jobs:
           path: ${{ github.workspace }}/code-coverage-results.md
 
       - uses: actions/github-script@v7
+        id: coverage-reporter
         with:
           script: |
             const fs = require('fs');
