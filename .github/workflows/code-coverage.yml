@@ -61,9 +61,6 @@ jobs:
           recreate: true
           path: ${{ github.workspace }}/code-coverage-results.md
 
-      - name: Add Detailed Coverage PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
+      - name: Coverage on step summary
         if: github.event_name == 'pull_request' && always()
-        with:
-          recreate: true
-          path: ${{ github.workspace }}/report/MarkdownSummaryGithub.md
+        run: cat "${{ github.workspace }}/report/MarkdownSummaryGithub.md" >> $GITHUB_STEP_SUMMARY
