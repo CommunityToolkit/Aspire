@@ -63,4 +63,4 @@ jobs:
 
       - name: Coverage on step summary
         if: always()
-        run: cat "${{ github.workspace }}/report/MarkdownSummaryGithub.md" >> $GITHUB_STEP_SUMMARY
+        run: cat "${{ github.workspace }}/report/SummaryGithub.md" >> $GITHUB_STEP_SUMMARY
