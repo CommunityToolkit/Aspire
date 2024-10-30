@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration runs [Data API Builder](https://aka.ms/dab/docs) in a container. Data API builder generates secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB. 
+This .NET Aspire Integration runs [Data API builder](https://aka.ms/dab/docs) in a container. Data API builder generates secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB. 
 
 ## Usage
 
@@ -99,10 +99,10 @@ builder.Build().Run();
 ### Configuration
 
 - `name` - The name of the resource.
-- `port` - The optional port number for the Data API Builder container. Defaults to `random`.
-- `configFilePaths` - Opiotnal paths to the config/schema file(s) for Data API Builder. Default is `./dab-config.json`.
+- `port` - The optional port number for the Data API builder container. Defaults to `random`.
+- `configFilePaths` - Opiotnal paths to the config/schema file(s) for Data API builder. Default is `./dab-config.json`.
 
-### Data API Builder Container Image Configuration
+### Data API builder Container Image Configuration
 
 You can specify a different registry/image/tag by using the `WithImageRegistry`/`WithImage`/`WithImageTag` methods:
 
@@ -115,4 +115,4 @@ var dab = builder.AddDataAPIBuilder("dab")
 
 ## Known Issues
 
-The current imlpementation of Data API Builder does not support HTTPS endpoints.
+The current imlpementation of Data API builder does not support HTTPS endpoints.
