@@ -60,3 +60,34 @@ jobs:
         with:
           recreate: true
           path: ${{ github.workspace }}/code-coverage-results.md
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const data = fs.readFileSync('${{ github.workspace }}/report/summary.html', 'utf8');
+            const createResp = await github.rest.checks.create({
+              head_sha: this.context.sha,
+              name: 'Code Coverage',
+              status: 'in_progress',
+              output: {
+                title: 'Code Coverage',
+                summary: ''
+              },
+              ...context.repo
+            });
+
+            const check_run_id = createResp.data.id;
+
+            const updateResp = await github.rest.checks.update({
+              check_run_id,
+              name: 'Code Coverage',
+              status: 'completed',
+              conclusion: 'success',
+              output: {
+                title: 'Code Coverage',
+                summary: '',
+                text: data
+              },
+              ...context.repo
+            });
