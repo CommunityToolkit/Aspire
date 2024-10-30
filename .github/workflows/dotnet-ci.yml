@@ -14,7 +14,9 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [
+          # windows-latest,
+           ubuntu-latest]
       fail-fast: false
     runs-on: "${{ matrix.os }}"
     env:
