@@ -65,7 +65,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const data = fs.readFileSync('${{ github.workspace }}/report/summary.html', 'utf8');
+            const data = fs.readFileSync('${{ github.workspace }}/report/SummaryGithub.md', 'utf8');
             const createResp = await github.rest.checks.create({
               head_sha: context.sha,
               name: 'Code Coverage',
