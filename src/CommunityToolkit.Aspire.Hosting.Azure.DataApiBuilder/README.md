@@ -104,7 +104,7 @@ builder.Build().Run();
 
 ### Data API builder Container Image Configuration
 
-You can specify a different registry/image/tag by using the `WithImageRegistry`/`WithImage`/`WithImageTag` methods:
+You can specify custom registry/image/tag values by using the `WithImageRegistry`/`WithImage`/`WithImageTag` methods:
 
 ```csharp
 var dab = builder.AddDataAPIBuilder("dab")
