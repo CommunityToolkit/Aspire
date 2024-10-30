@@ -66,6 +66,9 @@ jobs:
           script: |
             const fs = require('fs');
             const data = fs.readFileSync('${{ github.workspace }}/report/SummaryGithub.md', 'utf8');
+
+            console.log(`Creating check aginst sha: ${context.sha}`);
+
             const createResp = await github.rest.checks.create({
               head_sha: context.sha,
               name: 'Code Coverage',
@@ -77,7 +80,11 @@ jobs:
               ...context.repo
             });
 
+            const baseUrl = createResp.data.html_url;
             const check_run_id = createResp.data.id;
+
+            console.log(`Check run created: ${baseUrl}`);
+            console.log(`Check run id: ${check_run_id}`);
 
             const updateResp = await github.rest.checks.update({
               check_run_id,
@@ -91,3 +98,7 @@ jobs:
               },
               ...context.repo
             });
+
+            console.log(`Check run updated: ${updateResp.data.html_url}`);
+            console.log(`Check run create response: ${updateResp.status}`);
+            console.log((`Check run URL: ${updateResp.data.url}`));
