@@ -6,7 +6,9 @@ on:
 jobs:
   publish-coverage:
     permissions:
+      pull-requests: write
       checks: write
+      actions: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
