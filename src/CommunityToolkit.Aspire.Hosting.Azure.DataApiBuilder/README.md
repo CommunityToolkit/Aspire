@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration runs [Data API Builder](https://aka.ms/dab/docs) in a container. Data API builder generate secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB. 
+This .NET Aspire Integration runs [Data API Builder](https://aka.ms/dab/docs) in a container. Data API builder generates secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB. 
 
 ## Usage
 
