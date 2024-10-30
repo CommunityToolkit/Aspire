@@ -7,6 +7,8 @@ jobs:
   publish-coverage:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
@@ -35,7 +37,7 @@ jobs:
       - name: Publish code coverage report
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          filename: "${{ github.workspace }}/report/Cobertura.xml"
+          filename: "report/Cobertura.xml"
           badge: true
           fail_below_min: true
           format: markdown
