@@ -115,4 +115,4 @@ var dab = builder.AddDataAPIBuilder("dab")
 
 ## Known Issues
 
-The current imlpementation of Data API builder does not support HTTPS endpoints.
+The current imlpementation of the Data API builder .NET Aspire integration does not support HTTPS endpoints. However, this is only a dev-time consideration. Service discovery when published can use HTTPS without any problems.
