@@ -2,7 +2,7 @@
 
 Thank you for exhibiting interest in contributing to the .NET Aspire Community Toolkit. The team is delighted to welcome you onboard to our exciting and growing project. Any contribution or value added go a long way to enhance the project!
 
-In the next few steps, you will be able to see a glimpse of ways you can contribute to the Windows Community Toolkit.
+In the next few steps, you will be able to see a glimpse of ways you can contribute to the .NET Aspire Community Toolkit.
 
 ## ❔ Questions <a name="question"></a>
 
