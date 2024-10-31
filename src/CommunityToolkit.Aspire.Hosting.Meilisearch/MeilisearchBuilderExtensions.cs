@@ -3,6 +3,9 @@ using CommunityToolkit.Aspire.Hosting.Meilisearch;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using Meilisearch;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using CommunityToolkit.Aspire.Meilisearch;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
@@ -49,26 +52,24 @@ public static class MeilisearchBuilderExtensions
 
         var meilisearch = new MeilisearchResource(name, masterKeyParameter);
 
-        //following commented section need to aspire 9.0.
+        MeilisearchClient? meilisearchClient = null;
 
-        //MeilisearchClient? meilisearchClient = null;
+        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(meilisearch, async (@event, ct) =>
+        {
+            var connectionString = await meilisearch.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false)
+            ?? throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{meilisearch.Name}' resource but the connection string was null.");
 
-        //builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(meilisearch, async (@event, ct) =>
-        //{
-        //    var connectionString = await meilisearch.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false)
-        //    ?? throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{meilisearch.Name}' resource but the connection string was null.");
+            meilisearchClient = CreateMeilisearchClient(connectionString);
+        });
 
-        //    meilisearchClient = CreateMeilisearchClient(connectionString);
-        //});
-
-        //var healthCheckKey = $"{name}_check";
-        //builder.Services.AddHealthChecks()
-        // .Add(new HealthCheckRegistration(
-        //     healthCheckKey,
-        //     sp => new MeilisearchHealthCheck(meilisearchClient!),
-        //     failureStatus: default,
-        //     tags: default,
-        //     timeout: default));
+        var healthCheckKey = $"{name}_check";
+        builder.Services.AddHealthChecks()
+         .Add(new HealthCheckRegistration(
+             healthCheckKey,
+             sp => new MeilisearchHealthCheck(meilisearchClient!),
+             failureStatus: default,
+             tags: default,
+             timeout: default));
 
         return builder.AddResource(meilisearch)
              .WithImage(MeilisearchContainerImageTags.Image, MeilisearchContainerImageTags.Tag)
@@ -77,8 +78,8 @@ public static class MeilisearchBuilderExtensions
              .WithEnvironment(context =>
              {
                  context.EnvironmentVariables["MEILI_MASTER_KEY"] = meilisearch.MasterKeyParameter;
-             });
-        //.WithHealthCheck(healthCheckKey);
+             })
+             .WithHealthCheck(healthCheckKey);
     }
 
     /// <summary>
