@@ -1,6 +1,7 @@
 <Project>
   <Import Project="..\Directory.Build.props" />
   <PropertyGroup>
+    <TargetFrameworks>$(AllTargetFrameworks)</TargetFrameworks>
     <IsPackable>true</IsPackable>
 
     <Authors>Microsoft.Toolkit,dotnetfoundation,Community Toolkit</Authors>
