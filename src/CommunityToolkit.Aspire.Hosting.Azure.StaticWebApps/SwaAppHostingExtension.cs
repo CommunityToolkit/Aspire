@@ -52,6 +52,7 @@ public static class SwaAppHostingExtension
                 ctx.Args.Add("--devserver-timeout");
                 ctx.Args.Add(options.DevServerTimeout.ToString());
             })
+            .WithHttpHealthCheck("/.auth/me")
             .ExcludeFromManifest();
     }
 
@@ -62,7 +63,7 @@ public static class SwaAppHostingExtension
     /// <param name="appResource">The existing <see cref="IResourceBuilder{IResourceWithEndpoint}"/> to use as the <c>--app-devserver-url</c> argument.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<SwaResource> WithAppResource(this IResourceBuilder<SwaResource> builder, IResourceBuilder<IResourceWithEndpoints> appResource) =>
-        builder.WithAnnotation<SwaAppEndpointAnnotation>(new(appResource), ResourceAnnotationMutationBehavior.Replace);
+        builder.WithAnnotation<SwaAppEndpointAnnotation>(new(appResource), ResourceAnnotationMutationBehavior.Replace).WaitFor(appResource);
 
     /// <summary>
     /// Registers the API resource with the Static Web Apps emulator.
@@ -71,5 +72,5 @@ public static class SwaAppHostingExtension
     /// <param name="apiResource">The existing <see cref="IResourceBuilder{IResourceWithEndpoint}"/> to use as the <c>--api-devserver-url</c> argument.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<SwaResource> WithApiResource(this IResourceBuilder<SwaResource> builder, IResourceBuilder<IResourceWithEndpoints> apiResource) =>
-        builder.WithAnnotation<SwaApiEndpointAnnotation>(new(apiResource), ResourceAnnotationMutationBehavior.Replace);
+        builder.WithAnnotation<SwaApiEndpointAnnotation>(new(apiResource), ResourceAnnotationMutationBehavior.Replace).WaitFor(apiResource);
 }
