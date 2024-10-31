@@ -2,7 +2,8 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var meilisearch = builder.AddMeilisearch("meilisearch");
+var meilisearch = builder.AddMeilisearch("meilisearch")
+    .WithMeilisearchUI();
 
 builder.AddProject<CommunityToolkit_Aspire_Hosting_Meilisearch_ApiService>("apiservice")
     .WithReference(meilisearch)

@@ -1,2 +1,7 @@
 #nullable enable
-
+Aspire.Hosting.ApplicationModel.MeilisearchResourceUI
+Aspire.Hosting.ApplicationModel.MeilisearchResourceUI.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
+Aspire.Hosting.ApplicationModel.MeilisearchResourceUI.MeilisearchResourceUI(string! name) -> void
+Aspire.Hosting.ApplicationModel.MeilisearchResourceUI.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
+static Aspire.Hosting.MeilisearchBuilderExtensions.WithHostPort(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MeilisearchResourceUI!>! builder, int? port) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MeilisearchResourceUI!>!
+static Aspire.Hosting.MeilisearchBuilderExtensions.WithMeilisearchUI<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>! builder, System.Action<Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MeilisearchResourceUI!>!>? configureContainer = null, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>!
