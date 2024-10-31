@@ -1,7 +1,7 @@
 #nullable enable
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.DisableHealthChecks.get -> bool
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.DisableHealthChecks.set -> void
-CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Endpoint.get -> string?
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Endpoint.get -> Uri?
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Endpoint.set -> void
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.HealthCheckTimeout.get -> int?
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.HealthCheckTimeout.set -> void

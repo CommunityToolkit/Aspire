@@ -19,6 +19,8 @@ public class ConformanceTests(OllamaContainerFeature ollamaContainerFeature) : C
 
     protected override bool SupportsKeyedRegistrations => true;
 
+    protected override string? ConfigurationSectionName => "Aspire:OllamaSharp";
+    
     protected override void PopulateConfiguration(ConfigurationManager configuration, string? key = null)
     {
         var connectionString = RequiresDockerAttribute.IsSupported ?
