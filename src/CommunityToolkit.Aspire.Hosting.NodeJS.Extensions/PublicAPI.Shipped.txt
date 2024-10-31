@@ -1,4 +1,5 @@
-﻿Aspire.Hosting.NodeJSHostingExtensions
+#nullable enable
+Aspire.Hosting.NodeJSHostingExtensions
 static Aspire.Hosting.NodeJSHostingExtensions.AddPnpmApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, string! scriptName = "start", string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
 static Aspire.Hosting.NodeJSHostingExtensions.AddViteApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? workingDirectory = null, string! packageManager = "npm") -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
 static Aspire.Hosting.NodeJSHostingExtensions.AddYarnApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, string! scriptName = "start", string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!

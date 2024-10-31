@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.DisableHealthChecks.get -> bool
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.DisableHealthChecks.set -> void
 CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Endpoint.get -> string?

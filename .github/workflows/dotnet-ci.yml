@@ -147,3 +147,8 @@ jobs:
           --source PullRequests 
           --skip-duplicate
 
+  publish-coverage:
+    if: github.actor != 'dependabot[bot]'
+    needs: build
+    uses: ./.github/workflows/code-coverage.yml
+    secrets: inherit

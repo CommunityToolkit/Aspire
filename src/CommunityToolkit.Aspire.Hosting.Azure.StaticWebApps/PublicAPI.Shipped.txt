@@ -1,4 +1,5 @@
-﻿Aspire.Hosting.ApplicationModel.SwaApiEndpointAnnotation
+#nullable enable
+Aspire.Hosting.ApplicationModel.SwaApiEndpointAnnotation
 Aspire.Hosting.ApplicationModel.SwaApiEndpointAnnotation.Endpoint.get -> string!
 Aspire.Hosting.ApplicationModel.SwaApiEndpointAnnotation.SwaApiEndpointAnnotation(Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.IResourceWithEndpoints!>! resource) -> void
 Aspire.Hosting.ApplicationModel.SwaAppEndpointAnnotation
@@ -13,7 +14,7 @@ Aspire.Hosting.SwaResourceOptions.DevServerTimeout.set -> void
 Aspire.Hosting.SwaResourceOptions.Port.get -> int
 Aspire.Hosting.SwaResourceOptions.Port.set -> void
 Aspire.Hosting.SwaResourceOptions.SwaResourceOptions() -> void
-static Aspire.Hosting.SwaAppHostingExtension.AddSwaEmulator(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SwaResource!>!
 static Aspire.Hosting.SwaAppHostingExtension.AddSwaEmulator(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.SwaResourceOptions! options) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SwaResource!>!
+static Aspire.Hosting.SwaAppHostingExtension.AddSwaEmulator(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SwaResource!>!
 static Aspire.Hosting.SwaAppHostingExtension.WithApiResource(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SwaResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.IResourceWithEndpoints!>! apiResource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SwaResource!>!
 static Aspire.Hosting.SwaAppHostingExtension.WithAppResource(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SwaResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.IResourceWithEndpoints!>! appResource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SwaResource!>!

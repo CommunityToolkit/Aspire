@@ -6,19 +6,19 @@
 
 /examples/java/_ @justinyoo
 /src/CommunityToolkit.Aspire.Hosting.Java/_ @justinyoo
-/tests/CommunityToolkit.Aspire.Hosting.Java/\_ @justinyoo
+/tests/CommunityToolkit.Aspire.Hosting.Java/_ @justinyoo
 
 # CommunityToolkit.Aspire.Hosting.Golang
 
 /examples/golang/_ @tommasodotNET
 /src/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
-/tests/CommunityToolkit.Aspire.Hosting.Golang/\_ @tommasodotNET
+/tests/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
 
 # CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
 
 /examples/data-api-builder/_ @tommasodotNET @FBoucher
 /src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/_ @tommasodotNET @FBoucher
-/tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/\_ @tommasodotNET @FBoucher
+/tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/_ @tommasodotNET @FBoucher
 
 # CommunityToolkit.Aspire.Meilisearch
 # CommunityToolkit.Aspire.Hosting.Meilisearch
