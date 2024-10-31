@@ -9,7 +9,7 @@ namespace Aspire.Hosting;
 public static class DataApiBuilderHostingExtension
 {
     /// <summary>
-    /// Adds a DataAPIBuilder application to the application model. Executes the containerized DataAPIBuilder app.
+    /// Adds a DataAPIBuilder application to the application model. Executes the pre-built containerized DataAPIBuilder engine.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
@@ -27,7 +27,7 @@ public static class DataApiBuilderHostingExtension
     }
 
     /// <summary>
-    /// Adds a DataAPIBuilder application to the application model. Executes the containerized DataAPIBuilder app.
+    /// Adds a DataAPIBuilder application to the application model. Executes the pre-built containerized DataAPIBuilder engine.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
