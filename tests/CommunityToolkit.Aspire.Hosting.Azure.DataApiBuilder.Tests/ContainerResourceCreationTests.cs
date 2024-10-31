@@ -37,8 +37,15 @@ public class ContainerResourceCreationTests
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
 
-        Assert.True(resource.TryGetLastAnnotation(out EndpointAnnotation? httpEndpointAnnotations));
-        Assert.Equal(5000, httpEndpointAnnotations.TargetPort);
+        // verify ports
+
+        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
+
+        var http = endpoints.Where(x => x.Name == DataApiBuilderContainerResource.HttpEndpointName).Single();
+        Assert.Equal(DataApiBuilderContainerResource.HttpEndpointPort, http.TargetPort);
+
+        // var https = endpoints.Where(x => x.Name == DataApiBuilderContainerResource.HttpsEndpointName).Single();
+        // Assert.Equal(DataApiBuilderContainerResource.HttpsEndpointPort, https.TargetPort);
     }
 
     [Fact]
@@ -55,7 +62,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddDataAPIBuilder("dab", port: 1234);
+        builder.AddDataAPIBuilder("dab", httpPort: 1234);
     }
 
     [Fact]
@@ -73,7 +80,7 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         // file exists in test project root
-        builder.AddDataAPIBuilder("dab", port: 1234, configFilePaths: "./dab-config.json");
+        builder.AddDataAPIBuilder("dab", httpPort: 1234, configFilePaths: "./dab-config.json");
     }
 
     [Fact]
