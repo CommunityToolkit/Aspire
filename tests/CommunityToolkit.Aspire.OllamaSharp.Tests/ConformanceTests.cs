@@ -36,11 +36,11 @@ public class ConformanceTests(OllamaContainerFeature ollamaContainerFeature) : C
     {
         if (key is null)
         {
-            builder.AddOllamaSharpClient("ollama", configure);
+            builder.AddOllamaSharpChatClient("ollama", configure);
         }
         else
         {
-            builder.AddKeyedOllamaSharpClient(key, configure);
+            builder.AddKeyedOllamaSharpChatClient(key, configure);
         }
     }
 

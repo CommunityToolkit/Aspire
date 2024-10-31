@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 
-public class AspireOllamaSharpExtensionsTests
+public class OllamaSharpIChatClientTests
 {
     private const string Endpoint = "https://localhost:5001/";
 
@@ -20,11 +20,11 @@ public class AspireOllamaSharpExtensionsTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpClient("Ollama");
+            builder.AddKeyedOllamaSharpChatClient("Ollama");
         }
         else
         {
-            builder.AddOllamaSharpClient("Ollama");
+            builder.AddOllamaSharpChatClient("Ollama");
         }
 
         using var host = builder.Build();
@@ -49,11 +49,11 @@ public class AspireOllamaSharpExtensionsTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpClient("Ollama", settings => settings.Endpoint = Endpoint);
+            builder.AddKeyedOllamaSharpChatClient("Ollama", settings => settings.Endpoint = Endpoint);
         }
         else
         {
-            builder.AddOllamaSharpClient("Ollama", settings => settings.Endpoint = Endpoint);
+            builder.AddOllamaSharpChatClient("Ollama", settings => settings.Endpoint = Endpoint);
         }
 
         using var host = builder.Build();
@@ -79,11 +79,11 @@ public class AspireOllamaSharpExtensionsTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpClient("Ollama");
+            builder.AddKeyedOllamaSharpChatClient("Ollama");
         }
         else
         {
-            builder.AddOllamaSharpClient("Ollama");
+            builder.AddOllamaSharpChatClient("Ollama");
         }
 
         using var host = builder.Build();
@@ -106,9 +106,9 @@ public class AspireOllamaSharpExtensionsTests
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "https://localhost:5003/")
         ]);
 
-        builder.AddOllamaSharpClient("Ollama");
-        builder.AddKeyedOllamaSharpClient("Ollama2");
-        builder.AddKeyedOllamaSharpClient("Ollama3");
+        builder.AddOllamaSharpChatClient("Ollama");
+        builder.AddKeyedOllamaSharpChatClient("Ollama2");
+        builder.AddKeyedOllamaSharpChatClient("Ollama3");
 
         using var host = builder.Build();
         var client = host.Services.GetRequiredService<IChatClient>();
