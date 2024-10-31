@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.OllamaSharp library
 
-Registers `IOllamaClientApi` in the DI container to interact with the [Ollama](https://ollama.com) API.
+Registers `IOllamaClientApi` in the DI container to interact with the [Ollama](https://ollama.com) API and optionally supports registering an `IChatClient` or `IEmbeddingGenerator` from [Microsoft.Extensions.AI](https://devblogs.microsoft.com/dotnet/introducing-microsoft-extensions-ai-preview/).
 
 ## Getting Started
 
@@ -33,12 +33,16 @@ public class MyService(IOllamaClientApi ollamaClientApi)
 }
 ```
 
+#### Integration with Microsoft.Extensions.AI
+
+To use the integration with Microsoft.Extensions.AI, call the `AddOllamaSharpChatClient` or `AddOllamaSharpEmbeddingGenerator` extension method in the _Program.cs_ file of your project. These methods take the connection name as a parameter, just as `AddOllamaClientApi` does, and will register the `IOllamaApiClient`, as well as the `IChatClient` or `IEmbeddingGenerator` in the DI container. The `IEmbeddingsGenerator` is registered with the generic arguments of `<string, Embedding<float>>`.
+
 ## Additional documentation
 
 -   https://github.com/awaescher/OllamaSharp
 -   https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-ollama
+-   https://devblogs.microsoft.com/dotnet/introducing-microsoft-extensions-ai-preview/
 
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
-
