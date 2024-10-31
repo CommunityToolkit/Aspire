@@ -48,12 +48,9 @@ public static class DataApiBuilderHostingExtension
         var resource = new DataApiBuilderContainerResource(name);
 
         var rb = builder.AddResource(resource)
-            .WithAnnotation(new ContainerImageAnnotation
-            {
-                Image = DataApiBuilderContainerImageTags.Image,
-                Tag = DataApiBuilderContainerImageTags.Tag,
-                Registry = DataApiBuilderContainerImageTags.Registry
-            })
+            .WithImage(DataApiBuilderContainerImageTags.Image)
+            .WithImageTag(DataApiBuilderContainerImageTags.Tag)
+            .WithImageRegistry(DataApiBuilderContainerImageTags.Registry)
             .WithHttpEndpoint(port: httpPort,
                 targetPort: DataApiBuilderContainerResource.HttpEndpointPort,
                 name: DataApiBuilderContainerResource.HttpEndpointName)
