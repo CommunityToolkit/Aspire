@@ -185,4 +185,46 @@ public class AddOllamaTests
 
         Assert.Equal("data", annotation.Source);
     }
+
+    [Theory]
+    [InlineData("data")]
+    [InlineData(null)]
+    public void CorrectTargetPathOnVolumeMount(string? volumeName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume(volumeName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal("/root/.ollama", annotation.Target);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ReadOnlyVolumeMount(bool isReadOnly)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume(isReadOnly: isReadOnly);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal(isReadOnly, annotation.IsReadOnly);
+    }
 }
