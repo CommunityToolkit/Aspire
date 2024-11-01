@@ -1,5 +1,5 @@
 ﻿@page "/"
-@using global::OllamaSharp
+@using Microsoft.Extensions.AI
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
@@ -14,13 +14,13 @@
         <div>
             <label>
                 <InputRadio Value="ServiceKeys.Phi3" />
-                @OllamaClient1.SelectedModel
+                @OllamaClient1.Metadata.ModelId
             </label>
         </div>
         <div>
             <label>
                 <InputRadio Value="ServiceKeys.Llama" />
-                @OllamaClient2.SelectedModel
+                @OllamaClient2.Metadata.ModelId
             </label>
         </div>
     </InputRadioGroup>
@@ -36,10 +36,10 @@
     private string? _selectedClient;
 
     [Inject(Key = ServiceKeys.Phi3)]
-    public required IOllamaApiClient OllamaClient1 { get; set; }
+    public required IChatClient OllamaClient1 { get; set; }
 
     [Inject(Key = ServiceKeys.Llama)]
-    public required IOllamaApiClient OllamaClient2 { get; set; }
+    public required IChatClient OllamaClient2 { get; set; }
 
     private async Task GetPrompt()
     {
@@ -61,8 +61,9 @@
             bool gotResponse = false;
             _response = "Asking Ollama...";
 
-            Chat chat = new(client, "You are a demo application.");
-            await foreach (string answerToken in chat.Send(_prompt))
+            var stream = client.CompleteStreamingAsync(_prompt);
+
+            await foreach (var answerToken in stream)
             {
                 if (!gotResponse)
                 {
@@ -70,7 +71,7 @@
                     gotResponse = true;
                 }
 
-                _response += answerToken;
+                _response += answerToken.Text;
                 StateHasChanged();
             }
         }
