@@ -17,7 +17,7 @@ public static class AspireOllamaSharpExtensions
     private const string DefaultConfigSectionName = "Aspire:OllamaSharp";
 
     /// <summary>
-    /// Adds <see cref="OllamaApiClient"/> services to the container.
+    /// Adds <see cref="IOllamaApiClient"/> services to the container.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
@@ -31,7 +31,7 @@ public static class AspireOllamaSharpExtensions
     }
 
     /// <summary>
-    /// Adds <see cref="OllamaApiClient"/> services to the container using the <paramref name="connectionName"/> as the service key. 
+    /// Adds <see cref="IOllamaApiClient"/> services to the container using the <paramref name="connectionName"/> as the service key. 
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
@@ -45,7 +45,7 @@ public static class AspireOllamaSharpExtensions
     }
 
     /// <summary>
-    /// Adds <see cref="OllamaApiClient"/> and <see cref="IChatClient"/> services to the container.
+    /// Adds <see cref="IOllamaApiClient"/> and <see cref="IChatClient"/> services to the container.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
@@ -58,7 +58,7 @@ public static class AspireOllamaSharpExtensions
     }
 
     /// <summary>
-    /// Adds <see cref="OllamaApiClient"/> and <see cref="IChatClient"/> services to the container using the <paramref name="connectionName"/> as the service key. 
+    /// Adds <see cref="IOllamaApiClient"/> and <see cref="IChatClient"/> services to the container using the <paramref name="connectionName"/> as the service key. 
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
@@ -71,7 +71,7 @@ public static class AspireOllamaSharpExtensions
     }
 
     /// <summary>
-    /// Adds <see cref="OllamaApiClient"/> and <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> services to the container.
+    /// Adds <see cref="IOllamaApiClient"/> and <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> services to the container.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
@@ -84,7 +84,7 @@ public static class AspireOllamaSharpExtensions
     }
 
     /// <summary>
-    /// Adds <see cref="OllamaApiClient"/> and <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> services to the container using the <paramref name="connectionName"/> as the service key.
+    /// Adds <see cref="IOllamaApiClient"/> and <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> services to the container using the <paramref name="connectionName"/> as the service key.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
