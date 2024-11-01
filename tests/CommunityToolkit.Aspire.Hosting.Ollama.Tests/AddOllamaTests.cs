@@ -146,6 +146,46 @@ public class AddOllamaTests
 
         Assert.Equal("ollama-openwebui", resource.Name);
         Assert.Equal("http", resource.PrimaryEndpoint.EndpointName);
+        Assert.Equal(8080, resource.PrimaryEndpoint.TargetPort);
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerImageAnnotation>(out var imageAnnotations));
+        var imageAnnotation = Assert.Single(imageAnnotations);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUIImage, imageAnnotation.Image);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUITag, imageAnnotation.Tag);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUIRegistry, imageAnnotation.Registry);
+
+        Assert.False(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out _));
+    }
+
+    [Theory]
+    [InlineData("volumeName")]
+    [InlineData(null)]
+    public void CanPersistVolumeOfOpenWebUI(string? volumeName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI(configureContainer: container => {
+            container.WithDataVolume(volumeName);
+        });
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal("/app/backend/data", annotation.Target);
+
+        if (volumeName is null)
+        {
+            Assert.NotNull(annotation.Source);
+        }
+        else
+        {
+            Assert.Equal(volumeName, annotation.Source);
+        }
     }
 
     [Fact]
