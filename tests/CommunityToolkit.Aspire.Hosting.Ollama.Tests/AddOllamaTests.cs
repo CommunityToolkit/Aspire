@@ -267,4 +267,31 @@ public class AddOllamaTests
 
         Assert.Equal(isReadOnly, annotation.IsReadOnly);
     }
+
+    [Theory]
+    [InlineData("bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS")]
+    [InlineData("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS")]
+    [InlineData("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS@sha256:1234567890abcdef")]
+    [InlineData("huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS")]
+    [InlineData("huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS@sha256:1234567890abcdef")]
+    public void HuggingFaceModel(string modelName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").AddHuggingFaceModel("llama", modelName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
+
+        Assert.Equal("ollama", resource.Name);
+        Assert.Contains("llama", resource.Models);
+
+        Assert.Equal("ollama-llama", modelResource.Name);
+        Assert.Equal("llama", modelResource.ModelName);
+        Assert.Equal(resource, modelResource.Parent);
+    }
 }
