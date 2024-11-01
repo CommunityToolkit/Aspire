@@ -2,6 +2,7 @@ using CommunityToolkit.Aspire.OllamaSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OllamaSharp;
+using System.Data.Common;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -48,6 +49,24 @@ public static class AspireOllamaSharpExtensions
         if (builder.Configuration.GetConnectionString(connectionName) is string connectionString)
         {
             settings.ConnectionString = connectionString;
+        }
+
+        if (!Uri.TryCreate(settings.ConnectionString, UriKind.Absolute, out var endpoint))
+        {
+            var connectionBuilder = new DbConnectionStringBuilder
+            {
+                ConnectionString = settings.ConnectionString
+            };
+
+            if (connectionBuilder.ContainsKey("Endpoint") && Uri.TryCreate(connectionBuilder["Endpoint"].ToString(), UriKind.Absolute, out endpoint))
+            {
+                settings.ConnectionString = endpoint.ToString();
+            }
+
+            if (connectionBuilder.ContainsKey("Model"))
+            {
+                settings.SelectedModel = connectionBuilder["Model"].ToString();
+            }
         }
 
         configureSettings?.Invoke(settings);
