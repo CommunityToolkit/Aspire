@@ -45,18 +45,37 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         await DownloadModel(ollamaApi);
     }
 
-    private static async Task DownloadModel(IOllamaApiClient ollamaApi)
+    [Fact]
+    public async Task AddModelShouldDownloadModel()
     {
+        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+        var ollama = builder.AddOllama("ollama");
+        var phi3 = ollama.AddModel("phi3", "phi3");
+
+        using var app = builder.Build();
+
+        await app.StartAsync();
+
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        await rns.WaitForResourceAsync(ollama.Resource.Name, KnownResourceStates.Running);
+
+        await rns.WaitForResourceAsync(phi3.Resource.Name, (re)=> re.Snapshot?.State?.Text == "Ready");
+
+        var hb = Host.CreateApplicationBuilder();
+
+        hb.Configuration[$"ConnectionStrings:{ollama.Resource.Name}"] = await ollama.Resource.ConnectionStringExpression.GetValueAsync(default);
+
+        hb.AddOllamaApiClient(ollama.Resource.Name);
+
+        using var host = hb.Build();
+
+        await host.StartAsync();
+
+        var ollamaApi = host.Services.GetRequiredService<IOllamaApiClient>();
+
         var models = await ollamaApi.ListLocalModelsAsync();
-
-        Assert.Empty(models);
-
-        await foreach (var response in ollamaApi.PullModelAsync("phi3"))
-        {
-
-        }
-
-        models = await ollamaApi.ListLocalModelsAsync();
 
         Assert.Single(models);
         Assert.StartsWith("phi3", models.First().Name);
@@ -156,5 +175,22 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
                 DockerUtils.AttemptDeleteDockerVolume(volumeName);
             }
         }
+    }
+
+    private static async Task DownloadModel(IOllamaApiClient ollamaApi)
+    {
+        var models = await ollamaApi.ListLocalModelsAsync();
+
+        Assert.Empty(models);
+
+        await foreach (var response in ollamaApi.PullModelAsync("phi3"))
+        {
+
+        }
+
+        models = await ollamaApi.ListLocalModelsAsync();
+
+        Assert.Single(models);
+        Assert.StartsWith("phi3", models.First().Name);
     }
 }
