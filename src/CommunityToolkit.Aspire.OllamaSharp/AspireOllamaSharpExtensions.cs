@@ -135,21 +135,6 @@ public static class AspireOllamaSharpExtensions
             builder.Services.AddSingleton(ConfigureOllamaClient);
         }
 
-        if (!settings.DisableHealthChecks)
-        {
-            var healthCheckName = serviceKey is null ? "OllamaSharp" : $"OllamaSharp_{connectionName}";
-
-            builder.TryAddHealthCheck(new HealthCheckRegistration(
-                healthCheckName,
-                sp => new OllamaHealthCheck(serviceKey is null ?
-                    sp.GetRequiredService<IOllamaApiClient>() :
-                    sp.GetRequiredKeyedService<IOllamaApiClient>(serviceKey)),
-                failureStatus: null,
-                tags: null,
-                timeout: settings.HealthCheckTimeout > 0 ? TimeSpan.FromMilliseconds(settings.HealthCheckTimeout.Value) : null
-                ));
-        }
-
         IOllamaApiClient ConfigureOllamaClient(IServiceProvider serviceProvider)
         {
             if (settings.Endpoint is not null)
