@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OllamaSharp;
+using System.Data.Common;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -107,7 +108,20 @@ public static class AspireOllamaSharpExtensions
 
         if (builder.Configuration.GetConnectionString(connectionName) is string connectionString)
         {
-            settings.Endpoint = connectionString;
+            var connectionBuilder = new DbConnectionStringBuilder
+            {
+                ConnectionString = connectionString
+            };
+
+            if (connectionBuilder.ContainsKey("Endpoint") && Uri.TryCreate(connectionBuilder["Endpoint"].ToString(), UriKind.Absolute, out Uri? endpoint))
+            {
+                settings.Endpoint = endpoint;
+            }
+
+            if (connectionBuilder.ContainsKey("Model"))
+            {
+                settings.SelectedModel = (string)connectionBuilder["Model"];
+            }
         }
 
         configureSettings?.Invoke(settings);
@@ -140,7 +154,7 @@ public static class AspireOllamaSharpExtensions
         {
             if (settings.Endpoint is not null)
             {
-                var client = new OllamaApiClient(new HttpClient { BaseAddress = new Uri(settings.Endpoint) });
+                var client = new OllamaApiClient(new HttpClient { BaseAddress = settings.Endpoint });
                 if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
                 {
                     client.SelectedModel = settings.SelectedModel;

@@ -6,7 +6,7 @@ namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 
 public class OllamaSharpIEmbeddingGeneratorTests
 {
-    private const string Endpoint = "https://localhost:5001/";
+    private static readonly Uri Endpoint = new("https://localhost:5001/");
 
     [Theory]
     [InlineData(true)]
@@ -15,7 +15,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint)
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString())
         ]);
 
         if (useKeyed)
@@ -34,7 +34,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
             host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
         Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri.ToString());
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
     }
 
     [Theory]
@@ -62,7 +62,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
             host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
         Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri.ToString());
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
         Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
     }
 
@@ -74,7 +74,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
             new KeyValuePair<string, string?>("Aspire:Ollama:Ollama:ConnectionString", "http://not-used"),
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint)
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString())
         ]);
 
         if (useKeyed)
@@ -92,7 +92,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
             host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
         Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri.ToString());
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
         Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
     }
 
@@ -101,7 +101,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString()),
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama2", "https://localhost:5002/"),
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "https://localhost:5003/")
         ]);
@@ -115,7 +115,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
         var client2 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("Ollama2");
         var client3 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("Ollama3");
 
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri?.ToString());
+        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
         Assert.Equal("https://localhost:5002/", client2.Metadata.ProviderUri?.ToString());
         Assert.Equal("https://localhost:5003/", client3.Metadata.ProviderUri?.ToString());
 

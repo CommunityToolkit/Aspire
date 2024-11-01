@@ -1,2 +1,15 @@
 #nullable enable
-
+Aspire.Hosting.ApplicationModel.OllamaModelResource
+Aspire.Hosting.ApplicationModel.OllamaModelResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
+Aspire.Hosting.ApplicationModel.OllamaModelResource.ModelName.get -> string!
+Aspire.Hosting.ApplicationModel.OllamaModelResource.OllamaModelResource(string! name, string! modelName, Aspire.Hosting.ApplicationModel.OllamaResource! parent) -> void
+Aspire.Hosting.ApplicationModel.OllamaModelResource.Parent.get -> Aspire.Hosting.ApplicationModel.OllamaResource!
+static Aspire.Hosting.OllamaResourceBuilderExtensions.AddHuggingFaceModel(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string! name, string! modelName) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaModelResource!>!
+static Aspire.Hosting.OllamaResourceBuilderExtensions.AddModel(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string! modelName) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaModelResource!>!
+static Aspire.Hosting.OllamaResourceBuilderExtensions.AddModel(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string! name, string! modelName) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaModelResource!>!
+*REMOVED*Aspire.Hosting.ApplicationModel.OllamaResource.DefaultModel.get -> string?
+*REMOVED*Aspire.Hosting.ApplicationModel.OllamaResource.SetDefaultModel(string! modelName) -> void
+*REMOVED*static Aspire.Hosting.OllamaResourceBuilderExtensions.AddOllama(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name = "Ollama", int? port = null, string! modelName = "llama3") -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
+*REMOVED*static Aspire.Hosting.OllamaResourceBuilderExtensions.AddModel(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string! modelName) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
+*REMOVED*static Aspire.Hosting.OllamaResourceBuilderExtensions.WithDefaultModel(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string! modelName) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
+*REMOVED*static Aspire.Hosting.OllamaResourceBuilderExtensions.WithReference<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! ollama) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!

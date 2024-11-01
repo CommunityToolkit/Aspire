@@ -1,7 +1,5 @@
 using CommunityToolkit.Aspire.Hosting.Ollama.Web;
 using CommunityToolkit.Aspire.Hosting.Ollama.Web.Components;
-using CommunityToolkit.Aspire.OllamaSharp;
-using OllamaSharp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +12,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.AddOllamaSharpChatClient("ollama");
+builder.AddKeyedOllamaApiClient(ServiceKeys.Phi3);
+builder.AddKeyedOllamaApiClient(ServiceKeys.Llama);
 
 var app = builder.Build();
 

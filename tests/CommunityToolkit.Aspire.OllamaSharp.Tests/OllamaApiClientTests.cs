@@ -6,7 +6,7 @@ namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 
 public class OllamaApiClientTests
 {
-    private const string Endpoint = "https://localhost:5001/";
+    private readonly static Uri Endpoint = new("https://localhost:5001/");
 
     [Theory]
     [InlineData(true)]
@@ -15,7 +15,7 @@ public class OllamaApiClientTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint)
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString())
         ]);
 
         if (useKeyed)
@@ -34,7 +34,7 @@ public class OllamaApiClientTests
             host.Services.GetRequiredService<IOllamaApiClient>();
 
         Assert.NotNull(client.Uri);
-        Assert.Equal(Endpoint, client.Uri.ToString());
+        Assert.Equal(Endpoint, client.Uri);
     }
 
     [Theory]
@@ -62,7 +62,7 @@ public class OllamaApiClientTests
             host.Services.GetRequiredService<IOllamaApiClient>();
 
         Assert.NotNull(client.Uri);
-        Assert.Equal(Endpoint, client.Uri.ToString());
+        Assert.Equal(Endpoint, client.Uri);
         Assert.DoesNotContain("http://not-used", client.Uri.ToString());
     }
 
@@ -74,7 +74,7 @@ public class OllamaApiClientTests
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
             new KeyValuePair<string, string?>("Aspire:Ollama:Ollama:ConnectionString", "http://not-used"),
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint)
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString())
         ]);
 
         if (useKeyed)
@@ -92,7 +92,7 @@ public class OllamaApiClientTests
             host.Services.GetRequiredService<IOllamaApiClient>();
 
         Assert.NotNull(client.Uri);
-        Assert.Equal(Endpoint, client.Uri.ToString());
+        Assert.Equal(Endpoint, client.Uri);
         Assert.DoesNotContain("http://not-used", client.Uri.ToString());
     }
 
@@ -101,7 +101,7 @@ public class OllamaApiClientTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString()),
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama2", "https://localhost:5002/"),
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "https://localhost:5003/")
         ]);
@@ -115,7 +115,7 @@ public class OllamaApiClientTests
         var client2 = host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama2");
         var client3 = host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama3");
 
-        Assert.Equal(Endpoint, client.Uri?.ToString());
+        Assert.Equal(Endpoint, client.Uri);
         Assert.Equal("https://localhost:5002/", client2.Uri?.ToString());
         Assert.Equal("https://localhost:5003/", client3.Uri?.ToString());
 
