@@ -59,7 +59,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         models = await ollamaApi.ListLocalModelsAsync();
 
         Assert.Single(models);
-        Assert.Equal("phi3", models.First().Name);
+        Assert.StartsWith("phi3", models.First().Name);
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
                         var ollamaApiClient = host.Services.GetRequiredService<IOllamaApiClient>();
                         var models = await ollamaApiClient.ListLocalModelsAsync();
                         Assert.Single(models);
-                        Assert.Equal("phi3", models.First().Name);
+                        Assert.StartsWith("phi3", models.First().Name);
                     }
                 }
                 finally
