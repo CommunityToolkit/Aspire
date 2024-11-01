@@ -147,4 +147,42 @@ public class AddOllamaTests
         Assert.Equal("ollama-openwebui", resource.Name);
         Assert.Equal("http", resource.PrimaryEndpoint.EndpointName);
     }
+
+    [Fact]
+    public void NoDataVolumeNameGeneratesOne()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.NotNull(annotation.Source);
+    }
+
+    [Fact]
+    public void SpecifiedDataVolumeNameIsUsed()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume("data");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal("data", annotation.Source);
+    }
 }
