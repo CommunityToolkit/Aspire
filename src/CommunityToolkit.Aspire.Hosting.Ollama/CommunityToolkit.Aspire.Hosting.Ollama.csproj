@@ -14,8 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>CommunityToolkit.Aspire.Hosting.Ollama.Tests</_Parameter1>
-    </AssemblyAttribute>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Ollama.Tests" ></InternalsVisibleTo>
   </ItemGroup>
 </Project>
