@@ -48,7 +48,7 @@ public class ConformanceTests(OllamaContainerFeature ollamaContainerFeature) : C
 
     protected override void SetHealthCheck(OllamaSharpSettings options, bool enabled)
     {
-        options.DisableHealthChecks = !enabled;
+        throw new NotImplementedException();
     }
 
     protected override void SetMetrics(OllamaSharpSettings options, bool enabled)
