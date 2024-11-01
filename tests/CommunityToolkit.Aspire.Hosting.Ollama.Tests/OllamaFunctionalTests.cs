@@ -56,7 +56,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 
         }
 
-        await ollamaApi.ListLocalModelsAsync();
+        models = await ollamaApi.ListLocalModelsAsync();
 
         Assert.Single(models);
         Assert.Equal("phi3", models.First().Name);
