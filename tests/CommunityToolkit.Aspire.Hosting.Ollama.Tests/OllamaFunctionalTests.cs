@@ -16,6 +16,8 @@ namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 [RequiresDocker]
 public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 {
+    private const string model = "tinyllama";
+
     [Fact]
     public async Task VerifyOllamaResource()
     {
@@ -51,7 +53,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var ollama = builder.AddOllama("ollama");
-        var phi3 = ollama.AddModel("phi3", "phi3");
+        var tinyllama = ollama.AddModel(model, model);
 
         using var app = builder.Build();
 
@@ -61,7 +63,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await rns.WaitForResourceAsync(ollama.Resource.Name, KnownResourceStates.Running);
 
-        await rns.WaitForResourceAsync(phi3.Resource.Name, (re)=> re.Snapshot?.State?.Text == "Ready");
+        await rns.WaitForResourceAsync(tinyllama.Resource.Name, (re)=> re.Snapshot?.State?.Text == "Ready");
 
         var hb = Host.CreateApplicationBuilder();
 
@@ -78,7 +80,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         var models = await ollamaApi.ListLocalModelsAsync();
 
         Assert.Single(models);
-        Assert.StartsWith("phi3", models.First().Name);
+        Assert.StartsWith(model, models.First().Name);
     }
 
     [Fact]
@@ -158,7 +160,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
                         var ollamaApiClient = host.Services.GetRequiredService<IOllamaApiClient>();
                         var models = await ollamaApiClient.ListLocalModelsAsync();
                         Assert.Single(models);
-                        Assert.StartsWith("phi3", models.First().Name);
+                        Assert.StartsWith(model, models.First().Name);
                     }
                 }
                 finally
@@ -180,10 +182,9 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
     private static async Task DownloadModel(IOllamaApiClient ollamaApi)
     {
         var models = await ollamaApi.ListLocalModelsAsync();
-
         Assert.Empty(models);
 
-        await foreach (var response in ollamaApi.PullModelAsync("phi3"))
+        await foreach (var response in ollamaApi.PullModelAsync(model))
         {
 
         }
@@ -191,6 +192,6 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         models = await ollamaApi.ListLocalModelsAsync();
 
         Assert.Single(models);
-        Assert.StartsWith("phi3", models.First().Name);
+        Assert.StartsWith(model, models.First().Name);
     }
 }
