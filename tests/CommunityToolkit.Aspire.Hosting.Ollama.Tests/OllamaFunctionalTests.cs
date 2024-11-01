@@ -123,7 +123,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceAsync(ollama1.Resource.Name, KnownResourceStates.Running);
+                await rns.WaitForResourceAsync(ollama2.Resource.Name, KnownResourceStates.Running);
 
                 try
                 {
