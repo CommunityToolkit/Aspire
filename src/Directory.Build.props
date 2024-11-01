@@ -3,27 +3,10 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
 
-    <Authors>Microsoft.Toolkit,dotnetfoundation,Community Toolkit</Authors>
-    <Company>.NET Foundation</Company>
-    <Copyright>(c) .NET Foundation and Contributors. All rights reserved.</Copyright>
-    <NeutralLanguage>en</NeutralLanguage>
-    <Product>CommunityToolkit.Aspire ($(NetVersion))</Product>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/CommunityToolkit/Aspire</PackageProjectUrl>
-    <PackageIcon>nuget.png</PackageIcon>
-    <RepositoryUrl>https://github.com/CommunityToolkit/Aspire</RepositoryUrl>
-    <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <DocsPath>README.md</DocsPath>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-
-    <DocsPath>README.md</DocsPath>
-    <PackageReadmeFile>$(DocsPath)</PackageReadmeFile>
-    <PackageOutputPath>../../nuget</PackageOutputPath>
-    <PackageTags>aspire integration communitytoolkit dotnetcommunitytoolkit $(AdditionalPackageTags)</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,18 +30,4 @@
       <PackagePath>/</PackagePath>
     </None>
   </ItemGroup>
-
-  <!--
-    Create local branding
-  -->
-  <PropertyGroup Condition=" '$(ContinuousIntegrationBuild)' == 'false' AND  '$(VersionSuffix)' == ''  ">
-    <_VersionSuffix>$([System.DateTime]::Now.ToString(yyMMdd-HHmm))</_VersionSuffix>
-    <VersionSuffix>dev.$(_VersionSuffix)</VersionSuffix>
-    <PackageVersion>$(VersionPrefix)-$(VersionSuffix)</PackageVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <WarningsAsErrors>$(WarningsAsErrors);CS1591;CS1573;CS1712</WarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
 </Project>
