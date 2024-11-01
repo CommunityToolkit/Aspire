@@ -15,7 +15,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString())
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
         ]);
 
         if (useKeyed)
@@ -44,7 +44,7 @@ public class OllamaSharpIEmbeddingGeneratorTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", "http://not-used")
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", "Endpoint=http://not-used")
         ]);
 
         if (useKeyed)
@@ -73,8 +73,8 @@ public class OllamaSharpIEmbeddingGeneratorTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("Aspire:Ollama:Ollama:ConnectionString", "http://not-used"),
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString())
+            new KeyValuePair<string, string?>("Aspire:Ollama:Ollama:ConnectionString", "Endpoint=http://not-used"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
         ]);
 
         if (useKeyed)
@@ -101,9 +101,9 @@ public class OllamaSharpIEmbeddingGeneratorTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", Endpoint.ToString()),
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama2", "https://localhost:5002/"),
-            new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "https://localhost:5003/")
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama2", "Endpoint=https://localhost:5002/"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "Endpoint=https://localhost:5003/")
         ]);
 
         builder.AddOllamaSharpEmbeddingGenerator("Ollama");

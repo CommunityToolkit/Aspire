@@ -20,17 +20,17 @@ public class ConformanceTests(OllamaContainerFeature ollamaContainerFeature) : C
     protected override bool SupportsKeyedRegistrations => true;
 
     protected override string? ConfigurationSectionName => "Aspire:OllamaSharp";
-    
+
     protected override void PopulateConfiguration(ConfigurationManager configuration, string? key = null)
     {
-        var connectionString = RequiresDockerAttribute.IsSupported ?
-          $"{ollamaContainerFeature.GetConnectionString()}" :
+        var endpoint = RequiresDockerAttribute.IsSupported ?
+          $"{ollamaContainerFeature.GetContainerEndpoint()}" :
           "http://localhost:11434";
 
         configuration.AddInMemoryCollection(
           [
-              new KeyValuePair<string, string?>(CreateConfigKey("Aspire:OllamaSharp", key, "Endpoint"), connectionString),
-              new KeyValuePair<string, string?>($"ConnectionStrings:{key}", connectionString)
+              new KeyValuePair<string, string?>(CreateConfigKey("Aspire:OllamaSharp", key, "Endpoint"), endpoint),
+              new KeyValuePair<string, string?>($"ConnectionStrings:{key}", $"Endpoint={endpoint}")
           ]);
     }
 

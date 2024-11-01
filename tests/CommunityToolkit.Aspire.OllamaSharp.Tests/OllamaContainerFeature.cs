@@ -8,7 +8,7 @@ namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 public class OllamaContainerFeature : IAsyncLifetime
 {
     public IContainer? Container { get; private set; }
-    public string GetConnectionString()
+    public string GetContainerEndpoint()
     {
         if (Container is null)
         {
