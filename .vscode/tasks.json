@@ -1,4 +1,19 @@
 {
   "version": "2.0.0",
-  "tasks": []
+  "tasks": [
+    {
+      "label": "Generate PublicAPI files",
+      "type": "shell",
+      "command": "echo '#nullable enable' > src/${input:projectName}/PublicAPI.Shipped.txt && echo '#nullable enable' > src/${input:projectName}/PublicAPI.Unshipped.txt",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "projectName",
+      "description": "Enter the name of the project",
+      "default": "CommunityToolkit.Aspire.MyIntegration"
+    }
+  ]
 }
