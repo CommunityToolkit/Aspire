@@ -2,6 +2,7 @@
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Ollama;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Aspire.Hosting;
 
@@ -143,7 +144,6 @@ public static class OllamaResourceBuilderExtensions
                                                         .WithImage(OllamaContainerImageTags.OpenWebUIImage, OllamaContainerImageTags.OpenWebUITag)
                                                         .WithImageRegistry(OllamaContainerImageTags.OpenWebUIRegistry)
                                                         .WithHttpEndpoint(targetPort: 8080, name: "http")
-                                                        .WithVolume("open-webui", "/app/backend/data")
                                                         .WithEnvironment(context => ConfigureOpenWebUIContainer(context, builder.Resource))
                                                         .ExcludeFromManifest();
 
@@ -151,6 +151,24 @@ public static class OllamaResourceBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Adds a data volume to the Open WebUI container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/> for the <see cref="OpenWebUIResource"/>.</param>
+    /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
+    /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [SuppressMessage("ApiDesign", "RS0026", Justification = "The method is named WithDataVolume to be consistent with other methods.")]
+    public static IResourceBuilder<OpenWebUIResource> WithDataVolume(this IResourceBuilder<OpenWebUIResource> builder, string? name = null, bool isReadOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+#pragma warning disable CTASPIRE001
+        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "openwebui"), "/app/backend/data", isReadOnly);
+#pragma warning restore CTASPIRE001
+    }
+        
 
     private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
     {

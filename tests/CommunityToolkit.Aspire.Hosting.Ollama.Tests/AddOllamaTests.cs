@@ -146,5 +146,174 @@ public class AddOllamaTests
 
         Assert.Equal("ollama-openwebui", resource.Name);
         Assert.Equal("http", resource.PrimaryEndpoint.EndpointName);
+        Assert.Equal(8080, resource.PrimaryEndpoint.TargetPort);
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerImageAnnotation>(out var imageAnnotations));
+        var imageAnnotation = Assert.Single(imageAnnotations);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUIImage, imageAnnotation.Image);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUITag, imageAnnotation.Tag);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUIRegistry, imageAnnotation.Registry);
+
+        Assert.False(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out _));
+    }
+
+    [Theory]
+    [InlineData("volumeName")]
+    [InlineData(null)]
+    public void CanPersistVolumeOfOpenWebUI(string? volumeName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI(configureContainer: container =>
+        {
+            container.WithDataVolume(volumeName);
+        });
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal("/app/backend/data", annotation.Target);
+
+        if (volumeName is null)
+        {
+            Assert.NotNull(annotation.Source);
+        }
+        else
+        {
+            Assert.Equal(volumeName, annotation.Source);
+        }
+    }
+
+    [Fact]
+    public void NoDataVolumeNameGeneratesOne()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.NotNull(annotation.Source);
+    }
+
+    [Fact]
+    public void SpecifiedDataVolumeNameIsUsed()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume("data");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal("data", annotation.Source);
+    }
+
+    [Theory]
+    [InlineData("data")]
+    [InlineData(null)]
+    public void CorrectTargetPathOnVolumeMount(string? volumeName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume(volumeName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal("/root/.ollama", annotation.Target);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ReadOnlyVolumeMount(bool isReadOnly)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithDataVolume(isReadOnly: isReadOnly);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal(isReadOnly, annotation.IsReadOnly);
+    }
+
+    [Theory]
+    [InlineData("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS")]
+    [InlineData("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS@sha256:1234567890abcdef")]
+    [InlineData("huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS")]
+    [InlineData("huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS@sha256:1234567890abcdef")]
+    public void HuggingFaceModel(string modelName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").AddHuggingFaceModel("llama", modelName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
+
+        Assert.Equal("ollama", resource.Name);
+        Assert.Contains(modelName, resource.Models);
+
+        Assert.Equal("llama", modelResource.Name);
+        Assert.Equal(modelName, modelResource.ModelName);
+        Assert.Equal(resource, modelResource.Parent);
+    }
+
+    [Fact]
+    public void HuggingFaceModelWithoutDomainPrefixHasItAdded()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").AddHuggingFaceModel("llama", "bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
+
+        Assert.Equal("ollama", resource.Name);
+        Assert.Contains("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS", resource.Models);
+
+        Assert.Equal("llama", modelResource.Name);
+        Assert.Equal("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS", modelResource.ModelName);
+        Assert.Equal(resource, modelResource.Parent);
     }
 }
