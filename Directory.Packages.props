@@ -40,7 +40,7 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.2" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="8.0.0-beta.24525.2" />
     <!-- External packages -->
-    <PackageVersion Include="OllamaSharp" Version="4.0.2" />
+    <PackageVersion Include="OllamaSharp" Version="4.0.3" />
     <PackageVersion Include="MeiliSearch" Version="0.15.3" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
