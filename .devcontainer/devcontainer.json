@@ -34,7 +34,8 @@
         "vscjava.vscode-java-pack",
         "esbenp.prettier-vscode",
         "redhat.vscode-yaml",
-        "rust-lang.rust-analyzer"
+        "rust-lang.rust-analyzer",
+        "oven.bun-vscode"
       ]
     }
   },
