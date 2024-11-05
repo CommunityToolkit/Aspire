@@ -29,7 +29,7 @@ public class AddSqlProjectTests
     {
         // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddSqlProject("MySqlProject").FromDacpac(TestProject.RelativePath);
+        appBuilder.AddSqlProject("MySqlProject").WithDacpac(TestProject.RelativePath);
         
         // Act
         using var app = appBuilder.Build();
@@ -54,7 +54,7 @@ public class AddSqlProjectTests
         var appBuilder = DistributedApplication.CreateBuilder();
         var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
         appBuilder.AddSqlProject<TestProject>("MySqlProject")
-                  .PublishTo(targetDatabase);
+                  .WithReference(targetDatabase);
         
         // Act
         using var app = appBuilder.Build();

@@ -57,7 +57,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="dacpacPath">Path to the .dacpac file.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> FromDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath)
+    public static IResourceBuilder<SqlProjectResource> WithDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath)
     {
         if (!Path.IsPathRooted(dacpacPath))
         {
@@ -73,7 +73,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="SqlServerDatabaseResource"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> PublishTo(
+    public static IResourceBuilder<SqlProjectResource> WithReference(
         this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<SqlServerDatabaseResource> target)
     {
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeployer, DacpacDeployer>();
