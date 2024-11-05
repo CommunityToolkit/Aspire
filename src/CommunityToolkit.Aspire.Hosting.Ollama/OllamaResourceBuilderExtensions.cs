@@ -2,6 +2,10 @@
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Ollama;
+using Microsoft.Extensions.DependencyInjection;
+using OllamaSharp;
+using System.ComponentModel;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Aspire.Hosting;
@@ -79,6 +83,49 @@ public static class OllamaResourceBuilderExtensions
 
         builder.Resource.AddModel(modelName);
         var modelResource = new OllamaModelResource(name, modelName, builder.Resource);
+
+        modelResource.Annotations.Add(new ResourceCommandAnnotation(
+            type: "Redownload",
+            displayName: "Redownload Model",
+            updateState: context =>
+                context.ResourceSnapshot.State?.Text == OllamaModelResourceLifecycleHook.ModelAvailableState ?
+                    ResourceCommandState.Enabled :
+                    ResourceCommandState.Disabled,
+            executeCommand: async context =>
+            {
+                var connectionString = await modelResource.ConnectionStringExpression.GetValueAsync(context.CancellationToken);
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    return new ExecuteCommandResult { Success = false, ErrorMessage = "No connection string" };
+                }
+
+                var connectionBuilder = new DbConnectionStringBuilder
+                {
+                    ConnectionString = connectionString
+                };
+
+                if (!Uri.TryCreate((string)connectionBuilder["Endpoint"], UriKind.Absolute, out var endpoint))
+                {
+                    return new ExecuteCommandResult { Success = false, ErrorMessage = "Invalid connection string" };
+                }
+
+                var ollamaClient = new OllamaApiClient(endpoint);
+
+                var logger = context.ServiceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(modelResource);
+                var notificationService = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
+
+                await OllamaModelResourceLifecycleHook.PullModelAsync(modelResource, ollamaClient, modelName, logger, notificationService, context.CancellationToken);
+                await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(OllamaModelResourceLifecycleHook.ModelAvailableState, KnownResourceStateStyles.Success) });
+
+                return CommandResults.Success();
+            },
+            displayDescription: $"Redownload the model {modelName}.",
+            parameter: null,
+            confirmationMessage: null,
+            iconName: "ArrowDownload",
+            iconVariant: IconVariant.Filled,
+            isHighlighted: true
+        ));
 
         return builder.ApplicationBuilder.AddResource(modelResource);
     }
@@ -168,7 +215,7 @@ public static class OllamaResourceBuilderExtensions
         return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "openwebui"), "/app/backend/data", isReadOnly);
 #pragma warning restore CTASPIRE001
     }
-        
+
 
     private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
     {

@@ -14,7 +14,7 @@ internal class OllamaModelResourceLifecycleHook(
     ResourceNotificationService notificationService,
     DistributedApplicationExecutionContext context) : IDistributedApplicationLifecycleHook, IAsyncDisposable
 {
-    private readonly ResourceNotificationService _notificationService = notificationService;
+    public const string ModelAvailableState = "ModelAvailable";
 
     private readonly CancellationTokenSource _tokenSource = new();
 
@@ -43,7 +43,7 @@ internal class OllamaModelResourceLifecycleHook(
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                await _notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot("No connection string", KnownResourceStateStyles.Error) });
+                await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot("No connection string", KnownResourceStateStyles.Error) });
                 return;
             }
 
@@ -62,7 +62,7 @@ internal class OllamaModelResourceLifecycleHook(
 
             var ollamaClient = new OllamaApiClient(new Uri(connectionString));
 
-            await _notificationService.PublishUpdateAsync(modelResource, state => state with
+            await notificationService.PublishUpdateAsync(modelResource, state => state with
             {
                 State = new ResourceStateSnapshot($"Checking {model}", KnownResourceStateStyles.Info),
                 Properties = [.. state.Properties, new(CustomResourceKnownProperties.Source, model)]
@@ -76,7 +76,7 @@ internal class OllamaModelResourceLifecycleHook(
                     DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
                     model,
                     ollamaResource.Name);
-                await PullModel(modelResource, ollamaClient, model, logger, cancellationToken);
+                await PullModelAsync(modelResource, ollamaClient, model, logger, notificationService, cancellationToken);
             }
             else
             {
@@ -86,11 +86,11 @@ internal class OllamaModelResourceLifecycleHook(
                     ollamaResource.Name);
             }
 
-            await _notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot("Ready", KnownResourceStateStyles.Success) });
+            await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(ModelAvailableState, KnownResourceStateStyles.Success) });
         }
         catch (Exception ex)
         {
-            await _notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(ex.Message, KnownResourceStateStyles.Error) });
+            await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(ex.Message, KnownResourceStateStyles.Error) });
         }
     }
 
@@ -115,12 +115,12 @@ internal class OllamaModelResourceLifecycleHook(
         throw new TimeoutException("Failed to list local models after 5 retries. Likely that the container image was not pulled in time, or the container is not running.");
     }
 
-    private async Task PullModel(OllamaModelResource resource, OllamaApiClient ollamaClient, string model, ILogger logger, CancellationToken cancellationToken)
+    public static async Task PullModelAsync(OllamaModelResource resource, OllamaApiClient ollamaClient, string model, ILogger logger, ResourceNotificationService notificationService, CancellationToken cancellationToken)
     {
         logger.LogInformation("{TimeStamp}: Pulling ollama model {Model}...",
             DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture),
             model);
-        await _notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot($"Downloading {model}", KnownResourceStateStyles.Info) });
+        await notificationService.PublishUpdateAsync(resource, state => state with { State = new ResourceStateSnapshot($"Downloading {model}", KnownResourceStateStyles.Info) });
 
         long percentage = 0;
 
@@ -141,7 +141,7 @@ internal class OllamaModelResourceLifecycleHook(
                         percentage = newPercentage;
 
                         var percentageState = $"Downloading {model}{(percentage > 0 ? $" {percentage} percent" : "")}";
-                        await _notificationService.PublishUpdateAsync(resource,
+                        await notificationService.PublishUpdateAsync(resource,
                         state => state with
                         {
                             State = new ResourceStateSnapshot(percentageState, KnownResourceStateStyles.Info)
