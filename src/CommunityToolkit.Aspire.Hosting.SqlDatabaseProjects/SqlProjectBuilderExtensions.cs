@@ -35,6 +35,7 @@ public static class SqlProjectBuilderExtensions
         var resource = new SqlProjectResource(name);
         
         return builder.AddResource(resource)
+                      .ExcludeFromManifest()
                       .WithAnnotation(new TProject());
     }
 
@@ -48,7 +49,8 @@ public static class SqlProjectBuilderExtensions
     {
         var resource = new SqlProjectResource(name);
         
-        return builder.AddResource(resource);
+        return builder.AddResource(resource)
+                      .ExcludeFromManifest();
     }
 
     /// <summary>
