@@ -9,7 +9,6 @@ namespace Aspire.Hosting;
 
 public static partial class OllamaResourceBuilderExtensions
 {
-
     /// <summary>
     /// Adds a model to the Ollama container.
     /// </summary>
