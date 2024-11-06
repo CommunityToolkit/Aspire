@@ -77,6 +77,6 @@ public static partial class OllamaResourceBuilderExtensions
         context.EnvironmentVariables.Add("ENABLE_SIGNUP", "false");
         context.EnvironmentVariables.Add("ENABLE_COMMUNITY_SHARING", "false"); // by default don't enable sharing
         context.EnvironmentVariables.Add("WEBUI_AUTH", "false"); // https://docs.openwebui.com/#quick-start-with-docker--recommended
-        context.EnvironmentVariables.Add("OLLAMA_BASE_URL", resource.PrimaryEndpoint.Url);
+        context.EnvironmentVariables.Add("OLLAMA_BASE_URL", $"http://{resource.Name}:{resource.PrimaryEndpoint.TargetPort}");
     }
 }
