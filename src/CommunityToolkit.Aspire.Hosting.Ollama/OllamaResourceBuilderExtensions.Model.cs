@@ -16,7 +16,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> WithModel(this IResourceBuilder<OllamaResource> builder, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
@@ -24,7 +24,7 @@ public static partial class OllamaResourceBuilderExtensions
         string sanitizedModelName = modelName.Split(':')[0].Split('/').Last().Replace('.', '-');
         string resourceName = $"{builder.Resource.Name}-{sanitizedModelName}";
 
-        return WithModel(builder, resourceName, modelName);
+        return AddModel(builder, resourceName, modelName);
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> WithModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
@@ -111,7 +111,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> WithHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
@@ -123,7 +123,7 @@ public static partial class OllamaResourceBuilderExtensions
             modelName = "hf.co/" + modelName;
         }
 
-        return WithModel(builder, name, modelName);
+        return AddModel(builder, name, modelName);
     }
 
     private static OllamaModelResource AddModelResourceCommand(

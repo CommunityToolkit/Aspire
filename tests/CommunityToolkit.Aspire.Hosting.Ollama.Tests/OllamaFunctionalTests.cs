@@ -53,7 +53,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var ollama = builder.AddOllama("ollama");
-        var tinyllama = ollama.WithModel(model, model);
+        var tinyllama = ollama.AddModel(model, model);
 
         using var app = builder.Build();
 
