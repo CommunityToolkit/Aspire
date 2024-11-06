@@ -1,7 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var ollama = builder.AddOllama("ollama")
-    .WithDataVolume()
     .WithOpenWebUI();
 
 var phi3 = ollama.AddModel("phi3", "phi3");
