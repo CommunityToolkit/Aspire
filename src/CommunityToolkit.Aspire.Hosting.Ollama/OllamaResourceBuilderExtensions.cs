@@ -1,19 +1,17 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Ollama;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OllamaSharp;
-using System.ComponentModel;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for adding an Ollama container to the application model.
 /// </summary>
-public static class OllamaResourceBuilderExtensions
+public static partial class OllamaResourceBuilderExtensions
 {
     /// <summary>
     /// Adds the Ollama container to the application model.
@@ -27,10 +25,50 @@ public static class OllamaResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        var resource = new OllamaResource(name);
+        var resource = new OllamaResource(name)
+            .AddServerResourceCommand(
+                type: "ListAllModels",
+                displayName: "List All Models",
+                executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
+                {
+                    var models = await ollamaClient.ListLocalModelsAsync(ct);
+
+                    if (!models.Any())
+                    {
+                        logger.LogInformation("No models found in the Ollama container.");
+                        return CommandResults.Success();
+                    }
+
+                    logger.LogInformation("Models: {Models}", models.ToJson());
+
+                    return CommandResults.Success();
+                },
+                displayDescription: "List all models in the Ollama container.",
+                iconName: "AppsList"
+            ).AddServerResourceCommand(
+                type: "ListRunningModels",
+                displayName: "List Running Models",
+                executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
+                {
+                    var models = await ollamaClient.ListRunningModelsAsync(ct);
+
+                    if (!models.Any())
+                    {
+                        logger.LogInformation("No running models found in the Ollama container.");
+                        return CommandResults.Success();
+                    }
+
+                    logger.LogInformation("Running Models: {Models}", models.ToJson());
+
+                    return CommandResults.Success();
+                },
+                displayDescription: "List all running models in the Ollama container.",
+                iconName: "AppsList"
+            );
         return builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
+          .WithOtlpExporter()
           .ExcludeFromManifest();
     }
 
@@ -50,178 +88,55 @@ public static class OllamaResourceBuilderExtensions
 #pragma warning restore CTASPIRE001
     }
 
-    /// <summary>
-    /// Adds a model to the Ollama container.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="modelName">The name of the LLM to download on initial startup.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, string modelName)
+    private static OllamaResource AddServerResourceCommand(
+        this OllamaResource ollamaResource,
+        string type,
+        string displayName,
+        Func<OllamaResource, IOllamaApiClient, ILogger, ResourceNotificationService, CancellationToken, Task<ExecuteCommandResult>> executeCommand,
+        string? displayDescription,
+        object? parameter = null,
+        string? confirmationMessage = null,
+        string? iconName = null,
+        IconVariant? iconVariant = IconVariant.Filled,
+        bool isHighlighted = false)
     {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
-
-        string sanitizedModelName = modelName.Split(':')[0].Split('/').Last().Replace('.', '-');
-        string resourceName = $"{builder.Resource.Name}-{sanitizedModelName}";
-
-        return AddModel(builder, resourceName, modelName);
-    }
-
-    /// <summary>
-    /// Adds a model to the Ollama container.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="modelName">The name of the LLM to download on initial startup.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
-
-        builder.ApplicationBuilder.Services.TryAddLifecycleHook<OllamaModelResourceLifecycleHook>();
-
-        builder.Resource.AddModel(modelName);
-        var modelResource = new OllamaModelResource(name, modelName, builder.Resource);
-
-        modelResource.Annotations.Add(new ResourceCommandAnnotation(
-            type: "Redownload",
-            displayName: "Redownload Model",
+        ollamaResource.Annotations.Add(new ResourceCommandAnnotation(
+            type: type,
+            displayName: displayName,
             updateState: context =>
-                context.ResourceSnapshot.State?.Text == OllamaModelResourceLifecycleHook.ModelAvailableState ?
+                context.ResourceSnapshot.State?.Text == KnownResourceStates.Running ?
                     ResourceCommandState.Enabled :
                     ResourceCommandState.Disabled,
             executeCommand: async context =>
             {
-                var connectionString = await modelResource.ConnectionStringExpression.GetValueAsync(context.CancellationToken);
-                if (string.IsNullOrWhiteSpace(connectionString))
-                {
-                    return new ExecuteCommandResult { Success = false, ErrorMessage = "No connection string" };
-                }
+                (var success, var endpoint) = await OllamaUtilities.TryGetEndpointAsync(ollamaResource, context.CancellationToken);
 
-                var connectionBuilder = new DbConnectionStringBuilder
-                {
-                    ConnectionString = connectionString
-                };
-
-                if (!Uri.TryCreate((string)connectionBuilder["Endpoint"], UriKind.Absolute, out var endpoint))
+                if (!success || endpoint is null)
                 {
                     return new ExecuteCommandResult { Success = false, ErrorMessage = "Invalid connection string" };
                 }
 
                 var ollamaClient = new OllamaApiClient(endpoint);
-
-                var logger = context.ServiceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(modelResource);
+                var logger = context.ServiceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(ollamaResource);
                 var notificationService = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
 
-                await OllamaModelResourceLifecycleHook.PullModelAsync(modelResource, ollamaClient, modelName, logger, notificationService, context.CancellationToken);
-                await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(OllamaModelResourceLifecycleHook.ModelAvailableState, KnownResourceStateStyles.Success) });
-
-                return CommandResults.Success();
+                return await executeCommand(ollamaResource, ollamaClient, logger, notificationService, context.CancellationToken);
             },
-            displayDescription: $"Redownload the model {modelName}.",
-            parameter: null,
-            confirmationMessage: null,
-            iconName: "ArrowDownload",
-            iconVariant: IconVariant.Filled,
-            isHighlighted: true
+            displayDescription: displayDescription,
+            parameter: parameter,
+            confirmationMessage: confirmationMessage,
+            iconName: iconName,
+            iconVariant: iconVariant,
+            isHighlighted: isHighlighted
         ));
 
-        return builder.ApplicationBuilder.AddResource(modelResource);
+        return ollamaResource;
     }
 
-    /// <summary>
-    /// Adds a model from Hugging Face to the Ollama container. Only models in GGUF format are supported.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
+    // this is a workaround since we can't write to the structured logs, we'll JSON print for now
+    private static readonly JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
+    private static string ToJson(this object obj)
     {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
-
-        builder.ApplicationBuilder.Services.TryAddLifecycleHook<OllamaModelResourceLifecycleHook>();
-
-        if (!modelName.StartsWith("hf.co/") && !modelName.StartsWith("huggingface.co/"))
-        {
-            modelName = "hf.co/" + modelName;
-        }
-
-        return AddModel(builder, name, modelName);
-    }
-
-    /// <summary>
-    /// Adds an administration web UI Ollama to the application model using Attu. This version the package defaults to the main tag of the Open WebUI container image
-    /// </summary>
-    /// <example>
-    /// Use in application host with an Ollama resource
-    /// <code lang="csharp">
-    /// var builder = DistributedApplication.CreateBuilder(args);
-    ///
-    /// var ollama = builder.AddOllama("ollama")
-    ///   .WithOpenWebUI();
-    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
-    ///   .WithReference(ollama);
-    ///  
-    /// builder.Build().Run(); 
-    /// </code>
-    /// </example>
-    /// <param name="builder">The Ollama resource builder.</param>
-    /// <param name="configureContainer">Configuration callback for Open WebUI container resource.</param>
-    /// <param name="containerName">The name of the container (Optional).</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>See https://openwebui.com for more information about Open WebUI</remarks>
-    public static IResourceBuilder<T> WithOpenWebUI<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<OpenWebUIResource>>? configureContainer = null, string? containerName = null) where T : OllamaResource
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-
-        if (builder.ApplicationBuilder.Resources.OfType<OpenWebUIResource>().SingleOrDefault() is { } existingOpenWebUIResource)
-        {
-            var builderForExistingResource = builder.ApplicationBuilder.CreateResourceBuilder(existingOpenWebUIResource);
-            configureContainer?.Invoke(builderForExistingResource);
-            return builder;
-        }
-
-        containerName ??= $"{builder.Resource.Name}-openwebui";
-
-        var openWebUI = new OpenWebUIResource(containerName);
-        var resourceBuilder = builder.ApplicationBuilder.AddResource(openWebUI)
-                                                        .WithImage(OllamaContainerImageTags.OpenWebUIImage, OllamaContainerImageTags.OpenWebUITag)
-                                                        .WithImageRegistry(OllamaContainerImageTags.OpenWebUIRegistry)
-                                                        .WithHttpEndpoint(targetPort: 8080, name: "http")
-                                                        .WithEnvironment(context => ConfigureOpenWebUIContainer(context, builder.Resource))
-                                                        .ExcludeFromManifest();
-
-        configureContainer?.Invoke(resourceBuilder);
-
-        return builder;
-    }
-
-    /// <summary>
-    /// Adds a data volume to the Open WebUI container.
-    /// </summary>
-    /// <param name="builder">The <see cref="IResourceBuilder{T}"/> for the <see cref="OpenWebUIResource"/>.</param>
-    /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
-    /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [SuppressMessage("ApiDesign", "RS0026", Justification = "The method is named WithDataVolume to be consistent with other methods.")]
-    public static IResourceBuilder<OpenWebUIResource> WithDataVolume(this IResourceBuilder<OpenWebUIResource> builder, string? name = null, bool isReadOnly = false)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-
-#pragma warning disable CTASPIRE001
-        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "openwebui"), "/app/backend/data", isReadOnly);
-#pragma warning restore CTASPIRE001
-    }
-
-
-    private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
-    {
-        context.EnvironmentVariables.Add("ENABLE_SIGNUP", "false");
-        context.EnvironmentVariables.Add("ENABLE_COMMUNITY_SHARING", "false"); // by default don't enable sharing
-        context.EnvironmentVariables.Add("WEBUI_AUTH", "false"); // https://docs.openwebui.com/#quick-start-with-docker--recommended
-        context.EnvironmentVariables.Add("OLLAMA_BASE_URL", $"{resource.PrimaryEndpoint.Scheme}://{resource.PrimaryEndpoint.ContainerHost}:{resource.PrimaryEndpoint.Port}");
+        return JsonSerializer.Serialize(obj, jsonSerializerOptions);
     }
 }

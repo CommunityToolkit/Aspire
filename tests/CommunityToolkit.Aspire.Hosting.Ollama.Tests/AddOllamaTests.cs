@@ -9,7 +9,7 @@ public class AddOllamaTests
     {
         var builder = DistributedApplication.CreateBuilder();
         var ollama = builder.AddOllama("ollama", port: null);
-        var model = ollama.AddModel("custom:tag");
+        var model = ollama.WithModel("custom:tag");
 
         using var app = builder.Build();
 
@@ -66,8 +66,8 @@ public class AddOllamaTests
         var builder = DistributedApplication.CreateBuilder();
         var ollama = builder.AddOllama("ollama", port: null);
 
-        var llama3 = ollama.AddModel("llama3");
-        var phi3 = ollama.AddModel("phi3");
+        var llama3 = ollama.WithModel("llama3");
+        var phi3 = ollama.WithModel("phi3");
 
         using var app = builder.Build();
 
@@ -123,13 +123,13 @@ public class AddOllamaTests
         var ollama = builder.AddOllama("ollama", port: null);
 
         string name = "";
-        Assert.Throws<ArgumentException>(() => ollama.AddModel(name));
+        Assert.Throws<ArgumentException>(() => ollama.WithModel(name));
 
         name = " ";
-        Assert.Throws<ArgumentException>(() => ollama.AddModel(name));
+        Assert.Throws<ArgumentException>(() => ollama.WithModel(name));
 
         name = null!;
-        Assert.Throws<ArgumentNullException>(() => ollama.AddModel(name));
+        Assert.Throws<ArgumentNullException>(() => ollama.WithModel(name));
     }
 
     [Fact]
@@ -277,7 +277,7 @@ public class AddOllamaTests
     public void HuggingFaceModel(string modelName)
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").AddHuggingFaceModel("llama", modelName);
+        _ = builder.AddOllama("ollama").WithHuggingFaceModel("llama", modelName);
 
         using var app = builder.Build();
 
@@ -299,7 +299,7 @@ public class AddOllamaTests
     public void HuggingFaceModelWithoutDomainPrefixHasItAdded()
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").AddHuggingFaceModel("llama", "bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS");
+        _ = builder.AddOllama("ollama").WithHuggingFaceModel("llama", "bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS");
 
         using var app = builder.Build();
 
