@@ -2,6 +2,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Ollama;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using OllamaSharp;
 
@@ -100,7 +101,14 @@ public static partial class OllamaResourceBuilderExtensions
             isHighlighted: true
         );
 
-        return builder.ApplicationBuilder.AddResource(modelResource);
+        var healthCheckKey = $"{name}-{modelName}-health";
+
+        builder.ApplicationBuilder.Services.AddHealthChecks()
+            .AddTypeActivatedCheck<OllamaModelHealthCheck>(healthCheckKey, modelResource);
+
+        return builder.ApplicationBuilder
+            .AddResource(modelResource)
+            .WithHealthCheck(healthCheckKey);
     }
 
     /// <summary>

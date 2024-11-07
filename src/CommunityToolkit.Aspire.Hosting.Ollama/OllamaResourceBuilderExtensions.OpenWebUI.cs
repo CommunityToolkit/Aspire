@@ -47,7 +47,8 @@ public static partial class OllamaResourceBuilderExtensions
                                                         .WithImageRegistry(OllamaContainerImageTags.OpenWebUIRegistry)
                                                         .WithHttpEndpoint(targetPort: 8080, name: "http")
                                                         .WithEnvironment(context => ConfigureOpenWebUIContainer(context, builder.Resource))
-                                                        // .WaitFor(builder)
+                                                        .WaitFor(builder)
+                                                        .WithHttpHealthCheck("/health")
                                                         .ExcludeFromManifest();
 
         configureContainer?.Invoke(resourceBuilder);
