@@ -13,8 +13,6 @@ internal class OllamaModelResourceLifecycleHook(
     ResourceNotificationService notificationService,
     DistributedApplicationExecutionContext context) : IDistributedApplicationLifecycleHook, IAsyncDisposable
 {
-    public const string ModelAvailableState = "ModelAvailable";
-
     private readonly CancellationTokenSource _tokenSource = new();
 
     public async Task AfterResourcesCreatedAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
@@ -85,7 +83,7 @@ internal class OllamaModelResourceLifecycleHook(
                     ollamaResource.Name);
             }
 
-            await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(ModelAvailableState, KnownResourceStateStyles.Success) });
+            await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success) });
         }
         catch (Exception ex)
         {

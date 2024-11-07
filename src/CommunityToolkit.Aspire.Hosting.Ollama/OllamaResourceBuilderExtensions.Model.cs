@@ -49,7 +49,7 @@ public static partial class OllamaResourceBuilderExtensions
             executeCommand: async (modelResource, ollamaClient, logger, notificationService, ct) =>
             {
                 await OllamaUtilities.PullModelAsync(modelResource, ollamaClient, modelResource.ModelName, logger, notificationService, ct);
-                await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(OllamaModelResourceLifecycleHook.ModelAvailableState, KnownResourceStateStyles.Success) });
+                await notificationService.PublishUpdateAsync(modelResource, state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success) });
 
                 return CommandResults.Success();
             },
@@ -141,7 +141,7 @@ public static partial class OllamaResourceBuilderExtensions
             type: type,
             displayName: displayName,
             updateState: context =>
-                context.ResourceSnapshot.State?.Text == OllamaModelResourceLifecycleHook.ModelAvailableState ?
+                context.ResourceSnapshot.State?.Text == KnownResourceStates.Running ?
                     ResourceCommandState.Enabled :
                     ResourceCommandState.Disabled,
             executeCommand: async context =>
