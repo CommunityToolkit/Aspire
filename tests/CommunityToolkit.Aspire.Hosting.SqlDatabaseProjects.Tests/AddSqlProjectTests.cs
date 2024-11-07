@@ -39,8 +39,8 @@ public class AddSqlProjectTests
         var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
         Assert.Equal("MySqlProject", sqlProjectResource.Name);
 
-        var annotation = Assert.Single(sqlProjectResource.Annotations.OfType<DacpacMetadataAnnotation>());
-        Assert.Equal(Path.Combine(appBuilder.AppHostDirectory, TestProject.RelativePath), annotation.DacpacPath);
+        Assert.True(sqlProjectResource.TryGetLastAnnotation(out DacpacMetadataAnnotation? dacpacMetadataAnnotation));
+        Assert.Equal(Path.Combine(appBuilder.AppHostDirectory, TestProject.RelativePath), dacpacMetadataAnnotation.DacpacPath);
 
         var dacpacPath = sqlProjectResource.GetDacpacPath();
         Assert.NotNull(dacpacPath);

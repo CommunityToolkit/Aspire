@@ -6,12 +6,11 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Represents a SQL Server Database project resource.
 /// </summary>
 /// <param name="name">Name of the resource.</param>
-public sealed class SqlProjectResource(string name) : Resource(name)
+public sealed class SqlProjectResource(string name) : Resource(name), IResourceWithWaitSupport
 {
     internal string GetDacpacPath()
     {
-        var projectMetadata = Annotations.OfType<IProjectMetadata>().FirstOrDefault();
-        if (projectMetadata != null)
+        if (this.TryGetLastAnnotation<IProjectMetadata>(out var projectMetadata))
         {
             var projectPath = projectMetadata.ProjectPath;
             using var projectCollection = new ProjectCollection();
@@ -27,8 +26,7 @@ public sealed class SqlProjectResource(string name) : Resource(name)
             return targetPath;
         }
 
-        var dacpacMetadata = Annotations.OfType<DacpacMetadataAnnotation>().FirstOrDefault();
-        if (dacpacMetadata != null)
+        if (this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var dacpacMetadata))
         {
             return dacpacMetadata.DacpacPath;
         }

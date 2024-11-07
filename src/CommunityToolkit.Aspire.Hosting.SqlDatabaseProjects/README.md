@@ -25,7 +25,7 @@ var sql = builder.AddSqlServer("sql")
                  .AddDatabase("test");
 
 builder.AddSqlProject<Projects.MySqlProj>("mysqlproj")
-       .PublishTo(sql);
+       .WithReference(sql);
 
 builder.Build().Run();
 ```
@@ -42,8 +42,8 @@ var sql = builder.AddSqlServer("sql")
                  .AddDatabase("test");
 
 builder.AddSqlProject("mysqlproj")
-       .FromDacpac("path/to/mysqlproj.dacpac")
-       .PublishTo(sql);
+       .WithDacpac("path/to/mysqlproj.dacpac")
+       .WithReference(sql);
 
 builder.Build().Run();
 ```

@@ -29,13 +29,13 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> AddSqlProject<TProject>(this IDistributedApplicationBuilder builder, string name)
+    public static IResourceBuilder<SqlProjectResource> AddSqlProject<TProject>(this IDistributedApplicationBuilder builder, [ResourceName]string name)
         where TProject : IProjectMetadata, new()
     {
-        var resource = new SqlProjectResource(name);
-        
-        return builder.AddResource(resource)
-                      .ExcludeFromManifest()
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
+        return builder.AddSqlProject(name)
                       .WithAnnotation(new TProject());
     }
 
@@ -45,8 +45,11 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, string name)
+    public static IResourceBuilder<SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, [ResourceName]string name)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
         var resource = new SqlProjectResource(name);
         
         return builder.AddResource(resource)
@@ -86,6 +89,8 @@ public static class SqlProjectBuilderExtensions
             var service = resourceReady.Services.GetRequiredService<SqlProjectPublishService>();
             return service.PublishSqlProject(builder.Resource, target.Resource, ct);
         });
+
+        builder.WaitFor(target);
 
         builder.WithInitialState(new CustomResourceSnapshot
         {

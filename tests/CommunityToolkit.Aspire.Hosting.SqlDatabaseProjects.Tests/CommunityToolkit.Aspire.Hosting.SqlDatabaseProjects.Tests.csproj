@@ -6,8 +6,4 @@
     <ProjectReference Include="..\..\examples\sql-database-projects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NSubstitute" />
-  </ItemGroup>
-
 </Project>
