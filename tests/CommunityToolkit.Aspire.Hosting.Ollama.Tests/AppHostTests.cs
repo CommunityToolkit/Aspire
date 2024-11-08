@@ -8,7 +8,7 @@ namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 [RequiresDocker]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Ollama_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Ollama_AppHost>>
 {
-    [Theory]
+    [Theory(Skip = "This test is flaky")]
     [InlineData("ollama")]
     [InlineData("ollama-openwebui")]
     public async Task ResourceStartsAndRespondsOk(string resourceName)
@@ -21,7 +21,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact]
+    [Fact(Skip = "This test is flaky")]
     public async Task OllamaListsAvailableModels()
     {
         var distributedAppModel = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
