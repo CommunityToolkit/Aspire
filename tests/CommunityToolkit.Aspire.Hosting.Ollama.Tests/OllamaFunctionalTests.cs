@@ -47,7 +47,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         await DownloadModel(ollamaApi);
     }
 
-    [Fact(Skip = "This test is flaky")]
+    [Fact]
     public async Task AddModelShouldDownloadModel()
     {
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
