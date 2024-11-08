@@ -21,7 +21,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "This test is flaky")]
+    [Fact]
     public async Task OllamaListsAvailableModels()
     {
         var distributedAppModel = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
