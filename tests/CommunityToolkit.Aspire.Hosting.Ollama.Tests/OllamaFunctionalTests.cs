@@ -179,6 +179,45 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         }
     }
 
+    [Fact]
+    public async Task ModelInitiallyUnhealthy()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+        var ollama = builder.AddOllama("ollama");
+        var tinyllama = ollama.AddModel(model, model);
+
+        using var app = builder.Build();
+
+        await app.StartAsync();
+
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        var resourceEvent = await rns.WaitForResourceAsync(tinyllama.Resource.Name, re => re.Snapshot.HealthStatus == HealthStatus.Unhealthy).WaitAsync(TimeSpan.FromMinutes(5));
+
+        Assert.Equal(HealthStatus.Unhealthy, resourceEvent.Snapshot.HealthStatus);
+
+        await rns.WaitForResourceAsync(ollama.Resource.Name, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
+
+        await rns.WaitForResourceAsync(tinyllama.Resource.Name, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
+
+        var hb = Host.CreateApplicationBuilder();
+
+        hb.Configuration[$"ConnectionStrings:{ollama.Resource.Name}"] = await ollama.Resource.ConnectionStringExpression.GetValueAsync(default);
+
+        hb.AddOllamaApiClient(ollama.Resource.Name);
+
+        using var host = hb.Build();
+
+        await host.StartAsync();
+
+        var ollamaApi = host.Services.GetRequiredService<IOllamaApiClient>();
+
+        var models = await ollamaApi.ListLocalModelsAsync();
+
+        Assert.Single(models);
+        Assert.StartsWith(model, models.First().Name);
+    }
     private static async Task DownloadModel(IOllamaApiClient ollamaApi)
     {
         var models = await ollamaApi.ListLocalModelsAsync();
