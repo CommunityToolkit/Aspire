@@ -61,9 +61,9 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-        await rns.WaitForResourceAsync(ollama.Resource.Name, KnownResourceStates.Running);
+        await rns.WaitForResourceAsync(ollama.Resource.Name, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
 
-        await rns.WaitForResourceAsync(tinyllama.Resource.Name, (re) => re.Snapshot?.State?.Text == "Ready");
+        await rns.WaitForResourceAsync(tinyllama.Resource.Name, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
 
         var hb = Host.CreateApplicationBuilder();
 
