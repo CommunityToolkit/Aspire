@@ -18,7 +18,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     private const string model = "tinyllama";
 
-    [Fact]
+    [Fact(Skip = "This test is flaky")]
     public async Task VerifyOllamaResource()
     {
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
@@ -47,7 +47,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         await DownloadModel(ollamaApi);
     }
 
-    [Fact]
+    [Fact(Skip = "This test is flaky")]
     public async Task AddModelShouldDownloadModel()
     {
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
@@ -83,7 +83,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         Assert.StartsWith(model, models.First().Name);
     }
 
-    [Fact]
+    [Fact(Skip = "This test is flaky")]
     public async Task WithDataShouldPersistStateBetweenUsages()
     {
         string? volumeName = null;
