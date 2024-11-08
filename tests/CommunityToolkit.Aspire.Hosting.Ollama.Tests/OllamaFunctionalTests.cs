@@ -83,7 +83,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
         Assert.StartsWith(model, models.First().Name);
     }
 
-    [Fact(Skip = "This test is flaky")]
+    [Fact]
     public async Task WithDataShouldPersistStateBetweenUsages()
     {
         string? volumeName = null;
