@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting uvicorn</AdditionalPackageTags>
+    <Description>A .NET Aspire for hosting Uvicorn apps.</Description>
+  </PropertyGroup>
+</Project>
