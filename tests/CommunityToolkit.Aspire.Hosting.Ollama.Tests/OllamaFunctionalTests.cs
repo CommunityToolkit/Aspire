@@ -5,11 +5,8 @@ using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
-using Polly;
 using Xunit.Abstractions;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Testing;
-using YamlDotNet.Core.Tokens;
 using OllamaSharp;
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
