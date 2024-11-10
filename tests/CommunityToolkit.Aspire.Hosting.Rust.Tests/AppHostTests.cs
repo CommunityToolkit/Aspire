@@ -1,0 +1,21 @@
+using CommunityToolkit.Aspire.Testing;
+using FluentAssertions;
+
+namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
+
+#pragma warning disable CTASPIRE001
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost>>
+{
+    [Fact]
+    public async Task ResourceStartsAndRespondsOk()
+    {
+        var appName = "rust-app";
+        var httpClient = fixture.CreateHttpClient(appName);
+
+        await fixture.App.WaitForTextAsync("listening on: 127.0.0.1:8080", appName).WaitAsync(TimeSpan.FromMinutes(5));
+
+        var response = await httpClient.GetAsync("/ping");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+}
