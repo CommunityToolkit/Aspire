@@ -42,6 +42,9 @@
     <!-- External packages -->
     <PackageVersion Include="OllamaSharp" Version="4.0.4" />
     <PackageVersion Include="MeiliSearch" Version="0.15.3" />
+    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.4.92" />
+    <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
+    <PackageVersion Include="Microsoft.Build.Locator" Version="1.7.8" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->

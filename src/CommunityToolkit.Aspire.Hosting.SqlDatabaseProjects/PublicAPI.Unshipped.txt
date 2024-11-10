@@ -1,0 +1,12 @@
+#nullable enable
+Aspire.Hosting.ApplicationModel.DacpacMetadataAnnotation
+Aspire.Hosting.ApplicationModel.DacpacMetadataAnnotation.DacpacMetadataAnnotation(string! DacpacPath) -> void
+Aspire.Hosting.ApplicationModel.DacpacMetadataAnnotation.DacpacPath.get -> string!
+Aspire.Hosting.ApplicationModel.DacpacMetadataAnnotation.DacpacPath.init -> void
+Aspire.Hosting.ApplicationModel.SqlProjectResource
+Aspire.Hosting.ApplicationModel.SqlProjectResource.SqlProjectResource(string! name) -> void
+static Aspire.Hosting.SqlProjectBuilderExtensions.AddSqlProject(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!
+static Aspire.Hosting.SqlProjectBuilderExtensions.AddSqlProject<TProject>(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!
+Aspire.Hosting.SqlProjectBuilderExtensions
+static Aspire.Hosting.SqlProjectBuilderExtensions.WithReference(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlServerDatabaseResource!>! target) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!
+static Aspire.Hosting.SqlProjectBuilderExtensions.WithDacpac(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>! builder, string! dacpacPath) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!

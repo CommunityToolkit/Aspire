@@ -1,0 +1,4 @@
+CREATE TABLE [dbo].[SdkProject]
+(
+	[Id] INT NOT NULL PRIMARY KEY
+)
