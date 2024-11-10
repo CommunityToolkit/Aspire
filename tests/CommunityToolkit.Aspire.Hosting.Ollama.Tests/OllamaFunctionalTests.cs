@@ -112,7 +112,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
                 await rns.WaitForResourceAsync(ollama1.Resource.Name, KnownResourceStates.Running);
-                await rns.WaitForResourceAsync(model1.Resource.Name, KnownResourceStates.Running);
+                await rns.WaitForResourceHealthyAsync(model1.Resource.Name);
 
                 try
                 {
@@ -122,15 +122,13 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 
                     hb.AddOllamaApiClient(ollama1.Resource.Name);
 
-                    using (var host = hb.Build())
-                    {
-                        await host.StartAsync();
+                    using var host = hb.Build();
+                    await host.StartAsync();
 
-                        var ollamaApiClient = host.Services.GetRequiredService<IOllamaApiClient>();
-                        var models = await ollamaApiClient.ListLocalModelsAsync();
-                        Assert.Single(models);
-                        Assert.StartsWith(model, models.First().Name);
-                    }
+                    var ollamaApiClient = host.Services.GetRequiredService<IOllamaApiClient>();
+                    var models = await ollamaApiClient.ListLocalModelsAsync();
+                    Assert.Single(models);
+                    Assert.StartsWith(model, models.First().Name);
                 }
                 finally
                 {
@@ -151,7 +149,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
                 await rns.WaitForResourceAsync(ollama2.Resource.Name, KnownResourceStates.Running);
-                await rns.WaitForResourceAsync(model2.Resource.Name, KnownResourceStates.Running);
+                await rns.WaitForResourceHealthyAsync(model2.Resource.Name);
 
                 try
                 {
