@@ -12,10 +12,16 @@ use tracing_actix_web::TracingLogger;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
-const APP_NAME: LazyLock<String> = LazyLock::new(|| std::env::var("OTEL_SERVICE_NAME").unwrap()) ;
+static APP_NAME: LazyLock<String> = LazyLock::new(|| std::env::var("OTEL_SERVICE_NAME").unwrap());
 
-static RESOURCE: LazyLock<Resource> =
-    LazyLock::new(|| Resource::new(vec![KeyValue::new(resource::SERVICE_NAME, APP_NAME.to_string())]));
+static RESOURCE: LazyLock<Resource> = LazyLock::new(|| {
+    Resource::new(vec![KeyValue::new(
+        resource::SERVICE_NAME,
+        APP_NAME.to_string(),
+    )])
+});
+
+static PORT: LazyLock<u16> = LazyLock::new(|| std::env::var("PORT").unwrap().parse::<u16>().unwrap());
 
 #[get("/")]
 async fn index() -> impl Responder {
@@ -42,10 +48,10 @@ async fn main() -> std::io::Result<()> {
             .service(echo)
             .service(ping)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", PORT.clone()))?
     .run()
     .await?;
-    // Ensure all spans have been shipped to Jaeger.
+    // Ensure all spans have been shipped to Dashbord.
     opentelemetry::global::shutdown_tracer_provider();
 
     Ok(())

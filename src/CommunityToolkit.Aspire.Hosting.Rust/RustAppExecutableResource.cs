@@ -8,5 +8,5 @@
 public class RustAppExecutableResource(string name, string workingDirectory)
     : ExecutableResource(name, "cargo", workingDirectory), IResourceWithServiceDiscovery
 {
-    internal const string HttpEndpointName = "http";
+
 }
