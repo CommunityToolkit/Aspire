@@ -3,4 +3,8 @@
     <AdditionalPackageTags>hosting Rust</AdditionalPackageTags>
     <Description>A .NET Aspire for hosting Rust apps.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Rust.Tests"></InternalsVisibleTo>
+  </ItemGroup>
 </Project>

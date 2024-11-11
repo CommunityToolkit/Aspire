@@ -3,22 +3,54 @@
 
 using System.Net.Sockets;
 using Aspire.Hosting;
+using Aspire.Hosting.Tests.Utils;
+using CommunityToolkit.Aspire.Hosting.Rust.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
 public class AddRustAppTests
 {
     [Fact]
-    public void AddRustAppAddsAnnotationMetadata()
+    public async Task AddRustAppAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        var rustApp = appBuilder.AddRustApp("rust-app", "../../examples/rust/actix_api");
+        var workingDirectory = "../../examples/rust/actix_api";
+        var rustApp = appBuilder.AddRustApp("rust-app", workingDirectory);
 
         using var app = appBuilder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var containerResource = Assert.Single(appModel.Resources.OfType<RustAppExecutableResource>());
-        Assert.Equal("rust-app", containerResource.Name);
+        var resource = Assert.Single(appModel.Resources.OfType<RustAppExecutableResource>());
+        workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
+        Assert.Equal("rust-app", resource.Name);
+        Assert.Equal(workingDirectory, resource.WorkingDirectory);
+        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
+        Assert.Collection(args,
+            arg => Assert.Equal("run", arg),
+            arg => Assert.Equal(".", arg));
+    }
+
+    [Fact]
+    public async Task AddRustAppWithArgsAddsAnnotationMetadata()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var workingDirectory = "../../examples/rust/actix_api";
+        var rustApp = appBuilder.AddRustApp("rust-app", workingDirectory, ["--verbose"]);
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<RustAppExecutableResource>());
+        workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
+        Assert.Equal("rust-app", resource.Name);
+        Assert.Equal(workingDirectory, resource.WorkingDirectory);
+        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
+        Assert.Collection(args,
+            arg => Assert.Equal("run", arg),
+            arg => Assert.Equal(".", arg),
+            arg => Assert.Equal("--verbose", arg));
     }
 }
