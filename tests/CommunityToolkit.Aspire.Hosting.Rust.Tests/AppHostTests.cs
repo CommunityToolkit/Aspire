@@ -12,7 +12,8 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var appName = "rust-app";
         var httpClient = fixture.CreateHttpClient(appName);
 
-        await fixture.App.WaitForTextAsync("listening on", appName).WaitAsync(TimeSpan.FromMinutes(5));
+        var rns = fixture.App.Services.GetRequiredService<ResourceNotificationService>();
+        await rns.WaitForResourceHealthyAsync(appName);
 
         var response = await httpClient.GetAsync("/ping");
 
