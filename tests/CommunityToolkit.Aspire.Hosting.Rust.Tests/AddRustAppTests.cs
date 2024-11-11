@@ -25,6 +25,7 @@ public class AddRustAppTests
         workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         Assert.Equal("rust-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
+        Assert.Equal("cargo", resource.Command);
         var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
@@ -47,6 +48,7 @@ public class AddRustAppTests
         workingDirectory = Path.Combine(appBuilder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         Assert.Equal("rust-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
+        Assert.Equal("cargo", resource.Command);
         var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
