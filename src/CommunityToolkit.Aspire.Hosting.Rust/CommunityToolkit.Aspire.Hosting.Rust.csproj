@@ -3,7 +3,4 @@
     <AdditionalPackageTags>hosting Rust</AdditionalPackageTags>
     <Description>A .NET Aspire for hosting Rust apps.</Description>
   </PropertyGroup>
-  <ItemGroup>
-    <AdditionalFiles Remove="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
 </Project>

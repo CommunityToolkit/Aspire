@@ -31,7 +31,8 @@ public static class RustAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithRustDefaults()
-                      .WithArgs(allArgs);
+                      .WithArgs(allArgs)
+                      .PublishAsDockerFile();
     }
 
     private static IResourceBuilder<RustAppExecutableResource> WithRustDefaults(
