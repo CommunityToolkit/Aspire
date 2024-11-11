@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting Rust</AdditionalPackageTags>
+    <Description>A .NET Aspire integration for hosting Rust apps.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Rust.Tests"></InternalsVisibleTo>
+  </ItemGroup>
+</Project>
