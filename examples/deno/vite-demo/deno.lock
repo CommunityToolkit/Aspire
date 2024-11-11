@@ -2,6 +2,7 @@
   "version": "4",
   "specifiers": {
     "npm:@deno/vite-plugin@1": "1.0.0_vite@5.4.10",
+    "npm:@types/node@*": "22.5.4",
     "npm:@types/react-dom@^18.3.1": "18.3.1",
     "npm:@types/react@^18.3.11": "18.3.12",
     "npm:@vitejs/plugin-react@^4.3.3": "4.3.3_vite@5.4.10_@babel+core@7.25.9",
@@ -345,6 +346,12 @@
     "@types/estree@1.0.6": {
       "integrity": "sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw=="
     },
+    "@types/node@22.5.4": {
+      "integrity": "sha512-FDuKUJQm/ju9fT/SeX/6+gBzoPzlVCzfzmGkwKvRHQVxi4BntVbyIwf6a4Xn62mrvndLiml6z/UBXIdEVjQLXg==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
     "@types/prop-types@15.7.13": {
       "integrity": "sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA=="
     },
@@ -566,6 +573,9 @@
       "dependencies": [
         "has-flag"
       ]
+    },
+    "undici-types@6.19.8": {
+      "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
     },
     "update-browserslist-db@1.1.1_browserslist@4.24.2": {
       "integrity": "sha512-R8UzCaa9Az+38REPiJ1tXlImTJXlVfgHZsglwBD/k6nj76ctsH1E3q4doGrukiLQd3sGQYu56r5+lo5r94l29A==",
