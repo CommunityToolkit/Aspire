@@ -8,7 +8,7 @@ namespace Aspire.Hosting;
 public static partial class OllamaResourceBuilderExtensions
 {
     /// <summary>
-    /// Adds an administration web UI Ollama to the application model using Attu. This version the package defaults to the main tag of the Open WebUI container image
+    /// Adds an administration web UI Ollama to the application model using Open WebUI. This version the package defaults to the main tag of the Open WebUI container image
     /// </summary>
     /// <example>
     /// Use in application host with an Ollama resource
