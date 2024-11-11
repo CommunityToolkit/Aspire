@@ -1,2 +1,5 @@
 #nullable enable
-
+Aspire.Hosting.ApplicationModel.UvicornAppResource
+Aspire.Hosting.ApplicationModel.UvicornAppResource.UvicornAppResource(string! name, string! workingDirectory) -> void
+Aspire.Hosting.UvicornAppHostingExtension
+static Aspire.Hosting.UvicornAppHostingExtension.AddUvicornApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! projectDirectory, string! appName, string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.UvicornAppResource!>!

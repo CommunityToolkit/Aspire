@@ -12,12 +12,17 @@ In your AppHost project, install the package using the following command:
 dotnet add package CommunityToolkit.Aspire.Hosting.Uvicorn
 ```
 
+### Initialize the Python virtual environment
+
+Please refer to the [Python virtual environment](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/build-aspire-apps-with-python?tabs=powershell#initialize-the-python-virtual-environment) section for more information.
+
 ### Example usage
 
 Then, in the _Program.cs_ file of `AddUvicornApp`, define a Uvicorn resource, then call `Add`:
 
 ```csharp
-
+var uvicorn = builder.AddUvicornApp("uvicornapp", "../uvicornapp-api", "main:app")
+    .WithHttpEndpoint(env: "UVICORN_PORT");
 ```
 
 ## Additional Information
