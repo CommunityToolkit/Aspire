@@ -2,6 +2,7 @@
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Ollama;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Aspire.Hosting;
 
@@ -10,8 +11,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class OllamaResourceBuilderExtensions
 {
-    private const string ConnectionStringEnvironmentName = "ConnectionStrings__";
-
     /// <summary>
     /// Adds the Ollama container to the application model.
     /// </summary>
@@ -23,8 +22,6 @@ public static class OllamaResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
-
-        builder.Services.TryAddLifecycleHook<OllamaResourceLifecycleHook>();
 
         var resource = new OllamaResource(name);
         return builder.AddResource(resource)
@@ -55,63 +52,57 @@ public static class OllamaResourceBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaResource> AddModel(this IResourceBuilder<OllamaResource> builder, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
+
+        string sanitizedModelName = modelName.Split(':')[0].Split('/').Last().Replace('.', '-');
+        string resourceName = $"{builder.Resource.Name}-{sanitizedModelName}";
+
+        return AddModel(builder, resourceName, modelName);
+    }
+
+    /// <summary>
+    /// Adds a model to the Ollama container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="modelName">The name of the LLM to download on initial startup.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
+
+        builder.ApplicationBuilder.Services.TryAddLifecycleHook<OllamaModelResourceLifecycleHook>();
 
         builder.Resource.AddModel(modelName);
-        return builder;
+        var modelResource = new OllamaModelResource(name, modelName, builder.Resource);
+
+        return builder.ApplicationBuilder.AddResource(modelResource);
     }
 
     /// <summary>
-    /// Sets the default model to be configured on the Ollama server.
+    /// Adds a model from Hugging Face to the Ollama container. Only models in GGUF format are supported.
     /// </summary>
-    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
-    /// <param name="modelName">The name of the model.</param>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaResource> WithDefaultModel(this IResourceBuilder<OllamaResource> builder, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
 
-        builder.Resource.SetDefaultModel(modelName);
-        return builder;
-    }
+        builder.ApplicationBuilder.Services.TryAddLifecycleHook<OllamaModelResourceLifecycleHook>();
 
-    /// <summary>
-    /// Adds a reference to an Ollama resource to the application model.
-    /// </summary>
-    /// <typeparam name="T">The type of the resource to add Ollama to.</typeparam>
-    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
-    /// <param name="ollama">The Ollama resource to add as a reference.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>
-    /// This method adds the connection string and model references to the application model.
-    /// </remarks>
-    public static IResourceBuilder<T> WithReference<T>(this IResourceBuilder<T> builder, IResourceBuilder<OllamaResource> ollama) where T : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNull(ollama, nameof(ollama));
-
-        var resource = (IResourceWithConnectionString)ollama.Resource;
-        return builder.WithEnvironment(context =>
+        if (!modelName.StartsWith("hf.co/") && !modelName.StartsWith("huggingface.co/"))
         {
-            var connectionStringName = resource.ConnectionStringEnvironmentVariable ?? $"{ConnectionStringEnvironmentName}{resource.Name}";
+            modelName = "hf.co/" + modelName;
+        }
 
-            context.EnvironmentVariables[connectionStringName] = new ConnectionStringReference(resource, optional: false);
-
-            for (int i = 0; i < ollama.Resource.Models.Count; i++)
-            {
-                var model = ollama.Resource.Models[i];
-                context.EnvironmentVariables[$"Aspire__OllamaSharp__{resource.Name}__Models__{i}"] = model;
-
-                if (model == ollama.Resource.DefaultModel)
-                {
-                    context.EnvironmentVariables[$"Aspire__OllamaSharp__{resource.Name}__SelectedModel"] = model;
-                }
-            }
-        });
+        return AddModel(builder, name, modelName);
     }
 
     /// <summary>
@@ -153,7 +144,6 @@ public static class OllamaResourceBuilderExtensions
                                                         .WithImage(OllamaContainerImageTags.OpenWebUIImage, OllamaContainerImageTags.OpenWebUITag)
                                                         .WithImageRegistry(OllamaContainerImageTags.OpenWebUIRegistry)
                                                         .WithHttpEndpoint(targetPort: 8080, name: "http")
-                                                        .WithVolume("open-webui", "/app/backend/data")
                                                         .WithEnvironment(context => ConfigureOpenWebUIContainer(context, builder.Resource))
                                                         .ExcludeFromManifest();
 
@@ -161,6 +151,24 @@ public static class OllamaResourceBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Adds a data volume to the Open WebUI container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/> for the <see cref="OpenWebUIResource"/>.</param>
+    /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
+    /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [SuppressMessage("ApiDesign", "RS0026", Justification = "The method is named WithDataVolume to be consistent with other methods.")]
+    public static IResourceBuilder<OpenWebUIResource> WithDataVolume(this IResourceBuilder<OpenWebUIResource> builder, string? name = null, bool isReadOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+#pragma warning disable CTASPIRE001
+        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "openwebui"), "/app/backend/data", isReadOnly);
+#pragma warning restore CTASPIRE001
+    }
+        
 
     private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
     {

@@ -177,4 +177,93 @@ public class ResourceCreationTests
         Assert.Contains("--port", args);
         Assert.Contains("4280", args);
     }
+
+    [Fact]
+    public void SwaResourceHasHealthCheck()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddSwaEmulator("swa");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<SwaResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.Equal("swa", resource.Name);
+
+        var result = resource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations);
+
+        Assert.True(result);
+        Assert.NotNull(annotations);
+
+        Assert.Single(annotations);
+    }
+
+    [Fact]
+    public void AppResourceWillBeWaitedFor()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var appResource = builder
+                            .AddContainer("app", "test/container") // container image doesn't need to be valid as we aren't actually running it
+                            .WithHttpEndpoint();
+
+        builder.AddSwaEmulator("swa")
+            .WithAppResource(appResource);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<SwaResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.Equal("swa", resource.Name);
+
+        var result = resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations);
+
+        Assert.True(result);
+        Assert.NotNull(waitAnnotations);
+        Assert.Single(waitAnnotations);
+
+        var waitAnnotation = waitAnnotations.Single();
+        Assert.Equal(appResource.Resource, waitAnnotation.Resource);
+    }
+
+    [Fact]
+    public void ApiResourceWillBeWaitedFor()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var apiResource = builder
+                            .AddContainer("api", "test/container") // container image doesn't need to be valid as we aren't actually running it
+                            .WithHttpEndpoint();
+
+        builder.AddSwaEmulator("swa")
+            .WithApiResource(apiResource);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<SwaResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.Equal("swa", resource.Name);
+
+        var result = resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations);
+
+        Assert.True(result);
+        Assert.NotNull(waitAnnotations);
+        Assert.Single(waitAnnotations);
+
+        var waitAnnotation = waitAnnotations.Single();
+        Assert.Equal(apiResource.Resource, waitAnnotation.Resource);
+    }
 }
