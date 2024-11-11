@@ -134,6 +134,10 @@ jobs:
           path: |
             ${{ github.workspace }}/test-results/**
 
+      - name: List NuGet packages in step summary
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: ls -l ${{ github.workspace }}/nuget/*.nupkg >> $GITHUB_STEP_SUMMARY
+
   test-reporting:
     permissions:
       contents: read
