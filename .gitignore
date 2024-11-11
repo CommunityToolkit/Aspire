@@ -12,3 +12,4 @@ nuget
 .pnpm-store
 
 *.binlog
+/examples/rust/actix_api/target

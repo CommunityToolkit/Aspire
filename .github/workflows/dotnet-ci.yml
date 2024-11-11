@@ -83,6 +83,11 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('.github/workflows/dotnet-ci.yml') }}
           restore-keys: |
             ${{ runner.os }}-npm-
+      
+      - uses: Swatinem/rust-cache@v2
+        name: Cache Rust packages
+        with:
+          workspaces: "examples/rust/actix_api -> target"
 
       - name: Setup .NET dev certs
         if: ${{ matrix.os == 'ubuntu-latest' }}
