@@ -126,6 +126,10 @@ jobs:
           path: |
             ${{ github.workspace }}/test-results/**
 
+      - name: List NuGet packages in step summary
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: ls -l ${{ github.workspace }}/nuget/*.nupkg >> $GITHUB_STEP_SUMMARY
+
   publish-azure-artifacts:
     if: github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
     needs: build
