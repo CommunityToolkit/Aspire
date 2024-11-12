@@ -441,4 +441,97 @@ public class AddOllamaTests
                 Assert.True(annotation.IsHighlighted);
             });
     }
+
+    [Theory]
+    [InlineData("Redownload")]
+    [InlineData("Delete")]
+    [InlineData("ModelInfo")]
+    [InlineData("Stop")]
+    public void OllamaModelResourceCommandsUpdateState(string commandType)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var ollama = builder.AddOllama("ollama");
+        _ = ollama.AddModel("custom:tag");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
+
+        var command = Assert.Single(modelResource.Annotations.OfType<ResourceCommandAnnotation>(), (a => a.Type == commandType));
+
+        var context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = null,
+                ResourceType = modelResource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        var state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Disabled, state);
+
+        context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+                ResourceType = modelResource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Enabled, state);
+    }
+
+    [Theory]
+    [InlineData("ListAllModels")]
+    [InlineData("ListRunningModels")]
+    public void OllamaResourceCommandsUpdateState(string commandType)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        var command = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), (a => a.Type == commandType));
+
+        var context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = null,
+                ResourceType = resource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        var state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Disabled, state);
+
+        context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+                ResourceType = resource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Enabled, state);
+    }
 }
