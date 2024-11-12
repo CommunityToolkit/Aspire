@@ -10,7 +10,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 {
     [Theory]
     [InlineData("ollama")]
-    // [InlineData("ollama-openwebui")]
+    [InlineData("ollama-openwebui")]
     public async Task ResourceStartsAndRespondsOk(string resourceName)
     {
         await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
