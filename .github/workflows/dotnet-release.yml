@@ -88,6 +88,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
+      - uses: Swatinem/rust-cache@v2
+        name: Cache Rust packages
+        with:
+          workspaces: "examples/rust/actix_api -> target"
+
       - name: Setup .NET dev certs
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
@@ -141,7 +146,7 @@ jobs:
 
       - name: List NuGet packages in step summary
         if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: ls -l ${{ github.workspace }}/nuget/*.nupkg >> $GITHUB_STEP_SUMMARY
+        run: ls -1 ${{ github.workspace }}/nuget/*.nupkg >> $GITHUB_STEP_SUMMARY
 
   test-reporting:
     permissions:

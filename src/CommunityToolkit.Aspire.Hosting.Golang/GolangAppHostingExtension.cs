@@ -1,5 +1,5 @@
-﻿using CommunityToolkit.Aspire.Hosting.Golang.Utils;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
 

@@ -3,4 +3,8 @@
     <AdditionalPackageTags>hosting java</AdditionalPackageTags>
     <Description>A .NET Aspire for hosting Java apps using either the Java executable or container image.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\PathNormalizer.cs" Link="Utils\PathNormalizer.cs" />
+  </ItemGroup>
 </Project>

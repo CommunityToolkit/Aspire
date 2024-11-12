@@ -5,5 +5,8 @@
     <Description>A .NET Aspire for hosting Deno apps.</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\PathNormalizer.cs" Link="Utils\PathNormalizer.cs" />
+  </ItemGroup>
 
 </Project>

@@ -1,9 +1,9 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
-using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
 
