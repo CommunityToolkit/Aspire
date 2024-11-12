@@ -1,5 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Hosting.Rust.Utils;
+using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
 
