@@ -24,6 +24,8 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`Meilisearch`][meilisearch-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Meilisearch][meilisearch-client-shields]][meilisearch-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Meilisearch][meilisearch-client-shields-preview]][meilisearch-client-nuget-preview]  | An Aspire client integration for the [Meilisearch](https://github.com/meilisearch/meilisearch-dotnet) package.                                                                                                                 |
 | - **Learn More**: [`Hosting.Azure.DataApiBuilder`][dab-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder][dab-shields]][dab-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder][dab-shields-preview]][dab-nuget-preview]                   | A hosting integration for the [Azure Data API builder](https://learn.microsoft.com/en-us/azure/data-api-builder/overview).                                                                       |
 | - **Learn More**: [`Hosting.Deno`][deno-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Deno][deno-shields]][deno-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Deno][deno-shields-preview]][deno-nuget-preview]                                                              | A hosting integration for the Deno apps.                                                                       |
+| - **Learn More**: [`Hosting.SqlDatabaseProjects`][sql-database-projects-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects][sql-database-projects-shields]][sql-database-projects-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects][sql-database-projects-shields-preview]][sql-database-projects-nuget-preview]                 | A hosting integration for the SQL Databases Projects.                                                                       |
+| - **Learn More**: [`Hosting.Rust`][rust-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Rust][rust-shields]][rust-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Rust][rust-shields-preview]][rust-nuget-preview]                                                              | A hosting integration for the Rust apps.                                                                       |
 ## 🙌 Getting Started
 
 Each of the integrations in the toolkit is available as a NuGet package, and can be added to your .NET project. Refer to the table above for the available integrations and the documentation on how to use them.
@@ -111,3 +113,15 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [deno-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Deno/
 [deno-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Deno?label=nuget%20(preview)
 [deno-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Deno/absoluteLatest
+
+[sql-database-projects-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-sql-database-projects
+[sql-database-projects-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects
+[sql-database-projects-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/
+[sql-database-projects-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects?label=nuget%20(preview)
+[sql-database-projects-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/absoluteLatest
+
+[rust-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-rust
+[rust-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Rust
+[rust-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Rust/
+[rust-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Rust?label=nuget%20(preview)
+[rust-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Rust/absoluteLatest
