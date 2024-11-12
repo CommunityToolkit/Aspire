@@ -11,7 +11,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
     {
         var httpClient = fixture.CreateHttpClient("swa");
 
-        await fixture.ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("swa").WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/");
 
@@ -23,7 +23,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
     {
         var httpClient = fixture.CreateHttpClient("swa");
 
-        await fixture.ResourceNotificationService.WaitForResourceAsync("swa", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("swa").WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/api/weather");
 
