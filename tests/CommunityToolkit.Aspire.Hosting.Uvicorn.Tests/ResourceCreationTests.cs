@@ -20,5 +20,19 @@ public class ResourceCreationTests
         Assert.NotNull(resource);
 
         Assert.Equal("uvicorn", resource.Command);
+        Assert.Equal(NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, "../../examples/uvicorn/uvicornapp-api")), resource.WorkingDirectory);
+    }
+
+    private string NormalizePathForCurrentPlatform(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) == true)
+        {
+            return path;
+        }
+
+        // Fix slashes
+        path = path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+
+        return Path.GetFullPath(path);
     }
 }
