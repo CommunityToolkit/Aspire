@@ -15,7 +15,7 @@ public class OllamaFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     private const string model = "tinyllama";
 
-    [Fact(Skip = "This test is flaky and needs to be fixed.")]
+    [Fact]
     public async Task VerifyOllamaResource()
     {
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
