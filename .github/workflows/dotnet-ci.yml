@@ -89,6 +89,9 @@ jobs:
         with:
           workspaces: "examples/rust/actix_api -> target"
 
+      - name: Build rust example app
+        run: cargo build --manifest-path examples/rust/actix_api/Cargo.toml
+
       - name: Setup .NET dev certs
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
