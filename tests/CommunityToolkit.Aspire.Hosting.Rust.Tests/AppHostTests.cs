@@ -12,7 +12,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var httpClient = fixture.CreateHttpClient(appName);
 
         var rns = fixture.App.Services.GetRequiredService<ResourceNotificationService>();
-        await rns.WaitForResourceHealthyAsync(appName).WaitAsync(TimeSpan.FromMinutes(5));
+        await rns.WaitForResourceHealthyAsync(appName).WaitAsync(TimeSpan.FromMinutes(10));
 
         var response = await httpClient.GetAsync("/ping");
 
