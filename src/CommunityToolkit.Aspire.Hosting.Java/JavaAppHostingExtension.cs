@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
-
-using CommunityToolkit.Aspire.Hosting.Java.Utils;
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
 

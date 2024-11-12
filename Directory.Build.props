@@ -20,6 +20,7 @@
     <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <SharedDir>$(RepoRoot)src\Shared</SharedDir>
   </PropertyGroup>
 
   <PropertyGroup>
