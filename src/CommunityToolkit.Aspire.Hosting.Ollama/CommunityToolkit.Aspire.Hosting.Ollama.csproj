@@ -10,10 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Ollama.Tests" ></InternalsVisibleTo>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Ollama.Tests"></InternalsVisibleTo>
   </ItemGroup>
 </Project>

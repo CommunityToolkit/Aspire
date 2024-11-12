@@ -4,7 +4,7 @@
 using System.Net.Sockets;
 using Aspire.Hosting;
 using Aspire.Hosting.Tests.Utils;
-using CommunityToolkit.Aspire.Hosting.Rust.Utils;
+using CommunityToolkit.Aspire.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
 public class AddRustAppTests
