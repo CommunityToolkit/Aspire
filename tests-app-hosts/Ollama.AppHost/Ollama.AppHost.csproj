@@ -7,11 +7,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
-    <UserSecretsId>f39fb70f-21f3-4af9-89b4-3062ff4432e6</UserSecretsId>
+    <UserSecretsId>f39fb70f-21f3-4af9-89b4-3062ff4431e6</UserSecretsId>
+    <IsTestProject>false</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Ollama\CommunityToolkit.Aspire.Hosting.Ollama.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Ollama\CommunityToolkit.Aspire.Hosting.Ollama.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <ItemGroup>
