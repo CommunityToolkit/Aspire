@@ -55,8 +55,7 @@ public static partial class OllamaResourceBuilderExtensions
                 return CommandResults.Success();
             },
             displayDescription: $"Redownload the model {modelName}.",
-            iconName: "ArrowDownload",
-            isHighlighted: false
+            iconName: "ArrowDownload"
         ).AddModelResourceCommand(
             type: "Delete",
             displayName: "Delete Model",

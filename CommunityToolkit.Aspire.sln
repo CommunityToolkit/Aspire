@@ -125,6 +125,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Rust.Tests", "tests\CommunityToolkit.Aspire.Hosting.Rust.Tests\CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj", "{373472DA-BAEB-44B6-915D-1EF3DA845797}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests-app-hosts", "tests-app-hosts", "{79CBF217-CED1-4BB2-9A72-37D2429F83B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollama.AppHost", "tests-app-hosts\Ollama.AppHost\Ollama.AppHost.csproj", "{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -323,6 +327,10 @@ Global
 		{373472DA-BAEB-44B6-915D-1EF3DA845797}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{373472DA-BAEB-44B6-915D-1EF3DA845797}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{373472DA-BAEB-44B6-915D-1EF3DA845797}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -386,6 +394,8 @@ Global
 		{1E753568-E34B-4E93-93F8-43764171725D} = {662514C8-EAED-4EAB-91CE-893D4DE2469A}
 		{FB9B8F61-5125-452B-8332-938DCFA27366} = {662514C8-EAED-4EAB-91CE-893D4DE2469A}
 		{373472DA-BAEB-44B6-915D-1EF3DA845797} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{79CBF217-CED1-4BB2-9A72-37D2429F83B8} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92} = {79CBF217-CED1-4BB2-9A72-37D2429F83B8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
