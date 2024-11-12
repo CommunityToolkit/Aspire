@@ -20,7 +20,7 @@ public static class UvicornAppHostingExtension
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
     public static IResourceBuilder<UvicornAppResource> AddUvicornApp(
         this IDistributedApplicationBuilder builder,
-        string name, 
+        [ResourceName] string name, 
         string projectDirectory, 
         string appName,
         string[]? args = null)
