@@ -3,6 +3,8 @@
   <PropertyGroup>
     <AdditionalPackageTags>hosting meilisearch</AdditionalPackageTags>
     <Description>Meilisearch support for .NET Aspire.</Description>
+    <!--MeiliSearch package have vulnerable dependency-->
+    <NoWarn>NU1903</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
