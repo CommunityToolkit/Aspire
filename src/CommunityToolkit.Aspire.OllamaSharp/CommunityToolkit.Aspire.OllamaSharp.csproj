@@ -9,4 +9,8 @@
     <PackageReference Include="OllamaSharp" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
+  </ItemGroup>
+
 </Project>

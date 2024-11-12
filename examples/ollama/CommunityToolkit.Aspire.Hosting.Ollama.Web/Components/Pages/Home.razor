@@ -1,5 +1,5 @@
 ﻿@page "/"
-@using global::OllamaSharp
+@using Microsoft.Extensions.AI
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
@@ -7,6 +7,25 @@
 <h1>Ollama demo</h1>
 
 <p>Welcome to the Ollama demo!</p>
+
+<fieldset>
+    <legend>Model</legend>
+    <InputRadioGroup @bind-Value="_selectedClient">
+        <div>
+            <label>
+                <InputRadio Value="ServiceKeys.Phi3" />
+                @OllamaClient1.Metadata.ModelId
+            </label>
+        </div>
+        <div>
+            <label>
+                <InputRadio Value="ServiceKeys.Llama" />
+                @OllamaClient2.Metadata.ModelId
+            </label>
+        </div>
+    </InputRadioGroup>
+</fieldset>
+
 <p><input type="text" @bind-value="_prompt" />&nbsp;<button @onclick="GetPrompt">Ask</button></p>
 <p>@_response</p>
 
@@ -14,17 +33,37 @@
     private string _prompt = "";
     private string _response = "";
 
-    [Inject]
-    public required IOllamaApiClient OllamaClient { get; set; }
+    private string? _selectedClient;
+
+    [Inject(Key = ServiceKeys.Phi3)]
+    public required IChatClient OllamaClient1 { get; set; }
+
+    [Inject(Key = ServiceKeys.Llama)]
+    public required IChatClient OllamaClient2 { get; set; }
 
     private async Task GetPrompt()
     {
+        var client = _selectedClient switch
+        {
+            ServiceKeys.Phi3 => OllamaClient1,
+            ServiceKeys.Llama => OllamaClient2,
+            _ => null
+        };
+
         if (!string.IsNullOrWhiteSpace(_prompt))
         {
+            if (client is null)
+            {
+                _response = "No model selected";
+                return;
+            }
+
             bool gotResponse = false;
             _response = "Asking Ollama...";
-            Chat chat = new(OllamaClient, "You are a demo application");
-            await foreach (string answerToken in chat.Send(_prompt))
+
+            var stream = client.CompleteStreamingAsync(_prompt);
+
+            await foreach (var answerToken in stream)
             {
                 if (!gotResponse)
                 {
@@ -32,7 +71,7 @@
                     gotResponse = true;
                 }
 
-                _response += answerToken;
+                _response += answerToken.Text;
                 StateHasChanged();
             }
         }

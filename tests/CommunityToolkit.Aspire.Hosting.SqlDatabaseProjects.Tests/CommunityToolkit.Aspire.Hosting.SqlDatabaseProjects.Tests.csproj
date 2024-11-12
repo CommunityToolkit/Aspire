@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="..\..\examples\sql-database-projects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj" />
+  </ItemGroup>
+
+</Project>

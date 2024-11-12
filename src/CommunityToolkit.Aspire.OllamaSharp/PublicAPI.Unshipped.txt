@@ -1,2 +1,13 @@
 #nullable enable
-
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.DisableHealthChecks.get -> bool
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.DisableHealthChecks.set -> void
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Endpoint.get -> System.Uri?
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.Endpoint.set -> void
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.HealthCheckTimeout.get -> int?
+CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.HealthCheckTimeout.set -> void
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddKeyedOllamaSharpChatClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddKeyedOllamaSharpEmbeddingGenerator(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddOllamaSharpChatClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void
+*REMOVED*CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.ConnectionString.get -> string?
+*REMOVED*CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings.ConnectionString.set -> void
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddOllamaSharpEmbeddingGenerator(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void

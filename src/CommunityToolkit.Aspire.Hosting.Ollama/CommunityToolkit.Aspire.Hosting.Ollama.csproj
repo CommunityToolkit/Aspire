@@ -13,4 +13,7 @@
     <Compile Include="..\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Ollama.Tests" ></InternalsVisibleTo>
+  </ItemGroup>
 </Project>
