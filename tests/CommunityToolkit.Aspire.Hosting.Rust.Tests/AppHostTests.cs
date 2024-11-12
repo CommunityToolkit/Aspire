@@ -2,19 +2,15 @@ using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
 
-public class AppHostTests(
-    AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Rust_AppHost>>
 {
     [Fact]
     public async Task ResourceStartsAndRespondsOk()
     {
         var appName = "rust-app";
-        var httpClient = fixture.CreateHttpClient(appName);
-
         var logger = fixture.App.Services.GetRequiredService<ILogger<AppHostTests>>();
 
         logger.LogInformation($"[Custom]: Waiting for resource {appName} to be healthy...");
@@ -26,6 +22,7 @@ public class AppHostTests(
         logger.LogInformation($"[Custom]: Resource event: {JsonSerializer.Serialize(re, new JsonSerializerOptions { WriteIndented = true })}");
         logger.LogInformation("[Custom]: Pinging the resource...");
 
+        var httpClient = fixture.CreateHttpClient(appName);
         var response = await httpClient.GetAsync("/ping");
 
         logger.LogInformation($"[Custom]: Response: {response.StatusCode}");
