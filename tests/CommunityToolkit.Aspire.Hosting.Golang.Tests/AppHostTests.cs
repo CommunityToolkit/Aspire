@@ -12,7 +12,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var appName = "golang";
         var httpClient = fixture.CreateHttpClient(appName);
 
-        await fixture.App.WaitForTextAsync("Listening and serving HTTP on :8080", appName).WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.App.WaitForTextAsync("Listening and serving HTTP on :", appName).WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/ping");
 

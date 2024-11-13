@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.Golang.Extensions.Tests;
 public class ResourceCreationTests
 {
     [Fact]
-    public void DefaultViteAppUsesNpm()
+    public void DefaultGolangApp()
     {
         var builder = DistributedApplication.CreateBuilder();
 
