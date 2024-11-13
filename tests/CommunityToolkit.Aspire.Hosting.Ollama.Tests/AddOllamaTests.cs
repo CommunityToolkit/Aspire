@@ -356,14 +356,14 @@ public class AddOllamaTests
         Assert.Collection(annotations,
             annotation =>
             {
-                Assert.Equal("ListAllModels", annotation.Type);
+                Assert.Equal("ListAllModels", annotation.Name);
                 Assert.Equal("List All Models", annotation.DisplayName);
                 Assert.Equal("List all models in the Ollama container.", annotation.DisplayDescription);
                 Assert.Equal("AppsList", annotation.IconName);
             },
             annotation =>
             {
-                Assert.Equal("ListRunningModels", annotation.Type);
+                Assert.Equal("ListRunningModels", annotation.Name);
                 Assert.Equal("List Running Models", annotation.DisplayName);
                 Assert.Equal("List all running models in the Ollama container.", annotation.DisplayDescription);
                 Assert.Equal("AppsList", annotation.IconName);
@@ -410,7 +410,7 @@ public class AddOllamaTests
         Assert.Collection(annotations,
             annotation =>
             {
-                Assert.Equal("Redownload", annotation.Type);
+                Assert.Equal("Redownload", annotation.Name);
                 Assert.Equal("Redownload Model", annotation.DisplayName);
                 Assert.Equal("Redownload the model custom:tag.", annotation.DisplayDescription);
                 Assert.Equal("ArrowDownload", annotation.IconName);
@@ -418,7 +418,7 @@ public class AddOllamaTests
             },
             annotation =>
             {
-                Assert.Equal("Delete", annotation.Type);
+                Assert.Equal("Delete", annotation.Name);
                 Assert.Equal("Delete Model", annotation.DisplayName);
                 Assert.Equal("Delete the model custom:tag.", annotation.DisplayDescription);
                 Assert.Equal("Delete", annotation.IconName);
@@ -426,7 +426,7 @@ public class AddOllamaTests
             },
             annotation =>
             {
-                Assert.Equal("ModelInfo", annotation.Type);
+                Assert.Equal("ModelInfo", annotation.Name);
                 Assert.Equal("Print Model Info", annotation.DisplayName);
                 Assert.Equal("Print the info for the model custom:tag.", annotation.DisplayDescription);
                 Assert.Equal("Info", annotation.IconName);
@@ -434,7 +434,7 @@ public class AddOllamaTests
             },
             annotation =>
             {
-                Assert.Equal("Stop", annotation.Type);
+                Assert.Equal("Stop", annotation.Name);
                 Assert.Equal("Stop Model", annotation.DisplayName);
                 Assert.Equal("Stop the model custom:tag.", annotation.DisplayDescription);
                 Assert.Equal("Stop", annotation.IconName);
@@ -459,7 +459,7 @@ public class AddOllamaTests
 
         var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
 
-        var command = Assert.Single(modelResource.Annotations.OfType<ResourceCommandAnnotation>(), (a => a.Type == commandType));
+        var command = Assert.Single(modelResource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == commandType);
 
         var context = new UpdateCommandStateContext
         {
@@ -504,7 +504,7 @@ public class AddOllamaTests
 
         var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
 
-        var command = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), (a => a.Type == commandType));
+        var command = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == commandType);
 
         var context = new UpdateCommandStateContext
         {
