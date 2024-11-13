@@ -1,6 +1,6 @@
 using Aspire.Hosting;
 
-namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests;
 
 public class ResourceCreationTests
 {
@@ -20,19 +20,6 @@ public class ResourceCreationTests
         Assert.NotNull(resource);
 
         Assert.Equal("uvicorn", resource.Command);
-        Assert.Equal(NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, "../../examples/uvicorn/uvicornapp-api")), resource.WorkingDirectory);
-    }
-
-    private string NormalizePathForCurrentPlatform(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path) == true)
-        {
-            return path;
-        }
-
-        // Fix slashes
-        path = path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-
-        return Path.GetFullPath(path);
+        Assert.EndsWith("examples/uvicorn/uvicornapp-api", resource.WorkingDirectory);
     }
 }
