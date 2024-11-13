@@ -45,7 +45,7 @@ public static partial class OllamaResourceBuilderExtensions
         var modelResource = new OllamaModelResource(name, modelName, builder.Resource);
 
         modelResource.AddModelResourceCommand(
-            type: "Redownload",
+            name: "Redownload",
             displayName: "Redownload Model",
             executeCommand: async (modelResource, ollamaClient, logger, notificationService, ct) =>
             {
@@ -57,7 +57,7 @@ public static partial class OllamaResourceBuilderExtensions
             displayDescription: $"Redownload the model {modelName}.",
             iconName: "ArrowDownload"
         ).AddModelResourceCommand(
-            type: "Delete",
+            name: "Delete",
             displayName: "Delete Model",
             executeCommand: async (modelResource, ollamaClient, logger, notificationService, ct) =>
             {
@@ -70,7 +70,7 @@ public static partial class OllamaResourceBuilderExtensions
             iconName: "Delete",
             confirmationMessage: $"Are you sure you want to delete the model {modelName}?"
         ).AddModelResourceCommand(
-            type: "ModelInfo",
+            name: "ModelInfo",
             displayName: "Print Model Info",
             executeCommand: async (modelResource, ollamaClient, logger, notificationService, ct) =>
             {
@@ -82,7 +82,7 @@ public static partial class OllamaResourceBuilderExtensions
             displayDescription: $"Print the info for the model {modelName}.",
             iconName: "Info"
         ).AddModelResourceCommand(
-            type: "Stop",
+            name: "Stop",
             displayName: "Stop Model",
             executeCommand: async (modelResource, ollamaClient, logger, notificationService, ct) =>
             {
@@ -134,7 +134,7 @@ public static partial class OllamaResourceBuilderExtensions
 
     private static OllamaModelResource AddModelResourceCommand(
         this OllamaModelResource modelResource,
-        string type,
+        string name,
         string displayName,
         Func<OllamaModelResource, IOllamaApiClient, ILogger, ResourceNotificationService, CancellationToken, Task<ExecuteCommandResult>> executeCommand,
         string? displayDescription,
@@ -145,7 +145,7 @@ public static partial class OllamaResourceBuilderExtensions
         bool isHighlighted = false)
     {
         modelResource.Annotations.Add(new ResourceCommandAnnotation(
-            type: type,
+            name: name,
             displayName: displayName,
             updateState: context =>
                 context.ResourceSnapshot.State?.Text == KnownResourceStates.Running ?
