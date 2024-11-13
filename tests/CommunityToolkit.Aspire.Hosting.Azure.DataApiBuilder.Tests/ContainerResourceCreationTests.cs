@@ -55,6 +55,18 @@ public class ContainerResourceCreationTests
 
         // defaults to ./dab-config.json which exists in this test project root
         builder.AddDataAPIBuilder("dab");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderContainerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var configFileAnnotations));
+
+        var annotation = Assert.Single(configFileAnnotations);
+        Assert.EndsWith("/dab-config.json", annotation.Source);
+        Assert.Equal("/App/dab-config.json", annotation.Target);
     }
 
     [Fact]
@@ -63,6 +75,18 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         builder.AddDataAPIBuilder("dab", httpPort: 1234);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderContainerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpointAnnotations));
+
+        var annotation = Assert.Single(endpointAnnotations);
+        Assert.Equal(1234, annotation.Port);
+        Assert.Equal(DataApiBuilderContainerResource.HttpEndpointPort, annotation.TargetPort);
     }
 
     [Fact]
@@ -72,6 +96,18 @@ public class ContainerResourceCreationTests
 
         // file exists in test project root
         builder.AddDataAPIBuilder("dab", configFilePaths: "./dab-config.json");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderContainerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var configFileAnnotations));
+
+        var annotation = Assert.Single(configFileAnnotations);
+        Assert.EndsWith("/dab-config.json", annotation.Source);
+        Assert.Equal("/App/dab-config.json", annotation.Target);
     }
 
     [Fact]
@@ -81,6 +117,24 @@ public class ContainerResourceCreationTests
 
         // file exists in test project root
         builder.AddDataAPIBuilder("dab", httpPort: 1234, configFilePaths: "./dab-config.json");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderContainerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpointAnnotations));
+
+        var annotation = Assert.Single(endpointAnnotations);
+        Assert.Equal(1234, annotation.Port);
+        Assert.Equal(DataApiBuilderContainerResource.HttpEndpointPort, annotation.TargetPort);
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var configFileAnnotations));
+
+        var configAnnotation = Assert.Single(configFileAnnotations);
+        Assert.EndsWith("/dab-config.json", configAnnotation.Source);
+        Assert.Equal("/App/dab-config.json", configAnnotation.Target);
     }
 
     [Fact]
@@ -99,6 +153,28 @@ public class ContainerResourceCreationTests
 
         // both files exist in test project root
         builder.AddDataAPIBuilder("dab", "./dab-config.json", "./dab-config-2.json");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderContainerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var configFileAnnotations));
+
+        Assert.Equal(2, configFileAnnotations.Count());
+        Assert.Collection(
+            configFileAnnotations,
+            a =>
+            {
+                Assert.EndsWith("/dab-config.json", a.Source);
+                Assert.Equal("/App/dab-config.json", a.Target);
+            },
+            a =>
+            {
+                Assert.EndsWith("/dab-config-2.json", a.Source);
+                Assert.Equal("/App/dab-config-2.json", a.Target);
+            });
     }
 
     [Fact]
