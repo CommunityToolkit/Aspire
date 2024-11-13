@@ -16,4 +16,7 @@ cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
 npm ci
 cd ../../../
 
+echo Install Aspire 9 templates
+dotnet new install Aspire.ProjectTemplates
+
 echo Done!
