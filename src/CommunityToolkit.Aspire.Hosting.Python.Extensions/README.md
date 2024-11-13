@@ -14,7 +14,7 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Python.Extensions
 
 ### Initialize the Python virtual environment
 
-Please refer to the [Python virtual environment](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/build-aspire-apps-with-python?tabs=powershell#initialize-the-python-virtual-environment) section for more information.
+Please refer to the [Python virtual environment](https://learn.microsoft.com/dotnet/aspire/get-started/build-aspire-apps-with-python?tabs=powershell#initialize-the-python-virtual-environment) section for more information.
 
 ### Example usage
 
