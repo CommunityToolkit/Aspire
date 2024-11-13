@@ -27,7 +27,7 @@ var uvicorn = builder.AddUvicornApp("uvicornapp", "../uvicornapp-api", "main:app
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-uvicorn
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-python-extensions
 
 ## Feedback & contributing
 
