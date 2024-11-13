@@ -11,9 +11,10 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>9</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).0.0-rc.1.24511.1</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).0.0</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
-    <AspNetCoreVersion>8.0.10</AspNetCoreVersion>
+    <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
+    <DotNetExtensionsVersion>9.0.0</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
     <TestContainersVersion>4.0.0</TestContainersVersion>
     <IsPackable>false</IsPackable>
