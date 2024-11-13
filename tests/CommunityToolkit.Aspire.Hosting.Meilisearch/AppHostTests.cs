@@ -12,7 +12,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task ResourceStartsAndRespondsOk()
     {
         var resourceName = "meilisearch";
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var response = await httpClient.GetAsync("/");
@@ -24,7 +24,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task ApiServiceCreateData()
     {
         var resourceName = "apiservice";
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var createResponse = await httpClient.GetAsync("/create");
