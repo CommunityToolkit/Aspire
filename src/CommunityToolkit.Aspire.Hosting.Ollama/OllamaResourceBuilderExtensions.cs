@@ -27,7 +27,7 @@ public static partial class OllamaResourceBuilderExtensions
 
         var resource = new OllamaResource(name)
             .AddServerResourceCommand(
-                type: "ListAllModels",
+                name: "ListAllModels",
                 displayName: "List All Models",
                 executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
                 {
@@ -46,7 +46,7 @@ public static partial class OllamaResourceBuilderExtensions
                 displayDescription: "List all models in the Ollama container.",
                 iconName: "AppsList"
             ).AddServerResourceCommand(
-                type: "ListRunningModels",
+                name: "ListRunningModels",
                 displayName: "List Running Models",
                 executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
                 {
@@ -91,7 +91,7 @@ public static partial class OllamaResourceBuilderExtensions
 
     private static OllamaResource AddServerResourceCommand(
         this OllamaResource ollamaResource,
-        string type,
+        string name,
         string displayName,
         Func<OllamaResource, IOllamaApiClient, ILogger, ResourceNotificationService, CancellationToken, Task<ExecuteCommandResult>> executeCommand,
         string? displayDescription,
@@ -102,7 +102,7 @@ public static partial class OllamaResourceBuilderExtensions
         bool isHighlighted = false)
     {
         ollamaResource.Annotations.Add(new ResourceCommandAnnotation(
-            type: type,
+            name: name,
             displayName: displayName,
             updateState: context =>
                 context.ResourceSnapshot.State?.Text == KnownResourceStates.Running ?
