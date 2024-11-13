@@ -1,11 +1,14 @@
 {
   "name": ".NET Aspire Community Toolkit",
-
   "image": "mcr.microsoft.com/devcontainers/dotnet:8.0-jammy",
-
   "features": {
     "ghcr.io/azure/azure-dev/azd:latest": {},
-    "ghcr.io/devcontainers/features/dotnet:latest": {},
+    "ghcr.io/devcontainers/features/dotnet:latest": {
+      "version": "8.0",
+      "additionalVersions": [
+        "9.0"
+      ]
+    },
     "ghcr.io/devcontainers/features/github-cli:latest": {},
     "ghcr.io/devcontainers/features/java:1": {
       "installGradle": true,
@@ -18,7 +21,6 @@
     "ghcr.io/devcontainers/features/go:latest": {},
     "ghcr.io/devcontainers/features/rust:latest": {}
   },
-
   "customizations": {
     "vscode": {
       "extensions": [
@@ -36,15 +38,11 @@
       ]
     }
   },
-
   "remoteUser": "vscode",
-
   "postCreateCommand": "./.devcontainer/post-create.sh > ~/post-create.log",
-
   "hostRequirements": {
     "memory": "8gb"
   },
-
   "portsAttributes": {
     "4280": {
       "label": "SWA Emulator",
