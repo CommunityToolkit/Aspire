@@ -1,8 +1,8 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting;
 using Aspire.Hosting.Lifecycle;
-using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Hosting;
+using CommunityToolkit.Aspire.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Deno;
 /// <summary>

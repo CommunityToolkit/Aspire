@@ -1,8 +1,9 @@
-<Project Sdk="MSBuild.Sdk.SqlProj/2.9.1">
+<Project Sdk="MSBuild.Sdk.SqlProj/3.0.0-beta.2">
     <PropertyGroup>
         <SqlServerVersion>Sql150</SqlServerVersion>
         <RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
         <!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->
+        <NoWarn>SQLPROJ0001</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
