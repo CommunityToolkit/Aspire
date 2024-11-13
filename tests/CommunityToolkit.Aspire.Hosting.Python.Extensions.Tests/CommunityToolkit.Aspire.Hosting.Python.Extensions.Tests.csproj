@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\uvicorn\Aspire.CommunityToolkit.Hosting.Uvicorn.AppHost\CommunityToolkit.Aspire.Hosting.Uvicorn.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\python\CommunityToolkit.Aspire.Hosting.Python.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.Python.Extensions.AppHost.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 

@@ -1,10 +1,10 @@
 using CommunityToolkit.Aspire.Testing;
 using FluentAssertions;
 
-namespace CommunityToolkit.Aspire.Hosting.Uvicorn.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests;
 
 #pragma warning disable CTASPIRE001
-public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Uvicorn_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Uvicorn_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Python_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Python_Extensions_AppHost>>
 {
     [Fact]
     public async Task ResourceStartsAndRespondsOk()

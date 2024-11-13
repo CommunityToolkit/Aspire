@@ -129,13 +129,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests-app-hosts", "tests-ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollama.AppHost", "tests-app-hosts\Ollama.AppHost\Ollama.AppHost.csproj", "{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Uvicorn", "src\Aspire.CommunityToolkit.Hosting.Uvicorn\CommunityToolkit.Aspire.Hosting.Uvicorn.csproj", "{4DCF987E-9071-4899-8B5F-5FDAF2BC77D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Python.Extensions", "src\CommunityToolkit.Aspire.Hosting.Python.Extensions\CommunityToolkit.Aspire.Hosting.Python.Extensions.csproj", "{4DCF987E-9071-4899-8B5F-5FDAF2BC77D3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "uvicorn", "uvicorn", "{DDDAABA3-D8F0-47C6-98E0-AB57F28404CF}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "python", "python", "{DDDAABA3-D8F0-47C6-98E0-AB57F28404CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Uvicorn.AppHost", "examples\uvicorn\Aspire.CommunityToolkit.Hosting.Uvicorn.AppHost\CommunityToolkit.Aspire.Hosting.Uvicorn.AppHost.csproj", "{C686CEA0-8B89-470B-84A2-0264040DCDC8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Python.Extensions.AppHost", "examples\python\CommunityToolkit.Aspire.Hosting.Python.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.Python.Extensions.AppHost.csproj", "{C686CEA0-8B89-470B-84A2-0264040DCDC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Uvicorn.Tests", "tests\CommunityToolkit.Aspire.Hosting.Uvicorn.Tests\CommunityToolkit.Aspire.Hosting.Uvicorn.Tests.csproj", "{5B825CF9-E8B8-4960-9330-648ED0323FE0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests", "tests\CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests\CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests.csproj", "{5B825CF9-E8B8-4960-9330-648ED0323FE0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

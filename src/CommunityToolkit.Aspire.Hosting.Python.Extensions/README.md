@@ -1,4 +1,4 @@
-# CommunityToolkit.Aspire.Hosting.Uvicorn library
+# CommunityToolkit.Aspire.Hosting.Python.Extensions library
 
 Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Uvicorn applications.
 
@@ -9,7 +9,7 @@ Provides extensions methods and resource definitions for the .NET Aspire AppHost
 In your AppHost project, install the package using the following command:
 
 ```dotnetcli
-dotnet add package CommunityToolkit.Aspire.Hosting.Uvicorn
+dotnet add package CommunityToolkit.Aspire.Hosting.Python.Extensions
 ```
 
 ### Initialize the Python virtual environment

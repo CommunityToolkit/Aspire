@@ -1,6 +1,6 @@
 using Aspire.Hosting;
 
-namespace CommunityToolkit.Aspire.Hosting.Uvicorn.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Extensions.Tests;
 
 public class ResourceCreationTests
 {
