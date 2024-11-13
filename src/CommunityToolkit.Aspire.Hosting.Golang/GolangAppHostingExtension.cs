@@ -1,5 +1,5 @@
-﻿using CommunityToolkit.Aspire.Hosting.Golang.Utils;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
 
@@ -17,7 +17,7 @@ public static class GolangAppHostingExtension
     /// <param name="port">This is the port that will be given to other resource to communicate with this resource.</param>"
     /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, int port = 8080, string[]? args = null)
+    public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[]? args = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
@@ -32,7 +32,6 @@ public static class GolangAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithGolangDefaults()
-                      .WithHttpEndpoint(port: port, name: GolangAppExecutableResource.HttpEndpointName, isProxied: false)
                       .WithArgs(allArgs);
     }
 

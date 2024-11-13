@@ -3,6 +3,8 @@
   <PropertyGroup>
     <AdditionalPackageTags>Meilisearch client</AdditionalPackageTags>
     <Description>A Meilisearch client that integrates with Aspire, including health checks, logging, and telemetry.</Description>
+    <!--MeiliSearch package have vulnerable dependency-->
+    <NoWarn>NU1903</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
+    <Compile Include="$(SharedDir)\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
   </ItemGroup>
 
 </Project>

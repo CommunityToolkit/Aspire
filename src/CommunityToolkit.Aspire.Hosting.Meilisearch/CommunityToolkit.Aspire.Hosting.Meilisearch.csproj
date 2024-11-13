@@ -3,10 +3,12 @@
   <PropertyGroup>
     <AdditionalPackageTags>hosting meilisearch</AdditionalPackageTags>
     <Description>Meilisearch support for .NET Aspire.</Description>
+    <!--MeiliSearch package have vulnerable dependency-->
+    <NoWarn>NU1903</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Meilisearch\MeilisearchHealthCheck.cs" Link="MeilisearchHealthCheck.cs"></Compile>
   </ItemGroup>
 

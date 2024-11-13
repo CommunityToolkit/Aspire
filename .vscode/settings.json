@@ -3,5 +3,8 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[csharp]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp"
-  }
+  },
+  "rust-analyzer.linkedProjects": [
+    "examples/rust/actix_api/Cargo.toml",
+  ]
 }

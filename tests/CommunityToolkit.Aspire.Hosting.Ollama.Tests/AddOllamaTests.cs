@@ -316,4 +316,222 @@ public class AddOllamaTests
         Assert.Equal("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS", modelResource.ModelName);
         Assert.Equal(resource, modelResource.Parent);
     }
+
+    [Fact]
+    public void OllamaRegistersHttpHealthCheck()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+        Assert.Contains("http", annotation.Key);
+        Assert.Contains("/", annotation.Key);
+        Assert.Contains(resource.Name, annotation.Key);
+    }
+
+    [Fact]
+    public void OllamaRegistrationContainsResourceCommandAnnotations()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ResourceCommandAnnotation>(out var annotations));
+
+        Assert.Equal(2, annotations.Count());
+
+        Assert.Collection(annotations,
+            annotation =>
+            {
+                Assert.Equal("ListAllModels", annotation.Type);
+                Assert.Equal("List All Models", annotation.DisplayName);
+                Assert.Equal("List all models in the Ollama container.", annotation.DisplayDescription);
+                Assert.Equal("AppsList", annotation.IconName);
+            },
+            annotation =>
+            {
+                Assert.Equal("ListRunningModels", annotation.Type);
+                Assert.Equal("List Running Models", annotation.DisplayName);
+                Assert.Equal("List all running models in the Ollama container.", annotation.DisplayDescription);
+                Assert.Equal("AppsList", annotation.IconName);
+            });
+    }
+
+    [Fact]
+    public void OllamaModelResourceRegistersCustomHealthCheck()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var ollama = builder.AddOllama("ollama");
+        _ = ollama.AddModel("custom:tag");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
+
+        Assert.True(modelResource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+        Assert.Contains(modelResource.Name, annotation.Key);
+        Assert.Contains(modelResource.ModelName, annotation.Key);
+    }
+
+    [Fact]
+    public void OllamaModelResourceRegistersResourceCommandAnnotations()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var ollama = builder.AddOllama("ollama");
+        _ = ollama.AddModel("custom:tag");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
+
+        Assert.True(modelResource.TryGetAnnotationsOfType<ResourceCommandAnnotation>(out var annotations));
+
+        Assert.Equal(4, annotations.Count());
+
+        Assert.Collection(annotations,
+            annotation =>
+            {
+                Assert.Equal("Redownload", annotation.Type);
+                Assert.Equal("Redownload Model", annotation.DisplayName);
+                Assert.Equal("Redownload the model custom:tag.", annotation.DisplayDescription);
+                Assert.Equal("ArrowDownload", annotation.IconName);
+                Assert.False(annotation.IsHighlighted);
+            },
+            annotation =>
+            {
+                Assert.Equal("Delete", annotation.Type);
+                Assert.Equal("Delete Model", annotation.DisplayName);
+                Assert.Equal("Delete the model custom:tag.", annotation.DisplayDescription);
+                Assert.Equal("Delete", annotation.IconName);
+                Assert.False(annotation.IsHighlighted);
+            },
+            annotation =>
+            {
+                Assert.Equal("ModelInfo", annotation.Type);
+                Assert.Equal("Print Model Info", annotation.DisplayName);
+                Assert.Equal("Print the info for the model custom:tag.", annotation.DisplayDescription);
+                Assert.Equal("Info", annotation.IconName);
+                Assert.False(annotation.IsHighlighted);
+            },
+            annotation =>
+            {
+                Assert.Equal("Stop", annotation.Type);
+                Assert.Equal("Stop Model", annotation.DisplayName);
+                Assert.Equal("Stop the model custom:tag.", annotation.DisplayDescription);
+                Assert.Equal("Stop", annotation.IconName);
+                Assert.True(annotation.IsHighlighted);
+            });
+    }
+
+    [Theory]
+    [InlineData("Redownload")]
+    [InlineData("Delete")]
+    [InlineData("ModelInfo")]
+    [InlineData("Stop")]
+    public void OllamaModelResourceCommandsUpdateState(string commandType)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var ollama = builder.AddOllama("ollama");
+        _ = ollama.AddModel("custom:tag");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
+
+        var command = Assert.Single(modelResource.Annotations.OfType<ResourceCommandAnnotation>(), (a => a.Type == commandType));
+
+        var context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = null,
+                ResourceType = modelResource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        var state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Disabled, state);
+
+        context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+                ResourceType = modelResource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Enabled, state);
+    }
+
+    [Theory]
+    [InlineData("ListAllModels")]
+    [InlineData("ListRunningModels")]
+    public void OllamaResourceCommandsUpdateState(string commandType)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        var command = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), (a => a.Type == commandType));
+
+        var context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = null,
+                ResourceType = resource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        var state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Disabled, state);
+
+        context = new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+                ResourceType = resource.GetType().Name,
+                Properties = [],
+            },
+            ServiceProvider = app.Services
+        };
+
+        state = command.UpdateState(context);
+        Assert.Equal(ResourceCommandState.Enabled, state);
+    }
 }

@@ -20,9 +20,7 @@
     <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
-
-    <ToolkitMinorVersion>0</ToolkitMinorVersion>
-    <ToolkitPatchVersion>0</ToolkitPatchVersion>
+    <SharedDir>$(RepoRoot)src\Shared</SharedDir>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,5 +31,13 @@
   <PropertyGroup>
     <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Versioning -->
+  <PropertyGroup>
+    <ToolkitMinorVersion>0</ToolkitMinorVersion>
+    <ToolkitPatchVersion>0</ToolkitPatchVersion>
+
+    <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
   </PropertyGroup>
 </Project>
