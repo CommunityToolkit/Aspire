@@ -1,5 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Hosting.Golang.Utils;
+using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
 
@@ -20,8 +20,8 @@ public static class UvicornAppHostingExtension
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
     public static IResourceBuilder<UvicornAppResource> AddUvicornApp(
         this IDistributedApplicationBuilder builder,
-        [ResourceName] string name, 
-        string projectDirectory, 
+        [ResourceName] string name,
+        string projectDirectory,
         string appName,
         string[]? args = null)
     {
@@ -30,11 +30,11 @@ public static class UvicornAppHostingExtension
         return builder.AddUvicornApp(name, projectDirectory, appName, ".venv", args);
     }
 
-    private static IResourceBuilder<UvicornAppResource> AddUvicornApp(this IDistributedApplicationBuilder builder, 
-        string name, 
-        string projectDirectory, 
+    private static IResourceBuilder<UvicornAppResource> AddUvicornApp(this IDistributedApplicationBuilder builder,
+        string name,
+        string projectDirectory,
         string appName,
-        string virtualEnvironmentPath, 
+        string virtualEnvironmentPath,
         string[]? args = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
