@@ -29,7 +29,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName,KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
         var httpClient = fixture.CreateHttpClient(resourceName);
 
-        var createResponse = await httpClient.GetAsync("/create").WaitAsync(TimeSpan.FromMinutes(2));
+        var createResponse = await httpClient.GetAsync("/create");
         createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var getResponse = await httpClient.GetAsync("/get");
