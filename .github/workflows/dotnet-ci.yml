@@ -34,6 +34,14 @@ jobs:
           dotnet-version: |
             8.0.x
             9.0.x
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install Uvicorn
+        run: |
+          python -m pip install --upgrade pip
+          pip install uvicorn
       - uses: actions/setup-go@v5
         name: Set up Go
         with:
