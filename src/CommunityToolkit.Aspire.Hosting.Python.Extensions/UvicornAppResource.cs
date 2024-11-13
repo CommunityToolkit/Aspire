@@ -1,8 +1,6 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+using Aspire.Hosting.Python;
 
 namespace Aspire.Hosting.ApplicationModel;
 
 public class UvicornAppResource(string name, string workingDirectory)
-    : ExecutableResource(name, "uvicorn", workingDirectory), IResourceWithServiceDiscovery;
+    : PythonAppResource(name, "uvicorn", workingDirectory), IResourceWithServiceDiscovery;

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);ASPIREHOSTINGPYTHON001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
