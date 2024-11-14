@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
 
 namespace Aspire.Hosting;
@@ -28,7 +29,9 @@ public static class BunAppExtensions
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
         ArgumentException.ThrowIfNullOrEmpty(entryPoint, nameof(entryPoint));
 
-        var resource = new BunAppResource(name, workingDirectory ?? Path.Combine("..", name));
+        workingDirectory ??= Path.Combine("..", name);
+
+        var resource = new BunAppResource(name, PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory)));
 
         string[] args = watch ? ["--watch", "run", entryPoint] : ["run", entryPoint];
 

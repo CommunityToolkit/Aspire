@@ -118,7 +118,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        Assert.Equal("src", resource.WorkingDirectory);
+        Assert.EndsWith("src", resource.WorkingDirectory);
     }
 
     [Fact]
