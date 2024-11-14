@@ -23,14 +23,21 @@
 # CommunityToolkit.Aspire.Meilisearch
 # CommunityToolkit.Aspire.Hosting.Meilisearch
 
-/examples/meilisearch/_ @alirexaa
-/src/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @alirexaa
-/tests/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @alirexaa
-/src/CommunityToolkit.Aspire.Meilisearch/_ @alirexaa
-/tests/CommunityToolkit.Aspire.Meilisearch/_ @alirexaa
+/examples/meilisearch/_ @Alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @Alirexaa
+/src/CommunityToolkit.Aspire.Meilisearch/_ @Alirexaa
+/tests/CommunityToolkit.Aspire.Meilisearch/_ @Alirexaa
 
 # CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects
 
 /examples/sql-database-projects/_ @ErikEJ @jmezach
 /src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/_ @ErikEJ @jmezach
 /tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/_ @ErikEJ @jmezach
+
+
+# CommunityToolkit.Aspire.Hosting.Rust
+
+/examples/rust/_ @Alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Rust/_ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Rust/_ @Alirexaa

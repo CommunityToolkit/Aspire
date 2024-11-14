@@ -10,4 +10,8 @@ public class DataApiBuilderContainerResource(string name, string? entrypoint = n
     : ContainerResource(name, entrypoint), IResourceWithServiceDiscovery
 {
     internal const string HttpEndpointName = "http";
+    internal const string HttpsEndpointName = "https";
+
+    internal const int HttpEndpointPort = 5000;
+    internal const int HttpsEndpointPort = 5001;
 }
