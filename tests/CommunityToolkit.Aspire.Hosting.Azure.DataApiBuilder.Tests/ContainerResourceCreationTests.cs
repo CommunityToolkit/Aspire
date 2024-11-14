@@ -65,7 +65,7 @@ public class ContainerResourceCreationTests
         Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var configFileAnnotations));
 
         var annotation = Assert.Single(configFileAnnotations);
-        Assert.EndsWith("/dab-config.json", annotation.Source);
+        Assert.EndsWith("dab-config.json", annotation.Source);
         Assert.Equal("/App/dab-config.json", annotation.Target);
     }
 
@@ -106,7 +106,7 @@ public class ContainerResourceCreationTests
         Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var configFileAnnotations));
 
         var annotation = Assert.Single(configFileAnnotations);
-        Assert.EndsWith("/dab-config.json", annotation.Source);
+        Assert.EndsWith("dab-config.json", annotation.Source);
         Assert.Equal("/App/dab-config.json", annotation.Target);
     }
 
@@ -133,7 +133,7 @@ public class ContainerResourceCreationTests
         Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var configFileAnnotations));
 
         var configAnnotation = Assert.Single(configFileAnnotations);
-        Assert.EndsWith("/dab-config.json", configAnnotation.Source);
+        Assert.EndsWith("dab-config.json", configAnnotation.Source);
         Assert.Equal("/App/dab-config.json", configAnnotation.Target);
     }
 
@@ -167,12 +167,12 @@ public class ContainerResourceCreationTests
             configFileAnnotations,
             a =>
             {
-                Assert.EndsWith("/dab-config.json", a.Source);
+                Assert.EndsWith("dab-config.json", a.Source);
                 Assert.Equal("/App/dab-config.json", a.Target);
             },
             a =>
             {
-                Assert.EndsWith("/dab-config-2.json", a.Source);
+                Assert.EndsWith("dab-config-2.json", a.Source);
                 Assert.Equal("/App/dab-config-2.json", a.Target);
             });
     }
