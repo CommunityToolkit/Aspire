@@ -24,11 +24,17 @@ public static class BunAppExtensions
         string entryPoint = "index.ts",
         bool watch = false)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+        ArgumentException.ThrowIfNullOrEmpty(entryPoint, nameof(entryPoint));
+
         var resource = new BunAppResource(name, workingDirectory ?? Path.Combine("..", name));
+
+        string[] args = watch ? ["--watch", "run", entryPoint] : ["run", entryPoint];
 
         return builder.AddResource(resource)
             .WithBunDefaults()
-            .WithArgs([watch ? "--watch" : "", "run", entryPoint]);
+            .WithArgs(args);
     }
 
     private static IResourceBuilder<BunAppResource> WithBunDefaults(
