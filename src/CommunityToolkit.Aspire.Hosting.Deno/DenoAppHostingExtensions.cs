@@ -1,10 +1,10 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting;
 using Aspire.Hosting.Lifecycle;
 using Microsoft.Extensions.Hosting;
 using CommunityToolkit.Aspire.Utils;
+using CommunityToolkit.Aspire.Hosting.Deno;
 
-namespace CommunityToolkit.Aspire.Hosting.Deno;
+namespace Aspire.Hosting;
 /// <summary>
 /// Extension methods to support adding Deno to the <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>

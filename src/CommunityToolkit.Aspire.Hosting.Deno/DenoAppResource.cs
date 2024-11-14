@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 
-namespace CommunityToolkit.Aspire.Hosting.Deno;
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a Deno application.
