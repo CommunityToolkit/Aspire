@@ -3,4 +3,8 @@
     <Description>An Aspire component leveraging the Data API Builder container.</Description>
     <AdditionalPackageTags>api dataapibuilder hosting</AdditionalPackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests"></InternalsVisibleTo>
+  </ItemGroup>
 </Project>
