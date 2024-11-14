@@ -49,6 +49,8 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`Hosting.MySql.Extensions`][mysql-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.MySql.Extensions][mysql-ext-shields]][mysql-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.MySql.Extensions][mysql-ext-shields-preview]][mysql-ext-nuget-preview]                                                                              | An integration that contains some additional extensions for hosting MySql container.                                                                                        |
 | - **Learn More**: [`Hosting.MinIO`][minio-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Minio][minio-hosting-shields]][minio-hosting-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Minio][minio-hosting-shields-preview]][minio-hosting-nuget-preview]                                                                                           | An Aspire hosting integration to setup a [MinIO S3](https://min.io/) storage.                                                                                               |
 | - **Learn More**: [`MinIO.Client`][minio-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Minio.Client][minio-client-shields]][minio-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Client.Minio][minio-client-shields-preview]][minio-client-nuget-preview]                                                                                                  | An Aspire client integration for the [MinIO](https://github.com/minio/minio-dotnet) package.                                                                                |
+| - **Learn More**: [`Hosting.SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields]][surrealdb-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields-preview]][surrealdb-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [SurrealDB](https://surrealdb.com/) container.                                                                                 |
+| - **Learn More**: [`SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields]][surrealdb-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields-preview]][surrealdb-client-nuget-preview]                                                                                       | An Aspire client integration for the [SurrealDB](https://github.com/surrealdb/surrealdb.net/) package.                                                                      |
 
 ## 🙌 Getting Started
 
@@ -257,3 +259,12 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [minio-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Minio.Client/
 [minio-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Minio.Client?label=nuget%20(preview)
 [minio-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Minio.Client/absoluteLatest
+[surrealdb-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-surrealdb
+[surrealdb-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.SurrealDb
+[surrealdb-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.SurrealDb/
+[surrealdb-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.SurrealDb?label=nuget%20(preview)
+[surrealdb-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.SurrealDb/absoluteLatest
+[surrealdb-client-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.SurrealDb
+[surrealdb-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/
+[surrealdb-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.SurrealDb?label=nuget%20(preview)
+[surrealdb-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/absoluteLatest
