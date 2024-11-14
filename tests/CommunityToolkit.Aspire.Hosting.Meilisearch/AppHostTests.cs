@@ -26,10 +26,10 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var resourceName = "apiservice";
 
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("meilisearch").WaitAsync(TimeSpan.FromMinutes(5));
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName,KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
         var httpClient = fixture.CreateHttpClient(resourceName);
 
-        var createResponse = await httpClient.GetAsync("/create");
+        var createResponse = await httpClient.GetAsync("/create").WaitAsync(TimeSpan.FromMinutes(5));
         createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var getResponse = await httpClient.GetAsync("/get");

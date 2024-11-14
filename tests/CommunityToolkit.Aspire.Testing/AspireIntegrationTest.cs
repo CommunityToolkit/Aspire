@@ -26,7 +26,15 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
                 else
                     builder.SetMinimumLevel(LogLevel.Information);
             })
-            .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
+            .ConfigureHttpClientDefaults(clientBuilder =>
+                clientBuilder.AddStandardResilienceHandler(opt =>
+                {
+                    TimeSpan timeSpan = TimeSpan.FromMinutes(2);
+                    opt.AttemptTimeout.Timeout = timeSpan;
+                    opt.CircuitBreaker.SamplingDuration = timeSpan * 2;
+                    opt.TotalRequestTimeout.Timeout = timeSpan * 3;
+                }
+            ));
 
         base.OnBuilderCreated(applicationBuilder);
     }
