@@ -20,6 +20,7 @@
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />    
   </ItemGroup>
   <ItemGroup Label="Core Packages">
+    <PackageVersion Include="Bogus" Version="35.6.1" />
     <!-- AspNetCore packages -->
     <PackageVersion Include="AspNetCore.HealthChecks.EventStore.gRPC" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
@@ -41,6 +42,7 @@
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
+    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.7.0" />
     <PackageVersion Include="SurrealDb.Net" Version="0.6.0" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0" />
