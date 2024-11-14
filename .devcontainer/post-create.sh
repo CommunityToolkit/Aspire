@@ -19,4 +19,7 @@ cd ../../../
 echo Install Aspire 9 templates
 dotnet new install Aspire.ProjectTemplates
 
+echo Installing Bun
+curl -fsSL https://bun.sh/install | bash
+
 echo Done!

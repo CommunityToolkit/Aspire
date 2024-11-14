@@ -65,8 +65,14 @@ jobs:
           run_install: false
 
       - uses: denoland/setup-deno@v2
+        name: Setup Deno
         with:
           deno-version: v2.x
+
+      - uses: oven-sh/setup-bun@v2
+        name: Setup Bun
+        with:
+          bun-version: latest
 
       - uses: actions/cache@v4
         name: Cache NuGet packages
@@ -175,3 +181,4 @@ jobs:
     needs: build
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
+
