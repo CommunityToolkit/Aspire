@@ -1,5 +1,5 @@
-﻿using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder;
 
 namespace Aspire.Hosting;
 
@@ -9,29 +9,67 @@ namespace Aspire.Hosting;
 public static class DataApiBuilderHostingExtension
 {
     /// <summary>
-    /// Adds a DataAPIBuilder application to the application model. Executes the containerized DataAPIBuilder app.
+    /// Adds a DataAPIBuilder application to the application model. Executes the pre-built containerized DataAPIBuilder engine.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="configFilePath">The path to the config file for Data API Builder.</param>"
-    /// <param name="port">The port number for the Data API Builder container.</param>"
+    /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>"
+    /// <remarks>
+    /// At this time, this .NET Aspire DAB integration only supports HTTPS ports. 
+    /// You can <see href="https://learn.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-8.0#running-pre-built-container-images-with-https">deploy DAB with HTTPS and custom certs</see> in production.
+    /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        string configFilePath = "./dab-config.json",
-        int? port = null)
+        params string[] configFilePaths)
+    {
+        return builder.AddDataAPIBuilder(name, null, configFilePaths);
+    }
+
+    /// <summary>
+    /// Adds a DataAPIBuilder application to the application model. Executes the pre-built containerized DataAPIBuilder engine.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="httpPort">The HTTP port number for the Data API Builder container.</param>"
+    /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>"
+    /// <remarks>
+    /// At this time, this .NET Aspire DAB integration only supports HTTPS ports. 
+    /// You can <see href="https://learn.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-8.0#running-pre-built-container-images-with-https">deploy DAB with HTTPS and custom certs</see> in production.
+    /// </remarks>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        int? httpPort = null,
+        params string[] configFilePaths)
     {
         ArgumentNullException.ThrowIfNull("Service name must be specified.", nameof(name));
-        ArgumentNullException.ThrowIfNull("Config file path must be specified.", nameof(configFilePath));
 
         var resource = new DataApiBuilderContainerResource(name);
 
         var rb = builder.AddResource(resource)
-            .WithAnnotation(new ContainerImageAnnotation { Image = DataApiBuilderContainerImageTags.Image, Tag = DataApiBuilderContainerImageTags.Tag, Registry = DataApiBuilderContainerImageTags.Registry })
-            .WithHttpEndpoint(port: port, targetPort: 5000, name: DataApiBuilderContainerResource.HttpEndpointName)
+            .WithImage(DataApiBuilderContainerImageTags.Image)
+            .WithImageTag(DataApiBuilderContainerImageTags.Tag)
+            .WithImageRegistry(DataApiBuilderContainerImageTags.Registry)
+            .WithHttpEndpoint(port: httpPort,
+                targetPort: DataApiBuilderContainerResource.HttpEndpointPort,
+                name: DataApiBuilderContainerResource.HttpEndpointName)
             .WithDataApiBuilderDefaults();
 
-        rb.WithBindMount(configFilePath, "/App/dab-config.json", true);
+        // Use default config file path if no paths are provided
+        if (configFilePaths is [])
+        {
+            configFilePaths = ["./dab-config.json"];
+        }
+
+        foreach (var configFilePath in configFilePaths)
+        {
+            var configFileName = File.Exists(configFilePath)
+                ? Path.GetFileName(configFilePath)
+                : throw new FileNotFoundException($"Config file not found: {configFilePath}");
+
+            rb.WithBindMount(configFilePath, $"/App/{configFileName}", true);
+        }
 
         return rb;
     }
