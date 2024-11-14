@@ -1,4 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Lifecycle;
+using CommunityToolkit.Aspire.Hosting.Bun;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
 
@@ -38,6 +40,17 @@ public static class BunAppExtensions
         return builder.AddResource(resource)
             .WithBunDefaults()
             .WithArgs(args);
+    }
+
+    /// <summary>
+    /// Ensures the Bun packages are installed before the application starts using Bun as the package manager.
+    /// </summary>
+    /// <param name="resource">The Bun app resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource)
+    {
+        resource.ApplicationBuilder.Services.TryAddLifecycleHook<BunPackageInstallerLifecycleHook>();
+        return resource;
     }
 
     private static IResourceBuilder<BunAppResource> WithBunDefaults(
