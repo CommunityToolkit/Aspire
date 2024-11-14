@@ -141,6 +141,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.SurrealDb", "src\CommunityToolkit.Aspire.SurrealDb\CommunityToolkit.Aspire.SurrealDb.csproj", "{151B8E17-1B77-456F-ABDA-0B073815212F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "surrealdb", "surrealdb", "{C0EC3C39-5C97-4EC9-943F-A79B5AE551D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost", "examples\surrealdb\CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost\CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost.csproj", "{B5B903D1-072D-49C2-AB06-065923E660F0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults", "examples\surrealdb\CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults\CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj", "{3ACB71BF-27B3-4B21-A4F8-E86296CB9C3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService", "examples\surrealdb\CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService\CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService.csproj", "{E4A8D5E9-1307-45E2-8495-88B39AF67277}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -363,6 +371,18 @@ Global
 		{151B8E17-1B77-456F-ABDA-0B073815212F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{151B8E17-1B77-456F-ABDA-0B073815212F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{151B8E17-1B77-456F-ABDA-0B073815212F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5B903D1-072D-49C2-AB06-065923E660F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5B903D1-072D-49C2-AB06-065923E660F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5B903D1-072D-49C2-AB06-065923E660F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5B903D1-072D-49C2-AB06-065923E660F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ACB71BF-27B3-4B21-A4F8-E86296CB9C3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ACB71BF-27B3-4B21-A4F8-E86296CB9C3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ACB71BF-27B3-4B21-A4F8-E86296CB9C3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ACB71BF-27B3-4B21-A4F8-E86296CB9C3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4A8D5E9-1307-45E2-8495-88B39AF67277}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4A8D5E9-1307-45E2-8495-88B39AF67277}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4A8D5E9-1307-45E2-8495-88B39AF67277}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4A8D5E9-1307-45E2-8495-88B39AF67277}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -434,6 +454,10 @@ Global
 		{2CC61B84-CF97-4CE7-A08F-2EECF4AEAD92} = {79CBF217-CED1-4BB2-9A72-37D2429F83B8}
 		{65A9BB78-8622-4E0B-9237-A88010DC3CC0} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{151B8E17-1B77-456F-ABDA-0B073815212F} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{C0EC3C39-5C97-4EC9-943F-A79B5AE551D9} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{B5B903D1-072D-49C2-AB06-065923E660F0} = {C0EC3C39-5C97-4EC9-943F-A79B5AE551D9}
+		{3ACB71BF-27B3-4B21-A4F8-E86296CB9C3A} = {C0EC3C39-5C97-4EC9-943F-A79B5AE551D9}
+		{E4A8D5E9-1307-45E2-8495-88B39AF67277} = {C0EC3C39-5C97-4EC9-943F-A79B5AE551D9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
