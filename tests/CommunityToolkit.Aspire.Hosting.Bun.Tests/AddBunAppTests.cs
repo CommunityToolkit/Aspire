@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.Tests.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Bun.Tests;
 
@@ -21,7 +22,7 @@ public class AddBunAppTests
     }
 
     [Fact]
-    public void BunAppDefaultArgs()
+    public async Task BunAppDefaultArgs()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -33,14 +34,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var annotations));
-
-        var annotation = Assert.Single(annotations);
-
-        List<object> args = [];
-        var ctx = new CommandLineArgsCallbackContext(args);
-
-        annotation.Callback(ctx);
+        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
 
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
@@ -49,7 +43,7 @@ public class AddBunAppTests
     }
 
     [Fact]
-    public void BunAppWatchArgs()
+    public async Task BunAppWatchArgs()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -61,14 +55,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var annotations));
-
-        var annotation = Assert.Single(annotations);
-
-        List<object> args = [];
-        var ctx = new CommandLineArgsCallbackContext(args);
-
-        annotation.Callback(ctx);
+        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
 
         Assert.Collection(args,
             arg => Assert.Equal("--watch", arg),
@@ -78,7 +65,7 @@ public class AddBunAppTests
     }
 
     [Fact]
-    public void BunAppWithCustomEntryPoint()
+    public async Task BunAppWithCustomEntryPoint()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -90,14 +77,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var annotations));
-
-        var annotation = Assert.Single(annotations);
-
-        List<object> args = [];
-        var ctx = new CommandLineArgsCallbackContext(args);
-
-        annotation.Callback(ctx);
+        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
 
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
