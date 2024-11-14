@@ -1,0 +1,14 @@
+﻿#nullable enable
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.DisableHealthChecks.get -> bool
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.DisableHealthChecks.set -> void
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.HealthCheckTimeout.get -> int?
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.HealthCheckTimeout.set -> void
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.Lifetime.get -> Microsoft.Extensions.DependencyInjection.ServiceLifetime
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.Lifetime.set -> void
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.Options.get -> Microsoft.Extensions.DependencyInjection.SurrealDbOptions?
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.Options.set -> void
+CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings.SurrealDbClientSettings() -> void
+Microsoft.Extensions.Hosting.AspireSurrealDbExtensions
+static Microsoft.Extensions.Hosting.AspireSurrealDbExtensions.AddKeyedSurrealClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings!>? configureSettings = null) -> void
+static Microsoft.Extensions.Hosting.AspireSurrealDbExtensions.AddSurrealClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.SurrealDb.SurrealDbClientSettings!>? configureSettings = null) -> void
