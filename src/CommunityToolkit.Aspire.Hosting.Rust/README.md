@@ -17,7 +17,7 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Rust
 Then, in the _Program.cs_ file of `AppHost`, define a Rust resource, then call `AddRustApp`:
 
 ```csharp
-var golang = builder.AddRustApp("rust-app", "../actix_api");
+var rustApp = builder.AddRustApp("rust-app", "../actix_api");
 ```
 
 ## Additional Information
