@@ -27,6 +27,7 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`Hosting.SqlDatabaseProjects`][sql-database-projects-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects][sql-database-projects-shields]][sql-database-projects-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects][sql-database-projects-shields-preview]][sql-database-projects-nuget-preview]                 | A hosting integration for the SQL Databases Projects.                                                                       |
 | - **Learn More**: [`Hosting.Rust`][rust-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Rust][rust-shields]][rust-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Rust][rust-shields-preview]][rust-nuget-preview]                                                              | A hosting integration for the Rust apps.                                                                       |
 | - **Learn More**: [`Hosting.Bun`][bun-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Bun][bun-shields]][bun-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Bun][bun-shields-preview]][bun-nuget-preview]                                                                     | A hosting integration for the Bun apps.                                                                       |
+| - **Learn More**: [`Hosting.Python.Extensions`][python-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Python.Extensions][nodejs-ext-shields]][python-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Python.Extensions][python-ext-shields-preview]][python-ext-nuget-preview] | An integration that contains some additional extensions for running python applications                                                                                                                                       |
 ## 🙌 Getting Started
 
 Each of the integrations in the toolkit is available as a NuGet package, and can be added to your .NET project. Refer to the table above for the available integrations and the documentation on how to use them.
@@ -132,3 +133,9 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [bun-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Bun/
 [bun-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Bun?label=nuget%20(preview)
 [bun-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Bun/absoluteLatest
+
+[python-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-python-extensions
+[python-ext-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Python.Extensions
+[python-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Python.Extensions/
+[python-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Python.Extensions?label=nuget%20(preview)
+[python-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Python.Extensions/absoluteLatest
