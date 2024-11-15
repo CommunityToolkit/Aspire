@@ -34,3 +34,12 @@
 /examples/sql-database-projects/_ @ErikEJ @jmezach
 /src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/_ @ErikEJ @jmezach
 /tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/_ @ErikEJ @jmezach
+
+# CommunityToolkit.Aspire.SurrealDb
+# CommunityToolkit.Aspire.Hosting.SurrealDb
+
+/examples/surrealdb/_ @Odonno
+/src/CommunityToolkit.Aspire.Hosting.SurrealDb/_ @Odonno
+/tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/_ @Odonno
+/src/CommunityToolkit.Aspire.SurrealDb/_ @Odonno
+/tests/CommunityToolkit.Aspire.SurrealDb.Tests/_ @Odonno
