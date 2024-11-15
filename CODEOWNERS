@@ -21,6 +21,7 @@
 /tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/ @tommasodotNET @FBoucher
 
 # CommunityToolkit.Aspire.Meilisearch
+
 # CommunityToolkit.Aspire.Hosting.Meilisearch
 
 /examples/meilisearch/ @Alirexaa
@@ -35,7 +36,6 @@
 /src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
 /tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
 
-
 # CommunityToolkit.Aspire.Hosting.Rust
 
 /examples/rust/ @Alirexaa
@@ -43,6 +43,7 @@
 /tests/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
 
 # CommunityToolkit.Aspire.EventStore
+
 # CommunityToolkit.Aspire.Hosting.EventStore
 
 /examples/eventstore/ @fredimachado
@@ -63,8 +64,18 @@
 /src/CommunityToolkit.Aspire.Hosting.Ngrok/ @esskar
 /tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/ @esskar
 
-# CommunityToolkit.Aspire.Dapr.*
+# CommunityToolkit.Aspire.Dapr.\*
 
 /examples/dapr**/ @FullStackChef @WhitWaldo @Paule96
 /src/CommunityToolkit.Aspire.Hosting.Dapr**/ @FullStackChef @WhitWaldo @Paule96
-/tests/CommunityToolkit.Aspire.Hosting.Dapr**.Tests/ @FullStackChef @WhitWaldo @Paule96
+/tests/CommunityToolkit.Aspire.Hosting.Dapr\*\*.Tests/ @FullStackChef @WhitWaldo @Paule96
+
+# CommunityToolkit.Aspire.SurrealDb
+
+# CommunityToolkit.Aspire.Hosting.SurrealDb
+
+/examples/surrealdb/ @Odonno
+/src/CommunityToolkit.Aspire.Hosting.SurrealDb/ @Odonno
+/tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/ @Odonno
+/src/CommunityToolkit.Aspire.SurrealDb/ @Odonno
+/tests/CommunityToolkit.Aspire.SurrealDb.Tests/ @Odonno
