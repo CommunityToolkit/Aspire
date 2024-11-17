@@ -71,29 +71,15 @@ body:
     attributes:
       label: IDE version
       description: What's the exact build number of your IDE? (For Visual Studio, go to Help -> About Microsoft Visual Studio)
-  - type: checkboxes
+  - type: textarea
     id: nuget-packages
     attributes:
       label: Nuget packages
+      render: text
       description: Which NuGet packages have you used? Include the version number.
-      options:
-        - label: CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
-        - label: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps
-        - label: CommunityToolkit.Aspire.Hosting.Deno
-        - label: CommunityToolkit.Aspire.Hosting.Golang
-        - label: CommunityToolkit.Aspire.Hosting.Java
-        - label: CommunityToolkit.Aspire.Hosting.Meilisearch
-        - label: CommunityToolkit.Aspire.Hosting.NodeJS.Extensions
-        - label: CommunityToolkit.Aspire.Hosting.Ollama
-        - label: CommunityToolkit.Aspire.Meilisearch
-        - label: CommunityToolkit.Aspire.OllamaSharp
-  - type: input
-    id: nuget-package-version
-    validations:
-      required: true
-    attributes:
-      label: Nuget package version(s)
-      description: What's the exact version number of the Nuget package(s) you're using?
+      placeholder: |
+           Example:
+           CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder (9.0.0)
   - type: textarea
     id: additional-context
     attributes:
