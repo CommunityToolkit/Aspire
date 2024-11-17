@@ -15,7 +15,7 @@ public static class UvicornAppHostingExtension
     /// <param name="name">The name of the Uvicorn application.</param>
     /// <param name="projectDirectory">The directory of the project containing the Uvicorn application.</param>
     /// <param name="appName">The name of the uvicorn app.</param>
-    /// <param name="scriptArgs">Optional arguments to pass to the script.</param>
+    /// <param name="args">Optional arguments to pass to the script.</param>
     /// <returns>An <see cref="IResourceBuilder{UvicornAppResource}"/> for the Uvicorn application resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
     public static IResourceBuilder<UvicornAppResource> AddUvicornApp(
