@@ -41,7 +41,7 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.2" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="9.0.0-beta.24562.13" />
     <!-- External packages -->
-    <PackageVersion Include="OllamaSharp" Version="4.0.6" />
+    <PackageVersion Include="OllamaSharp" Version="4.0.7" />
     <PackageVersion Include="MeiliSearch" Version="0.15.3" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.4.92" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
