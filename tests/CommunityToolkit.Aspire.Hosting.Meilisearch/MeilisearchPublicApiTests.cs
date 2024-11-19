@@ -77,7 +77,7 @@ public class MeilisearchPublicApiTests
         var masterKey = builder.AddParameter("masterKey");
         const string name = null!;
 
-        var action = () => new MeilisearchResource(name, masterKey.Resource);
+        var action = () => new MeilisearchResource(name!, masterKey.Resource);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(name), exception.ParamName);
