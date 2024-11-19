@@ -63,6 +63,7 @@ public abstract class ConformanceTests<TService, TOptions>
     /// Populates the Configuration with everything that is required by the Component
     /// </summary>
     /// <param name="configuration"></param>
+    /// <param name="key"></param>
     protected abstract void PopulateConfiguration(ConfigurationManager configuration, string? key = null);
 
     /// <summary>
