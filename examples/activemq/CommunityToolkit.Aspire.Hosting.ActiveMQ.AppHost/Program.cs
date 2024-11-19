@@ -11,6 +11,7 @@ var amq = builder.AddActiveMQ("amq",
         .WithEndpoint(port: 8161, targetPort: 8161, name: "web", scheme: "http");
 
 builder.AddProject<CommunityToolkit_Aspire_Hosting_ActiveMQ_MassTransit>("masstransitExample")
-    .WithReference(amq);
+    .WithReference(amq)
+    .WaitFor(amq);
 
 builder.Build().Run();

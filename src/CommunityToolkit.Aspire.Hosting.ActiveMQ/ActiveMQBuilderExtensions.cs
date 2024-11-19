@@ -33,6 +33,9 @@ public static class ActiveMQBuilderExtensions
         int? port = null,
         string scheme = "tcp")
     {
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(scheme, nameof(scheme));
+        
         // don't use special characters in the password, since it goes into a URI
         ParameterResource passwordParameter = password?.Resource
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
