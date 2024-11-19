@@ -7,5 +7,5 @@ internal static class ActiveMQContainerImageTags
 {
     public const string Registry = "docker.io";
     public const string Image = "apache/activemq-classic";
-    public const string Tag = "6.1.0";
+    public const string Tag = "6.1.2";
 }

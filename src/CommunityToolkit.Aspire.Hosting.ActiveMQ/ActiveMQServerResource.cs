@@ -8,6 +8,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 public class ActiveMQServerResource : ContainerResource, IResourceWithConnectionString, IResourceWithEnvironment
 {
+    private readonly string _scheme;
     internal const string PrimaryEndpointName = "tcp";
     private const string DefaultUserName = "admin";
 
@@ -17,19 +18,20 @@ public class ActiveMQServerResource : ContainerResource, IResourceWithConnection
     /// <param name="name">The name of the resource.</param>
     /// <param name="userName">A parameter that contains the ActiveMQ server user name, or <see langword="null"/> to use a default value.</param>
     /// <param name="password">A parameter that contains the ActiveMQ server password.</param>
-    /// <param name="endpointName">A parameter that contains the endpointname for the connection e.g. tcp or activemq (default tcp)</param>
+    /// <param name="scheme">Scheme used in the connectionstring (e.g. tcp or activemq, see MassTransit)</param>
     public ActiveMQServerResource(string name, ParameterResource? userName, ParameterResource password,
-        string endpointName = PrimaryEndpointName) : base(name)
+        string scheme) : base(name)
     {
+        _scheme = scheme;
         ArgumentNullException.ThrowIfNull(password);
 
-        PrimaryEndpoint = new EndpointReference(this, endpointName);
+        PrimaryEndpoint = new EndpointReference(this, PrimaryEndpointName);
         UserNameParameter = userName;
         PasswordParameter = password;
     }
 
     /// <summary>
-    /// Gets the primary endpoint for the Redis server.
+    /// Gets the primary endpoint for the ActiveMQ server.
     /// </summary>
     public EndpointReference PrimaryEndpoint { get; }
 
@@ -53,5 +55,5 @@ public class ActiveMQServerResource : ContainerResource, IResourceWithConnection
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"{PrimaryEndpointName}://{UserNameReference}:{PasswordParameter}@{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+            $"{_scheme}://{UserNameReference}:{PasswordParameter}@{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
 }

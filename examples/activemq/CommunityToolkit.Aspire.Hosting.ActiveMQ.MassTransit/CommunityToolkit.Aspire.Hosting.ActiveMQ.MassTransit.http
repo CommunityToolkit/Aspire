@@ -1,0 +1,6 @@
+@CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit_HostAddress = http://localhost:5004
+
+POST http://localhost:5004/send/Hello%20World
+Accept: application/json
+
+###

@@ -24,24 +24,25 @@ public static class ActiveMQBuilderExtensions
     /// <param name="userName">The parameter used to provide the user name for the ActiveMQ resource. If <see langword="null"/> a default value will be used.</param>
     /// <param name="password">The parameter used to provide the password for the ActiveMQ resource. If <see langword="null"/> a random password will be generated.</param>
     /// <param name="port">The host port that the underlying container is bound to when running locally.</param>
-    /// <param name="endpointName">The name of the endpoint, e.g. tcp or activemq. Defaults to tcp.</param>
+    /// <param name="scheme">The scheme of the endpoint, e.g. tcp or activemq (for masstransit). Defaults to tcp.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<ActiveMQServerResource> AddActiveMQ(this IDistributedApplicationBuilder builder,
         string name,
         IResourceBuilder<ParameterResource>? userName = null,
         IResourceBuilder<ParameterResource>? password = null,
         int? port = null,
-        string endpointName = ActiveMQServerResource.PrimaryEndpointName)
+        string scheme = "tcp")
     {
         // don't use special characters in the password, since it goes into a URI
         ParameterResource passwordParameter = password?.Resource
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
 
-        ActiveMQServerResource activeMq = new(name, userName?.Resource, passwordParameter, endpointName);
+        ActiveMQServerResource activeMq = new(name, userName?.Resource, passwordParameter, scheme);
         IResourceBuilder<ActiveMQServerResource> activemq = builder.AddResource(activeMq)
                               .WithImage(ActiveMQContainerImageTags.Image, ActiveMQContainerImageTags.Tag)
                               .WithImageRegistry(ActiveMQContainerImageTags.Registry)
-                              .WithEndpoint(port: port, targetPort: 61616, name: endpointName)
+                              .WithEndpoint(port: port, targetPort: 61616, name: ActiveMQServerResource.PrimaryEndpointName,
+                                  scheme: scheme)
                               .WithEnvironment(context =>
                               {
                                   context.EnvironmentVariables["ACTIVEMQ_CONNECTION_USER"] = activeMq.UserNameReference;
@@ -104,5 +105,4 @@ public static class ActiveMQBuilderExtensions
         => builder.WithBindMount(source,
             "/opt/apache-activemq/conf",
             isReadOnly);
-
 }
