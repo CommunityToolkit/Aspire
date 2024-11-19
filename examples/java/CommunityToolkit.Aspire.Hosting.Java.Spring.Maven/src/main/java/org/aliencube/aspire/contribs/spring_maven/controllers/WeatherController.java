@@ -1,10 +1,7 @@
 package org.aliencube.aspire.contribs.spring_maven.controllers;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.aliencube.aspire.contribs.spring_maven.models.WeatherForecast;

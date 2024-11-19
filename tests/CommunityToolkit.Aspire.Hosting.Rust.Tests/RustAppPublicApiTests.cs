@@ -23,7 +23,7 @@ public class RustAppPublicApiTests
         const string name = null!;
         const string workingDirectory = "rust_app";
 
-        var action = () => builder.AddRustApp(name, workingDirectory);
+        var action = () => builder.AddRustApp(name!, workingDirectory);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(name), exception.ParamName);
@@ -36,7 +36,7 @@ public class RustAppPublicApiTests
         const string name = "rust-app";
         const string workingDirectory = null!;
 
-        var action = () => builder.AddRustApp(name, workingDirectory);
+        var action = () => builder.AddRustApp(name, workingDirectory!);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(workingDirectory), exception.ParamName);
