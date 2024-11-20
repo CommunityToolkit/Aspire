@@ -44,8 +44,7 @@ public static class ActiveMQBuilderExtensions
         IResourceBuilder<ActiveMQServerResource> activemq = builder.AddResource(activeMq)
                               .WithImage(ActiveMQContainerImageTags.Image, ActiveMQContainerImageTags.Tag)
                               .WithImageRegistry(ActiveMQContainerImageTags.Registry)
-                              .WithEndpoint(port: port, targetPort: 61616, name: ActiveMQServerResource.PrimaryEndpointName,
-                                  scheme: scheme)
+                              .WithEndpoint(port: port, targetPort: 61616, name: ActiveMQServerResource.PrimaryEndpointName, scheme: scheme)
                               .WithEnvironment(context =>
                               {
                                   context.EnvironmentVariables["ACTIVEMQ_CONNECTION_USER"] = activeMq.UserNameReference;
