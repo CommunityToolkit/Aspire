@@ -4,3 +4,7 @@ POST http://localhost:5004/send/Hello%20World
 Accept: application/json
 
 ###
+GET http://admin:admin@localhost:8161/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus
+origin: localhost
+
+###

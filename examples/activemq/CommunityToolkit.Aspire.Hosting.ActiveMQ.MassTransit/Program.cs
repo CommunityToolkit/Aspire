@@ -21,8 +21,6 @@ builder.Services.AddMassTransit(x =>
 
 WebApplication app = builder.Build();
 
-app.UseHttpsRedirection();
-
 app.MapPost("/send/{text}", async (string text,
         [FromServices] IPublishEndpoint publishEndpoint,
         [FromServices] ILogger<Program> logger) =>

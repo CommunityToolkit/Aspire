@@ -6,7 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.ActiveMQ\CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 
 </Project>
