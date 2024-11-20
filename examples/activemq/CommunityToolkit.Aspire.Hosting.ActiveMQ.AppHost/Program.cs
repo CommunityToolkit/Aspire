@@ -2,11 +2,10 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var amq = builder.AddActiveMQ("amq", 
-        builder.AddParameter("user", "admin"),
-        builder.AddParameter("password", "admin", secret: true), 
-        61616, 
-        "activemq")
+var username = builder.AddParameter("user", "admin");
+var password = builder.AddParameter("password", "admin", secret: true);
+
+var amq = builder.AddActiveMQ("amq", username, password, 61616, "activemq")
         .PublishAsConnectionString()
         .WithEndpoint(port: 8161, targetPort: 8161, name: "web", scheme: "http");
 
