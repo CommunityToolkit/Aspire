@@ -28,8 +28,7 @@ app.MapPost("/send/{text}", async (string text,
         logger.LogInformation("Send message: {Text}", text);
         await publishEndpoint.Publish<Message>(new { Text = text });
         logger.LogInformation("Sent message: {Text}", text);
-
     })
     .WithName("SendMessage");
-
+app.MapDefaultEndpoints();
 app.Run();

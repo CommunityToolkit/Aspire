@@ -110,7 +110,8 @@ public static class Extensions
             // Only health checks tagged with the "live" tag must pass for app to be considered alive
             app.MapHealthChecks("/alive", new HealthCheckOptions
             {
-                Predicate = r => r.Tags.Contains("live")
+                Predicate = r => r.Tags.Contains("live") ||
+                                 r.Tags.Contains("masstransit")
             });
         }
 
