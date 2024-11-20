@@ -91,10 +91,8 @@ public static class ActiveMQBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<ActiveMQServerResource> WithDataBindMount(this IResourceBuilder<ActiveMQServerResource> builder, string source, bool isReadOnly = false)
-        => builder.WithBindMount(source,
-            "/opt/apache-activemq/data",
-            isReadOnly);
+    public static IResourceBuilder<ActiveMQServerResource> WithDataBindMount(this IResourceBuilder<ActiveMQServerResource> builder, string source, bool isReadOnly = false) =>
+        builder.WithBindMount(source, "/opt/apache-activemq/data", isReadOnly);
 
     /// <summary>
     /// Adds a bind mount for the conf folder to a ActiveMQ container resource.
