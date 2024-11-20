@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.AppHost" />
   </ItemGroup>
 
@@ -18,11 +19,5 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.ActiveMQ\CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Aspire.Hosting">
-      <HintPath>..\..\..\..\..\.nuget\packages\aspire.hosting\9.0.0\lib\net8.0\Aspire.Hosting.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
+  
 </Project>
