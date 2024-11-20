@@ -76,8 +76,8 @@ public static class ActiveMQBuilderExtensions
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<ActiveMQServerResource> WithConfVolume(this IResourceBuilder<ActiveMQServerResource> builder, string? name = null, bool isReadOnly = false)
-        => builder
+    public static IResourceBuilder<ActiveMQServerResource> WithConfVolume(this IResourceBuilder<ActiveMQServerResource> builder, string? name = null, bool isReadOnly = false) =>
+        builder
 #pragma warning disable CTASPIRE001
             .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "conf"),
 #pragma warning restore CTASPIRE001
