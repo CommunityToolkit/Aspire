@@ -7,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 builder.Services
-    .TryAddSingleton(KebabCaseEndpointNameFormatter.Instance);
+    .AddSingleton(KebabCaseEndpointNameFormatter.Instance)
+    .AddSingleton<MessageCounter>();
 builder.Services.AddMassTransit(x =>
 {
     x.UsingActiveMq((context, cfg) =>
@@ -30,5 +31,9 @@ app.MapPost("/send/{text}", async (string text,
         logger.LogInformation("Sent message: {Text}", text);
     })
     .WithName("SendMessage");
+
+app.MapGet("/received", ([FromServices] MessageCounter messageCounter) => messageCounter)
+    .WithName("ReceivedMessages");
+
 app.MapDefaultEndpoints();
 app.Run();

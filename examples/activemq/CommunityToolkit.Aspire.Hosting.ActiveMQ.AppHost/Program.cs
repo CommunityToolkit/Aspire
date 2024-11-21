@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ var amq = builder.AddActiveMQ("amq", username, password, 61616, "activemq")
 
 builder.AddProject<CommunityToolkit_Aspire_Hosting_ActiveMQ_MassTransit>("masstransitExample")
     .WithReference(amq)
+    .WithHttpHealthCheck(path: "/health")
     .WaitFor(amq);
 
 builder.Build().Run();
