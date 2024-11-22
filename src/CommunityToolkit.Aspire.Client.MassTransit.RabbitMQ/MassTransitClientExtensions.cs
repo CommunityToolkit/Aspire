@@ -51,7 +51,7 @@ ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
             });
         });
 
-        if (telemetry == true)
+        if (telemetry)
         {
             services.AddOpenTelemetry()
                 .WithMetrics(b => b
