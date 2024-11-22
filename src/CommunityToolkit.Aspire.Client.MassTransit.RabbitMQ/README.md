@@ -25,3 +25,5 @@ Add this extension to your client application using `builder.Services` in your `
 
 ```csharp
 builder.Services.AddMassTransitClient("RabbitMQ", telemetry: true);
+```
+

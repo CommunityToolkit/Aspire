@@ -1,10 +1,13 @@
-using Microsoft.Extensions.Hosting;
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.AddServiceDefaults();
 
-builder.Services.AddMassTransitRabbitMqClient("RabbitMQInstance", telemetry: true);
+builder.AddMassTransitRabbitMq("RabbitMQInstance", options =>
+{
+    options.DisableTelemetry = false;
+} );
+
 var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");

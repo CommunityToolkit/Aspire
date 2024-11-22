@@ -1,5 +1,10 @@
 #nullable enable
 
-Microsoft.Extensions.Hosting.MassTransitClientExtensions
-static Microsoft.Extensions.Hosting.MassTransitClientExtensions.AddMassTransitRabbitMqClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, bool? telemetry = false) -> void
+Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions
+static Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions.AddMassTransitRabbitMq(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, bool? telemetry = false) -> void
+Microsoft.Extensions.Hosting.MassTransitRabbitMqOptions
+Microsoft.Extensions.Hosting.MassTransitRabbitMqOptions.DisableTelemetry.get -> bool
+Microsoft.Extensions.Hosting.MassTransitRabbitMqOptions.DisableTelemetry.set -> void
+Microsoft.Extensions.Hosting.MassTransitRabbitMqOptions.MassTransitRabbitMqOptions() -> void
+static Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions.AddMassTransitRabbitMq(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<Microsoft.Extensions.Hosting.MassTransitRabbitMqOptions!>? configure = null) -> void
 

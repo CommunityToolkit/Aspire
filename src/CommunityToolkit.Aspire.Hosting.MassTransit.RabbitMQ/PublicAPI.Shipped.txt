@@ -1,13 +1,13 @@
 #nullable enable
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitHostingExtensions
-static CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitHostingExtensions.AddMassTransit(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions!>? configure = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.RabbitMQServerResource!>!
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.MassTransitOptions() -> void
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.ManagementPort.get -> int?
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.ManagementPort.set -> void
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.Password.get -> string!
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.Password.set -> void
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.Port.get -> int?
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.Port.set -> void
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.Username.get -> string!
-CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions.Username.set -> void
+Aspire.Hosting.MassTransitHostingExtensions
+static Aspire.Hosting.MassTransitHostingExtensions.AddMassTransit(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions!>? configure = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.RabbitMQServerResource!>!
+Aspire.Hosting.MassTransitHostingExtensions
+Aspire.Hosting.MassTransitHostingExtensions.MassTransitOptions() -> void
+Aspire.Hosting.MassTransitHostingExtensions.ManagementPort.get -> int?
+Aspire.Hosting.MassTransitHostingExtensions.ManagementPort.set -> void
+Aspire.Hosting.MassTransitHostingExtensions.Password.get -> string!
+Aspire.Hosting.MassTransitHostingExtensions.Password.set -> void
+Aspire.Hosting.MassTransitHostingExtensions.Port.get -> int?
+Aspire.Hosting.MassTransitHostingExtensions.Port.set -> void
+Aspire.Hosting.MassTransitHostingExtensions.Username.get -> string!
+Aspire.Hosting.MassTransitHostingExtensions.Username.set -> void

@@ -3,7 +3,7 @@
 /// <summary>
 /// Configuration options for MassTransit integration (same as host-side).
 /// </summary>
-public sealed class MassTransitOptions
+public sealed class MassTransitRabbitMqOptions
 {
     /// <summary>
     /// Username to use for RabbitMQ.
