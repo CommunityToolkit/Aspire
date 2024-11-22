@@ -1,5 +1,6 @@
 using CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit;
 using MassTransit;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -23,12 +24,13 @@ builder.Services.AddMassTransit(x =>
 WebApplication app = builder.Build();
 
 app.MapPost("/send/{text}", async (string text,
-        [FromServices] IPublishEndpoint publishEndpoint,
+        [FromServices] IRequestClient<Message> requestClient,
         [FromServices] ILogger<Program> logger) =>
     {
         logger.LogInformation("Send message: {Text}", text);
-        await publishEndpoint.Publish<Message>(new { Text = text });
+        Response<MessageReply> response = await requestClient.GetResponse<MessageReply>(new { Text = text });
         logger.LogInformation("Sent message: {Text}", text);
+        return response.Message.Reply;
     })
     .WithName("SendMessage");
 

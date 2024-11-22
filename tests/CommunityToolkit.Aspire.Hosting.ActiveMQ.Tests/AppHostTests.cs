@@ -22,6 +22,18 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     }
 
     [Fact]
+    public async Task ReplyShouldBeReceived()
+    {
+        const string resourceName = "masstransitExample";
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(2));
+        HttpClient httpClient = fixture.CreateHttpClient(resourceName);
+        
+        HttpResponseMessage response = await httpClient.PostAsync("/send/Hello%20World", new StringContent(""));
+
+        (await response.Content.ReadAsStringAsync()).Should().Be("I've received your message: Hello World");
+    }
+
+    [Fact]
     public async Task WhenMessageIsSendItShouldBeReceivedByConsumer()
     {
         const string resourceName = "masstransitExample";
@@ -34,15 +46,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         await httpClient.PostAsync("/send/Hello%20World", new StringContent(""));
 
         MessageCounter? messageCounter = null;
-        for (int i = 0; i < 10; i++)
-        {
-            messageCounter = await httpClient.GetFromJsonAsync<MessageCounter>("/received");
-            await Task.Delay(1000);
-            if (messageCounter!.ReceivedMessages > oldMessageCounter!.ReceivedMessages)
-            {
-                break;
-            }
-        }
+        messageCounter = await httpClient.GetFromJsonAsync<MessageCounter>("/received");
 
         messageCounter.Should().NotBeNull();
         messageCounter!.ReceivedMessages.Should().BeGreaterThan(oldMessageCounter!.ReceivedMessages);
