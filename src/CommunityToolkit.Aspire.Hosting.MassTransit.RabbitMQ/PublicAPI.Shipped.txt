@@ -1,13 +1,11 @@
 #nullable enable
-Aspire.Hosting.MassTransitHostingExtensions
-static Aspire.Hosting.MassTransitHostingExtensions.AddMassTransit(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitOptions!>? configure = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.RabbitMQServerResource!>!
-Aspire.Hosting.MassTransitHostingExtensions
-Aspire.Hosting.MassTransitHostingExtensions.MassTransitOptions() -> void
-Aspire.Hosting.MassTransitHostingExtensions.ManagementPort.get -> int?
-Aspire.Hosting.MassTransitHostingExtensions.ManagementPort.set -> void
-Aspire.Hosting.MassTransitHostingExtensions.Password.get -> string!
-Aspire.Hosting.MassTransitHostingExtensions.Password.set -> void
-Aspire.Hosting.MassTransitHostingExtensions.Port.get -> int?
-Aspire.Hosting.MassTransitHostingExtensions.Port.set -> void
-Aspire.Hosting.MassTransitHostingExtensions.Username.get -> string!
-Aspire.Hosting.MassTransitHostingExtensions.Username.set -> void
+Aspire.Hosting.MassTransitRabbitMqHostingExtensions
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.MassTransitRabbitMqOptions() -> void
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.PasswordKey.get -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>?
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.PasswordKey.set -> void
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.Port.get -> int?
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.Port.set -> void
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.UsernameKey.get -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>?
+CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.UsernameKey.set -> void
+static Aspire.Hosting.MassTransitRabbitMqHostingExtensions.AddMassTransitRabbitMq(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.MassTransitRabbitMqOptions!>? configure = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.RabbitMQServerResource!>!

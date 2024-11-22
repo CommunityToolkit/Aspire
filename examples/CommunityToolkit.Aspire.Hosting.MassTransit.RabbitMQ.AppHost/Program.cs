@@ -1,13 +1,11 @@
-using CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 
-var rmq = builder.AddMassTransit("RabbitMQInstance", options =>
+var passwordParam = builder.AddParameter("RabbitMQPassword", secret: true);
+
+var rmq = builder.AddMassTransitRabbitMq("RabbitMQInstance", options =>
 {
-    options.Username = "guest";
-    options.Password = "guest";
-    options.Port = 5672;
+    options.Port = 990;
 });
 
 

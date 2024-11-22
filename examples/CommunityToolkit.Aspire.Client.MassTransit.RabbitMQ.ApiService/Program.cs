@@ -6,6 +6,7 @@ builder.AddServiceDefaults();
 builder.AddMassTransitRabbitMq("RabbitMQInstance", options =>
 {
     options.DisableTelemetry = false;
+    
 } );
 
 var app = builder.Build();
