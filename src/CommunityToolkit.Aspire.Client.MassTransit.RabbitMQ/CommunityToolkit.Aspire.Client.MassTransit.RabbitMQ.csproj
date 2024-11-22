@@ -12,6 +12,4 @@
     <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
-
-  
 </Project>
