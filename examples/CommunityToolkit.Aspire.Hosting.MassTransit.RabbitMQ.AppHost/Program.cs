@@ -1,4 +1,3 @@
-
 using CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ;
 
 var builder = DistributedApplication.CreateBuilder(args);
