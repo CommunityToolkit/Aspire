@@ -57,9 +57,7 @@ public static class ActiveMQBuilderExtensions
                                   context.EnvironmentVariables["ACTIVEMQ_CONNECTION_PASSWORD"] = activeMq.PasswordParameter;
                               });
 
-        activemq.WithJolokiaHealthCheck(
-            endpointName: "web",
-            path: "/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus");
+        activemq.WithJolokiaHealthCheck();
 
         return activemq;
     }
@@ -114,22 +112,12 @@ public static class ActiveMQBuilderExtensions
     public static IResourceBuilder<ActiveMQServerResource> WithConfBindMount(this IResourceBuilder<ActiveMQServerResource> builder, string source, bool isReadOnly = false) =>
         builder.WithBindMount(source, "/opt/apache-activemq/conf", isReadOnly);
     
-    private static IResourceBuilder<ActiveMQServerResource> WithJolokiaHealthCheck(this IResourceBuilder<ActiveMQServerResource> builder, string? path = null, int? statusCode = null, string? endpointName = null)
+    private static IResourceBuilder<ActiveMQServerResource> WithJolokiaHealthCheck(this IResourceBuilder<ActiveMQServerResource> builder)
     {
-        endpointName ??= "http";
-        return builder.WithHttpHealthCheckInternal(
-            path: path,
-            desiredScheme: "http",
-            endpointName: endpointName,
-            statusCode: statusCode
-        );
-    }
-
-    private static IResourceBuilder<ActiveMQServerResource> WithHttpHealthCheckInternal(this IResourceBuilder<ActiveMQServerResource> builder, string desiredScheme, string endpointName, string? path = null, int? statusCode = null)
-    {
-        path = path ?? "/";
-        statusCode = statusCode ?? 200;
-
+        const string path = "/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus";
+        const int statusCode = 200;
+        const string endpointName = "web";
+        const string scheme = "http";
         EndpointReference endpoint = builder.Resource.GetEndpoint(endpointName);
 
         builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((_, _) =>
@@ -139,29 +127,29 @@ public static class ActiveMQBuilderExtensions
                 throw new DistributedApplicationException($"The endpoint '{endpointName}' does not exist on the resource '{builder.Resource.Name}'.");
             }
 
-            if (endpoint.Scheme != desiredScheme)
+            if (endpoint.Scheme != scheme)
             {
-                throw new DistributedApplicationException($"The endpoint '{endpointName}' on resource '{builder.Resource.Name}' was not using the '{desiredScheme}' scheme.");
+                throw new DistributedApplicationException($"The endpoint '{endpointName}' on resource '{builder.Resource.Name}' was not using the '{scheme}' scheme.");
             }
 
             return Task.CompletedTask;
         });
 
         Uri? uri = null;
-        string auth = string.Empty;
+        string basicAuthentication = string.Empty;
         builder.ApplicationBuilder.Eventing.Subscribe<BeforeResourceStartedEvent>(builder.Resource, async (_, ct) =>
         {
             Uri baseUri = new Uri(endpoint.Url, UriKind.Absolute);
             string userName = (await builder.Resource.UserNameReference.GetValueAsync(ct))!;
             string password = builder.Resource.PasswordParameter.Value;
-            auth = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
+            basicAuthentication = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
             uri = new UriBuilder(baseUri)
             {
                 Path = path
             }.Uri;
         });
 
-        var healthCheckKey = $"{builder.Resource.Name}_{endpointName}_check";
+        string healthCheckKey = $"{builder.Resource.Name}_{endpointName}_check";
         builder.ApplicationBuilder.Services.AddLogging(configure =>
         {
             // The AddUrlGroup health check makes use of http client factory.
@@ -178,9 +166,9 @@ public static class ActiveMQBuilderExtensions
 
             options.AddUri(uri, setup =>
             {
-                setup.AddCustomHeader("Authorization", auth);
+                setup.AddCustomHeader("Authorization", basicAuthentication);
                 setup.AddCustomHeader("origin", "localhost");
-                setup.ExpectHttpCode(statusCode ?? 200);
+                setup.ExpectHttpCode(statusCode);
             });
         }, healthCheckKey);
 
@@ -188,5 +176,4 @@ public static class ActiveMQBuilderExtensions
 
         return builder;
     }
-
 }
