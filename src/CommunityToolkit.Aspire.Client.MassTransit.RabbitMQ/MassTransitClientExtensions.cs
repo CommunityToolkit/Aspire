@@ -20,8 +20,7 @@ public static class MassTransitClientExtensions
     /// <param name="telemetry">Enables telemetry, which could be exported to either OpenTelemetry or Application Insights.</param>
     public static void AddMassTransitClient(this IServiceCollection services, string name, bool? telemetry = false)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("The name must be a valid, non-empty string.", nameof(name));
+ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
 
         var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
         var configurationSection = configuration.GetSection($"MassTransit:{name}");
