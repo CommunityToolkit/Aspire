@@ -32,7 +32,7 @@ public static class AspireEventStoreExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNullOrEmpty(connectionName);
-        AddEventStoreClient(builder, configureSettings, connectionName, serviceKey: null);
+        AddEventStoreClient(builder, DefaultConfigSectionName, configureSettings, connectionName, serviceKey: null);
     }
 
     /// <summary>
@@ -48,23 +48,20 @@ public static class AspireEventStoreExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNullOrEmpty(name);
-        AddEventStoreClient(builder, configureSettings, connectionName: name, serviceKey: name);
+        AddEventStoreClient(builder, $"{DefaultConfigSectionName}:{name}", configureSettings, connectionName: name, serviceKey: name);
     }
 
     private static void AddEventStoreClient(
         this IHostApplicationBuilder builder,
+        string configurationSectionName,
         Action<EventStoreSettings>? configureSettings,
         string connectionName,
         string? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var configSection = builder.Configuration.GetSection(DefaultConfigSectionName);
-        var namedConfigSection = configSection.GetSection(connectionName);
-
         var settings = new EventStoreSettings();
-        configSection.Bind(settings);
-        namedConfigSection.Bind(settings);
+        builder.Configuration.GetSection(configurationSectionName).Bind(settings);
 
         if (builder.Configuration.GetConnectionString(connectionName) is string connectionString)
         {
@@ -73,16 +70,13 @@ public static class AspireEventStoreExtensions
 
         configureSettings?.Invoke(settings);
 
-        var eventStoreClientSettings = EventStoreClientSettings.Create(settings.ConnectionString!);
-        var eventStoreClient = new EventStoreClient(eventStoreClientSettings);
-
         if (serviceKey is null)
         {
-            builder.Services.AddSingleton(eventStoreClient);
+            builder.Services.AddSingleton(ConfigureEventStoreClient);
         }
         else
         {
-            builder.Services.AddKeyedSingleton(serviceKey, (sp, key) => eventStoreClient);
+            builder.Services.AddKeyedSingleton(serviceKey, (sp, key) => ConfigureEventStoreClient(sp));
         }
 
         if (!settings.DisableTracing)
@@ -101,6 +95,22 @@ public static class AspireEventStoreExtensions
                 failureStatus: default,
                 tags: default,
                 timeout: default));
+        }
+
+        EventStoreClient ConfigureEventStoreClient(IServiceProvider serviceProvider)
+        {
+            if (settings.ConnectionString is not null)
+            {
+                var eventStoreClientSettings = EventStoreClientSettings.Create(settings.ConnectionString!);
+                return new EventStoreClient(eventStoreClientSettings);
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                        $"An EventStore could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or either " +
+                        $"{nameof(settings.ConnectionString)} must be provided " +
+                        $"in the '{configurationSectionName}' configuration section.");
+            }
         }
     }
 }

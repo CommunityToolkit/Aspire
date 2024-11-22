@@ -159,6 +159,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.EventStore.ApiService", "examples\eventstore\CommunityToolkit.Aspire.Hosting.EventStore.ApiService\CommunityToolkit.Aspire.Hosting.EventStore.ApiService.csproj", "{019D6506-9D68-41AD-A7A1-A27B2FFE1253}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.EventStore.Tests", "tests\CommunityToolkit.Aspire.EventStore.Tests\CommunityToolkit.Aspire.EventStore.Tests.csproj", "{C696480B-C2E0-4ACA-BD5E-A62BF8558024}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -409,6 +411,10 @@ Global
 		{019D6506-9D68-41AD-A7A1-A27B2FFE1253}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{019D6506-9D68-41AD-A7A1-A27B2FFE1253}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{019D6506-9D68-41AD-A7A1-A27B2FFE1253}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C696480B-C2E0-4ACA-BD5E-A62BF8558024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C696480B-C2E0-4ACA-BD5E-A62BF8558024}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C696480B-C2E0-4ACA-BD5E-A62BF8558024}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C696480B-C2E0-4ACA-BD5E-A62BF8558024}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -489,6 +495,7 @@ Global
 		{ED3E5B89-091C-4A0E-9A2B-946CA1A11557} = {114DDF07-489A-419B-BE76-E5A289F12791}
 		{0A4E5B43-155A-4FDA-A50F-0B86CF1705E7} = {114DDF07-489A-419B-BE76-E5A289F12791}
 		{019D6506-9D68-41AD-A7A1-A27B2FFE1253} = {114DDF07-489A-419B-BE76-E5A289F12791}
+		{C696480B-C2E0-4ACA-BD5E-A62BF8558024} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
