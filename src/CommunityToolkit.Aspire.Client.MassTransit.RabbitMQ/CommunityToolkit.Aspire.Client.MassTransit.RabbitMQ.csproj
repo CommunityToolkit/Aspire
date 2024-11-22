@@ -8,7 +8,6 @@
       <Nullable>enable</Nullable>
     </PropertyGroup>
 
-
   <ItemGroup>
     <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
