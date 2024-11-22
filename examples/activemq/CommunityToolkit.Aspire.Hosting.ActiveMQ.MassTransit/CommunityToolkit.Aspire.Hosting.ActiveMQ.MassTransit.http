@@ -16,3 +16,6 @@ GET http://admin:admin@localhost:8161/api/jolokia/read/org.apache.activemq:type=
 origin: localhost
 
 ###
+GET http://localhost:8161/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus
+origin: localhost
+Authorization: Basic YWRtaW46YWRtaW4=

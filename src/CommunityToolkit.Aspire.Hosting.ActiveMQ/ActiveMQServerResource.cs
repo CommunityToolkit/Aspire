@@ -15,7 +15,6 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="scheme">Scheme used in the connectionString (e.g. tcp or activemq, see MassTransit)</param>
 public class ActiveMQServerResource(string name, ParameterResource? userName, ParameterResource password, string scheme) : ContainerResource(name), IResourceWithConnectionString, IResourceWithEnvironment
 {
-    private readonly string _scheme = scheme;
     internal const string PrimaryEndpointName = "tcp";
     private const string DefaultUserName = "admin";
     private EndpointReference? _primaryEndpoint;
@@ -45,7 +44,7 @@ public class ActiveMQServerResource(string name, ParameterResource? userName, Pa
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"{_scheme}://{UserNameReference}:{PasswordParameter}@{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+            $"{scheme}://{UserNameReference}:{PasswordParameter}@{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
     
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);
