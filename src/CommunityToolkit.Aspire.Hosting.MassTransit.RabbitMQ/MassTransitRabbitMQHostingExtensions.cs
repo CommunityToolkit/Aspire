@@ -15,8 +15,7 @@ public static class MassTransitHostingExtensions
     /// <param name="builder">The application builder.</param>
     /// <param name="name">A unique name for the RabbitMQ instance.</param>
     /// <param name="configure">An optional configuration action to override default settings.</param>
-    public static IResourceBuilder<RabbitMQServerResource> AddMassTransit(this IDistributedApplicationBuilder builder,
-        string name, Action<MassTransitOptions>? configure = null)
+    public static IResourceBuilder<RabbitMQServerResource> AddMassTransit(this IDistributedApplicationBuilder builder, [ResourceName] string name, Action<MassTransitOptions>? configure = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("The name must be a valid, non-empty string.", nameof(name));
