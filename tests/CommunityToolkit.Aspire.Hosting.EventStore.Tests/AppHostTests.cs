@@ -17,7 +17,7 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
     {
         var resourceName = "eventstore";
         await fixture.ResourceNotificationService
-            .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
+            .WaitForResourceHealthyAsync(resourceName)
             .WaitAsync(TimeSpan.FromMinutes(1));
 
         var httpClient = fixture.CreateHttpClient(resourceName);
@@ -32,7 +32,10 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
     {
         var resourceName = "apiservice";
         await fixture.ResourceNotificationService
-            .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
+            .WaitForResourceHealthyAsync("eventstore")
+            .WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService
+            .WaitForResourceHealthyAsync(resourceName)
             .WaitAsync(TimeSpan.FromMinutes(1));
 
         var httpClient = fixture.CreateHttpClient(resourceName);
@@ -56,7 +59,7 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
     {
         var resourceName = "apiservice";
         await fixture.ResourceNotificationService
-            .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
+            .WaitForResourceHealthyAsync(resourceName)
             .WaitAsync(TimeSpan.FromMinutes(1));
 
         var httpClient = fixture.CreateHttpClient(resourceName);
@@ -83,7 +86,7 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
     {
         var resourceName = "apiservice";
         await fixture.ResourceNotificationService
-            .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
+            .WaitForResourceHealthyAsync(resourceName)
             .WaitAsync(TimeSpan.FromMinutes(1));
 
         var httpClient = fixture.CreateHttpClient(resourceName);

@@ -42,6 +42,12 @@ public class AddEventStoreTests
         var config = await eventstore.Resource.GetEnvironmentVariableValuesAsync();
 
         Assert.Equal(6, config.Count);
+        Assert.Equal("1", config["EVENTSTORE_CLUSTER_SIZE"]);
+        Assert.Equal("All", config["EVENTSTORE_RUN_PROJECTIONS"]);
+        Assert.Equal("true", config["EVENTSTORE_START_STANDARD_PROJECTIONS"]);
+        Assert.Equal($"{EventStoreResource.DefaultHttpPort}", config["EVENTSTORE_NODE_PORT"]);
+        Assert.Equal("true", config["EVENTSTORE_INSECURE"]);
+        Assert.Equal("true", config["EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP"]);
     }
 
     [Fact]

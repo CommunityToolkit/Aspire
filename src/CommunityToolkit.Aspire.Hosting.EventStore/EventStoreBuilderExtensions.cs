@@ -40,8 +40,7 @@ public static class EventStoreBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    public static IResourceBuilder<EventStoreResource> AddEventStore(
-        this IDistributedApplicationBuilder builder, string name, int? port = null)
+    public static IResourceBuilder<EventStoreResource> AddEventStore(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
