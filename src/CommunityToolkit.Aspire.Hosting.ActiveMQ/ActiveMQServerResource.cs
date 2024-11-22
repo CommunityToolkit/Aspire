@@ -13,8 +13,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="userName">A parameter that contains the ActiveMQ server username, or <see langword="null"/> to use a default value.</param>
 /// <param name="password">A parameter that contains the ActiveMQ server password.</param>
 /// <param name="scheme">Scheme used in the connectionString (e.g. tcp or activemq, see MassTransit)</param>
-public class ActiveMQServerResource(string name, ParameterResource? userName, ParameterResource password,
-    string scheme) : ContainerResource(name), IResourceWithConnectionString, IResourceWithEnvironment
+public class ActiveMQServerResource(string name, ParameterResource? userName, ParameterResource password, string scheme) : ContainerResource(name), IResourceWithConnectionString, IResourceWithEnvironment
 {
     private readonly string _scheme = scheme;
     internal const string PrimaryEndpointName = "tcp";
