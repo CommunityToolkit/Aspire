@@ -9,7 +9,7 @@
     </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="8.2.2"/>
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" />
 
   </ItemGroup>
 
