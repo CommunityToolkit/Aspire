@@ -10,8 +10,8 @@
 
 
   <ItemGroup>
-    <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.2"/>
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.10.0"/>
+    <PackageReference Include="MassTransit.RabbitMQ" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
 
   
