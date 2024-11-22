@@ -39,7 +39,7 @@ public static class MassTransitHostingExtensions
                 userName: builder.CreateResourceBuilder(usernameResource),
                 password: builder.CreateResourceBuilder(passwordResource))
             .WithExternalHttpEndpoints()
-            .WithManagementPlugin(options.ManagementPort ?? 60812);
+            .WithManagementPlugin();
     }
 
     /// <summary>
@@ -53,27 +53,4 @@ public static class MassTransitHostingExtensions
     }
 }
 
-/// <summary>
-/// Configuration options for MassTransit integration (same as host-side).
-/// </summary>
-public sealed class MassTransitOptions
-{
-    /// <summary>
-    /// Username to use for RabbitMQ.
-    /// </summary>
-    public string Username { get; set; } = string.Empty;
-    /// <summary>
-    /// Password to use for RabbitMQ.
-    /// </summary>
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Port to use for RabbitMQ.
-    /// </summary>
-    public int? Port { get; set; }
-    /// <summary>
-    /// Port to use for management dashboard.
-    /// </summary>
-    public int? ManagementPort { get; set; }
-}
 

@@ -30,3 +30,6 @@ var rmq = builder.AddMassTransit("RabbitMQ", options =>
     options.Port = 5672;
     options.ManagementPort = 999;
 });
+```
+
+

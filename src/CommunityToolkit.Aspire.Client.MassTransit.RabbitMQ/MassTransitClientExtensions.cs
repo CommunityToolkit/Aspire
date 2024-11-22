@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
-namespace CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ;
+namespace Microsoft.Extensions.Hosting;
 
 /// <summary>
 /// MassTransitClientExtensions provides extension methods for configuring MassTransit in a client application.
@@ -15,19 +15,19 @@ public static class MassTransitClientExtensions
     /// Configures MassTransit with RabbitMQ integration for the client side,
     /// using the same configuration used by the hosting environment.
     /// </summary>
-    /// <param name="services">The client service collection.</param>
+    /// <param name="builder">The client IhostApplicationBuilder</param>
     /// <param name="name">A unique name for the RabbitMQ instance.</param>
     /// <param name="telemetry">Enables telemetry, which could be exported to either OpenTelemetry or Application Insights.</param>
-    public static void AddMassTransitClient(this IServiceCollection services, string name, bool? telemetry = false)
+    public static void AddMassTransitRabbitMqClient(this IHostApplicationBuilder builder, string name, bool? telemetry = false)
     {
 ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
 
-        var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+        var configuration = builder.Services.BuildServiceProvider().GetRequiredService<IConfiguration>();
         var configurationSection = configuration.GetSection($"MassTransit:{name}");
         var options = new MassTransitOptions();
         configurationSection.Bind(options);
 
-        services.AddMassTransit(x =>
+        builder.Services.AddMassTransit(x =>
         {
             x.SetKebabCaseEndpointNameFormatter();
             x.SetInMemorySagaRepositoryProvider();
@@ -51,9 +51,9 @@ ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
             });
         });
 
-        if (telemetry)
+        if (telemetry == true)
         {
-            services.AddOpenTelemetry()
+            builder.Services.AddOpenTelemetry()
                 .WithMetrics(b => b
                     .AddMeter(InstrumentationOptions.MeterName)
                 ).WithTracing(builder =>

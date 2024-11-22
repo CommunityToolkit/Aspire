@@ -1,5 +1,5 @@
 #nullable enable
 
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitClientExtensions
-static CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitClientExtensions.AddMassTransitClient(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! name, bool? telemetry = false) -> void
+Microsoft.Extensions.Hosting.MassTransitClientExtensions
+static Microsoft.Extensions.Hosting.MassTransitClientExtensions.AddMassTransitRabbitMqClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, bool? telemetry = false) -> void
 

@@ -1,11 +1,10 @@
-using CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ;
-
+using Microsoft.Extensions.Hosting;
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.AddServiceDefaults();
 
-builder.Services.AddMassTransitClient("RabbitMQInstance", telemetry: true);
+builder.Services.AddMassTransitRabbitMqClient("RabbitMQInstance", telemetry: true);
 var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
