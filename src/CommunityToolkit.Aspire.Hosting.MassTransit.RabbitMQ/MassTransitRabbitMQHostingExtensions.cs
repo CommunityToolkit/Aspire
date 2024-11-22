@@ -17,8 +17,8 @@ public static class MassTransitHostingExtensions
     /// <param name="configure">An optional configuration action to override default settings.</param>
     public static IResourceBuilder<RabbitMQServerResource> AddMassTransit(this IDistributedApplicationBuilder builder, [ResourceName] string name, Action<MassTransitOptions>? configure = null)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("The name must be a valid, non-empty string.", nameof(name));
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
 
         // Load options from configuration
         IConfigurationSection configurationSection = builder.Configuration.GetSection($"MassTransit:{name}");
