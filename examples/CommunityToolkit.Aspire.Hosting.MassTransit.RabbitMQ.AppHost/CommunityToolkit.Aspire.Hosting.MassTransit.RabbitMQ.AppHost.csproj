@@ -16,7 +16,6 @@
     <ItemGroup>
       <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj" />
       <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.csproj" IsAspireProjectResource="false" />
-
     </ItemGroup>
 
 </Project>
