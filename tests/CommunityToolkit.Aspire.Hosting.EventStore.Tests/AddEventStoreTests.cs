@@ -26,7 +26,7 @@ public class AddEventStoreTests
         Assert.Single(endpoints);
 
         var primaryEndpoint = Assert.Single(endpoints, e => e.Name == "http");
-        Assert.Equal(2113, primaryEndpoint.TargetPort);
+        Assert.Equal(EventStoreResource.DefaultHttpPort, primaryEndpoint.TargetPort);
         Assert.False(primaryEndpoint.IsExternal);
         Assert.Equal("http", primaryEndpoint.Name);
         Assert.Null(primaryEndpoint.Port);
@@ -41,13 +41,37 @@ public class AddEventStoreTests
 
         var config = await eventstore.Resource.GetEnvironmentVariableValuesAsync();
 
-        Assert.Equal(6, config.Count);
-        Assert.Equal("1", config["EVENTSTORE_CLUSTER_SIZE"]);
-        Assert.Equal("All", config["EVENTSTORE_RUN_PROJECTIONS"]);
-        Assert.Equal("true", config["EVENTSTORE_START_STANDARD_PROJECTIONS"]);
-        Assert.Equal($"{EventStoreResource.DefaultHttpPort}", config["EVENTSTORE_NODE_PORT"]);
-        Assert.Equal("true", config["EVENTSTORE_INSECURE"]);
-        Assert.Equal("true", config["EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP"]);
+        Assert.Collection(config,
+            env =>
+            {
+                Assert.Equal("EVENTSTORE_CLUSTER_SIZE", env.Key);
+                Assert.Equal("1", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("EVENTSTORE_RUN_PROJECTIONS", env.Key);
+                Assert.Equal("All", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("EVENTSTORE_START_STANDARD_PROJECTIONS", env.Key);
+                Assert.Equal("true", env.Value);
+            },
+            env =>
+            {
+                Assert.Equal("EVENTSTORE_NODE_PORT", env.Key);
+                Assert.Equal($"{EventStoreResource.DefaultHttpPort}", env.Value);
+            },
+            ext =>
+            {
+                Assert.Equal("EVENTSTORE_INSECURE", ext.Key);
+                Assert.Equal("true", ext.Value);
+            },
+            ext =>
+            {
+                Assert.Equal("EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP", ext.Key);
+                Assert.Equal("true", ext.Value);
+            });
     }
 
     [Fact]
