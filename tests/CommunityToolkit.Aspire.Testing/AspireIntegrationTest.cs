@@ -31,6 +31,18 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
         base.OnBuilderCreated(applicationBuilder);
     }
 
+    public async override ValueTask DisposeAsync()
+    {
+        try
+        {
+            await base.DisposeAsync();
+        }
+        catch (Exception)
+        {
+            // Ignore exceptions during disposal
+        }
+    }
+
     public Task InitializeAsync() => StartAsync().WaitAsync(TimeSpan.FromMinutes(10));
 
     async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync();
