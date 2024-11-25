@@ -1,17 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
-
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="AddEventStoreTests.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\examples\eventstore\CommunityToolkit.Aspire.Hosting.EventStore.ApiService\CommunityToolkit.Aspire.Hosting.EventStore.ApiService.csproj" />
     <ProjectReference Include="..\..\examples\eventstore\CommunityToolkit.Aspire.Hosting.EventStore.AppHost\CommunityToolkit.Aspire.Hosting.EventStore.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.EventStore\CommunityToolkit.Aspire.EventStore.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.EventStore\CommunityToolkit.Aspire.Hosting.EventStore.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
