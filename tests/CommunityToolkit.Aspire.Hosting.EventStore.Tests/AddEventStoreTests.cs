@@ -66,11 +66,6 @@ public class AddEventStoreTests
             {
                 Assert.Equal("EVENTSTORE_INSECURE", ext.Key);
                 Assert.Equal("true", ext.Value);
-            },
-            ext =>
-            {
-                Assert.Equal("EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP", ext.Key);
-                Assert.Equal("true", ext.Value);
             });
     }
 

@@ -204,6 +204,5 @@ public static class EventStoreBuilderExtensions
         context.EnvironmentVariables.Add("EVENTSTORE_START_STANDARD_PROJECTIONS", "true");
         context.EnvironmentVariables.Add("EVENTSTORE_NODE_PORT", $"{EventStoreResource.DefaultHttpPort}");
         context.EnvironmentVariables.Add("EVENTSTORE_INSECURE", "true");
-        context.EnvironmentVariables.Add("EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP", "true");
     }
 }
