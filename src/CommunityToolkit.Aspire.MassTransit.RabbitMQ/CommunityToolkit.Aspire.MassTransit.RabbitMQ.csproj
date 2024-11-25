@@ -5,6 +5,7 @@
       <Description>A .NET Aspire client integration for MassTransit RabbitMQ.</Description>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
+      <RootNamespace>CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ</RootNamespace>
     </PropertyGroup>
 
   <ItemGroup>

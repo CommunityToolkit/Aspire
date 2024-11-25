@@ -145,7 +145,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Bun.Tests", "tests\CommunityToolkit.Aspire.Hosting.Bun.Tests\CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj", "{DA5DD2CB-51D9-429F-91F5-BF3D1A13A21A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ", "src\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.csproj", "{887F91FF-C41D-4286-AD0F-DE56516E4E73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ", "src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj", "{887F91FF-C41D-4286-AD0F-DE56516E4E73}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService", "examples\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj", "{FE57BF8E-7565-4968-827D-F6F96B8DAA56}"
 EndProject
