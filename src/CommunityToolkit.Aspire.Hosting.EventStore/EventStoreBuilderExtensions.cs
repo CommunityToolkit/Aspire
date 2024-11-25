@@ -136,67 +136,6 @@ public static class EventStoreBuilderExtensions
         return builder.WithBindMount(source, DataTargetFolder);
     }
 
-    /// <summary>
-    /// Adds a named volume for the log folder to a EventStore container resource.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
-    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>
-    /// <example>
-    /// Add an EventStore container to the application model and reference it in a .NET project. Additionally, in this
-    /// example a log volume is added to the container to allow logs to be persisted across container restarts.
-    /// <code lang="csharp">
-    /// var builder = DistributedApplication.CreateBuilder(args);
-    ///
-    /// var eventstore = builder.AddEventStore("eventstore")
-    ///   .WithLogVolume();
-    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
-    ///   .WithReference(eventstore);
-    ///  
-    /// builder.Build().Run(); 
-    /// </code>
-    /// </example>
-    /// </remarks>
-    public static IResourceBuilder<EventStoreResource> WithLogVolume(this IResourceBuilder<EventStoreResource> builder, string? name = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "log"), LogTargetFolder);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-    }
-
-    /// <summary>
-    /// Adds a bind mount for the log folder to a EventStore container resource.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="source">The source directory on the host to mount into the container.</param>
-    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>
-    /// <example>
-    /// Add an EventStore container to the application model and reference it in a .NET project. Additionally, in this
-    /// example a bind mount is added to the container to allow logs to be persisted across container restarts.
-    /// <code lang="csharp">
-    /// var builder = DistributedApplication.CreateBuilder(args);
-    ///
-    /// var eventstore = builder.AddEventStore("eventstore")
-    ///   .WithLogBindMount("./data/eventstore/logs");
-    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
-    ///   .WithReference(eventstore);
-    ///  
-    /// builder.Build().Run(); 
-    /// </code>
-    /// </example>
-    /// </remarks>
-    public static IResourceBuilder<EventStoreResource> WithLogBindMount(this IResourceBuilder<EventStoreResource> builder, string source)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
-
-        return builder.WithBindMount(source, LogTargetFolder);
-    }
-
     private static void ConfigureEventStoreContainer(EnvironmentCallbackContext context)
     {
         context.EnvironmentVariables.Add("EVENTSTORE_CLUSTER_SIZE", "1");
