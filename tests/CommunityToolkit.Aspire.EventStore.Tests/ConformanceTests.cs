@@ -69,7 +69,6 @@ public class ConformanceTests(EventStoreContainerFixture containerFixture) : Con
     protected override void SetHealthCheck(EventStoreSettings options, bool enabled)
     {
         options.DisableHealthChecks = !enabled;
-        options.HealthCheckTimeout = TimeSpan.FromMilliseconds(100);
     }
 
     protected override void SetMetrics(EventStoreSettings options, bool enabled)
