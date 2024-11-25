@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ;
 using MassTransit;
+using MassTransit.Logging;
 using MassTransit.Monitoring;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,13 +25,8 @@ public static class MassTransitRabbitMqExtensions
         string name,
         Action<MassTransitRabbitMqOptions>? configure = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
-
-
+      
         var options = new MassTransitRabbitMqOptions();
-        builder.Configuration.GetSection(name).Bind(options);
-
-        // Apply additional configuration overrides
         configure?.Invoke(options);
 
         builder.Services.AddMassTransit(x =>
@@ -47,7 +43,7 @@ public static class MassTransitRabbitMqExtensions
             x.UsingRabbitMq((context, cfg) =>
             {
                 
-                var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:mq"];
+                var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:"+name];
                 if (string.IsNullOrWhiteSpace(rabbitMqConnectionString))
                 {
                     throw new InvalidOperationException("RabbitMQ connection string is missing or empty in configuration.");
@@ -61,10 +57,10 @@ public static class MassTransitRabbitMqExtensions
         if (!options.DisableTelemetry)
         {
             builder.Services.AddOpenTelemetry()
-                .WithMetrics(b => b.AddMeter(InstrumentationOptions.MeterName))
+                .WithMetrics(b => b.AddMeter(DiagnosticHeaders.DefaultListenerName))
                 .WithTracing(providerBuilder =>
                 {
-                    providerBuilder.AddSource(InstrumentationOptions.MeterName);
+                    providerBuilder.AddSource(DiagnosticHeaders.DefaultListenerName);
                 });
         }
     }
