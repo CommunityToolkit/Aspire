@@ -14,6 +14,10 @@ public class ConfigurationTests
         Assert.False(new EventStoreSettings().DisableHealthChecks);
 
     [Fact]
+    public void HealthCheckTimeoutNullByDefault() =>
+     Assert.Null(new EventStoreSettings().HealthCheckTimeout);
+
+    [Fact]
     public void DisableTracingIsFalseByDefault() =>
       Assert.False(new EventStoreSettings().DisableTracing);
 }

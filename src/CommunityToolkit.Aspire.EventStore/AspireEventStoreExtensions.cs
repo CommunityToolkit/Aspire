@@ -94,7 +94,7 @@ public static class AspireEventStoreExtensions
                 sp => new EventStoreHealthCheck(settings.ConnectionString!),
                 failureStatus: default,
                 tags: default,
-                timeout: default));
+                timeout: settings.HealthCheckTimeout));
         }
 
         EventStoreClient ConfigureEventStoreClient(IServiceProvider serviceProvider)
