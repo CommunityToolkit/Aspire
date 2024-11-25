@@ -34,13 +34,7 @@ public static class MassTransitRabbitMqHostingExtensions
 
         configure?.Invoke(rabbitMqOptions);
 
-        return builder.AddRabbitMQ(
-                name: name,
-                port: rabbitMqOptions.Port ?? 5672,
-                userName: rabbitMqOptions.UsernameKey,
-                password: rabbitMqOptions.PasswordKey)
-            .WithExternalHttpEndpoints()
-            .WithManagementPlugin();
+
     }
 
  

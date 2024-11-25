@@ -26,13 +26,9 @@ public static class MassTransitRabbitMqExtensions
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
 
-        // Load options from configuration
-        var serviceProvider = builder.Services.BuildServiceProvider();
-        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-        var configurationSection = configuration.GetSection($"Aspire:MassTransit:RabbitMQ");
 
         var options = new MassTransitRabbitMqOptions();
-        configurationSection.Bind(options);
+        builder.Configuration.GetSection(name).Bind(options);
 
         // Apply additional configuration overrides
         configure?.Invoke(options);
@@ -50,14 +46,13 @@ public static class MassTransitRabbitMqExtensions
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                // Configure RabbitMQ host
-                cfg.Host(options.Host, options.VirtualHost, h =>
+                
+                var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:mq"];
+                if (string.IsNullOrWhiteSpace(rabbitMqConnectionString))
                 {
-                    // Resolve username and password values from IResourceBuilder<ParameterResource>
-                    h.Username(options.UsernameKey?.Resource?.Value ?? "guest");
-                    h.Password(options.PasswordKey?.Resource?.Value ?? "guest");
-                });
-
+                    throw new InvalidOperationException("RabbitMQ connection string is missing or empty in configuration.");
+                }
+                cfg.Host(new Uri(rabbitMqConnectionString));
                 cfg.ConfigureEndpoints(context);
             });
         });

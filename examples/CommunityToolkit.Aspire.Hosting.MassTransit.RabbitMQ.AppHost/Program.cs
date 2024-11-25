@@ -1,12 +1,11 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 
-var passwordParam = builder.AddParameter("RabbitMQPassword", secret: true);
-
-var rmq = builder.AddMassTransitRabbitMq("RabbitMQInstance", options =>
-{
-    options.Port = 990;
-});
+var rmq = builder.AddRabbitMQ(
+        name: "rmq",
+        port: 5672)
+    .WithExternalHttpEndpoints()
+    .WithManagementPlugin();
 
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Client_MassTransit_RabbitMQ_ApiService>("api")

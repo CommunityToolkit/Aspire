@@ -2,14 +2,6 @@
 CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions
 CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.DisableTelemetry.get -> bool
 CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.DisableTelemetry.set -> void
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.Host.get -> string!
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.Host.set -> void
 CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.MassTransitRabbitMqOptions() -> void
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.PasswordKey.get -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>?
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.PasswordKey.set -> void
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.UsernameKey.get -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>?
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.UsernameKey.set -> void
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.VirtualHost.get -> string!
-CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.VirtualHost.set -> void
 Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions
 static Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions.AddMassTransitRabbitMq(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MassTransitRabbitMqOptions!>? configure = null) -> void
