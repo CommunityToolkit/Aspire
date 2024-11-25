@@ -1,4 +1,5 @@
 using Microsoft.Build.Evaluation;
+using Microsoft.SqlServer.Dac;
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -32,5 +33,17 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
         }
 
         throw new InvalidOperationException($"Unable to locate SQL Server Database project package for resource {Name}.");
+    }
+
+    internal DacDeployOptions GetDacpacDeployOptions()
+    {
+        var options = new DacDeployOptions();
+
+        if (this.TryGetLastAnnotation<ConfigureDacDeployOptionsAnnotation>(out var configureAnnotation))
+        {
+            configureAnnotation.ConfigureDeploymentOptions(options);
+        }
+
+        return options;
     }
 }

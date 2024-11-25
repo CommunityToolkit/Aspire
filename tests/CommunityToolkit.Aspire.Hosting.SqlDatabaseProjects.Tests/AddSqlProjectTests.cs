@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Microsoft.SqlServer.Dac;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
@@ -45,6 +46,53 @@ public class AddSqlProjectTests
         var dacpacPath = sqlProjectResource.GetDacpacPath();
         Assert.NotNull(dacpacPath);
         Assert.True(File.Exists(dacpacPath));
+    }
+
+    [Fact]
+    public void AddSqlProject_WithoutDeploymentOptions()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddSqlProject("MySqlProject");
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
+        Assert.Equal("MySqlProject", sqlProjectResource.Name);
+
+        Assert.False(sqlProjectResource.TryGetLastAnnotation(out ConfigureDacDeployOptionsAnnotation? _));
+
+        var options = sqlProjectResource.GetDacpacDeployOptions();
+        Assert.NotNull(options);
+        Assert.Equivalent(new DacDeployOptions(), options);
+    }
+
+    [Fact]
+    public void AddSqlProject_WithDeploymentOptions()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+        Action<DacDeployOptions> configureAction = options => options.IncludeCompositeObjects = true;
+
+        appBuilder.AddSqlProject("MySqlProject").WithConfigureDacDeployOptions(configureAction);
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
+        Assert.Equal("MySqlProject", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.TryGetLastAnnotation(out ConfigureDacDeployOptionsAnnotation? configureDacDeployOptionsAnnotation));
+        Assert.Same(configureAction, configureDacDeployOptionsAnnotation.ConfigureDeploymentOptions);
+
+        var options = sqlProjectResource.GetDacpacDeployOptions();
+        Assert.True(options.IncludeCompositeObjects);
     }
 
     [Fact]
