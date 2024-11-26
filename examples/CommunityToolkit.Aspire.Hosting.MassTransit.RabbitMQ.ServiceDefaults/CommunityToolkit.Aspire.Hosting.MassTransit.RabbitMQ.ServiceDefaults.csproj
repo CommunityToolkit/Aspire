@@ -7,10 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
       <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />
       <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
