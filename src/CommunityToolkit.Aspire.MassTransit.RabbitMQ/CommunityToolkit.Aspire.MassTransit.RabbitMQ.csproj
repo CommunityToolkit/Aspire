@@ -7,10 +7,6 @@
       <Nullable>enable</Nullable>
       <RootNamespace>CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ</RootNamespace>
     </PropertyGroup>
-
-  <ItemGroup>
-    </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
