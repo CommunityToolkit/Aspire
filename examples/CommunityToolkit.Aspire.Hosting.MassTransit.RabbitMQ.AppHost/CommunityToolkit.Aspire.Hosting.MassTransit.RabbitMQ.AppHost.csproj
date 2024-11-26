@@ -16,5 +16,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj" />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher.csproj" />
     </ItemGroup>
 </Project>

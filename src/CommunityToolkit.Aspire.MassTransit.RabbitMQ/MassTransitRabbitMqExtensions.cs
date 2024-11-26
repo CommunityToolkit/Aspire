@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ;
+﻿using CommunityToolkit.Aspire.MassTransit.RabbitMQ;
 using MassTransit;
 using MassTransit.Logging;
 using MassTransit.Monitoring;
@@ -20,12 +20,13 @@ public static class MassTransitRabbitMqExtensions
     /// <param name="builder">The client IHostApplicationBuilder.</param>
     /// <param name="name">A unique name for the RabbitMQ instance.</param>
     /// <param name="configure">Optional action to override default settings.</param>
+    /// <param name="configureConsumers">Action to register one or more consumers.</param>
     public static void AddMassTransitRabbitMq(
         this IHostApplicationBuilder builder,
         string name,
-        Action<MassTransitRabbitMqOptions>? configure = null)
+        Action<MassTransitRabbitMqOptions>? configure = null,
+        Action<IBusRegistrationConfigurator>? configureConsumers = null)
     {
-      
         var options = new MassTransitRabbitMqOptions();
         configure?.Invoke(options);
 
@@ -35,25 +36,27 @@ public static class MassTransitRabbitMqExtensions
             x.SetInMemorySagaRepositoryProvider();
 
             var entryAssembly = Assembly.GetEntryAssembly();
-            x.AddConsumers(entryAssembly);
             x.AddSagaStateMachines(entryAssembly);
             x.AddSagas(entryAssembly);
             x.AddActivities(entryAssembly);
 
+            // Register consumers using the provided action
+            configureConsumers?.Invoke(x);
+
             x.UsingRabbitMq((context, cfg) =>
             {
-                
-                var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:"+name];
+                var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:" + name];
                 if (string.IsNullOrWhiteSpace(rabbitMqConnectionString))
                 {
                     throw new InvalidOperationException("RabbitMQ connection string is missing or empty in configuration.");
                 }
                 cfg.Host(new Uri(rabbitMqConnectionString));
+
+                // Configure endpoints as the last step
                 cfg.ConfigureEndpoints(context);
             });
         });
 
-        // Telemetry configuration
         if (!options.DisableTelemetry)
         {
             builder.Services.AddOpenTelemetry()
