@@ -13,7 +13,7 @@ internal class DacpacDeployer : IDacpacDeployer
     {
         using var dacPackage = DacPackage.Load(dacpacPath, DacSchemaModelStorageType.Memory);
         var dacServices = new DacServices(targetConnectionString);
-        dacServices.Message += (_, args) => deploymentLogger.LogDeploymentMessage(args.Message.ToString());
+        dacServices.Message += (sender, args) => deploymentLogger.LogInformation(args.Message.ToString());
         dacServices.Deploy(dacPackage, targetDatabaseName, true, options, cancellationToken);
     }
 }
