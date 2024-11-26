@@ -43,7 +43,7 @@
     <PackageVersion Include="JsonSchema.Net" Version="7.2.3" />
     <PackageVersion Include="OllamaSharp" Version="4.0.8" />
     <PackageVersion Include="MeiliSearch" Version="0.15.4" />
-    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.4.92" />
+    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.5.57" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.7.8" />
     <!-- Build dependencies -->
