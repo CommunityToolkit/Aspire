@@ -1,4 +1,4 @@
-﻿namespace CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ;
+﻿namespace CommunityToolkit.Aspire.MassTransit.RabbitMQ;
 
 /// <summary>
 /// Configuration options for the MassTransit RabbitMQ client integration.
