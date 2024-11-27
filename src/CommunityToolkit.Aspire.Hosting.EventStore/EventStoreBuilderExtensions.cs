@@ -16,7 +16,6 @@ namespace Aspire.Hosting;
 public static class EventStoreBuilderExtensions
 {
     private const string DataTargetFolder = "/var/lib/eventstore";
-    private const string LogTargetFolder = "/var/log/eventstore";
 
     /// <summary>
     /// Adds an EventStore resource to the application model. A container is used for local development.
