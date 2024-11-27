@@ -3,11 +3,6 @@ name: .NET main
 on:
   push:
     branches: ["main"]
-    paths:
-      - "src/**"
-      - "examples/**"
-      - "tests/**"
-      - ".github/workflows/dotnet-main.yml"
   workflow_dispatch:
 
 env:
