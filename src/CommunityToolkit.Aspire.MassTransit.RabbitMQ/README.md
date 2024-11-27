@@ -26,7 +26,14 @@ To install, add the extension to your client application using `builder.Services
 ### Example Usage
 
 ```csharp
-builder.AddMassTransitRabbitMq("rmq", options =>
-{
-    options.DisableTelemetry = false;
-});
+builder.AddMassTransitRabbitMq(
+    "rmq",
+    options => { options.DisableTelemetry = false; },
+    consumers =>
+    {
+        consumers.AddConsumer<SubmitOrderConsumer>();
+        consumers.AddConsumer<CancelOrderConsumer>();
+        consumers.AddConsumer<UpdateOrderConsumer>();
+    }
+);
+```
