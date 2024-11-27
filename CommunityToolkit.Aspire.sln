@@ -147,17 +147,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ", "src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj", "{887F91FF-C41D-4286-AD0F-DE56516E4E73}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService", "examples\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj", "{FE57BF8E-7565-4968-827D-F6F96B8DAA56}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "masstransit-rabbitmq", "masstransit-rabbitmq", "{5FB20992-C7C3-4A4C-8117-FD26D156554A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost", "examples\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost.csproj", "{06B0E6BB-FDFA-4066-866B-CCE7ADCAF69F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj", "{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults", "examples\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults.csproj", "{1B09ABA2-8128-433F-BADE-B5CD02452812}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost.csproj", "{8D3EED95-8EE5-421D-9161-F2AFA8D22543}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "masstransit-rabbitmq", "masstransit-rabbitmq", "{ED3608BF-2AE2-4F77-998D-1FD051448813}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults.csproj", "{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher", "examples\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher.csproj", "{92515576-4E7C-4D7B-86E8-8C5B08B4AEB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes.csproj", "{A855190A-DE7A-4B98-835D-7C23E1B600D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes", "examples\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes.csproj", "{731842DE-A969-4DB4-911E-2378BAD3E30E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher.csproj", "{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -389,26 +389,26 @@ Global
 		{887F91FF-C41D-4286-AD0F-DE56516E4E73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{887F91FF-C41D-4286-AD0F-DE56516E4E73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{887F91FF-C41D-4286-AD0F-DE56516E4E73}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE57BF8E-7565-4968-827D-F6F96B8DAA56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE57BF8E-7565-4968-827D-F6F96B8DAA56}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE57BF8E-7565-4968-827D-F6F96B8DAA56}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE57BF8E-7565-4968-827D-F6F96B8DAA56}.Release|Any CPU.Build.0 = Release|Any CPU
-		{06B0E6BB-FDFA-4066-866B-CCE7ADCAF69F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{06B0E6BB-FDFA-4066-866B-CCE7ADCAF69F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{06B0E6BB-FDFA-4066-866B-CCE7ADCAF69F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{06B0E6BB-FDFA-4066-866B-CCE7ADCAF69F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1B09ABA2-8128-433F-BADE-B5CD02452812}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1B09ABA2-8128-433F-BADE-B5CD02452812}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1B09ABA2-8128-433F-BADE-B5CD02452812}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1B09ABA2-8128-433F-BADE-B5CD02452812}.Release|Any CPU.Build.0 = Release|Any CPU
-		{92515576-4E7C-4D7B-86E8-8C5B08B4AEB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{92515576-4E7C-4D7B-86E8-8C5B08B4AEB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{92515576-4E7C-4D7B-86E8-8C5B08B4AEB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{92515576-4E7C-4D7B-86E8-8C5B08B4AEB0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{731842DE-A969-4DB4-911E-2378BAD3E30E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{731842DE-A969-4DB4-911E-2378BAD3E30E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{731842DE-A969-4DB4-911E-2378BAD3E30E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{731842DE-A969-4DB4-911E-2378BAD3E30E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -483,12 +483,12 @@ Global
 		{36FC2579-582A-4DAF-9B20-AB33331624C6} = {A7614F2B-E810-412E-91E7-8B6272DD5DBB}
 		{DA5DD2CB-51D9-429F-91F5-BF3D1A13A21A} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{887F91FF-C41D-4286-AD0F-DE56516E4E73} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
-		{ED3608BF-2AE2-4F77-998D-1FD051448813} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
-		{FE57BF8E-7565-4968-827D-F6F96B8DAA56} = {ED3608BF-2AE2-4F77-998D-1FD051448813}
-		{1B09ABA2-8128-433F-BADE-B5CD02452812} = {ED3608BF-2AE2-4F77-998D-1FD051448813}
-		{06B0E6BB-FDFA-4066-866B-CCE7ADCAF69F} = {ED3608BF-2AE2-4F77-998D-1FD051448813}
-		{92515576-4E7C-4D7B-86E8-8C5B08B4AEB0} = {ED3608BF-2AE2-4F77-998D-1FD051448813}
-		{731842DE-A969-4DB4-911E-2378BAD3E30E} = {ED3608BF-2AE2-4F77-998D-1FD051448813}
+		{5FB20992-C7C3-4A4C-8117-FD26D156554A} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

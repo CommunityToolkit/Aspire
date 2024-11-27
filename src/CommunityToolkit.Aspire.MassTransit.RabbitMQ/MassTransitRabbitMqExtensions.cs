@@ -40,7 +40,6 @@ public static class MassTransitRabbitMqExtensions
             x.AddSagas(entryAssembly);
             x.AddActivities(entryAssembly);
 
-            // Register consumers using the provided action
             configureConsumers?.Invoke(x);
 
             x.UsingRabbitMq((context, cfg) =>
@@ -48,11 +47,12 @@ public static class MassTransitRabbitMqExtensions
                 var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:" + name];
                 if (string.IsNullOrWhiteSpace(rabbitMqConnectionString))
                 {
-                    throw new InvalidOperationException("RabbitMQ connection string is missing or empty in configuration.");
+                    throw new InvalidOperationException(
+                        "RabbitMQ connection string is missing or empty in configuration.");
                 }
+
                 cfg.Host(new Uri(rabbitMqConnectionString));
 
-                // Configure endpoints as the last step
                 cfg.ConfigureEndpoints(context);
             });
         });

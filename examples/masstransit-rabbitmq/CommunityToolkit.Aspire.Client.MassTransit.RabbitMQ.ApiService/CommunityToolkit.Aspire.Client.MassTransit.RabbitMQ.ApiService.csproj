@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
+      <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
       <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes.csproj" />
       <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults.csproj" />
     </ItemGroup>
