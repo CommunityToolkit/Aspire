@@ -159,6 +159,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Cli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher.csproj", "{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ", "src\CommunityToolkit.Aspire.Hosting.ActiveMQ\CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj", "{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "activemq", "activemq", "{BF4C4E57-DAAF-4EE5-B330-1923106BAE69}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost", "examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj", "{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults", "examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults\CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults.csproj", "{978EED2A-43BB-4DE6-8563-3A9972869661}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit", "examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj", "{A87F7800-BD24-4577-8F15-50D33C8DACF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests", "tests\CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests\CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj", "{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -409,6 +421,26 @@ Global
 		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -489,6 +521,12 @@ Global
 		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
 		{A855190A-DE7A-4B98-835D-7C23E1B600D2} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
 		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{BF4C4E57-DAAF-4EE5-B330-1923106BAE69} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
+		{978EED2A-43BB-4DE6-8563-3A9972869661} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
