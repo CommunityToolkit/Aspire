@@ -1,0 +1,21 @@
+@CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit_HostAddress = http://localhost:5004
+
+POST http://localhost:5004/send/Hello%20World
+Accept: application/json
+
+###
+GET http://localhost:5004/alive
+Accept: application/json
+
+###
+GET http://localhost:5004/received
+Accept: application/json
+
+###
+GET http://admin:admin@localhost:8161/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus
+origin: localhost
+
+###
+GET http://localhost:8161/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus
+origin: localhost
+Authorization: Basic YWRtaW46YWRtaW4=

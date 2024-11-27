@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.ActiveMQ\CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
