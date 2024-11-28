@@ -1,7 +1,6 @@
 ﻿using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Testing;
 using EventStore.Client;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -20,7 +19,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task VerifyEventStoreResource()
     {
-        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+        using var builder = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
 
         var eventstore = builder.AddEventStore("eventstore");
 
@@ -44,22 +43,23 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
 
-        await CreateTestData(eventStoreClient);
+        var id = await CreateTestDataAsync(eventStoreClient);
+        await VerifyTestDataAsync(eventStoreClient, id);
     }
 
-    [Theory(Skip = "Finding root cause for test issue")]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
     {
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         string? volumeName = null;
         string? bindMountPath = null;
         Guid? id = null;
 
         try
         {
-            using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
-
+            using var builder1 = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
             var eventstore1 = builder1.AddEventStore("eventstore");
 
             if (useVolume)
@@ -79,14 +79,13 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
                 eventstore1.WithDataBindMount(bindMountPath);
             }
 
-            var cts1 = new CancellationTokenSource(TimeSpan.FromMinutes(5));
             using (var app = builder1.Build())
             {
-                await app.StartAsync(cts1.Token);
+                await app.StartAsync();
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts1.Token);
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts.Token);
 
                 try
                 {
@@ -98,10 +97,11 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                     using (var host = hostBuilder.Build())
                     {
-                        await host.StartAsync(cts1.Token);
+                        await host.StartAsync();
 
                         var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
-                        id = await CreateTestData(eventStoreClient);
+                        id = await CreateTestDataAsync(eventStoreClient);
+                        await VerifyTestDataAsync(eventStoreClient, id.Value);
                     }
                 }
                 finally
@@ -111,8 +111,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
                 }
             }
 
-            using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
-
+            using var builder2 = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
             var eventstore2 = builder2.AddEventStore("eventstore");
 
             if (useVolume)
@@ -121,17 +120,18 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             }
             else
             {
+                //EventStore shutdown can be slightly delayed, so second instance might fail to start when using the same bind mount before shutdown.
+                await Task.Delay(TimeSpan.FromSeconds(5));
                 eventstore2.WithDataBindMount(bindMountPath!);
             }
 
-            var cts2 = new CancellationTokenSource(TimeSpan.FromMinutes(5));
             using (var app = builder2.Build())
             {
-                await app.StartAsync(cts2.Token);
+                await app.StartAsync();
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts2.Token);
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts.Token);
 
                 try
                 {
@@ -143,10 +143,10 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                     using (var host = hostBuilder.Build())
                     {
-                        await host.StartAsync(cts2.Token);
+                        await host.StartAsync();
                         var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
 
-                        await VerifyTestData(eventStoreClient, id.Value);
+                        await VerifyTestDataAsync(eventStoreClient, id.Value);
                     }
                 }
                 finally
@@ -182,7 +182,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
     public async Task VerifyWaitForEventStoreBlocksDependentResources()
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+        using var builder = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
 
         var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
         builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () =>
@@ -217,7 +217,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
         await app.StopAsync();
     }
 
-    private static async Task<Guid> CreateTestData(EventStoreClient eventStoreClient)
+    private static async Task<Guid> CreateTestDataAsync(EventStoreClient eventStoreClient)
     {
         var id = Guid.NewGuid();
         var accountCreated = new AccountCreated(id, TestAccountName);
@@ -228,12 +228,10 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
         var writeResult = await eventStoreClient.AppendToStreamAsync(streamName, StreamRevision.None, [eventData]);
         Assert.NotNull(writeResult);
 
-        await VerifyTestData(eventStoreClient, id);
-
         return id;
     }
 
-    private static async Task VerifyTestData(EventStoreClient eventStoreClient, Guid id)
+    private static async Task VerifyTestDataAsync(EventStoreClient eventStoreClient, Guid id)
     {
         var streamName = $"{TestStreamNamePrefix}{id}";
 
