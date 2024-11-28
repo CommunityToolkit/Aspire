@@ -44,10 +44,10 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
 
-        await CreateTestData(eventStoreClient);
+        await CreateTestData(eventStoreClient);s
     }
 
-    [Theory(Skip = "Finding root cause for test issue")]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
