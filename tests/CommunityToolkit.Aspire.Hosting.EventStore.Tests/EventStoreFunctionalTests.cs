@@ -52,7 +52,6 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         string? volumeName = null;
         string? bindMountPath = null;
         Guid? id = null;
@@ -85,7 +84,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts.Token);
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
 
                 try
                 {
@@ -131,7 +130,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts.Token);
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
 
                 try
                 {
