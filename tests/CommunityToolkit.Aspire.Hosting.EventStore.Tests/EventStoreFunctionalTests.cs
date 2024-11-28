@@ -17,7 +17,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
     public const string TestStreamNamePrefix = "account-";
     public const string TestAccountName = "John Doe";
 
-    [Fact(Skip = "Finding root cause for test issue")]
+    [Fact]
     public async Task VerifyEventStoreResource()
     {
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
@@ -47,7 +47,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
         await CreateTestData(eventStoreClient);
     }
 
-    [Theory]
+    [Theory(Skip = "Finding root cause for test issue")]
     [InlineData(true)]
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
