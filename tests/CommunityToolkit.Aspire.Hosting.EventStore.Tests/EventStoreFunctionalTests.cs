@@ -74,7 +74,19 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             }
             else
             {
-                bindMountPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                bindMountPath = Directory.CreateTempSubdirectory().FullName;
+
+                if (!OperatingSystem.IsWindows())
+                {
+                    // Change permissions for non-root accounts (container user account)
+                    const UnixFileMode OwnershipPermissions =
+                       UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                       UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
+                       UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
+
+                    File.SetUnixFileMode(bindMountPath, OwnershipPermissions);
+                }
+
                 eventstore1.WithDataBindMount(bindMountPath);
             }
 
