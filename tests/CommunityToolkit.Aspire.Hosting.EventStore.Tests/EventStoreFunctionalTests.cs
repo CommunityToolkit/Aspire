@@ -74,7 +74,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             }
             else
             {
-                bindMountPath = Directory.CreateTempSubdirectory().FullName;
+                bindMountPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 eventstore1.WithDataBindMount(bindMountPath);
             }
 
