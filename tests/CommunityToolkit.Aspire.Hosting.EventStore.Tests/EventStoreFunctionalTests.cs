@@ -28,9 +28,9 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        await app.WaitForTextAsync("Processor ConnectorsStreamSupervisor Running", "eventstore");
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        await rns.WaitForResourceHealthyAsync(eventstore.Resource.Name, default);
 
         var hostBuilder = Host.CreateApplicationBuilder();
 
@@ -83,9 +83,9 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             {
                 await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                await app.WaitForTextAsync("Processor ConnectorsStreamSupervisor Running", eventstore1.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
 
                 try
                 {
@@ -127,9 +127,9 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             {
                 await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                await app.WaitForTextAsync("Processor ConnectorsStreamSupervisor Running", eventstore2.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
 
                 try
                 {
