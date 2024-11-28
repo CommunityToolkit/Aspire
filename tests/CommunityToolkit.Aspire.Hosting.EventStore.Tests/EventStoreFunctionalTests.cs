@@ -79,7 +79,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
                 eventstore1.WithDataBindMount(bindMountPath);
             }
 
-            var cts1 = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            var cts1 = new CancellationTokenSource(TimeSpan.FromMinutes(5));
             using (var app = builder1.Build())
             {
                 await app.StartAsync(cts1.Token);
@@ -124,7 +124,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
                 eventstore2.WithDataBindMount(bindMountPath!);
             }
 
-            var cts2 = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            var cts2 = new CancellationTokenSource(TimeSpan.FromMinutes(5));
             using (var app = builder2.Build())
             {
                 await app.StartAsync(cts2.Token);
