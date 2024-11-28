@@ -79,13 +79,14 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
                 eventstore1.WithDataBindMount(bindMountPath);
             }
 
+            var cts1 = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             using (var app = builder1.Build())
             {
-                await app.StartAsync();
+                await app.StartAsync(cts1.Token);
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts1.Token);
 
                 try
                 {
@@ -97,7 +98,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                     using (var host = hostBuilder.Build())
                     {
-                        await host.StartAsync();
+                        await host.StartAsync(cts1.Token);
 
                         var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
                         id = await CreateTestData(eventStoreClient);
@@ -123,13 +124,14 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
                 eventstore2.WithDataBindMount(bindMountPath!);
             }
 
+            var cts2 = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             using (var app = builder2.Build())
             {
-                await app.StartAsync();
+                await app.StartAsync(cts2.Token);
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
+                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, cts2.Token);
 
                 try
                 {
@@ -141,7 +143,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                     using (var host = hostBuilder.Build())
                     {
-                        await host.StartAsync();
+                        await host.StartAsync(cts2.Token);
                         var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
 
                         await VerifyTestData(eventStoreClient, id.Value);
