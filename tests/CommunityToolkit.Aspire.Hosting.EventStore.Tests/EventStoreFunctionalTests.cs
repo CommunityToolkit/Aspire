@@ -181,7 +181,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task VerifyWaitForEventStoreBlocksDependentResources()
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
@@ -193,7 +193,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
         var resource = builder.AddEventStore("resource")
                               .WithHealthCheck("blocking_check");
 
-        var dependentResource = builder.AddEventStore("dependentresource")
+        var dependentResource = builder.AddContainer("nginx", "mcr.microsoft.com/cbl-mariner/base/nginx", "1.22")
                                        .WaitFor(resource);
 
         using var app = builder.Build();
@@ -208,7 +208,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
         healthCheckTcs.SetResult(HealthCheckResult.Healthy());
 
-        await rns.WaitForResourceAsync(resource.Resource.Name, re => re.Snapshot.HealthStatus == HealthStatus.Healthy, cts.Token);
+        await rns.WaitForResourceHealthyAsync(resource.Resource.Name, cts.Token);
 
         await rns.WaitForResourceAsync(dependentResource.Resource.Name, KnownResourceStates.Running, cts.Token);
 
