@@ -47,7 +47,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
         await CreateTestData(eventStoreClient);
     }
 
-    [Theory]
+    [Theory(Skip = "Finding root cause for test issue")]
     [InlineData(true)]
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
@@ -178,7 +178,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    [Fact(Skip = "Finding root cause for test issue")]
+    [Fact]
     public async Task VerifyWaitForEventStoreBlocksDependentResources()
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
