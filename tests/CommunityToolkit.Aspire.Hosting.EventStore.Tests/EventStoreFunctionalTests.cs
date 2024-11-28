@@ -44,7 +44,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
 
-        await CreateTestData(eventStoreClient);s
+        await CreateTestData(eventStoreClient);
     }
 
     [Theory]
