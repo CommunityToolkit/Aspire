@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.EventStore\CommunityToolkit.Aspire.EventStore.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults\CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

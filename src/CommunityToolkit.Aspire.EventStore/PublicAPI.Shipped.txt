@@ -1,0 +1,14 @@
+#nullable enable
+CommunityToolkit.Aspire.EventStore.EventStoreSettings
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.EventStoreSettings() -> void
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.ConnectionString.get -> string?
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.ConnectionString.set -> void
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.DisableHealthChecks.get -> bool
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.DisableHealthChecks.set -> void
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.HealthCheckTimeout.get -> System.TimeSpan?
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.HealthCheckTimeout.set -> void
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.DisableTracing.get -> bool
+CommunityToolkit.Aspire.EventStore.EventStoreSettings.DisableTracing.set -> void
+Microsoft.Extensions.Hosting.AspireEventStoreExtensions
+static Microsoft.Extensions.Hosting.AspireEventStoreExtensions.AddKeyedEventStoreClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.EventStore.EventStoreSettings!>? configureSettings = null) -> void
+static Microsoft.Extensions.Hosting.AspireEventStoreExtensions.AddEventStoreClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.EventStore.EventStoreSettings!>? configureSettings = null) -> void
