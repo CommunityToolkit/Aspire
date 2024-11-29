@@ -1,2 +1,5 @@
 #nullable enable
-
+Aspire.Hosting.OllamaGpuVendor
+Aspire.Hosting.OllamaGpuVendor.Nvidia = 0 -> Aspire.Hosting.OllamaGpuVendor
+Aspire.Hosting.OllamaGpuVendor.AMD = 1 -> Aspire.Hosting.OllamaGpuVendor
+static Aspire.Hosting.OllamaResourceBuilderExtensions.WithGPUSupport(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, Aspire.Hosting.OllamaGpuVendor vendor = Aspire.Hosting.OllamaGpuVendor.Nvidia) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
