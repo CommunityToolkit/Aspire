@@ -8,12 +8,12 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 /// </summary>
 internal class DacpacDeployer : IDacpacDeployer
 {
-    /// <inheritdoc cref="IDacpacDeployer.Deploy(string, string, string, ILogger, CancellationToken)" />
-    public void Deploy(string dacpacPath, string targetConnectionString, string targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken)
+    /// <inheritdoc cref="IDacpacDeployer.Deploy(string, DacDeployOptions, string, string, ILogger, CancellationToken)" />
+    public void Deploy(string dacpacPath, DacDeployOptions options, string targetConnectionString, string targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken)
     {
-        var dacPackage = DacPackage.Load(dacpacPath, DacSchemaModelStorageType.Memory);
+        using var dacPackage = DacPackage.Load(dacpacPath, DacSchemaModelStorageType.Memory);
         var dacServices = new DacServices(targetConnectionString);
         dacServices.Message += (sender, args) => deploymentLogger.LogInformation(args.Message.ToString());
-        dacServices.Deploy(dacPackage, targetDatabaseName, true, new DacDeployOptions(), cancellationToken);
+        dacServices.Deploy(dacPackage, targetDatabaseName, true, options, cancellationToken);
     }
 }

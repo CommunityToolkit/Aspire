@@ -1,2 +1,6 @@
 #nullable enable
-
+Aspire.Hosting.ApplicationModel.ConfigureDacDeployOptionsAnnotation
+Aspire.Hosting.ApplicationModel.ConfigureDacDeployOptionsAnnotation.ConfigureDacDeployOptionsAnnotation(System.Action<Microsoft.SqlServer.Dac.DacDeployOptions!>! ConfigureDeploymentOptions) -> void
+Aspire.Hosting.ApplicationModel.ConfigureDacDeployOptionsAnnotation.ConfigureDeploymentOptions.get -> System.Action<Microsoft.SqlServer.Dac.DacDeployOptions!>!
+Aspire.Hosting.ApplicationModel.ConfigureDacDeployOptionsAnnotation.ConfigureDeploymentOptions.init -> void
+static Aspire.Hosting.SqlProjectBuilderExtensions.WithConfigureDacDeployOptions(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>! builder, System.Action<Microsoft.SqlServer.Dac.DacDeployOptions!>! configureDeploymentOptions) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!
