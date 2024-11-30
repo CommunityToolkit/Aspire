@@ -534,4 +534,35 @@ public class AddOllamaTests
         state = command.UpdateState(context);
         Assert.Equal(ResourceCommandState.Enabled, state);
     }
+
+    [Theory]
+    [InlineData(OllamaGpuVendor.Nvidia, "--gpus", "all")]
+    [InlineData(OllamaGpuVendor.AMD, "--device", "/dev/kfd")]
+    public async Task WithGPUSupport(OllamaGpuVendor vendor, string expectedArg, string expectedValue)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithGPUSupport(vendor);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
+        CommandLineArgsCallbackContext context = new([]);
+        await argsAnnotations.Callback(context);
+
+        Assert.Collection(
+            context.Args,
+            arg =>
+            {
+                Assert.Equal(expectedArg, arg);
+            },
+            arg =>
+            {
+                Assert.Equal(expectedValue, arg);
+            }
+        );
+    }
 }
