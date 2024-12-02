@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
+    </ItemGroup>
+
+</Project>

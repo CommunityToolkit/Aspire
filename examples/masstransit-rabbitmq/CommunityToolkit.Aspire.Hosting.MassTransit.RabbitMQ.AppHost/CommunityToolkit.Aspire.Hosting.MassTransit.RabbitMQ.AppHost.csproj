@@ -1,21 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
 
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <IsAspireHost>true</IsAspireHost>
-        <UserSecretsId>c86b96db-58a9-47f7-b8a0-552da81efa9f</UserSecretsId>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>c86b96db-58a9-47f7-b8a0-552da81efa9f</UserSecretsId>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Aspire.Hosting.AppHost" />
-      <PackageReference Include="Aspire.Hosting.RabbitMQ" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost"/>
+    <PackageReference Include="Aspire.Hosting.RabbitMQ"/>
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj" />
-      <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj"/>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher.csproj"/>
+  </ItemGroup>
 </Project>

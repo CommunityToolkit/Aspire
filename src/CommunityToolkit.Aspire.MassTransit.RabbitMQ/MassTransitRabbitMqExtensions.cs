@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Aspire.MassTransit.RabbitMQ;
 using MassTransit;
 using MassTransit.Logging;
-using MassTransit.Monitoring;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -27,10 +25,39 @@ public static class MassTransitRabbitMqExtensions
         Action<MassTransitRabbitMqOptions>? configure = null,
         Action<IBusRegistrationConfigurator>? configureConsumers = null)
     {
+        AddMassTransitRabbitMq<IBus>(builder, name, configure, configureConsumers);
+    }
+
+    /// <summary>
+    /// Configures an additional MassTransit bus instance with RabbitMQ integration.
+    /// </summary>
+    /// <typeparam name="TBus">The interface type representing the bus.</typeparam>
+    /// <param name="builder">The client IHostApplicationBuilder.</param>
+    /// <param name="name">A unique name for the RabbitMQ instance.</param>
+    /// <param name="configure">Optional action to override default settings.</param>
+    /// <param name="configureConsumers">Action to register one or more consumers.</param>
+    public static void AddMassTransitRabbitMq<TBus>(
+        this IHostApplicationBuilder builder,
+        string name,
+        Action<MassTransitRabbitMqOptions>? configure = null,
+        Action<IBusRegistrationConfigurator>? configureConsumers = null)
+        where TBus : class, IBus
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
         var options = new MassTransitRabbitMqOptions();
         configure?.Invoke(options);
+        var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:" + name];
 
-        builder.Services.AddMassTransit(x =>
+        if (string.IsNullOrWhiteSpace(rabbitMqConnectionString))
+        {
+            throw new InvalidOperationException(
+                "RabbitMQ connection string is missing or empty in configuration.");
+        }
+
+        builder.Services.AddMassTransit<TBus>(x =>
         {
             x.SetKebabCaseEndpointNameFormatter();
             x.SetInMemorySagaRepositoryProvider();
@@ -44,13 +71,6 @@ public static class MassTransitRabbitMqExtensions
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:" + name];
-                if (string.IsNullOrWhiteSpace(rabbitMqConnectionString))
-                {
-                    throw new InvalidOperationException(
-                        "RabbitMQ connection string is missing or empty in configuration.");
-                }
-
                 cfg.Host(new Uri(rabbitMqConnectionString));
 
                 cfg.ConfigureEndpoints(context);
