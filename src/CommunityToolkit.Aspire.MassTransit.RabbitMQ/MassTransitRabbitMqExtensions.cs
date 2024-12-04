@@ -2,7 +2,6 @@
 using MassTransit;
 using MassTransit.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.Reflection;
 
 namespace Microsoft.Extensions.Hosting;

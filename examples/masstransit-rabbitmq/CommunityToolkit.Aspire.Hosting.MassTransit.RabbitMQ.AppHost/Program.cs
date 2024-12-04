@@ -12,7 +12,7 @@ var rmq = builder.AddRabbitMQ(
 var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Client_MassTransit_RabbitMQ_ApiService>("api")
     .WaitFor(rmq).WithReference(rmq);
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Client_MassTransit_RabbitMQ_ApiService>("publisher")
+builder.AddProject<Projects.CommunityToolkit_Aspire_Client_MassTransit_RabbitMQ_Publisher>("publisher")
     .WaitFor(api).WaitFor(rmq).WithReference(rmq);
 
 builder.Build().Run();
