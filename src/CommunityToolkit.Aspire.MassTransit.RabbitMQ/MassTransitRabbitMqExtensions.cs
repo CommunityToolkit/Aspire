@@ -2,6 +2,7 @@
 using MassTransit;
 using MassTransit.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Reflection;
 
 namespace Microsoft.Extensions.Hosting;
@@ -17,15 +18,15 @@ public static class MassTransitRabbitMqExtensions
     /// </summary>
     /// <param name="builder">The client IHostApplicationBuilder.</param>
     /// <param name="name">A unique name for the RabbitMQ instance.</param>
-    /// <param name="configure">Optional action to override default settings.</param>
-    /// <param name="configureConsumers">Action to register one or more consumers.</param>
+    /// <param name="configureOptions">Optional action to override default settings.</param>
+    /// <param name="massTransitConfiguration">Action to register one or more consumers.</param>
     public static void AddMassTransitRabbitMq(
         this IHostApplicationBuilder builder,
         string name,
-        Action<MassTransitRabbitMqOptions>? configure = null,
-        Action<IBusRegistrationConfigurator>? configureConsumers = null)
+        Action<MassTransitRabbitMqOptions>? configureOptions = null,
+        Action<IBusRegistrationConfigurator>? massTransitConfiguration = null)
     {
-        AddMassTransitRabbitMq<IBus>(builder, name, configure, configureConsumers);
+        AddMassTransitRabbitMq<IBus>(builder, name, configureOptions, massTransitConfiguration);
     }
 
     /// <summary>
@@ -34,13 +35,13 @@ public static class MassTransitRabbitMqExtensions
     /// <typeparam name="TBus">The interface type representing the bus.</typeparam>
     /// <param name="builder">The client IHostApplicationBuilder.</param>
     /// <param name="name">A unique name for the RabbitMQ instance.</param>
-    /// <param name="configure">Optional action to override default settings.</param>
-    /// <param name="configureConsumers">Action to register one or more consumers.</param>
+    /// <param name="configureOptions">Optional action to override default settings.</param>
+    /// <param name="massTransitConfiguration">Action to register one or more consumers.</param>
     public static void AddMassTransitRabbitMq<TBus>(
         this IHostApplicationBuilder builder,
         string name,
-        Action<MassTransitRabbitMqOptions>? configure = null,
-        Action<IBusRegistrationConfigurator>? configureConsumers = null)
+        Action<MassTransitRabbitMqOptions>? configureOptions = null,
+        Action<IBusRegistrationConfigurator>? massTransitConfiguration = null)
         where TBus : class, IBus
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -48,7 +49,7 @@ public static class MassTransitRabbitMqExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         var options = new MassTransitRabbitMqOptions();
-        configure?.Invoke(options);
+        configureOptions?.Invoke(options);
         var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:" + name];
 
         if (string.IsNullOrWhiteSpace(rabbitMqConnectionString))
@@ -67,7 +68,7 @@ public static class MassTransitRabbitMqExtensions
             x.AddSagas(entryAssembly);
             x.AddActivities(entryAssembly);
 
-            configureConsumers?.Invoke(x);
+            massTransitConfiguration?.Invoke(x);
 
             x.UsingRabbitMq((context, cfg) =>
             {

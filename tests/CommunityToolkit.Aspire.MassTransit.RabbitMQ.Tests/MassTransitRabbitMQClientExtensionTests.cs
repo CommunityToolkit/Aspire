@@ -106,13 +106,13 @@ public class MassTransitRabbitMqExtensionsTest
 
 
         // Add the first RabbitMQ client
-        builder.AddMassTransitRabbitMq("rabbitmq1", configureConsumers: x =>
+        builder.AddMassTransitRabbitMq("rabbitmq1", massTransitConfiguration: x =>
         {
             x.AddConsumer<TestConsumer>();
         });
 
         // Add the second RabbitMQ client with a different configuration
-        builder.AddMassTransitRabbitMq<ISecondBus>("rabbitmq2", configureConsumers: x =>
+        builder.AddMassTransitRabbitMq<ISecondBus>("rabbitmq2", massTransitConfiguration: x =>
         {
             x.AddConsumer<TestConsumerTwo>();
         });
@@ -145,7 +145,7 @@ public class MassTransitRabbitMqExtensionsTest
             new KeyValuePair<string, string?>("ConnectionStrings:rabbitmq1", "amqp://localhost:5672")
         ]);
 
-        builder.AddMassTransitRabbitMq("rabbitmq1", configureConsumers: x =>
+        builder.AddMassTransitRabbitMq("rabbitmq1", massTransitConfiguration: x =>
         {
             x.AddConsumer<TestConsumer>();
             x.AddSaga<TestSagaState>().InMemoryRepository();
