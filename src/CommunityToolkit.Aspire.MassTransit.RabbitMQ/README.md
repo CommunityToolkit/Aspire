@@ -4,7 +4,7 @@
 
 This package provides an **Aspire client extension** for seamlessly integrating **MassTransit with RabbitMQ**. It works with the `Aspire.Hosting.RabbitMQ.AddRabbitMQ()` method for hosting.
 
-The name string should match the name used in Aspire.Hosting.RabbitMQ.AddRabbitMQ(), as it references the connection string.
+The name string should match the name used in `Aspire.Hosting.RabbitMQ.AddRabbitMQ()`, as it references the connection string.
 
 ---
 
@@ -14,6 +14,7 @@ The name string should match the name used in Aspire.Hosting.RabbitMQ.AddRabbitM
 - Automatically discovers and registers **consumers**, **sagas**, and **activities**.
 - Supports **OpenTelemetry** and **Application Insights** for monitoring.
 - Uses the same configuration format as the hosting environment for easy integration.
+- **Multi-bus support** to configure multiple RabbitMQ instances.
 
 ---
 
@@ -36,4 +37,21 @@ builder.AddMassTransitRabbitMq(
         consumers.AddConsumer<UpdateOrderConsumer>();
     }
 );
+```
+### Multi-bus example
+
+
+```csharp
+public interface ISecondBus : IBus;
+```
+
+```csharp
+        builder.AddMassTransitRabbitMq("rabbitmq1", massTransitConfiguration: x =>
+        {
+            x.AddConsumer<TestConsumer>();
+        });
+        builder.AddMassTransitRabbitMq<ISecondBus>("rabbitmq2", massTransitConfiguration: x =>
+        {
+            x.AddConsumer<TestConsumerTwo>();
+        });
 ```

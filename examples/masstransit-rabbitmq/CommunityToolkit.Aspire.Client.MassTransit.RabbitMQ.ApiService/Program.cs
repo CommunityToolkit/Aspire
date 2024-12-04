@@ -7,11 +7,11 @@ builder.AddServiceDefaults();
 builder.AddMassTransitRabbitMq(
     "rmq",
     options => { options.DisableTelemetry = false; },
-    consumers =>
+    masstransitConfiguration =>
     {
-        consumers.AddConsumer<SubmitOrderConsumer>();
-        consumers.AddConsumer<CancelOrderConsumer>();
-        consumers.AddConsumer<UpdateOrderConsumer>();
+        masstransitConfiguration.AddConsumer<SubmitOrderConsumer>();
+        masstransitConfiguration.AddConsumer<CancelOrderConsumer>();
+        masstransitConfiguration.AddConsumer<UpdateOrderConsumer>();
     }
 );
 
