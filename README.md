@@ -26,8 +26,11 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`Hosting.Deno`][deno-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Deno][deno-shields]][deno-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Deno][deno-shields-preview]][deno-nuget-preview]                                                              | A hosting integration for the Deno apps.                                                                       |
 | - **Learn More**: [`Hosting.SqlDatabaseProjects`][sql-database-projects-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects][sql-database-projects-shields]][sql-database-projects-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects][sql-database-projects-shields-preview]][sql-database-projects-nuget-preview]                 | A hosting integration for the SQL Databases Projects.                                                                       |
 | - **Learn More**: [`Hosting.Rust`][rust-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Rust][rust-shields]][rust-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Rust][rust-shields-preview]][rust-nuget-preview]                                                              | A hosting integration for the Rust apps.                                                                       |
-| - **Learn More**: [`Hosting.Bun`][bun-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Bun][bun-shields]][bun-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Bun][bun-shields-preview]][bun-nuget-preview]                                                                     | A hosting integration for the Bun apps.                                                                       |
+| - **Learn More**: [`Hosting.Bun`][bun-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Bun][bun-shields]][bun-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Bun][bun-shields-preview]][bun-nuget-preview]                                                                      | A hosting integration for the Bun apps.                                                                       |
 | - **Learn More**: [`Hosting.Python.Extensions`][python-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Python.Extensions][python-ext-shields]][python-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Python.Extensions][python-ext-shields-preview]][python-ext-nuget-preview] | An integration that contains some additional extensions for running python applications                                                                                                                                       |
+| - **Learn More**: [`Hosting.EventStore`][eventstore-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.EventStore][eventstore-shields]][eventstore-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.EventStore][eventstore-shields-preview]][eventstore-nuget-preview]              | An Aspire hosting integration leveraging the [EventStore](https://eventstore.com) container.                                                                                                                                 |
+| - **Learn More**: [`EventStore`][eventstore-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.EventStore][eventstore-client-shields]][eventstore-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.EventStore][eventstore-client-shields-preview]][eventstore-client-nuget-preview]          | An Aspire client integration for the [EventStore](https://github.com/EventStore/EventStore-Client-Dotnet) package.                                                                                                                 |
+| - **Learn More**: [`Hosting.ActiveMQ`][activemq-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.ActiveMQ][activemq-shields]][activemq-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.ActiveMQ][activemq-shields-preview]][activemq-nuget-preview]                              | An Aspire hosting integration leveraging the [ActiveMq](https://activemq.apache.org) container.                                                                                                                                 |
 ## 🙌 Getting Started
 
 Each of the integrations in the toolkit is available as a NuGet package, and can be added to your .NET project. Refer to the table above for the available integrations and the documentation on how to use them.
@@ -139,3 +142,20 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [python-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Python.Extensions/
 [python-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Python.Extensions?label=nuget%20(preview)
 [python-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Python.Extensions/absoluteLatest
+
+
+[eventstore-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-eventstore
+[eventstore-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.EventStore
+[eventstore-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.EventStore/
+[eventstore-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.EventStore?label=nuget%20(preview)
+[eventstore-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.EventStore/absoluteLatest
+[eventstore-client-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.EventStore
+[eventstore-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.EventStore/
+[eventstore-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.EventStore?label=nuget%20(preview)
+[eventstore-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.EventStore/absoluteLatest
+
+[activemq-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-activemq
+[activemq-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.ActiveMQ
+[activemq-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.ActiveMQ/
+[activemq-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.ActiveMQ?label=nuget%20(preview)
+[activemq-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.ActiveMQ/absoluteLatest
