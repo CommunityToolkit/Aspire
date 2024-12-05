@@ -5,8 +5,8 @@
     -   If the integration is a hosting integration (starts with CommunityToolkit.Aspire.Hosting), extension methods should be placed in `Aspire.Hosting`.
     -   If the integration is a client integration (starts with CommunityToolkit.Aspire), extension methods should be placed in `Microsoft.Extensions.Hosting`.
     -   Use file-scoped namespaces.
--   All public methods require doc comments
--   Prefer type declarations over `var`
+-   All public members require doc comments.
+-   Prefer type declarations over `var` when the type isn't obvious.
 
 ## Sample hosting integration
 
