@@ -21,6 +21,8 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, ResourceLogger
                 return;
             }
 
+            var options = sqlProject.GetDacpacDeployOptions();
+
             var connectionString = await target.ConnectionStringExpression.GetValueAsync(cancellationToken);
             if (connectionString is null)
             {
@@ -33,7 +35,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, ResourceLogger
             await resourceNotificationService.PublishUpdateAsync(sqlProject,
                 state => state with { State = new ResourceStateSnapshot("Publishing", KnownResourceStateStyles.Info) });
 
-            deployer.Deploy(dacpacPath, connectionString, target.DatabaseName, logger, cancellationToken);
+            deployer.Deploy(dacpacPath, options, connectionString, target.DatabaseName, logger, cancellationToken);
 
             await resourceNotificationService.PublishUpdateAsync(sqlProject,
                 state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success) });

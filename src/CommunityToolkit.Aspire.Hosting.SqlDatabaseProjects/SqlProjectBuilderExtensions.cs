@@ -3,6 +3,7 @@ using Microsoft.Build.Locator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
+using Microsoft.SqlServer.Dac;
 
 namespace Aspire.Hosting;
 
@@ -70,6 +71,21 @@ public static class SqlProjectBuilderExtensions
         }
 
         return builder.WithAnnotation(new DacpacMetadataAnnotation(dacpacPath));
+    }
+
+    /// <summary>
+    /// Adds a delegate annotation for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
+    /// <param name="configureDeploymentOptions">The delegate for configuring dacpac deployment options</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlProjectResource> WithConfigureDacDeployOptions(this IResourceBuilder<SqlProjectResource> builder, Action<DacDeployOptions> configureDeploymentOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(configureDeploymentOptions);
+
+        return builder
+            .WithAnnotation(new ConfigureDacDeployOptionsAnnotation(configureDeploymentOptions));
     }
 
     /// <summary>

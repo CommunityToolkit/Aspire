@@ -89,6 +89,28 @@ public static partial class OllamaResourceBuilderExtensions
 #pragma warning restore CTASPIRE001
     }
 
+    /// <summary>
+    /// Adds GPU support to the Ollama container.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/>.</param>
+    /// <param name="vendor">The GPU vendor, defaults to Nvidia.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the builder is null.</exception>
+    /// <remarks>
+    /// This will add the right arguments to the container to enable GPU support as per <see href="https://github.com/ollama/ollama/blob/main/docs/docker.md" />.
+    /// </remarks>
+    public static IResourceBuilder<OllamaResource> WithGPUSupport(this IResourceBuilder<OllamaResource> builder, OllamaGpuVendor vendor = OllamaGpuVendor.Nvidia)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        return vendor switch
+        {
+            OllamaGpuVendor.Nvidia => builder.WithContainerRuntimeArgs("--gpus", "all"),
+            OllamaGpuVendor.AMD => builder.WithContainerRuntimeArgs("--device", "/dev/kfd"),
+            _ => throw new ArgumentException("Invalid GPU vendor", nameof(vendor))
+        };
+    }
+
     private static OllamaResource AddServerResourceCommand(
         this OllamaResource ollamaResource,
         string name,

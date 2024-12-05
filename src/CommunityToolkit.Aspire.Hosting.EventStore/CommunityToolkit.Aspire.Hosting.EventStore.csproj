@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting eventstore</AdditionalPackageTags>
+    <Description>EventStore support for .NET Aspire.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.EventStore.gRPC" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.EventStore.Tests"></InternalsVisibleTo>
+  </ItemGroup>
+
+</Project>

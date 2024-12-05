@@ -47,3 +47,19 @@ builder.AddSqlProject("mysqlproj")
 
 builder.Build().Run();
 ```
+
+## Deployment options support
+Define options that affect the behavior of package deployment.
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var sql = builder.AddSqlServer("sql")
+                 .AddDatabase("test");
+
+builder.AddSqlProject("mysqlproj")
+       .WithConfigureDacDeployOptions(options => options.IncludeCompositeObjects = true)
+       .WithReference(sql);
+
+builder.Build().Run();
+```
