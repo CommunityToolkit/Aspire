@@ -105,8 +105,8 @@ public static partial class OllamaResourceBuilderExtensions
 
         return vendor switch
         {
-            OllamaGpuVendor.Nvidia => builder.WithArgs("--gpus", "all"),
-            OllamaGpuVendor.AMD => builder.WithArgs("--device", "/dev/kfd"),
+            OllamaGpuVendor.Nvidia => builder.WithContainerRuntimeArgs("--gpus", "all"),
+            OllamaGpuVendor.AMD => builder.WithContainerRuntimeArgs("--device", "/dev/kfd"),
             _ => throw new ArgumentException("Invalid GPU vendor", nameof(vendor))
         };
     }
