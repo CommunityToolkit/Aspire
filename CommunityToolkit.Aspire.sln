@@ -145,6 +145,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Bun.Tests", "tests\CommunityToolkit.Aspire.Hosting.Bun.Tests\CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj", "{DA5DD2CB-51D9-429F-91F5-BF3D1A13A21A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ", "src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj", "{887F91FF-C41D-4286-AD0F-DE56516E4E73}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "masstransit-rabbitmq", "masstransit-rabbitmq", "{5FB20992-C7C3-4A4C-8117-FD26D156554A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService.csproj", "{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost.csproj", "{8D3EED95-8EE5-421D-9161-F2AFA8D22543}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults.csproj", "{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ.MessageTypes", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.MassTransit.RabbitMQ.MessageTypes\CommunityToolkit.Aspire.MassTransit.RabbitMQ.MessageTypes.csproj", "{A855190A-DE7A-4B98-835D-7C23E1B600D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher.csproj", "{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eventstore", "eventstore", "{114DDF07-489A-419B-BE76-E5A289F12791}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.EventStore", "src\CommunityToolkit.Aspire.Hosting.EventStore\CommunityToolkit.Aspire.Hosting.EventStore.csproj", "{B209275E-1CFF-4AF0-A65A-2895DD679775}"
@@ -172,6 +186,38 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit", "examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj", "{A87F7800-BD24-4577-8F15-50D33C8DACF1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests", "tests\CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests\CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj", "{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ", "src\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.csproj", "{AA4CBF15-4FF1-4AB4-95C4-BC5C8E8247B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ", "src\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.csproj", "{887F91FF-C41D-4286-AD0F-DE56516E4E73}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ", "src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj", "{887F91FF-C41D-4286-AD0F-DE56516E4E73}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "masstransit-rabbitmq", "masstransit-rabbitmq", "{5FB20992-C7C3-4A4C-8117-FD26D156554A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.ApiService.csproj", "{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost.csproj", "{8D3EED95-8EE5-421D-9161-F2AFA8D22543}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults\CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults.csproj", "{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.MessageTypes.csproj", "{A855190A-DE7A-4B98-835D-7C23E1B600D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher", "examples\masstransit-rabbitmq\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher\CommunityToolkit.Aspire.Client.MassTransit.RabbitMQ.Publisher.csproj", "{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ", "src\CommunityToolkit.Aspire.Hosting.ActiveMQ\CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj", "{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "activemq", "activemq", "{BF4C4E57-DAAF-4EE5-B330-1923106BAE69}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost", "examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost\CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj", "{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults", "examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults\CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults.csproj", "{978EED2A-43BB-4DE6-8563-3A9972869661}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit", "examples\activemq\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit\CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj", "{A87F7800-BD24-4577-8F15-50D33C8DACF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests", "tests\CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests\CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj", "{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests", "tests\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests\CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj", "{DE596B1A-B923-4D19-89B6-A361FA4EB5BF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -447,6 +493,58 @@ Global
 		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA4CBF15-4FF1-4AB4-95C4-BC5C8E8247B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA4CBF15-4FF1-4AB4-95C4-BC5C8E8247B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA4CBF15-4FF1-4AB4-95C4-BC5C8E8247B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA4CBF15-4FF1-4AB4-95C4-BC5C8E8247B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{887F91FF-C41D-4286-AD0F-DE56516E4E73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{887F91FF-C41D-4286-AD0F-DE56516E4E73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{887F91FF-C41D-4286-AD0F-DE56516E4E73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{887F91FF-C41D-4286-AD0F-DE56516E4E73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{978EED2A-43BB-4DE6-8563-3A9972869661}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE596B1A-B923-4D19-89B6-A361FA4EB5BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE596B1A-B923-4D19-89B6-A361FA4EB5BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE596B1A-B923-4D19-89B6-A361FA4EB5BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE596B1A-B923-4D19-89B6-A361FA4EB5BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -534,6 +632,21 @@ Global
 		{978EED2A-43BB-4DE6-8563-3A9972869661} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
 		{A87F7800-BD24-4577-8F15-50D33C8DACF1} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
 		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{AA4CBF15-4FF1-4AB4-95C4-BC5C8E8247B3} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{887F91FF-C41D-4286-AD0F-DE56516E4E73} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{5FB20992-C7C3-4A4C-8117-FD26D156554A} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{23FEAA8C-0C5B-41BD-A025-BABFA6091DCC} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{8D3EED95-8EE5-421D-9161-F2AFA8D22543} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{F9279F45-8A1F-41C0-B027-0EF6FFE3B706} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{A855190A-DE7A-4B98-835D-7C23E1B600D2} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{2A405CF6-72CA-488D-A159-2D5F72C7E2DF} = {5FB20992-C7C3-4A4C-8117-FD26D156554A}
+		{56C3C409-10FF-4CA5-99AD-0D35C5418B2A} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{BF4C4E57-DAAF-4EE5-B330-1923106BAE69} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{CF6CF1C3-EBE1-41CE-9B34-0C2F931AEA12} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
+		{978EED2A-43BB-4DE6-8563-3A9972869661} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
+		{A87F7800-BD24-4577-8F15-50D33C8DACF1} = {BF4C4E57-DAAF-4EE5-B330-1923106BAE69}
+		{1200FB2E-F476-4151-BDFD-1DAEE3E99FF5} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{DE596B1A-B923-4D19-89B6-A361FA4EB5BF} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
