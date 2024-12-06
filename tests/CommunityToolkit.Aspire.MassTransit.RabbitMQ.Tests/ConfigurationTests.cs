@@ -4,5 +4,5 @@ public class ConfigurationTests
 {
     [Fact]
     public void DisableTelemetryIsFalseByDefault() =>
-        Assert.False(new MassTransitRabbitMqOptions().DisableTelemetry);
+        Assert.False(new MassTransitRabbitMqSettings().DisableTelemetry);
 }

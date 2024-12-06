@@ -1,8 +1,1 @@
 #nullable enable
-CommunityToolkit.Aspire.MassTransit.RabbitMQ.MassTransitRabbitMqOptions
-CommunityToolkit.Aspire.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.DisableTelemetry.get -> bool
-CommunityToolkit.Aspire.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.DisableTelemetry.set -> void
-CommunityToolkit.Aspire.MassTransit.RabbitMQ.MassTransitRabbitMqOptions.MassTransitRabbitMqOptions() -> void
-Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions
-static Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions.AddMassTransitRabbitMq(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.MassTransit.RabbitMQ.MassTransitRabbitMqOptions!>? configureOptions = null, System.Action<MassTransit.IBusRegistrationConfigurator!>? massTransitConfiguration = null) -> void
-static Microsoft.Extensions.Hosting.MassTransitRabbitMqExtensions.AddMassTransitRabbitMq<TBus>(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<CommunityToolkit.Aspire.MassTransit.RabbitMQ.MassTransitRabbitMqOptions!>? configureOptions = null, System.Action<MassTransit.IBusRegistrationConfigurator!>? massTransitConfiguration = null) -> void

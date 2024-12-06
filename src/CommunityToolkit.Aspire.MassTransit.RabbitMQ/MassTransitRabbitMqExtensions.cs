@@ -22,11 +22,9 @@ public static class MassTransitRabbitMqExtensions
     public static void AddMassTransitRabbitMq(
         this IHostApplicationBuilder builder,
         string name,
-        Action<MassTransitRabbitMqOptions>? configureOptions = null,
-        Action<IBusRegistrationConfigurator>? massTransitConfiguration = null)
-    {
-        AddMassTransitRabbitMq<IBus>(builder, name, configureOptions, massTransitConfiguration);
-    }
+        Action<MassTransitRabbitMqSettings>? configureOptions = null,
+        Action<IBusRegistrationConfigurator>? massTransitConfiguration = null) =>
+            AddMassTransitRabbitMq<IBus>(builder, name, configureOptions, massTransitConfiguration);
 
     /// <summary>
     /// Configures an additional MassTransit bus instance with RabbitMQ integration.
@@ -39,7 +37,7 @@ public static class MassTransitRabbitMqExtensions
     public static void AddMassTransitRabbitMq<TBus>(
         this IHostApplicationBuilder builder,
         string name,
-        Action<MassTransitRabbitMqOptions>? configureOptions = null,
+        Action<MassTransitRabbitMqSettings>? configureOptions = null,
         Action<IBusRegistrationConfigurator>? massTransitConfiguration = null)
         where TBus : class, IBus
     {
@@ -47,7 +45,7 @@ public static class MassTransitRabbitMqExtensions
         ArgumentNullException.ThrowIfNull(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        var options = new MassTransitRabbitMqOptions();
+        var options = new MassTransitRabbitMqSettings();
         configureOptions?.Invoke(options);
         var rabbitMqConnectionString = builder.Configuration["ConnectionStrings:" + name];
 
