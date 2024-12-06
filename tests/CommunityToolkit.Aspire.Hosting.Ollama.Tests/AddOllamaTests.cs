@@ -549,8 +549,8 @@ public class AddOllamaTests
 
         var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
 
-        Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
-        CommandLineArgsCallbackContext context = new([]);
+        Assert.True(resource.TryGetLastAnnotation(out ContainerRuntimeArgsCallbackAnnotation? argsAnnotations));
+        ContainerRuntimeArgsCallbackContext context = new([]);
         await argsAnnotations.Callback(context);
 
         Assert.Collection(
