@@ -16,11 +16,13 @@ If you prefer not to use `devcontainer`, you can manually set up your developmen
 
 -   [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0) and [.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0)
 -   [Node.js LTS](https://nodejs.org/en/)
+    - [Yarn 2]()
 -   [Java JDK 11](https://learn.microsoft.com/java/openjdk/download)
 -   [Bun](https://bun.sh)
 -   [Deno 2](https://deno.land/)
 -   [Go 1.23](https://golang.org/)
 -   [Python 3](https://www.python.org/downloads/)
+    -   [Uvicorn](https://www.uvicorn.org/)
 -   [Rust](https://www.rust-lang.org/tools/install)
 -   [Docker](https://docs.docker.com/get-docker/)
     -   Podman is also supported, but Docker is recommended for consistency.
