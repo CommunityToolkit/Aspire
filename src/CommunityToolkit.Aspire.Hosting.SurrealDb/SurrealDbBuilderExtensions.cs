@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
@@ -16,11 +16,13 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class SurrealDbBuilderExtensions
 {
+    private const int SurrealDbPort = 8000;
     private const string UserEnvVarName = "SURREAL_USER";
     private const string PasswordEnvVarName = "SURREAL_PASS";
 
     /// <summary>
     /// Adds a SurrealDB resource to the application model. A container is used for local development.
+    /// The default image is <inheritdoc cref="SurrealDbContainerImageTags.Image"/> and the tag is <inheritdoc cref="SurrealDbContainerImageTags.Tag"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
@@ -71,7 +73,7 @@ public static class SurrealDbBuilderExtensions
 
         var surrealServer = new SurrealDbServerResource(name, userName?.Resource, passwordParameter);
         return builder.AddResource(surrealServer)
-                      .WithEndpoint(port: port, targetPort: 8000, name: SurrealDbServerResource.PrimaryEndpointName)
+                      .WithEndpoint(port: port, targetPort: SurrealDbPort, name: SurrealDbServerResource.PrimaryEndpointName)
                       .WithImage(SurrealDbContainerImageTags.Image, SurrealDbContainerImageTags.Tag)
                       .WithImageRegistry(SurrealDbContainerImageTags.Registry)
                       .WithEnvironment(context =>
@@ -166,12 +168,13 @@ public static class SurrealDbBuilderExtensions
         builder.ApplicationBuilder.Eventing.Subscribe<ConnectionStringAvailableEvent>(surrealServerDatabase, async (@event, ct) =>
         {
             var connectionString = await surrealServerDatabase.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
-            if (connectionString == null)
+            if (connectionString is null)
             {
                 throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerDatabase}' resource but the connection string was null.");
             }
             
-            surrealDbClient = new SurrealDbClient(connectionString);
+            var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
+            surrealDbClient = new SurrealDbClient(options);
         });
 
         string namespaceName = builder.Resource.Name;
@@ -199,7 +202,7 @@ public static class SurrealDbBuilderExtensions
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <example>
-    /// Add an Meilisearch container to the application model and reference it in a .NET project.
+    /// Add a SurrealDB container to the application model and reference it in a .NET project.
     /// Additionally, in this example a data volume is added to the container
     /// to allow data to be persisted across container restarts.
     /// <code lang="csharp">
@@ -260,7 +263,7 @@ public static class SurrealDbBuilderExtensions
     
     /// <summary>
     /// Adds a Surrealist UI instance for SurrealDB to the application model.
-    /// This version the package defaults to the 3.1.2 tag of the surrealdb/surrealist container image
+    /// The default image is <inheritdoc cref="SurrealDbContainerImageTags.SurrealistImage"/> and the tag is <inheritdoc cref="SurrealDbContainerImageTags.SurrealistTag"/>.
     /// </summary>
     /// <param name="builder">The SurrealDB server resource builder.</param>
     /// <param name="configureContainer">Callback to configure Surrealist container resource.</param>
