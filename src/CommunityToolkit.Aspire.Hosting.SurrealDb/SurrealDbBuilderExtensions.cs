@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
@@ -7,6 +7,7 @@ using CommunityToolkit.Aspire.SurrealDb;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using SurrealDb.Net;
+using System.Text.Json;
 
 namespace Aspire.Hosting;
 
@@ -255,5 +256,145 @@ public static class SurrealDbBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(source);
 
         return builder.WithBindMount(source, "/var/opt/surreal");
+    }
+    
+    /// <summary>
+    /// Adds a Surrealist UI instance for SurrealDB to the application model.
+    /// This version the package defaults to the 3.1.2 tag of the surrealdb/surrealist container image
+    /// </summary>
+    /// <param name="builder">The SurrealDB server resource builder.</param>
+    /// <param name="configureContainer">Callback to configure Surrealist container resource.</param>
+    /// <param name="containerName">The name of the container (optional).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<T> WithSurrealist<T>(
+        this IResourceBuilder<T> builder,
+        Action<IResourceBuilder<SurrealistContainerResource>>? configureContainer = null,
+        string? containerName = null
+    )
+        where T : SurrealDbServerResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        
+        if (builder.ApplicationBuilder.Resources.OfType<SurrealistContainerResource>().SingleOrDefault() is { } existingSurrealistResource)
+        {
+            var builderForExistingResource = builder.ApplicationBuilder.CreateResourceBuilder(existingSurrealistResource);
+            configureContainer?.Invoke(builderForExistingResource);
+            
+            return builder;
+        }
+        
+        containerName ??= $"{builder.Resource.Name}-surrealist";
+        
+        const string CONNECTIONS_FILE_PATH = "/usr/share/nginx/html/connections.json";
+        
+        var surrealistContainer = new SurrealistContainerResource(containerName);
+        var surrealistContainerBuilder = builder.ApplicationBuilder.AddResource(surrealistContainer)
+            .WithImage(SurrealDbContainerImageTags.SurrealistImage, SurrealDbContainerImageTags.SurrealistTag)
+            .WithImageRegistry(SurrealDbContainerImageTags.SurrealistRegistry)
+            .WithHttpEndpoint(targetPort: 8080, name: "http")
+            .WithBindMount(Path.GetTempFileName(), CONNECTIONS_FILE_PATH)
+            .ExcludeFromManifest();
+        
+        builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>( (e, ct) =>
+            {
+                var serverFileMount = surrealistContainer.Annotations.OfType<ContainerMountAnnotation>().Single(v => v.Target == CONNECTIONS_FILE_PATH);
+                var surrealDbServerResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbServerResource>().ToList();
+
+                using var stream = new FileStream(serverFileMount.Source!, FileMode.Create);
+                using var writer = new Utf8JsonWriter(stream);
+                
+                // Need to grant read access to the config file on unix like systems.
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(serverFileMount.Source!, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
+                }
+
+                writer.WriteStartObject();
+
+                if (surrealDbServerResources.Count == 1)
+                {
+                    var uniqueSurrealDbResource = surrealDbServerResources[0];
+                    writer.WriteString("defaultConnection", uniqueSurrealDbResource.Name);
+                }
+
+                writer.WriteStartArray("connections");
+                
+                var surrealDbNamespaceResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbNamespaceResource>().ToList();
+                var surrealDbDatabaseResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbDatabaseResource>().ToList();
+
+                foreach (var surrealInstance in surrealDbServerResources)
+                {
+                    if (surrealInstance.PrimaryEndpoint.IsAllocated)
+                    {
+                        SurrealDbNamespaceResource? uniqueNamespace = null;
+                        SurrealDbDatabaseResource? uniqueDatabase = null;
+                        
+                        var serverNamespaces = surrealDbNamespaceResources
+                            .Where(ns => ns.Parent == surrealInstance)
+                            .ToList();
+
+                        if (serverNamespaces.Count == 1)
+                        {
+                            uniqueNamespace = serverNamespaces.First();
+                            
+                            var nsDatabases = surrealDbDatabaseResources
+                                .Where(db => db.Parent == uniqueNamespace)
+                                .ToList();
+                            
+                            if (nsDatabases.Count == 1)
+                            {
+                                uniqueDatabase = nsDatabases.First();
+                            }
+                        }
+                        
+                        var endpoint = surrealInstance.PrimaryEndpoint;
+
+                        writer.WriteStartObject();
+
+                        writer.WriteString("id", surrealInstance.Name);
+                        writer.WriteString("name", surrealInstance.Name);
+                        
+                        if (uniqueNamespace is not null)
+                        {
+                            writer.WriteString("defaultNamespace", uniqueNamespace.NamespaceName);
+                        }
+                        if (uniqueDatabase is not null)
+                        {
+                            writer.WriteString("defaultDatabase", uniqueDatabase.DatabaseName);
+                        }
+                        
+                        writer.WriteStartObject("authentication");
+                        writer.WriteString("protocol", "ws");
+                        // How to do host resolution?
+                        writer.WriteString("hostname", $"localhost:{endpoint.Port}");
+                        writer.WriteString("mode", "root");
+                        if (uniqueNamespace is not null)
+                        {
+                            writer.WriteString("namespace", uniqueNamespace.NamespaceName);
+                        }
+                        if (uniqueDatabase is not null)
+                        {
+                            writer.WriteString("database", uniqueDatabase.DatabaseName);
+                        }
+                        
+                        writer.WriteEndObject();
+                        
+                        writer.WriteEndObject();
+                    }
+                }
+
+                writer.WriteEndArray();
+                
+                writer.WriteEndObject();
+                
+                return Task.CompletedTask;
+            });
+        
+        configureContainer?.Invoke(surrealistContainerBuilder);
+
+        // TODO : missing
+        //surrealistContainerBuilder.WithRelationship(builder.Resource, "Surrealist");
+        
+        return builder;
     }
 }
