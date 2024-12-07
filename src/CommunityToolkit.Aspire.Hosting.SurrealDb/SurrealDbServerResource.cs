@@ -54,7 +54,7 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
 
     private ReferenceExpression ConnectionString =>
         ReferenceExpression.Create(
-            $"Server={SchemeUri}://{PrimaryEndpoint.Property(EndpointProperty.IPV4Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password={PasswordParameter}");
+            $"Server={SchemeUri}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password={PasswordParameter}");
 
     /// <summary>
     /// Gets the connection string expression for the SurrealDB instance.
