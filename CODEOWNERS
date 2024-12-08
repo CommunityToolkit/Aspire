@@ -4,56 +4,58 @@
 
 # CommunityToolkit.Aspire.Hosting.Java
 
-/examples/java/_ @justinyoo
-/src/CommunityToolkit.Aspire.Hosting.Java/_ @justinyoo
-/tests/CommunityToolkit.Aspire.Hosting.Java/_ @justinyoo
+/examples/java/ @justinyoo
+/src/CommunityToolkit.Aspire.Hosting.Java/ @justinyoo
+/tests/CommunityToolkit.Aspire.Hosting.Java/ @justinyoo
 
 # CommunityToolkit.Aspire.Hosting.Golang
 
-/examples/golang/_ @tommasodotNET
-/src/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
-/tests/CommunityToolkit.Aspire.Hosting.Golang/_ @tommasodotNET
+/examples/golang/ @tommasodotNET
+/src/CommunityToolkit.Aspire.Hosting.Golang/ @tommasodotNET
+/tests/CommunityToolkit.Aspire.Hosting.Golang/ @tommasodotNET
 
 # CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
 
-/examples/data-api-builder/_ @tommasodotNET @FBoucher
-/src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/_ @tommasodotNET @FBoucher
-/tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/_ @tommasodotNET @FBoucher
+/examples/data-api-builder/ @tommasodotNET @FBoucher
+/src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/ @tommasodotNET @FBoucher
+/tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/ @tommasodotNET @FBoucher
 
 # CommunityToolkit.Aspire.Meilisearch
 # CommunityToolkit.Aspire.Hosting.Meilisearch
 
-/examples/meilisearch/_ @Alirexaa
-/src/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @Alirexaa
-/tests/CommunityToolkit.Aspire.Hosting.Meilisearch/_ @Alirexaa
-/src/CommunityToolkit.Aspire.Meilisearch/_ @Alirexaa
-/tests/CommunityToolkit.Aspire.Meilisearch/_ @Alirexaa
+/examples/meilisearch/ @Alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Meilisearch/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Meilisearch/ @Alirexaa
+/src/CommunityToolkit.Aspire.Meilisearch/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Meilisearch/ @Alirexaa
 
 # CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects
 
-/examples/sql-database-projects/_ @ErikEJ @jmezach
-/src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/_ @ErikEJ @jmezach
-/tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/_ @ErikEJ @jmezach
+/examples/sql-database-projects/ @ErikEJ @jmezach
+/src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
+/tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
 
 
 # CommunityToolkit.Aspire.Hosting.Rust
 
-/examples/rust/_ @Alirexaa
-/src/CommunityToolkit.Aspire.Hosting.Rust/_ @Alirexaa
-/tests/CommunityToolkit.Aspire.Hosting.Rust/_ @Alirexaa
+/examples/rust/ @Alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
 
 # CommunityToolkit.Aspire.EventStore
 # CommunityToolkit.Aspire.Hosting.EventStore
 
-/examples/eventstore/_ @fredimachado
-/src/CommunityToolkit.Aspire.Hosting.EventStore/_ @fredimachado
-/tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests/_ @fredimachado
-/src/CommunityToolkit.Aspire.EventStore/_ @fredimachado
-/tests/CommunityToolkit.Aspire.EventStore.Tests/_ @fredimachado
-
+/examples/eventstore/ @fredimachado
+/src/CommunityToolkit.Aspire.Hosting.EventStore/ @fredimachado
+/tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests/ @fredimachado
+/src/CommunityToolkit.Aspire.EventStore/ @fredimachado
+/tests/CommunityToolkit.Aspire.EventStore.Tests/ @fredimachado
 
 # CommunityToolkit.Aspire.MassTransit.RabbitMQ
 
 /examples/masstransit-rabbitmq/ @michielb
 /src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/ @michielb
 /tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/ @michielb
+
+
+
