@@ -54,7 +54,6 @@
 
 # CommunityToolkit.Aspire.MassTransit.RabbitMQ
 
-/examples/masstransit-rabbitmq/_ @michielb
-/src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/_ @michielb
-/tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/_ @michielb
-
+/examples/masstransit-rabbitmq/ @michielb
+/src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/ @michielb
+/tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/ @michielb
