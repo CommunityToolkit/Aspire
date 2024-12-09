@@ -4,7 +4,7 @@ Because the Community Toolkit consists of integrations across a lot of different
 
 ## ✅ Recommended Setup
 
-The easiest, and recommended way it to use [VS Code](https://code.visualstudio.com/) with the [`devcontainer`](https://code.visualstudio.com/docs/remote/containers) extension.
+The easiest, and recommended way is to use [VS Code](https://code.visualstudio.com/) with the [`devcontainer`](https://code.visualstudio.com/docs/remote/containers) extension.
 
 This will run the development environment in a container, install all the necessary tools and dependencies, add extensions to align with our contribution guidelines, and ensure that you have a consistent development environment.
 
