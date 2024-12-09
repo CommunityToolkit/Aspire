@@ -30,7 +30,7 @@ public class ConformanceTests(OllamaContainerFeature ollamaContainerFeature) : C
         configuration.AddInMemoryCollection(
           [
               new KeyValuePair<string, string?>(CreateConfigKey("Aspire:OllamaSharp", key, "Endpoint"), endpoint),
-              new KeyValuePair<string, string?>($"ConnectionStrings:{key}", $"Endpoint={endpoint}")
+              new KeyValuePair<string, string?>($"ConnectionStrings:{key ?? "ollama"}", $"Endpoint={endpoint}")
           ]);
     }
 
