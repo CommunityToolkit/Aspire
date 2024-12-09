@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using OllamaSharp;
 
@@ -121,5 +122,46 @@ public class OllamaApiClientTests
 
         Assert.NotEqual(client, client2);
         Assert.NotEqual(client, client3);
+    }
+
+    [Fact]
+    public void RegisteringChatClientAndEmbeddingGeneratorReturnsCorrectModelForServices()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Chat", $"Endpoint={Endpoint};Model=Chat"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Embedding", $"Endpoint={Endpoint};Model=Embedding")
+        ]);
+
+        builder.AddOllamaSharpChatClient("Chat");
+        builder.AddOllamaSharpEmbeddingGenerator("Embedding");
+        using var host = builder.Build();
+
+        var chatClient = host.Services.GetRequiredService<IChatClient>();
+        var embeddingGenerator = host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
+
+        var chatAsOllama = (IOllamaApiClient)chatClient;
+        var embeddingAsOllama = (IOllamaApiClient)embeddingGenerator;
+
+        Assert.Equal("Chat", chatAsOllama.SelectedModel);
+        Assert.Equal("Embedding", embeddingAsOllama.SelectedModel);
+    }
+
+    [Fact]
+    public void RegisteringChatClientAndEmbeddingGeneratorResultsInMultipleOllamaApiClients()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Chat", $"Endpoint={Endpoint};Model=Chat"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Embedding", $"Endpoint={Endpoint};Model=Embedding")
+        ]);
+
+        builder.AddOllamaSharpChatClient("Chat");
+        builder.AddOllamaSharpEmbeddingGenerator("Embedding");
+        using var host = builder.Build();
+
+        var ollamaApiClients = host.Services.GetServices<IOllamaApiClient>();
+
+        Assert.Equal(2, ollamaApiClients.Count());
     }
 }

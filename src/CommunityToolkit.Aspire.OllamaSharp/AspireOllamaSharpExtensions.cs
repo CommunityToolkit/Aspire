@@ -53,8 +53,9 @@ public static class AspireOllamaSharpExtensions
     /// <exception cref="InvalidOperationException">Thrown when no Ollama endpoint is provided.</exception>
     public static void AddOllamaSharpChatClient(this IHostApplicationBuilder builder, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
     {
-        builder.AddOllamaApiClient(connectionName, configureSettings);
-        builder.Services.AddSingleton(sp => ConfigureOllamaChatClient(sp));
+        builder.AddKeyedOllamaApiClient(connectionName, configureSettings);
+        builder.Services.AddSingleton(sp => ConfigureOllamaChatClient(sp, connectionName));
+        builder.Services.AddSingleton(sp => sp.GetRequiredKeyedService<IOllamaApiClient>(connectionName));
     }
 
     /// <summary>
@@ -79,8 +80,9 @@ public static class AspireOllamaSharpExtensions
     /// <exception cref="InvalidOperationException">Thrown when no Ollama endpoint is provided.</exception>
     public static void AddOllamaSharpEmbeddingGenerator(this IHostApplicationBuilder builder, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
     {
-        builder.AddOllamaApiClient(connectionName, configureSettings);
-        builder.Services.AddSingleton(sp => ConfigureOllamaEmbeddingGenerator<string, Embedding<float>>(sp));
+        builder.AddKeyedOllamaSharpChatClient(connectionName, configureSettings);
+        builder.Services.AddSingleton(sp => ConfigureOllamaEmbeddingGenerator<string, Embedding<float>>(sp, connectionName));
+        builder.Services.AddSingleton(sp => sp.GetRequiredKeyedService<IOllamaApiClient>(connectionName));
     }
 
     /// <summary>
@@ -92,7 +94,7 @@ public static class AspireOllamaSharpExtensions
     /// <exception cref="InvalidOperationException">Thrown when no Ollama endpoint is provided.</exception>
     public static void AddKeyedOllamaSharpEmbeddingGenerator(this IHostApplicationBuilder builder, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
     {
-        builder.AddKeyedOllamaApiClient(connectionName, configureSettings);
+        builder.AddKeyedOllamaSharpChatClient(connectionName, configureSettings);
         builder.Services.AddKeyedSingleton(connectionName, (sp, _) => ConfigureOllamaEmbeddingGenerator<string, Embedding<float>>(sp, connectionName));
     }
 
@@ -143,6 +145,7 @@ public static class AspireOllamaSharpExtensions
                 if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
                 {
                     client.SelectedModel = settings.SelectedModel;
+                    client.Config.Model = settings.SelectedModel;
                 }
 
                 return client;
@@ -155,11 +158,9 @@ public static class AspireOllamaSharpExtensions
         }
     }
 
-    private static IChatClient ConfigureOllamaChatClient(IServiceProvider serviceProvider, string? serviceKey = null)
+    private static IChatClient ConfigureOllamaChatClient(IServiceProvider serviceProvider, string serviceKey)
     {
-        var ollamaClient = serviceKey is null ?
-            serviceProvider.GetRequiredService<IOllamaApiClient>() :
-            serviceProvider.GetRequiredKeyedService<IOllamaApiClient>(serviceKey);
+        var ollamaClient = serviceProvider.GetRequiredKeyedService<IOllamaApiClient>(serviceKey);
         if (ollamaClient is IChatClient chatClient)
         {
             return chatClient;
@@ -168,12 +169,10 @@ public static class AspireOllamaSharpExtensions
         throw new InvalidOperationException("The Ollama client does not implement IChatClient.");
     }
 
-    private static IEmbeddingGenerator<TInput, TEmbedding> ConfigureOllamaEmbeddingGenerator<TInput, TEmbedding>(IServiceProvider serviceProvider, string? serviceKey = null)
+    private static IEmbeddingGenerator<TInput, TEmbedding> ConfigureOllamaEmbeddingGenerator<TInput, TEmbedding>(IServiceProvider serviceProvider, string serviceKey)
         where TEmbedding : Embedding
     {
-        var ollamaClient = serviceKey is null ?
-            serviceProvider.GetRequiredService<IOllamaApiClient>() :
-            serviceProvider.GetRequiredKeyedService<IOllamaApiClient>(serviceKey);
+        var ollamaClient = serviceProvider.GetRequiredKeyedService<IOllamaApiClient>(serviceKey);
         if (ollamaClient is IEmbeddingGenerator<TInput, TEmbedding> embeddingGenerator)
         {
             return embeddingGenerator;
