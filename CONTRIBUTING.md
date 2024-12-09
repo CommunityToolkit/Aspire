@@ -35,7 +35,7 @@ The documentation for the .NET Aspire Community Toolkit is available on the [Mic
 
 Anyone can create a Pull Request by forking the .NET Aspire Community Toolkit Repository. Here is how you can [Create a Pull Request from fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork). Once you fork the .NET Aspire Community Toolkit repo, it is essential to create all changes in the feature branch of your forked repository. If you have the changes in the forked feature branch, you can then create a Pull Request in the main .NET Aspire Community Toolkit.
 
-If this is your first time running the solution, be sure to familiarise yourself with [how to setup the develpment environment](./docs/setup.md).
+If this is your first time running the solution, be sure to familiarise yourself with [how to setup the development environment](./docs/setup.md).
 
 ### 📦 Add New Integration <a name="integration"></a>
 
