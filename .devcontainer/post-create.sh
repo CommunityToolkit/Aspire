@@ -22,4 +22,7 @@ dotnet new install Aspire.ProjectTemplates
 echo Installing Bun
 curl -fsSL https://bun.sh/install | bash
 
+echo Installing uvicorn
+pip install uvicorn
+
 echo Done!

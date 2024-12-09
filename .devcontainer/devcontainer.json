@@ -19,7 +19,8 @@
     "ghcr.io/devcontainers/features/node:latest": {},
     "ghcr.io/devcontainers-community/features/deno": {},
     "ghcr.io/devcontainers/features/go:latest": {},
-    "ghcr.io/devcontainers/features/rust:latest": {}
+    "ghcr.io/devcontainers/features/rust:latest": {},
+    "ghcr.io/devcontainers/features/python:1": {}
   },
   "customizations": {
     "vscode": {

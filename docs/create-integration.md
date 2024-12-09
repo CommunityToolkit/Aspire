@@ -14,19 +14,7 @@ The repository structure for the .NET Aspire Community Toolkit is as follows:
 
 ## 🛠️ Setting up your Development Environment
 
-The recommended development environment for contributing to the .NET Aspire Community Toolkit is [VS Code](https://code.visualstudio.com/) using the [`devcontainer`](https://code.visualstudio.com/docs/remote/containers) extension. This will ensure that you have all the necessary tools and dependencies installed to build and test the toolkit.
-
-### Manual Setup
-
-If you prefer not to use `devcontainer`, you can manually set up your development environment by installing the following tools:
-
--   [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0)
--   [Node.js LTS](https://nodejs.org/en/)
--   [Java JDK 11](https://learn.microsoft.com/java/openjdk/download)
--   [Docker](https://docs.docker.com/get-docker/)
-    -   Podman is also supported, but Docker is recommended for consistency.
-
-And of course, an editor such as Visual Studio, JetBrains Rider or emacs.
+Be sure to read through the [Setting up your Development Environment](./setup.md) guide to get your environment set up correctly, after all, there are a lot of runtimes and environments that are supported by the toolkit, so setup can be a bit complex!
 
 ## 🚀 Getting Started
 
