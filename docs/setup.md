@@ -16,9 +16,10 @@ If you prefer not to use `devcontainer`, you can manually set up your developmen
 
 -   [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0) and [.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0)
 -   [Node.js LTS](https://nodejs.org/en/)
-    - [Yarn 2](https://yarnpkg.com/getting-started/install)
-    - [pnpm](https://pnpm.io/)
+    -   [Yarn 2](https://yarnpkg.com/getting-started/install)
+    -   [pnpm](https://pnpm.io/)
 -   [Java JDK 11](https://learn.microsoft.com/java/openjdk/download)
+    -   You'll also need [Gradle](https://gradle.org/install/) and [Apache Maven](https://maven.apache.org/download.cgi)
 -   [Bun](https://bun.sh)
 -   [Deno 2](https://deno.land/)
 -   [Go 1.23](https://golang.org/)
