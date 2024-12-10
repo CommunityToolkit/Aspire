@@ -8,11 +8,10 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 public class SurrealDbServerResource : ContainerResource, IResourceWithConnectionString
 {
-    internal const string PrimaryEndpointName = "ws";
-    internal const string SecondaryEndpointName = "http";
+    internal const string PrimaryEndpointName = "tcp";
 
     private const string DefaultUserName = "root";
-    private const string DefaultScheme = PrimaryEndpointName;
+    private const string SchemeUri = "ws";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SurrealDbServerResource"/> class.
@@ -29,7 +28,6 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
         ArgumentNullException.ThrowIfNull(password);
 
         PrimaryEndpoint = new(this, PrimaryEndpointName);
-        SecondaryEndpoint = new(this, SecondaryEndpointName);
         UserNameParameter = userName;
         PasswordParameter = password;
     }
@@ -38,11 +36,6 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     /// Gets the primary endpoint for the SurrealDB instance.
     /// </summary>
     public EndpointReference PrimaryEndpoint { get; }
-
-    /// <summary>
-    /// Gets the secondary endpoint for the SurrealDB instance.
-    /// </summary>
-    public EndpointReference SecondaryEndpoint { get; }
 
     /// <summary>
     /// Gets the parameter that contains the SurrealDB username.
@@ -61,7 +54,7 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
 
     private ReferenceExpression ConnectionString =>
         ReferenceExpression.Create(
-            $"Server={DefaultScheme}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password={PasswordParameter}");
+            $"Server={SchemeUri}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password={PasswordParameter}");
 
     /// <summary>
     /// Gets the connection string expression for the SurrealDB instance.
