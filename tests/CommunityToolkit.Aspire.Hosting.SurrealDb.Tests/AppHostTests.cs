@@ -14,9 +14,13 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [Fact]
     public async Task SurrealResourceStartsAndRespondsOk()
     {
-        const string resourceName = "db";
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(1));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        const string resourceName = "surreal";
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
+
+        var tcpUri = fixture.GetEndpoint(resourceName, "ws");
+        var baseUri = new Uri(tcpUri.AbsoluteUri.Replace("tcp://", "http://"));
+        var httpClient = new HttpClient();
+        httpClient.BaseAddress = baseUri;
 
         var response = await httpClient.GetAsync("/");
 
@@ -27,7 +31,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task ApiServiceStartsAndRespondsOk()
     {
         const string resourceName = "apiservice";
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var todoResponse = await httpClient.GetAsync("/api/todo");
