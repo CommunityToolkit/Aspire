@@ -16,6 +16,7 @@ Aspire.Hosting.ApplicationModel.SurrealDbServerResource.GetConnectionStringAsync
 Aspire.Hosting.ApplicationModel.SurrealDbServerResource.Namespaces.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 Aspire.Hosting.ApplicationModel.SurrealDbServerResource.PasswordParameter.get -> Aspire.Hosting.ApplicationModel.ParameterResource!
 Aspire.Hosting.ApplicationModel.SurrealDbServerResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
+Aspire.Hosting.ApplicationModel.SurrealDbServerResource.SecondaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
 Aspire.Hosting.ApplicationModel.SurrealDbServerResource.SurrealDbServerResource(string! name, Aspire.Hosting.ApplicationModel.ParameterResource? userName, Aspire.Hosting.ApplicationModel.ParameterResource! password) -> void
 Aspire.Hosting.ApplicationModel.SurrealDbServerResource.UserNameParameter.get -> Aspire.Hosting.ApplicationModel.ParameterResource?
 Aspire.Hosting.ApplicationModel.SurrealistContainerResource
