@@ -182,13 +182,7 @@ public static class SurrealDbBuilderExtensions
         
         string healthCheckKey = $"{serverName}_{namespaceName}_{name}_check";
         builder.ApplicationBuilder.Services.AddHealthChecks()
-            .Add(new HealthCheckRegistration(
-                healthCheckKey,
-                sp => new SurrealDbHealthCheck(surrealDbClient!),
-                failureStatus: default,
-                tags: default,
-                timeout: default)
-            );
+            .AddTypeActivatedCheck<SurrealDbHealthCheck>(healthCheckKey, surrealDbClient!);
         
         return builder.ApplicationBuilder.AddResource(surrealServerDatabase)
             .WithHealthCheck(healthCheckKey);
