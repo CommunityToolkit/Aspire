@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire integration leveraging the Ollama container with support for downloading a model on startup.</Description>
+    <AdditionalPackageTags>hosting ha home home-assitant automation</AdditionalPackageTags>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="Aspire.Hosting.ApplicationModel" />
+    <Using Include="Aspire.CommunityToolkit.Hosting.HomeAssistant" />
+    <Using Include="Aspire.Hosting.ApplicationModel" />
+    <Using Include="Aspire.Hosting.Utils" />
+    <Using Include="CommunityToolkit.Aspire.Utils" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+    <Compile Include="$(SharedDir)\PathNormalizer.cs" Link="Utils\PathNormalizer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.HomeAssistant.Tests"></InternalsVisibleTo>
+  </ItemGroup>
+
+</Project>

@@ -5,12 +5,8 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Aspire.Components.Common.Tests;
-using Aspire.Hosting.Dashboard;
 using Aspire.Hosting.Eventing;
-using Aspire.Hosting.Testing;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;

@@ -1,10 +1,8 @@
-﻿using Aspire.Components.Common.Tests;
-using Aspire.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Testing;
 
-public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
+public sealed class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
 {
     public ResourceNotificationService ResourceNotificationService => App.Services.GetRequiredService<ResourceNotificationService>();
 

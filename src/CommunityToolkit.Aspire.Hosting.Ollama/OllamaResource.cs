@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-
-namespace Aspire.Hosting.ApplicationModel;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents an Ollama container.

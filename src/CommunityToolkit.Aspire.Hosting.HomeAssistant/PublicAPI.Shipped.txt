@@ -1,0 +1,9 @@
+#nullable enable
+Aspire.Hosting.HomeAssistantResource
+Aspire.Hosting.HomeAssistantResource.HomeAssistantResource(string! name) -> void
+Aspire.Hosting.HomeAssistantResourceBuilderExtensions
+static Aspire.Hosting.HomeAssistantResourceBuilderExtensions.AddHomeAssistant(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.HomeAssistantResource!>!
+static Aspire.Hosting.HomeAssistantResourceBuilderExtensions.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.HomeAssistantResource!>! builder, string? name = null, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.HomeAssistantResource!>!
+static Aspire.Hosting.HomeAssistantResourceBuilderExtensions.WithDataBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.HomeAssistantResource!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.HomeAssistantResource!>!
+Aspire.Hosting.HomeAssistantResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
+Aspire.Hosting.HomeAssistantResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!

@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using Json.Schema;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using Xunit.Sdk;
 using Microsoft.DotNet.XUnitExtensions;
 
 namespace Aspire.Components.ConformanceTests;

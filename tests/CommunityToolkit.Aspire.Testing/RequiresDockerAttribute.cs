@@ -9,7 +9,7 @@ namespace Aspire.Components.Common.Tests;
 
 [TraitDiscoverer("Aspire.Components.Common.Tests.RequiresDockerDiscoverer", "CommunityToolkit.Aspire.Testing")]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-public class RequiresDockerAttribute : Attribute, ITraitAttribute
+public class RequiresDockerAttribute(string? reason = null) : Attribute, ITraitAttribute
 {
     // This property is `true` when docker is *expected* to be available.
     //
@@ -22,13 +22,13 @@ public class RequiresDockerAttribute : Attribute, ITraitAttribute
     // - Windows: assume installed only for *local* runs as docker isn't supported on CI yet
     //                - https://github.com/dotnet/aspire/issues/4291
     // - Linux - Local, or CI: always assume that docker is installed
+    //
+    // In the Community Toolkit, the CI env var isn't set, instead we used GITHUB_ACTIONS
+    // to determine if we are running on CI.
     public static bool IsSupported =>
         !OperatingSystem.IsWindows() ||
-        !PlatformDetection.IsRunningOnCI;
+        !PlatformDetection.IsRunningOnCI ||
+        !PlatformDetection.IsRunningOnGitHubActions;
 
-    public string? Reason { get; init; }
-    public RequiresDockerAttribute(string? reason = null)
-    {
-        Reason = reason;
-    }
+    public string? Reason { get; init; } = reason;
 }

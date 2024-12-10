@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+    <Using Include="Aspire.Hosting" />
+    <Using Include="Aspire.Hosting.Utils" />
+    <Using Include="Aspire.Components.Common.Tests" />
+    <Using Include="Aspire.CommunityToolkit.Hosting.HomeAssistant" />
+    <Using Include="System.Net.Sockets" />
+    <Using Include="Xunit.Abstractions" />
+    <Using Include="CommunityToolkit.Aspire.Testing" />
+    <Using Include="FluentAssertions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\home-assistant\CommunityToolkit.Aspire.Hosting.HomeAssistant.AppHost\CommunityToolkit.Aspire.Hosting.HomeAssistant.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.HomeAssistant\CommunityToolkit.Aspire.Hosting.HomeAssistant.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+</Project>
