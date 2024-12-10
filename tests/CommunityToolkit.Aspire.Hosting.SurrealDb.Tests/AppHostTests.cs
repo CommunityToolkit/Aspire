@@ -17,7 +17,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         const string resourceName = "surreal";
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
 
-        var tcpUri = fixture.GetEndpoint(resourceName, "ws");
+        var tcpUri = fixture.GetEndpoint(resourceName, "tcp");
         var baseUri = new Uri(tcpUri.AbsoluteUri.Replace("tcp://", "http://"));
         var httpClient = new HttpClient();
         httpClient.BaseAddress = baseUri;
