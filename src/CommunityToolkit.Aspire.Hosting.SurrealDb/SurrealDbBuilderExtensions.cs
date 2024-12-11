@@ -29,6 +29,7 @@ public static class SurrealDbBuilderExtensions
     /// <param name="userName">The parameter used to provide the administrator username for the SurrealDB resource.</param>
     /// <param name="password">The parameter used to provide the administrator password for the SurrealDB resource. If <see langword="null"/> a random password will be generated.</param>
     /// <param name="port">The host port for the SurrealDB instance.</param>
+    /// <param name="path">Sets the path for storing data. If no argument is given, the default of <c>memory</c> for non-persistent storage in memory is assumed.</param>
     /// <param name="strictMode">Whether strict mode is enabled on the server.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
@@ -53,6 +54,7 @@ public static class SurrealDbBuilderExtensions
         IResourceBuilder<ParameterResource>? userName = null,
         IResourceBuilder<ParameterResource>? password = null,
         int? port = null,
+        string path = "memory",
         bool strictMode = false
     )
     {
@@ -61,7 +63,8 @@ public static class SurrealDbBuilderExtensions
 
         var args = new List<string>
         {
-            "start"
+            "start",
+            path
         };
         if (strictMode)
         {
