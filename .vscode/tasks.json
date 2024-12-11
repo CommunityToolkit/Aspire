@@ -6,6 +6,38 @@
       "type": "shell",
       "command": "echo '#nullable enable' > src/${input:projectName}/PublicAPI.Shipped.txt && echo '#nullable enable' > src/${input:projectName}/PublicAPI.Unshipped.txt",
       "problemMatcher": []
+    },
+    {
+        "label": "build",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+            "build",
+            "/property:GenerateFullPaths=true",
+            "/consoleloggerparameters:NoSummary;ForceNoAlign"
+        ],
+        "problemMatcher": "$msCompile"
+    },
+    {
+        "label": "publish",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+            "publish",
+            "/property:GenerateFullPaths=true",
+            "/consoleloggerparameters:NoSummary;ForceNoAlign"
+        ],
+        "problemMatcher": "$msCompile"
+    },
+    {
+        "label": "watch",
+        "command": "dotnet",
+        "type": "process",
+        "args": [
+            "watch",
+            "run"
+        ],
+        "problemMatcher": "$msCompile"
     }
   ],
   "inputs": [
