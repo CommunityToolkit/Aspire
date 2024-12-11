@@ -53,7 +53,7 @@
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.7" />
     <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.7" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.2" />
-    <PackageVersion Include="Microsoft.SqlServer.Dacpacs.Master" Version="160.2.3" />
+    <PackageVersion Include="Microsoft.SqlServer.Dacpacs.Master" Version="160.2.3" IsAspirePackageResource="true" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->

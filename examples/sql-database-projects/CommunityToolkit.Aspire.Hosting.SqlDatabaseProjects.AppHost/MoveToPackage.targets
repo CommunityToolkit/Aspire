@@ -2,7 +2,8 @@
     <Target Name="_CreateAspirePackageResources">
 
       <ItemGroup>
-        <_AspirePackageResource  Include="@(PackageReference->WithMetadataValue('IsAspirePackageResource', 'true'))" />
+        <_AspirePackageResource Condition="'$(ManagePackageVersionsCentrally)'!='true'" Include="@(PackageReference->WithMetadataValue('IsAspirePackageResource', 'true'))" />
+        <_AspirePackageResource Condition="'$(ManagePackageVersionsCentrally)'=='true'" Include="@(PackageVersion->WithMetadataValue('IsAspirePackageResource', 'true'))" />
       </ItemGroup>
 
     </Target>
@@ -16,8 +17,7 @@
           <ClassName Condition="%(_AspirePackageResource.AspirePackageMetadataTypeName) != ''">$([System.Text.RegularExpressions.Regex]::Replace(%(_AspirePackageResource.AspirePackageMetadataTypeName), $(_GeneratedClassNameFixupRegex), '_'))</ClassName>
           <PackageName>@(_AspirePackageResource->'%(Identity)'->Replace('.', '_'))</PackageName>
           <PackagePath>$(Pkg%(_AspirePackageResource.PackageName))</PackagePath>
-          <PackageVersion Condition="'%(_AspirePackageResource.PackageVersion)' == ''">%(PackageVersion.PackageVersion)</PackageVersion>
-          <PackagePath Condition="'%(AspirePackageMetadataSource.PackagePath)'==''">$([System.String]::new('$(NuGetPackageRoot)%(_AspirePackageResource.Identity)/%(_AspirePackageResource.PackageVersion)').ToLower())</PackagePath>
+          <PackagePath Condition="'%(AspirePackageMetadataSource.PackagePath)'==''">$([System.String]::new('$(NuGetPackageRoot)%(_AspirePackageResource.Identity)/%(_AspirePackageResource.Version)').ToLower())</PackagePath>
         </AspirePackageMetadataSource>
       </ItemGroup>
     </Target>
