@@ -41,6 +41,25 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TPackage"></typeparam>
+    /// <param name="builder"></param>
+    /// <param name="name"></param>
+    /// <param name="relativePathToDacpac"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<SqlProjectResource> AddSqlPackage<TPackage>(this IDistributedApplicationBuilder builder, [ResourceName]string name, string relativePathToDacpac)
+        where TPackage : IPackageMetadata, new()
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
+        return builder.AddSqlProject(name)
+                      .WithAnnotation(new TPackage())
+                      .WithAnnotation(new DacpacMetadataAnnotation(relativePathToDacpac));
+    }
+
+    /// <summary>
     /// Adds a SQL Server Database Project resource to the application.
     /// </summary>
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>

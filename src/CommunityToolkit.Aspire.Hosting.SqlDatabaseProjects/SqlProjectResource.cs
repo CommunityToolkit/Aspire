@@ -27,6 +27,19 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
             return targetPath;
         }
 
+        if (this.TryGetLastAnnotation<IPackageMetadata>(out var packageMetadata))
+        {
+            var packagePath = packageMetadata.PackagePath;
+            if (this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var relativeDacpacMetadata))
+            {
+                return Path.Combine(packagePath, relativeDacpacMetadata.DacpacPath);
+            }
+            else
+            {
+                return Path.Combine(packagePath, "tools", packageMetadata.PackageId + ".dacpac");
+            }
+        }
+
         if (this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var dacpacMetadata))
         {
             return dacpacMetadata.DacpacPath;
