@@ -37,6 +37,7 @@ namespace Packages%3B
 {
     public string PackageId => """]]>%(Identity)<![CDATA["""%3B
     public string PackagePath => """]]>%(PackagePath)<![CDATA["""%3B
+    public Version PackageVersion => new Version("""]]>%(Version)<![CDATA[""")%3B
 }]]>
           </Source>
         </AspirePackageMetadataSource>
