@@ -1,7 +1,4 @@
 // copied from: https://github.com/dotnet/aspire/blob/2ea981718d2addc835b033fc4a52fae63b2a4a51/tests/Aspire.Hosting.Tests/Utils/LoggerNotificationExtensions.cs
-using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
