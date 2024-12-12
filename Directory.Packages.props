@@ -111,6 +111,7 @@
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="SurrealDb.Net" Version="0.7.0" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.7.0" />
+    <PackageVersion Include="SurrealDb.Net" Version="0.7.0" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->

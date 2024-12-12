@@ -7,8 +7,7 @@ builder.AddServiceDefaults();
 
 builder.AddSurrealClient("db", settings =>
 {
-    // TODO : Wait for v0.7
-    // settings.Options!.NamingPolicy = "CamelCase";
+    settings.Options!.NamingPolicy = "CamelCase";
 });
 
 var app = builder.Build();
