@@ -86,8 +86,7 @@ public static class AspireSurrealDbExtensions
         }
         else
         {
-            // TODO : Implement AddKeyedSurreal
-            //builder.Services.AddKeyedSurreal(serviceKey, settings.Options, settings.Lifetime);
+            builder.Services.AddKeyedSurreal(serviceKey, settings.Options, settings.Lifetime);
         }
 
         if (!settings.DisableHealthChecks)
