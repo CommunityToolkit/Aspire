@@ -56,7 +56,7 @@
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.2" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.7.0" />
-    <PackageVersion Include="SurrealDb.Net" Version="0.6.0" />
+    <PackageVersion Include="SurrealDb.Net" Version="0.7.0" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
