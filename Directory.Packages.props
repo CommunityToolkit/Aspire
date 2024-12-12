@@ -40,7 +40,6 @@
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
-    <PackageVersion Include="SurrealDb.Net" Version="0.6.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.1.0" />
@@ -109,6 +108,7 @@
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="9.0.0-beta.24568.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.7.0" />
+    <PackageVersion Include="SurrealDb.Net" Version="0.7.0" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
