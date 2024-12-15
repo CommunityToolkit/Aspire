@@ -1,0 +1,20 @@
+[project]
+name = "uv-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Tommaso Stocchi", email = "tstocchi@microsoft.com" } 
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.6",
+    "uvicorn>=0.32.1",
+]
+
+[project.scripts]
+uv-api = "uv_api:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
