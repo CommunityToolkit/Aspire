@@ -1,22 +1,18 @@
 <Project>
-    <Target Name="_CreateAspirePackageResources">
 
-      <CallTarget Targets="CollectCentralPackageVersions" Condition="'$(ManagePackageVersionsCentrally)'=='true'">
-        <Output TaskParameter="TargetOutputs" ItemName="ResolvedPackageReferences"/>
-      </CallTarget>
-
-      <ItemGroup>
-        <_AspirePackageResource Condition="'$(ManagePackageVersionsCentrally)'!='true'" Include="@(PackageReference->WithMetadataValue('IsAspirePackageResource', 'true')" />
-        <_AspirePackageResource Condition="'$(ManagePackageVersionsCentrally)'=='true'" Include="@(ResolvedPackageReferences->WithMetadataValue('IsAspirePackageResource', 'true'))" />
-      </ItemGroup>
-
-    </Target>
+    <ItemGroup>
+      <_AspirePackageResource Condition="'$(ManagePackageVersionsCentrally)'!='true'" Include="@(PackageReference->WithMetadataValue('IsAspirePackageResource', 'true'))" />
+      <_AspirePackageResource Condition="'$(ManagePackageVersionsCentrally)'=='true'" Include="@(PackageVersion)" />
+      <_AspirePackageResource Condition="'$(ManagePackageVersionsCentrally)'=='true'" Update="@(PackageReference)">
+        <IsAspirePackageResource Condition="'%(PackageReference.IsAspirePackageResource)' != ''">%(PackageReference.IsAspirePackageResource)</IsAspirePackageResource>
+      </_AspirePackageResource>
+    </ItemGroup>
 
     <!-- Generate the data structures for doing the codegen for package resources -->
     <Target Name="CreateAspirePackageMetadataSources"
-            DependsOnTargets="_CreateAspireProjectResources;_CreateAspirePackageResources">
+            DependsOnTargets="_CreateAspireProjectResources">
       <ItemGroup>
-        <AspirePackageMetadataSource Include="@(_AspirePackageResource)" Condition="'@(_AspirePackageResource)' != ''">
+        <AspirePackageMetadataSource Include="@(_AspirePackageResource->WithMetadataValue('IsAspirePackageResource', 'true'))" Condition="'@(_AspirePackageResource)' != ''">
           <ClassName Condition="%(_AspirePackageResource.AspirePackageMetadataTypeName) == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.Path]::GetFileNameWithoutExtension(%(_AspirePackageResource.Identity))), $(_GeneratedClassNameFixupRegex), '_'))</ClassName>
           <ClassName Condition="%(_AspirePackageResource.AspirePackageMetadataTypeName) != ''">$([System.Text.RegularExpressions.Regex]::Replace(%(_AspirePackageResource.AspirePackageMetadataTypeName), $(_GeneratedClassNameFixupRegex), '_'))</ClassName>
           <PackageName>@(_AspirePackageResource->'%(Identity)'->Replace('.', '_'))</PackageName>
