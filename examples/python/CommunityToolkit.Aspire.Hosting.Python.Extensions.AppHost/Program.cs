@@ -1,3 +1,4 @@
+#pragma warning disable CS0612
 var builder = DistributedApplication.CreateBuilder(args);
 
 var uvicorn = builder.AddUvicornApp("uvicornapp", "../uvicornapp-api", "main:app")
