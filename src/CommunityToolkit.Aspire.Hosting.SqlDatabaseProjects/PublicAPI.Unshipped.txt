@@ -4,3 +4,8 @@ Aspire.Hosting.ApplicationModel.ConfigureDacDeployOptionsAnnotation.ConfigureDac
 Aspire.Hosting.ApplicationModel.ConfigureDacDeployOptionsAnnotation.ConfigureDeploymentOptions.get -> System.Action<Microsoft.SqlServer.Dac.DacDeployOptions!>!
 Aspire.Hosting.ApplicationModel.ConfigureDacDeployOptionsAnnotation.ConfigureDeploymentOptions.init -> void
 static Aspire.Hosting.SqlProjectBuilderExtensions.WithConfigureDacDeployOptions(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>! builder, System.Action<Microsoft.SqlServer.Dac.DacDeployOptions!>! configureDeploymentOptions) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!
+Aspire.Hosting.IPackageMetadata
+Aspire.Hosting.IPackageMetadata.PackageId.get -> string!
+Aspire.Hosting.IPackageMetadata.PackageVersion.get -> System.Version!
+Aspire.Hosting.IPackageMetadata.PackagePath.get -> string!
+static Aspire.Hosting.SqlProjectBuilderExtensions.AddSqlPackage<TPackage>(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!

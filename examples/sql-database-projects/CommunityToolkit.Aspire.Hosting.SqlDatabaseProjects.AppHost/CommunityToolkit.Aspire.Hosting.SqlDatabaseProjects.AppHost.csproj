@@ -20,6 +20,6 @@
     <ProjectReference Include="..\SdkProject\SdkProject.csproj" />
   </ItemGroup>
 
-  <Import Project="MoveToPackage.targets" />
+  <Import Project="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\build\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.targets" />
 
 </Project>

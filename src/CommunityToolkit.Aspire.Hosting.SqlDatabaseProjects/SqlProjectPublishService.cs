@@ -1,10 +1,13 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Eventing;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
-internal class SqlProjectPublishService(IDacpacDeployer deployer, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
+internal class SqlProjectPublishService(IDacpacDeployer deployer, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
 {
     public async Task PublishSqlProject(SqlProjectResource sqlProject, SqlServerDatabaseResource target, CancellationToken cancellationToken)
     {
@@ -13,6 +16,11 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, ResourceLogger
         try
         {
             var dacpacPath = sqlProject.GetDacpacPath();
+            if (!Path.IsPathRooted(dacpacPath))
+            {
+                dacpacPath = Path.Combine(hostEnvironment.ContentRootPath, dacpacPath);
+            }
+
             if (!File.Exists(dacpacPath))
             {
                 logger.LogError("SQL Server Database project package not found at path {DacpacPath}.", dacpacPath);

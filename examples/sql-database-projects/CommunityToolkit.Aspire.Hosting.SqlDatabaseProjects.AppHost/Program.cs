@@ -6,7 +6,8 @@ var server = builder.AddSqlServer("sql")
 builder.AddSqlProject<Projects.SdkProject>("sdk-project")
        .WithReference(server);
 
-builder.AddSqlPackage<Packages.Microsoft_SqlServer_Dacpacs>("dacpac-project", "tools/master.dacpac")
+builder.AddSqlPackage<Packages.Microsoft_SqlServer_Dacpacs>("dacpac-project")
+       .WithDacpac("tools/master.dacpac")
        .WithReference(server);
 
 builder.Build().Run();

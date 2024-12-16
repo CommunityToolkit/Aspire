@@ -32,7 +32,7 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
             var packagePath = packageMetadata.PackagePath;
             if (this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var relativeDacpacMetadata))
             {
-                return Path.Combine(packagePath, relativeDacpacMetadata.DacpacPath);
+                return Path.Combine(packagePath, relativeDacpacMetadata.DacpacPath);;
             }
             else
             {
