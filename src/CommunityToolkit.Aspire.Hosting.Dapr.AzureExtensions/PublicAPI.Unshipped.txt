@@ -1,0 +1,3 @@
+#nullable enable
+Aspire.Hosting.DaprAzureHostingExtensions
+static Aspire.Hosting.DaprAzureHostingExtensions.ConfigureForAzure(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Dapr.IDaprComponentResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Azure.AzureProvisioningResource!>! source, string! componentType, string! version, System.Func<Aspire.Hosting.Azure.AzureResourceInfrastructure!, Azure.Provisioning.AppContainers.ContainerAppManagedEnvironmentDaprComponent!, System.Collections.Generic.IEnumerable<Azure.Provisioning.ProvisioningParameter!>!>! configureDaprResource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Dapr.IDaprComponentResource!>!

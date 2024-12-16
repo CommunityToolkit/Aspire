@@ -1,0 +1,3 @@
+#nullable enable
+Aspire.Hosting.DaprAzureRedisHostingExtensions
+static Aspire.Hosting.DaprAzureRedisHostingExtensions.WithReference(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Dapr.IDaprComponentResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Azure.AzureRedisCacheResource!>! source) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Dapr.IDaprComponentResource!>!
