@@ -6,9 +6,9 @@ internal class TestPackage : IPackageMetadata
 {
     public static readonly string NuGetPackageCache = Path.Combine(Environment.GetEnvironmentVariable("HOME") ?? Environment.GetEnvironmentVariable("USERPROFILE") ?? string.Empty, ".nuget", "packages");
 
-    public string PackageId { get; } = "Microsoft.SqlServer.Dacpacs.Master";
+    public string PackageId { get; } = "ErikEJ.Dacpac.Chinook";
 
-    public Version PackageVersion { get; } = new Version(160, 2, 3);
+    public Version PackageVersion { get; } = new Version(1, 0, 0);
 
-    public string PackagePath { get; } = Path.Combine(NuGetPackageCache, "microsoft.sqlserver.dacpacs.master", "160.2.3");
+    public string PackagePath { get; } = Path.Combine(NuGetPackageCache, "erikej.dacpac.chinook", "1.0.0");
 }

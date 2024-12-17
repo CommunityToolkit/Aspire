@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
-    <PackageReference Include="Microsoft.SqlServer.Dacpacs.Master" IsAspirePackageResource="true" />
+    <PackageReference Include="ErikEJ.Dacpac.Chinook" IsAspirePackageResource="true" />
   </ItemGroup>
 
   <ItemGroup>

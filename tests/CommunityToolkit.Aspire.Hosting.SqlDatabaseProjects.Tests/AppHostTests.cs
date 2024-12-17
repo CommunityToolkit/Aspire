@@ -8,7 +8,7 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_SqlDatabaseProjects_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_SqlDatabaseProjects_AppHost>>
 {
     [Fact]
-    public async Task ResourceStartsAndRespondsOk()
+    public async Task ProjectBasedResourceStartsAndRespondsOk()
     {
         string resourceName = "sdk-project";
         await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Finished).WaitAsync(TimeSpan.FromMinutes(5));
@@ -25,6 +25,29 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
             "FROM   INFORMATION_SCHEMA.TABLES " +
             "WHERE  TABLE_SCHEMA = 'dbo' " +
             "AND    TABLE_NAME = 'SdkProject'";
+        
+        var result = await command.ExecuteScalarAsync();
+        Assert.Equal(1, result);
+    }
+
+    [Fact]
+    public async Task PackageBasedResourceStartsAndRespondsOk()
+    {
+        string resourceName = "chinook";
+        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Finished).WaitAsync(TimeSpan.FromMinutes(5));
+
+        string? connectionString = await fixture.GetConnectionString("TargetDatabase");
+        Assert.NotNull(connectionString);
+
+        using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT COUNT(1) " +
+            "FROM   INFORMATION_SCHEMA.TABLES " +
+            "WHERE  TABLE_SCHEMA = 'dbo' " +
+            "AND    TABLE_NAME = 'InvoiceLine'";
         
         var result = await command.ExecuteScalarAsync();
         Assert.Equal(1, result);

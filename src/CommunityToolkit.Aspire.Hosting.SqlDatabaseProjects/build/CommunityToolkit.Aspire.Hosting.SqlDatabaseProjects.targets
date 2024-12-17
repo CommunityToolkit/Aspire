@@ -13,7 +13,7 @@
             DependsOnTargets="_CreateAspireProjectResources">
       <ItemGroup>
         <AspirePackageMetadataSource Include="@(_AspirePackageResource->WithMetadataValue('IsAspirePackageResource', 'true'))" Condition="'@(_AspirePackageResource)' != ''">
-          <ClassName Condition="%(_AspirePackageResource.AspirePackageMetadataTypeName) == ''">$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.Path]::GetFileNameWithoutExtension(%(_AspirePackageResource.Identity))), $(_GeneratedClassNameFixupRegex), '_'))</ClassName>
+          <ClassName Condition="%(_AspirePackageResource.AspirePackageMetadataTypeName) == ''">$([System.Text.RegularExpressions.Regex]::Replace(%(_AspirePackageResource.Identity), $(_GeneratedClassNameFixupRegex), '_'))</ClassName>
           <ClassName Condition="%(_AspirePackageResource.AspirePackageMetadataTypeName) != ''">$([System.Text.RegularExpressions.Regex]::Replace(%(_AspirePackageResource.AspirePackageMetadataTypeName), $(_GeneratedClassNameFixupRegex), '_'))</ClassName>
           <PackageName>@(_AspirePackageResource->'%(Identity)'->Replace('.', '_'))</PackageName>
           <PackagePath>$([System.String]::new('$(NuGetPackageRoot)%(_AspirePackageResource.Identity)/%(_AspirePackageResource.Version)').ToLower())</PackagePath>

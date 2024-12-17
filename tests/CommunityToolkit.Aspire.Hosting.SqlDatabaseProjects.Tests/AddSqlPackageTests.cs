@@ -9,7 +9,7 @@ public class AddSqlPackageTests
     {
          // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddSqlPackage<TestPackage>("master");
+        appBuilder.AddSqlPackage<TestPackage>("chinook");
         
         // Act
         using var app = appBuilder.Build();
@@ -17,11 +17,12 @@ public class AddSqlPackageTests
         
         // Assert
         var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
-        Assert.Equal("master", sqlProjectResource.Name);
+        Assert.Equal("chinook", sqlProjectResource.Name);
 
         var dacpacPath = sqlProjectResource.GetDacpacPath();
         Assert.NotNull(dacpacPath);
-        Assert.Equal(Path.Combine(TestPackage.NuGetPackageCache, "microsoft.sqlserver.dacpacs.master", "160.2.3", "tools", "Microsoft.SqlServer.Dacpacs.Master.dacpac"), dacpacPath);
+        Assert.Equal(Path.Combine(TestPackage.NuGetPackageCache, "erikej.dacpac.chinook", "1.0.0", "tools", "ErikEJ.Dacpac.Chinook.dacpac"), dacpacPath);
+        Assert.True(File.Exists(dacpacPath));
     }
 
     [Fact]
@@ -29,7 +30,7 @@ public class AddSqlPackageTests
     {
          // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddSqlPackage<TestPackage>("master").WithDacpac("tools/master.dacpac");
+        appBuilder.AddSqlPackage<TestPackage>("chinook").WithDacpac("tools/ErikEJ.Dacpac.Chinook2.dacpac");
         
         // Act
         using var app = appBuilder.Build();
@@ -37,10 +38,10 @@ public class AddSqlPackageTests
         
         // Assert
         var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
-        Assert.Equal("master", sqlProjectResource.Name);
+        Assert.Equal("chinook", sqlProjectResource.Name);
 
         var dacpacPath = sqlProjectResource.GetDacpacPath();
         Assert.NotNull(dacpacPath);
-        Assert.True(File.Exists(dacpacPath));
+        Assert.Equal(Path.Combine(TestPackage.NuGetPackageCache, "erikej.dacpac.chinook", "1.0.0", "tools", "ErikEJ.Dacpac.Chinook2.dacpac"), dacpacPath);
     }
 }
