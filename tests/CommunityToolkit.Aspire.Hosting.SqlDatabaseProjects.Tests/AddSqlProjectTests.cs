@@ -41,7 +41,7 @@ public class AddSqlProjectTests
         Assert.Equal("MySqlProject", sqlProjectResource.Name);
 
         Assert.True(sqlProjectResource.TryGetLastAnnotation(out DacpacMetadataAnnotation? dacpacMetadataAnnotation));
-        Assert.Equal(Path.Combine(appBuilder.AppHostDirectory, TestProject.RelativePath), dacpacMetadataAnnotation.DacpacPath);
+        Assert.Equal(TestProject.RelativePath, dacpacMetadataAnnotation.DacpacPath);
 
         var dacpacPath = sqlProjectResource.GetDacpacPath();
         Assert.NotNull(dacpacPath);
