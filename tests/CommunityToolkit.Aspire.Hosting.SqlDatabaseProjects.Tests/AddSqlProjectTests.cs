@@ -96,7 +96,7 @@ public class AddSqlProjectTests
     }
 
     [Fact]
-    public void PublishTo_AddsRequiredServices()
+    public void WithReference_AddsRequiredServices()
     {
         // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
