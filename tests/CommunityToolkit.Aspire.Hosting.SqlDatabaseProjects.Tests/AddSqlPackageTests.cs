@@ -21,7 +21,7 @@ public class AddSqlPackageTests
 
         var dacpacPath = sqlProjectResource.GetDacpacPath();
         Assert.NotNull(dacpacPath);
-        Assert.Equal(Path.Combine(TestPackage.PackageBasePath, "tools", "Microsoft.SqlServer.Dacpacs.Master.dacpac"), dacpacPath);
+        Assert.Equal(Path.Combine(TestPackage.NuGetPackageCache, "microsoft.sqlserver.dacpacs.master", "160.2.3", "tools", "Microsoft.SqlServer.Dacpacs.Master.dacpac"), dacpacPath);
     }
 
     [Fact]
