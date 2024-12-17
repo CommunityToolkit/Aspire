@@ -30,7 +30,7 @@ public class AddSqlPackageTests
     {
          // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddSqlPackage<TestPackage>("chinook").WithDacpac("tools/ErikEJ.Dacpac.Chinook2.dacpac");
+        appBuilder.AddSqlPackage<TestPackage>("chinook").WithDacpac(Path.Combine("tools", "ErikEJ.Dacpac.Chinook2.dacpac"));
         
         // Act
         using var app = appBuilder.Build();
