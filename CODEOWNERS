@@ -50,3 +50,12 @@
 /tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests/ @fredimachado
 /src/CommunityToolkit.Aspire.EventStore/ @fredimachado
 /tests/CommunityToolkit.Aspire.EventStore.Tests/ @fredimachado
+
+# CommunityToolkit.Aspire.MassTransit.RabbitMQ
+
+/examples/masstransit-rabbitmq/ @MichielBrys
+/src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/ @MichielBrys
+/tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/ @MichielBrys
+
+
+
