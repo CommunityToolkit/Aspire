@@ -12,11 +12,14 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="ErikEJ.Dacpac.Chinook" IsAspirePackageResource="true" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" IsAspireProjectResource="False" />
     <ProjectReference Include="..\SdkProject\SdkProject.csproj" />
   </ItemGroup>
+
+  <Import Project="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects\build\CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.targets" />
 
 </Project>

@@ -30,7 +30,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> AddSqlProject<TProject>(this IDistributedApplicationBuilder builder, [ResourceName]string name)
+    public static IResourceBuilder<SqlProjectResource> AddSqlProject<TProject>(this IDistributedApplicationBuilder builder, [ResourceName] string name)
         where TProject : IProjectMetadata, new()
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -46,7 +46,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, [ResourceName]string name)
+    public static IResourceBuilder<SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
@@ -58,6 +58,24 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
+    /// Adds a SQL Server Database Project resource to the application based on a referenced NuGet package.
+    /// </summary>
+    /// <typeparam name="TPackage">Type that represents the NuGet package that contains the .dacpac file.</typeparam>
+    /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
+    /// <param name="name">Name of the resource.</param>
+    /// <returns>Am <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlProjectResource> AddSqlPackage<TPackage>(this IDistributedApplicationBuilder builder, [ResourceName] string name)
+        where TPackage : IPackageMetadata, new()
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
+        return builder.AddSqlProject(name)
+                      .WithAnnotation(new TPackage())
+                      .ExcludeFromManifest();
+    }
+
+    /// <summary>
     /// Specifies the path to the .dacpac file.
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
@@ -65,11 +83,6 @@ public static class SqlProjectBuilderExtensions
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
     public static IResourceBuilder<SqlProjectResource> WithDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath)
     {
-        if (!Path.IsPathRooted(dacpacPath))
-        {
-            dacpacPath = Path.Combine(builder.ApplicationBuilder.AppHostDirectory, dacpacPath);
-        }
-
         return builder.WithAnnotation(new DacpacMetadataAnnotation(dacpacPath));
     }
 
