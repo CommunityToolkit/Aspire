@@ -3,6 +3,7 @@ using Aspire.Hosting.Azure;
 using Aspire.Hosting.Dapr;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
+using Azure.Provisioning;
 
 namespace Aspire.Hosting;
 
@@ -16,16 +17,15 @@ public static class AzureDaprHostingExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="name">The name of the Dapr resource.</param>
-    /// <param name="configurInfrastructure">The action to configure the Azure resource infrastructure.</param>
+    /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
     /// <returns>The updated resource builder.</returns>
     public static IResourceBuilder<IDaprComponentResource> AddAzureDaprResource(
         this IResourceBuilder<IDaprComponentResource> builder,
         [ResourceName] string name,
-        Action<AzureResourceInfrastructure> configurInfrastructure)
+        Action<AzureResourceInfrastructure> configureInfrastructure)
     {
-        var daprResource = new AzureDaprResource(name, configurInfrastructure);
-        builder.ApplicationBuilder.AddResource(daprResource);
-
+        var daprResourceBuilder = builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
+        // TODO: Add parameters
         return builder.ExcludeFromManifest();
     }
 
@@ -33,8 +33,10 @@ public static class AzureDaprHostingExtensions
     /// Configures the infrastructure for a Dapr component in a container app managed environment.
     /// </summary>
     /// <param name="daprComponent">The Dapr component to configure.</param>
+    /// <param name="parameters">The parameters to provide to the component</param>
     /// <returns>An action to configure the Azure resource infrastructure.</returns>
-    public static Action<AzureResourceInfrastructure> ConfigureInfrastructure(ContainerAppManagedEnvironmentDaprComponent daprComponent) =>
+    public static Action<AzureResourceInfrastructure> ConfigureInfrastructure(ContainerAppManagedEnvironmentDaprComponent daprComponent,
+    IEnumerable<ProvisioningParameter> parameters) =>
         (AzureResourceInfrastructure infrastructure) =>
         {
             var resourceToken = BicepFunction.GetUniqueString(BicepFunction.GetResourceGroup().Id);
@@ -42,8 +44,14 @@ public static class AzureDaprHostingExtensions
             containerAppEnvironment.Name = BicepFunction.Interpolate($"cae-{resourceToken}");
 
             infrastructure.Add(containerAppEnvironment);
-
+            daprComponent.Parent = containerAppEnvironment;
             infrastructure.Add(daprComponent);
+
+            foreach (var parameter in parameters ?? [])
+            {
+                infrastructure.Add(parameter);
+            }
+
         };
 
     /// <summary>
@@ -61,4 +69,5 @@ public static class AzureDaprHostingExtensions
             ComponentType = componentType,
             Version = version
         };
+
 }

@@ -41,6 +41,8 @@ public static class AzureRedisCacheDaprHostingExtensions
     {
         var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1.0");
 
+        HashSet<ProvisioningParameter> parameters = [];
+
         source.ConfigureInfrastructure(redisCache =>
         {
             var redisCacheResource = redisCache.GetProvisionableResources().OfType<AzureRedisResource>().Single();
@@ -58,6 +60,7 @@ public static class AzureRedisCacheDaprHostingExtensions
 
             var redisHost = new ProvisioningParameter("redisHost", typeof(string));
 
+            parameters.Add(redisHost);
             ContainerAppDaprMetadata securityMetadata = useEntraID ?
                 new ContainerAppDaprMetadata { Name = "useEntraID", Value = "true" } :
                 new ContainerAppDaprMetadata { Name = "redisPassword", SecretRef = "redisPassword" };
@@ -79,8 +82,7 @@ public static class AzureRedisCacheDaprHostingExtensions
 
         });
 
-        var configureInfrastructure = AzureDaprHostingExtensions.ConfigureInfrastructure(daprComponent);
-
+        var configureInfrastructure = AzureDaprHostingExtensions.ConfigureInfrastructure(daprComponent, parameters);
         return builder.AddAzureDaprResource(redisDaprState, configureInfrastructure);
     }
 }
