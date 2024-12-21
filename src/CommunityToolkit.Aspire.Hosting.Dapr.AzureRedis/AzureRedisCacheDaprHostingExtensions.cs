@@ -4,6 +4,7 @@ using Aspire.Hosting.Dapr;
 using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
+using Azure.Provisioning.KeyVault;
 using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
 
 namespace Aspire.Hosting;
@@ -41,7 +42,11 @@ public static class AzureRedisCacheDaprHostingExtensions
     {
         var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1.0");
 
-        HashSet<ProvisioningParameter> parameters = [];
+        var redisHost = new ProvisioningParameter("redisHost", typeof(string));
+        var redisPasswordSecret = new ProvisioningParameter("redisPasswordSecretUri", typeof(Uri));
+        var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
+
+        builder.ApplicationBuilder.AddAzureRedis("");
 
         source.ConfigureInfrastructure(redisCache =>
         {
@@ -53,36 +58,88 @@ public static class AzureRedisCacheDaprHostingExtensions
 
             BicepValue<int> port = enableTLS ? redisCacheResource.SslPort : redisCacheResource.Port;
 
-            redisCache.Add(new ProvisioningOutput("DaprConnectionString", typeof(string))
+            redisCache.Add(new ProvisioningOutput("daprConnectionString", typeof(string))
             {
                 Value = BicepFunction.Interpolate($"{redisCacheResource.HostName}:{port}")
             });
 
-            var redisHost = new ProvisioningParameter("redisHost", typeof(string));
-
-            parameters.Add(redisHost);
-            ContainerAppDaprMetadata securityMetadata = useEntraID ?
-                new ContainerAppDaprMetadata { Name = "useEntraID", Value = "true" } :
-                new ContainerAppDaprMetadata { Name = "redisPassword", SecretRef = "redisPassword" };
-
             daprComponent.Metadata = [
                 new ContainerAppDaprMetadata { Name = "redisHost", Value = redisHost },
-                                            securityMetadata,
-                                            new ContainerAppDaprMetadata { Name = "enableTLS", Value = enableTLS? "true":"false"},
-                                            new ContainerAppDaprMetadata { Name = "actorStateStore", Value = "true" }
+                new ContainerAppDaprMetadata { Name = "enableTLS", Value = enableTLS? "true":"false"},
+                new ContainerAppDaprMetadata { Name = "actorStateStore", Value = "true" }
             ];
 
-            if (!useEntraID)
+            if (useEntraID)
             {
-                // TODO: Add key vault details
-                daprComponent.Secrets = [
-                    new ContainerAppWritableSecret { Name = "redisPassword", Value="redacted" }
-                ];
+                daprComponent.Metadata.Add(new ContainerAppDaprMetadata
+                {
+                    Name = "useEntraID",
+                    Value = "true"
+                });
+                daprComponent.Metadata.Add(new ContainerAppDaprMetadata
+                {
+                    Name = "azureClientId",
+                    Value = principalIdParameter
+                });
+            }
+            else
+            {
+                redisCache.ConfigureSecretAccess(daprComponent, redisPasswordSecret, redisCacheResource);
             }
 
         });
 
-        var configureInfrastructure = AzureDaprHostingExtensions.ConfigureInfrastructure(daprComponent, parameters);
-        return builder.AddAzureDaprResource(redisDaprState, configureInfrastructure);
+        var configureInfrastructure = AzureDaprHostingExtensions.ConfigureInfrastructure(daprComponent, [redisHost]);
+
+        var daprResourceBuilder = builder.AddAzureDaprResource(redisDaprState, configureInfrastructure)
+          .WithParameter("redisHost", source.GetOutput("daprConnectionString"));
+
+        if (source.GetOutput("redisPasswordSecretUri") is BicepOutputReference keyVaultSecretParam)
+        {
+            daprResourceBuilder.WithParameter("redisPasswordSecretUri", keyVaultSecretParam);
+        }
+        // return the original builder to allow chaining
+        return builder;
+    }
+
+    private static void ConfigureSecretAccess(this AzureResourceInfrastructure redisCache,
+                                              ContainerAppManagedEnvironmentDaprComponent daprComponent,
+                                              ProvisioningParameter redisPasswordSecret,
+                                              AzureRedisResource redisCacheResource)
+    {
+        var keyVault = redisCache.GetProvisionableResources()
+                                                 .OfType<KeyVaultService>()
+                                                 .FirstOrDefault() ?? redisCache.ConfigureKeyVaultSecrets();
+
+        var redisPassword = new KeyVaultSecret("daprRedisPassword")
+        {
+            Parent = keyVault,
+            Name = "daprRedisPassword",
+            Properties = new SecretProperties
+            {
+                Value = redisCacheResource.GetKeys().PrimaryKey
+            }
+        };
+
+        redisCache.Add(redisPassword);
+
+        redisCache.Add(new ProvisioningOutput("redisPasswordSecretUri", typeof(Uri))
+        {
+            Value = redisPassword.Properties.SecretUri
+        });
+
+        daprComponent.Metadata.Add(new ContainerAppDaprMetadata
+        {
+            Name = "redisPassword",
+            SecretRef = "redisPassword"
+        });
+
+        // TODO: Add key vault details
+        daprComponent.Secrets = [
+            new ContainerAppWritableSecret {
+                        Name = "redisPassword",
+                        KeyVaultUri = redisPasswordSecret
+                     }
+        ];
     }
 }

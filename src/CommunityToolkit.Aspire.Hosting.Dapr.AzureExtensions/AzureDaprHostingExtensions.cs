@@ -4,6 +4,7 @@ using Aspire.Hosting.Dapr;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning;
+using Azure.Provisioning.KeyVault;
 
 namespace Aspire.Hosting;
 
@@ -19,14 +20,13 @@ public static class AzureDaprHostingExtensions
     /// <param name="name">The name of the Dapr resource.</param>
     /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
     /// <returns>The updated resource builder.</returns>
-    public static IResourceBuilder<IDaprComponentResource> AddAzureDaprResource(
+    public static IResourceBuilder<AzureProvisioningResource> AddAzureDaprResource(
         this IResourceBuilder<IDaprComponentResource> builder,
         [ResourceName] string name,
         Action<AzureResourceInfrastructure> configureInfrastructure)
     {
-        var daprResourceBuilder = builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
-        // TODO: Add parameters
-        return builder.ExcludeFromManifest();
+        builder.ExcludeFromManifest();
+        return builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
     }
 
     /// <summary>
@@ -51,9 +51,32 @@ public static class AzureDaprHostingExtensions
             {
                 infrastructure.Add(parameter);
             }
-
         };
 
+
+    /// <summary>
+    /// Configures Key Vault secrets for the Azure resource infrastructure.
+    /// </summary>
+    /// <param name="infrastructure">The Azure resource infrastructure.</param>
+    /// <param name="keyVaultSecrets">The Key Vault secrets to configure.</param>
+    /// <returns>The configured Key Vault service.</returns>
+    public static KeyVaultService ConfigureKeyVaultSecrets(
+        this AzureResourceInfrastructure infrastructure, IEnumerable<KeyVaultSecret>? keyVaultSecrets = null)
+    {
+        var kvNameParam = new ProvisioningParameter("keyVaultName", typeof(string));
+        infrastructure.Add(kvNameParam);
+
+        var keyVault = KeyVaultService.FromExisting("keyVault");
+        keyVault.Name = kvNameParam;
+        infrastructure.Add(keyVault);
+
+        foreach (var secret in keyVaultSecrets ?? [])
+        {
+            secret.Parent = keyVault;
+            infrastructure.Add(secret);
+        }
+        return keyVault;
+    }
     /// <summary>
     /// Creates a new Dapr component for a container app managed environment.
     /// </summary>
