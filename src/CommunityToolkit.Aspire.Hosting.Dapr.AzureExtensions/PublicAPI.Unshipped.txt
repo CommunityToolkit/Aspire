@@ -1,7 +1,8 @@
 #nullable enable
-Aspire.Hosting.ApplicationModel.AzureDaprResource
+Aspire.Hosting.ApplicationModel.AzureDaprComponentResource
+Aspire.Hosting.ApplicationModel.AzureDaprComponentResource.AzureDaprComponentResource(string! bicepIdentifier, System.Action<Aspire.Hosting.Azure.AzureResourceInfrastructure!>! configureInfrastructure) -> void
 Aspire.Hosting.AzureDaprHostingExtensions
 static Aspire.Hosting.AzureDaprHostingExtensions.AddAzureDaprResource(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Dapr.IDaprComponentResource!>! builder, string! name, System.Action<Aspire.Hosting.Azure.AzureResourceInfrastructure!>! configureInfrastructure) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.Azure.AzureProvisioningResource!>!
-static Aspire.Hosting.AzureDaprHostingExtensions.ConfigureInfrastructure(Azure.Provisioning.AppContainers.ContainerAppManagedEnvironmentDaprComponent! daprComponent, System.Collections.Generic.IEnumerable<Azure.Provisioning.ProvisioningParameter!>! parameters) -> System.Action<Aspire.Hosting.Azure.AzureResourceInfrastructure!>!
+static Aspire.Hosting.AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(Azure.Provisioning.AppContainers.ContainerAppManagedEnvironmentDaprComponent! daprComponent, System.Collections.Generic.IEnumerable<Azure.Provisioning.ProvisioningParameter!>! parameters) -> System.Action<Aspire.Hosting.Azure.AzureResourceInfrastructure!>!
 static Aspire.Hosting.AzureDaprHostingExtensions.ConfigureKeyVaultSecrets(this Aspire.Hosting.Azure.AzureResourceInfrastructure! infrastructure, System.Collections.Generic.IEnumerable<Azure.Provisioning.KeyVault.KeyVaultSecret!>? keyVaultSecrets = null) -> Azure.Provisioning.KeyVault.KeyVaultService!
 static Aspire.Hosting.AzureDaprHostingExtensions.CreateDaprComponent(string! resourceName, string! componentType, string! version) -> Azure.Provisioning.AppContainers.ContainerAppManagedEnvironmentDaprComponent!

@@ -25,8 +25,10 @@ public static class AzureDaprHostingExtensions
         [ResourceName] string name,
         Action<AzureResourceInfrastructure> configureInfrastructure)
     {
+        // Validate if this is needed
         builder.ExcludeFromManifest();
-        return builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
+        // Create a resource to wrap this
+        return builder.ApplicationBuilder.AddResource(new AzureDaprComponentResource(name, configureInfrastructure));
     }
 
     /// <summary>
@@ -35,8 +37,9 @@ public static class AzureDaprHostingExtensions
     /// <param name="daprComponent">The Dapr component to configure.</param>
     /// <param name="parameters">The parameters to provide to the component</param>
     /// <returns>An action to configure the Azure resource infrastructure.</returns>
-    public static Action<AzureResourceInfrastructure> ConfigureInfrastructure(ContainerAppManagedEnvironmentDaprComponent daprComponent,
-    IEnumerable<ProvisioningParameter> parameters) =>
+    public static Action<AzureResourceInfrastructure> GetInfrastructureConfigurationAction(
+        ContainerAppManagedEnvironmentDaprComponent daprComponent,
+        IEnumerable<ProvisioningParameter> parameters) =>
         (AzureResourceInfrastructure infrastructure) =>
         {
             var resourceToken = BicepFunction.GetUniqueString(BicepFunction.GetResourceGroup().Id);

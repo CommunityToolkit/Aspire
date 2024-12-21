@@ -46,8 +46,6 @@ public static class AzureRedisCacheDaprHostingExtensions
         var redisPasswordSecret = new ProvisioningParameter("redisPasswordSecretUri", typeof(Uri));
         var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
 
-        builder.ApplicationBuilder.AddAzureRedis("");
-
         source.ConfigureInfrastructure(redisCache =>
         {
             var redisCacheResource = redisCache.GetProvisionableResources().OfType<AzureRedisResource>().Single();
@@ -89,7 +87,7 @@ public static class AzureRedisCacheDaprHostingExtensions
 
         });
 
-        var configureInfrastructure = AzureDaprHostingExtensions.ConfigureInfrastructure(daprComponent, [redisHost]);
+        var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprComponent, [redisHost]);
 
         var daprResourceBuilder = builder.AddAzureDaprResource(redisDaprState, configureInfrastructure)
           .WithParameter("redisHost", source.GetOutput("daprConnectionString"));
