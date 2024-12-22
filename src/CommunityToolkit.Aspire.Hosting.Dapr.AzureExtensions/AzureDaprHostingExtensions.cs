@@ -20,15 +20,22 @@ public static class AzureDaprHostingExtensions
     /// <param name="name">The name of the Dapr resource.</param>
     /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
     /// <returns>The updated resource builder.</returns>
-    public static IResourceBuilder<AzureProvisioningResource> AddAzureDaprResource(
+    public static IResourceBuilder<AzureDaprComponentResource> AddAzureDaprResource(
         this IResourceBuilder<IDaprComponentResource> builder,
         [ResourceName] string name,
         Action<AzureResourceInfrastructure> configureInfrastructure)
     {
         // Validate if this is needed
         builder.ExcludeFromManifest();
-        // Create a resource to wrap this
-        return builder.ApplicationBuilder.AddResource(new AzureDaprComponentResource(name, configureInfrastructure));
+
+        var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
+
+        return builder.ApplicationBuilder.AddResource(azureDaprComponentResource)
+                                    .WithManifestPublishingCallback(azureDaprComponentResource.WriteToManifest);
+
+        //builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
+
+        // return builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
     }
 
     /// <summary>
@@ -39,15 +46,28 @@ public static class AzureDaprHostingExtensions
     /// <returns>An action to configure the Azure resource infrastructure.</returns>
     public static Action<AzureResourceInfrastructure> GetInfrastructureConfigurationAction(
         ContainerAppManagedEnvironmentDaprComponent daprComponent,
-        IEnumerable<ProvisioningParameter> parameters) =>
+        IEnumerable<ProvisioningParameter>? parameters = null) =>
         (AzureResourceInfrastructure infrastructure) =>
         {
-            var resourceToken = BicepFunction.GetUniqueString(BicepFunction.GetResourceGroup().Id);
+
+            ProvisioningVariable resourceToken = new("resourceToken", typeof(string))
+            {
+                Value = BicepFunction.GetUniqueString(BicepFunction.GetResourceGroup().Id)
+            };
+
+            infrastructure.Add(resourceToken);
+
             var containerAppEnvironment = ContainerAppManagedEnvironment.FromExisting("containerAppEnvironment");
             containerAppEnvironment.Name = BicepFunction.Interpolate($"cae-{resourceToken}");
 
             infrastructure.Add(containerAppEnvironment);
             daprComponent.Parent = containerAppEnvironment;
+
+            if (!daprComponent.ProvisionableProperties.TryGetValue("Name", out IBicepValue? name) || name.IsEmpty)
+            {
+                daprComponent.Name = BicepFunction.Take(BicepFunction.Interpolate($"{daprComponent.BicepIdentifier}{resourceToken}"), 24);
+            }
+
             infrastructure.Add(daprComponent);
 
             foreach (var parameter in parameters ?? [])
@@ -83,14 +103,14 @@ public static class AzureDaprHostingExtensions
     /// <summary>
     /// Creates a new Dapr component for a container app managed environment.
     /// </summary>
-    /// <param name="resourceName">The name of the resource.</param>
+    /// <param name="bicepIdentifier">The name of the resource.</param>
     /// <param name="componentType">The type of the Dapr component.</param>
     /// <param name="version">The version of the Dapr component.</param>
     /// <returns>A new instance of <see cref="ContainerAppManagedEnvironmentDaprComponent"/>.</returns>
     public static ContainerAppManagedEnvironmentDaprComponent CreateDaprComponent(
-        string resourceName,
+        string bicepIdentifier,
         string componentType,
-        string version) => new(resourceName)
+        string version) => new(bicepIdentifier)
         {
             ComponentType = componentType,
             Version = version
