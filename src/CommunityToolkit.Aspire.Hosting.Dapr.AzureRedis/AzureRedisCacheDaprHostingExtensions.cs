@@ -43,16 +43,19 @@ public static class AzureRedisCacheDaprHostingExtensions
         var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1.0");
 
         var redisHost = new ProvisioningParameter("redisHost", typeof(string));
-        var redisPasswordSecret = new ProvisioningParameter("redisPasswordSecretUri", typeof(Uri));
         var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
+
+        var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprComponent, [redisHost]);
+
+        var daprResourceBuilder = builder.AddAzureDaprResource(redisDaprState, configureInfrastructure);
 
         source.ConfigureInfrastructure(redisCache =>
         {
             var redisCacheResource = redisCache.GetProvisionableResources().OfType<AzureRedisResource>().Single();
 
             // Make necessary changes to the redis resource
-            bool useEntraID = redisCacheResource.RedisConfiguration.IsAadEnabled.Equals("true");
-            bool enableTLS = redisCacheResource.EnableNonSslPort.Equals("false");
+            bool useEntraID = redisCacheResource.RedisConfiguration.IsAadEnabled.Value == "true";
+            bool enableTLS = redisCacheResource.EnableNonSslPort.Value == false;
 
             BicepValue<int> port = enableTLS ? redisCacheResource.SslPort : redisCacheResource.Port;
 
@@ -61,11 +64,14 @@ public static class AzureRedisCacheDaprHostingExtensions
                 Value = BicepFunction.Interpolate($"{redisCacheResource.HostName}:{port}")
             });
 
+            daprResourceBuilder.WithParameter("redisHost", source.GetOutput("daprConnectionString"));
+
             daprComponent.Metadata = [
                 new ContainerAppDaprMetadata { Name = "redisHost", Value = redisHost },
                 new ContainerAppDaprMetadata { Name = "enableTLS", Value = enableTLS? "true":"false"},
                 new ContainerAppDaprMetadata { Name = "actorStateStore", Value = "true" }
             ];
+
 
             if (useEntraID)
             {
@@ -82,29 +88,21 @@ public static class AzureRedisCacheDaprHostingExtensions
             }
             else
             {
-                redisCache.ConfigureSecretAccess(daprComponent, redisPasswordSecret, redisCacheResource);
+                redisCache.ConfigureSecretAccess(daprComponent, redisCacheResource);
+                daprResourceBuilder.WithParameter("redisPasswordSecretUri", source.GetOutput("redisPasswordSecretUri"));
             }
-
         });
 
-        var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprComponent, [redisHost]);
-
-        var daprResourceBuilder = builder.AddAzureDaprResource(redisDaprState, configureInfrastructure)
-          .WithParameter("redisHost", source.GetOutput("daprConnectionString"));
-
-        if (source.GetOutput("redisPasswordSecretUri") is BicepOutputReference keyVaultSecretParam)
-        {
-            daprResourceBuilder.WithParameter("redisPasswordSecretUri", keyVaultSecretParam);
-        }
         // return the original builder to allow chaining
         return builder;
     }
 
     private static void ConfigureSecretAccess(this AzureResourceInfrastructure redisCache,
                                               ContainerAppManagedEnvironmentDaprComponent daprComponent,
-                                              ProvisioningParameter redisPasswordSecret,
                                               AzureRedisResource redisCacheResource)
     {
+        var redisPasswordSecret = new ProvisioningParameter("redisPasswordSecretUri", typeof(Uri));
+
         var keyVault = redisCache.GetProvisionableResources()
                                                  .OfType<KeyVaultService>()
                                                  .FirstOrDefault() ?? redisCache.ConfigureKeyVaultSecrets();
