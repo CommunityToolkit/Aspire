@@ -33,9 +33,6 @@ public static class AzureDaprHostingExtensions
         return builder.ApplicationBuilder.AddResource(azureDaprComponentResource)
                                     .WithManifestPublishingCallback(azureDaprComponentResource.WriteToManifest);
 
-        //builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
-
-        // return builder.ApplicationBuilder.AddAzureInfrastructure(name, configureInfrastructure);
     }
 
     /// <summary>

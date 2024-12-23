@@ -130,7 +130,6 @@ public static class AzureRedisCacheDaprHostingExtensions
             SecretRef = "redisPassword"
         });
 
-        // TODO: Add key vault details
         daprComponent.Secrets = [
             new ContainerAppWritableSecret {
                         Name = "redisPassword",
