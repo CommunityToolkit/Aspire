@@ -16,6 +16,7 @@ var executableapp = builder.AddSpringApp("executableapp",
                                Port = 8085,
                                OtelAgentPath = "../../../agents",
                            })
+                           .WithMavenBuild()
                            .PublishAsDockerFile(
                            [
                                new DockerBuildArg("JAR_NAME", "spring-maven-0.0.1-SNAPSHOT.jar"),
