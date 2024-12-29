@@ -20,7 +20,7 @@ public class AddSqlProjectTests
         var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
         Assert.Equal("MySqlProject", sqlProjectResource.Name);
 
-        var dacpacPath = sqlProjectResource.GetDacpacPath();
+        var dacpacPath = ((IResourceWithDacpac)sqlProjectResource).GetDacpacPath();
         Assert.NotNull(dacpacPath);
         Assert.True(File.Exists(dacpacPath));
     }
@@ -43,7 +43,7 @@ public class AddSqlProjectTests
         Assert.True(sqlProjectResource.TryGetLastAnnotation(out DacpacMetadataAnnotation? dacpacMetadataAnnotation));
         Assert.Equal(TestProject.RelativePath, dacpacMetadataAnnotation.DacpacPath);
 
-        var dacpacPath = sqlProjectResource.GetDacpacPath();
+        var dacpacPath = ((IResourceWithDacpac)sqlProjectResource).GetDacpacPath();
         Assert.NotNull(dacpacPath);
         Assert.True(File.Exists(dacpacPath));
     }
@@ -53,7 +53,6 @@ public class AddSqlProjectTests
     {
         // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
-
         appBuilder.AddSqlProject("MySqlProject");
 
         // Act
@@ -66,7 +65,7 @@ public class AddSqlProjectTests
 
         Assert.False(sqlProjectResource.TryGetLastAnnotation(out ConfigureDacDeployOptionsAnnotation? _));
 
-        var options = sqlProjectResource.GetDacpacDeployOptions();
+        var options = ((IResourceWithDacpac)sqlProjectResource).GetDacpacDeployOptions();
         Assert.NotNull(options);
         Assert.Equivalent(new DacDeployOptions(), options);
     }
@@ -91,7 +90,7 @@ public class AddSqlProjectTests
         Assert.True(sqlProjectResource.TryGetLastAnnotation(out ConfigureDacDeployOptionsAnnotation? configureDacDeployOptionsAnnotation));
         Assert.Same(configureAction, configureDacDeployOptionsAnnotation.ConfigureDeploymentOptions);
 
-        var options = sqlProjectResource.GetDacpacDeployOptions();
+        var options = ((IResourceWithDacpac)sqlProjectResource).GetDacpacDeployOptions();
         Assert.True(options.IncludeCompositeObjects);
     }
 

@@ -8,4 +8,10 @@ Aspire.Hosting.IPackageMetadata
 Aspire.Hosting.IPackageMetadata.PackageId.get -> string!
 Aspire.Hosting.IPackageMetadata.PackageVersion.get -> System.Version!
 Aspire.Hosting.IPackageMetadata.PackagePath.get -> string!
-static Aspire.Hosting.SqlProjectBuilderExtensions.AddSqlPackage<TPackage>(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlProjectResource!>!
+Aspire.Hosting.ApplicationModel.IResourceWithDacpac
+Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>
+Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>.SqlPackageResource(string! name) -> void
+static Aspire.Hosting.SqlProjectBuilderExtensions.AddSqlPackage<TPackage>(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>!>!
+static Aspire.Hosting.SqlProjectBuilderExtensions.WithReference<TPackage>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlServerDatabaseResource!>! target) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>!>!
+static Aspire.Hosting.SqlProjectBuilderExtensions.WithDacpac<TPackage>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>!>! builder, string! dacpacPath) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>!>!
+static Aspire.Hosting.SqlProjectBuilderExtensions.WithConfigureDacDeployOptions<TPackage>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>!>! builder, System.Action<Microsoft.SqlServer.Dac.DacDeployOptions!>! configureDeploymentOptions) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlPackageResource<TPackage>!>!

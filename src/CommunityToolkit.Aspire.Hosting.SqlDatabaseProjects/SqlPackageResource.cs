@@ -1,30 +1,28 @@
-using Microsoft.Build.Evaluation;
 using Microsoft.SqlServer.Dac;
 
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// Represents a SQL Server Database project resource.
+/// Represents a SQL Server Database package resource.
 /// </summary>
+/// <typeparam name="TPackage">Type that represents the package that contains the .dacpac file.</typeparam>
 /// <param name="name">Name of the resource.</param>
-public sealed class SqlProjectResource(string name) : Resource(name), IResourceWithWaitSupport, IResourceWithDacpac
+public sealed class SqlPackageResource<TPackage>(string name) : Resource(name), IResourceWithWaitSupport, IResourceWithDacpac
+    where TPackage : IPackageMetadata
 {
     string IResourceWithDacpac.GetDacpacPath()
     {
-        if (this.TryGetLastAnnotation<IProjectMetadata>(out var projectMetadata))
+        if (this.TryGetLastAnnotation<IPackageMetadata>(out var packageMetadata))
         {
-            var projectPath = projectMetadata.ProjectPath;
-            using var projectCollection = new ProjectCollection();
-            var project = projectCollection.LoadProject(projectPath);
-
-            // .sqlprojx has a SqlTargetPath property, so try that first
-            var targetPath = project.GetPropertyValue("SqlTargetPath");
-            if (string.IsNullOrWhiteSpace(targetPath))
+            var packagePath = packageMetadata.PackagePath;
+            if (this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var relativeDacpacMetadata))
             {
-                targetPath = project.GetPropertyValue("TargetPath");
+                return Path.Combine(packagePath, relativeDacpacMetadata.DacpacPath);;
             }
-
-            return targetPath;
+            else
+            {
+                return Path.Combine(packagePath, "tools", packageMetadata.PackageId + ".dacpac");
+            }
         }
 
         if (this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var dacpacMetadata))
