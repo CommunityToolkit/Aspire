@@ -7,4 +7,9 @@
   <ItemGroup>
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests"></InternalsVisibleTo>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
 </Project>
