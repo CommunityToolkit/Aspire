@@ -11,6 +11,7 @@
   
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.EventStore.gRPC" />
+    <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
 
   <ItemGroup>
