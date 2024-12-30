@@ -11,7 +11,7 @@
     <PackageVersion Include="Aspire.Hosting.Rabbitmq" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
     <!-- AspNetCore packages -->
-    <PackageVersion Include="AspNetCore.HealthChecks.EventStore.gRPC" Version="8.0.1" />
+    <PackageVersion Include="AspNetCore.HealthChecks.EventStore.gRPC" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
@@ -53,6 +53,7 @@
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.7" />
     <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.7" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.2" />
+    <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
