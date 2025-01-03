@@ -14,7 +14,7 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Ngrok
 
 ### Example usage
 
-Then, in the _Program.cs_ file of `AppHost`, define a Bun resource, then call `AddNgrok`:
+Then, in the _Program.cs_ file of app host, add a ngrok resource and add endpoints to be tunneled following methods:
 
 ```csharp
 var myService = builder.AddProject<Projects.MyService>();
