@@ -7,6 +7,7 @@ using Aspire.Hosting.Utils;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Xunit;
+using System.Linq.Expressions;
 
 namespace CommunityToolkit.Aspire.Meilisearch.Tests;
 
@@ -28,9 +29,20 @@ public sealed class MeilisearchContainerFixture : IAsyncLifetime
     {
         if (RequiresDockerAttribute.IsSupported)
         {
-
+            var param = new GenerateParameterDefault
+            {
+                MinLength = 16,
+                Lower = true,
+                Upper = true,
+                Numeric = true,
+                Special = false,
+                MinLower = 1,
+                MinUpper = 1,
+                MinNumeric = 1,
+                MinSpecial = 0
+            };
             //The master key must be at least 16-bytes-long and composed of valid UTF-8 characters.
-            _masterKey = PasswordGenerator.Generate(minLength: 16, lower: true, upper: true, numeric: true, special: false, minLower: 1, minUpper: 1, minNumeric: 1, minSpecial: 0);
+            _masterKey = param.GetDefaultValue();
 
             Container = new ContainerBuilder()
               .WithImage($"{MeilisearchContainerImageTags.Registry}/{MeilisearchContainerImageTags.Image}:{MeilisearchContainerImageTags.Tag}")
