@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(SharedDir)\PasswordGenerator.cs" Link="Utils\PasswordGenerator.cs" />
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.SurrealDb\SurrealDbContainerImageTags.cs" />
   </ItemGroup>
 
