@@ -32,7 +32,20 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
     {
         if (RequiresDockerAttribute.IsSupported)
         {
-            _password = PasswordGenerator.Generate(minLength: 8, lower: true, upper: true, numeric: true, special: false, minLower: 1, minUpper: 1, minNumeric: 1, minSpecial: 0);
+            var paramGenerator = new GenerateParameterDefault
+            {
+                MinLength = 8,
+                Lower = true,
+                Upper = true,
+                Numeric = true,
+                Special = false,
+                MinLower = 1,
+                MinUpper = 1,
+                MinNumeric = 1,
+                MinSpecial = 0
+            };
+
+            _password = paramGenerator.GetDefaultValue();
 
             Container = new ContainerBuilder()
                 .WithImage($"{SurrealDbContainerImageTags.Registry}/{SurrealDbContainerImageTags.Image}:{SurrealDbContainerImageTags.Tag}")
