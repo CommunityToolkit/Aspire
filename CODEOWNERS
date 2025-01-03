@@ -35,7 +35,6 @@
 /src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
 /tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
 
-
 # CommunityToolkit.Aspire.Hosting.Rust
 
 /examples/rust/ @Alirexaa
@@ -57,5 +56,11 @@
 /src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/ @MichielBrys
 /tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/ @MichielBrys
 
+# CommunityToolkit.Aspire.SurrealDb
+# CommunityToolkit.Aspire.Hosting.SurrealDb
 
-
+/examples/surrealdb/ @Odonno
+/src/CommunityToolkit.Aspire.Hosting.SurrealDb/ @Odonno
+/tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/ @Odonno
+/src/CommunityToolkit.Aspire.SurrealDb/ @Odonno
+/tests/CommunityToolkit.Aspire.SurrealDb.Tests/ @Odonno
