@@ -36,8 +36,7 @@ public static class NgrokExtensions
             .WithImage(NgrokContainerValues.Image, NgrokContainerValues.Tag)
             .WithImageRegistry(NgrokContainerValues.Registry)
             .WithBindMount(configurationFolder, "/var/tmp/ngrok")
-            .ExcludeFromManifest();
-        
+            .WithHttpEndpoint(targetPort: 4040);
         builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>(async (e, ct) =>
         {
             var endpointTuples = resource.Annotations
@@ -54,7 +53,6 @@ public static class NgrokExtensions
             resourceBuilder
                 .WithArgs("start", startParameter, "--config", $"/var/tmp/ngrok/{name}.yml");
         });
-        
         return resourceBuilder;
     }
     
