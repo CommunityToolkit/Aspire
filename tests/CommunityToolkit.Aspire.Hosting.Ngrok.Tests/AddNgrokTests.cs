@@ -43,4 +43,52 @@ public class AddNgrokTests
 
         Assert.Throws<ArgumentException>(() => builder.AddNgrok(""));
     }
+    
+    [Fact]
+    public void AddNgrokEmptyConfigurationFolderThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", configurationFolder: ""));
+    }
+    
+    [Fact]
+    public void AddNgrokWhitespaceConfigurationFolderThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", configurationFolder: "   "));
+    }
+    
+    [Fact]
+    public void AddNgrokEmptyEndpointNameFolderThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", endpointName: ""));
+    }
+    
+    [Fact]
+    public void AddNgrokWhitespaceEndpointNameFolderThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", endpointName: "   "));
+    }
+    
+    [Fact]
+    public void AddNgrokZeroOrNegativeEndpointPortFolderThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => builder.AddNgrok("ngrok", endpointPort: 0));
+    }
+    
+    [Fact]
+    public void AddNgrokLargeEndpointPortFolderThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => builder.AddNgrok("ngrok", endpointPort: 65536));
+    }
 }

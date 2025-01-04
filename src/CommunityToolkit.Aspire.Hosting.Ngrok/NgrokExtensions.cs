@@ -19,14 +19,26 @@ public static class NgrokExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="configurationFolder">The folder where temporary ngrok configuration files will be stored; defaults to .ngrok</param>
+    /// <param name="endpointPort">The port of the endpoint for this resource, defaults to a randomly assigned port.</param>
+    /// <param name="endpointName">The name of the endpoint for this resource, defaults to http.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
     public static IResourceBuilder<NgrokResource> AddNgrok(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        string? configurationFolder = null)
+        string? configurationFolder = null,
+        int? endpointPort = null,
+        [EndpointName] string? endpointName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
+        if (configurationFolder is not null)
+            ArgumentException.ThrowIfNullOrWhiteSpace(configurationFolder);
         
+        if (endpointPort is not null)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(endpointPort.Value, 1, nameof(endpointPort));
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(endpointPort.Value, 65535, nameof(endpointPort));
+        }
+
         configurationFolder ??= Path.Combine(builder.AppHostDirectory, ".ngrok");
         if (!Directory.Exists(configurationFolder))
             Directory.CreateDirectory(configurationFolder);
@@ -36,7 +48,7 @@ public static class NgrokExtensions
             .WithImage(NgrokContainerValues.Image, NgrokContainerValues.Tag)
             .WithImageRegistry(NgrokContainerValues.Registry)
             .WithBindMount(configurationFolder, "/var/tmp/ngrok")
-            .WithHttpEndpoint(targetPort: 4040);
+            .WithHttpEndpoint(targetPort: 4040, port: endpointPort, name: endpointName);
         builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>(async (e, ct) =>
         {
             var endpointTuples = resource.Annotations
