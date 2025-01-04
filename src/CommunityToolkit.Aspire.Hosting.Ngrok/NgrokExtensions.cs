@@ -52,7 +52,7 @@ public static class NgrokExtensions
                 startParameter = "--all";
             }
             resourceBuilder
-                .WithArgs("start", startParameter, "--config", $"/var/tmp/ngrok/{name}.yml", "--log", "stdout");
+                .WithArgs("start", startParameter, "--config", $"/var/tmp/ngrok/{name}.yml");
         });
         
         return resourceBuilder;
@@ -130,6 +130,9 @@ public static class NgrokExtensions
     {
         var ngrokConfig = new StringBuilder();
         ngrokConfig.AppendLine("version: 3");
+        ngrokConfig.AppendLine();
+        ngrokConfig.AppendLine("agent:");
+        ngrokConfig.AppendLine( "  log: stdout");
         ngrokConfig.AppendLine();
         ngrokConfig.AppendLine("endpoints:");
         foreach (var (endpointReference, ngrokEndpoint) in endpointTuples)
