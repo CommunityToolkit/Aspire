@@ -137,7 +137,7 @@ public static class NgrokExtensions
         ngrokConfig.AppendLine("endpoints:");
         foreach (var (endpointReference, ngrokEndpoint) in endpointTuples)
         {
-            ngrokConfig.AppendLine($"  - name: {endpointReference.EndpointName}");
+            ngrokConfig.AppendLine($"  - name: {endpointReference.Resource.Name}-{endpointReference.EndpointName}");
             if (!string.IsNullOrWhiteSpace(ngrokEndpoint.Url))
                 ngrokConfig.AppendLine($"    url: {ngrokEndpoint.Url}");    
             ngrokConfig.AppendLine( "    upstream:");
