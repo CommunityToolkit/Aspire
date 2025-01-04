@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire integration leveraging the NGrok container.</Description>
-    <AdditionalPackageTags>hosting Ngrok</AdditionalPackageTags>
+    <Description>An Aspire integration for exposing hosted applications via secure, public URLs using ngrok.</Description>
+    <AdditionalPackageTags>hosting ngrok tunnels</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>
