@@ -201,6 +201,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Ngrok.Tests", "tests\CommunityToolkit.Aspire.Hosting.Ngrok.Tests\CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj", "{31D2ECC1-15EA-4850-88E9-A5F967D742C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Sqlite", "src\CommunityToolkit.Aspire.Hosting.Sqlite\CommunityToolkit.Aspire.Hosting.Sqlite.csproj", "{BEA41234-DFF9-49AE-AD6C-42A9D54202E7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sqlite", "sqlite", "{6782F1C1-5146-549F-82A8-60C82F1C7F16}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Sqlite.AppHost", "examples\sqlite\CommunityToolkit.Aspire.Sqlite.AppHost\CommunityToolkit.Aspire.Sqlite.AppHost.csproj", "{97E455C1-C914-4C51-87A9-2C213CE2ED5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -523,6 +529,14 @@ Global
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEA41234-DFF9-49AE-AD6C-42A9D54202E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEA41234-DFF9-49AE-AD6C-42A9D54202E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEA41234-DFF9-49AE-AD6C-42A9D54202E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEA41234-DFF9-49AE-AD6C-42A9D54202E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97E455C1-C914-4C51-87A9-2C213CE2ED5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97E455C1-C914-4C51-87A9-2C213CE2ED5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97E455C1-C914-4C51-87A9-2C213CE2ED5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97E455C1-C914-4C51-87A9-2C213CE2ED5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -624,6 +638,9 @@ Global
 		{1E18FE0B-C6DF-4935-AD43-4FEE73ED810C} = {7431DE02-23CA-4024-B22D-FCF008AFE3CB}
 		{59101126-7BD2-4E03-9C4D-D0D01AD14674} = {7431DE02-23CA-4024-B22D-FCF008AFE3CB}
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{BEA41234-DFF9-49AE-AD6C-42A9D54202E7} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{6782F1C1-5146-549F-82A8-60C82F1C7F16} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{97E455C1-C914-4C51-87A9-2C213CE2ED5B} = {6782F1C1-5146-549F-82A8-60C82F1C7F16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
