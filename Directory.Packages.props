@@ -33,7 +33,7 @@
     <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="$(OpenTelemetryVersion)" />
     <!-- Testing packages -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.3" />
     <PackageVersion Include="FluentAssertions" Version="7.0.0" />
     <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.5.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
