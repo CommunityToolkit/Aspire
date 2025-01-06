@@ -1,0 +1,105 @@
+#nullable enable
+Aspire.Hosting.ApplicationModel.DaprComponentOptions
+Aspire.Hosting.ApplicationModel.DaprComponentOptions.LocalPath.get -> string?
+Aspire.Hosting.ApplicationModel.DaprComponentOptions.LocalPath.init -> void
+Aspire.Hosting.ApplicationModel.DaprComponentResource
+Aspire.Hosting.ApplicationModel.DaprComponentResource.DaprComponentResource(string! name, string! type) -> void
+Aspire.Hosting.ApplicationModel.DaprComponentResource.Options.get -> Aspire.Hosting.ApplicationModel.DaprComponentOptions?
+Aspire.Hosting.ApplicationModel.DaprComponentResource.Options.init -> void
+Aspire.Hosting.ApplicationModel.DaprComponentResource.Type.get -> string!
+Aspire.Hosting.ApplicationModel.DaprSidecarResource
+Aspire.Hosting.ApplicationModel.DaprSidecarResource.DaprSidecarResource(string! name) -> void
+Aspire.Hosting.DaprComponentReferenceAnnotation
+Aspire.Hosting.DaprComponentReferenceAnnotation.Component.get -> Aspire.Hosting.ApplicationModel.DaprComponentResource!
+Aspire.Hosting.DaprComponentReferenceAnnotation.Component.init -> void
+Aspire.Hosting.DaprComponentReferenceAnnotation.DaprComponentReferenceAnnotation(Aspire.Hosting.ApplicationModel.DaprComponentResource! Component) -> void
+Aspire.Hosting.DaprConstants
+Aspire.Hosting.DaprConstants.BuildingBlocks
+Aspire.Hosting.DaprOptions
+Aspire.Hosting.DaprOptions.DaprPath.get -> string?
+Aspire.Hosting.DaprOptions.DaprPath.set -> void
+Aspire.Hosting.DaprOptions.EnableTelemetry.get -> bool?
+Aspire.Hosting.DaprOptions.EnableTelemetry.set -> void
+Aspire.Hosting.DaprSidecarAnnotation
+Aspire.Hosting.DaprSidecarAnnotation.DaprSidecarAnnotation(Aspire.Hosting.ApplicationModel.DaprSidecarResource! Sidecar) -> void
+Aspire.Hosting.DaprSidecarAnnotation.Sidecar.get -> Aspire.Hosting.ApplicationModel.DaprSidecarResource!
+Aspire.Hosting.DaprSidecarAnnotation.Sidecar.init -> void
+Aspire.Hosting.DaprSidecarOptions
+Aspire.Hosting.DaprSidecarOptions.AppChannelAddress.get -> string?
+Aspire.Hosting.DaprSidecarOptions.AppChannelAddress.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppEndpoint.get -> string?
+Aspire.Hosting.DaprSidecarOptions.AppEndpoint.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppHealthCheckPath.get -> string?
+Aspire.Hosting.DaprSidecarOptions.AppHealthCheckPath.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppHealthProbeInterval.get -> int?
+Aspire.Hosting.DaprSidecarOptions.AppHealthProbeInterval.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppHealthProbeTimeout.get -> int?
+Aspire.Hosting.DaprSidecarOptions.AppHealthProbeTimeout.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppHealthThreshold.get -> int?
+Aspire.Hosting.DaprSidecarOptions.AppHealthThreshold.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppId.get -> string?
+Aspire.Hosting.DaprSidecarOptions.AppId.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppMaxConcurrency.get -> int?
+Aspire.Hosting.DaprSidecarOptions.AppMaxConcurrency.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppPort.get -> int?
+Aspire.Hosting.DaprSidecarOptions.AppPort.init -> void
+Aspire.Hosting.DaprSidecarOptions.AppProtocol.get -> string?
+Aspire.Hosting.DaprSidecarOptions.AppProtocol.init -> void
+Aspire.Hosting.DaprSidecarOptions.Command.get -> System.Collections.Immutable.IImmutableList<string!>!
+Aspire.Hosting.DaprSidecarOptions.Command.init -> void
+Aspire.Hosting.DaprSidecarOptions.Config.get -> string?
+Aspire.Hosting.DaprSidecarOptions.Config.init -> void
+Aspire.Hosting.DaprSidecarOptions.DaprGrpcPort.get -> int?
+Aspire.Hosting.DaprSidecarOptions.DaprGrpcPort.init -> void
+Aspire.Hosting.DaprSidecarOptions.DaprHttpMaxRequestSize.get -> int?
+Aspire.Hosting.DaprSidecarOptions.DaprHttpMaxRequestSize.init -> void
+Aspire.Hosting.DaprSidecarOptions.DaprHttpPort.get -> int?
+Aspire.Hosting.DaprSidecarOptions.DaprHttpPort.init -> void
+Aspire.Hosting.DaprSidecarOptions.DaprHttpReadBufferSize.get -> int?
+Aspire.Hosting.DaprSidecarOptions.DaprHttpReadBufferSize.init -> void
+Aspire.Hosting.DaprSidecarOptions.DaprInternalGrpcPort.get -> int?
+Aspire.Hosting.DaprSidecarOptions.DaprInternalGrpcPort.init -> void
+Aspire.Hosting.DaprSidecarOptions.DaprListenAddresses.get -> string?
+Aspire.Hosting.DaprSidecarOptions.DaprListenAddresses.init -> void
+Aspire.Hosting.DaprSidecarOptions.EnableApiLogging.get -> bool?
+Aspire.Hosting.DaprSidecarOptions.EnableApiLogging.init -> void
+Aspire.Hosting.DaprSidecarOptions.EnableAppHealthCheck.get -> bool?
+Aspire.Hosting.DaprSidecarOptions.EnableAppHealthCheck.init -> void
+Aspire.Hosting.DaprSidecarOptions.EnableProfiling.get -> bool?
+Aspire.Hosting.DaprSidecarOptions.EnableProfiling.init -> void
+Aspire.Hosting.DaprSidecarOptions.LogLevel.get -> string?
+Aspire.Hosting.DaprSidecarOptions.LogLevel.init -> void
+Aspire.Hosting.DaprSidecarOptions.MetricsPort.get -> int?
+Aspire.Hosting.DaprSidecarOptions.MetricsPort.init -> void
+Aspire.Hosting.DaprSidecarOptions.PlacementHostAddress.get -> string?
+Aspire.Hosting.DaprSidecarOptions.PlacementHostAddress.init -> void
+Aspire.Hosting.DaprSidecarOptions.ProfilePort.get -> int?
+Aspire.Hosting.DaprSidecarOptions.ProfilePort.init -> void
+Aspire.Hosting.DaprSidecarOptions.ResourcesPaths.get -> System.Collections.Immutable.IImmutableSet<string!>!
+Aspire.Hosting.DaprSidecarOptions.ResourcesPaths.init -> void
+Aspire.Hosting.DaprSidecarOptions.RunFile.get -> string?
+Aspire.Hosting.DaprSidecarOptions.RunFile.init -> void
+Aspire.Hosting.DaprSidecarOptions.RuntimePath.get -> string?
+Aspire.Hosting.DaprSidecarOptions.RuntimePath.init -> void
+Aspire.Hosting.DaprSidecarOptions.SchedulerHostAddress.get -> string?
+Aspire.Hosting.DaprSidecarOptions.SchedulerHostAddress.init -> void
+Aspire.Hosting.DaprSidecarOptions.UnixDomainSocket.get -> string?
+Aspire.Hosting.DaprSidecarOptions.UnixDomainSocket.init -> void
+Aspire.Hosting.DaprSidecarOptionsAnnotation
+Aspire.Hosting.DaprSidecarOptionsAnnotation.DaprSidecarOptionsAnnotation(Aspire.Hosting.DaprSidecarOptions! Options) -> void
+Aspire.Hosting.DaprSidecarOptionsAnnotation.Options.get -> Aspire.Hosting.DaprSidecarOptions!
+Aspire.Hosting.DaprSidecarOptionsAnnotation.Options.init -> void
+Aspire.Hosting.IDistributedApplicationBuilderExtensions
+Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions
+const Aspire.Hosting.DaprConstants.BuildingBlocks.PubSub = "pubsub" -> string!
+const Aspire.Hosting.DaprConstants.BuildingBlocks.StateStore = "state" -> string!
+static Aspire.Hosting.IDistributedApplicationBuilderExtensions.AddDapr(this Aspire.Hosting.IDistributedApplicationBuilder! builder, System.Action<Aspire.Hosting.DaprOptions!>? configure = null) -> Aspire.Hosting.IDistributedApplicationBuilder!
+static Aspire.Hosting.IDistributedApplicationBuilderExtensions.AddDaprComponent(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! type, Aspire.Hosting.ApplicationModel.DaprComponentOptions? options = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DaprComponentResource!>!
+static Aspire.Hosting.IDistributedApplicationBuilderExtensions.AddDaprPubSub(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.ApplicationModel.DaprComponentOptions? options = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DaprComponentResource!>!
+static Aspire.Hosting.IDistributedApplicationBuilderExtensions.AddDaprStateStore(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.ApplicationModel.DaprComponentOptions? options = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DaprComponentResource!>!
+static Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions.WithDaprSidecar<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
+static Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions.WithDaprSidecar<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, Aspire.Hosting.DaprSidecarOptions! options) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
+static Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions.WithDaprSidecar<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, string! appId) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
+static Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions.WithDaprSidecar<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, System.Action<Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DaprSidecarResource!>!>! configureSidecar) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
+static Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions.WithOptions(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DaprSidecarResource!>! builder, Aspire.Hosting.DaprSidecarOptions! options) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DaprSidecarResource!>!
+static Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions.WithReference<TDestination>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<TDestination>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DaprComponentResource!>! component) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<TDestination>!

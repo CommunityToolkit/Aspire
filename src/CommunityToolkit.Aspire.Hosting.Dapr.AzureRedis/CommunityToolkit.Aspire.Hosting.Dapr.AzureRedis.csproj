@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Dapr" />
     <PackageReference Include="Aspire.Hosting.Azure.Redis" />
     <PackageReference Include="Azure.Provisioning.AppContainers" />
   </ItemGroup>

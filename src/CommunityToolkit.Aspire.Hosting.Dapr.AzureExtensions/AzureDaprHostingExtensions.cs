@@ -1,6 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
-using Aspire.Hosting.Dapr;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning;
@@ -21,7 +20,7 @@ public static class AzureDaprHostingExtensions
     /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
     /// <returns>The updated resource builder.</returns>
     public static IResourceBuilder<AzureDaprComponentResource> AddAzureDaprResource(
-        this IResourceBuilder<IDaprComponentResource> builder,
+        this IResourceBuilder<DaprComponentResource> builder,
         [ResourceName] string name,
         Action<AzureResourceInfrastructure> configureInfrastructure)
     {

@@ -1,6 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
-using Aspire.Hosting.Dapr;
 using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
@@ -21,8 +20,8 @@ public static class AzureRedisCacheDaprHostingExtensions
     /// <param name="builder">The Dapr component resource builder.</param>
     /// <param name="source">The Azure Redis cache resource builder.</param>
     /// <returns>The updated Dapr component resource builder.</returns>
-    public static IResourceBuilder<IDaprComponentResource> WithReference(
-        this IResourceBuilder<IDaprComponentResource> builder,
+    public static IResourceBuilder<DaprComponentResource> WithReference(
+        this IResourceBuilder<DaprComponentResource> builder,
         IResourceBuilder<AzureRedisCacheResource> source) =>
         builder.ApplicationBuilder.ExecutionContext.IsRunMode ? builder : builder.Resource.Type switch
         {
@@ -36,8 +35,8 @@ public static class AzureRedisCacheDaprHostingExtensions
     /// <param name="builder">The Dapr component resource builder.</param>
     /// <param name="source">The Azure Redis cache resource builder.</param>
     /// <returns>The updated Dapr component resource builder.</returns>
-    private static IResourceBuilder<IDaprComponentResource> ConfigureRedisStateComponent(
-        this IResourceBuilder<IDaprComponentResource> builder,
+    private static IResourceBuilder<DaprComponentResource> ConfigureRedisStateComponent(
+        this IResourceBuilder<DaprComponentResource> builder,
         IResourceBuilder<AzureRedisCacheResource> source)
     {
         var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1.0");
