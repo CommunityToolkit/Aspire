@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup>
+    <Description>An Aspire hosting integration for providing a Sqlite database connection.</Description>
+    <AdditionalPackageTags>hosting sql sqlite</AdditionalPackageTags>
+  </PropertyGroup>
+<ItemGroup>
+  <AdditionalFiles Remove="PublicAPI.Shipped.txt" />
+  <AdditionalFiles Remove="PublicAPI.Unshipped.txt" />
+</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+</Project>
