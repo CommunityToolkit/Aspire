@@ -7,6 +7,14 @@ Aspire.Hosting.ApplicationModel.DaprComponentResource.DaprComponentResource(stri
 Aspire.Hosting.ApplicationModel.DaprComponentResource.Options.get -> Aspire.Hosting.ApplicationModel.DaprComponentOptions?
 Aspire.Hosting.ApplicationModel.DaprComponentResource.Options.init -> void
 Aspire.Hosting.ApplicationModel.DaprComponentResource.Type.get -> string!
+Aspire.Hosting.ApplicationModel.DaprSidecarAnnotation
+Aspire.Hosting.ApplicationModel.DaprSidecarAnnotation.DaprSidecarAnnotation(Aspire.Hosting.ApplicationModel.DaprSidecarResource! Sidecar) -> void
+Aspire.Hosting.ApplicationModel.DaprSidecarAnnotation.Sidecar.get -> Aspire.Hosting.ApplicationModel.DaprSidecarResource!
+Aspire.Hosting.ApplicationModel.DaprSidecarAnnotation.Sidecar.init -> void
+Aspire.Hosting.ApplicationModel.DaprSidecarOptionsAnnotation
+Aspire.Hosting.ApplicationModel.DaprSidecarOptionsAnnotation.DaprSidecarOptionsAnnotation(Aspire.Hosting.DaprSidecarOptions! Options) -> void
+Aspire.Hosting.ApplicationModel.DaprSidecarOptionsAnnotation.Options.get -> Aspire.Hosting.DaprSidecarOptions!
+Aspire.Hosting.ApplicationModel.DaprSidecarOptionsAnnotation.Options.init -> void
 Aspire.Hosting.ApplicationModel.DaprSidecarResource
 Aspire.Hosting.ApplicationModel.DaprSidecarResource.DaprSidecarResource(string! name) -> void
 Aspire.Hosting.DaprComponentReferenceAnnotation
@@ -20,10 +28,6 @@ Aspire.Hosting.DaprOptions.DaprPath.get -> string?
 Aspire.Hosting.DaprOptions.DaprPath.set -> void
 Aspire.Hosting.DaprOptions.EnableTelemetry.get -> bool?
 Aspire.Hosting.DaprOptions.EnableTelemetry.set -> void
-Aspire.Hosting.DaprSidecarAnnotation
-Aspire.Hosting.DaprSidecarAnnotation.DaprSidecarAnnotation(Aspire.Hosting.ApplicationModel.DaprSidecarResource! Sidecar) -> void
-Aspire.Hosting.DaprSidecarAnnotation.Sidecar.get -> Aspire.Hosting.ApplicationModel.DaprSidecarResource!
-Aspire.Hosting.DaprSidecarAnnotation.Sidecar.init -> void
 Aspire.Hosting.DaprSidecarOptions
 Aspire.Hosting.DaprSidecarOptions.AppChannelAddress.get -> string?
 Aspire.Hosting.DaprSidecarOptions.AppChannelAddress.init -> void
@@ -85,10 +89,6 @@ Aspire.Hosting.DaprSidecarOptions.SchedulerHostAddress.get -> string?
 Aspire.Hosting.DaprSidecarOptions.SchedulerHostAddress.init -> void
 Aspire.Hosting.DaprSidecarOptions.UnixDomainSocket.get -> string?
 Aspire.Hosting.DaprSidecarOptions.UnixDomainSocket.init -> void
-Aspire.Hosting.DaprSidecarOptionsAnnotation
-Aspire.Hosting.DaprSidecarOptionsAnnotation.DaprSidecarOptionsAnnotation(Aspire.Hosting.DaprSidecarOptions! Options) -> void
-Aspire.Hosting.DaprSidecarOptionsAnnotation.Options.get -> Aspire.Hosting.DaprSidecarOptions!
-Aspire.Hosting.DaprSidecarOptionsAnnotation.Options.init -> void
 Aspire.Hosting.IDistributedApplicationBuilderExtensions
 Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions
 const Aspire.Hosting.DaprConstants.BuildingBlocks.PubSub = "pubsub" -> string!
