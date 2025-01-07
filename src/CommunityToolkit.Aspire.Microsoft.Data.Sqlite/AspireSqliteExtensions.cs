@@ -93,11 +93,17 @@ public static class AspireSqliteExtensions
 
         if (serviceKey is null)
         {
-            builder.Services.AddScoped(sp => new SqliteConnection(settings.ConnectionString));
+            builder.Services.AddScoped(sp => new SqliteConnection(settings.ConnectionString)
+            {
+                DefaultTimeout = settings.DefaultTimeout,
+            });
         }
         else
         {
-            builder.Services.AddKeyedScoped(serviceKey, (_, _) => new SqliteConnection(settings.ConnectionString));
+            builder.Services.AddKeyedScoped(serviceKey, (_, _) => new SqliteConnection(settings.ConnectionString)
+            {
+                DefaultTimeout = settings.DefaultTimeout,
+            });
         }
     }
 }
