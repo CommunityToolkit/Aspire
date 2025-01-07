@@ -17,4 +17,9 @@ public class SqliteClientSettings
     /// The default value is <see langword="false"/>.
     /// </value>
     public bool DisableHealthChecks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default timeout for the database operations.
+    /// </summary>
+    public int DefaultTimeout { get; set; }
 }
