@@ -5,14 +5,15 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="databasePath">The path to the database directory.</param>
-public class SqliteResource(string name, string databasePath) : Resource(name), IResourceWithConnectionString
+/// <param name="databaseFileName">The filename of the database file. Must include extension.</param>
+public class SqliteResource(string name, string databasePath, string databaseFileName) : Resource(name), IResourceWithConnectionString
 {
     internal string DatabasePath { get; set; } = databasePath;
 
-    internal string DatabaseFileName => $"{Name}.db";
+    internal string DatabaseFileName { get; set; } = databaseFileName;
 
     private string DatabaseFilePath => Path.Combine(DatabasePath, DatabaseFileName);
 
     /// <inheritdoc/>
-    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"Data Source={DatabaseFilePath}");
+    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"Data Source={DatabaseFilePath};Cache=Shared;Mode=ReadWrite");
 }

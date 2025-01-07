@@ -207,6 +207,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sqlite", "sqlite", "{6782F1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Sqlite.AppHost", "examples\sqlite\CommunityToolkit.Aspire.Sqlite.AppHost\CommunityToolkit.Aspire.Sqlite.AppHost.csproj", "{97E455C1-C914-4C51-87A9-2C213CE2ED5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Microsoft.Data.Sqlite", "src\CommunityToolkit.Aspire.Microsoft.Data.Sqlite\CommunityToolkit.Aspire.Microsoft.Data.Sqlite.csproj", "{5DF8F833-F6F8-4C9C-ABEC-80EC0C734A88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Sqlite.Api", "examples\sqlite\CommunityToolkit.Aspire.Sqlite.Api\CommunityToolkit.Aspire.Sqlite.Api.csproj", "{E48F6DDD-D62D-4723-810D-0F178C35E8B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Sqlite.ServiceDefaults", "examples\sqlite\CommunityToolkit.Aspire.Sqlite.ServiceDefaults\CommunityToolkit.Aspire.Sqlite.ServiceDefaults.csproj", "{DD7042A1-8E44-40A8-B338-DC2F7B755702}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -537,6 +543,18 @@ Global
 		{97E455C1-C914-4C51-87A9-2C213CE2ED5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97E455C1-C914-4C51-87A9-2C213CE2ED5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97E455C1-C914-4C51-87A9-2C213CE2ED5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DF8F833-F6F8-4C9C-ABEC-80EC0C734A88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DF8F833-F6F8-4C9C-ABEC-80EC0C734A88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DF8F833-F6F8-4C9C-ABEC-80EC0C734A88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DF8F833-F6F8-4C9C-ABEC-80EC0C734A88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E48F6DDD-D62D-4723-810D-0F178C35E8B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E48F6DDD-D62D-4723-810D-0F178C35E8B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E48F6DDD-D62D-4723-810D-0F178C35E8B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E48F6DDD-D62D-4723-810D-0F178C35E8B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD7042A1-8E44-40A8-B338-DC2F7B755702}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD7042A1-8E44-40A8-B338-DC2F7B755702}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD7042A1-8E44-40A8-B338-DC2F7B755702}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD7042A1-8E44-40A8-B338-DC2F7B755702}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -641,6 +659,9 @@ Global
 		{BEA41234-DFF9-49AE-AD6C-42A9D54202E7} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{6782F1C1-5146-549F-82A8-60C82F1C7F16} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{97E455C1-C914-4C51-87A9-2C213CE2ED5B} = {6782F1C1-5146-549F-82A8-60C82F1C7F16}
+		{5DF8F833-F6F8-4C9C-ABEC-80EC0C734A88} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{E48F6DDD-D62D-4723-810D-0F178C35E8B8} = {6782F1C1-5146-549F-82A8-60C82F1C7F16}
+		{DD7042A1-8E44-40A8-B338-DC2F7B755702} = {6782F1C1-5146-549F-82A8-60C82F1C7F16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
