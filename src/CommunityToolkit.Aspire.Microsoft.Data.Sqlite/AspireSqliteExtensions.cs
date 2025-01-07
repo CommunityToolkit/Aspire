@@ -45,14 +45,22 @@ public static class AspireSqliteExtensions
     private static void AddSqliteClient(
         this IHostApplicationBuilder builder,
         string configurationSectionName,
+<<<<<<< HEAD
         Action<SqliteConnectionSettings>? configureSettings,
+=======
+        Action<SqliteClientSettings>? configureSettings,
+>>>>>>> e24494d (Adding sqlite client integration)
         string connectionName,
         object? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
+<<<<<<< HEAD
         SqliteConnectionSettings settings = new();
+=======
+        SqliteClientSettings settings = new();
+>>>>>>> e24494d (Adding sqlite client integration)
         var configSection = builder.Configuration.GetSection(configurationSectionName);
         configSection.Bind(settings);
 
@@ -68,7 +76,11 @@ public static class AspireSqliteExtensions
         if (!settings.DisableHealthChecks)
         {
             builder.TryAddHealthCheck(new HealthCheckRegistration(
+<<<<<<< HEAD
                 serviceKey is null ? "Sqlite" : $"Sqlite_{connectionName}",
+=======
+                serviceKey is null ? "PostgreSql" : $"PostgreSql_{connectionName}",
+>>>>>>> e24494d (Adding sqlite client integration)
                 sp =>
                 {
                     var connection = serviceKey is null
