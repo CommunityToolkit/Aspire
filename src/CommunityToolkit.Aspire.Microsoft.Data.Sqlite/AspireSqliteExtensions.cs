@@ -68,11 +68,7 @@ public static class AspireSqliteExtensions
         if (!settings.DisableHealthChecks)
         {
             builder.TryAddHealthCheck(new HealthCheckRegistration(
-<<<<<<< HEAD
                 serviceKey is null ? "Sqlite" : $"Sqlite_{connectionName}",
-=======
-                serviceKey is null ? "PostgreSql" : $"PostgreSql_{connectionName}",
->>>>>>> e24494d (Adding sqlite client integration)
                 sp =>
                 {
                     var connection = serviceKey is null
@@ -95,17 +91,11 @@ public static class AspireSqliteExtensions
     {
         if (serviceKey is null)
         {
-            builder.Services.AddScoped(sp => CreateConnection(sp, null));
+            builder.Services.AddScoped(sp => new SqliteConnection(settings.ConnectionString));
         }
         else
         {
-            builder.Services.AddKeyedScoped(serviceKey, CreateConnection);
-        }
-
-        SqliteConnection CreateConnection(IServiceProvider sp, object? key)
-        {
-            ConnectionStringValidation.ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
-            return new SqliteConnection(settings.ConnectionString);
+            builder.Services.AddKeyedScoped(serviceKey, (_, _) => new SqliteConnection(settings.ConnectionString));
         }
     }
 }
