@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Microsoft.Data.Sqlite/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.csproj" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Sqlite.ServiceDefaults/CommunityToolkit.Aspire.Sqlite.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

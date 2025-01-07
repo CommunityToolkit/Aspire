@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Sqlite/CommunityToolkit.Aspire.Hosting.Sqlite.csproj" IsAspireProjectResource="False" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Sqlite.Api/CommunityToolkit.Aspire.Sqlite.Api.csproj" />
   </ItemGroup>
 
 </Project>

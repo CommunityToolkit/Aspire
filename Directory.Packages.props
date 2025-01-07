@@ -12,6 +12,7 @@
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
     <!-- AspNetCore packages -->
     <PackageVersion Include="AspNetCore.HealthChecks.EventStore.gRPC" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Sqlite" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.11" />
@@ -47,6 +48,7 @@
     <PackageVersion Include="MassTransit" Version="8.3.4" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.3.1" />
     <PackageVersion Include="MeiliSearch" Version="0.15.5" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.0" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.5.57" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.7.8" />

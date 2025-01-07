@@ -1,0 +1,10 @@
+#nullable enable
+Microsoft.Extensions.Hosting.AspireSqliteExtensions
+Microsoft.Extensions.Hosting.SqliteClientSettings
+Microsoft.Extensions.Hosting.SqliteClientSettings.ConnectionString.get -> string?
+Microsoft.Extensions.Hosting.SqliteClientSettings.ConnectionString.set -> void
+Microsoft.Extensions.Hosting.SqliteClientSettings.DisableHealthChecks.get -> bool
+Microsoft.Extensions.Hosting.SqliteClientSettings.DisableHealthChecks.set -> void
+Microsoft.Extensions.Hosting.SqliteClientSettings.SqliteClientSettings() -> void
+static Microsoft.Extensions.Hosting.AspireSqliteExtensions.AddKeyedSqliteClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<Microsoft.Extensions.Hosting.SqliteClientSettings!>? configureSettings = null) -> void
+static Microsoft.Extensions.Hosting.AspireSqliteExtensions.AddSqliteClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<Microsoft.Extensions.Hosting.SqliteClientSettings!>? configureSettings = null) -> void
