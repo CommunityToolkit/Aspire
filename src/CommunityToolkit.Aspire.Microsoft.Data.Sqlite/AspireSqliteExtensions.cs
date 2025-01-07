@@ -68,7 +68,7 @@ public static class AspireSqliteExtensions
         if (!settings.DisableHealthChecks)
         {
             builder.TryAddHealthCheck(new HealthCheckRegistration(
-                serviceKey is null ? "PostgreSql" : $"PostgreSql_{connectionName}",
+                serviceKey is null ? "Sqlite" : $"Sqlite_{connectionName}",
                 sp =>
                 {
                     var connection = serviceKey is null
@@ -93,17 +93,11 @@ public static class AspireSqliteExtensions
 
         if (serviceKey is null)
         {
-            builder.Services.AddScoped(sp => new SqliteConnection(settings.ConnectionString)
-            {
-                DefaultTimeout = settings.DefaultTimeout,
-            });
+            builder.Services.AddScoped(sp => new SqliteConnection(settings.ConnectionString));
         }
         else
         {
-            builder.Services.AddKeyedScoped(serviceKey, (_, _) => new SqliteConnection(settings.ConnectionString)
-            {
-                DefaultTimeout = settings.DefaultTimeout,
-            });
+            builder.Services.AddKeyedScoped(serviceKey, (_, _) => new SqliteConnection(settings.ConnectionString));
         }
     }
 }

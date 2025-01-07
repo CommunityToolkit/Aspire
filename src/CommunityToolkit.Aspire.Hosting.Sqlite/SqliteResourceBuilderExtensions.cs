@@ -21,7 +21,29 @@ public static class SqliteResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        var resource = new SqliteResource(name, databasePath ?? Path.GetTempPath(), databaseFileName ?? $"{Path.GetFileName(Path.GetTempFileName())}.db");
+        var resource = new SqliteResource(name, databasePath ?? Path.GetTempPath(), databaseFileName ?? $"{Path.GetFileName(Path.GetRandomFileName())}.db");
+
+        builder.Eventing.Subscribe<BeforeStartEvent>((_, ct) =>
+        {
+            if (!File.Exists(resource.DatabaseFilePath))
+            {
+                Directory.CreateDirectory(resource.DatabasePath);
+                File.Create(resource.DatabaseFilePath).Dispose();
+
+                if (!OperatingSystem.IsWindows())
+                {
+                    // Change permissions for non-root accounts (container user account)
+                    const UnixFileMode OwnershipPermissions =
+                       UnixFileMode.UserRead | UnixFileMode.UserWrite |
+                       UnixFileMode.GroupRead | UnixFileMode.GroupWrite |
+                       UnixFileMode.OtherRead | UnixFileMode.OtherWrite;
+
+                    File.SetUnixFileMode(resource.DatabaseFilePath, OwnershipPermissions);
+                }
+            }
+
+            return Task.CompletedTask;
+        });
 
         var state = new CustomResourceSnapshot()
         {

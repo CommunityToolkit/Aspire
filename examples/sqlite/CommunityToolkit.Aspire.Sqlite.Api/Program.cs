@@ -1,5 +1,7 @@
+using CommunityToolkit.Aspire.Sqlite.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,7 @@ builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
 
 builder.AddSqliteClient("sqlite");
+builder.AddSqliteDbContext<BloggingContext>("sqlite-ef");
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -37,6 +40,28 @@ testGroup.MapPost("/", async (SqliteConnection db, [FromBody] string name) =>
         return Results.Created($"/test/{name}", name);
     });
 
+var blogGroup = app.MapGroup("/blog");
+blogGroup.MapGet("/", async (BloggingContext db) =>
+    {
+        var blogs = await db.Blogs.ToListAsync();
+        return Results.Ok(blogs);
+    });
+blogGroup.MapPost("/", async (BloggingContext db, [FromBody] Blog blog) =>
+    {
+        db.Blogs.Add(blog);
+        await db.SaveChangesAsync();
+        return Results.Created($"/blog/{blog.BlogId}", blog);
+    });
+blogGroup.MapGet("/{id}", async (BloggingContext db, int id) =>
+    {
+        var blog = await db.Blogs.FindAsync(id);
+        if (blog is null)
+        {
+            return Results.NotFound();
+        }
+        return Results.Ok(blog);
+    });
+
 app.Run();
 
 static async Task SetupDatabase(WebApplication app)
@@ -48,4 +73,7 @@ static async Task SetupDatabase(WebApplication app)
     var command = db.CreateCommand();
     command.CommandText = "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT)";
     await command.ExecuteNonQueryAsync();
+
+    using var context = scope.ServiceProvider.GetRequiredService<BloggingContext>();
+    await context.Database.MigrateAsync();
 }
