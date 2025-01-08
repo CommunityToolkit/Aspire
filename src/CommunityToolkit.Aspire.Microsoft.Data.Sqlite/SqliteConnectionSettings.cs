@@ -3,7 +3,7 @@ namespace Microsoft.Extensions.Hosting;
 /// <summary>
 /// Represents the settings for the Sqlite client.
 /// </summary>
-public sealed class SqliteClientSettings
+public sealed class SqliteConnectionSettings
 {
     /// <summary>
     /// The connection string of the PostgreSQL database to connect to.
