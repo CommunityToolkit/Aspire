@@ -39,7 +39,7 @@ public class ConformanceTests :
         configuration.AddInMemoryCollection(
         [
             new KeyValuePair<string, string?>(CreateConfigKey("Aspire:Surreal:Client", key, "Endpoint"), GetConnectionStringKeyValue(connectionString,"Endpoint")),
-            new KeyValuePair<string, string?>($"ConnectionStrings:{key}", $"{connectionString}")
+            new KeyValuePair<string, string?>($"ConnectionStrings:{key ?? "surreal"}", $"{connectionString}")
         ]);
     }
 
