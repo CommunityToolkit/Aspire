@@ -3,8 +3,6 @@ Microsoft.Extensions.Hosting.AspireSqliteExtensions
 Microsoft.Extensions.Hosting.SqliteClientSettings
 Microsoft.Extensions.Hosting.SqliteClientSettings.ConnectionString.get -> string?
 Microsoft.Extensions.Hosting.SqliteClientSettings.ConnectionString.set -> void
-Microsoft.Extensions.Hosting.SqliteClientSettings.DefaultTimeout.get -> int
-Microsoft.Extensions.Hosting.SqliteClientSettings.DefaultTimeout.set -> void
 Microsoft.Extensions.Hosting.SqliteClientSettings.DisableHealthChecks.get -> bool
 Microsoft.Extensions.Hosting.SqliteClientSettings.DisableHealthChecks.set -> void
 Microsoft.Extensions.Hosting.SqliteClientSettings.SqliteClientSettings() -> void
