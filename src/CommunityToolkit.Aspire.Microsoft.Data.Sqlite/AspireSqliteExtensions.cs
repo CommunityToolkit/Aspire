@@ -91,11 +91,17 @@ public static class AspireSqliteExtensions
     {
         if (serviceKey is null)
         {
-            builder.Services.AddScoped(sp => new SqliteConnection(settings.ConnectionString));
+            builder.Services.AddScoped(sp => CreateConnection(sp, null));
         }
         else
         {
-            builder.Services.AddKeyedScoped(serviceKey, (_, _) => new SqliteConnection(settings.ConnectionString));
+            builder.Services.AddKeyedScoped(serviceKey, CreateConnection);
+        }
+
+        SqliteConnection CreateConnection(IServiceProvider sp, object? key)
+        {
+            ConnectionStringValidation.ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
+            return new SqliteConnection(settings.ConnectionString);
         }
     }
 }
