@@ -69,11 +69,6 @@ public static class SqliteResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        // Set the default timeout for the resource to 60 seconds otherwise
-        // we can hit concurrency issues with the sqlite web container
-        // locking the database when the .NET client is trying to access it.
-        builder.Resource.DefaultTimeout = 60;
-
         containerName ??= $"{builder.Resource.Name}-sqliteweb";
 
         var resource = new SqliteWebResource(containerName);

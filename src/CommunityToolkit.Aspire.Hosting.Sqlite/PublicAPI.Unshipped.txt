@@ -3,6 +3,8 @@ Aspire.Hosting.ApplicationModel.SqliteResource
 Aspire.Hosting.ApplicationModel.SqliteResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
 Aspire.Hosting.ApplicationModel.SqliteResource.SqliteResource(string! name, string! databasePath, string! databaseFileName) -> void
 Aspire.Hosting.ApplicationModel.SqliteWebResource
+Aspire.Hosting.ApplicationModel.SqliteWebResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
+Aspire.Hosting.ApplicationModel.SqliteWebResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
 Aspire.Hosting.ApplicationModel.SqliteWebResource.SqliteWebResource(string! name) -> void
 Aspire.Hosting.SqliteResourceBuilderExtensions
 static Aspire.Hosting.SqliteResourceBuilderExtensions.AddSqlite(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? databasePath = null, string? databaseFileName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>!
