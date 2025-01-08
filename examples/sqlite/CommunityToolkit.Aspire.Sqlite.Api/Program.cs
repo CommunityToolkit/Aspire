@@ -28,7 +28,7 @@ testGroup.MapGet("/", async (SqliteConnection db) =>
         var command = db.CreateCommand();
         command.CommandText = "SELECT name FROM test";
         var result = await command.ExecuteScalarAsync();
-        return result?.ToString() ?? "No data";
+        return result?.ToString() ?? null;
     });
 testGroup.MapPost("/", async (SqliteConnection db, [FromBody] string name) =>
     {

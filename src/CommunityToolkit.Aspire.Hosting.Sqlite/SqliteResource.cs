@@ -12,10 +12,8 @@ public class SqliteResource(string name, string databasePath, string databaseFil
 
     internal string DatabaseFileName { get; set; } = databaseFileName;
 
-    internal int DefaultTimeout { get; set; } = 30;
-
     internal string DatabaseFilePath => Path.Combine(DatabasePath, DatabaseFileName);
 
     /// <inheritdoc/>
-    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"Data Source={DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate;Default Timeout={DefaultTimeout.ToString()};");
+    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"Data Source={DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate;");
 }
