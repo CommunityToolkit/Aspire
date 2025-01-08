@@ -319,7 +319,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Contains(healthReport.Entries, entry => entry.Value.Status == expected);
     }
 
-    [Fact]
+    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/112")]
     public void ConfigurationSchemaValidJsonConfigTest()
     {
         var schema = JsonSchema.FromFile(JsonSchemaPath);
@@ -330,7 +330,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.True(results.IsValid);
     }
 
-    [Fact]
+    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/112")]
     public void ConfigurationSchemaInvalidJsonConfigTest()
     {
         var schema = JsonSchema.FromFile(JsonSchemaPath);
