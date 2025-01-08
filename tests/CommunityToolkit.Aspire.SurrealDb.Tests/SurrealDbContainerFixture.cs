@@ -53,6 +53,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
                 .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(_port)))
                 .WithEnvironment("SURREAL_USER", _username)
                 .WithEnvironment("SURREAL_PASS", _password)
+                .WithCommand("start", "memory")
                 .Build();
 
             await Container.StartAsync();
