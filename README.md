@@ -31,6 +31,8 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`Hosting.EventStore`][eventstore-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.EventStore][eventstore-shields]][eventstore-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.EventStore][eventstore-shields-preview]][eventstore-nuget-preview]                                                                                   | An Aspire hosting integration leveraging the [EventStore](https://eventstore.com) container.                                                                                                                                   |
 | - **Learn More**: [`EventStore`][eventstore-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.EventStore][eventstore-client-shields]][eventstore-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.EventStore][eventstore-client-shields-preview]][eventstore-client-nuget-preview]                                                                               | An Aspire client integration for the [EventStore](https://github.com/EventStore/EventStore-Client-Dotnet) package.                                                                                                             |
 | - **Learn More**: [`Hosting.ActiveMQ`][activemq-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.ActiveMQ][activemq-shields]][activemq-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.ActiveMQ][activemq-shields-preview]][activemq-nuget-preview]                                                                                                   | An Aspire hosting integration leveraging the [ActiveMq](https://activemq.apache.org) container.                                                                                                                                |
+| - **Learn More**: [`Hosting.SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields]][surrealdb-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields-preview]][surrealdb-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [SurrealDB](https://surrealdb.com/) container.                                                                                                                                    |
+| - **Learn More**: [`SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields]][surrealdb-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields-preview]][surrealdb-client-nuget-preview]                                                                                       | An Aspire client integration for the [SurrealDB](https://github.com/surrealdb/surrealdb.net/) package.                                                                                                                         |
 
 ## 🙌 Getting Started
 
@@ -153,4 +155,12 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [activemq-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.ActiveMQ/
 [activemq-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.ActiveMQ?label=nuget%20(preview)
 [activemq-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.ActiveMQ/absoluteLatest
-
+[surrealdb-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-surrealdb
+[surrealdb-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.SurrealDb
+[surrealdb-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.SurrealDb/
+[surrealdb-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.SurrealDb?label=nuget%20(preview)
+[surrealdb-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.SurrealDb/absoluteLatest
+[surrealdb-client-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.SurrealDb
+[surrealdb-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/
+[surrealdb-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.SurrealDb?label=nuget%20(preview)
+[surrealdb-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/absoluteLatest
