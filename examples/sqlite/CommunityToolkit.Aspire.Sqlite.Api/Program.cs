@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
 
-builder.AddSqliteClient("sqlite");
+builder.AddSqliteConnection("sqlite");
 builder.AddSqliteDbContext<BloggingContext>("sqlite-ef");
 
 var app = builder.Build();

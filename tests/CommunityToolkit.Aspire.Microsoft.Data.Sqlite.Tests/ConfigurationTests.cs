@@ -6,9 +6,9 @@ public class ConfigurationTests
 {
     [Fact]
     public void ConnectionStringIsNullByDefault() =>
-        Assert.Null(new SqliteClientSettings().ConnectionString);
+        Assert.Null(new SqliteConnectionSettings().ConnectionString);
 
     [Fact]
     public void HealthChecksEnabledByDefault() =>
-        Assert.False(new SqliteClientSettings().DisableHealthChecks);
+        Assert.False(new SqliteConnectionSettings().DisableHealthChecks);
 }

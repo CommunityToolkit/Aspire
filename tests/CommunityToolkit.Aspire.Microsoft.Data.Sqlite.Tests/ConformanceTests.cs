@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests;
 
-public class ConformanceTests : ConformanceTests<SqliteConnection, SqliteClientSettings>
+public class ConformanceTests : ConformanceTests<SqliteConnection, SqliteConnectionSettings>
 {
     protected override ServiceLifetime ServiceLifetime => ServiceLifetime.Scoped;
 
@@ -24,29 +24,29 @@ public class ConformanceTests : ConformanceTests<SqliteConnection, SqliteClientS
             ]);
     }
 
-    protected override void RegisterComponent(HostApplicationBuilder builder, Action<SqliteClientSettings>? configure = null, string? key = null)
+    protected override void RegisterComponent(HostApplicationBuilder builder, Action<SqliteConnectionSettings>? configure = null, string? key = null)
     {
         if (key is null)
         {
-            builder.AddSqliteClient("sqlite", configure);
+            builder.AddSqliteConnection("sqlite", configure);
         }
         else
         {
-            builder.AddKeyedSqliteClient(key, configure);
+            builder.AddKeyedSqliteConnection(key, configure);
         }
     }
 
-    protected override void SetHealthCheck(SqliteClientSettings options, bool enabled)
+    protected override void SetHealthCheck(SqliteConnectionSettings options, bool enabled)
     {
         throw new NotImplementedException();
     }
 
-    protected override void SetMetrics(SqliteClientSettings options, bool enabled)
+    protected override void SetMetrics(SqliteConnectionSettings options, bool enabled)
     {
         throw new NotImplementedException();
     }
 
-    protected override void SetTracing(SqliteClientSettings options, bool enabled)
+    protected override void SetTracing(SqliteConnectionSettings options, bool enabled)
     {
         throw new NotImplementedException();
     }

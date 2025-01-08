@@ -18,11 +18,11 @@ public class SqliteConnectionTests
 
         if (useKeyed)
         {
-            builder.AddKeyedSqliteClient("sqlite");
+            builder.AddKeyedSqliteConnection("sqlite");
         }
         else
         {
-            builder.AddSqliteClient("sqlite");
+            builder.AddSqliteConnection("sqlite");
         }
 
         using var host = builder.Build();
@@ -47,11 +47,11 @@ public class SqliteConnectionTests
 
         if (useKeyed)
         {
-            builder.AddKeyedSqliteClient("sqlite", settings => settings.ConnectionString = "Data Source=:memory:");
+            builder.AddKeyedSqliteConnection("sqlite", settings => settings.ConnectionString = "Data Source=:memory:");
         }
         else
         {
-            builder.AddSqliteClient("sqlite", settings => settings.ConnectionString = "Data Source=:memory:");
+            builder.AddSqliteConnection("sqlite", settings => settings.ConnectionString = "Data Source=:memory:");
         }
 
         using var host = builder.Build();
@@ -76,11 +76,11 @@ public class SqliteConnectionTests
 
         if (useKeyed)
         {
-            builder.AddKeyedSqliteClient("sqlite");
+            builder.AddKeyedSqliteConnection("sqlite");
         }
         else
         {
-            builder.AddSqliteClient("sqlite");
+            builder.AddSqliteConnection("sqlite");
         }
 
         using var host = builder.Build();
@@ -93,7 +93,7 @@ public class SqliteConnectionTests
     }
 
     [Fact]
-    public void CanSetMultipleKeyedClients()
+    public void CanSetMultipleKeyedConnections()
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
@@ -101,8 +101,8 @@ public class SqliteConnectionTests
             new KeyValuePair<string, string?>("ConnectionStrings:sqlite2", "Data Source=/tmp/sqlite2.db")
         ]);
 
-        builder.AddKeyedSqliteClient("sqlite1");
-        builder.AddKeyedSqliteClient("sqlite2");
+        builder.AddKeyedSqliteConnection("sqlite1");
+        builder.AddKeyedSqliteConnection("sqlite2");
 
         using var host = builder.Build();
 

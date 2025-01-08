@@ -19,13 +19,13 @@ public static class AspireSqliteExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>
-    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="SqliteClientSettings"/>. It's invoked after the settings are read from the configuration.</param>
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="SqliteConnectionSettings"/>. It's invoked after the settings are read from the configuration.</param>
     /// <remarks>Reads the configuration from "Aspire:Sqlite:Client" section.</remarks>
     /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section.</exception>
-    public static void AddSqliteClient(
+    public static void AddSqliteConnection(
         this IHostApplicationBuilder builder,
         string name,
-        Action<SqliteClientSettings>? configureSettings = null) =>
+        Action<SqliteConnectionSettings>? configureSettings = null) =>
             AddSqliteClient(builder, DefaultConfigSectionName, configureSettings, name, serviceKey: null);
 
     /// <summary>
@@ -33,26 +33,26 @@ public static class AspireSqliteExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>
-    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="SqliteClientSettings"/>. It's invoked after the settings are read from the configuration.</param>
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="SqliteConnectionSettings"/>. It's invoked after the settings are read from the configuration.</param>
     /// <remarks>Reads the configuration from "Aspire:Sqlite:Client" section.</remarks>
     /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section.</exception>
-    public static void AddKeyedSqliteClient(
+    public static void AddKeyedSqliteConnection(
         this IHostApplicationBuilder builder,
         string name,
-        Action<SqliteClientSettings>? configureSettings = null) =>
+        Action<SqliteConnectionSettings>? configureSettings = null) =>
             AddSqliteClient(builder, $"{DefaultConfigSectionName}:{name}", configureSettings, connectionName: name, serviceKey: name);
 
     private static void AddSqliteClient(
         this IHostApplicationBuilder builder,
         string configurationSectionName,
-        Action<SqliteClientSettings>? configureSettings,
+        Action<SqliteConnectionSettings>? configureSettings,
         string connectionName,
         object? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(connectionName);
 
-        SqliteClientSettings settings = new();
+        SqliteConnectionSettings settings = new();
         var configSection = builder.Configuration.GetSection(configurationSectionName);
         configSection.Bind(settings);
 
@@ -85,7 +85,7 @@ public static class AspireSqliteExtensions
 
     private static void RegisterSqliteServices(
         this IHostApplicationBuilder builder,
-        SqliteClientSettings settings,
+        SqliteConnectionSettings settings,
         string connectionName,
         object? serviceKey)
     {
