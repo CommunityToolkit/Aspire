@@ -26,7 +26,7 @@ public static class AzureDaprHostingExtensions
         Action<AzureResourceInfrastructure> configureInfrastructure)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
         ArgumentNullException.ThrowIfNull(configureInfrastructure, nameof(configureInfrastructure));
 
         builder.ExcludeFromManifest();
@@ -89,7 +89,7 @@ public static class AzureDaprHostingExtensions
         this AzureResourceInfrastructure infrastructure, IEnumerable<KeyVaultSecret>? keyVaultSecrets = null)
     {
         ArgumentNullException.ThrowIfNull(infrastructure, nameof(infrastructure));
-        
+
         var kvNameParam = new ProvisioningParameter("keyVaultName", typeof(string));
         infrastructure.Add(kvNameParam);
 
@@ -114,10 +114,16 @@ public static class AzureDaprHostingExtensions
     public static ContainerAppManagedEnvironmentDaprComponent CreateDaprComponent(
         string bicepIdentifier,
         string componentType,
-        string version) => new(bicepIdentifier)
+        string version)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(bicepIdentifier, nameof(bicepIdentifier));
+        ArgumentException.ThrowIfNullOrEmpty(componentType, nameof(componentType));
+        ArgumentException.ThrowIfNullOrEmpty(version, nameof(version));
+        
+        return new(bicepIdentifier)
         {
             ComponentType = componentType,
             Version = version
         };
-
+    }
 }
