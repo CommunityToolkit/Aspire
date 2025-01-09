@@ -25,7 +25,6 @@ public static class AzureDaprHostingExtensions
         [ResourceName] string name,
         Action<AzureResourceInfrastructure> configureInfrastructure)
     {
-        // Validate if this is needed
         builder.ExcludeFromManifest();
 
         var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
