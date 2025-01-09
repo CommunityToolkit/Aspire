@@ -65,7 +65,7 @@ public static class SqliteResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="containerName">The optional name of the container.</param>
     /// <returns>A resource builder for the Sqlite resource.</returns>
-    public static IResourceBuilder<SqliteResource> AddSqliteWeb(this IResourceBuilder<SqliteResource> builder, string? containerName = null)
+    public static IResourceBuilder<SqliteResource> WithSqliteWeb(this IResourceBuilder<SqliteResource> builder, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 

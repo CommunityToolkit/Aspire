@@ -21,7 +21,7 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Sqlite
 Then, in the _Program.cs_ file of `AppHost`, define an Sqlite resource, then call `AddSqlite`:
 
 ```csharp
-var ollama = builder.AddSqlite("sqlite")
+var sqlite = builder.AddSqlite("sqlite")
     .WithSqliteWeb();
 ```
 
@@ -32,3 +32,4 @@ https://learn.microsoft.com/dotnet/aspire/community-toolkit/sqlite
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
+
