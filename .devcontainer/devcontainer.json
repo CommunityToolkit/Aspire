@@ -5,9 +5,7 @@
     "ghcr.io/azure/azure-dev/azd:latest": {},
     "ghcr.io/devcontainers/features/dotnet:latest": {
       "version": "8.0",
-      "additionalVersions": [
-        "9.0"
-      ]
+      "additionalVersions": ["9.0"]
     },
     "ghcr.io/devcontainers/features/github-cli:latest": {},
     "ghcr.io/devcontainers/features/java:1": {
@@ -20,7 +18,8 @@
     "ghcr.io/devcontainers-community/features/deno": {},
     "ghcr.io/devcontainers/features/go:latest": {},
     "ghcr.io/devcontainers/features/rust:latest": {},
-    "ghcr.io/devcontainers/features/python:1": {}
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/dapr/cli/dapr-cli:0": {}
   },
   "customizations": {
     "vscode": {
