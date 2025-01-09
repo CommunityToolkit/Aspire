@@ -24,9 +24,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var redisCache = appModel.Resources.OfType<AzureRedisCacheResource>().SingleOrDefault();
-
-        Assert.NotNull(redisCache);
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
 
         string redisBicep = redisCache.GetBicepTemplateString();
 
@@ -80,9 +78,7 @@ public class ResourceCreationTests
 
         Assert.Equal(expectedRedisBicep, redisBicep);
 
-        var daprResource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
-
-        Assert.NotNull(daprResource);
+        var daprResource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
         string daprBicep = daprResource.GetBicepTemplateString();
 
@@ -151,9 +147,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var redisCache = appModel.Resources.OfType<AzureRedisCacheResource>().SingleOrDefault();
-
-        Assert.NotNull(redisCache);
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
 
         string redisBicep = redisCache.GetBicepTemplateString();
 
@@ -203,9 +197,7 @@ public class ResourceCreationTests
 
         Assert.Equal(expectedRedisBicep, redisBicep);
 
-        var daprResource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
-
-        Assert.NotNull(daprResource);
+        var daprResource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
         string daprBicep = daprResource.GetBicepTemplateString();
 
@@ -260,7 +252,6 @@ public class ResourceCreationTests
     [Fact]
     public void WithReference_WhenTLSDisabled_UsesNonSslPort()
     {
-
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
         var redisState = builder.AddAzureRedis("redisState")
@@ -339,8 +330,6 @@ public class ResourceCreationTests
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
         var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
-
-
         var ex = Assert.Throws<InvalidOperationException>(() =>
         {
             var daprPubSub = builder.AddDaprPubSub("daprState")

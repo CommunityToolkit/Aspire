@@ -30,9 +30,9 @@ public static class AzureDaprHostingExtensions
 
         var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
 
-        return builder.ApplicationBuilder.AddResource(azureDaprComponentResource)
+        return builder.ApplicationBuilder
+                                    .AddResource(azureDaprComponentResource)
                                     .WithManifestPublishingCallback(azureDaprComponentResource.WriteToManifest);
-
     }
 
     /// <summary>
@@ -46,7 +46,6 @@ public static class AzureDaprHostingExtensions
         IEnumerable<ProvisioningParameter>? parameters = null) =>
         (AzureResourceInfrastructure infrastructure) =>
         {
-
             ProvisioningVariable resourceToken = new("resourceToken", typeof(string))
             {
                 Value = BicepFunction.GetUniqueString(BicepFunction.GetResourceGroup().Id)

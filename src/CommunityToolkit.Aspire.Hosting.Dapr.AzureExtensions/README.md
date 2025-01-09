@@ -1,4 +1,4 @@
-# CommunityToolkit.Aspire.Hosting.Dapr.Azure
+# CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions
 
 This package provides extension methods and resource definitions that help integrate **Dapr** with **Azure** resources as part of an Aspire Hosting application.
 

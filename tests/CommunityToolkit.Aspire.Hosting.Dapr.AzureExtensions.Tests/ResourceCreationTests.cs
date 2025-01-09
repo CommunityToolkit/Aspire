@@ -41,7 +41,6 @@ public class ResourceCreationTests
     [Fact]
     public void GetInfrastructureConfigurationAction_ComponentNameCanBeOverwritten()
     {
-
         using var builder = TestDistributedApplicationBuilder.Create();
 
         var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
@@ -57,9 +56,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
         string bicepTemplate = resource.GetBicepTemplateString();
 
@@ -104,9 +101,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
         string bicepTemplate = resource.GetBicepTemplateString();
 
@@ -150,9 +145,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
         string bicepTemplate = resource.GetBicepTemplateString();
 
@@ -182,7 +175,6 @@ public class ResourceCreationTests
     [Fact]
     public void ConfigureKeyVaultSecrets_AddsKeyVaultNameParameterAndService_AndSecrets()
     {
-
         using var builder = TestDistributedApplicationBuilder.Create();
 
         var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
@@ -209,9 +201,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
         string bicepTemplate = resource.GetBicepTemplateString();
 
@@ -257,7 +247,6 @@ public class ResourceCreationTests
     [Fact]
     public void ConfigureKeyVaultSecrets_HandlesNullSecrets()
     {
-
         using var builder = TestDistributedApplicationBuilder.Create();
 
         var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
@@ -275,9 +264,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
         string bicepTemplate = resource.GetBicepTemplateString();
 
