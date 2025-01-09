@@ -57,5 +57,9 @@
 /src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/ @MichielBrys
 /tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/ @MichielBrys
 
+# CommunityToolkit.Aspire.Hosting.Ngrok
 
+/examples/ngrok/ @esskar
+/src/CommunityToolkit.Aspire.Hosting.Ngrok/ @esskar
+/tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/ @esskar
 
