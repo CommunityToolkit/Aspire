@@ -25,6 +25,10 @@ public static class AzureDaprHostingExtensions
         [ResourceName] string name,
         Action<AzureResourceInfrastructure> configureInfrastructure)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(configureInfrastructure, nameof(configureInfrastructure));
+
         builder.ExcludeFromManifest();
 
         var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
@@ -45,6 +49,9 @@ public static class AzureDaprHostingExtensions
         IEnumerable<ProvisioningParameter>? parameters = null) =>
         (AzureResourceInfrastructure infrastructure) =>
         {
+            ArgumentNullException.ThrowIfNull(daprComponent, nameof(daprComponent));
+            ArgumentNullException.ThrowIfNull(infrastructure, nameof(infrastructure));
+
             ProvisioningVariable resourceToken = new("resourceToken", typeof(string))
             {
                 Value = BicepFunction.GetUniqueString(BicepFunction.GetResourceGroup().Id)
@@ -81,6 +88,8 @@ public static class AzureDaprHostingExtensions
     public static KeyVaultService ConfigureKeyVaultSecrets(
         this AzureResourceInfrastructure infrastructure, IEnumerable<KeyVaultSecret>? keyVaultSecrets = null)
     {
+        ArgumentNullException.ThrowIfNull(infrastructure, nameof(infrastructure));
+        
         var kvNameParam = new ProvisioningParameter("keyVaultName", typeof(string));
         infrastructure.Add(kvNameParam);
 

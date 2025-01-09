@@ -40,6 +40,9 @@ public static class AzureRedisCacheDaprHostingExtensions
         this IResourceBuilder<IDaprComponentResource> builder,
         IResourceBuilder<AzureRedisCacheResource> source)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(source, nameof(source));
+
         var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1.0");
 
         var redisHost = new ProvisioningParameter("redisHost", typeof(string));
@@ -107,6 +110,10 @@ public static class AzureRedisCacheDaprHostingExtensions
                                               ContainerAppManagedEnvironmentDaprComponent daprComponent,
                                               AzureRedisResource redisCacheResource)
     {
+        ArgumentNullException.ThrowIfNull(redisCache, nameof(redisCache));
+        ArgumentNullException.ThrowIfNull(daprComponent, nameof(daprComponent));
+        ArgumentNullException.ThrowIfNull(redisCacheResource, nameof(redisCacheResource));
+        
         var redisPasswordSecret = new ProvisioningParameter("redisPasswordSecretUri", typeof(Uri));
 
         var keyVault = redisCache.GetProvisionableResources()
