@@ -22,9 +22,8 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<AzureDaprComponentResource>().SingleOrDefault();
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
-        Assert.NotNull(resource);
     }
 
     [Fact]
