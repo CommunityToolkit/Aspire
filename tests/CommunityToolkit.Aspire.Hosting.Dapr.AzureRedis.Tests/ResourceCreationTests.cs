@@ -269,9 +269,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var redisCache = appModel.Resources.OfType<AzureRedisCacheResource>().SingleOrDefault();
-
-        Assert.NotNull(redisCache);
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
 
         string redisBicep = redisCache.GetBicepTemplateString();
 
