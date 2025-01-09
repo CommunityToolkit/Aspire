@@ -73,6 +73,23 @@ public static partial class JavaAppHostingExtension
         MavenOptions? mavenOptions = null)
     {
         mavenOptions ??= new MavenOptions();
+
+        if (mavenOptions.WorkingDirectory is null)
+        {
+            mavenOptions.WorkingDirectory = builder.Resource.WorkingDirectory;
+        }
+
+        var annotation = new MavenBuildAnnotation(mavenOptions);
+
+        if (builder.Resource.TryGetLastAnnotation<MavenBuildAnnotation>(out _))
+        {
+            // Replace the existing annotation, but don't continue on and subscribe to the event again.
+            builder.WithAnnotation(annotation, ResourceAnnotationMutationBehavior.Replace);
+            return builder;
+        }
+
+        builder.WithAnnotation(annotation);
+
         builder.ApplicationBuilder.Eventing.Subscribe<BeforeResourceStartedEvent>(builder.Resource, async (e, ct) =>
         {
             if (e.Resource is not JavaAppExecutableResource javaAppResource)
@@ -103,8 +120,14 @@ public static partial class JavaAppHostingExtension
 
         return builder;
 
-        async Task<bool> BuildWithMaven(JavaAppExecutableResource javaAppResource, IServiceProvider services, CancellationToken ct, bool useNotificationService = true)
+        static async Task<bool> BuildWithMaven(JavaAppExecutableResource javaAppResource, IServiceProvider services, CancellationToken ct, bool useNotificationService = true)
         {
+            if (!javaAppResource.TryGetLastAnnotation<MavenBuildAnnotation>(out var mavenOptionsAnnotation))
+            {
+                return false;
+            }
+
+            var mavenOptions = mavenOptionsAnnotation.MavenOptions;
             var logger = services.GetRequiredService<ResourceLoggerService>().GetLogger(javaAppResource);
             var notificationService = services.GetRequiredService<ResourceNotificationService>();
 
@@ -126,7 +149,7 @@ public static partial class JavaAppHostingExtension
                 {
                     FileName = isWindows ? "cmd" : "sh",
                     Arguments = isWindows ? $"/c {mavenOptions.Command} {string.Join(" ", mavenOptions.Args)}" : $"./{mavenOptions.Command} {string.Join(" ", mavenOptions.Args)}",
-                    WorkingDirectory = mavenOptions.WorkingDirectory ?? javaAppResource.WorkingDirectory,
+                    WorkingDirectory = mavenOptions.WorkingDirectory,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     CreateNoWindow = true,

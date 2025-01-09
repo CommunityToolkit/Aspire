@@ -1,8 +1,8 @@
 #nullable enable
+Aspire.Hosting.MavenOptions.WorkingDirectory.get -> string?
 static Aspire.Hosting.JavaAppHostingExtension.WithMavenBuild(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppExecutableResource!>! builder, Aspire.Hosting.MavenOptions? mavenOptions = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppExecutableResource!>!
 Aspire.Hosting.MavenOptions
 Aspire.Hosting.MavenOptions.MavenOptions() -> void
-Aspire.Hosting.MavenOptions.WorkingDirectory.get -> string?
 Aspire.Hosting.MavenOptions.WorkingDirectory.set -> void
 Aspire.Hosting.MavenOptions.Command.get -> string!
 Aspire.Hosting.MavenOptions.Command.set -> void
