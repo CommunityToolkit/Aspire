@@ -12,4 +12,7 @@
     <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Java.Tests" />
+  </ItemGroup>
 </Project>
