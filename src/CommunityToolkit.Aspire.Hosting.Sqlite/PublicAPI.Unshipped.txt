@@ -8,4 +8,4 @@ Aspire.Hosting.ApplicationModel.SqliteWebResource.PrimaryEndpoint.get -> Aspire.
 Aspire.Hosting.ApplicationModel.SqliteWebResource.SqliteWebResource(string! name) -> void
 Aspire.Hosting.SqliteResourceBuilderExtensions
 static Aspire.Hosting.SqliteResourceBuilderExtensions.AddSqlite(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? databasePath = null, string? databaseFileName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>!
-static Aspire.Hosting.SqliteResourceBuilderExtensions.AddSqliteWeb(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>! builder, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>!
+static Aspire.Hosting.SqliteResourceBuilderExtensions.WithSqliteWeb(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>! builder, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>!

@@ -110,7 +110,7 @@ public class AddSqliteTests
     {
         var builder = DistributedApplication.CreateBuilder();
         var sqlite = builder.AddSqlite("sqlite")
-            .AddSqliteWeb();
+            .WithSqliteWeb();
 
         var sqliteWeb = Assert.Single(builder.Resources.OfType<SqliteWebResource>());
 

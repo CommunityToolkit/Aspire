@@ -15,7 +15,7 @@ public static class AspireSqliteExtensions
     private const string DefaultConfigSectionName = "Aspire:Sqlite:Client";
 
     /// <summary>
-    /// Registers <see cref="SqliteConnection" /> as a singleton in the services provided by the <paramref name="builder"/>.
+    /// Registers <see cref="SqliteConnection" /> as scoped in the services provided by the <paramref name="builder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>
@@ -29,7 +29,7 @@ public static class AspireSqliteExtensions
             AddSqliteClient(builder, DefaultConfigSectionName, configureSettings, name, serviceKey: null);
 
     /// <summary>
-    /// Registers <see cref="SqliteConnection" /> as a keyed singleton for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
+    /// Registers <see cref="SqliteConnection" /> as keyed scoped for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>
