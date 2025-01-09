@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
@@ -79,13 +80,41 @@ public static partial class JavaAppHostingExtension
                 return;
             }
 
-            var logger = e.Services.GetRequiredService<ResourceLoggerService>().GetLogger(javaAppResource);
-            var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
+            await BuildWithMaven(javaAppResource, e.Services, ct).ConfigureAwait(false);
+        });
 
-            await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+        builder.WithCommand(
+            "build-with-maven",
+            "Build with Maven",
+            async (context) =>
+                await BuildWithMaven(builder.Resource, context.ServiceProvider, context.CancellationToken, false).ConfigureAwait(false) ?
+                    new ExecuteCommandResult { Success = true } :
+                    new ExecuteCommandResult { Success = false, ErrorMessage = "Failed to build with Maven" },
+            (context) => context.ResourceSnapshot.State switch
             {
-                State = new("Building Maven project", KnownResourceStates.Starting)
-            }).ConfigureAwait(false);
+                { Text: "Stopped" } or
+                { Text: "Exited" } or
+                { Text: "Finished" } or
+                { Text: "FailedToStart" } => ResourceCommandState.Enabled,
+                _ => ResourceCommandState.Disabled
+            },
+            iconName: "build"
+        );
+
+        return builder;
+
+        async Task<bool> BuildWithMaven(JavaAppExecutableResource javaAppResource, IServiceProvider services, CancellationToken ct, bool useNotificationService = true)
+        {
+            var logger = services.GetRequiredService<ResourceLoggerService>().GetLogger(javaAppResource);
+            var notificationService = services.GetRequiredService<ResourceNotificationService>();
+
+            if (useNotificationService)
+            {
+                await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+                {
+                    State = new("Building Maven project", KnownResourceStates.Starting)
+                }).ConfigureAwait(false);
+            }
 
             logger.LogInformation("Building Maven project");
 
@@ -109,10 +138,13 @@ public static partial class JavaAppHostingExtension
             {
                 if (!string.IsNullOrWhiteSpace(args.Data))
                 {
-                    await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+                    if (useNotificationService)
                     {
-                        State = new(args.Data, KnownResourceStates.Starting)
-                    }).ConfigureAwait(false);
+                        await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+                        {
+                            State = new(args.Data, KnownResourceStates.Starting)
+                        }).ConfigureAwait(false);
+                    }
 
                     logger.LogInformation("{Data}", args.Data);
                 }
@@ -122,10 +154,13 @@ public static partial class JavaAppHostingExtension
             {
                 if (!string.IsNullOrWhiteSpace(args.Data))
                 {
-                    await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+                    if (useNotificationService)
                     {
-                        State = new(args.Data, KnownResourceStates.FailedToStart)
-                    }).ConfigureAwait(false);
+                        await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+                        {
+                            State = new(args.Data, KnownResourceStates.FailedToStart)
+                        }).ConfigureAwait(false);
+                    }
 
                     logger.LogError("{Data}", args.Data);
                 }
@@ -139,16 +174,16 @@ public static partial class JavaAppHostingExtension
 
             if (mvnw.ExitCode != 0)
             {
+                // always use notification service to push out errors in the maven build
                 await notificationService.PublishUpdateAsync(javaAppResource, state => state with
                 {
                     State = new($"mvnw exited with {mvnw.ExitCode}", KnownResourceStates.FailedToStart)
                 }).ConfigureAwait(false);
 
-                throw new InvalidOperationException($"mvnw build failed with exit code {mvnw.ExitCode}");
+                return false;
             }
-        });
-
-        return builder;
+            return true;
+        }
     }
 
     private static IResourceBuilder<JavaAppExecutableResource> WithJavaDefaults(
