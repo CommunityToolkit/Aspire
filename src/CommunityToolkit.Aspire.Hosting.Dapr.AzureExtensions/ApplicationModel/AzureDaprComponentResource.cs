@@ -10,5 +10,4 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </remarks>
 /// <param name="bicepIdentifier">The Bicep identifier.</param>
 /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
-public class AzureDaprComponentResource(string bicepIdentifier,
-    Action<AzureResourceInfrastructure> configureInfrastructure) : AzureProvisioningResource(bicepIdentifier, configureInfrastructure);
+public class AzureDaprComponentResource(string bicepIdentifier, Action<AzureResourceInfrastructure> configureInfrastructure) : AzureProvisioningResource(bicepIdentifier, configureInfrastructure);
