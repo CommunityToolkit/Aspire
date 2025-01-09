@@ -97,6 +97,12 @@ public static class AzureRedisCacheDaprHostingExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Configures secrets access for the Azure Redis Cache and sets up the necessary Dapr component secrets.
+    /// </summary>
+    /// <param name="redisCache">The Azure Redis Cache resource infrastructure.</param>
+    /// <param name="daprComponent">The Dapr component for the container app managed environment.</param>
+    /// <param name="redisCacheResource">The Azure Redis resource containing the keys.</param>
     private static void ConfigureSecretAccess(this AzureResourceInfrastructure redisCache,
                                               ContainerAppManagedEnvironmentDaprComponent daprComponent,
                                               AzureRedisResource redisCacheResource)
