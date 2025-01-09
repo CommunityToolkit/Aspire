@@ -242,4 +242,45 @@ public class ExecutableResourceCreationTests
         var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
         Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-maven");
     }
+
+    [Theory]
+    [InlineData("Stopped", ResourceCommandState.Enabled)]
+    [InlineData("Finished", ResourceCommandState.Enabled)]
+    [InlineData("Exited", ResourceCommandState.Enabled)]
+    [InlineData("FailedToStart", ResourceCommandState.Enabled)]
+    [InlineData("Starting", ResourceCommandState.Disabled)]
+    [InlineData("Running", ResourceCommandState.Disabled)]
+    public void MavenBuildCommandAvailability(string text, ResourceCommandState expectedCommandState)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var options = new JavaAppExecutableResourceOptions
+        {
+            ApplicationName = "test.jar",
+            Args = ["--test"],
+            OtelAgentPath = "otel-agent",
+            Port = 8080
+        };
+
+        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
+            .WithMavenBuild();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var annoitation = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-maven");
+
+        var updateState = annoitation.UpdateState(new UpdateCommandStateContext()
+        {
+            ResourceSnapshot = new CustomResourceSnapshot()
+            {
+                State = new ResourceStateSnapshot(text, null),
+                ResourceType = "JavaAppExecutableResource",
+                Properties = []
+            },
+            ServiceProvider = app.Services
+        });
+        Assert.Equal(expectedCommandState, updateState);
+    }
 }
