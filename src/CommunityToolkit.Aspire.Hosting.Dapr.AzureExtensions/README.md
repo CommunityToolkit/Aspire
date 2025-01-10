@@ -1,14 +1,8 @@
-# CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions
+# CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions library
 
-This package provides extension methods and resource definitions that help integrate **Dapr** with **Azure** resources as part of an Aspire Hosting application.
+This package provides extension methods and resource definitions that support the development of  packages that integrate **Dapr** with **Azure** resources as part of an Aspire Hosting application.
 
-It offers a simplified publishing experience for Dapr components in a Container App Managed Environment, plus a utility method for managing key vault secrets.
-
-> **Note**: While this package can be used directly, it’s primarily designed to be consumed by more focused packages (such as [CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis]), which build on top of these shared infrastructure definitions.
-
----
-
-## Features
+## Functionality
 
 1. **`AzureDaprComponentResource`**  
    A resource that defines 'extends' AzureProvisioningResource. This resource currently contains no additional functionality but ensures API consistency as well as resource identification when extending infrastructure configuration
@@ -25,6 +19,6 @@ It offers a simplified publishing experience for Dapr components in a Container 
 5. **`CreateDaprComponent`**  
    A factory-like method to quickly instantiate a Dapr component with the specified type and version.
 
----
+## Notes
 
-This package currently does not make any changes to resources used in local development it provides publish functionality only
+  This designed to be consumed by more focused packages (such as `CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis`), which build on top of these shared infrastructure definitions.
