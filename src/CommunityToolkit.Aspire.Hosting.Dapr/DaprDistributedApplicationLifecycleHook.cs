@@ -11,9 +11,9 @@ using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.Sockets;
-using static Aspire.Hosting.Dapr.CommandLineArgs;
+using static CommunityToolkit.Aspire.Hosting.Dapr.CommandLineArgs;
 
-namespace Aspire.Hosting.Dapr;
+namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
 internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedApplicationLifecycleHook, IDisposable
 {

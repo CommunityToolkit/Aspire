@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Aspire.Hosting.Dapr;
+namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
 internal delegate IEnumerable<object> CommandLineArgBuilder();
 

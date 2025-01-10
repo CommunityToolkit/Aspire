@@ -3,7 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 
-namespace Aspire.Hosting.Dapr;
+namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
 /// <summary>
 /// Represents a Dapr component resource.

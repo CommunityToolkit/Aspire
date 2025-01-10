@@ -3,7 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 
-namespace Aspire.Hosting.Dapr;
+namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
 /// <summary>
 /// Indicates that a Dapr sidecar should be started for the associated resource.

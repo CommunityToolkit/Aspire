@@ -1,4 +1,4 @@
-# Aspire.Hosting.Dapr library
+# CommunityToolkit.Aspire.Hosting.Dapr library
 
 Provides extension methods and resource definitions for a .NET Aspire AppHost to configure Dapr resources.
 
@@ -9,7 +9,7 @@ Provides extension methods and resource definitions for a .NET Aspire AppHost to
 In your AppHost project, install the .NET Aspire Dapr Hosting library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
-dotnet add package Aspire.Hosting.Dapr
+dotnet add package CommunityToolkit.Aspire.Hosting.Dapr
 ```
 
 ## Usage example
@@ -31,6 +31,7 @@ builder.Build().Run();
 ```
 
 ## Additional documentation
+
 https://dapr.io/
 
 ## Feedback & contributing

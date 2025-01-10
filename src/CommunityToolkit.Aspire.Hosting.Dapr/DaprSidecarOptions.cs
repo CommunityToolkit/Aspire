@@ -3,7 +3,7 @@
 
 using System.Collections.Immutable;
 
-namespace Aspire.Hosting.Dapr;
+namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
 /// <summary>
 /// Options for configuring a Dapr sidecar.
