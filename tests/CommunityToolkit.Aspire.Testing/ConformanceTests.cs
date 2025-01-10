@@ -1,18 +1,18 @@
-﻿// Copied from https://github.com/dotnet/aspire/blob/b51d08a617a60ae30f8305d98f1e34e1ed90da1a/tests/Aspire.Components.Common.Tests/ConformanceTests.cs
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Diagnostics;
 using System.Text.Json.Nodes;
+using Microsoft.DotNet.XUnitExtensions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Json.Schema;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using Xunit.Sdk;
-using Microsoft.DotNet.XUnitExtensions;
+using Xunit;
 
 namespace Aspire.Components.ConformanceTests;
 
@@ -63,7 +63,6 @@ public abstract class ConformanceTests<TService, TOptions>
     /// Populates the Configuration with everything that is required by the Component
     /// </summary>
     /// <param name="configuration"></param>
-    /// <param name="key"></param>
     protected abstract void PopulateConfiguration(ConfigurationManager configuration, string? key = null);
 
     /// <summary>
