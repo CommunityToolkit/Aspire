@@ -201,6 +201,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Ngrok.Tests", "tests\CommunityToolkit.Aspire.Hosting.Ngrok.Tests\CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj", "{31D2ECC1-15EA-4850-88E9-A5F967D742C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Dapr", "src\CommunityToolkit.Aspire.Hosting.Dapr\CommunityToolkit.Aspire.Hosting.Dapr.csproj", "{2165F65B-83F2-4269-8781-86AB6ACF043D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -523,6 +525,10 @@ Global
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2165F65B-83F2-4269-8781-86AB6ACF043D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2165F65B-83F2-4269-8781-86AB6ACF043D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2165F65B-83F2-4269-8781-86AB6ACF043D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2165F65B-83F2-4269-8781-86AB6ACF043D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -624,6 +630,7 @@ Global
 		{1E18FE0B-C6DF-4935-AD43-4FEE73ED810C} = {7431DE02-23CA-4024-B22D-FCF008AFE3CB}
 		{59101126-7BD2-4E03-9C4D-D0D01AD14674} = {7431DE02-23CA-4024-B22D-FCF008AFE3CB}
 		{31D2ECC1-15EA-4850-88E9-A5F967D742C9} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{2165F65B-83F2-4269-8781-86AB6ACF043D} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
