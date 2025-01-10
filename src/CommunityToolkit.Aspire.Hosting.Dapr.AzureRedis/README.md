@@ -1,17 +1,31 @@
-# CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis
+# CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis library
 
-This package extends [CommunityToolkit.Aspire.Hosting.Dapr.Azure] by adding specialized integration for **Azure Redis** as a Dapr state store in Aspire Hosting applications.
+This package provides [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) integration for Azure Redis as a Dapr component. It allows you to configure dapr state to use Azure Redis as part of your .NET Aspire AppHost projects. 
 
-It provides a convenient way to configure an **Azure Redis** resource so that Dapr components (specifically, a Redis state store) can integrate smoothly into the Aspire deployment pipeline.
+## Usage
+To use this package, install it into your .NET Aspire AppHost project:
 
----
+```bash
+dotnet add package CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis
+```
 
-## Features
-   - Automatically sets up parameters for **Redis Host** and handles **TLS** configuration.  
-   - Integrates secret management if Azure Redis requires password-based access.
-   - Generates a valid hostname and port.  
-   - Supports Azure Entra ID (AadEnabled) for secure access.  
-   - Stores or references secrets in Azure Key Vault if password-based authentication is required.
-   - Automatically adds references to the Dapr component’s metadata and secrets list.
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
 
----
+var redisState = builder.AddAzureRedis("redisState")
+                        .RunAsContainer(); // for local development
+
+var daprState = builder.AddDaprStateStore("daprState")
+                       .WithReference(redisState); //instructs aspire to use azure redis when publishing
+
+var api = builder.AddProject<Projects.MyApiService>("example-api")
+    .WithReference(daprState)
+    .WithDaprSidecar();
+
+builder.Build().Run();
+
+```
+
+## Notes
+
+The current version of the integration currently focuses on publishing and does not make any changes to how dapr components are handled in local development
