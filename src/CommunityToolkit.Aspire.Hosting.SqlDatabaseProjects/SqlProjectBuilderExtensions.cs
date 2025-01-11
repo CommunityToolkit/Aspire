@@ -170,10 +170,12 @@ public static class SqlProjectBuilderExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeployer, DacpacDeployer>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
 
-        builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, (resourceReady, ct) =>
+        builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
         {
+            var notificationService = resourceReady.Services.GetRequiredService<ResourceNotificationService>();
+            await notificationService.WaitForDependenciesAsync(builder.Resource, ct);
             var service = resourceReady.Services.GetRequiredService<SqlProjectPublishService>();
-            return service.PublishSqlProject(builder.Resource, target.Resource, ct);
+            await service.PublishSqlProject(builder.Resource, target.Resource, ct);
         });
 
         builder.WaitFor(target);
@@ -184,7 +186,7 @@ public static class SqlProjectBuilderExtensions
             await service.PublishSqlProject(builder.Resource, target.Resource, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
         }, updateState: (context) => context.ResourceSnapshot?.State?.Text == KnownResourceStates.Finished ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
-           displayDescription: "Redeploys the SQL Server Database to the target database.",
+           displayDescription: "Redeploys the SQL Database Project to the target database.",
            iconName: "ArrowReset",
            iconVariant: IconVariant.Filled,
            isHighlighted: true);
