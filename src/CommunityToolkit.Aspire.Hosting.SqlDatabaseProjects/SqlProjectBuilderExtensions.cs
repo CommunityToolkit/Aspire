@@ -186,7 +186,7 @@ public static class SqlProjectBuilderExtensions
             await service.PublishSqlProject(builder.Resource, target.Resource, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
         }, updateState: (context) => context.ResourceSnapshot?.State?.Text == KnownResourceStates.Finished ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
-           displayDescription: "Redeploys the SQL Database Project to the target database.",
+           displayDescription: "Redeploys the SQL Server Database Project to the target database.",
            iconName: "ArrowReset",
            iconVariant: IconVariant.Filled,
            isHighlighted: true);
