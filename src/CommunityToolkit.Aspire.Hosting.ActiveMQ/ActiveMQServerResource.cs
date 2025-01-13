@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using CommunityToolkit.Aspire.Hosting.ActiveMQ;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -13,7 +14,8 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="userName">A parameter that contains the ActiveMQ server username, or <see langword="null"/> to use a default value.</param>
 /// <param name="password">A parameter that contains the ActiveMQ server password.</param>
 /// <param name="scheme">Scheme used in the connectionString (e.g. tcp or activemq, see MassTransit)</param>
-public class ActiveMQServerResource(string name, ParameterResource? userName, ParameterResource password, string scheme) : ContainerResource(name), IResourceWithConnectionString, IResourceWithEnvironment
+/// <param name="activeMqSettings">Settings being used for the chosen ActiveMQ (Classic or Artemis)</param>
+public class ActiveMQServerResource(string name, ParameterResource? userName, ParameterResource password, string scheme, IActiveMQSettings activeMqSettings) : ContainerResource(name), IResourceWithConnectionString, IResourceWithEnvironment
 {
     internal const string PrimaryEndpointName = "tcp";
     private const string DefaultUserName = "admin";
@@ -28,6 +30,11 @@ public class ActiveMQServerResource(string name, ParameterResource? userName, Pa
     /// Gets the parameter that contains the ActiveMQ server username.
     /// </summary>
     public ParameterResource? UserNameParameter { get; } = userName;
+    
+    /// <summary>
+    /// Gets the ActiveMQ settings.
+    /// </summary>
+    public IActiveMQSettings ActiveMqSettings { get; } = activeMqSettings;
 
     internal ReferenceExpression UserNameReference =>
         UserNameParameter is not null ?

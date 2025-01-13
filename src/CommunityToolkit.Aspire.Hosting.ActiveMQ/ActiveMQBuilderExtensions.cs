@@ -29,6 +29,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="port">The host port that the underlying container is bound to when running locally.</param>
     /// <param name="scheme">The scheme of the endpoint, e.g. tcp or activemq (for masstransit). Defaults to tcp.</param>
     /// <param name="webPort">The host port that the underlying webconsole is bound to when running locally.</param>
+    /// <param name="forClassic">Choose between Classic or Artemis ActiveMQ</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<ActiveMQServerResource> AddActiveMQ(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -36,32 +37,34 @@ public static class ActiveMQBuilderExtensions
         IResourceBuilder<ParameterResource>? password = null,
         int? port = null,
         string scheme = "tcp",
-        int? webPort = null)
+        int? webPort = null,
+        bool forClassic = true)
     {
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         ArgumentNullException.ThrowIfNull(scheme, nameof(scheme));
+        var settings = forClassic ? ActiveMQSettings.ForClassic : ActiveMQSettings.ForArtemis;
         
         // don't use special characters in the password, since it goes into a URI
         ParameterResource passwordParameter = password?.Resource
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
 
-        ActiveMQServerResource activeMq = new(name, userName?.Resource, passwordParameter, scheme);
+        ActiveMQServerResource activeMq = new(name, userName?.Resource, passwordParameter, scheme, settings);
         IResourceBuilder<ActiveMQServerResource> activemq = builder.AddResource(activeMq)
-                              .WithImage(ActiveMQContainerImageTags.Image, ActiveMQContainerImageTags.Tag)
-                              .WithImageRegistry(ActiveMQContainerImageTags.Registry)
+                              .WithImage(activeMq.ActiveMqSettings.Image, activeMq.ActiveMqSettings.Tag)
+                              .WithImageRegistry(activeMq.ActiveMqSettings.Registry)
                               .WithEndpoint(port: port, targetPort: 61616, name: ActiveMQServerResource.PrimaryEndpointName, scheme: scheme)
                               .WithEndpoint(port: webPort, targetPort: 8161, name: "web", scheme: "http")
                               .WithEnvironment(context =>
                               {
-                                  context.EnvironmentVariables["ACTIVEMQ_CONNECTION_USER"] = activeMq.UserNameReference;
-                                  context.EnvironmentVariables["ACTIVEMQ_CONNECTION_PASSWORD"] = activeMq.PasswordParameter;
+                                  context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariableUsername] = activeMq.UserNameReference;
+                                  context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariablePassword] = activeMq.PasswordParameter;
                               });
 
         activemq.WithJolokiaHealthCheck();
 
         return activemq;
     }
-
+    
     /// <summary>
     /// Adds a named volume for the data folder to a ActiveMQ container resource.
     /// </summary>
@@ -74,7 +77,7 @@ public static class ActiveMQBuilderExtensions
 #pragma warning disable CTASPIRE001
             .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "data"),
 #pragma warning restore CTASPIRE001
-                "/opt/apache-activemq/data",
+                builder.Resource.ActiveMqSettings.DataPath,
                 isReadOnly);
 
     /// <summary>
@@ -89,7 +92,7 @@ public static class ActiveMQBuilderExtensions
 #pragma warning disable CTASPIRE001
             .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "conf"),
 #pragma warning restore CTASPIRE001
-                "/opt/apache-activemq/conf",
+                builder.Resource.ActiveMqSettings.ConfPath,
                 isReadOnly);
 
     /// <summary>
@@ -100,7 +103,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<ActiveMQServerResource> WithDataBindMount(this IResourceBuilder<ActiveMQServerResource> builder, string source, bool isReadOnly = false) =>
-        builder.WithBindMount(source, "/opt/apache-activemq/data", isReadOnly);
+        builder.WithBindMount(source, builder.Resource.ActiveMqSettings.DataPath, isReadOnly);
 
     /// <summary>
     /// Adds a bind mount for the conf folder to a ActiveMQ container resource.
@@ -110,11 +113,11 @@ public static class ActiveMQBuilderExtensions
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<ActiveMQServerResource> WithConfBindMount(this IResourceBuilder<ActiveMQServerResource> builder, string source, bool isReadOnly = false) =>
-        builder.WithBindMount(source, "/opt/apache-activemq/conf", isReadOnly);
+        builder.WithBindMount(source, builder.Resource.ActiveMqSettings.ConfPath, isReadOnly);
     
-    private static IResourceBuilder<ActiveMQServerResource> WithJolokiaHealthCheck(this IResourceBuilder<ActiveMQServerResource> builder)
+    private static IResourceBuilder<ActiveMQServerResource> WithJolokiaHealthCheck(
+        this IResourceBuilder<ActiveMQServerResource> builder)
     {
-        const string path = "/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus";
         const int statusCode = 200;
         const string endpointName = "web";
         const string scheme = "http";
@@ -145,7 +148,7 @@ public static class ActiveMQBuilderExtensions
             basicAuthentication = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
             uri = new UriBuilder(baseUri)
             {
-                Path = path
+                Path = builder.Resource.ActiveMqSettings.JolokiaPath
             }.Uri;
         });
 

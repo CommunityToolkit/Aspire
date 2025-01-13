@@ -1,12 +1,22 @@
 #nullable enable
 Aspire.Hosting.ActiveMQBuilderExtensions
 Aspire.Hosting.ApplicationModel.ActiveMQServerResource
-Aspire.Hosting.ApplicationModel.ActiveMQServerResource.ActiveMQServerResource(string! name, Aspire.Hosting.ApplicationModel.ParameterResource? userName, Aspire.Hosting.ApplicationModel.ParameterResource! password, string! scheme) -> void
+Aspire.Hosting.ApplicationModel.ActiveMQServerResource.ActiveMQServerResource(string! name, Aspire.Hosting.ApplicationModel.ParameterResource? userName, Aspire.Hosting.ApplicationModel.ParameterResource! password, string! scheme, CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings! activeMqSettings) -> void
+Aspire.Hosting.ApplicationModel.ActiveMQServerResource.ActiveMqSettings.get -> CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings!
 Aspire.Hosting.ApplicationModel.ActiveMQServerResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
 Aspire.Hosting.ApplicationModel.ActiveMQServerResource.PasswordParameter.get -> Aspire.Hosting.ApplicationModel.ParameterResource!
 Aspire.Hosting.ApplicationModel.ActiveMQServerResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
 Aspire.Hosting.ApplicationModel.ActiveMQServerResource.UserNameParameter.get -> Aspire.Hosting.ApplicationModel.ParameterResource?
-static Aspire.Hosting.ActiveMQBuilderExtensions.AddActiveMQ(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>? userName = null, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>? password = null, int? port = null, string! scheme = "tcp", int? webPort = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.ConfPath.get -> string!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.DataPath.get -> string!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.EnvironmentVariablePassword.get -> string!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.EnvironmentVariableUsername.get -> string!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.Image.get -> string!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.JolokiaPath.get -> string!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.Registry.get -> string!
+CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.Tag.get -> string!
+static Aspire.Hosting.ActiveMQBuilderExtensions.AddActiveMQ(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>? userName = null, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>? password = null, int? port = null, string! scheme = "tcp", int? webPort = null, bool forClassic = true) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>!
 static Aspire.Hosting.ActiveMQBuilderExtensions.WithConfBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>!
 static Aspire.Hosting.ActiveMQBuilderExtensions.WithConfVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>! builder, string? name = null, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>!
 static Aspire.Hosting.ActiveMQBuilderExtensions.WithDataBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQServerResource!>!
