@@ -67,7 +67,7 @@ jobs:
       - uses: denoland/setup-deno@v2
         name: Setup Deno
         with:
-          deno-version: v2.x
+          deno-version: v2.1.4
 
       - uses: oven-sh/setup-bun@v2
         name: Setup Bun
