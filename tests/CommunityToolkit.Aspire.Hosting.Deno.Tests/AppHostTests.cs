@@ -4,10 +4,9 @@ using FluentAssertions;
 namespace CommunityToolkit.Aspire.Hosting.Deno.Tests;
 
 #pragma warning disable CTASPIRE001
-[ActiveIssue("https://github.com/CommunityToolkit/Aspire/issues/377")]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Deno_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Deno_AppHost>>
 {
-    [Fact]
+    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/377")]
     public async Task ResourceStartsAndRespondsOk()
     {
         var appName = "vite-demo";
@@ -20,7 +19,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact]
+    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/377")]
     public async Task ApiResourceStartsAndRespondsOk()
     {
         var appName = "oak-demo";
