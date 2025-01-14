@@ -5,11 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Remove="PublicAPI.Shipped.txt" />
-    <AdditionalFiles Remove="PublicAPI.Unshipped.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
 
