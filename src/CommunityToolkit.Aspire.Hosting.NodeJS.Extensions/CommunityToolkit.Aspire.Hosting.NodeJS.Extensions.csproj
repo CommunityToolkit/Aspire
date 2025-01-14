@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.NodeJS" />
   </ItemGroup>
 

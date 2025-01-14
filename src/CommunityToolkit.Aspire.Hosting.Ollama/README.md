@@ -26,7 +26,7 @@ var ollama = builder.AddOllama("ollama")
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-ollama
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/ollama
 
 ## Feedback & contributing
 
