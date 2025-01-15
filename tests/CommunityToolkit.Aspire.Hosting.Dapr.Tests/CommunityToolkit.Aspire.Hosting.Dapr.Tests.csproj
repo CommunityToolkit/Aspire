@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Dapr\CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
     <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="..\..\examples\dapr\CommunityToolkit.Aspire.Hosting.Dapr.AppHost\CommunityToolkit.Aspire.Hosting.Dapr.AppHost.csproj" />
   </ItemGroup>
 
 </Project>
