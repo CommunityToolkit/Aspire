@@ -1,8 +1,7 @@
 [project]
 name = "uv-api"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "Test project for uv-api"
 authors = [
     { name = "Tommaso Stocchi", email = "tstocchi@microsoft.com" } 
 ]
