@@ -2,6 +2,7 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests;
 
+#pragma warning disable CS0612
 public class ResourceCreationTests
 {
     [Fact]
@@ -9,7 +10,7 @@ public class ResourceCreationTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddUvicornApp("uvicornapp", "../../examples/uvicorn/uvicornapp-api", "main:app");
+        builder.AddUvicornApp("uvicornapp", "../../examples/python/uvicornapp-api", "main:app");
 
         using var app = builder.Build();
 
@@ -20,7 +21,26 @@ public class ResourceCreationTests
         Assert.NotNull(resource);
 
         Assert.Equal("uvicorn", resource.Command);
-        Assert.Equal(NormalizePathForCurrentPlatform("../../examples/uvicorn/uvicornapp-api"), resource.WorkingDirectory);
+        Assert.Equal(NormalizePathForCurrentPlatform("../../examples/python/uvicornapp-api"), resource.WorkingDirectory);
+    }
+
+    [Fact]
+    public void DefaultUvApp()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddUvApp("uvapp", "../../examples/python/uv-api", "uv-api");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<UvAppResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.Equal("uv", resource.Command);
+        Assert.Equal(NormalizePathForCurrentPlatform("../../examples/python/uv-api"), resource.WorkingDirectory);
     }
 
     static string NormalizePathForCurrentPlatform(string path)

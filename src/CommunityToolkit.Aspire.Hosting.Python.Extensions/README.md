@@ -1,6 +1,8 @@
 # CommunityToolkit.Aspire.Hosting.Python.Extensions library
 
-Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Uvicorn applications.
+Provides extensions methods and resource definitions for the .NET Aspire AppHost to extend the support for Python applications. Current support includes:
+- Uvicorn
+- Uv
 
 ## Getting Started
 
@@ -16,13 +18,22 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Python.Extensions
 
 Please refer to the [Python virtual environment](https://learn.microsoft.com/dotnet/aspire/get-started/build-aspire-apps-with-python?tabs=powershell#initialize-the-python-virtual-environment) section for more information.
 
-### Example usage
+### Uvicorn example usage
 
 Then, in the _Program.cs_ file of `AddUvicornApp`, define a Uvicorn resource, then call `Add`:
 
 ```csharp
 var uvicorn = builder.AddUvicornApp("uvicornapp", "../uvicornapp-api", "main:app")
     .WithHttpEndpoint(env: "UVICORN_PORT");
+```
+
+### Uv example usage
+
+Then, in the _Program.cs_ file of `AddUvApp`, define a Uvicorn resource, then call `Add`:
+
+```csharp
+var uvicorn = builder.AddUvApp("uvapp", "../uv-api", "uv-api")
+    .WithHttpEndpoint(env: "PORT");
 ```
 
 ## Additional Information
