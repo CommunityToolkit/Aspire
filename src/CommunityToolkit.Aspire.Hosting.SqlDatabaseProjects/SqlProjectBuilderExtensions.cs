@@ -172,8 +172,6 @@ public static class SqlProjectBuilderExtensions
 
         builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
         {
-            var notificationService = resourceReady.Services.GetRequiredService<ResourceNotificationService>();
-            await notificationService.WaitForDependenciesAsync(builder.Resource, ct);
             var service = resourceReady.Services.GetRequiredService<SqlProjectPublishService>();
             await service.PublishSqlProject(builder.Resource, target.Resource, ct);
         });
