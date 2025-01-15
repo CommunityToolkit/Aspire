@@ -10,8 +10,14 @@
     <PackageReference Include="Azure.Provisioning.AppContainers" />
   </ItemGroup>
 
+  
+ <ItemGroup>
+    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprComponentResource.cs" Link="ApplicationModel\AzureDaprComponentResource.cs" />
+    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprHostingExtensions.cs" Link="AzureDaprHostingExtensions.cs" />
+  </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions\CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions.csproj" />
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests"/>
   </ItemGroup>
 
 </Project>

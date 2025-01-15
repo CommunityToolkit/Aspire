@@ -11,7 +11,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for configuring Dapr components in an Azure hosting environment.
 /// </summary>
-public static class AzureDaprHostingExtensions
+internal static class AzureDaprHostingExtensions
 {
     /// <summary>
     /// Adds an Azure Dapr resource to the resource builder.

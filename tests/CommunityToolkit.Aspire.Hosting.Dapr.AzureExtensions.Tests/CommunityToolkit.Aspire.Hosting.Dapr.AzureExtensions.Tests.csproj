@@ -5,9 +5,18 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+<ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dapr" />
+    <PackageReference Include="Aspire.Hosting.Azure.Redis" />
+    <PackageReference Include="Azure.Provisioning.AppContainers" />
+</ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions\CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions.csproj"/>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 
+ <ItemGroup>
+    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprComponentResource.cs" Link="ApplicationModel\AzureDaprComponentResource.cs" />
+    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprHostingExtensions.cs" Link="AzureDaprHostingExtensions.cs" />
+  </ItemGroup>
 </Project>
