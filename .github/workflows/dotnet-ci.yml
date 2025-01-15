@@ -130,6 +130,7 @@ jobs:
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           dapr init --runtime-version=${{ env.DAPR_VERSION }}
           dapr --version
+          which dapr
 
       - name: Restore dependencies
         run: dotnet restore
