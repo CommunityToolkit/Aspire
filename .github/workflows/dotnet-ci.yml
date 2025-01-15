@@ -25,6 +25,7 @@ jobs:
     runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
+      DAPR_VERSION: "1.14.1"
 
     steps:
       - uses: actions/checkout@v4
@@ -74,6 +75,11 @@ jobs:
         with:
           bun-version: latest
 
+      - uses: dapr/setup-dapr@v2
+        name: Setup Dapr
+        with:
+          version: ${{ env.DAPR_VERSION }}
+
       - uses: actions/cache@v4
         name: Cache NuGet packages
         with:
@@ -117,6 +123,9 @@ jobs:
           npm install -g @azure/static-web-apps-cli
           cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
           npm ci
+
+      - name: Setup Dapr
+        run: dapr init --runtime-version ${{ env.DAPR_VERSION }}
 
       - name: Restore dependencies
         run: dotnet restore
@@ -181,4 +190,3 @@ jobs:
     needs: build
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
-
