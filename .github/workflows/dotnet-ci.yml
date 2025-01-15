@@ -125,7 +125,11 @@ jobs:
           npm ci
 
       - name: Setup Dapr
-        run: dapr init --runtime-version ${{ env.DAPR_VERSION }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          dapr init --runtime-version=${{ env.DAPR_VERSION }}
+          dapr --version
 
       - name: Restore dependencies
         run: dotnet restore
