@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>e7f9178b-87a6-4047-b90a-a1fa9d8137b9</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapr.Client" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dapr.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Dapr.ServiceDefaults.csproj" />
+  </ItemGroup>
+</Project>
