@@ -70,7 +70,7 @@ public class ContainerResourceCreationTests
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         
-        var resource = appModel.Resources.OfType<ActiveMQServerResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<ActiveMQArtemisServerResource>().SingleOrDefault();
         
         Assert.NotNull(resource);
         Assert.Equal("amq", resource.Name);
