@@ -63,10 +63,9 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
     
-        builder.AddActiveMQ("amq",
+        builder.AddActiveMQArtemis("amq",
             builder.AddParameter("username", "admin"),
-            builder.AddParameter("password", "admin"),
-            forClassic: false);
+            builder.AddParameter("password", "admin"));
         
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
