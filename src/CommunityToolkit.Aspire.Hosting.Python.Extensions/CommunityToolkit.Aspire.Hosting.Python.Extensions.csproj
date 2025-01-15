@@ -9,6 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.Python" />
   </ItemGroup>
+
 </Project>

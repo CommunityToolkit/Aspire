@@ -6,7 +6,7 @@ internal static class MeilisearchContainerImageTags
     public const string Registry = "docker.io";
     /// <summary>getmeili/meilisearch</summary>
     public const string Image = "getmeili/meilisearch";
-    /// <summary>v1.11</summary>
-    public const string Tag = "v1.11";
+    /// <summary>v1.12</summary>
+    public const string Tag = "v1.12";
 }
 

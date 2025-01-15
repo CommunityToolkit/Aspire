@@ -9,6 +9,8 @@
     <PackageReference Include="AspNetCore.HealthChecks.EventStore.gRPC" />
     <PackageReference Include="EventStore.Client.Extensions.OpenTelemetry" />
     <PackageReference Include="EventStore.Client.Grpc.Streams" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
 

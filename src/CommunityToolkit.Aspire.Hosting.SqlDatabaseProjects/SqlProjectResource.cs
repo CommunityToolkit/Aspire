@@ -7,9 +7,9 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Represents a SQL Server Database project resource.
 /// </summary>
 /// <param name="name">Name of the resource.</param>
-public sealed class SqlProjectResource(string name) : Resource(name), IResourceWithWaitSupport
+public sealed class SqlProjectResource(string name) : Resource(name), IResourceWithWaitSupport, IResourceWithDacpac
 {
-    internal string GetDacpacPath()
+    string IResourceWithDacpac.GetDacpacPath()
     {
         if (this.TryGetLastAnnotation<IProjectMetadata>(out var projectMetadata))
         {
@@ -35,7 +35,7 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
         throw new InvalidOperationException($"Unable to locate SQL Server Database project package for resource {Name}.");
     }
 
-    internal DacDeployOptions GetDacpacDeployOptions()
+    DacDeployOptions IResourceWithDacpac.GetDacpacDeployOptions()
     {
         var options = new DacDeployOptions();
 

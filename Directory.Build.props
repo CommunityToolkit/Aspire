@@ -18,8 +18,8 @@
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>9.0.0</DotNetExtensionsVersion>
-    <OpenTelemetryVersion>1.9.0</OpenTelemetryVersion>
-    <TestContainersVersion>4.0.0</TestContainersVersion>
+    <OpenTelemetryVersion>1.10.0</OpenTelemetryVersion>
+    <TestContainersVersion>4.1.0</TestContainersVersion>
     <IsPackable>false</IsPackable>
     <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
 
@@ -39,7 +39,7 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>0</ToolkitMinorVersion>
+    <ToolkitMinorVersion>1</ToolkitMinorVersion>
     <ToolkitPatchVersion>1</ToolkitPatchVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>

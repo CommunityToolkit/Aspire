@@ -40,7 +40,7 @@ To use the integration with Microsoft.Extensions.AI, call the `AddOllamaSharpCha
 ## Additional documentation
 
 -   https://github.com/awaescher/OllamaSharp
--   https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-ollama
+-   https://learn.microsoft.com/dotnet/aspire/community-toolkit/ollama
 -   https://devblogs.microsoft.com/dotnet/introducing-microsoft-extensions-ai-preview/
 
 ## Feedback & contributing

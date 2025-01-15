@@ -3,4 +3,9 @@
     <AdditionalPackageTags>azure staticwebapps hosting</AdditionalPackageTags>
     <Description>A hosting package that wraps endpoints with the Azure Static Web Apps emulator.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
 </Project>

@@ -48,7 +48,7 @@ public class ContainerResourceCreationTests
         Assert.Equal("admin", resource.PasswordParameter.Value);
         
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal("6.1.2", imageAnnotations.Tag);
+        Assert.Equal("6.1.4", imageAnnotations.Tag);
         Assert.Equal("apache/activemq-classic", imageAnnotations.Image);
         Assert.Equal("docker.io", imageAnnotations.Registry);
         
