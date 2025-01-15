@@ -59,7 +59,7 @@
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.7.8" />
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.7" />
-    <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.7" />
+    <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.8" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.2" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <!-- Build dependencies -->
