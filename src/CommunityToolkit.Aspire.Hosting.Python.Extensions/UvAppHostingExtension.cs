@@ -1,45 +1,45 @@
-﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Python;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for adding Uvicorn applications to an <see cref="IDistributedApplicationBuilder"/>.
+/// Provides extension methods for adding Uv applications to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
-public static class UvicornAppHostingExtension
+public static class UvAppHostingExtension
 {
     /// <summary>
-    /// Adds a Uvicorn application to the distributed application builder.
+    /// Adds a Uv application to the distributed application builder.
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
-    /// <param name="name">The name of the Uvicorn application.</param>
-    /// <param name="projectDirectory">The directory of the project containing the Uvicorn application.</param>
-    /// <param name="appName">The name of the uvicorn app.</param>
-    /// <param name="args">Optional arguments to pass to the script.</param>
-    /// <returns>An <see cref="IResourceBuilder{UvicornAppResource}"/> for the Uvicorn application resource.</returns>
+    /// <param name="name">The name of the Uv application.</param>
+    /// <param name="projectDirectory">The directory of the project containing the Uv application.</param>
+    /// <param name="scriptPath">The name of the Uv app.</param>
+    /// <param name="scriptArgs">Optional arguments to pass to the script.</param>
+    /// <returns>An <see cref="IResourceBuilder{UvAppResource}"/> for the Uv application resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
-    public static IResourceBuilder<UvicornAppResource> AddUvicornApp(
+    public static IResourceBuilder<UvAppResource> AddUvApp(
         this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        string projectDirectory,
-        string appName,
-        string[]? args = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        return builder.AddUvicornApp(name, projectDirectory, appName, ".venv", args);
-    }
-
-    private static IResourceBuilder<UvicornAppResource> AddUvicornApp(this IDistributedApplicationBuilder builder,
         string name,
         string projectDirectory,
-        string appName,
-        string virtualEnvironmentPath,
-        string[]? args = null)
+        string scriptPath,
+        params string[] scriptArgs)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(appName);
+
+        return builder.AddUvApp(name, scriptPath, projectDirectory, ".venv", scriptArgs);
+    }
+
+    private static IResourceBuilder<UvAppResource> AddUvApp(this IDistributedApplicationBuilder builder,
+        string name,
+        string scriptPath,
+        string projectDirectory,
+        string virtualEnvironmentPath,
+        params string[] args)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(scriptPath);
 
         string wd = projectDirectory ?? Path.Combine("..", name);
 
@@ -50,23 +50,28 @@ public static class UvicornAppHostingExtension
             : Path.Join(projectDirectory, virtualEnvironmentPath));
 
         var instrumentationExecutable = virtualEnvironment.GetExecutable("opentelemetry-instrument");
+        // var pythonExecutable = virtualEnvironment.GetRequiredExecutable("python");
+        // var projectExecutable = instrumentationExecutable ?? pythonExecutable;
 
         string[] allArgs = args is { Length: > 0 }
-            ? [appName, .. args]
-            : [appName];
+            ? ["run", scriptPath, .. args]
+            : ["run", scriptPath];
 
-        var projectResource = new UvicornAppResource(name, projectDirectory);
+        var projectResource = new UvAppResource(name, projectDirectory);
 
         var resourceBuilder = builder.AddResource(projectResource)
             .WithArgs(allArgs)
             .WithArgs(context =>
+            {
+                // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
+                if (!string.IsNullOrEmpty(instrumentationExecutable))
                 {
-                    // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
-                    if (!string.IsNullOrEmpty(instrumentationExecutable))
-                    {
-                        AddOpenTelemetryArguments(context);
-                    }
-                });
+                    AddOpenTelemetryArguments(context);
+
+                    // // Add the python executable as the next argument so we can run the project.
+                    // context.Args.Add(pythonExecutable!);
+                }
+            });
 
         if (!string.IsNullOrEmpty(instrumentationExecutable))
         {

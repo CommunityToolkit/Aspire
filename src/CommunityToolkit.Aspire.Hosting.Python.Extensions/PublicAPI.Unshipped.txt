@@ -1,2 +1,5 @@
 #nullable enable
-
+Aspire.Hosting.ApplicationModel.UvAppResource
+Aspire.Hosting.ApplicationModel.UvAppResource.UvAppResource(string! name, string! workingDirectory) -> void
+Aspire.Hosting.UvAppHostingExtension
+static Aspire.Hosting.UvAppHostingExtension.AddUvApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! projectDirectory, string! scriptPath, params string![]! scriptArgs) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.UvAppResource!>!

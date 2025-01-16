@@ -25,4 +25,7 @@ curl -fsSL https://bun.sh/install | bash
 echo Installing uvicorn
 pip install uvicorn
 
+echo Installing uv
+pip install uv
+
 echo Done!
