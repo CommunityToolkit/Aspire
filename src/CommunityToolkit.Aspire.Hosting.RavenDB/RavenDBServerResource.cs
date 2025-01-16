@@ -3,33 +3,24 @@
 /// <summary>
 /// A resource that represents a RavenDB container.
 /// </summary>
-public class RavenDBServerResource : ContainerResource, IResourceWithConnectionString
+public class RavenDBServerResource(string name, bool isSecured) : ContainerResource(name), IResourceWithConnectionString
 {
     /// <summary>
     /// Indicates whether the server connection is secured (HTTPS) or not (HTTP).
     /// </summary>
-    private bool IsSecured { get; }
+    private bool IsSecured { get; } = isSecured;
 
     /// <summary>
     /// Gets the protocol used for the primary endpoint, based on the security setting ("http" or "https").
     /// </summary>
     internal string PrimaryEndpointName => IsSecured ? "https" : "http";
 
+    private EndpointReference? _primaryEndpoint;
+
     /// <summary>
     /// Gets the primary endpoint for the RavenDB server.
     /// </summary>
-    public EndpointReference PrimaryEndpoint { get; }
-
-    /// <summary>
-    /// Initialize a resource that represents a RavenDB container.
-    /// </summary>
-    /// <param name="name">The name of the RavenDB server resource.</param>
-    /// <param name="isSecured">Indicates whether the server connection is secured (true for HTTPS, false for HTTP).</param>
-    public RavenDBServerResource(string name, bool isSecured) : base(name)
-    {
-        IsSecured = isSecured;
-        PrimaryEndpoint = new(this, PrimaryEndpointName);
-    }
+    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 
     /// <summary>
     /// Gets the connection string expression for the RavenDB server, 

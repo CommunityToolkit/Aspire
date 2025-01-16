@@ -20,6 +20,10 @@ CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings
 CommunityToolkit.Aspire.Hosting.RavenDB.LicensingOptions
 CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode
+CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode.None = 0 -> CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode
+CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode.LetsEncrypt = 1 -> CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode
+CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode.Secured = 2 -> CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode
+CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode.Unsecured = 3 -> CommunityToolkit.Aspire.Hosting.RavenDB.SetupMode
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings.RavenDBServerSettings() -> void
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings.ServerUrl.get -> string?
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings.ServerUrl.set -> void
@@ -29,15 +33,10 @@ static CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings.Secured(str
 static CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings.SecuredWithLetsEncrypt(string! domainUrl, string! certificatePath, string? certificatePassword = null, string? serverUrl = null) -> CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings!
 static CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings.Unsecured() -> CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings!
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings.WithLicense(string! license, bool eulaAccepted = true) -> void
-CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.RavenDBSecuredServerSettings() -> void
+CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.RavenDBSecuredServerSettings(string! certificatePath, string? certificatePassword, string! publicServerUrl) -> void
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.CertificatePath.get -> string!
-CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.CertificatePath.set -> void
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.CertificatePassword.get -> string?
-CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.CertificatePassword.set -> void
 CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.PublicServerUrl.get -> string!
-CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBSecuredServerSettings.PublicServerUrl.set -> void
-CommunityToolkit.Aspire.Hosting.RavenDB.LicensingOptions.LicensingOptions() -> void
+CommunityToolkit.Aspire.Hosting.RavenDB.LicensingOptions.LicensingOptions(string! license, bool eulaAccepted = true) -> void
 CommunityToolkit.Aspire.Hosting.RavenDB.LicensingOptions.License.get -> string!
-CommunityToolkit.Aspire.Hosting.RavenDB.LicensingOptions.License.set -> void
 CommunityToolkit.Aspire.Hosting.RavenDB.LicensingOptions.EulaAccepted.get -> bool
-CommunityToolkit.Aspire.Hosting.RavenDB.LicensingOptions.EulaAccepted.set -> void

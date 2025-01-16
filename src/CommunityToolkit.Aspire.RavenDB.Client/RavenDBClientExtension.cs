@@ -55,7 +55,7 @@ public static class RavenDBClientExtension
         X509Certificate2? certificate = null)
     {
         var settings = new RavenDBClientSettings(connectionUrls, databaseName);
-        if (certificate != null)
+        if (certificate is not null)
             settings.Certificate = certificate;
 
         ValidateSettings(builder, settings);
@@ -103,7 +103,7 @@ public static class RavenDBClientExtension
         X509Certificate2? certificate = null)
     {
         var settings = new RavenDBClientSettings(connectionUrls, databaseName);
-        if (certificate != null)
+        if (certificate is not null)
             settings.Certificate = certificate;
 
         ValidateSettings(builder, settings);
@@ -235,7 +235,7 @@ public static class RavenDBClientExtension
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        if (settings.Urls == null || settings.Urls.Length == 0)
+        if (settings.Urls is null || settings.Urls.Length == 0)
             throw new ArgumentNullException(nameof(settings.Urls), "At least one connection URL must be provided.");
 
         if (settings.CreateDatabase && string.IsNullOrWhiteSpace(settings.DatabaseName))

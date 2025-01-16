@@ -24,7 +24,7 @@ builder.AddRavenDB("ravendb", serverSettings)
 ## Additional documentation
 
 <!-- TODO: Update the link once it is created -->
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-ravendb
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/ravendb
 
 ## Feedback & contributing
 

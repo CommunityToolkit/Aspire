@@ -7,18 +7,11 @@ using Raven.Client.Http;
 
 namespace CommunityToolkit.Aspire.RavenDB.Client.Tests;
 
-public class AspireRavenDBExtensionsTests : IClassFixture<RavenDbServerFixture>
+public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : IClassFixture<RavenDbServerFixture>
 {
-    private readonly RavenDbServerFixture _serverFixture;
-
     private const string DefaultConnectionName = "ravendb";
-    private string DefaultConnectionString => _serverFixture.ConnectionString ??
+    private string DefaultConnectionString => serverFixture.ConnectionString ??
                                               throw new InvalidOperationException("The server was not initialized.");
-
-    public AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture)
-    {
-        _serverFixture = serverFixture;
-    }
 
     [Fact]
     public void AddKeyedRavenDbClientWithoutDatabaseShouldWork()

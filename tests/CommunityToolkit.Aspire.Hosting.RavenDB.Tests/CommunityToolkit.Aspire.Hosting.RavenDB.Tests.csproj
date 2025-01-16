@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\ravendb\RavenDB.AppHost\RavenDB.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\ravendb\RavenDB.AppHost\CommunityToolkit.Aspire.Hosting.RavenDB.AppHost.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.RavenDB\CommunityToolkit.Aspire.Hosting.RavenDB.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.RavenDB.Client\CommunityToolkit.Aspire.RavenDB.Client.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />

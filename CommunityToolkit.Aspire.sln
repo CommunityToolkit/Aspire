@@ -259,7 +259,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ravendb", "ravendb", "{1C65F967-D5F1-424B-82E9-B8585B6F0BD6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenDB.AppHost", "examples\ravendb\RavenDB.AppHost\RavenDB.AppHost.csproj", "{28FCB1E2-7460-4FDD-AA63-03162C9F2154}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.RavenDB.AppHost", "examples\ravendb\RavenDB.AppHost\CommunityToolkit.Aspire.Hosting.RavenDB.AppHost.csproj", "{28FCB1E2-7460-4FDD-AA63-03162C9F2154}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

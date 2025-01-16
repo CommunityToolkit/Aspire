@@ -29,7 +29,11 @@ internal static class HealthChecksExtensions
     {
         return builder.Add(new HealthCheckRegistration(
             name ?? NAME,
-            sp => new RavenDBHealthCheck(new RavenDBOptions() { Urls = new[] { connectionStringFactory(sp) } }),
+            sp =>
+            {
+                var connectionString = ValidateConnectionString(connectionStringFactory, sp);
+                return new RavenDBHealthCheck(new RavenDBOptions { Urls = new[] { connectionString } });
+            },
             failureStatus,
             tags,
             timeout));
@@ -58,9 +62,35 @@ internal static class HealthChecksExtensions
     {
         return builder.Add(new HealthCheckRegistration(
             name ?? NAME,
-            sp => new RavenDBHealthCheck(new RavenDBOptions() { Urls = new[] { connectionStringFactory(sp) }, Database = databaseName }),
+            sp =>
+            {
+                var connectionString = ValidateConnectionString(connectionStringFactory, sp);
+                return new RavenDBHealthCheck(new RavenDBOptions
+                {
+                    Urls = new[] { connectionString },
+                    Database = databaseName
+                });
+            },
             failureStatus,
             tags,
             timeout));
+    }
+
+    /// <summary>
+    /// Validates that the connection string is not null or empty.
+    /// </summary>
+    /// <param name="connectionStringFactory">The factory to generate the connection string.</param>
+    /// <param name="serviceProvider">The service provider instance.</param>
+    /// <returns>A valid, non-empty connection string.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the connection string is null or empty.</exception>
+    private static string ValidateConnectionString(Func<IServiceProvider, string> connectionStringFactory, IServiceProvider serviceProvider)
+    {
+        var connectionString = connectionStringFactory(serviceProvider);
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("Failed to generate a valid RavenDB connection string. The result cannot be null or empty.");
+        }
+
+        return connectionString;
     }
 }

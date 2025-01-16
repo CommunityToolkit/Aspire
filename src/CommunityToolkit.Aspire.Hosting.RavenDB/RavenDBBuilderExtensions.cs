@@ -85,7 +85,7 @@ public static class RavenDBBuilderExtensions
         {
             connectionString = await serverResource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
 
-            if (connectionString == null)
+            if (connectionString is null)
                 throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{serverResource.Name}' resource but the connection string was null.");
         });
 
@@ -110,13 +110,13 @@ public static class RavenDBBuilderExtensions
             { "RAVEN_Setup_Mode", serverSettings.SetupMode.ToString() }
         };
 
-        if (serverSettings.LicensingOptions != null)
+        if (serverSettings.LicensingOptions is not null)
         {
             environmentVariables.TryAdd("RAVEN_License_Eula_Accepted", serverSettings.LicensingOptions.EulaAccepted.ToString());
             environmentVariables.TryAdd("RAVEN_License", serverSettings.LicensingOptions.License);
         }
 
-        if (serverSettings.ServerUrl != null)
+        if (serverSettings.ServerUrl is not null)
             environmentVariables.TryAdd("RAVEN_ServerUrl", serverSettings.ServerUrl);
 
         if (serverSettings is RavenDBSecuredServerSettings securedServerSettings)
@@ -124,7 +124,7 @@ public static class RavenDBBuilderExtensions
             environmentVariables.TryAdd("RAVEN_PublicServerUrl", securedServerSettings.PublicServerUrl);
             environmentVariables.TryAdd("RAVEN_Security_Certificate_Path", securedServerSettings.CertificatePath);
             
-            if (securedServerSettings.CertificatePassword != null)
+            if (securedServerSettings.CertificatePassword is not null)
                 environmentVariables.TryAdd("RAVEN_Security_Certificate_Password", securedServerSettings.CertificatePassword);
         }
 
@@ -172,7 +172,7 @@ public static class RavenDBBuilderExtensions
         {
             connectionString = await databaseResource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
 
-            if (connectionString == null)
+            if (connectionString is null)
                 throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{databaseResource.Name}' resource but the connection string was null.");
         });
 

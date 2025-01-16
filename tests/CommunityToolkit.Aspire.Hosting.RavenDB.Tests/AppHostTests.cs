@@ -8,7 +8,7 @@ using Raven.Client.Documents;
 namespace CommunityToolkit.Aspire.Hosting.RavenDB.Tests;
 
 [RequiresDocker]
-public class AppHostTests(AspireIntegrationTestFixture<Projects.RavenDB_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.RavenDB_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_RavenDB_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_RavenDB_AppHost>>
 {
     [Fact]
     public async Task TestAppHost()
@@ -30,8 +30,6 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.RavenDB_AppHost>
         Assert.NotNull(url);
         Assert.Equal(connectionString.OriginalString, url);
         Assert.Equal("TestDatabase", dbResource.DatabaseName);
-
-        await Task.Delay(10000, cancellationToken.Token);
 
         // Create RavenDB Client
 
