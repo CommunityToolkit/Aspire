@@ -8,6 +8,11 @@ Aspire.Hosting.ApplicationModel.ActiveMQServerResourceBase.ConnectionStringExpre
 Aspire.Hosting.ApplicationModel.ActiveMQServerResourceBase.PasswordParameter.get -> Aspire.Hosting.ApplicationModel.ParameterResource!
 Aspire.Hosting.ApplicationModel.ActiveMQServerResourceBase.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
 Aspire.Hosting.ApplicationModel.ActiveMQServerResourceBase.UserNameParameter.get -> Aspire.Hosting.ApplicationModel.ParameterResource?
+static Aspire.Hosting.ActiveMQBuilderExtensions.AddActiveMQArtemis(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>? userName = null, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>? password = null, int? port = null, string! scheme = "tcp", int? webPort = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ActiveMQArtemisServerResource!>!
+static Aspire.Hosting.ActiveMQBuilderExtensions.WithConfBindMount<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>!
+static Aspire.Hosting.ActiveMQBuilderExtensions.WithConfVolume<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>! builder, string? name = null, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>!
+static Aspire.Hosting.ActiveMQBuilderExtensions.WithDataBindMount<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>!
+static Aspire.Hosting.ActiveMQBuilderExtensions.WithDataVolume<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>! builder, string? name = null, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>!
 CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings
 CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.ConfPath.get -> string!
 CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings.DataPath.get -> string!
