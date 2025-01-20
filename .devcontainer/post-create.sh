@@ -28,4 +28,7 @@ pip install uvicorn
 echo Setting up dapr
 dapr init
 
+echo Installing uv
+pip install uv
+
 echo Done!

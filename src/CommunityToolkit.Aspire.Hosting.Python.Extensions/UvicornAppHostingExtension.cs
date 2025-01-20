@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Python;
 using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
@@ -64,9 +65,6 @@ public static class UvicornAppHostingExtension
                     if (!string.IsNullOrEmpty(instrumentationExecutable))
                     {
                         AddOpenTelemetryArguments(context);
-
-                        // // Add the python executable as the next argument so we can run the project.
-                        // context.Args.Add(pythonExecutable!);
                     }
                 });
 
