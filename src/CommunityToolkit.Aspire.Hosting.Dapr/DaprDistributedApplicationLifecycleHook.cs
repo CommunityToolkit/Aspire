@@ -340,6 +340,16 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
             {
                 yield return Path.Combine(homebrewPrefix, "bin", "dapr");
             }
+
+            // Add all the paths that are reachable via the `PATH` environment variable:
+            var possibleDaprPaths = Environment.GetEnvironmentVariable("PATH")?
+                .Split(Path.PathSeparator)
+                .Select(path => Path.Combine(path, "dapr"))
+                .Where(File.Exists) ?? [];
+            foreach (var path in possibleDaprPaths)
+            {
+                yield return path;
+            }
         }
     }
 
