@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Aspire.Hosting</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Dapr" />
+    <PackageReference Include="Aspire.Hosting.Azure.Redis" />
+    <PackageReference Include="Azure.Provisioning.AppContainers" />
+  </ItemGroup>
+
+  
+ <ItemGroup>
+    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprComponentResource.cs" Link="ApplicationModel\AzureDaprComponentResource.cs" />
+    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprHostingExtensions.cs" Link="AzureDaprHostingExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests"/>
+  </ItemGroup>
+
+</Project>
