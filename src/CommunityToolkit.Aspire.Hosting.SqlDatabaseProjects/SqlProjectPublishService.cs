@@ -7,13 +7,16 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
 internal class SqlProjectPublishService(IDacpacDeployer deployer, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
 {
-    public async Task PublishSqlProject(IResourceWithDacpac resource, SqlServerDatabaseResource target, CancellationToken cancellationToken)
+    public async Task PublishSqlProject(IResourceWithDacpac resource, IResourceWithConnectionString target, string? targetDatabaseName, CancellationToken cancellationToken)
     {
         var logger = resourceLoggerService.GetLogger(resource);
 
         try
         {
-            await resourceNotificationService.WaitForDependenciesAsync(resource, cancellationToken);
+            if (target is SqlServerDatabaseResource)
+            {
+                await resourceNotificationService.WaitForDependenciesAsync(resource, cancellationToken);
+            }
 
             var dacpacPath = resource.GetDacpacPath();
             if (!Path.IsPathRooted(dacpacPath))
@@ -43,7 +46,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IHostEnvironme
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with { State = new ResourceStateSnapshot("Publishing", KnownResourceStateStyles.Info) });
 
-            deployer.Deploy(dacpacPath, options, connectionString, target.DatabaseName, logger, cancellationToken);
+            deployer.Deploy(dacpacPath, options, connectionString, targetDatabaseName, logger, cancellationToken);
 
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success) });

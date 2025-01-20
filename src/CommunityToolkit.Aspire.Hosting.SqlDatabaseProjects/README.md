@@ -48,6 +48,21 @@ builder.AddSqlProject("mysqlproj")
 builder.Build().Run();
 ```
 
+## Support for existing databases
+Instead of using the `AddDatabase` method to create a new database, you can specify an existing database:
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+// Get an existing connection string from the configuration
+var connection = builder.AddConnectionString("Aspire");
+
+builder.AddSqlProject<Projects.SdkProject>("mysqlproj")
+       .WithReference(connection);
+
+builder.Build().Run();
+```
+
 ## Deployment options support
 Define options that affect the behavior of package deployment.
 

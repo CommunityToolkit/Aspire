@@ -16,4 +16,9 @@ var otherProject = builder.AddSqlProject<Projects.SdkProject>("other-sdk-project
 builder.AddSqlPackage<Packages.ErikEJ_Dacpac_Chinook>("chinook")
        .WithReference(database);
 
+var connection = builder.AddConnectionString("Aspire");
+
+builder.AddSqlProject<Projects.SdkProject>("existing-db")
+        .WithReference(connection);
+
 builder.Build().Run();
