@@ -11,11 +11,11 @@ Accept: application/json
 GET http://localhost:5004/received
 Accept: application/json
 
-###
+### Jolokia call for Classic broker status
 GET http://admin:admin@localhost:8161/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus
 origin: localhost
 
-###
-GET http://localhost:8161/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus
+### Jolokia call for Artemis broker status
+GET http://admin:admin@localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker=%220.0.0.0%22/Started
 origin: localhost
-Authorization: Basic YWRtaW46YWRtaW4=
+
