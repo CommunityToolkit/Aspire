@@ -1,10 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Hosting.ActiveMQ;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -46,20 +44,56 @@ public static class ActiveMQBuilderExtensions
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
 
         ActiveMQServerResource activeMq = new(name, userName?.Resource, passwordParameter, scheme);
-        IResourceBuilder<ActiveMQServerResource> activemq = builder.AddResource(activeMq)
-                              .WithImage(ActiveMQContainerImageTags.Image, ActiveMQContainerImageTags.Tag)
-                              .WithImageRegistry(ActiveMQContainerImageTags.Registry)
-                              .WithEndpoint(port: port, targetPort: 61616, name: ActiveMQServerResource.PrimaryEndpointName, scheme: scheme)
-                              .WithEndpoint(port: webPort, targetPort: 8161, name: "web", scheme: "http")
-                              .WithEnvironment(context =>
-                              {
-                                  context.EnvironmentVariables["ACTIVEMQ_CONNECTION_USER"] = activeMq.UserNameReference;
-                                  context.EnvironmentVariables["ACTIVEMQ_CONNECTION_PASSWORD"] = activeMq.PasswordParameter;
-                              });
+        return builder.Build(port, scheme, webPort, activeMq);
+    }
 
-        activemq.WithJolokiaHealthCheck();
+    /// <summary>
+    /// Adds a ActiveMQ Artemis container to the application model.
+    /// </summary>
+    /// <remarks>
+    /// The default image and tag are "apache/activemq-artemis" and "2.39.0".
+    /// </remarks>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
+    /// <param name="userName">The parameter used to provide the username for the ActiveMQ resource. If <see langword="null"/> a default value will be used.</param>
+    /// <param name="password">The parameter used to provide the password for the ActiveMQ resource. If <see langword="null"/> a random password will be generated.</param>
+    /// <param name="port">The host port that the underlying container is bound to when running locally.</param>
+    /// <param name="scheme">The scheme of the endpoint, e.g. tcp or activemq (for masstransit). Defaults to tcp.</param>
+    /// <param name="webPort">The host port that the underlying webconsole is bound to when running locally.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<ActiveMQArtemisServerResource> AddActiveMQArtemis(this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        IResourceBuilder<ParameterResource>? userName = null,
+        IResourceBuilder<ParameterResource>? password = null,
+        int? port = null,
+        string scheme = "tcp",
+        int? webPort = null)
+    {
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(scheme, nameof(scheme));
+        
+        // don't use special characters in the password, since it goes into a URI
+        ParameterResource passwordParameter = password?.Resource
+                                              ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
 
-        return activemq;
+        ActiveMQArtemisServerResource activeMq = new(name, userName?.Resource, passwordParameter, scheme);
+        return builder.Build(port, scheme, webPort, activeMq);
+    }
+
+    private static IResourceBuilder<T> Build<T>(this IDistributedApplicationBuilder builder, int? port, string scheme, int? webPort, T activeMq)
+    where T : ActiveMQServerResourceBase
+    {
+        IResourceBuilder<T> result = builder.AddResource(activeMq)
+            .WithImage(activeMq.ActiveMqSettings.Image, activeMq.ActiveMqSettings.Tag)
+            .WithImageRegistry(activeMq.ActiveMqSettings.Registry)
+            .WithEndpoint(port: port, targetPort: 61616, name: ActiveMQServerResourceBase.PrimaryEndpointName, scheme: scheme)
+            .WithEndpoint(port: webPort, targetPort: 8161, name: "web", scheme: "http")
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariableUsername] = activeMq.UserNameReference;
+                context.EnvironmentVariables[activeMq.ActiveMqSettings.EnvironmentVariablePassword] = activeMq.PasswordParameter;
+            });
+        return result.WithJolokiaHealthCheck();
     }
 
     /// <summary>
@@ -69,12 +103,13 @@ public static class ActiveMQBuilderExtensions
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<ActiveMQServerResource> WithDataVolume(this IResourceBuilder<ActiveMQServerResource> builder, string? name = null, bool isReadOnly = false) =>
+    public static IResourceBuilder<T> WithDataVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
+        where T : ActiveMQServerResourceBase =>
         builder
 #pragma warning disable CTASPIRE001
             .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "data"),
 #pragma warning restore CTASPIRE001
-                "/opt/apache-activemq/data",
+                builder.Resource.ActiveMqSettings.DataPath,
                 isReadOnly);
 
     /// <summary>
@@ -84,12 +119,13 @@ public static class ActiveMQBuilderExtensions
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<ActiveMQServerResource> WithConfVolume(this IResourceBuilder<ActiveMQServerResource> builder, string? name = null, bool isReadOnly = false) =>
+    public static IResourceBuilder<T> WithConfVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
+        where T : ActiveMQServerResourceBase =>
         builder
 #pragma warning disable CTASPIRE001
             .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "conf"),
 #pragma warning restore CTASPIRE001
-                "/opt/apache-activemq/conf",
+                builder.Resource.ActiveMqSettings.ConfPath,
                 isReadOnly);
 
     /// <summary>
@@ -99,8 +135,9 @@ public static class ActiveMQBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<ActiveMQServerResource> WithDataBindMount(this IResourceBuilder<ActiveMQServerResource> builder, string source, bool isReadOnly = false) =>
-        builder.WithBindMount(source, "/opt/apache-activemq/data", isReadOnly);
+    public static IResourceBuilder<T> WithDataBindMount<T>(this IResourceBuilder<T> builder, string source, bool isReadOnly = false) 
+        where T : ActiveMQServerResourceBase =>
+        builder.WithBindMount(source, builder.Resource.ActiveMqSettings.DataPath, isReadOnly);
 
     /// <summary>
     /// Adds a bind mount for the conf folder to a ActiveMQ container resource.
@@ -109,12 +146,14 @@ public static class ActiveMQBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<ActiveMQServerResource> WithConfBindMount(this IResourceBuilder<ActiveMQServerResource> builder, string source, bool isReadOnly = false) =>
-        builder.WithBindMount(source, "/opt/apache-activemq/conf", isReadOnly);
+    public static IResourceBuilder<T> WithConfBindMount<T>(this IResourceBuilder<T> builder, string source, bool isReadOnly = false)
+        where T : ActiveMQServerResourceBase =>
+        builder.WithBindMount(source, builder.Resource.ActiveMqSettings.ConfPath, isReadOnly);
     
-    private static IResourceBuilder<ActiveMQServerResource> WithJolokiaHealthCheck(this IResourceBuilder<ActiveMQServerResource> builder)
+    private static IResourceBuilder<T> WithJolokiaHealthCheck<T>(
+        this IResourceBuilder<T> builder)
+    where T : ActiveMQServerResourceBase
     {
-        const string path = "/api/jolokia/read/org.apache.activemq:type=Broker,brokerName=localhost,service=Health/CurrentStatus";
         const int statusCode = 200;
         const string endpointName = "web";
         const string scheme = "http";
@@ -145,7 +184,7 @@ public static class ActiveMQBuilderExtensions
             basicAuthentication = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
             uri = new UriBuilder(baseUri)
             {
-                Path = path
+                Path = builder.Resource.ActiveMqSettings.JolokiaPath
             }.Uri;
         });
 
