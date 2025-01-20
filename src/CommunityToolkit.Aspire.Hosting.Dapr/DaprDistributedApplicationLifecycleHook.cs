@@ -322,6 +322,16 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                 // Installed windows paths:
                 yield return Path.Combine(pathRoot, "dapr", "dapr.exe");
 
+                // Add all the paths that are reachable via the `PATH` environment variable:
+                var possibleWindowsDaprPaths = Environment.GetEnvironmentVariable("PATH")?
+                    .Split(Path.PathSeparator)
+                    .Select(path => Path.Combine(path, "dapr"))
+                    .Where(File.Exists) ?? [];
+                foreach (var path in possibleWindowsDaprPaths)
+                {
+                    yield return path;
+                }
+
                 yield break;
             }
 
