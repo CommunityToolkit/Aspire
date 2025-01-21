@@ -306,7 +306,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
         {
             if (File.Exists(path))
             {
-                _logger.LogDebug("Checking path: {Path}", path);
+                _logger.LogWarning("Checking path: {Path}", path);
                 return path;
             }
         }
