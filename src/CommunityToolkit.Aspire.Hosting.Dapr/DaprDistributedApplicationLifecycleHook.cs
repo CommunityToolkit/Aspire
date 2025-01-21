@@ -330,7 +330,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                 // Add all the paths that are reachable via the `PATH` environment variable:
                 var possibleWindowsDaprPaths = Environment.GetEnvironmentVariable("PATH")?
                     .Split(Path.PathSeparator)
-                    .Select(path => Path.Combine(path, "dapr"))
+                    .Select(path => Path.Combine(path, "dapr.exe"))
                     .Where(File.Exists) ?? [];
                 foreach (var path in possibleWindowsDaprPaths)
                 {
