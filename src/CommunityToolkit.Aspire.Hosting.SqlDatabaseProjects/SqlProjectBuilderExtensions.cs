@@ -196,15 +196,13 @@ public static class SqlProjectBuilderExtensions
         {
             builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
             {
-                var service = resourceReady.Services.GetRequiredService<SqlProjectPublishService>();
-                await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, ct);
+                await RunPublish(builder, target, targetDatabaseName, resourceReady.Services, ct);
             });
         }
         else 
         {
             builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => {
-                var service = @event.Services.GetRequiredService<SqlProjectPublishService>();
-                await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, ct);
+                await RunPublish(builder, target, targetDatabaseName, @event.Services, ct);
             });
         }
 
@@ -222,5 +220,12 @@ public static class SqlProjectBuilderExtensions
            isHighlighted: true);
 
         return builder;
+    }
+
+    private static async Task RunPublish<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider serviceProvider, CancellationToken ct) 
+        where TResource : IResourceWithDacpac
+    {
+        var service = serviceProvider.GetRequiredService<SqlProjectPublishService>();
+        await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, ct);
     }
 }

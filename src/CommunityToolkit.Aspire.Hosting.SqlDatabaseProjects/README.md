@@ -48,8 +48,8 @@ builder.AddSqlProject("mysqlproj")
 builder.Build().Run();
 ```
 
-## Support for existing databases
-Instead of using the `AddDatabase` method to create a new database, you can specify an existing database:
+## Support for existing SQL Server
+Instead of using the `AddSqlServer` method to use a SQL Server container, you can specify a connection string to an existing server:
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
