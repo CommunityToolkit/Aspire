@@ -51,7 +51,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
             }
 
             var fileName = this._options.DaprPath
-                ?? DaprDistributedApplicationLifecycleHook.GetDefaultDaprPath(_resourceLoggerService.GetLogger(resource))
+                ?? GetDefaultDaprPath()
                 ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
 
 
@@ -303,14 +303,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     /// <summary>
     /// Return the first verified dapr path
     /// </summary>
-    static string? GetDefaultDaprPath(ILogger logger)
+    static string? GetDefaultDaprPath()
     {
         foreach (var path in GetAvailablePaths())
         {
-            logger.LogInformation("Checking Dapr CLI at '{DaprPath}'.", path);
             if (File.Exists(path))
             {
-                logger.LogInformation("Found Dapr CLI at '{DaprPath}'.", path);
                 return path;
             }
         }
