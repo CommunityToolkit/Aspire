@@ -300,12 +300,13 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     /// <summary>
     /// Return the first verified dapr path
     /// </summary>
-    static string? GetDefaultDaprPath()
+    string? GetDefaultDaprPath()
     {
         foreach (var path in GetAvailablePaths())
         {
             if (File.Exists(path))
             {
+                _logger.LogInformation("Checking path: {Path}", path);
                 return path;
             }
         }
