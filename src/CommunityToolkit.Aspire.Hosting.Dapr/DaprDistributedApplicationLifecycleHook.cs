@@ -21,15 +21,17 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     private readonly IConfiguration _configuration;
     private readonly IHostEnvironment _environment;
     private readonly ILogger<DaprDistributedApplicationLifecycleHook> _logger;
+    private readonly ResourceLoggerService _resourceLoggerService;
     private readonly DaprOptions _options;
 
     private string? _onDemandResourcesRootPath;
 
-    public DaprDistributedApplicationLifecycleHook(IConfiguration configuration, IHostEnvironment environment, ILogger<DaprDistributedApplicationLifecycleHook> logger, IOptions<DaprOptions> options)
+    public DaprDistributedApplicationLifecycleHook(IConfiguration configuration, IHostEnvironment environment, ILogger<DaprDistributedApplicationLifecycleHook> logger, IOptions<DaprOptions> options, ResourceLoggerService resourceLoggerService)
     {
         _configuration = configuration;
         _environment = environment;
         _logger = logger;
+        _resourceLoggerService = resourceLoggerService;
         _options = options.Value;
     }
 
@@ -41,16 +43,17 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
         var sideCars = new List<ExecutableResource>();
 
-        var fileName = this._options.DaprPath
-            ?? GetDefaultDaprPath()
-            ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
-
         foreach (var resource in appModel.Resources)
         {
             if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation))
             {
                 continue;
             }
+
+            var fileName = this._options.DaprPath
+                ?? DaprDistributedApplicationLifecycleHook.GetDefaultDaprPath(_resourceLoggerService.GetLogger(resource))
+                ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
+
 
             var daprSidecar = daprAnnotation.Sidecar;
 
@@ -300,13 +303,14 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     /// <summary>
     /// Return the first verified dapr path
     /// </summary>
-    string? GetDefaultDaprPath()
+    static string? GetDefaultDaprPath(ILogger logger)
     {
         foreach (var path in GetAvailablePaths())
         {
+            logger.LogInformation("Checking Dapr CLI at '{DaprPath}'.", path);
             if (File.Exists(path))
             {
-                Console.WriteLine($"Checking path: {path}");
+                logger.LogInformation("Found Dapr CLI at '{DaprPath}'.", path);
                 return path;
             }
         }
