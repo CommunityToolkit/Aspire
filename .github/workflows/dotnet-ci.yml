@@ -127,9 +127,7 @@ jobs:
           npm ci
 
       - name: Setup Dapr
-        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           dapr init --runtime-version=${{ env.DAPR_VERSION }}
           dapr --version
 
@@ -196,4 +194,3 @@ jobs:
     needs: build
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
-
