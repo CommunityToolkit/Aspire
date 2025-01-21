@@ -126,7 +126,7 @@ jobs:
           cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
           npm ci
 
-      - name: Setup Dapr
+      - name: Init Dapr
         run: |
           dapr init --runtime-version=${{ env.DAPR_VERSION }}
           dapr --version
@@ -194,3 +194,4 @@ jobs:
     needs: build
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
+
