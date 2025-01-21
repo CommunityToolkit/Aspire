@@ -1,7 +1,6 @@
 using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit;
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests;
@@ -18,7 +17,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         
         HttpResponseMessage response = await httpClient.PostAsync("/send/Hello%20World", new StringContent(""));
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -30,7 +29,8 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         
         HttpResponseMessage response = await httpClient.PostAsync("/send/Hello%20World", new StringContent(""));
 
-        (await response.Content.ReadAsStringAsync()).Should().Be("I've received your message: Hello World");
+        string message = (await response.Content.ReadAsStringAsync());
+        Assert.Equal("I've received your message: Hello World", message);
     }
 
     [Fact]
@@ -41,14 +41,13 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         HttpClient httpClient = fixture.CreateHttpClient(resourceName);
         
         MessageCounter? oldMessageCounter = await httpClient.GetFromJsonAsync<MessageCounter>("/received");
-        oldMessageCounter.Should().NotBeNull();
+        Assert.NotNull(oldMessageCounter);
         
         await httpClient.PostAsync("/send/Hello%20World", new StringContent(""));
 
-        MessageCounter? messageCounter = null;
-        messageCounter = await httpClient.GetFromJsonAsync<MessageCounter>("/received");
+        MessageCounter? messageCounter = await httpClient.GetFromJsonAsync<MessageCounter>("/received");
 
-        messageCounter.Should().NotBeNull();
-        messageCounter!.ReceivedMessages.Should().BeGreaterThan(oldMessageCounter!.ReceivedMessages);
+        Assert.NotNull(messageCounter);
+        Assert.True(messageCounter.ReceivedMessages > oldMessageCounter.ReceivedMessages);
     }
 }
