@@ -74,7 +74,7 @@ public class ResourceCreationTests
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
 
             output redisPasswordSecretUri string = daprRedisPassword.properties.secretUri
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedRedisBicep, redisBicep);
 
@@ -128,7 +128,7 @@ public class ResourceCreationTests
               }
               parent: containerAppEnvironment
             }
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedDaprBicep, daprBicep);
     }
@@ -193,7 +193,7 @@ public class ResourceCreationTests
             output connectionString string = '${redisState.properties.hostName},ssl=true'
 
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedRedisBicep, redisBicep);
 
@@ -243,7 +243,7 @@ public class ResourceCreationTests
               }
               parent: containerAppEnvironment
             }
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedDaprBicep, daprBicep);
 
@@ -316,7 +316,7 @@ public class ResourceCreationTests
             output connectionString string = '${redisState.properties.hostName},ssl=true'
 
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.port}'
-            """.ReplaceLineEndings("\n");
+            """;
 
 
         Assert.Equal(expectedRedisBicep, redisBicep);
