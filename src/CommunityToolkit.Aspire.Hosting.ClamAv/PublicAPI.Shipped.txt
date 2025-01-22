@@ -1,0 +1,9 @@
+#nullable enable
+Aspire.Hosting.ApplicationModel.ClamAvResource
+Aspire.Hosting.ApplicationModel.ClamAvResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
+Aspire.Hosting.ApplicationModel.ClamAvResource.ClamAvResource(string! name) -> void
+Aspire.Hosting.ApplicationModel.ClamAvResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
+Aspire.Hosting.ClamAvBuilderExtensions
+static Aspire.Hosting.ClamAvBuilderExtensions.AddClamAv(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ClamAvResource!>!
+static Aspire.Hosting.ClamAvBuilderExtensions.WithDataBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ClamAvResource!>! builder, string! source) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ClamAvResource!>!
+static Aspire.Hosting.ClamAvBuilderExtensions.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ClamAvResource!>! builder, string? name = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ClamAvResource!>!
