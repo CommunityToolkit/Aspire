@@ -9,8 +9,6 @@ namespace Aspire.Hosting;
 public static class ClamAvBuilderExtensions
 {
 
-    private const int ClamAvPort = 3310;
-
     /// <summary>
     /// Adds a ClamAv container resource to the application model.
     /// </summary>
