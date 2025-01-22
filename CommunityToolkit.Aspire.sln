@@ -261,6 +261,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ravendb", "ravendb", "{1C65
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.RavenDB.AppHost", "examples\ravendb\RavenDB.AppHost\CommunityToolkit.Aspire.Hosting.RavenDB.AppHost.csproj", "{28FCB1E2-7460-4FDD-AA63-03162C9F2154}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults", "examples\ravendb\CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults\CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults.csproj", "{3D076CFF-6482-4126-9F29-C7617E7D2F5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.RavenDB.ApiService", "examples\ravendb\CommunityToolkit.Aspire.Hosting.RavenDB.ApiService\CommunityToolkit.Aspire.Hosting.RavenDB.ApiService.csproj", "{D214CBF5-D5E4-4641-868D-66B0C5337DD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -687,6 +691,14 @@ Global
 		{28FCB1E2-7460-4FDD-AA63-03162C9F2154}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28FCB1E2-7460-4FDD-AA63-03162C9F2154}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28FCB1E2-7460-4FDD-AA63-03162C9F2154}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D076CFF-6482-4126-9F29-C7617E7D2F5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D076CFF-6482-4126-9F29-C7617E7D2F5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D076CFF-6482-4126-9F29-C7617E7D2F5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D076CFF-6482-4126-9F29-C7617E7D2F5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D214CBF5-D5E4-4641-868D-66B0C5337DD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D214CBF5-D5E4-4641-868D-66B0C5337DD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D214CBF5-D5E4-4641-868D-66B0C5337DD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D214CBF5-D5E4-4641-868D-66B0C5337DD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -818,6 +830,8 @@ Global
 		{35B51242-F576-4CCE-BA29-712A80749CB1} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{1C65F967-D5F1-424B-82E9-B8585B6F0BD6} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{28FCB1E2-7460-4FDD-AA63-03162C9F2154} = {1C65F967-D5F1-424B-82E9-B8585B6F0BD6}
+		{3D076CFF-6482-4126-9F29-C7617E7D2F5B} = {1C65F967-D5F1-424B-82E9-B8585B6F0BD6}
+		{D214CBF5-D5E4-4641-868D-66B0C5337DD5} = {1C65F967-D5F1-424B-82E9-B8585B6F0BD6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

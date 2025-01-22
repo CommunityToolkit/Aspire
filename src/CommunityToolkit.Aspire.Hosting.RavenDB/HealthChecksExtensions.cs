@@ -1,6 +1,7 @@
 ﻿using HealthChecks.RavenDB;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Data.Common;
 
 namespace CommunityToolkit.Aspire.Hosting.RavenDB;
 
@@ -89,6 +90,20 @@ internal static class HealthChecksExtensions
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException("Failed to generate a valid RavenDB connection string. The result cannot be null or empty.");
+        }
+
+        var connectionBuilder = new DbConnectionStringBuilder
+        {
+            ConnectionString = connectionString
+        };
+
+        if (connectionBuilder.TryGetValue("URL", out var url) && url is string serverUrl)
+        {
+            connectionString = serverUrl;
+        }
+        else
+        {
+            throw new InvalidOperationException("Connection string is unavailable");
         }
 
         return connectionString;

@@ -1,10 +1,11 @@
 ﻿using CommunityToolkit.Aspire.RavenDB.Client;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.ServerWide;
 using Raven.Client.ServerWide.Operations;
-using System.Security.Cryptography.X509Certificates;
+using System.Data.Common;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -14,6 +15,58 @@ namespace Microsoft.Extensions.Hosting;
 public static class RavenDBClientExtension
 {
     private const string ActivityNameSource = "RavenDB.Client.DiagnosticSources";
+
+    private const string DefaultConfigSectionName = "Aspire:RavenDB:Client";
+
+    /// <summary>
+    /// Registers <see cref="IDocumentStore"/> and the associated <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/>
+    /// instances for connecting to an existing or new RavenDB database with RavenDB.Client.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder"/> used to add services.</param>
+    /// <param name="connectionName">The name used to retrieve the connection string from the "ConnectionStrings" configuration section.</param>
+    /// <param name="configureSettings">An optional delegate that can be used for customizing options. It is invoked after the settings are read from the configuration.</param>
+    /// <remarks>Notes:
+    /// <list type="bullet">
+    /// <item><description>Reads the configuration from "Aspire:RavenDB:Client" section.</description></item>
+    /// <item><description>The <see cref="IDocumentStore"/> is registered as a singleton, meaning a single instance is shared throughout the application's lifetime, 
+    /// while <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> are registered per request to ensure short-lived session instances for each use.</description></item>
+    /// </list>
+    /// </remarks>
+    public static void AddRavenDBClient(
+        this IHostApplicationBuilder builder,
+        string connectionName,
+        Action<RavenDBClientSettings>? configureSettings = null)
+    {
+        var settings = GetRavenDBClientSettings(builder, connectionName, configureSettings);
+
+        builder.AddRavenDBClientInternal(settings);
+    }
+
+    /// <summary>
+    /// Registers <see cref="IDocumentStore"/> and the associated <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/>
+    /// instances for connecting to an existing or new RavenDB database with RavenDB.Client, identified by a unique service key.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder"/> used to add services.</param>
+    /// <param name="serviceKey">A unique key that identifies this instance of the RavenDB client service.</param>
+    /// <param name="connectionName">The name used to retrieve the connection string from the "ConnectionStrings" configuration section.</param>
+    /// <param name="configureSettings">An optional delegate that can be used for customizing options. It is invoked after the settings are read from the configuration.</param>
+    /// <remarks>Notes:
+    /// <list type="bullet">
+    /// <item><description>Reads the configuration from "Aspire:RavenDB:Client" section.</description></item>
+    /// <item><description>The <see cref="IDocumentStore"/> is registered as a singleton, meaning a single instance is shared throughout the application's lifetime, 
+    /// while <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> are registered per request to ensure short-lived session instances for each use.</description></item>
+    /// </list>
+    /// </remarks>
+    public static void AddKeyedRavenDBClient(
+        this IHostApplicationBuilder builder,
+        object serviceKey,
+        string connectionName,
+        Action<RavenDBClientSettings>? configureSettings = null)
+    {
+        var settings = GetRavenDBClientSettings(builder, connectionName, configureSettings);
+
+        builder.AddRavenDBClientInternal(settings, serviceKey);
+    }
 
     /// <summary>
     /// Registers <see cref="IDocumentStore"/> and the associated <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/>
@@ -25,7 +78,7 @@ public static class RavenDBClientExtension
     /// <list type="bullet">
     /// <item><description>If <see cref="RavenDBClientSettings.DatabaseName"/> is not specified and <see cref="RavenDBClientSettings.CreateDatabase"/> is set to 'false',
     /// <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> will not be registered.</description></item>
-    /// <item><description>The <see cref="IDocumentStore"/> is registered as a singleton, meaning a single instance is shared throughout the application's lifetime,
+    /// <item><description>The <see cref="IDocumentStore"/> is registered as a singleton, meaning a single instance is shared throughout the application's lifetime, 
     /// while <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> are registered per request to ensure short-lived session instances for each use.</description></item>
     /// </list>
     /// </remarks>
@@ -33,34 +86,7 @@ public static class RavenDBClientExtension
         this IHostApplicationBuilder builder,
         RavenDBClientSettings settings)
     {
-        ValidateSettings(builder, settings);
-
-        builder.AddRavenDBClient(settings, serviceKey: null);
-    }
-
-    /// <summary>
-    /// Registers <see cref="IDocumentStore"/> and the associated <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/>
-    /// instances for connecting to an existing or new RavenDB database with RavenDB.Client.
-    /// </summary>
-    /// <param name="builder">The <see cref="IHostApplicationBuilder"/> used to add services.</param>
-    /// <param name="connectionUrls">The URLs of the RavenDB cluster nodes to connect to.</param>
-    /// <param name="databaseName">Optional: the name of an existing database to connect to.
-    /// If not specified, <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> will not be registered,
-    /// as a database context is required for session creation.</param>
-    /// <param name="certificate">Optional. The certificate for the server.</param>
-    public static void AddRavenDBClient(
-        this IHostApplicationBuilder builder,
-        string[] connectionUrls,
-        string? databaseName,
-        X509Certificate2? certificate = null)
-    {
-        var settings = new RavenDBClientSettings(connectionUrls, databaseName);
-        if (certificate is not null)
-            settings.Certificate = certificate;
-
-        ValidateSettings(builder, settings);
-
-        builder.AddRavenDBClient(settings, serviceKey: null);
+        builder.AddRavenDBClientInternal(settings);
     }
 
     /// <summary>
@@ -70,52 +96,29 @@ public static class RavenDBClientExtension
     /// <param name="builder">The <see cref="IHostApplicationBuilder"/> used to add services.</param>
     /// <param name="serviceKey">A unique key that identifies this instance of the RavenDB client service.</param>
     /// <param name="settings">The settings required to configure the <see cref="IDocumentStore"/>.</param>
-    /// <remarks>Note: If <see cref="RavenDBClientSettings.DatabaseName"/> is not specified and <see cref="RavenDBClientSettings.CreateDatabase"/>
-    /// is set to 'false', <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> will not be registered.</remarks>
+    /// <remarks>Notes:
+    /// <list type="bullet">
+    /// <item><description>If <see cref="RavenDBClientSettings.DatabaseName"/> is not specified and <see cref="RavenDBClientSettings.CreateDatabase"/> is set to 'false',
+    /// <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> will not be registered.</description></item>
+    /// <item><description>The <see cref="IDocumentStore"/> is registered as a singleton, meaning a single instance is shared throughout the application's lifetime, 
+    /// while <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> are registered per request to ensure short-lived session instances for each use.</description></item>
+    /// </list>
+    /// </remarks>
     public static void AddKeyedRavenDBClient(
         this IHostApplicationBuilder builder,
         object serviceKey,
         RavenDBClientSettings settings)
     {
-        ValidateSettings(builder, settings);
-
-        builder.AddRavenDBClient(settings, serviceKey);
+        builder.AddRavenDBClientInternal(settings, serviceKey);
     }
 
-    /// <summary>
-    /// Registers <see cref="IDocumentStore"/> and the associated <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/>
-    /// instances for connecting to an existing or new RavenDB database with RavenDB.Client, identified by a unique service key.
-    /// </summary>
-    /// <param name="builder">The <see cref="IHostApplicationBuilder"/> used to add services.</param>
-    /// <param name="serviceKey">A unique key that identifies this instance of the RavenDB client service.</param>
-    /// <param name="connectionUrls">The URLs of the RavenDB cluster nodes to connect to.</param>
-    /// <param name="databaseName">Optional: the name of an existing database to connect to.
-    /// If not specified, <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> will not be registered,
-    /// as a database context is required for session creation.</param>
-    /// <param name="certificate">Optional. The certificate for the server.</param>
-    /// <remarks>Note: If <see cref="RavenDBClientSettings.DatabaseName"/> is not specified and <see cref="RavenDBClientSettings.CreateDatabase"/>
-    /// is set to 'false', <see cref="IDocumentSession"/> and <see cref="IAsyncDocumentSession"/> will not be registered.</remarks>
-    public static void AddKeyedRavenDBClient(
-        this IHostApplicationBuilder builder,
-        object serviceKey,
-        string[] connectionUrls,
-        string? databaseName,
-        X509Certificate2? certificate = null)
-    {
-        var settings = new RavenDBClientSettings(connectionUrls, databaseName);
-        if (certificate is not null)
-            settings.Certificate = certificate;
-
-        ValidateSettings(builder, settings);
-
-        builder.AddRavenDBClient(settings, serviceKey);
-    }
-
-    private static void AddRavenDBClient(
+    private static void AddRavenDBClientInternal(
         this IHostApplicationBuilder builder,
         RavenDBClientSettings settings,
-        object? serviceKey)
+        object? serviceKey = null)
     {
+        ValidateSettings(builder, settings);
+
         var documentStore = CreateRavenClient(settings);
 
         if (serviceKey is null)
@@ -188,7 +191,7 @@ public static class RavenDBClientExtension
             healthCheck => healthCheck.AddRavenDB(options =>
                 {
                     options.Database = settings.DatabaseName;
-                    options.Urls = settings.Urls;
+                    options.Urls = settings.Urls!;
                     options.Certificate = settings.GetCertificate();
                 },
                 healthCheckName,
@@ -228,6 +231,41 @@ public static class RavenDBClientExtension
 
     private static IAsyncDocumentSession CreateAsyncDocumentSession(this IServiceProvider provider,
         IDocumentStore documentStore) => documentStore.OpenAsyncSession();
+
+    private static RavenDBClientSettings GetRavenDBClientSettings(this IHostApplicationBuilder builder,
+        string connectionName,
+        Action<RavenDBClientSettings>? configureSettings)
+    {
+        var configSection = builder.Configuration.GetSection(DefaultConfigSectionName);
+        var namedConfigSection = configSection.GetSection(connectionName);
+
+        var settings = new RavenDBClientSettings();
+        configSection.Bind(settings);
+        namedConfigSection.Bind(settings);
+
+        var connectionString = builder.Configuration.GetConnectionString(connectionName);
+        if (string.IsNullOrEmpty(connectionString) == false)
+        {
+            var connectionBuilder = new DbConnectionStringBuilder
+            {
+                ConnectionString = connectionString
+            };
+
+            if (connectionBuilder.TryGetValue("URL", out var url) && url is string serverUrl)
+            {
+                settings.Urls = new[] { serverUrl };
+            }
+
+            if (connectionBuilder.TryGetValue("Database", out var database) && database is string databaseName)
+            {
+                settings.DatabaseName = databaseName;
+            }
+        }
+
+        configureSettings?.Invoke(settings);
+
+        return settings;
+    }
 
     private static void ValidateSettings(
         IHostApplicationBuilder builder,

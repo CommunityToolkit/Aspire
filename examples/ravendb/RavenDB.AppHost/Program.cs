@@ -1,8 +1,14 @@
 ﻿using CommunityToolkit.Aspire.Hosting.RavenDB;
+using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var serverSettings = RavenDBServerSettings.Unsecured();
-builder.AddRavenDB("ravenServer", serverSettings).AddDatabase("TestDatabase");
+var ravendb = builder.AddRavenDB("ravendb", serverSettings);
+ravendb.AddDatabase("ravenDatabase");
+
+builder.AddProject<CommunityToolkit_Aspire_Hosting_RavenDB_ApiService>("apiservice")
+    .WithReference(ravendb)
+    .WaitFor(ravendb);
 
 builder.Build().Run();

@@ -1,12 +1,13 @@
 #nullable enable
 Microsoft.Extensions.Hosting.RavenDBClientExtension
 static Microsoft.Extensions.Hosting.RavenDBClientExtension.AddKeyedRavenDBClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, object! serviceKey, CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings! settings) -> void
-static Microsoft.Extensions.Hosting.RavenDBClientExtension.AddKeyedRavenDBClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, object! serviceKey, string![]! connectionUrls, string? databaseName, System.Security.Cryptography.X509Certificates.X509Certificate2? certificate = null) -> void
+static Microsoft.Extensions.Hosting.RavenDBClientExtension.AddKeyedRavenDBClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, object! serviceKey, string! connectionName, System.Action<CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings!>? configureSettings = null) -> void
 static Microsoft.Extensions.Hosting.RavenDBClientExtension.AddRavenDBClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings! settings) -> void
-static Microsoft.Extensions.Hosting.RavenDBClientExtension.AddRavenDBClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string![]! connectionUrls, string? databaseName, System.Security.Cryptography.X509Certificates.X509Certificate2? certificate = null) -> void
+static Microsoft.Extensions.Hosting.RavenDBClientExtension.AddRavenDBClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings!>? configureSettings = null) -> void
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings
-CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.RavenDBClientSettings(string![]! urls, string? databaseName = null) -> void
-CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.Urls.get -> string![]!
+CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.RavenDBClientSettings() -> void
+CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.Urls.get -> string![]?
+CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.Urls.set -> void
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.CertificatePath.get -> string?
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.CertificatePath.set -> void
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.CertificatePassword.get -> string?
@@ -16,7 +17,7 @@ CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.Certificate.set -> 
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.DatabaseName.get -> string?
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.DatabaseName.set -> void
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.CreateDatabase.get -> bool
-CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.CreateDatabase.init -> void
+CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.CreateDatabase.set -> void
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.ModifyDocumentStore.get -> System.Action<Raven.Client.Documents.IDocumentStore!>?
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.ModifyDocumentStore.set -> void
 CommunityToolkit.Aspire.RavenDB.Client.RavenDBClientSettings.DisableHealthChecks.get -> bool

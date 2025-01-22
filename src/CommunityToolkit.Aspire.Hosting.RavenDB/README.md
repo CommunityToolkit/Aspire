@@ -17,8 +17,10 @@ dotnet add package CommunityToolkit.Aspire.Hosting.RavenDB
 Then, in the _Program.cs_ file of `AppHost`, add a RavenDB resource and consume the connection using the following methods:
 
 ```csharp
-builder.AddRavenDB("ravendb", serverSettings)
-       .AddDatabase("myDatabase");
+var db = builder.AddRavenDB("ravendb").AddDatabase("mydb");
+
+var myService = builder.AddProject<Projects.MyService>()
+                       .WithReference(db);
 ```
 
 ## Additional documentation

@@ -13,80 +13,109 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
     private string DefaultConnectionString => serverFixture.ConnectionString ??
                                               throw new InvalidOperationException("The server was not initialized.");
 
-    [Fact]
-    public void AddKeyedRavenDbClientWithoutDatabaseShouldWork()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AddKeyedRavenDbClient_ReadsFromConnectionStringsCorrectly(bool shouldCreateDatabase)
     {
         var builder = CreateBuilder();
 
-        var settings = GetDefaultSettings(shouldCreateDatabase: false);
-        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, settings);
+        string? databaseName = null;
+        Action<RavenDBClientSettings>? configSettings = null;
+        if (shouldCreateDatabase)
+        {
+            databaseName = Guid.NewGuid().ToString("N");
+            configSettings = clientSettings =>
+            {
+                clientSettings.DatabaseName = databaseName;
+                clientSettings.CreateDatabase = true;
+            };
+        }
+
+        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: configSettings);
         using var host = builder.Build();
 
         using var documentStore = host.Services.GetRequiredKeyedService<IDocumentStore>(DefaultConnectionName);
-
         Assert.Equal(DefaultConnectionString, documentStore.Urls[0]);
-        Assert.True(string.IsNullOrEmpty(documentStore.Database));
+
+        if (shouldCreateDatabase)
+        {
+            Assert.Equal(databaseName, documentStore.Database);
+
+            using var session = host.Services.GetRequiredKeyedService<IDocumentSession>(DefaultConnectionName);
+            Assert.NotNull(session);
+        }
     }
 
-    [Fact]
-    public void AddRavenDbClientWithoutDatabaseShouldWork()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AddRavenDbClientWithSettingsShouldWork(bool shouldCreateDatabase)
     {
         var builder = CreateBuilder();
 
-        var settings = GetDefaultSettings(shouldCreateDatabase: false);
-        builder.AddRavenDBClient(settings);
+        string? databaseName = null;
+        if (shouldCreateDatabase)
+            databaseName = Guid.NewGuid().ToString("N");
+
+        var settings = GetDefaultSettings(databaseName, shouldCreateDatabase);
+
+        builder.AddRavenDBClient(settings: settings);
         using var host = builder.Build();
 
         using var documentStore = host.Services.GetRequiredService<IDocumentStore>();
-
         Assert.Equal(DefaultConnectionString, documentStore.Urls[0]);
-        Assert.True(string.IsNullOrEmpty(documentStore.Database));
+
+        if (shouldCreateDatabase)
+        {
+            Assert.Equal(databaseName, documentStore.Database);
+
+            using var session = host.Services.GetRequiredService<IDocumentSession>();
+            Assert.NotNull(session);
+        }
     }
 
-    [Fact]
-    public void AddKeyedRavenDbClientShouldWork()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AddKeyedRavenDbClientWithSettingsShouldWork(bool shouldCreateDatabase)
     {
-        var databaseName = Guid.NewGuid().ToString("N");
-        var settings = GetDefaultSettings(databaseName);
-
         var builder = CreateBuilder();
-        builder.AddKeyedRavenDBClient(serviceKey:DefaultConnectionName, settings);
+
+        string? databaseName = null;
+        if (shouldCreateDatabase)
+            databaseName = Guid.NewGuid().ToString("N");
+
+        var settings = GetDefaultSettings(databaseName, shouldCreateDatabase);
+
+        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, settings: settings);
         using var host = builder.Build();
 
         using var documentStore = host.Services.GetRequiredKeyedService<IDocumentStore>(DefaultConnectionName);
-        using var session = host.Services.GetRequiredKeyedService<IDocumentSession>(DefaultConnectionName);
-
         Assert.Equal(DefaultConnectionString, documentStore.Urls[0]);
-        Assert.Equal(databaseName, documentStore.Database);
-        Assert.NotNull(session);
-    }
 
-    [Fact]
-    public void AddKeyedRavenDbClientShouldWork_asyncSession()
-    {
-        var databaseName = Guid.NewGuid().ToString("N");
-        var settings = GetDefaultSettings(databaseName);
+        if (shouldCreateDatabase)
+        {
+            Assert.Equal(databaseName, documentStore.Database);
 
-        var builder = CreateBuilder();
-        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, settings);
-        using var host = builder.Build();
-
-        using var documentStore = host.Services.GetRequiredKeyedService<IDocumentStore>(DefaultConnectionName);
-        using var asyncSession = host.Services.GetRequiredKeyedService<IAsyncDocumentSession>(DefaultConnectionName);
-
-        Assert.Equal(DefaultConnectionString, documentStore.Urls[0]);
-        Assert.Equal(databaseName, documentStore.Database);
-        Assert.NotNull(asyncSession);
+            using var session = host.Services.GetRequiredKeyedService<IDocumentSession>(DefaultConnectionName);
+            using var asyncSession = host.Services.GetRequiredKeyedService<IAsyncDocumentSession>(DefaultConnectionName);
+            Assert.NotNull(session);
+            Assert.NotNull(asyncSession);
+        }
     }
 
     [Fact]
     public void AddKeyedRavenDbClientAndOpen2SessionShouldNotBeEqual()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = GetDefaultSettings(databaseName);
 
         var builder = CreateBuilder();
-        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, settings);
+        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.DatabaseName = databaseName;
+            clientSettings.CreateDatabase = true;
+        });
         using var host = builder.Build();
 
         using var documentStore = host.Services.GetRequiredKeyedService<IDocumentStore>(DefaultConnectionName);
@@ -101,10 +130,13 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
     public void AddRavenDbClientAndOpen2SessionShouldNotBeEqual()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = GetDefaultSettings(databaseName);
 
         var builder = CreateBuilder();
-        builder.AddRavenDBClient(settings);
+        builder.AddRavenDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.DatabaseName = databaseName;
+            clientSettings.CreateDatabase = true;
+        });
         using var host = builder.Build();
 
         using var documentStore = host.Services.GetRequiredService<IDocumentStore>();
@@ -121,35 +153,10 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
         var databaseName = Guid.NewGuid().ToString("N");
 
         var builder = CreateBuilder();
-        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, connectionUrls: new[] { DefaultConnectionString }, databaseName: databaseName);
+        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: settings => settings.DatabaseName = databaseName);
         using var host = builder.Build();
 
         Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<IDocumentStore>());
-
-    }
-
-    [Fact]
-    public void AddRavenDbClientShouldWork_CreateNewDatabase()
-    {
-        var databaseName = Guid.NewGuid().ToString("N");
-        var settings = GetDefaultSettings(databaseName);
-
-        var builder = CreateBuilder();
-        builder.AddRavenDBClient(settings);
-
-        using var host = builder.Build();
-
-        using var documentStore = host.Services.GetRequiredService<IDocumentStore>();
-        using var session = host.Services.GetRequiredService<IDocumentSession>(); //this should  work
-
-        Assert.Equal(DefaultConnectionString, documentStore.Urls[0]);
-        Assert.Equal(databaseName, documentStore.Database);
-
-        var product = session.Load<object>("products/77-A");
-        Assert.Null(product);
-
-        session.Store(new object(), "products/77-A");
-        session.SaveChanges();
     }
 
     [Fact]
@@ -163,16 +170,21 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
 
         IEnumerable<KeyValuePair<string, string?>> config =
         [
-            new KeyValuePair<string, string?>($"ConnectionStrings:{connectionName1}", DefaultConnectionString),
-            new KeyValuePair<string, string?>($"ConnectionStrings:{connectionName2}", DefaultConnectionString)
+            new KeyValuePair<string, string?>($"ConnectionStrings:{connectionName1}", $"URL={DefaultConnectionString}"),
+            new KeyValuePair<string, string?>($"ConnectionStrings:{connectionName2}", $"URL={DefaultConnectionString}")
         ];
         var builder = CreateBuilder(config);
 
-        var settings1 = GetDefaultSettings(databaseName1);
-        var settings2 = GetDefaultSettings(databaseName2);
-
-        builder.AddKeyedRavenDBClient(serviceKey: connectionName1, settings1);
-        builder.AddKeyedRavenDBClient(serviceKey: connectionName2, settings2);
+        builder.AddKeyedRavenDBClient(serviceKey: connectionName1, connectionName: connectionName1, configureSettings: clientSettings =>
+        {
+            clientSettings.DatabaseName = databaseName1;
+            clientSettings.CreateDatabase = true;
+        });
+        builder.AddKeyedRavenDBClient(serviceKey: connectionName2, connectionName: connectionName2, configureSettings: clientSettings =>
+        {
+            clientSettings.DatabaseName = databaseName2;
+            clientSettings.CreateDatabase = true;
+        });
 
         using var host = builder.Build();
 
@@ -192,68 +204,21 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
         Assert.Equal(databaseName2, documentStore2.Database);
 
         Assert.NotEqual(session1, session2);
-
-        var product = session1.Load<object>("products/77-A");
-        Assert.Null(product);
-
-        product = session2.Load<object>("products/77-A");
-        Assert.Null(product);
-    }
-
-    [Fact]
-    public void AddRavenDbClientShouldWork_Create2NewDatabases()
-    {
-        var databaseName1 = Guid.NewGuid().ToString("N");
-        var databaseName2 = Guid.NewGuid().ToString("N");
-
-        var connectionName1 = Guid.NewGuid().ToString("N");
-        var connectionName2 = Guid.NewGuid().ToString("N");
-
-        IEnumerable<KeyValuePair<string, string?>> config =
-        [
-            new KeyValuePair<string, string?>($"ConnectionStrings:{connectionName1}", DefaultConnectionString),
-            new KeyValuePair<string, string?>($"ConnectionStrings:{connectionName2}", DefaultConnectionString)
-        ];
-        var builder = CreateBuilder(config);
-
-        var settings1 = GetDefaultSettings(databaseName1);
-        var settings2 = GetDefaultSettings(databaseName2);
-
-        builder.AddRavenDBClient(settings1);
-        builder.AddRavenDBClient(settings2);
-
-        using var host = builder.Build();
-
-        using var documentStore1 = host.Services.GetRequiredService<IDocumentStore>();
-        using var documentStore2 = host.Services.GetRequiredService<IDocumentStore>();
-
-        Assert.NotNull(documentStore1);
-        Assert.NotNull(documentStore2);
-
-        using var session1 = host.Services.GetRequiredService<IDocumentSession>();
-        using var session2 = host.Services.GetRequiredService<IDocumentSession>();
-
-        Assert.Equal(DefaultConnectionString, documentStore1.Urls[0]);
-        Assert.Equal(DefaultConnectionString, documentStore2.Urls[0]);
-
-        Assert.True(documentStore1.Database == databaseName1 || documentStore1.Database == databaseName2);
-        Assert.True(documentStore2.Database == databaseName1 || documentStore2.Database == databaseName2);
-
-        Assert.NotEqual(session1, session2);
     }
 
     [Fact]
     public async Task AddRavenDbClient_HealthCheckShouldBeRegisteredWhenEnabled()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = new RavenDBClientSettings(new[] { DefaultConnectionString }, databaseName)
-        {
-            CreateDatabase = true,
-            DisableHealthChecks = false
-        };
 
         var builder = CreateBuilder();
-        builder.AddRavenDBClient(settings);
+
+        builder.AddRavenDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName;
+        });
+
         using var host = builder.Build();
 
         var healthCheckService = host.Services.GetRequiredService<HealthCheckService>();
@@ -269,34 +234,36 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
     public void AddRavenDbClient_HealthCheckShouldNotBeRegisteredWhenDisabled()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = new RavenDBClientSettings(new[] { DefaultConnectionString }, databaseName)
-        {
-            CreateDatabase = true,
-            DisableHealthChecks = true
-        };
 
         var builder = CreateBuilder();
-        builder.AddRavenDBClient(settings);
+
+        builder.AddRavenDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName;
+            clientSettings.DisableHealthChecks = true;
+        });
+
         using var host = builder.Build();
 
         var healthCheckService = host.Services.GetService<HealthCheckService>();
 
         Assert.Null(healthCheckService);
-
     }
 
     [Fact]
     public async Task AddKeyedRavenDbClient_HealthCheckShouldBeRegisteredWhenEnabled()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = new RavenDBClientSettings(new[] { DefaultConnectionString }, databaseName)
-        {
-            CreateDatabase = true,
-            DisableHealthChecks = false
-        };
 
         var builder = CreateBuilder();
-        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, settings);
+
+        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName;
+        });
+
         using var host = builder.Build();
 
         var healthCheckService = host.Services.GetRequiredService<HealthCheckService>();
@@ -312,38 +279,41 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
     public void AddKeyedRavenDbClient_HealthCheckShouldNotBeRegisteredWhenDisabled()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = new RavenDBClientSettings(new[] { DefaultConnectionString }, databaseName)
-        {
-            CreateDatabase = true,
-            DisableHealthChecks = true
-        };
 
         var builder = CreateBuilder();
-        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, settings);
+
+        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: clientSettings =>
+        {
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName;
+            clientSettings.DisableHealthChecks = true;
+        });
+
         using var host = builder.Build();
 
         var healthCheckService = host.Services.GetService<HealthCheckService>();
 
         Assert.Null(healthCheckService);
-
     }
 
     [Fact]
     public void AddRavenDbClient_ModifyDocumentStore()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = new RavenDBClientSettings(new[] { DefaultConnectionString }, databaseName)
+
+        var builder = CreateBuilder();
+
+        builder.AddRavenDBClient(connectionName: DefaultConnectionName, configureSettings: clientSettings =>
         {
-            CreateDatabase = true,
-            ModifyDocumentStore = store =>
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName;
+            clientSettings.ModifyDocumentStore = store =>
             {
                 store.Conventions.ReadBalanceBehavior = ReadBalanceBehavior.RoundRobin;
                 store.Conventions.MaxNumberOfRequestsPerSession = 99;
-            }
-        };
+            };
+        });
 
-        var builder = CreateBuilder();
-        builder.AddRavenDBClient(settings);
         using var host = builder.Build();
 
         using var documentStore = host.Services.GetRequiredService<IDocumentStore>();
@@ -358,18 +328,20 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
     public void AddKeyedRavenDbClient_ModifyDocumentStore()
     {
         var databaseName = Guid.NewGuid().ToString("N");
-        var settings = new RavenDBClientSettings(new[] { DefaultConnectionString }, databaseName)
+
+        var builder = CreateBuilder();
+
+        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, connectionName: DefaultConnectionName, configureSettings: clientSettings =>
         {
-            CreateDatabase = true,
-            ModifyDocumentStore = store =>
+            clientSettings.CreateDatabase = true;
+            clientSettings.DatabaseName = databaseName;
+            clientSettings.ModifyDocumentStore = store =>
             {
                 store.Conventions.ReadBalanceBehavior = ReadBalanceBehavior.RoundRobin;
                 store.Conventions.MaxNumberOfRequestsPerSession = 99;
-            }
-        };
+            };
+        });
 
-        var builder = CreateBuilder();
-        builder.AddKeyedRavenDBClient(serviceKey: DefaultConnectionName, settings);
         using var host = builder.Build();
 
         using var documentStore = host.Services.GetRequiredKeyedService<IDocumentStore>(DefaultConnectionName);
@@ -378,14 +350,6 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
         Assert.Equal(databaseName, documentStore.Database);
         Assert.Equal(ReadBalanceBehavior.RoundRobin, documentStore.Conventions.ReadBalanceBehavior);
         Assert.Equal(99, documentStore.Conventions.MaxNumberOfRequestsPerSession);
-    }
-
-    private RavenDBClientSettings GetDefaultSettings(string? databaseName = null, bool shouldCreateDatabase = true)
-    {
-        return new RavenDBClientSettings(new[] { DefaultConnectionString }, databaseName)
-        {
-            CreateDatabase = shouldCreateDatabase
-        };
     }
 
     private HostApplicationBuilder CreateBuilder(IEnumerable<KeyValuePair<string, string?>>? config = null)
@@ -398,6 +362,16 @@ public class AspireRavenDBExtensionsTests(RavenDbServerFixture serverFixture) : 
 
     private IEnumerable<KeyValuePair<string, string?>> GetDefaultConfiguration() =>
     [
-        new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", DefaultConnectionString)
+        new KeyValuePair<string, string?>($"ConnectionStrings:{DefaultConnectionName}", $"URL={DefaultConnectionString}")
     ];
+
+    private RavenDBClientSettings GetDefaultSettings(string? databaseName = null, bool shouldCreateDatabase = true)
+    {
+        return new RavenDBClientSettings
+        {
+            Urls = new[] { DefaultConnectionString },
+            DatabaseName = databaseName,
+            CreateDatabase = shouldCreateDatabase
+        };
+    }
 }

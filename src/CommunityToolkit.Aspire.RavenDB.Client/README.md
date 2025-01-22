@@ -6,7 +6,7 @@ Registers `IDocumentStore` and the associated `IDocumentSession` and `IAsyncDocu
 
 ### Prerequisites
 
-- A running RavenDB server instance with its connection details, such as the server's URL and a valid certificate if required.
+- RavenDB database and connection string for accessing the database or a running RavenDB server instance with its connection details, such as the server's URL and a valid certificate if required.
 
 _**Note:**  
 RavenDB allows creating an `IDocumentStore` without a defined database. In such cases, `IDocumentSession` and `IAsyncDocumentSession` will not be available. This library also supports creating a new RavenDB database. However, if you intend to connect to an existing RavenDB database, ensure the database exists and you have its connection details._
@@ -21,26 +21,66 @@ dotnet add package CommunityToolkit.Aspire.RavenDB.Client
 
 ## Usage example
 
-In the _Program.cs_ file of your project, use the `AddRavenDBClient` or `AddKeyedRavenDBClient` extension methods to register `IDocumentStore` and the associated `IDocumentSession` and `IAsyncDocumentSession` instances for dependency injection. Use `AddKeyedRavenDBClient` for scenarios requiring multiple RavenDB connections distinguished by service keys.
+In the _Program.cs_ file of your project, call the `AddRavenDBClient` extension method to register a `IDocumentStore` for use via the dependency injection container. The method takes a connection name parameter.
 
 ```csharp
-var settings = new RavenDBSettings(new[] { defaultConnectionString }, databaseName);
-builder.AddRavenDBClient(settings);
-var host = builder.Build();
+builder.AddRavenDBClient("ravendb");
 ```
-Once the host is built, you can retrieve the registered services:
+
+You can then retrieve a `IDocumentStore` instance using dependency injection, for example:
 
 ```csharp
-var documentStore = host.Services.GetRequiredService<IDocumentStore>();
-var session = host.Services.GetRequiredService<IDocumentSession>();
-var asyncSession = host.Services.GetRequiredService<IAsyncDocumentSession>();
+public class MyService
+{
+    private readonly IDocumentStore _documentStore;
+    public MyService(IDocumentStore documentStore)
+    {
+        _documentStore = documentStore;
+    }
+
+    // Your logic here
+}
 ```
 
 ## Configuration
 
-The `CommunityToolkit.Aspire.RavenDB.Client` library provides multiple options to configure the database connection to suit your project's needs.
+The .NET Aspire RavenDB Client component provides multiple options to configure the server connection based on the requirements and conventions of your project.
 
-### RavenDBClientSettings Class
+### Use a connection string
+
+When using a connection string from the `ConnectionStrings` configuration section, you can provide the name of the connection string when calling `builder.AddRavenDBClient()`:
+
+```csharp
+builder.AddRavenDBClient("ravendb");
+```
+
+And then the connection string will be retrieved from the `ConnectionStrings` configuration section:
+
+```json
+{
+  "ConnectionStrings": {
+    "ravendb": "URL=http://localhost:8080;Database=ravenDatabase"
+  }
+}
+```
+
+### Use configuration providers
+
+The .NET Aspire RavenDB Client component supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `RavenDBClientSettings` from configuration by using the `Aspire:RavenDB:Client` key.
+
+### Use inline delegates
+
+Also you can pass the `Action<RavenDBClientSettings> configureSettings` delegate to set up some or all the options inline, for example to set the database name and certificate from code:
+
+```csharp
+builder.AddRavenDBClient("ravendb", settings => 
+{
+    settings.DatabaseName = "ravenDatabase"; 
+    settings.Certificate = ravenCertificate;
+});
+```
+
+### Use RavenDBClientSettings Class
 
 The RavenDBClientSettings class simplifies configuration by allowing you to specify:
 - URLs of your RavenDB nodes.
@@ -63,11 +103,7 @@ You can also configure:
 - `HealthCheckTimeout` to set the timeout for health checks.
 - `DisableTracing` to disable `OpenTelemetry` tracing.
 
-Alternatively, use overload methods to pass configuration parameters directly, such as connection URLs, database name, certificate, or a service key.
-
 ## AppHost extensions
-
-For applications where you need a RavenDB container to run alongside your application, consider using the `CommunityToolkit.Aspire.Hosting.RavenDB` library. This is particularly useful for local development or when you want to manage the RavenDB server lifecycle via code.
 
 ### Install the CommunityToolkit.Aspire.Hosting.RavenDB Library
 
@@ -79,16 +115,19 @@ dotnet add package CommunityToolkit.Aspire.Hosting.RavenDB
 
 ### Usage in AppHost
 
-In your AppHost's _Program.cs_ file, register and start a RavenDB container:
+In your AppHost's _Program.cs_ file, register a RavenDB server resource and consume the connection using the following methods:
 
 ```csharp
-var ravendb = builder.AddRavenDB("ravendb", serverSettings).AddDatabase("mydatabase");
-builder.Build().Run();
+var elasticsearch = builder.AddRavenDB("ravendb");
+
+var myService = builder.AddProject<Projects.MyService>()
+                       .WithReference(ravendb);
 ```
-From your client application, configure `RavenDBClientSettings` to match the server settings and connect using:
+
+The `WithReference` method configures a connection in the `MyService` project named `ravendb`. In the _Program.cs_ file of `MyService`, the RavenDB connection can be consumed using:
 
 ```csharp
-builder.AddRavenDBClient("ravendb", clientSettings);
+builder.AddRavenDBClient("ravendb");
 ```
 
 ## Additional Documentation

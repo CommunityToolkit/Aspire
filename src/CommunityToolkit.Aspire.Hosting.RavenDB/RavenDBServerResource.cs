@@ -27,7 +27,7 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// formatted as "http(s)://{Host}:{Port}" depending on the security setting.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create(
-        $"{(IsSecured ? "https://" : "http://")}{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+        $"URL={(IsSecured ? "https://" : "http://")}{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
 
     private readonly Dictionary<string, string> _databases = new();
 

@@ -1,4 +1,3 @@
-
 using Raven.Client.Documents;
 using System.Security.Cryptography.X509Certificates;
 
@@ -10,22 +9,9 @@ namespace CommunityToolkit.Aspire.RavenDB.Client;
 public sealed class RavenDBClientSettings
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="RavenDBClientSettings"/> class with the specified connection URLs and optional database name.
-    /// </summary>
-    /// <param name="urls">The URLs of the RavenDB server nodes.</param>
-    /// <param name="databaseName">The optional name of the database to connect to.</param>
-    public RavenDBClientSettings(string[] urls, string? databaseName = null)
-    {
-        ArgumentNullException.ThrowIfNull(urls);
-
-        Urls = urls;
-        DatabaseName = databaseName;
-    }
-
-    /// <summary>
     /// The URLs of the RavenDB server nodes.
     /// </summary>
-    public string[] Urls { get; private set; }
+    public string[]? Urls { get; set; }
 
     /// <summary>
     /// The path to the certificate file.
@@ -52,7 +38,7 @@ public sealed class RavenDBClientSettings
     /// If set to <see langword="true"/> and a database with the specified name already exists, the existing database will be used.
     /// The default value is <see langword="false"/>.
     /// </summary>
-    public bool CreateDatabase { get; init; } = false;
+    public bool CreateDatabase { get; set; }
 
     /// <summary>
     /// Action that allows modifications of the <see cref="IDocumentStore"/>.

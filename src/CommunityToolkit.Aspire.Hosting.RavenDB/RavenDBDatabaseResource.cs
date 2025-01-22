@@ -1,40 +1,29 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a RavenDB database. This is a child resource of a <see cref="RavenDBServerResource"/>.
 /// </summary>
-public class RavenDBDatabaseResource : Resource, IResourceWithParent<RavenDBServerResource>, IResourceWithConnectionString
+public class RavenDBDatabaseResource(string name, string databaseName, RavenDBServerResource parent) : Resource(ThrowIfNull(name)), IResourceWithParent<RavenDBServerResource>, IResourceWithConnectionString
 {
     /// <summary>
     /// Gets the parent RavenDB server resource associated with this database.
     /// </summary>
-    public RavenDBServerResource Parent { get; }
+    public RavenDBServerResource Parent { get; } = ThrowIfNull(parent);
 
     /// <summary>
     /// Gets the name of the database.
     /// </summary>
-    public string DatabaseName { get; }
+    public string DatabaseName { get; } = ThrowIfNull(databaseName);
 
     /// <summary>
     /// Gets the connection string expression for the RavenDB database, derived from the parent server's connection string.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression => Parent.ConnectionStringExpression;
+    public ReferenceExpression ConnectionStringExpression =>
+        ReferenceExpression.Create($"{Parent};Database={DatabaseName}");
 
-    /// <summary>
-    /// Initialize a resource that represents a RavenDB database.
-    /// </summary>
-    /// <param name="name">The name of the database resource.</param>
-    /// <param name="databaseName">The name of the RavenDB database.</param>
-    /// <param name="parent">The parent RavenDB server resource to which this database belongs.</param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="databaseName"/> or <paramref name="parent"/> is <c>null</c>.
-    /// </exception>
-    public RavenDBDatabaseResource(string name, string databaseName, RavenDBServerResource parent) : base(name)
-    {
-        ArgumentNullException.ThrowIfNull(databaseName);
-        ArgumentNullException.ThrowIfNull(parent);
-
-        Parent = parent;
-        DatabaseName = databaseName;
-    }
+    private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+        => argument ?? throw new ArgumentNullException(paramName);
 }
