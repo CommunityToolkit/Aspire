@@ -1,5 +1,4 @@
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
@@ -15,7 +14,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -27,10 +26,10 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
 
         var response = await httpClient.GetAsync("/api/weather");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var forecasts = await response.Content.ReadFromJsonAsync<WeatherForecast[]>();
         Assert.NotNull(forecasts);
-        forecasts.Length.Should().Be(6);
+        Assert.Equal(6, forecasts.Length);
     }
 
     record WeatherForecast(DateTime Date, int TemperatureC, string Summary);
