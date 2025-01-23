@@ -3,7 +3,6 @@
 
 using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 using Projects;
 using System.Net.Http.Json;
 
@@ -24,7 +23,7 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -41,12 +40,12 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var createResponse = await httpClient.PostAsJsonAsync("/account/create", new { });
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
         var location = createResponse.Headers.Location;
 
         var getResponse = await httpClient.GetAsync(location);
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
         var account = await getResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
@@ -65,15 +64,15 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var createResponse = await httpClient.PostAsJsonAsync("/account/create", new { });
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
         var location = createResponse.Headers.Location;
 
         var depositResponse = await httpClient.PostAsJsonAsync($"{location!}/deposit", new { Amount = 50 });
-        depositResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, depositResponse.StatusCode);
 
         var getResponse = await httpClient.GetAsync(location);
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
         var account = await getResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);
@@ -92,15 +91,15 @@ public class AppHostTests(AspireIntegrationTestFixture<CommunityToolkit_Aspire_H
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var createResponse = await httpClient.PostAsJsonAsync("/account/create", new { });
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
         var location = createResponse.Headers.Location;
 
         var depositResponse = await httpClient.PostAsJsonAsync($"{location!}/withdraw", new { Amount = 90 });
-        depositResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, depositResponse.StatusCode);
 
         var getResponse = await httpClient.GetAsync(location);
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
         var account = await getResponse.Content.ReadFromJsonAsync<AccountDto>();
         Assert.NotNull(account);

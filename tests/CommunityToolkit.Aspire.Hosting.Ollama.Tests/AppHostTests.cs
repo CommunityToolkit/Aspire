@@ -1,6 +1,5 @@
 using CommunityToolkit.Aspire.Testing;
 using Aspire.Components.Common.Tests;
-using FluentAssertions;
 using OllamaSharp;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
@@ -17,7 +16,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> 
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -35,7 +34,6 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> 
 
         var models = await new OllamaApiClient(httpClient).ListLocalModelsAsync();
 
-        models.Should().NotBeEmpty();
-        models.Should().HaveCount(modelResources.Count());
+        Assert.Equal(modelResources.Count(), models.Count());
     }
 }

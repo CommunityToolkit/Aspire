@@ -1,5 +1,4 @@
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -18,6 +17,6 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }

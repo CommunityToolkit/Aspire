@@ -1,5 +1,4 @@
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 
 namespace CommunityToolkit.Aspire.Hosting.Deno.Tests;
 
@@ -16,7 +15,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -29,6 +28,6 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var response = await httpClient.GetAsync("/weather");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }
