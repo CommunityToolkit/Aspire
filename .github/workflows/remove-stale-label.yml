@@ -21,7 +21,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              name: 'LABEL_NAME'
+              name: 'stale'
             });
         if: github.event_name == 'pull_request'
 
@@ -33,6 +33,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
-              name: 'LABEL_NAME'
+              name: 'stale'
             });
         if: github.event_name == 'issue'
