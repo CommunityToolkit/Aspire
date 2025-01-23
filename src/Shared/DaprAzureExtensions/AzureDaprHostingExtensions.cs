@@ -1,10 +1,10 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
-using Aspire.Hosting.Dapr;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning;
 using Azure.Provisioning.KeyVault;
+using CommunityToolkit.Aspire.Hosting.Dapr;
 
 namespace Aspire.Hosting;
 
@@ -119,7 +119,7 @@ internal static class AzureDaprHostingExtensions
         ArgumentException.ThrowIfNullOrEmpty(bicepIdentifier, nameof(bicepIdentifier));
         ArgumentException.ThrowIfNullOrEmpty(componentType, nameof(componentType));
         ArgumentException.ThrowIfNullOrEmpty(version, nameof(version));
-        
+
         return new(bicepIdentifier)
         {
             ComponentType = componentType,

@@ -1,10 +1,10 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
-using Aspire.Hosting.Dapr;
 using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning.KeyVault;
+using CommunityToolkit.Aspire.Hosting.Dapr;
 using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
 
 namespace Aspire.Hosting;
