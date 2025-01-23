@@ -5,10 +5,10 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
-<ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Azure.Redis" />
     <PackageReference Include="Azure.Provisioning.AppContainers" />
-</ItemGroup>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
