@@ -12,4 +12,8 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Dapr.Tests" />
+  </ItemGroup>
 </Project>

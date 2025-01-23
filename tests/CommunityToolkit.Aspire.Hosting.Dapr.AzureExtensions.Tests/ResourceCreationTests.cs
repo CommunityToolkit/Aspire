@@ -47,7 +47,7 @@ public class ResourceCreationTests
         var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
 
         daprResource.Name = "myDaprComponent";
-        
+
         var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
                  .AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
@@ -79,7 +79,7 @@ public class ResourceCreationTests
               }
               parent: containerAppEnvironment
             }
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedBicep, bicepTemplate);
     }
@@ -124,7 +124,7 @@ public class ResourceCreationTests
               }
               parent: containerAppEnvironment
             }
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedBicep, bicepTemplate);
     }
@@ -166,7 +166,7 @@ public class ResourceCreationTests
               }
               parent: containerAppEnvironment
             }
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedBicep, bicepTemplate);
     }
@@ -238,7 +238,7 @@ public class ResourceCreationTests
               }
               parent: keyVault
             }
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedBicep, bicepTemplate);
     }
@@ -293,7 +293,7 @@ public class ResourceCreationTests
             resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
               name: keyVaultName
             }
-            """.ReplaceLineEndings("\n");
+            """;
 
         Assert.Equal(expectedBicep, bicepTemplate);
     }

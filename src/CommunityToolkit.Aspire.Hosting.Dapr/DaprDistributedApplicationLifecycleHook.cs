@@ -21,15 +21,17 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     private readonly IConfiguration _configuration;
     private readonly IHostEnvironment _environment;
     private readonly ILogger<DaprDistributedApplicationLifecycleHook> _logger;
+    private readonly ResourceLoggerService _resourceLoggerService;
     private readonly DaprOptions _options;
 
     private string? _onDemandResourcesRootPath;
 
-    public DaprDistributedApplicationLifecycleHook(IConfiguration configuration, IHostEnvironment environment, ILogger<DaprDistributedApplicationLifecycleHook> logger, IOptions<DaprOptions> options)
+    public DaprDistributedApplicationLifecycleHook(IConfiguration configuration, IHostEnvironment environment, ILogger<DaprDistributedApplicationLifecycleHook> logger, IOptions<DaprOptions> options, ResourceLoggerService resourceLoggerService)
     {
         _configuration = configuration;
         _environment = environment;
         _logger = logger;
+        _resourceLoggerService = resourceLoggerService;
         _options = options.Value;
     }
 
@@ -41,16 +43,17 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
         var sideCars = new List<ExecutableResource>();
 
-        var fileName = this._options.DaprPath
-            ?? GetDefaultDaprPath()
-            ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
-
         foreach (var resource in appModel.Resources)
         {
             if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation))
             {
                 continue;
             }
+
+            var fileName = this._options.DaprPath
+                ?? GetDefaultDaprPath()
+                ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
+
 
             var daprSidecar = daprAnnotation.Sidecar;
 
@@ -322,6 +325,16 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                 // Installed windows paths:
                 yield return Path.Combine(pathRoot, "dapr", "dapr.exe");
 
+                // Add all the paths that are reachable via the `PATH` environment variable:
+                var possibleWindowsDaprPaths = Environment.GetEnvironmentVariable("PATH")?
+                    .Split(Path.PathSeparator)
+                    .Select(path => Path.Combine(path, "dapr.exe"))
+                    .Where(File.Exists) ?? [];
+                foreach (var path in possibleWindowsDaprPaths)
+                {
+                    yield return path;
+                }
+
                 yield break;
             }
 
@@ -339,6 +352,16 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
             if (OperatingSystem.IsMacOS() && Environment.GetEnvironmentVariable("HOMEBREW_PREFIX") is string homebrewPrefix)
             {
                 yield return Path.Combine(homebrewPrefix, "bin", "dapr");
+            }
+
+            // Add all the paths that are reachable via the `PATH` environment variable:
+            var possibleDaprPaths = Environment.GetEnvironmentVariable("PATH")?
+                .Split(Path.PathSeparator)
+                .Select(path => Path.Combine(path, "dapr"))
+                .Where(File.Exists) ?? [];
+            foreach (var path in possibleDaprPaths)
+            {
+                yield return path;
             }
         }
     }
