@@ -1,7 +1,6 @@
 using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;
 using CommunityToolkit.Aspire.Testing;
 using Aspire.Components.Common.Tests;
-using FluentAssertions;
 using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests;
@@ -18,7 +17,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -30,11 +29,9 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var response = await httpClient.GetAsync("/api/series");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var series = await response.Content.ReadFromJsonAsync<SeriesList>();
-        // Using "standard" assertions because that cascades nullability state whereas FluentAssertions does not
         Assert.NotNull(series);
-        series.value.Should().NotBeNull();
-        series.value.Should().HaveCount(5);
+        Assert.Equal(5, series.value.Count);
     }
 }
