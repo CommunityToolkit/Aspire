@@ -66,5 +66,6 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
   </ItemGroup>
 </Project>
