@@ -1,14 +1,14 @@
 ﻿using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Projects;
 using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
 [RequiresDocker]
-public class FunctionalTests(ITestOutputHelper testOutputHelper)
+public class FunctionalTests(ITestOutputHelper testOutputHelper, SqlServerContainerFixture sqlServerContainerFixture) : IClassFixture<SqlServerContainerFixture>
 {
     [Fact]
     public async Task VerifyPublishSqlProjectWaitForDependentResources()
@@ -60,6 +60,48 @@ public class FunctionalTests(ITestOutputHelper testOutputHelper)
         await rns.WaitForResourceAsync(otherDependentResource.Resource.Name, "Publishing", cts.Token);
 
         await rns.WaitForResourceAsync(otherDependentResource.Resource.Name, KnownResourceStates.Finished, cts.Token);
+
+        await pendingStart;
+
+        await app.StopAsync();
+    }
+
+    [Fact]
+    public async Task VerifyWithConnectionStringReference()
+    {
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
+        var connectionString = sqlServerContainerFixture.GetConnectionString();
+
+        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+        builder.Configuration["ConnectionStrings:Aspire"] = connectionString;
+
+        var connection = builder.AddConnectionString("Aspire");
+
+        var sdkProject = builder.AddSqlProject<Projects.SdkProject>("sdkProject")
+        .WithReference(connection);
+
+        var app = builder.Build();
+
+        var pendingStart = app.StartAsync(cts.Token);
+
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        await rns.WaitForResourceAsync(sdkProject.Resource.Name, KnownResourceStates.Finished).WaitAsync(TimeSpan.FromMinutes(1));
+
+        using var sqlConnection = new SqlConnection(connectionString);
+        await sqlConnection.OpenAsync();
+
+        using var command = sqlConnection.CreateCommand();
+        command.CommandText =
+            "SELECT COUNT(1) " +
+            "FROM   INFORMATION_SCHEMA.TABLES " +
+            "WHERE  TABLE_SCHEMA = 'dbo' " +
+           $"AND    TABLE_NAME = 'SdkProject'";
+
+        var result = await command.ExecuteScalarAsync();
+        Assert.Equal(1, result);
 
         await pendingStart;
 

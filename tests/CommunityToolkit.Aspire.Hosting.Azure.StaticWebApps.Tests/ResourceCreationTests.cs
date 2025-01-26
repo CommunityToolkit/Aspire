@@ -1,7 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Testing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 

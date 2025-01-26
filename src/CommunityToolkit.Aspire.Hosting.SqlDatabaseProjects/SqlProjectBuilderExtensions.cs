@@ -149,7 +149,16 @@ public static class SqlProjectBuilderExtensions
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="SqlServerDatabaseResource"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
     public static IResourceBuilder<SqlProjectResource> WithReference(
-        this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<SqlServerDatabaseResource> target) => InternalWithReference(builder, target);
+        this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<SqlServerDatabaseResource> target) => InternalWithReference(builder, target, target.Resource.DatabaseName);
+
+    /// <summary>
+    /// Publishes the SQL Server Database project to the target <see cref="IResourceWithConnectionString"/>.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
+    /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="IResourceWithConnectionString"/> to publish the SQL Server Database project to.</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlProjectResource> WithReference(
+        this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<IResourceWithConnectionString> target) => InternalWithReference(builder, target);
 
     /// <summary>
     /// Publishes the SQL Server Database project to the target <see cref="SqlServerDatabaseResource"/>.
@@ -161,27 +170,48 @@ public static class SqlProjectBuilderExtensions
         this IResourceBuilder<SqlPackageResource<TPackage>> builder, IResourceBuilder<SqlServerDatabaseResource> target)
         where TPackage : IPackageMetadata
     {
+        return InternalWithReference(builder, target, target.Resource.DatabaseName);
+    }
+
+    /// <summary>
+    /// Publishes the SQL Server Database project to the target <see cref="IResourceWithConnectionString"/>.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
+    /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="IResourceWithConnectionString"/> to publish the SQL Server Database project to.</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlPackageResource<TPackage>> WithReference<TPackage>(
+        this IResourceBuilder<SqlPackageResource<TPackage>> builder,  IResourceBuilder<IResourceWithConnectionString> target)
+        where TPackage : IPackageMetadata
+    {
         return InternalWithReference(builder, target);
     }
 
-    internal static IResourceBuilder<TResource> InternalWithReference<TResource>(this IResourceBuilder<TResource> builder, IResourceBuilder<SqlServerDatabaseResource> target)
+    internal static IResourceBuilder<TResource> InternalWithReference<TResource>(this IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName = null)
         where TResource : IResourceWithDacpac
     {
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeployer, DacpacDeployer>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
 
-        builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
+        if (target.Resource is SqlServerDatabaseResource)
         {
-            var service = resourceReady.Services.GetRequiredService<SqlProjectPublishService>();
-            await service.PublishSqlProject(builder.Resource, target.Resource, ct);
-        });
+            builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
+            {
+                await RunPublish(builder, target, targetDatabaseName, resourceReady.Services, ct);
+            });
+        }
+        else 
+        {
+            builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => {
+                await RunPublish(builder, target, targetDatabaseName, @event.Services, ct);
+            });
+        }
 
         builder.WaitFor(target);
 
         builder.WithCommand("redeploy", "Redeploy", async (context) =>
         {
             var service = context.ServiceProvider.GetRequiredService<SqlProjectPublishService>();
-            await service.PublishSqlProject(builder.Resource, target.Resource, context.CancellationToken);
+            await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
         }, updateState: (context) => context.ResourceSnapshot?.State?.Text == KnownResourceStates.Finished ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
            displayDescription: "Redeploys the SQL Server Database Project to the target database.",
@@ -190,5 +220,12 @@ public static class SqlProjectBuilderExtensions
            isHighlighted: true);
 
         return builder;
+    }
+
+    private static async Task RunPublish<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider serviceProvider, CancellationToken ct) 
+        where TResource : IResourceWithDacpac
+    {
+        var service = serviceProvider.GetRequiredService<SqlProjectPublishService>();
+        await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, ct);
     }
 }
