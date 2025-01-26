@@ -18,5 +18,5 @@ internal interface IDacpacDeployer
     /// <param name="targetDatabaseName">Name of the target database to deploy to.</param>
     /// <param name="deploymentLogger">An <see cref="ILogger" /> to write the deployment log to.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the deployment operation.</param>
-    void Deploy(string dacpacPath, DacDeployOptions options, string targetConnectionString, string targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken);
+    void Deploy(string dacpacPath, DacDeployOptions options, string targetConnectionString, string? targetDatabaseName, ILogger deploymentLogger, CancellationToken cancellationToken);
 }
