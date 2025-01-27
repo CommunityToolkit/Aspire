@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration runs [Active MQ Classig](https://activemq.apache.org/components/classic/) in a container.
+This .NET Aspire Integration runs [Active MQ Classic](https://activemq.apache.org/components/classic/) in a container.
 
 
 ## Usage

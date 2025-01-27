@@ -12,7 +12,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="password">A parameter that contains the ActiveMQ server password.</param>
 /// <param name="scheme">Scheme used in the connectionString (e.g. tcp or activemq, see MassTransit)</param>
 /// <param name="settings">Settings being used for ActiveMQ Classic or Artemis</param>
-public abstract class ActiveMQServerResourceBase(string name, ParameterResource? userName, ParameterResource password, string scheme, IActiveMQSettings settings) : ContainerResource(name), IResourceWithConnectionString, IResourceWithEnvironment
+public abstract class ActiveMQServerResourceBase(string name, ParameterResource? userName, ParameterResource password, string scheme, IActiveMQSettings settings) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "tcp";
     internal const string DefaultUserName = "admin";
