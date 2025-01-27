@@ -25,5 +25,7 @@ app.MapPost("/send", ([FromBody]MailData mailData, [FromServices] SmtpClient smt
 })
 .WithName("SendMail");
 
+app.MapGet("/health", () => "OK");
+
 app.MapDefaultEndpoints();
 app.Run();
