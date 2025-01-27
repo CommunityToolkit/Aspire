@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>An Aspire component leveraging Papercut SMTP container.</Description>
-    <AdditionalPackageTags>api papercut smtp hosting</AdditionalPackageTags>
+    <AdditionalPackageTags>papercut smtp hosting</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>
