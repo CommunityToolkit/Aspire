@@ -13,7 +13,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     {
         const string resourceName = "sendmail";
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(2));
-        HttpClient httpClient = fixture.CreateHttpClient(resourceName);
+        HttpClient httpClient = fixture.CreateHttpClient(resourceName, "http");
 
         MailData payload = new()
         {
