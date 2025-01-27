@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\examples\papercut\CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost\CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost.csproj" />
-    <ProjectReference Include="..\..\examples\papercut\CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi\CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.PapercutSmtp\CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
