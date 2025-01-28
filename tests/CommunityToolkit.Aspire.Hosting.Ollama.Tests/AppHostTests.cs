@@ -23,7 +23,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> 
     public async Task OllamaListsAvailableModels()
     {
         var distributedAppModel = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
-        var modelResources = distributedAppModel.Resources.OfType<OllamaModelResource>();
+        var modelResources = distributedAppModel.Resources.OfType<OllamaModelResource>().ToList();
         var rns = fixture.ResourceNotificationService;
 
         await Task.WhenAll([
@@ -32,8 +32,9 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> 
             ]).WaitAsync(TimeSpan.FromMinutes(5));
         var httpClient = fixture.CreateHttpClient("ollama");
 
-        var models = await new OllamaApiClient(httpClient).ListLocalModelsAsync();
-
-        Assert.Equal(modelResources.Count(), models.Count());
+        var models = (await new OllamaApiClient(httpClient).ListLocalModelsAsync()).ToList();
+        
+        Assert.NotEmpty(models);
+        Assert.Equal(modelResources.Count, models.Count);
     }
 }
