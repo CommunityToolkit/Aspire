@@ -36,7 +36,7 @@ To demonstrate how to use the integration, you should create an example applicat
 
 The testing framework used is [`xunit`](https://xunit.net/), and you'll need to create a new test project in the `tests/` directory. The test project should be named `CommunityToolkit.Aspire.Hosting.MyIntegration.Tests` or `CommunityToolkit.Aspire.MyIntegration.Tests` following the same naming guidelines as the integration project. It's easiest to create a **Class Library** project as the `Directory.Build.props` will automatically add the necessary test dependencies.
 
-Asserts can be written using the `Assert` type or `FluentAssertions` if that is your preferred style, both are supported.
+Asserts can be written using the `Assert` type.
 
 ### Unit Tests
 
@@ -85,7 +85,7 @@ public async Task ResourceStartsAndRespondsOk(string appName)
 
     var response = await httpClient.GetAsync("/");
 
-    response.StatusCode.Should().Be(HttpStatusCode.OK);
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 }
 ```
 
