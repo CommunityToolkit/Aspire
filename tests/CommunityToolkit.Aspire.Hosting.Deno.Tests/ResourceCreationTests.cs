@@ -1,6 +1,4 @@
 using Aspire.Hosting;
-using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
 
 namespace CommunityToolkit.Aspire.Hosting.Deno.Tests;
 

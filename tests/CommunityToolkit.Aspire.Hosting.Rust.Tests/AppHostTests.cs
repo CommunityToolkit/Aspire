@@ -1,5 +1,4 @@
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 
 namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
 
@@ -16,6 +15,6 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var httpClient = fixture.CreateHttpClient(appName);
         var response = await httpClient.GetAsync("/ping");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }

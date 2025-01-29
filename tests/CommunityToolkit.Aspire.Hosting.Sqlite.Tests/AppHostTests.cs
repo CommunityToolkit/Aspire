@@ -1,5 +1,4 @@
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 using System.Data.Common;
 using System.Net.Http.Json;
 
@@ -34,10 +33,10 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var createResponse = await httpClient.PostAsJsonAsync("/test", "test");
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
         var getResponse = await httpClient.GetAsync("/test");
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
         var data = await getResponse.Content.ReadAsStringAsync();
         Assert.NotNull(data);
@@ -53,10 +52,10 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var createResponse = await httpClient.PostAsJsonAsync("/blog", new { Url = "https://example.com" });
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
         var getResponse = await httpClient.GetAsync("/blog");
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
         var data = await getResponse.Content.ReadFromJsonAsync<List<Blog>>();
         Assert.NotNull(data);

@@ -1,5 +1,4 @@
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 using Aspire.Components.Common.Tests;
 
 namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
@@ -19,6 +18,6 @@ public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.Com
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }
