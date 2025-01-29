@@ -134,4 +134,28 @@ public class AddSqliteTests
         Assert.Equal(sqlite.Resource.DatabasePath, bindMountAnnotation.Source);
         Assert.Equal("/data", bindMountAnnotation.Target);
     }
+
+    [Fact]
+    public void ResourceWithExtension()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlite = builder.AddSqlite("sqlite")
+            .WithExtension("FTS5");
+
+        Assert.Contains("FTS5", sqlite.Resource.Extensions);
+    }
+
+    [Fact]
+    public async Task ConnectionStringContainsExtensions()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlite = builder.AddSqlite("sqlite")
+            .WithExtension("FTS5")
+            .WithExtension("mod_spatialite");
+
+        var connectionString = await sqlite.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
+
+        Assert.Contains("FTS5", connectionString);
+        Assert.Contains("mod_spatialite", connectionString);
+    }
 }

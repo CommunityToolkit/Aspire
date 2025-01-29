@@ -115,4 +115,32 @@ public class SqliteConnectionTests
         Assert.NotNull(client2.ConnectionString);
         Assert.Equal("Data Source=/tmp/sqlite2.db", client2.ConnectionString);
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ExtensionsSetViaConnectionString(bool useKeyed)
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:sqlite", "Data Source=:memory:;Extensions=[\"mod_spatialite\"]")
+        ]);
+
+        if (useKeyed)
+        {
+            builder.AddKeyedSqliteConnection("sqlite", settings =>
+            {
+                Assert.NotEmpty(settings.Extensions);
+                Assert.Contains("mod_spatialite", settings.Extensions);
+            });
+        }
+        else
+        {
+            builder.AddSqliteConnection("sqlite", settings =>
+            {
+                Assert.NotEmpty(settings.Extensions);
+                Assert.Contains("mod_spatialite", settings.Extensions);
+            });
+        }
+    }
 }

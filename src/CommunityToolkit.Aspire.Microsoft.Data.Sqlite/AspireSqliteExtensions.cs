@@ -4,6 +4,8 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Data.Common;
+using System.Text.Json;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -61,6 +63,15 @@ public static class AspireSqliteExtensions
             settings.ConnectionString = connectionString;
         }
 
+        if (!string.IsNullOrEmpty(settings.ConnectionString))
+        {
+            var cbs = new DbConnectionStringBuilder { ConnectionString = settings.ConnectionString };
+            if (cbs.TryGetValue("Extensions", out var extensions))
+            {
+                settings.Extensions = JsonSerializer.Deserialize<IEnumerable<string>>((string)extensions) ?? [];
+            }
+        }
+
         configureSettings?.Invoke(settings);
 
         builder.RegisterSqliteServices(settings, connectionName, serviceKey);
@@ -101,7 +112,14 @@ public static class AspireSqliteExtensions
         SqliteConnection CreateConnection(IServiceProvider sp, object? key)
         {
             ConnectionStringValidation.ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
-            return new SqliteConnection(settings.ConnectionString);
+            var connection = new SqliteConnection(settings.ConnectionString);
+
+            foreach (var extension in settings.Extensions)
+            {
+                connection.LoadExtension(extension);
+            }
+
+            return connection;
         }
     }
 }

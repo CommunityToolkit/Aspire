@@ -1,6 +1,7 @@
 #nullable enable
 Aspire.Hosting.ApplicationModel.SqliteResource
 Aspire.Hosting.ApplicationModel.SqliteResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
+Aspire.Hosting.ApplicationModel.SqliteResource.Extensions.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 Aspire.Hosting.ApplicationModel.SqliteResource.SqliteResource(string! name, string! databasePath, string! databaseFileName) -> void
 Aspire.Hosting.ApplicationModel.SqliteWebResource
 Aspire.Hosting.ApplicationModel.SqliteWebResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
@@ -8,4 +9,5 @@ Aspire.Hosting.ApplicationModel.SqliteWebResource.PrimaryEndpoint.get -> Aspire.
 Aspire.Hosting.ApplicationModel.SqliteWebResource.SqliteWebResource(string! name) -> void
 Aspire.Hosting.SqliteResourceBuilderExtensions
 static Aspire.Hosting.SqliteResourceBuilderExtensions.AddSqlite(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? databasePath = null, string? databaseFileName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>!
+static Aspire.Hosting.SqliteResourceBuilderExtensions.WithExtension(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>! builder, string! extension) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>!
 static Aspire.Hosting.SqliteResourceBuilderExtensions.WithSqliteWeb(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>! builder, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqliteResource!>!
