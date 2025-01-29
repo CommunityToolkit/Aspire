@@ -85,4 +85,21 @@ public static class SqliteResourceBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Adds an extension to the Sqlite resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="extension">The extension to add.</param>
+    /// <returns>The resource builder.</returns>
+    /// <remarks>Extensions are not loaded by the hosting integration, the information is provided for the client to load the extensions.</remarks>
+    public static IResourceBuilder<SqliteResource> WithExtension(this IResourceBuilder<SqliteResource> builder, string extension)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(extension, nameof(extension));
+
+        builder.Resource.AddExtension(extension);
+
+        return builder;
+    }
 }

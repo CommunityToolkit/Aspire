@@ -11,4 +11,8 @@ public class ConfigurationTests
     [Fact]
     public void HealthChecksEnabledByDefault() =>
         Assert.False(new SqliteConnectionSettings().DisableHealthChecks);
+
+    [Fact]
+    public void ExtensionsIsEmptyByDefault() =>
+        Assert.Empty(new SqliteConnectionSettings().Extensions);
 }
