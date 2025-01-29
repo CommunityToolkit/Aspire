@@ -1,0 +1,38 @@
+name: Remove stale label on comment
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  remove-stale-label:
+    if: github.event.comment.body == '/stale-extend'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove stale label from pull request
+        uses: "actions/github-script@v7"
+        with:
+          script: |
+            github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              name: 'stale'
+            });
+        if: github.event_name == 'pull_request'
+
+      - name: Remove stale label from issue
+        uses: "actions/github-script@v7"
+        with:
+          script: |
+            github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              name: 'stale'
+            });
+        if: github.event_name == 'issue'
