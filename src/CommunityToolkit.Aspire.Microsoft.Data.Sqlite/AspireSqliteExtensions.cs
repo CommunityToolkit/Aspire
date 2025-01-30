@@ -71,7 +71,7 @@ public static class AspireSqliteExtensions
             var cbs = new DbConnectionStringBuilder { ConnectionString = settings.ConnectionString };
             if (cbs.TryGetValue("Extensions", out var extensions))
             {
-                settings.Extensions = JsonSerializer.Deserialize<IEnumerable<string>>((string)extensions) ?? [];
+                settings.Extensions = JsonSerializer.Deserialize<IEnumerable<ExtensionMetadata>>((string)extensions) ?? [];
             }
         }
 
@@ -124,8 +124,25 @@ public static class AspireSqliteExtensions
 
             foreach (var extension in settings.Extensions)
             {
-                EnsureLoadable(extension, extension);
-                connection.LoadExtension(extension);
+                if (extension.IsNuGetPackage)
+                {
+                    if (string.IsNullOrEmpty(extension.PackageName))
+                    {
+                        throw new InvalidOperationException("PackageName is required when loading an extension from a NuGet package.");
+                    }
+
+                    EnsureLoadableFromNuGet(extension.Extension, extension.PackageName);
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(extension.ExtensionFolder))
+                    {
+                        throw new InvalidOperationException("ExtensionFolder is required when loading an extension from a folder.");
+                    }
+
+                    EnsureLoadableFromLocalPath(extension.Extension, extension.ExtensionFolder);
+                }
+                connection.LoadExtension(extension.Extension);
             }
 
             return connection;
@@ -133,7 +150,7 @@ public static class AspireSqliteExtensions
     }
 
     // Adapted from https://github.com/dotnet/docs/blob/dbbeda13bf016a6ff76b0baab1488c927a64ff24/samples/snippets/standard/data/sqlite/ExtensionsSample/Program.cs#L40
-    internal static void EnsureLoadable(string package, string library)
+    internal static void EnsureLoadableFromNuGet(string package, string library)
     {
         var runtimeLibrary = DependencyContext.Default?.RuntimeLibraries.FirstOrDefault(l => l.Name == package);
         if (runtimeLibrary is null)
@@ -217,6 +234,38 @@ public static class AspireSqliteExtensions
                 assetDirectory = Path.GetDirectoryName(assetFullPath);
             }
 
+            var path = new HashSet<string>(Environment.GetEnvironmentVariable(pathVariableName)!.Split(Path.PathSeparator));
+
+            if (assetDirectory is not null && path.Add(assetDirectory))
+                Environment.SetEnvironmentVariable(pathVariableName, string.Join(Path.PathSeparator, path));
+        }
+    }
+
+    internal static void EnsureLoadableFromLocalPath(string library, string assetDirectory)
+    {
+        string sharedLibraryExtension;
+        string pathVariableName = "PATH";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            sharedLibraryExtension = ".dll";
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            sharedLibraryExtension = ".so";
+            pathVariableName = "LD_LIBRARY_PATH";
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            sharedLibraryExtension = ".dylib";
+            pathVariableName = "DYLD_LIBRARY_PATH";
+        }
+        else
+        {
+            throw new NotSupportedException("Unsupported OS platform");
+        }
+
+        if (File.Exists(Path.Combine(assetDirectory, library + sharedLibraryExtension)))
+        {
             var path = new HashSet<string>(Environment.GetEnvironmentVariable(pathVariableName)!.Split(Path.PathSeparator));
 
             if (assetDirectory is not null && path.Add(assetDirectory))

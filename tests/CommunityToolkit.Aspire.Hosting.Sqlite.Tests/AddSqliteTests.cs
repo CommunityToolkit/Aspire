@@ -1,7 +1,7 @@
 ﻿using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite;
-
+#pragma warning disable CTASPIRE002
 public class AddSqliteTests
 {
     [Fact]
@@ -136,13 +136,23 @@ public class AddSqliteTests
     }
 
     [Fact]
-    public void ResourceWithExtension()
+    public void ResourceWithExtensionFromNuGet()
     {
         var builder = DistributedApplication.CreateBuilder();
         var sqlite = builder.AddSqlite("sqlite")
-            .WithExtension("FTS5");
+            .WithNuGetExtension("FTS5");
 
-        Assert.Contains("FTS5", sqlite.Resource.Extensions);
+        Assert.Single(sqlite.Resource.Extensions, static e => e.Extension == "FTS5" && e.PackageName == "FTS5" && e.IsNuGetPackage && e.ExtensionFolder is null);
+    }
+
+    [Fact]
+    public void ResourceWithExtensionFromLocal()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlite = builder.AddSqlite("sqlite")
+            .WithLocalExtension("FTS5", "/path/to/extension");
+
+        Assert.Single(sqlite.Resource.Extensions, static e => e.Extension == "FTS5" && e.PackageName is null && !e.IsNuGetPackage && e.ExtensionFolder == "/path/to/extension");
     }
 
     [Fact]
@@ -150,8 +160,8 @@ public class AddSqliteTests
     {
         var builder = DistributedApplication.CreateBuilder();
         var sqlite = builder.AddSqlite("sqlite")
-            .WithExtension("FTS5")
-            .WithExtension("mod_spatialite");
+            .WithNuGetExtension("FTS5")
+            .WithNuGetExtension("mod_spatialite");
 
         var connectionString = await sqlite.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
 

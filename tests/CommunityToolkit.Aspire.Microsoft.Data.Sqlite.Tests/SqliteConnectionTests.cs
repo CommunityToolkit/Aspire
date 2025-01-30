@@ -123,7 +123,7 @@ public class SqliteConnectionTests
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:sqlite", "Data Source=:memory:;Extensions=[\"mod_spatialite\"]")
+            new KeyValuePair<string, string?>("ConnectionStrings:sqlite", "Data Source=:memory:;Extensions=[{\"Extension\":\"mod_spatialite\",\"PackageName\":\"mod_spatialite\",\"IsNuGetPackage\":true,\"ExtensionFolder\":null}]")
         ]);
 
         if (useKeyed)
@@ -131,7 +131,7 @@ public class SqliteConnectionTests
             builder.AddKeyedSqliteConnection("sqlite", settings =>
             {
                 Assert.NotEmpty(settings.Extensions);
-                Assert.Contains("mod_spatialite", settings.Extensions);
+                Assert.Single(settings.Extensions, e => e.Extension == "mod_spatialite" && e.PackageName == "mod_spatialite" && e.IsNuGetPackage && e.ExtensionFolder is null);
             });
         }
         else
@@ -139,7 +139,7 @@ public class SqliteConnectionTests
             builder.AddSqliteConnection("sqlite", settings =>
             {
                 Assert.NotEmpty(settings.Extensions);
-                Assert.Contains("mod_spatialite", settings.Extensions);
+                Assert.Single(settings.Extensions, e => e.Extension == "mod_spatialite" && e.PackageName == "mod_spatialite" && e.IsNuGetPackage && e.ExtensionFolder is null);
             });
         }
     }
