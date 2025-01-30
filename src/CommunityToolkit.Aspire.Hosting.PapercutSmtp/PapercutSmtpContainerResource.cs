@@ -11,12 +11,11 @@ public class PapercutSmtpContainerResource(string name) : ContainerResource(name
     internal const string HttpEndpointName = "http";
     internal const string SmtpEndpointName = "smtp";
     private EndpointReference? _smtpEndpoint;
+    private EndpointReference SmtpEndpoint => _smtpEndpoint ??= new EndpointReference(this, SmtpEndpointName);
 
     /// <summary>
     /// ConnectionString for the Papercut SMTP server in the form of smtp://host:port.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create(
-        $"smtp://{SmtpEndpoint.Property(EndpointProperty.Host)}:{SmtpEndpoint.Property(EndpointProperty.Port)}");
-
-    private EndpointReference SmtpEndpoint => _smtpEndpoint ??= new EndpointReference(this, SmtpEndpointName);
+        $"Endpoint={SmtpEndpoint.Scheme}://{SmtpEndpoint.Property(EndpointProperty.Host)}:{SmtpEndpoint.Property(EndpointProperty.Port)}");
 }

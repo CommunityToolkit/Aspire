@@ -9,4 +9,7 @@
     <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests" />
+  </ItemGroup>
 </Project>

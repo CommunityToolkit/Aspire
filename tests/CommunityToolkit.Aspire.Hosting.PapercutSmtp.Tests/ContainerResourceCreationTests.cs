@@ -1,6 +1,6 @@
 using Aspire.Hosting;
 
-namespace CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests;
+namespace CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests;
 
 public class ContainerResourceCreationTests
 {
@@ -35,8 +35,8 @@ public class ContainerResourceCreationTests
         Assert.Equal("papercut", resource.Name);
         
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal("7.0.0-rc1", imageAnnotations.Tag);
-        Assert.Equal("changemakerstudiosus/papercut-smtp", imageAnnotations.Image);
-        Assert.Equal("docker.io", imageAnnotations.Registry);
+        Assert.Equal(PapercutSmtpContainerImageTags.Tag, imageAnnotations.Tag);
+        Assert.Equal(PapercutSmtpContainerImageTags.Image, imageAnnotations.Image);
+        Assert.Equal(PapercutSmtpContainerImageTags.Registry, imageAnnotations.Registry);
     }
 }

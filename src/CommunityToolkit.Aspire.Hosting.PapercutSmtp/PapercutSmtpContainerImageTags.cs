@@ -1,4 +1,4 @@
-namespace CommunityToolkit.Aspire.Hosting.Ollama;
+namespace CommunityToolkit.Aspire.Hosting.PapercutSmtp;
 
 internal static class PapercutSmtpContainerImageTags
 {

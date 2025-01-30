@@ -1,5 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Hosting.Ollama;
+using CommunityToolkit.Aspire.Hosting.PapercutSmtp;
 
 namespace Aspire.Hosting;
 
@@ -8,20 +8,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class PapercutSmtpHostingExtension
 {
-    /// <summary>
-    /// Adds Papercut SMTP to the application model.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <remarks>
-    /// </remarks>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<PapercutSmtpContainerResource> AddPapercutSmtp(this IDistributedApplicationBuilder builder,
-        [ResourceName] string name)
-    {
-        return builder.AddPapercutSmtp(name, null);
-    }
-
     /// <summary>
     /// Adds Papercut SMTP to the application model.
     /// </summary>
@@ -49,7 +35,7 @@ public static class PapercutSmtpHostingExtension
             .WithHttpEndpoint(targetPort: PapercutSmtpContainerResource.HttpEndpointPort,
                 port: httpPort,
                 name: PapercutSmtpContainerResource.HttpEndpointName)
-            .WithHttpHealthCheck("", httpPort, PapercutSmtpContainerResource.HttpEndpointName);
+            .WithHttpHealthCheck("/health", httpPort, PapercutSmtpContainerResource.HttpEndpointName);
 
         return rb;
     }
