@@ -7,8 +7,8 @@ This .NET Aspire Integration runs [Papercut SMTP](https://github.com/Changemaker
 
 ## Usage
 
-The Papercut SMTP integration exposes a connection string with the format `smtp://<host>:<port>`.
-This connection string can be used to create an Uri object thus getting the host and port.
+The Papercut SMTP integration exposes a connection string with the format `endpoint=smtp://<host>:<port>`.
+This connection string can be used to with a DbConnectionStringBuilder to get the smtp endpoint.
 
 ### Example 1: Add Papercut SMTP with generated ports
 
