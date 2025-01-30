@@ -1,6 +1,8 @@
 using CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit;
 using MassTransit;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
