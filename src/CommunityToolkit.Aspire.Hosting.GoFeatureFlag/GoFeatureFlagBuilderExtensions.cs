@@ -3,10 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.GoFeatureFlag;
 using CommunityToolkit.Aspire.Hosting.GoFeatureFlag;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Aspire.Hosting;
 
@@ -51,15 +48,6 @@ public static class GoFeatureFlagBuilderExtensions
 
         var goFeatureFlagResource = new GoFeatureFlagResource(name);
 
-        var healthCheckKey = $"{name}_check";
-        builder.Services.AddHealthChecks()
-         .Add(new HealthCheckRegistration(
-             healthCheckKey,
-             sp => new GoFeatureFlagHealthCheck(goFeatureFlagResource.PrimaryEndpoint.Url),
-             failureStatus: default,
-             tags: default,
-             timeout: default));
-
         string[] args = string.IsNullOrWhiteSpace(pathToConfigFile)
             ? []
             : [$"--config={pathToConfigFile}"];
@@ -68,7 +56,7 @@ public static class GoFeatureFlagBuilderExtensions
             .WithImage(GoFeatureFlagContainerImageTags.Image, GoFeatureFlagContainerImageTags.Tag)
             .WithImageRegistry(GoFeatureFlagContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: GoFeatureFlagPort, port: port, name: GoFeatureFlagResource.PrimaryEndpointName)
-            .WithHealthCheck(healthCheckKey)
+            .WithHttpHealthCheck("/health")
             .WithEntrypoint("/go-feature-flag")
             .WithArgs(args)
             .WithOtlpExporter();

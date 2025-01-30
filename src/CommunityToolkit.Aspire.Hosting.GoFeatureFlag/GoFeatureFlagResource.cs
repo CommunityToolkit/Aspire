@@ -6,14 +6,9 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents a GO Feature Flag instance
 /// </summary>
-public class GoFeatureFlagResource : ContainerResource, IResourceWithConnectionString
+public class GoFeatureFlagResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
-
-    /// <param name="name">The name of the resource.</param>
-    public GoFeatureFlagResource(string name) : base(name)
-    {
-    }
 
     private EndpointReference? _primaryEndpoint;
 

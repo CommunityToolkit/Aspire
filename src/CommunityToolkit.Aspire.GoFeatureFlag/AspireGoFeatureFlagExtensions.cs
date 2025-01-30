@@ -3,6 +3,7 @@
 
 using Aspire;
 using CommunityToolkit.Aspire.GoFeatureFlag;
+using HealthChecks.Uris;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -88,10 +89,16 @@ public static class AspireGoFeatureFlagExtensions
         if (settings is { DisableHealthChecks: false, Endpoint: not null })
         {
             var healthCheckName = serviceKey is null ? "Goff" : $"Goff_{connectionName}";
-
+            
+            var healthEndpoint = new Uri(settings.Endpoint, "/health");
+            var uriHealthCheck = new UriHealthCheck(
+                new UriHealthCheckOptions().AddUri(healthEndpoint),
+                () => new HttpClient()
+            );
+            
             builder.TryAddHealthCheck(new HealthCheckRegistration(
                 healthCheckName,
-                sp => new GoFeatureFlagHealthCheck(settings.Endpoint.ToString()),
+                sp => uriHealthCheck,
                 failureStatus: null,
                 tags: null,
                 timeout: settings.HealthCheckTimeout > 0 ? TimeSpan.FromMilliseconds(settings.HealthCheckTimeout.Value) : null
