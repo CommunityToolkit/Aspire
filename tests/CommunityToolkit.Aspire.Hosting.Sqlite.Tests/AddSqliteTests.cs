@@ -102,7 +102,7 @@ public class AddSqliteTests
 
         var connectionString = await sqlite.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
 
-        Assert.Equal($"Data Source={sqlite.Resource.DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate;", connectionString);
+        Assert.Equal($"Data Source={sqlite.Resource.DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate;Extensions=[]", connectionString);
     }
 
     [Fact]
