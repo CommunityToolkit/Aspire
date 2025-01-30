@@ -10,3 +10,6 @@ In these cases, refer to the `<remarks>` docs section of the API for more inform
 
 Once a release of .NET Aspire with that API is available, the API in the .NET Aspire Community Toolkit will be marked as obsolete and will be removed in a future release.
 
+## CTASPIRE002
+
+Support for loading extensions into SQLite requires either a NuGet package or folder path to the library to be provided, and as a result there is some custom logic to load the extension based on the path or NuGet package. This logic will require some experimenting to figure out edge cases, so the feature for extension loading will be kept as experimental until it is proven to be stable.
