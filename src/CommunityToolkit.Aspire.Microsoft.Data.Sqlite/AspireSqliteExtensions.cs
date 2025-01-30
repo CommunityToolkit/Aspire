@@ -115,7 +115,12 @@ public static class AspireSqliteExtensions
         SqliteConnection CreateConnection(IServiceProvider sp, object? key)
         {
             ConnectionStringValidation.ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
-            var connection = new SqliteConnection(settings.ConnectionString);
+            var csb = new DbConnectionStringBuilder { ConnectionString = settings.ConnectionString };
+            if (csb.ContainsKey("Extensions"))
+            {
+                csb.Remove("Extensions");
+            }
+            var connection = new SqliteConnection(csb.ConnectionString);
 
             foreach (var extension in settings.Extensions)
             {

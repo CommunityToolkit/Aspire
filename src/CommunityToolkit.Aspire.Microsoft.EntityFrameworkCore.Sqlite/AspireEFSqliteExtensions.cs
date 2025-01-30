@@ -1,7 +1,9 @@
 ﻿using Aspire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Extensions.Hosting;
@@ -67,7 +69,13 @@ public static class AspireEFSqliteExtensions
             // delay validating the ConnectionString until the DbContext is requested. This ensures an exception doesn't happen until a Logger is established.
             ConnectionStringValidation.ValidateConnectionString(settings.ConnectionString, name, DefaultConfigSectionName, $"{DefaultConfigSectionName}:{typeof(TContext).Name}", isEfDesignTime: EF.IsDesignTime);
 
-            dbContextOptionsBuilder.UseSqlite(settings.ConnectionString);
+            var csb = new DbConnectionStringBuilder { ConnectionString = settings.ConnectionString };
+            if (csb.ContainsKey("Extensions"))
+            {
+                csb.Remove("Extensions");
+            }
+
+            dbContextOptionsBuilder.UseSqlite(csb.ConnectionString);
             configureDbContextOptions?.Invoke(dbContextOptionsBuilder);
         }
     }
