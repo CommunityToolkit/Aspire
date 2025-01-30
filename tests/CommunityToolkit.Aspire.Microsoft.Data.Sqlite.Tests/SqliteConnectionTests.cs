@@ -32,7 +32,7 @@ public class SqliteConnectionTests
             host.Services.GetRequiredService<SqliteConnection>();
 
         Assert.NotNull(client.ConnectionString);
-        Assert.Equal("Data Source=:memory:", client.ConnectionString);
+        Assert.Equal("data source=:memory:", client.ConnectionString);
     }
 
     [Theory]
@@ -60,7 +60,7 @@ public class SqliteConnectionTests
             host.Services.GetRequiredService<SqliteConnection>();
 
         Assert.NotNull(client.ConnectionString);
-        Assert.Equal("Data Source=:memory:", client.ConnectionString);
+        Assert.Equal("data source=:memory:", client.ConnectionString);
     }
 
     [Theory]
@@ -89,7 +89,7 @@ public class SqliteConnectionTests
             host.Services.GetRequiredService<SqliteConnection>();
 
         Assert.NotNull(client.ConnectionString);
-        Assert.Equal("Data Source=:memory:", client.ConnectionString);
+        Assert.Equal("data source=:memory:", client.ConnectionString);
     }
 
     [Fact]
@@ -110,10 +110,10 @@ public class SqliteConnectionTests
         var client2 = host.Services.GetRequiredKeyedService<SqliteConnection>("sqlite2");
 
         Assert.NotNull(client1.ConnectionString);
-        Assert.Equal("Data Source=/tmp/sqlite1.db", client1.ConnectionString);
+        Assert.Equal("data source=/tmp/sqlite1.db", client1.ConnectionString);
 
         Assert.NotNull(client2.ConnectionString);
-        Assert.Equal("Data Source=/tmp/sqlite2.db", client2.ConnectionString);
+        Assert.Equal("data source=/tmp/sqlite2.db", client2.ConnectionString);
     }
 
     [Theory]

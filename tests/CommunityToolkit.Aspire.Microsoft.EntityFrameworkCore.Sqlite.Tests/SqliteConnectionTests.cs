@@ -22,7 +22,7 @@ public class SqliteConnectionTests
         var client = host.Services.GetRequiredService<TestDbContext>();
 
         Assert.NotNull(client.Database.GetConnectionString());
-        Assert.Equal("Data Source=:memory:", client.Database.GetConnectionString());
+        Assert.Equal("data source=:memory:", client.Database.GetConnectionString());
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class SqliteConnectionTests
         var client = host.Services.GetRequiredService<TestDbContext>();
 
         Assert.NotNull(client.Database.GetConnectionString());
-        Assert.Equal("Data Source=:memory:", client.Database.GetConnectionString());
+        Assert.Equal("data source=:memory:", client.Database.GetConnectionString());
     }
 
     [Fact]
@@ -56,6 +56,6 @@ public class SqliteConnectionTests
         var client = host.Services.GetRequiredService<TestDbContext>();
 
         Assert.NotNull(client.Database.GetConnectionString());
-        Assert.Equal("Data Source=:memory:", client.Database.GetConnectionString());
+        Assert.Equal("data source=:memory:", client.Database.GetConnectionString());
     }
 }
