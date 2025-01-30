@@ -1,4 +1,3 @@
-namespace CommunityToolkit.Aspire.Hosting.Meilisearch;
 
 internal static class DbGateContainerImageTags
 {

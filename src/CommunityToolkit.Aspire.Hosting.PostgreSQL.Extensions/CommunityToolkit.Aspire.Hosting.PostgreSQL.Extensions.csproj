@@ -12,6 +12,9 @@
 
   <ItemGroup>
     <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+    <Compile Include="$(SharedDir)\dbgate\DbGateContainerImageTags.cs" Link="dbgate\DbGateContainerImageTags.cs" />
+    <Compile Include="$(SharedDir)\dbgate\DbGateContainerResource.cs" Link="dbgate\DbGateContainerResource.cs" />
+    <Compile Include="$(SharedDir)\dbgate\DbGateBuilderExtensions.cs" Link="dbgate\DbGateBuilderExtensions.cs" />
   </ItemGroup>
 
 </Project>

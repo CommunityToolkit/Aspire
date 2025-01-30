@@ -1,7 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.DbGate;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Hosting.Meilisearch;
 
 namespace Aspire.Hosting;
 
@@ -39,29 +38,17 @@ public static class PostgresBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
+        containerName ??= $"{builder.Resource.Name}-dbgate";
 
-        if (builder.ApplicationBuilder.Resources.OfType<DbGateContainerResource>().SingleOrDefault() is { } existingDbGateResource)
-        {
-            var builderForExistingResource = builder.ApplicationBuilder.CreateResourceBuilder(existingDbGateResource);
-            configureContainer?.Invoke(builderForExistingResource);
-            return builder;
-        }
-        else
-        {
-            containerName ??= $"{builder.Resource.Name}-dbgate";
-            var dir = Directory.CreateTempSubdirectory().FullName;
-            var dbGateContainer = new DbGateContainerResource(containerName);
-            var dbGateContainerBuilder = builder.ApplicationBuilder.AddResource(dbGateContainer)
-                                               .WithImage(DbGateContainerImageTags.Image, DbGateContainerImageTags.Tag)
-                                               .WithImageRegistry(DbGateContainerImageTags.Registry)
-                                               .WithHttpEndpoint(targetPort: 3000, name: DbGateContainerResource.PrimaryEndpointName)
-                                               .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder))
-                                               .ExcludeFromManifest()
-                                               .WaitFor(builder);
+        var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
-            configureContainer?.Invoke(dbGateContainerBuilder);
-            return builder;
-        }
+        configureContainer?.Invoke(dbGateBuilder);
+
+        dbGateBuilder
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder))
+            .WaitFor(builder);
+
+        return builder;
     }
 
 
@@ -75,10 +62,7 @@ public static class PostgresBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.WithEndpoint(DbGateContainerResource.PrimaryEndpointName, endpoint =>
-        {
-            endpoint.Port = port;
-        });
+        return DbGateBuilderExtensions.WithHostPort(builder, port);
     }
 
     /// <summary>
@@ -92,10 +76,7 @@ public static class PostgresBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "data"),
-            "/root/.dbgate", isReadOnly);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        return DbGateBuilderExtensions.WithDataVolume(builder, name, isReadOnly);
     }
 
     /// <summary>
@@ -110,7 +91,7 @@ public static class PostgresBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(source);
 
-        return builder.WithBindMount(source, "/root/.dbgate", isReadOnly);
+        return DbGateBuilderExtensions.WithDataBindMount(builder, source, isReadOnly);
     }
 
 
@@ -121,6 +102,12 @@ public static class PostgresBuilderExtensions
         var counter = 1;
         foreach (var postgresServer in postgresInstances)
         {
+            // Multiple WithDbGate calls will be ignored
+            if (context.EnvironmentVariables.ContainsKey($"LABEL_postgres{counter}"))
+            {
+                continue;
+            }
+
             var user = postgresServer.UserNameParameter?.Value ?? "postgres";
 
             // DbGate assumes Postgres is being accessed over a default Aspire container network and hardcodes the resource address
@@ -148,7 +135,10 @@ public static class PostgresBuilderExtensions
         if (context.EnvironmentVariables.TryGetValue("CONNECTIONS", out object? value) && value is not null)
         {
             string CONNECTIONS = value.ToString()!;
-            context.EnvironmentVariables["CONNECTIONS"] = CONNECTIONS.Remove(CONNECTIONS.Length - 1, 1);
+            if (CONNECTIONS.EndsWith(','))
+            {
+                context.EnvironmentVariables["CONNECTIONS"] = CONNECTIONS.Remove(CONNECTIONS.Length - 1, 1);
+            }
         }
     }
 }
