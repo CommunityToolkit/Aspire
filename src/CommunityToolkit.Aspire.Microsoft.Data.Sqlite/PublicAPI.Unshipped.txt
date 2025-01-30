@@ -1,11 +1,21 @@
 #nullable enable
 Microsoft.Extensions.Hosting.AspireSqliteExtensions
+Microsoft.Extensions.Hosting.ExtensionMetadata
+Microsoft.Extensions.Hosting.ExtensionMetadata.Extension.get -> string!
+Microsoft.Extensions.Hosting.ExtensionMetadata.Extension.init -> void
+Microsoft.Extensions.Hosting.ExtensionMetadata.ExtensionFolder.get -> string?
+Microsoft.Extensions.Hosting.ExtensionMetadata.ExtensionFolder.init -> void
+Microsoft.Extensions.Hosting.ExtensionMetadata.ExtensionMetadata(string! Extension, string? PackageName, bool IsNuGetPackage, string? ExtensionFolder) -> void
+Microsoft.Extensions.Hosting.ExtensionMetadata.IsNuGetPackage.get -> bool
+Microsoft.Extensions.Hosting.ExtensionMetadata.IsNuGetPackage.init -> void
+Microsoft.Extensions.Hosting.ExtensionMetadata.PackageName.get -> string?
+Microsoft.Extensions.Hosting.ExtensionMetadata.PackageName.init -> void
 Microsoft.Extensions.Hosting.SqliteConnectionSettings
 Microsoft.Extensions.Hosting.SqliteConnectionSettings.ConnectionString.get -> string?
 Microsoft.Extensions.Hosting.SqliteConnectionSettings.ConnectionString.set -> void
 Microsoft.Extensions.Hosting.SqliteConnectionSettings.DisableHealthChecks.get -> bool
 Microsoft.Extensions.Hosting.SqliteConnectionSettings.DisableHealthChecks.set -> void
-Microsoft.Extensions.Hosting.SqliteConnectionSettings.Extensions.get -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Extensions.Hosting.SqliteConnectionSettings.Extensions.get -> System.Collections.Generic.IEnumerable<Microsoft.Extensions.Hosting.ExtensionMetadata!>!
 Microsoft.Extensions.Hosting.SqliteConnectionSettings.Extensions.set -> void
 Microsoft.Extensions.Hosting.SqliteConnectionSettings.SqliteConnectionSettings() -> void
 static Microsoft.Extensions.Hosting.AspireSqliteExtensions.AddKeyedSqliteConnection(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! name, System.Action<Microsoft.Extensions.Hosting.SqliteConnectionSettings!>? configureSettings = null) -> void
