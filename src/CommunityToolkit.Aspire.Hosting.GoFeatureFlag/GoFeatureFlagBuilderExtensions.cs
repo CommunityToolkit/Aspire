@@ -94,7 +94,7 @@ public static class GoFeatureFlagBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a bind mount for the data folder to a GO Feature flag container resource.
+    /// Adds a bind mount for the goff configuration folder to a GO Feature flag container resource.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="source">The source directory on the host to mount into the container.</param>
@@ -102,12 +102,12 @@ public static class GoFeatureFlagBuilderExtensions
     /// <remarks>
     /// <example>
     /// Add a GO Feature flag container to the application model and reference it in a .NET project. Additionally, in this
-    /// example a bind mount is added to the container to allow data to be persisted across container restarts.
+    /// example a bind mount is added to the container to allow reading goff configuration.
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
     /// var goff = builder.AddGoFeatureFlag("goff")
-    /// .WithDataBindMount("./data/goff/data");
+    /// .WithGoffBindMount("./goff");
     /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
     ///   .WithReference(goff);
     ///  
@@ -115,11 +115,11 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    public static IResourceBuilder<GoFeatureFlagResource> WithDataBindMount(this IResourceBuilder<GoFeatureFlagResource> builder, string source)
+    public static IResourceBuilder<GoFeatureFlagResource> WithGoffBindMount(this IResourceBuilder<GoFeatureFlagResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(source);
 
-        return builder.WithBindMount(source, "/goff_data");
+        return builder.WithBindMount(source, "/goff");
     }
 }
