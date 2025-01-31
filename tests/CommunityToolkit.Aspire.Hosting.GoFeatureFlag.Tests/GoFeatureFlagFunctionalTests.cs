@@ -5,34 +5,35 @@ using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
-using Polly;
 using Xunit.Abstractions;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
 using OpenFeature.Contrib.Providers.GOFeatureFlag;
 using OpenFeature.Model;
-using YamlDotNet.Core.Tokens;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
 
 [RequiresDocker]
 public class GoFeatureFlagFunctionalTests(ITestOutputHelper testOutputHelper)
 {
+    private static readonly string SOURCE = Path.GetFullPath("./goff", Directory.GetCurrentDirectory());
+    
     [Fact]
     public async Task VerifyGoFeatureFlagResource()
     {
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
-        var goff = builder.AddGoFeatureFlag("goff");
+        var goff = builder.AddGoFeatureFlag("goff")
+            .WithBindMount(SOURCE, "/goff");
 
         using var app = builder.Build();
 
         await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        await app.WaitForTextAsync("GO Feature Flag Relay Proxy", goff.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
+        await rns.WaitForResourceHealthyAsync(goff.Resource.Name);
+        
         var hb = Host.CreateApplicationBuilder();
 
         hb.Configuration[$"ConnectionStrings:{goff.Resource.Name}"] = await goff.Resource.ConnectionStringExpression.GetValueAsync(default);
@@ -61,9 +62,11 @@ public class GoFeatureFlagFunctionalTests(ITestOutputHelper testOutputHelper)
         });
 
         var resource = builder.AddGoFeatureFlag("resource")
+            .WithBindMount(SOURCE, "/goff")
             .WithHealthCheck("blocking_check");
 
         var dependentResource = builder.AddGoFeatureFlag("dependentresource")
+            .WithBindMount(SOURCE, "/goff")
             .WaitFor(resource);
 
         using var app = builder.Build();

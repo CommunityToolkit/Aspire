@@ -1,6 +1,5 @@
 using CommunityToolkit.Aspire.Testing;
 using Aspire.Components.Common.Tests;
-using FluentAssertions;
 using OpenFeature.Model;
 using System.Net.Http.Json;
 
@@ -18,7 +17,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var response = await httpClient.GetAsync("/info");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -31,7 +30,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var getResponse = await httpClient.GetAsync("/features/display-banner");
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
         var data = await getResponse.Content.ReadFromJsonAsync<ResolutionDetails<bool>>();
         Assert.NotNull(data);
