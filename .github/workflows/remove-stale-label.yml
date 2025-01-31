@@ -9,6 +9,16 @@ permissions:
   pull-requests: write
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Comment body: ${{ github.event.comment.body }}"
+          echo "Issue number: ${{ github.event.issue.number }}"
+          echo "Pull request number: ${{ github.event.pull_request.number }}"
+
   remove-stale-label:
     if: github.event.comment.body == '/stale-extend'
     runs-on: ubuntu-latest
