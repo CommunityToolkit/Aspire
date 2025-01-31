@@ -63,3 +63,8 @@
 /src/CommunityToolkit.Aspire.Hosting.Ngrok/ @esskar
 /tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/ @esskar
 
+# CommunityToolkit.Aspire.Dapr.*
+
+/examples/dapr**/ @FullStackChef @WhitWaldo @Paule96
+/src/CommunityToolkit.Aspire.Hosting.Dapr**/ @FullStackChef @WhitWaldo @Paule96
+/tests/CommunityToolkit.Aspire.Hosting.Dapr**.Tests/ @FullStackChef @WhitWaldo @Paule96

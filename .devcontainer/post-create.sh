@@ -25,6 +25,9 @@ curl -fsSL https://bun.sh/install | bash
 echo Installing uvicorn
 pip install uvicorn
 
+echo Setting up dapr
+dapr init
+
 echo Installing uv
 pip install uv
 
