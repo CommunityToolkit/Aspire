@@ -1,6 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
-
-namespace Aspire.Hosting.DbGate;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a container resource for DbGate.

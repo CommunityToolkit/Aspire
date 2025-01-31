@@ -1,5 +1,4 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.DbGate;
 using Aspire.Hosting.Utils;
 
 namespace Aspire.Hosting;
@@ -62,10 +61,12 @@ public static class DbGateBuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
+    /// <param name="port">The host port to bind the underlying container to.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, [ResourceName] string name)
+    public static IResourceBuilder<DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
 
         if (builder.Resources.OfType<DbGateContainerResource>().SingleOrDefault() is { } existingDbGateResource)
         {
@@ -78,7 +79,7 @@ public static class DbGateBuilderExtensions
             var dbGateContainerBuilder = builder.AddResource(dbGateContainer)
                                                .WithImage(DbGateContainerImageTags.Image, DbGateContainerImageTags.Tag)
                                                .WithImageRegistry(DbGateContainerImageTags.Registry)
-                                               .WithHttpEndpoint(targetPort: 3000, name: DbGateContainerResource.PrimaryEndpointName)
+                                               .WithHttpEndpoint(targetPort: 3000, port: port, name: DbGateContainerResource.PrimaryEndpointName)
                                                .ExcludeFromManifest();
 
             return dbGateContainerBuilder;
