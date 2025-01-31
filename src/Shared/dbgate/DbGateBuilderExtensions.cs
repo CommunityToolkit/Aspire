@@ -1,12 +1,13 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.DbGate;
 using Aspire.Hosting.Utils;
+
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for DbGate resources to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
-internal static class DbGateBuilderExtensions
+public static class DbGateBuilderExtensions
 {
     /// <summary>
     /// Configures the host port that the DbGate resource is exposed on instead of using randomly assigned port.
