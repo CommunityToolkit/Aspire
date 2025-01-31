@@ -1,0 +1,3 @@
+#nullable enable
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.get -> string?
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.init -> void
