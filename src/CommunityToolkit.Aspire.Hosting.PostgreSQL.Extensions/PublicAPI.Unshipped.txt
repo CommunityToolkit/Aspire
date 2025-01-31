@@ -1,0 +1,10 @@
+Aspire.Hosting.ApplicationModel.DbGateContainerResource
+Aspire.Hosting.ApplicationModel.DbGateContainerResource.DbGateContainerResource(string! name) -> void
+Aspire.Hosting.ApplicationModel.DbGateContainerResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
+Aspire.Hosting.DbGateBuilderExtensions
+Aspire.Hosting.PostgresBuilderExtensions
+static Aspire.Hosting.DbGateBuilderExtensions.AddDbGate(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!
+static Aspire.Hosting.DbGateBuilderExtensions.WithDataBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!
+static Aspire.Hosting.DbGateBuilderExtensions.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>! builder, string? name = null, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!
+static Aspire.Hosting.DbGateBuilderExtensions.WithHostPort(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>! builder, int? port) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!
+static Aspire.Hosting.PostgresBuilderExtensions.WithDbGate(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.PostgresServerResource!>! builder, System.Action<Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!>? configureContainer = null, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.PostgresServerResource!>!

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting postgres dbgate</AdditionalPackageTags>
+    <Description>A .NET Aspire integration for extending postgres hosting.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+    <Compile Include="$(SharedDir)\dbgate\DbGateContainerImageTags.cs" Link="dbgate\DbGateContainerImageTags.cs" />
+    <Compile Include="$(SharedDir)\dbgate\DbGateContainerResource.cs" Link="dbgate\DbGateContainerResource.cs" />
+    <Compile Include="$(SharedDir)\dbgate\DbGateBuilderExtensions.cs" Link="dbgate\DbGateBuilderExtensions.cs" />
+  </ItemGroup>
+
+</Project>

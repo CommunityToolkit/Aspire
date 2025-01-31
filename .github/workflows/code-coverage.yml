@@ -25,7 +25,7 @@ jobs:
           tag: "${{ github.run_number }}_${{ github.run_id }}"
           customSettings: ""
           toolpath: "reportgeneratortool"
-          assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.NodeJs;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis"
+          assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.NodeJs;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis;-Aspire.Hosting.PostgreSQL"
 
       - name: Upload combined coverage XML
         uses: actions/upload-artifact@v4
