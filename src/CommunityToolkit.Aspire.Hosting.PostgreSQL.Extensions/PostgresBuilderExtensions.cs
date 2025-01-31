@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using System.Text;
 
 namespace Aspire.Hosting;
 
@@ -54,14 +55,15 @@ public static class PostgresBuilderExtensions
         var postgresInstances = applicationBuilder.Resources.OfType<PostgresServerResource>();
 
         var counter = 1;
+
+        // Multiple WithDbGate calls will be ignored
+        if (context.EnvironmentVariables.ContainsKey($"LABEL_postgres{counter}"))
+        {
+            return;
+        }
+
         foreach (var postgresServer in postgresInstances)
         {
-            // Multiple WithDbGate calls will be ignored
-            if (context.EnvironmentVariables.ContainsKey($"LABEL_postgres{counter}"))
-            {
-                continue;
-            }
-
             var user = postgresServer.UserNameParameter?.Value ?? "postgres";
 
             // DbGate assumes Postgres is being accessed over a default Aspire container network and hardcodes the resource address
@@ -73,25 +75,24 @@ public static class PostgresBuilderExtensions
             context.EnvironmentVariables.Add($"PORT_postgres{counter}", postgresServer.PrimaryEndpoint.TargetPort!.ToString()!);
             context.EnvironmentVariables.Add($"ENGINE_postgres{counter}", "postgres@dbgate-plugin-postgres");
 
-            string CONNECTIONS = context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS")?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(CONNECTIONS))
-            {
-                context.EnvironmentVariables["CONNECTIONS"] = $"postgres{counter},";
-            }
-            else
-            {
-                context.EnvironmentVariables["CONNECTIONS"] += $"postgres{counter},";
-            }
-
             counter++;
         }
 
-        if (context.EnvironmentVariables.TryGetValue("CONNECTIONS", out object? value) && value is not null)
+        var instancesCount = postgresInstances.Count();
+        if (instancesCount > 0)
         {
-            string CONNECTIONS = value.ToString()!;
-            if (CONNECTIONS.EndsWith(','))
+            var strBuilder = new StringBuilder();
+            strBuilder.AppendJoin(',', Enumerable.Range(1, instancesCount).Select(i => $"postgres{i}"));
+            var connections = strBuilder.ToString();
+
+            string CONNECTIONS = context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS")?.ToString() ?? string.Empty;
+            if (string.IsNullOrEmpty(CONNECTIONS))
             {
-                context.EnvironmentVariables["CONNECTIONS"] = CONNECTIONS.Remove(CONNECTIONS.Length - 1, 1);
+                context.EnvironmentVariables["CONNECTIONS"] = connections;
+            }
+            else
+            {
+                context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
             }
         }
     }
