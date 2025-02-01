@@ -6,7 +6,6 @@ using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Bogus;
 using CommunityToolkit.Aspire.Testing;
-using FluentAssertions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using SurrealDb.Net;
@@ -250,10 +249,11 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     private static async Task AssertTestData(SurrealDbClient surrealDbClient)
     {
         var records = await surrealDbClient.Select<Todo>(Todo.Table);
-        records.Count().Should().Be(_generatedTodoCount);
+        Assert.Equal(_generatedTodoCount, records.Count());
 
         var firstRecord = await surrealDbClient.Select<Todo>((Todo.Table, "1"));
-        firstRecord.Should().BeEquivalentTo(_todoList[0]);
+        Assert.NotNull(firstRecord);
+        Assert.Equivalent(firstRecord, _todoList[0]);
     }
     
     private sealed class Todo : SurrealRecord
