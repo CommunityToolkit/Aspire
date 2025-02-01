@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>6f09f62a-98fa-44a3-a1ac-a3ae097e367f</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.GoFeatureFlag\CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService\CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService.csproj" />
+  </ItemGroup>
+
+</Project>
