@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Components.Common.Tests;
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -79,7 +78,7 @@ public class AspireSurrealClientExtensionsTest(SurrealDbContainerFixture contain
 
         var healthCheckService = host.Services.GetService<HealthCheckService>();
 
-        healthCheckService.Should().BeNull();
+        Assert.Null(healthCheckService);
     }
 
     [Fact]
