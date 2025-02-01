@@ -3,7 +3,6 @@
 
 using CommunityToolkit.Aspire.Testing;
 using Aspire.Components.Common.Tests;
-using FluentAssertions;
 using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
@@ -24,7 +23,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var response = await httpClient.GetAsync("/");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -35,16 +34,17 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var todoResponse = await httpClient.GetAsync("/api/todo");
-        todoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, todoResponse.StatusCode);
         
         var initResponse = await httpClient.PostAsync("/init", null);
-        initResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, initResponse.StatusCode);
 
         var weatherForecastResponse = await httpClient.GetAsync("/api/weatherForecast");
-        weatherForecastResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, weatherForecastResponse.StatusCode);
 
         var data = await weatherForecastResponse.Content.ReadFromJsonAsync<List<object>>();
 
-        data.Should().NotBeNullOrEmpty();
+        Assert.NotNull(data);
+        Assert.NotEmpty(data);
     }
 }
