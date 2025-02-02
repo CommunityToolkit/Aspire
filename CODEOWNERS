@@ -68,3 +68,13 @@
 /examples/dapr**/ @FullStackChef @WhitWaldo @Paule96
 /src/CommunityToolkit.Aspire.Hosting.Dapr**/ @FullStackChef @WhitWaldo @Paule96
 /tests/CommunityToolkit.Aspire.Hosting.Dapr**.Tests/ @FullStackChef @WhitWaldo @Paule96
+
+# CommunityToolkit.Aspire.RavenDB.Client
+# CommunityToolkit.Aspire.Hosting.RavenDB
+
+/examples/ravendb/ @shiranshalom
+/src/CommunityToolkit.Aspire.RavenDB.Client/ @shiranshalom
+/tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/ @shiranshalom
+/src/CommunityToolkit.Aspire.Hosting.RavenDB/ @shiranshalom
+/tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/ @shiranshalom
+

@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "RavenDB.AppHost": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "\"\"",
+        "DISABLE_OTLP": "true",
+        "ASPNETCORE_URLS": "http://localhost:5000",
+        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true"
+      }
+    }
+  }
+}

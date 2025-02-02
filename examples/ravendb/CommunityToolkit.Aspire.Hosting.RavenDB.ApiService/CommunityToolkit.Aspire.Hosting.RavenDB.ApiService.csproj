@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.RavenDB.Client\CommunityToolkit.Aspire.RavenDB.Client.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults\CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
