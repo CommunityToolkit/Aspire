@@ -12,15 +12,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [
-            windows-latest,
-            ubuntu-latest,
-            #, macos-latest
-          ]
+        os: [windows-latest, ubuntu-latest]
       fail-fast: false
     runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
+      DAPR_VERSION: "1.14.1"
 
     steps:
       - uses: actions/checkout@v4
