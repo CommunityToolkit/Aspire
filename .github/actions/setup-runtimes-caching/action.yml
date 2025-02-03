@@ -117,6 +117,7 @@ runs:
 
     - name: Init Dapr
       shell: bash
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version
