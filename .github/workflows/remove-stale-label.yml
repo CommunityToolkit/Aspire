@@ -9,6 +9,16 @@ permissions:
   pull-requests: write
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Comment body: ${{ github.event.comment.body }}"
+          echo "Issue number: ${{ github.event.issue.number }}"
+          echo "Pull request number: ${{ github.event.pull_request.number }}"
+
   remove-stale-label:
     if: github.event.comment.body == '/stale-extend'
     runs-on: ubuntu-latest
@@ -23,7 +33,7 @@ jobs:
               issue_number: context.payload.pull_request.number,
               name: 'stale'
             });
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'issue_comment' && github.event.issue.pull_request
 
       - name: Remove stale label from issue
         uses: "actions/github-script@v7"
@@ -35,4 +45,4 @@ jobs:
               issue_number: context.payload.issue.number,
               name: 'stale'
             });
-        if: github.event_name == 'issue'
+        if: github.event_name == 'issue_comment' && !github.event.issue.pull_request

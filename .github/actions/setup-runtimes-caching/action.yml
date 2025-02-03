@@ -1,0 +1,123 @@
+name: "Setup Runtimes, Caching, and Tools"
+description: "Setup various runtimes, cache dependencies, and initialize tools"
+inputs:
+  hash-file:
+    description: "The file to hash for caching"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          9.0.x
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install Uvicorn
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install uvicorn
+
+    - uses: astral-sh/setup-uv@v5
+      name: Install uv
+
+    - uses: actions/setup-go@v5
+      name: Set up Go
+      with:
+        go-version: "^1.22.1"
+        cache-dependency-path: |
+          ./**/go.sum
+
+    - uses: actions/setup-java@v4
+      name: Set up Java
+      with:
+        distribution: "microsoft"
+        java-version: "21"
+
+    - uses: actions/setup-node@v4
+      name: Set up Node.js
+      with:
+        node-version: "latest"
+
+    - uses: pnpm/action-setup@v4
+      name: Setup pnpm
+      with:
+        version: 9
+        run_install: false
+
+    - uses: denoland/setup-deno@v2
+      name: Setup Deno
+      with:
+        deno-version: v2.1.4
+
+    - uses: oven-sh/setup-bun@v2
+      name: Setup Bun
+      with:
+        bun-version: latest
+
+    - uses: dapr/setup-dapr@v2
+      name: Setup Dapr
+      with:
+        version: ${{ env.DAPR_VERSION }}
+
+    - uses: actions/cache@v4
+      name: Cache NuGet packages
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - uses: actions/cache@v4
+      name: Cache Java Docker images
+      with:
+        path: /var/lib/docker/image
+        key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven/Dockerfile') }}
+        restore-keys: |
+          ${{ runner.os }}-docker-
+
+    - name: Get NPM package root
+      id: npm-root
+      run: "echo path=$(npm root -g) >> $GITHUB_OUTPUT"
+      shell: bash
+
+    - uses: actions/cache@v4
+      name: Cache global npm packages
+      with:
+        path: ${{ steps.npm-root.outputs.path }}
+        key: ${{ runner.os }}-npm-${{ hashFiles('${{ inputs.hash-file }}') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
+    - uses: Swatinem/rust-cache@v2
+      name: Cache Rust packages
+      with:
+        workspaces: "examples/rust/actix_api -> target"
+
+    - name: Setup .NET dev certs
+      shell: bash
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        dotnet tool update -g linux-dev-certs
+        dotnet linux-dev-certs install
+
+    - name: Setup Node projects
+      shell: bash
+      run: |
+        npm install -g @azure/static-web-apps-cli
+        cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
+        npm ci
+
+    - name: Init Dapr
+      shell: bash
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        dapr init --runtime-version=${{ env.DAPR_VERSION }}
+        dapr --version
