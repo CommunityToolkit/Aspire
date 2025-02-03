@@ -24,97 +24,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Setup Runtimes, Caching, and Tools
+        uses: ./.github/actions/setup-runtimes-caching
         with:
-          dotnet-version: |
-            ${{ env.DEFAULT_DOTNET_VERSION }}
-            9.0.x
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install Uvicorn
-        run: |
-          python -m pip install --upgrade pip
-          pip install uvicorn
-      - uses: astral-sh/setup-uv@v5
-        name: Install uv
-      - uses: actions/setup-go@v5
-        name: Set up Go
-        with:
-          go-version: "^1.22.1"
-          cache-dependency-path: |
-            ./**/go.sum
-      - uses: actions/setup-java@v4
-        name: Set up Java
-        with:
-          distribution: "microsoft"
-          java-version: "21"
-      - uses: actions/setup-node@v4
-        name: Set up Node.js
-        with:
-          node-version: "latest"
-
-      - uses: pnpm/action-setup@v4
-        name: Setup pnpm
-        with:
-          version: 9
-          run_install: false
-
-      - uses: denoland/setup-deno@v2
-        name: Setup Deno
-        with:
-          deno-version: v2.x
-
-      - uses: oven-sh/setup-bun@v2
-        name: Setup Bun
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        name: Cache NuGet packages
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-      - uses: actions/cache@v4
-        name: Cache Java Docker images
-        with:
-          path: /var/lib/docker/image
-          key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-docker-
-
-      - name: Get NPM package root
-        id: npm-root
-        run: "echo path=$(npm root -g) >> $GITHUB_OUTPUT"
-        shell: bash
-
-      - uses: actions/cache@v4
-        name: Cache global npm packages
-        with:
-          path: ${{ steps.npm-root.outputs.path }}
-          key: ${{ runner.os }}-npm-${{ hashFiles('.github/workflows/dotnet-release.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
-      - uses: Swatinem/rust-cache@v2
-        name: Cache Rust packages
-        with:
-          workspaces: "examples/rust/actix_api -> target"
-
-      - name: Setup .NET dev certs
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: |
-          dotnet tool update -g linux-dev-certs
-          dotnet linux-dev-certs install
-      - name: Setup Node projects
-        run: |
-          npm install -g @azure/static-web-apps-cli
-          cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
-          npm ci
+          hash-file: ".github/workflows/dotnet-release.yml"
 
       - name: Restore dependencies
         run: dotnet restore
@@ -270,4 +183,3 @@ jobs:
     needs: build
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
-
