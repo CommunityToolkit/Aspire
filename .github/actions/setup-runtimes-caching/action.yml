@@ -92,7 +92,7 @@ runs:
       name: Cache global npm packages
       with:
         path: ${{ steps.npm-root.outputs.path }}
-        key: ${{ runner.os }}-npm-${{ hashFiles('.github/workflows/dotnet-ci.yml') }}
+        key: ${{ runner.os }}-npm-${{ hashFiles('${{ inputs.hash-file }}') }}
         restore-keys: |
           ${{ runner.os }}-npm-
 
