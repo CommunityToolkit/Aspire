@@ -152,7 +152,7 @@ public static class NgrokExtensions
                 ngrokConfig.AppendLine("tunnels:");
                 foreach (var (endpointReference, ngrokEndpoint) in endpointTuples)
                 {
-                    ngrokConfig.AppendLine($"  {endpointReference.Resource.Name}-{endpointReference.EndpointName}");
+                    ngrokConfig.AppendLine($"  {endpointReference.Resource.Name}-{endpointReference.EndpointName}:");
                     if (ngrokEndpoint.Labels is null)
                         continue;
                     ngrokConfig.AppendLine("    labels:");
