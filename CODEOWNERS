@@ -78,3 +78,10 @@
 /src/CommunityToolkit.Aspire.Hosting.RavenDB/ @shiranshalom
 /tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/ @shiranshalom
 
+# CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions
+
+/src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/ @Alirexaa
+/examples/postgres-ext/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/ @Alirexaa
+/src/Shared/dbgate/ @Alirexaa
