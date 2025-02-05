@@ -233,6 +233,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Mic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests", "tests\CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests\CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests.csproj", "{52846E18-99D1-4040-AF5F-17FC69198BCE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions", "src\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj", "{D098AD9B-4D9C-45E1-9D7D-17FCC0EE95E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost", "examples\postgres-ext\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost.csproj", "{C46D82D9-327E-43CE-9FEB-B0A233E1C094}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.PapercutSmtp", "src\CommunityToolkit.Aspire.Hosting.PapercutSmtp\CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj", "{E267907F-4467-4504-9947-2A5A6940DE9B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "papercut", "papercut", "{2B0503E5-4FD5-4ED5-8AFA-8FC9609FCEC1}"
@@ -260,6 +264,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Dapr.ServiceC", "examples\dapr\CommunityToolkit.Aspire.Hosting.Dapr.ServiceC\CommunityToolkit.Aspire.Hosting.Dapr.ServiceC.csproj", "{5ADBE907-7E0B-4AD7-9073-C032C4183914}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Dapr.ServiceDefaults", "examples\dapr\CommunityToolkit.Aspire.Hosting.Dapr.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Dapr.ServiceDefaults.csproj", "{99441705-4BFA-499F-9897-371238665E38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.DbGate.Tests", "tests\CommunityToolkit.Aspire.Hosting.DbGate.Tests\CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj", "{BDAF7D27-C600-4419-9782-CF15BA5272E9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "postgres-ext", "postgres-ext", "{204BB8D8-04E3-4FE5-BB08-E793BF532F2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests", "tests\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj", "{356853EE-2C47-429C-B6CF-F3F76B6FFD91}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.GoFeatureFlag", "src\CommunityToolkit.Aspire.Hosting.GoFeatureFlag\CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj", "{F926FB8A-77C6-4D39-AE44-9A7C11A3202D}"
 EndProject
@@ -655,6 +665,14 @@ Global
 		{52846E18-99D1-4040-AF5F-17FC69198BCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52846E18-99D1-4040-AF5F-17FC69198BCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52846E18-99D1-4040-AF5F-17FC69198BCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D098AD9B-4D9C-45E1-9D7D-17FCC0EE95E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D098AD9B-4D9C-45E1-9D7D-17FCC0EE95E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D098AD9B-4D9C-45E1-9D7D-17FCC0EE95E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D098AD9B-4D9C-45E1-9D7D-17FCC0EE95E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C46D82D9-327E-43CE-9FEB-B0A233E1C094}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C46D82D9-327E-43CE-9FEB-B0A233E1C094}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C46D82D9-327E-43CE-9FEB-B0A233E1C094}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C46D82D9-327E-43CE-9FEB-B0A233E1C094}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E267907F-4467-4504-9947-2A5A6940DE9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E267907F-4467-4504-9947-2A5A6940DE9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E267907F-4467-4504-9947-2A5A6940DE9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -703,6 +721,14 @@ Global
 		{99441705-4BFA-499F-9897-371238665E38}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99441705-4BFA-499F-9897-371238665E38}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99441705-4BFA-499F-9897-371238665E38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDAF7D27-C600-4419-9782-CF15BA5272E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDAF7D27-C600-4419-9782-CF15BA5272E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDAF7D27-C600-4419-9782-CF15BA5272E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDAF7D27-C600-4419-9782-CF15BA5272E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{356853EE-2C47-429C-B6CF-F3F76B6FFD91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{356853EE-2C47-429C-B6CF-F3F76B6FFD91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{356853EE-2C47-429C-B6CF-F3F76B6FFD91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{356853EE-2C47-429C-B6CF-F3F76B6FFD91}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F926FB8A-77C6-4D39-AE44-9A7C11A3202D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F926FB8A-77C6-4D39-AE44-9A7C11A3202D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F926FB8A-77C6-4D39-AE44-9A7C11A3202D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -848,6 +874,8 @@ Global
 		{0E6EBCFB-DEF5-496C-95AF-00884826CFC8} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{861FE61C-90EE-49B0-BCC8-8417C293CC21} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{52846E18-99D1-4040-AF5F-17FC69198BCE} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{D098AD9B-4D9C-45E1-9D7D-17FCC0EE95E2} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{C46D82D9-327E-43CE-9FEB-B0A233E1C094} = {204BB8D8-04E3-4FE5-BB08-E793BF532F2F}
 		{E267907F-4467-4504-9947-2A5A6940DE9B} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{2B0503E5-4FD5-4ED5-8AFA-8FC9609FCEC1} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{9772004D-0905-421A-98C6-DAE1C35080B3} = {2B0503E5-4FD5-4ED5-8AFA-8FC9609FCEC1}
@@ -862,6 +890,9 @@ Global
 		{D2DDEA96-4A7E-496B-AFBE-69A133156C5F} = {E3C2B4B7-B3B0-4E7F-A975-A6C7FD926792}
 		{5ADBE907-7E0B-4AD7-9073-C032C4183914} = {E3C2B4B7-B3B0-4E7F-A975-A6C7FD926792}
 		{99441705-4BFA-499F-9897-371238665E38} = {E3C2B4B7-B3B0-4E7F-A975-A6C7FD926792}
+		{BDAF7D27-C600-4419-9782-CF15BA5272E9} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{204BB8D8-04E3-4FE5-BB08-E793BF532F2F} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{356853EE-2C47-429C-B6CF-F3F76B6FFD91} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{BEA41234-DFF9-49AE-AD6C-42A9D54202E7} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{6782F1C1-5146-549F-82A8-60C82F1C7F16} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{97E455C1-C914-4C51-87A9-2C213CE2ED5B} = {6782F1C1-5146-549F-82A8-60C82F1C7F16}

@@ -68,3 +68,11 @@
 /examples/dapr**/ @FullStackChef @WhitWaldo @Paule96
 /src/CommunityToolkit.Aspire.Hosting.Dapr**/ @FullStackChef @WhitWaldo @Paule96
 /tests/CommunityToolkit.Aspire.Hosting.Dapr**.Tests/ @FullStackChef @WhitWaldo @Paule96
+
+# CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions
+
+/src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/ @Alirexaa
+/examples/postgres-ext/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/ @Alirexaa
+/src/Shared/dbgate/ @Alirexaa
