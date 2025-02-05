@@ -97,7 +97,7 @@ public class WithTunnelEndpointTests
             .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
 
         builder.AddNgrok("ngrok")
-            .WithTunnelEndpoint(api,"http", "custom-url", new Dictionary<string, string>() { {"key", "value"} });
+            .WithTunnelEndpoint(api,"http", "custom-url", new Dictionary<string, string>() { ["key"] = "value" });
 
         using var app = builder.Build();
 

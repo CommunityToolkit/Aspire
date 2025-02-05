@@ -125,12 +125,12 @@ public static class NgrokExtensions
             .SingleOrDefault(a => a.Resource.Name == resource.Resource.Name);
         if (existingAnnotation is not null)
         {
-            existingAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl));
+            existingAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels));
         }
         else
         {
             var newAnnotation = new NgrokEndpointAnnotation(resource.Resource);
-            newAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl));
+            newAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels));
             builder.Resource.Annotations.Add(newAnnotation);
         }
 
