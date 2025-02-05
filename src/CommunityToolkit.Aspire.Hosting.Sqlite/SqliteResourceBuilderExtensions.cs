@@ -121,7 +121,7 @@ public static class SqliteResourceBuilderExtensions
     /// Extensions are not loaded by the hosting integration, the information is provided for the client to load the extensions.
     /// 
     /// This extension is experimental while the final design of extension loading is decided.
-    /// </remarks>    find . -type f -name "*.orig" -delete
+    /// </remarks>
     [Experimental("CTASPIRE002", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
     public static IResourceBuilder<SqliteResource> WithLocalExtension(this IResourceBuilder<SqliteResource> builder, string extension, string extensionPath)
     {
