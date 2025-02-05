@@ -2,6 +2,6 @@
 
 var ollama = builder.AddOllama("ollama");
 
-var tinyllama = ollama.AddModel("tinyllama");
+var model = ollama.AddModel("model", "all-minilm:22m");
 
 builder.Build().Run();
