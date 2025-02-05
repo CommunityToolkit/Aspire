@@ -1,3 +1,8 @@
 #nullable enable
+CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.get -> string?
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.init -> void
+CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentSpecMetadata
+static CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions.WithMetadata<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, string! name, Aspire.Hosting.ApplicationModel.EndpointReference! endpointReference) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
+static CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions.WithMetadata<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, string! name, Aspire.Hosting.ApplicationModel.ParameterResource! parameterResource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
+static CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions.WithMetadata<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, string! name, string! value) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
