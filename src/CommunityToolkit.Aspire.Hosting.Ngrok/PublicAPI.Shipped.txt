@@ -2,18 +2,20 @@
 Aspire.Hosting.ApplicationModel.NgrokResource
 Aspire.Hosting.ApplicationModel.NgrokResource.NgrokResource(string! name) -> void
 Aspire.Hosting.ApplicationModel.NgrokEndpoint
-Aspire.Hosting.ApplicationModel.NgrokEndpoint.NgrokEndpoint(string! EndpointName, string? Url) -> void
+Aspire.Hosting.ApplicationModel.NgrokEndpoint.NgrokEndpoint(string! EndpointName, string? Url, System.Collections.Generic.IDictionary<string!, string!>? Labels = null) -> void
 Aspire.Hosting.ApplicationModel.NgrokEndpoint.EndpointName.get -> string!
 Aspire.Hosting.ApplicationModel.NgrokEndpoint.EndpointName.init -> void
 Aspire.Hosting.ApplicationModel.NgrokEndpoint.Url.get -> string?
 Aspire.Hosting.ApplicationModel.NgrokEndpoint.Url.init -> void
+Aspire.Hosting.ApplicationModel.NgrokEndpoint.Labels.get -> System.Collections.Generic.IDictionary<string!, string!>?
+Aspire.Hosting.ApplicationModel.NgrokEndpoint.Labels.init -> void
 Aspire.Hosting.ApplicationModel.NgrokEndpointAnnotation
 Aspire.Hosting.ApplicationModel.NgrokEndpointAnnotation.NgrokEndpointAnnotation(Aspire.Hosting.ApplicationModel.IResourceWithEndpoints! Resource) -> void
 Aspire.Hosting.ApplicationModel.NgrokEndpointAnnotation.Resource.get -> Aspire.Hosting.ApplicationModel.IResourceWithEndpoints!
 Aspire.Hosting.ApplicationModel.NgrokEndpointAnnotation.Resource.init -> void
 Aspire.Hosting.ApplicationModel.NgrokEndpointAnnotation.Endpoints.get -> System.Collections.Generic.ICollection<Aspire.Hosting.ApplicationModel.NgrokEndpoint!>!
 Aspire.Hosting.NgrokExtensions
-static Aspire.Hosting.NgrokExtensions.AddNgrok(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? configurationFolder = null, int? endpointPort = null, string? endpointName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>!
+static Aspire.Hosting.NgrokExtensions.AddNgrok(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? configurationFolder = null, int? endpointPort = null, string? endpointName = null, int? configurationVersion = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>!
 static Aspire.Hosting.NgrokExtensions.WithAuthToken(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>! builder, string! ngrokAuthToken) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>!
 static Aspire.Hosting.NgrokExtensions.WithAuthToken(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.ParameterResource!>! ngrokAuthToken) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>!
-static Aspire.Hosting.NgrokExtensions.WithTunnelEndpoint<TResource>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<TResource>! resource, string! endpointName, string? ngrokUrl = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>!
+static Aspire.Hosting.NgrokExtensions.WithTunnelEndpoint<TResource>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<TResource>! resource, string! endpointName, string? ngrokUrl = null, System.Collections.Generic.IDictionary<string!, string!>? labels = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.NgrokResource!>!

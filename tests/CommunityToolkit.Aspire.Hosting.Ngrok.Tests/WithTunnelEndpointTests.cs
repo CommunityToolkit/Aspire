@@ -66,6 +66,49 @@ public class WithTunnelEndpointTests
         
         Assert.Equal("custom-url", endpoint.Url);
     }
+
+    [Fact]
+    public void WithTunnelEndpointSetsLabelsToNullByDefault()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        
+        var api = builder
+            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+
+        builder.AddNgrok("ngrok")
+            .WithTunnelEndpoint(api,"http");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<NgrokResource>());
+        var annotation = Assert.Single(resource.Annotations.OfType<NgrokEndpointAnnotation>());
+        var endpoint = Assert.Single(annotation.Endpoints);
+        
+        Assert.Null(endpoint.Labels);
+    }
+
+    [Fact]
+    public void WithTunnelEndpointSetsLabels()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        
+        var api = builder
+            .AddProject<Projects.CommunityToolkit_Aspire_Hosting_Ngrok_ApiService>("api");
+
+        builder.AddNgrok("ngrok")
+            .WithTunnelEndpoint(api,"http", "custom-url", new Dictionary<string, string>() { {"key", "value"} });
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<NgrokResource>());
+        var annotation = Assert.Single(resource.Annotations.OfType<NgrokEndpointAnnotation>());
+        var endpoint = Assert.Single(annotation.Endpoints);
+        
+        Assert.Equal("key", endpoint.Labels!.Keys.First());
+        Assert.Equal("value", endpoint.Labels!["key"]);
+    }
     
     [Fact]
     public void WithTunnelNullResourceBuilderThrows()
