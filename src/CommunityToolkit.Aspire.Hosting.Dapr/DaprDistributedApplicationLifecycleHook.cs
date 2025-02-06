@@ -436,6 +436,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
         string daprDefaultComponentsDirectory = Path.Combine(userDirectory, ".dapr", "components");
         string daprDefaultStateStorePath = Path.Combine(daprDefaultComponentsDirectory, "pubsub.yaml");
 
+
         if (File.Exists(daprDefaultStateStorePath))
         {
             _logger.LogInformation("Using default Dapr pub-sub for component '{ComponentName}'.", component.Name);
@@ -479,34 +480,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     private static string GetInMemoryPubSubContent(DaprComponentResource component)
     {
         // NOTE: This component can only be used within a single Dapr application.
-
-        return
-            $"""
-            apiVersion: dapr.io/v1alpha1
-            kind: Component
-            metadata:
-                name: {component.Name}
-            spec:
-                type: pubsub.in-memory
-                version: v1
-                metadata: []
-            """;
+        return new DaprComponentSchema(component.Name, "pubsub.in-memory").ToString();
     }
 
-    private static string GetInMemoryStateStoreContent(DaprComponentResource component)
-    {
-        return
-            $"""
-            apiVersion: dapr.io/v1alpha1
-            kind: Component
-            metadata:
-                name: {component.Name}
-            spec:
-                type: state.in-memory
-                version: v1
-                metadata: []
-            """;
-    }
+    private static string GetInMemoryStateStoreContent(DaprComponentResource component) => new DaprComponentSchema(component.Name, "state.in-memory").ToString();
 }
 
 internal static class IListExtensions
