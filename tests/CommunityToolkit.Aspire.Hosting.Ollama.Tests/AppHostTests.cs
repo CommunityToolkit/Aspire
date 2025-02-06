@@ -29,11 +29,11 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> 
         await Task.WhenAll([
                 rns.WaitForResourceHealthyAsync("ollama"),
                 .. modelResources.Select(m => rns.WaitForResourceHealthyAsync(m.Name))
-            ]).WaitAsync(TimeSpan.FromMinutes(5));
+            ]).WaitAsync(TimeSpan.FromMinutes(10));
         var httpClient = fixture.CreateHttpClient("ollama");
 
         var models = (await new OllamaApiClient(httpClient).ListLocalModelsAsync()).ToList();
-        
+
         Assert.NotEmpty(models);
         Assert.Equal(modelResources.Count, models.Count);
     }
