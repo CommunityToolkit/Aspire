@@ -21,13 +21,15 @@ public static class NgrokExtensions
     /// <param name="configurationFolder">The folder where temporary ngrok configuration files will be stored; defaults to .ngrok</param>
     /// <param name="endpointPort">The port of the endpoint for this resource, defaults to a randomly assigned port.</param>
     /// <param name="endpointName">The name of the endpoint for this resource, defaults to http.</param>
+    /// <param name="configurationVersion">The output version of the ngrok configuration file.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
     public static IResourceBuilder<NgrokResource> AddNgrok(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         string? configurationFolder = null,
         int? endpointPort = null,
-        [EndpointName] string? endpointName = null)
+        [EndpointName] string? endpointName = null,
+        int? configurationVersion = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         if (configurationFolder is not null)
@@ -37,6 +39,11 @@ public static class NgrokExtensions
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(endpointPort.Value, 1, nameof(endpointPort));
             ArgumentOutOfRangeException.ThrowIfGreaterThan(endpointPort.Value, 65535, nameof(endpointPort));
+        }
+        if (configurationVersion is not null)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(configurationVersion.Value, 2, nameof(configurationVersion));
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(configurationVersion.Value, 3, nameof(configurationVersion));
         }
 
         configurationFolder ??= Path.Combine(builder.AppHostDirectory, ".ngrok");
@@ -55,7 +62,7 @@ public static class NgrokExtensions
                 .OfType<NgrokEndpointAnnotation>()
                 .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointRefernce: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
                 .ToList();
-            await CreateNgrokConfigurationFileAsync(configurationFolder, name, endpointTuples);
+            await CreateNgrokConfigurationFileAsync(configurationFolder, name, endpointTuples, configurationVersion ?? 3);
             
             resourceBuilder.WithArgs(
                 "start", endpointTuples.Count > 0 ? "--all" : "--none", 
@@ -104,25 +111,26 @@ public static class NgrokExtensions
         this IResourceBuilder<NgrokResource> builder, 
         IResourceBuilder<TResource> resource,
         string endpointName,
-        string? ngrokUrl = null) where TResource : IResourceWithEndpoints
+        string? ngrokUrl = null,
+        IDictionary<string, string>? labels = null) where TResource : IResourceWithEndpoints
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(resource);
         ArgumentException.ThrowIfNullOrWhiteSpace(endpointName);
         if (ngrokUrl is not null)
             ArgumentException.ThrowIfNullOrWhiteSpace(ngrokUrl);
-        
+
         var existingAnnotation = builder.Resource.Annotations
             .OfType<NgrokEndpointAnnotation>()
             .SingleOrDefault(a => a.Resource.Name == resource.Resource.Name);
         if (existingAnnotation is not null)
         {
-            existingAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl));
+            existingAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels));
         }
         else
         {
             var newAnnotation = new NgrokEndpointAnnotation(resource.Resource);
-            newAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl));
+            newAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels));
             builder.Resource.Annotations.Add(newAnnotation);
         }
 
@@ -132,25 +140,48 @@ public static class NgrokExtensions
     private static async Task CreateNgrokConfigurationFileAsync(
         string configurationFolder,
         string name,
-        IList<(EndpointReference, NgrokEndpoint)> endpointTuples)
+        IList<(EndpointReference, NgrokEndpoint)> endpointTuples,
+        int configurationVersion)
     {
         var ngrokConfig = new StringBuilder();
-        ngrokConfig.AppendLine("version: 3");
+        ngrokConfig.AppendLine($"version: {configurationVersion}");
         ngrokConfig.AppendLine();
-        ngrokConfig.AppendLine("agent:");
-        ngrokConfig.AppendLine( "  log: stdout");
-        if (endpointTuples.Count > 0)
+        switch (configurationVersion)
         {
-            ngrokConfig.AppendLine();
-            ngrokConfig.AppendLine("endpoints:");
-            foreach (var (endpointReference, ngrokEndpoint) in endpointTuples)
-            {
-                ngrokConfig.AppendLine($"  - name: {endpointReference.Resource.Name}-{endpointReference.EndpointName}");
-                if (!string.IsNullOrWhiteSpace(ngrokEndpoint.Url))
-                    ngrokConfig.AppendLine($"    url: {ngrokEndpoint.Url}");
-                ngrokConfig.AppendLine("    upstream:");
-                ngrokConfig.AppendLine($"      url: {GetUpstreamUrl(endpointReference)}");
-            }
+            case 2:
+                ngrokConfig.AppendLine("tunnels:");
+                foreach (var (endpointReference, ngrokEndpoint) in endpointTuples)
+                {
+                    ngrokConfig.AppendLine($"  {endpointReference.Resource.Name}-{endpointReference.EndpointName}:");
+                    if (ngrokEndpoint.Labels is null)
+                        continue;
+                    ngrokConfig.AppendLine("    labels:");
+                    foreach (var label in ngrokEndpoint.Labels)
+                    {
+                        ngrokConfig.AppendLine($"      - {label.Key}={label.Value}");
+                    }
+                    ngrokConfig.AppendLine($"    addr: {GetUpstreamUrl(endpointReference)}");
+                }
+                break;
+            case 3:
+                ngrokConfig.AppendLine("agent:");
+                ngrokConfig.AppendLine( "  log: stdout");
+                if (endpointTuples.Count > 0)
+                {
+                    ngrokConfig.AppendLine();
+                    ngrokConfig.AppendLine("endpoints:");
+                    foreach (var (endpointReference, ngrokEndpoint) in endpointTuples)
+                    {
+                        ngrokConfig.AppendLine($"  - name: {endpointReference.Resource.Name}-{endpointReference.EndpointName}");
+                        if (!string.IsNullOrWhiteSpace(ngrokEndpoint.Url))
+                            ngrokConfig.AppendLine($"    url: {ngrokEndpoint.Url}");
+                        ngrokConfig.AppendLine("    upstream:");
+                        ngrokConfig.AppendLine($"      url: {GetUpstreamUrl(endpointReference)}");
+                    }
+                }
+                break;
+            default:
+                break;
         }
 
         await File.WriteAllTextAsync(Path.Combine(configurationFolder, $"{name}.yml"), ngrokConfig.ToString());

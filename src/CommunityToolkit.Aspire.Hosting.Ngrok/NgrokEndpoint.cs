@@ -5,4 +5,5 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 /// <param name="EndpointName">A unique name for this endpoint's configuration.</param>
 /// <param name="Url">The address you would like to use to forward traffic to your upstream service. Leave empty to get a randomly assigned address.</param>
-public sealed record NgrokEndpoint(string EndpointName, string? Url);
+/// <param name="Labels">An optional dictionary of labels to apply to the endpoint.</param>
+public sealed record NgrokEndpoint(string EndpointName, string? Url, IDictionary<string, string>? Labels = null);
