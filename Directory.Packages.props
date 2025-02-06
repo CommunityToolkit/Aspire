@@ -69,6 +69,9 @@
     <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.8" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.2" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
+    <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
+    <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
+    <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
