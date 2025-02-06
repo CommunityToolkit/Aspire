@@ -2,34 +2,56 @@
 
 ## Overview
 
-This .NET Aspire Integration runs [Active MQ Classig](https://activemq.apache.org/components/classic/) in a container.
-
+This .NET Aspire Integration can be used to [Active MQ Classic](https://activemq.apache.org/components/classic/) and [Active MQ Artemis](https://activemq.apache.org/components/artemis/) in a container.
 
 ## Usage
 
-### Example 1: ActiveMQ with default tcp scheme
+### Example 1: ActiveMQ Classic with default tcp scheme
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var amq = builder.AddActiveMQ("amq", 
+var amq = builder.AddActiveMQ("amq",
         builder.AddParameter("user", "admin"),
-        builder.AddParameter("password", "admin", secret: true), 
-        61616)
-        .PublishAsConnectionString()
-        .WithEndpoint(port: 8161, targetPort: 8161, name: "web", scheme: "http");
+        builder.AddParameter("password", "admin", secret: true),
+        61616,
+        webPort: 8161);
 ```
 
-### Example 2: ActiveMQ with activemq scheme for use with [MassTransit](https://masstransit.io/)
+### Example 2: ActiveMQ Classic with activemq scheme for use with [MassTransit](https://masstransit.io/)
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var amq = builder.AddActiveMQ("amq", 
+var amq = builder.AddActiveMQ("amq",
         builder.AddParameter("user", "admin"),
-        builder.AddParameter("password", "admin", secret: true), 
-        61616, 
-        "activemq")
-        .PublishAsConnectionString()
-        .WithEndpoint(port: 8161, targetPort: 8161, name: "web", scheme: "http");
+        builder.AddParameter("password", "admin", secret: true),
+        61616,
+        "activemq",
+        webPort: 8161);
+```
+
+### Example 3: ActiveMQ Artemis with default tcp scheme
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var amq = builder.AddActiveMQArtemis("amq",
+        builder.AddParameter("user", "admin"),
+        builder.AddParameter("password", "admin", secret: true),
+        61616,
+        webPort: 8161);
+```
+
+### Example 2: ActiveMQ Artemis with activemq scheme for use with [MassTransit](https://masstransit.io/)
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var amq = builder.AddActiveMQArtemis("amq",
+        builder.AddParameter("user", "admin"),
+        builder.AddParameter("password", "admin", secret: true),
+        61616,
+        "activemq",
+        webPort: 8161);
 ```
