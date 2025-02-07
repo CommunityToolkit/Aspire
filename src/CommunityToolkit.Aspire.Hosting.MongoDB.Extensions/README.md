@@ -1,4 +1,4 @@
-# CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions library
+# CommunityToolkit.Aspire.Hosting.MongoDB.Extensions library
 
 This integration contains extensions for the [MongoDB hosting package](https://nuget.org/packages/Aspire.Hosting.MongoDB) for .NET Aspire.
 
