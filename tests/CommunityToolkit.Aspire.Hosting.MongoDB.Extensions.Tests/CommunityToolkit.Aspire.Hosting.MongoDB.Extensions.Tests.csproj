@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\mongodb-ext\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+</Project>

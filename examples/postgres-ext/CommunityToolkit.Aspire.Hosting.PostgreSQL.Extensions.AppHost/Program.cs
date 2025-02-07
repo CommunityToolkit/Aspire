@@ -10,7 +10,4 @@ var postgres2 = builder.AddPostgres("postgres2")
 postgres2.AddDatabase("db3");
 postgres2.AddDatabase("db4");
 
-var mongodb1 = builder.AddMongoDB("mongodb1").WithDbGate();
-mongodb1.AddDatabase("db5");
-
 builder.Build().Run();

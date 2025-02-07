@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" IsAspireProjectResource="false"/>
   </ItemGroup>
 
 
