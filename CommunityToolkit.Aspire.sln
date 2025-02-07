@@ -313,6 +313,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mongodb-ext", "mongodb-ext"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost", "examples\mongodb-ext\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost.csproj", "{A461FE7E-2458-428C-B794-6CC388031F16}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dbgate", "dbgate", "{50FBAF3E-E0BB-44FF-884F-660357C1CC54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.DbGate.AppHost", "examples\dbgate\CommunityToolkit.Aspire.Hosting.DbGate.AppHost\CommunityToolkit.Aspire.Hosting.DbGate.AppHost.csproj", "{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -827,6 +831,10 @@ Global
 		{A461FE7E-2458-428C-B794-6CC388031F16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A461FE7E-2458-428C-B794-6CC388031F16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A461FE7E-2458-428C-B794-6CC388031F16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -984,6 +992,8 @@ Global
 		{57EF72E3-24DA-41B3-A3A1-B69E26421F68} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{8406E585-3329-48C5-B268-8C2140B720B6} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{A461FE7E-2458-428C-B794-6CC388031F16} = {8406E585-3329-48C5-B268-8C2140B720B6}
+		{50FBAF3E-E0BB-44FF-884F-660357C1CC54} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E} = {50FBAF3E-E0BB-44FF-884F-660357C1CC54}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
