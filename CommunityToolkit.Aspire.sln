@@ -305,6 +305,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MongoDB.Extensions", "src\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj", "{511D321E-277E-465A-AD62-B9971A6DD17E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.DbGate", "src\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj", "{72054ADC-94AC-48D4-9718-72B70E830CD2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -807,6 +809,10 @@ Global
 		{511D321E-277E-465A-AD62-B9971A6DD17E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{511D321E-277E-465A-AD62-B9971A6DD17E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{511D321E-277E-465A-AD62-B9971A6DD17E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72054ADC-94AC-48D4-9718-72B70E830CD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72054ADC-94AC-48D4-9718-72B70E830CD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72054ADC-94AC-48D4-9718-72B70E830CD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72054ADC-94AC-48D4-9718-72B70E830CD2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -960,6 +966,7 @@ Global
 		{F4891827-BE07-4547-AF89-2734FB8DE6D5} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{96458513-CAA8-498B-B4EE-3BF994140741} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{511D321E-277E-465A-AD62-B9971A6DD17E} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{72054ADC-94AC-48D4-9718-72B70E830CD2} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
