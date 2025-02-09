@@ -129,10 +129,10 @@ public sealed class DaprSecretKeyRef
     /// <summary>
     /// The name of the secret
     /// </summary>
-    public required string Name { get; init; } = default!;
+    public required string Name { get; init; }
     /// <summary>
     /// The key of the secret
     /// </summary>
-    public required string Key { get; init; } = default!;
+    public required string Key { get; init; }
 };
 
