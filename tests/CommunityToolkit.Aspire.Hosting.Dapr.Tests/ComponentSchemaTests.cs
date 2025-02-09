@@ -29,7 +29,7 @@ public class ComponentSchemaTests
                                     value: guest
                                 """;
 
-        DaprComponentSchema componentSchema = componentString;
+        DaprComponentSchema componentSchema = DaprComponentSchema.FromYaml(componentString);
 
         Assert.Equal("dapr.io/v1alpha1", componentSchema.ApiVersion);
         Assert.Equal("Component", componentSchema.Kind);
