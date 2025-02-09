@@ -16,7 +16,19 @@ public static class DaprMetadataResourceBuilderExtensions
     /// <param name="value"></param>
     /// <returns></returns>
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, string value) =>
-        builder.WithAnnotation(new DaprComponentConfigurationAnnotation(schema => schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValue { Name = name, Value = value })));
+        builder.WithAnnotation(new DaprComponentConfigurationAnnotation(schema =>
+        {
+            var existing = schema.Spec.Metadata.Find(m => m.Name == name);
+            if (existing is not null)
+            {
+                schema.Spec.Metadata.Remove(existing);
+            }
+            schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValue
+            {
+                Name = name,
+                Value = value
+            });
+        }));
 
 
     /// <summary>
@@ -28,22 +40,28 @@ public static class DaprMetadataResourceBuilderExtensions
     /// <returns></returns>
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, ParameterResource parameterResource)
     {
-        return parameterResource.Secret ? builder
-            .WithAnnotation(new DaprComponentSecretAnnotation(parameterResource.Name, parameterResource.Value))
-            .WithAnnotation(new DaprComponentConfigurationAnnotation(schema =>
-                schema.Spec.Metadata.Add(new DaprComponentSpecMetadataSecret
-                {
-                    Name = name,
-                    SecretKeyRef = new DaprSecretKeyRef
-                    {
-                        Name = parameterResource.Name,
-                        Key = parameterResource.Value
-                    }
-                }))) : builder.WithAnnotation(new DaprComponentConfigurationAnnotation(schema =>
-                schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValue
-                {
-                    Name = name,
-                    Value = parameterResource.Value
-                })));
+        if (parameterResource.Secret)
+        {
+            return builder.WithAnnotation(new DaprComponentSecretAnnotation(parameterResource.Name, parameterResource.Value))
+                          .WithAnnotation(new DaprComponentConfigurationAnnotation(schema =>
+                          {
+                              var existing = schema.Spec.Metadata.Find(m => m.Name == name);
+                              if (existing is not null)
+                              {
+                                  schema.Spec.Metadata.Remove(existing);
+                              }
+                              schema.Spec.Metadata.Add(new DaprComponentSpecMetadataSecret
+                              {
+                                  Name = name,
+                                  SecretKeyRef = new DaprSecretKeyRef
+                                  {
+                                      Name = parameterResource.Name,
+                                      Key = parameterResource.Name
+                                  }
+                              });
+                          }));
+        }
+
+        return builder.WithMetadata(name, parameterResource.Value);
     }
 }

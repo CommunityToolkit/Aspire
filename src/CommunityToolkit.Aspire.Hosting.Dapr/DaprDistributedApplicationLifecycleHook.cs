@@ -125,8 +125,17 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                 }
             }
 
+            if (secrets.Count > 0)
+            {
+                daprSidecar.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+                {
+                    foreach (var secret in secrets)
+                    {
+                        context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
+                    }
 
-
+                }));
+            }
             // It is possible that we have duplicate wate annotations so we just dedupe them here.
             var distinctWaitAnnotationsToCopyToDaprCli = waitAnnotationsToCopyToDaprCli.DistinctBy(w => (w.Resource, w.WaitType));
 
@@ -297,10 +306,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
             sideCars.Add(daprCli);
         }
 
-        foreach (var secret in secrets)
-        {
-            Environment.SetEnvironmentVariable(secret.Key, secret.Value);
-        }
+
         appModel.Resources.AddRange(sideCars);
     }
 
@@ -441,7 +447,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                 Func<string, Task<string>> contentWriter =
                     async content =>
                     {
-                        _logger.LogInformation("Creating on-demand configuration for component '{ComponentName}' with content: {content}.", component.Name, content);
+                        _logger.LogDebug("Creating on-demand configuration for component '{ComponentName}' with content: {content}.", component.Name, content);
                         string componentDirectory = Path.Combine(_onDemandResourcesRootPath, component.Name);
 
                         Directory.CreateDirectory(componentDirectory);
