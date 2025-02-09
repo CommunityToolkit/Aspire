@@ -1,3 +1,5 @@
+using CommunityToolkit.Aspire.Hosting.Dapr;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var rmq = builder.AddRabbitMQ("rabbitMQ")
@@ -15,8 +17,7 @@ var pubSub = builder.AddDaprPubSub("pubsub")
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
        .WithReference(stateStore)
        .WithReference(pubSub)
-       .WithDaprSidecar()
-       .WaitFor(rmq);
+       .WithDaprSidecar();
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
        .WithReference(pubSub)
