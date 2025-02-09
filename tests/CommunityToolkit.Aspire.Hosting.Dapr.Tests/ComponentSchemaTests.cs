@@ -96,7 +96,7 @@ public class ComponentSchemaTests
                                       name: password
                                       key: password
                                 """;
-        DaprComponentSchema componentSchema = componentString;
+        DaprComponentSchema componentSchema = DaprComponentSchema.FromYaml(componentString);
         Assert.Equal("dapr.io/v1alpha1", componentSchema.ApiVersion);
         Assert.Equal("Component", componentSchema.Kind);
         Assert.Equal("pubsub", componentSchema.Metadata.Name);

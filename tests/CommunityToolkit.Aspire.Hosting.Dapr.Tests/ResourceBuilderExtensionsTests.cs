@@ -18,7 +18,7 @@ public class ResourceBuilderExtensionsTests
     public void WithMetadataUsingParameterResourceAddsDaprComponentConfigurationAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var parameter = builder.AddParameter("name");
+        var parameter = builder.AddParameter("name", string.Empty);
         var rb = builder.AddDaprPubSub("pubsub").WithMetadata("name", parameter.Resource);
         var resource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
         Assert.Single(resource.Annotations.OfType<DaprComponentConfigurationAnnotation>());

@@ -7,8 +7,8 @@ internal interface IDaprComponentSpecMetadata : IList<DaprComponentSpecMetadata>
 
 internal class DaprComponentSchema
 {
-    internal static readonly ISerializer serializer = BuildSerializer();
-    internal static readonly IDeserializer deserializer = BuildDeSerializer();
+    private static readonly ISerializer serializer = BuildSerializer();
+    private static readonly IDeserializer deserializer = BuildDeSerializer();
 
     public string ApiVersion { get; init; } = "dapr.io/v1alpha1";
     public string Kind { get; init; } = "Component";
@@ -28,14 +28,10 @@ internal class DaprComponentSchema
             Metadata = []
         };
     }
-    public override string ToString()
-    {
-        return serializer.Serialize(this);
-    }
-    public static implicit operator DaprComponentSchema(string yamlContent)
-    {
-        return deserializer.Deserialize<DaprComponentSchema>(yamlContent);
-    }
+    public override string ToString() => serializer.Serialize(this);
+
+    public static DaprComponentSchema FromYaml(string yamlContent) =>
+        deserializer.Deserialize<DaprComponentSchema>(yamlContent);
     private static IDeserializer BuildDeSerializer()
     {
         DeserializerBuilder builder = new();

@@ -529,7 +529,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     private static async Task<string> GetDefaultContent(DaprComponentResource component, string defaultContentPath, CancellationToken cancellationToken)
     {
         string defaultContent = await File.ReadAllTextAsync(defaultContentPath, cancellationToken).ConfigureAwait(false);
-        DaprComponentSchema content = defaultContent.Replace($"name: {component.Type}", $"name: {component.Name}");
+        string yaml = defaultContent.Replace($"name: {component.Type}", $"name: {component.Name}");
+        DaprComponentSchema content = DaprComponentSchema.FromYaml(yaml);
         ConfigureDaprComponent(component, content);
         return content.ToString();
     }

@@ -11,7 +11,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task ResourceStartsAndRespondsOk()
     {
         var resourceName = "servicea";
-        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName);
         var httpClient = fixture.CreateHttpClient(resourceName);
 
         var response = await httpClient.GetAsync("/weatherforecast");
