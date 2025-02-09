@@ -1,93 +1,138 @@
-﻿namespace CommunityToolkit.Aspire.Hosting.Dapr;
+﻿using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+
+namespace CommunityToolkit.Aspire.Hosting.Dapr;
+
+internal interface IDaprComponentSpecMetadata : IList<DaprComponentSpecMetadata>;
+
 internal class DaprComponentSchema
 {
-    public string ApiVersion { get; set; } = "dapr.io/v1alpha1";
-    public string Kind { get; set; } = "Component";
-    public DaprComponentMetadata Metadata { get; init; }
-    public DaprComponentSpec Spec { get; init; }
+    internal static readonly ISerializer serializer = BuildSerializer();
+    internal static readonly IDeserializer deserializer = BuildDeSerializer();
 
-    internal DaprComponentSchema(string name, string type)
+    public string ApiVersion { get; init; } = "dapr.io/v1alpha1";
+    public string Kind { get; init; } = "Component";
+    public DaprComponentAuth? Auth { get; set; }
+    public DaprComponentMetadata Metadata { get; init; } = default!;
+    public DaprComponentSpec Spec { get; init; } = default!;
+
+    // Required for deserialization
+    public DaprComponentSchema() { }
+
+    public DaprComponentSchema(string name, string type)
     {
         Metadata = new DaprComponentMetadata { Name = name };
-        Spec = new DaprComponentSpec { Type = type };
+        Spec = new DaprComponentSpec
+        {
+            Type = type,
+            Metadata = []
+        };
+    }
+    public override string ToString()
+    {
+        return serializer.Serialize(this);
+    }
+    public static implicit operator DaprComponentSchema(string yamlContent)
+    {
+        return deserializer.Deserialize<DaprComponentSchema>(yamlContent);
+    }
+    private static IDeserializer BuildDeSerializer()
+    {
+        DeserializerBuilder builder = new();
+        builder.WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .WithTypeDiscriminatingNodeDeserializer(static o =>
+            {
+                Dictionary<string, Type> keyMappings = new()
+                {
+                    ["value"] = typeof(DaprComponentSpecMetadataValue),
+                    ["secretKeyRef"] = typeof(DaprComponentSpecMetadataSecret)
+                };
+                o.AddUniqueKeyTypeDiscriminator<DaprComponentSpecMetadata>(keyMappings);
+            });
+        return builder.Build();
     }
 
-    override public string ToString()
+    private static ISerializer BuildSerializer()
     {
-        return
-            $"""
-            apiVersion: {ApiVersion}
-            kind: {Kind}
-            metadata:
-              name: {Metadata.Name}
-            spec:
-              {Spec.Metadata}
-            """;
+        SerializerBuilder builder = new();
+        builder.WithNamingConvention(CamelCaseNamingConvention.Instance)
+               .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults);
+        return builder.Build();
     }
+
 }
 internal class DaprComponentMetadata
 {
-    public required string Name { get; set; }
+    public required string Name { get; init; }
+    public string? Namespace { get; init; }
+
 }
+
+internal class DaprComponentAuth
+{
+    public required string SecretStore { get; init; }
+}
+
+internal class GenericDaprComponentSpecMetadata : List<DaprComponentSpecMetadata>, IDaprComponentSpecMetadata;
+
+internal class DaprComponentSpec : DaprComponentSpec<GenericDaprComponentSpecMetadata> { }
 
 internal class DaprComponentSpec<TSpecMetadata> where TSpecMetadata : IDaprComponentSpecMetadata
 {
-    public required string Type { get; set; }
-    public string Version { get; set; } = "v1";
-    public TSpecMetadata? Metadata { get; set; }
-
-    override public string ToString()
-    {
-        return
-            $"""
-            type: {Type}
-            version: {Version}
-            metadata: 
-              {Metadata}
-            """;
-    }
+    public required string Type { get; init; }
+    public string Version { get; init; } = "v1";
+    public required TSpecMetadata Metadata { get; init; }
 }
+
+/// <summary>
+/// Represents a Dapr component spec metadata item
+/// </summary>
 public abstract class DaprComponentSpecMetadata
 {
-    public required string Name { get; set; }
+    /// <summary>
+    /// The name of the metadata item
+    /// </summary>
+    [YamlMember(Order = 1)]
+    public required string Name { get; init; }
+}
 
-}
-public class DaprComponentSpecMetadataValue : DaprComponentSpecMetadata
+/// <summary>
+/// Represents a Dapr component spec metadata item with a value
+/// </summary>
+public sealed class DaprComponentSpecMetadataValue : DaprComponentSpecMetadata
 {
+    /// <summary>
+    /// The value of the metadata item
+    /// </summary>
+    [YamlMember(Order = 2)]
     public required string Value { get; set; }
-    override public string ToString()
-    {
-        return
-            $"""
-            - name: {Name}
-              value: {Value}
-            """;
-    }
 }
-public class DaprComponentSpecMetadataSecret : DaprComponentSpecMetadata
+
+/// <summary>
+/// Represents a Dapr component spec metadata item with a secret key reference
+/// </summary>
+public sealed class DaprComponentSpecMetadataSecret : DaprComponentSpecMetadata
 {
+    /// <summary>
+    /// The secret key reference of the metadata item
+    /// </summary>
+    [YamlMember(Order = 2)]
     public required DaprSecretKeyRef SecretKeyRef { get; set; }
 
-    override public string ToString()
-    {
-        return
-            $"""
-            - name: {Name}
-              secretKeyRef:
-                name: {SecretKeyRef.Name}
-                key: {SecretKeyRef.Key}
-            """;
-    }
 }
-public class DaprSecretKeyRef
-{
-    public required string Name { get; set; }
-    public required string Key { get; set; }
-}
-public interface IDaprComponentSpecMetadata;
-public class RedisStateStoreMetadata :IDaprComponentSpecMetadata
-{
-    public required DaprComponentSpecMetadataValue RedisHost { get; set; }
-    public required DaprComponentSpecMetadataSecret RedisPassword { get; set; }
 
-}
+/// <summary>
+/// Represents a Dapr secret key reference
+/// </summary>
+public sealed class DaprSecretKeyRef
+{
+    /// <summary>
+    /// The name of the secret
+    /// </summary>
+    public required string Name { get; init; } = default!;
+    /// <summary>
+    /// The key of the secret
+    /// </summary>
+    public required string Key { get; init; } = default!;
+};
+

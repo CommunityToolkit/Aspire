@@ -1,8 +1,24 @@
 #nullable enable
-CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions
+Aspire.Hosting.DaprMetadataResourceBuilderExtensions
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadata
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadata.DaprComponentSpecMetadata() -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadata.Name.get -> string!
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadata.Name.init -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataSecret
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataSecret.DaprComponentSpecMetadataSecret() -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataSecret.SecretKeyRef.get -> CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef!
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataSecret.SecretKeyRef.set -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataValue
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataValue.DaprComponentSpecMetadataValue() -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataValue.Value.get -> string!
+CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentSpecMetadataValue.Value.set -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.DaprSecretKeyRef() -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Key.get -> string!
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Key.init -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Name.get -> string!
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Name.init -> void
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.get -> string?
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.init -> void
-CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentSpecMetadata
-static CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions.WithMetadata<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, string! name, Aspire.Hosting.ApplicationModel.EndpointReference! endpointReference) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
-static CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions.WithMetadata<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, string! name, Aspire.Hosting.ApplicationModel.ParameterResource! parameterResource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
-static CommunityToolkit.Aspire.Hosting.Dapr.DaprMetadataResourceBuilderExtensions.WithMetadata<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T>! builder, string! name, string! value) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T>!
+static Aspire.Hosting.DaprMetadataResourceBuilderExtensions.WithMetadata(this Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>! builder, string! name, Aspire.Hosting.ApplicationModel.ParameterResource! parameterResource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>!
+static Aspire.Hosting.DaprMetadataResourceBuilderExtensions.WithMetadata(this Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>! builder, string! name, string! value) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>!

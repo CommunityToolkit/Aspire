@@ -5,18 +5,23 @@ var rmq = builder.AddRabbitMQ("rabbitMQ")
                    .WithEndpoint("tcp", e => e.Port = 5672)
                    .WithEndpoint("management", e => e.Port = 15672);
 
+
 var stateStore = builder.AddDaprStateStore("statestore");
+
 var pubSub = builder.AddDaprPubSub("pubsub")
+                           .WithMetadata("password", rmq.Resource.PasswordParameter)
                     .WaitFor(rmq);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
-       .WithDaprSidecar()
        .WithReference(stateStore)
-       .WithReference(pubSub);
+       .WithReference(pubSub)
+       .WithDaprSidecar()
+       .WaitFor(rmq);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
+       .WithReference(pubSub)
        .WithDaprSidecar()
-       .WithReference(pubSub);
+       .WaitFor(rmq);
 
 // console app with no appPort (sender only)
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceC>("servicec")
