@@ -9,7 +9,7 @@ var rmq = builder.AddRabbitMQ("rabbitMQ")
 var stateStore = builder.AddDaprStateStore("statestore");
 
 var pubSub = builder.AddDaprPubSub("pubsub")
-                           .WithMetadata("password", rmq.Resource.PasswordParameter)
+                 .WithMetadata("password", rmq.Resource.PasswordParameter)
                     .WaitFor(rmq);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
