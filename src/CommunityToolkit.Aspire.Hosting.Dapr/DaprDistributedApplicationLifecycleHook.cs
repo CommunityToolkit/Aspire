@@ -43,10 +43,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
         var sideCars = new List<ExecutableResource>();
 
-        var secrets = new Dictionary<string, string>();
 
         foreach (var resource in appModel.Resources)
         {
+
             if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation))
             {
                 continue;
@@ -79,6 +79,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
             var componentReferenceAnnotations = resource.Annotations.OfType<DaprComponentReferenceAnnotation>();
 
             var waitAnnotationsToCopyToDaprCli = new List<WaitAnnotation>();
+
+            var secrets = new Dictionary<string, string>();
 
             foreach (var componentReferenceAnnotation in componentReferenceAnnotations)
             {
