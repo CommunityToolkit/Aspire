@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var redis = builder.AddRedis("redis");
+var redis = builder.AddRedis("redis").WithRedisInsight();
 
 
 var stateStore = builder.AddDaprStateStore("statestore");
