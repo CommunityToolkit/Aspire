@@ -1,7 +1,7 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres1 = builder.AddPostgres("postgres1")
-    .WithDbGate(c=> c.WithHostPort(8068));
+    .WithDbGate(c => c.WithHostPort(8068));
 postgres1.AddDatabase("db1");
 postgres1.AddDatabase("db2");
 

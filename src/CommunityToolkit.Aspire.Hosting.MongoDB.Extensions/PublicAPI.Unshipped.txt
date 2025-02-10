@@ -1,0 +1,2 @@
+Aspire.Hosting.MongoDBBuilderExtensions
+static Aspire.Hosting.MongoDBBuilderExtensions.WithDbGate(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MongoDBServerResource!>! builder, System.Action<Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!>? configureContainer = null, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MongoDBServerResource!>!
