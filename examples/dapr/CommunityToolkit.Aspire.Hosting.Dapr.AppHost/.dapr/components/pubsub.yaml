@@ -1,17 +1,12 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
+auth:
+  secretStore: secretstore
 metadata:
   name: pubsub
-  namespace: default
 spec:
-  type: pubsub.rabbitmq
+  type: pubsub.redis
   version: v1
   metadata:
-  - name: protocol
-    value: amqp
-  - name: hostname
-    value: localhost
-  - name: username
-    value: guest
-  - name: password
-    value: guest
+  - name: redisPassword
+    value: ''
