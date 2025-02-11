@@ -249,7 +249,11 @@ public static class AspireSqliteExtensions
             var path = new HashSet<string>(Environment.GetEnvironmentVariable(pathVariableName)!.Split(Path.PathSeparator));
 
             if (assetDirectory is not null && path.Add(assetDirectory))
+            {
+                logger.LogInformation("Adding {AssetDirectory} to {PathVariableName}", assetDirectory, pathVariableName);
                 Environment.SetEnvironmentVariable(pathVariableName, string.Join(Path.PathSeparator, path));
+                logger.LogInformation("Set {PathVariableName} to: {PathVariableValue}", pathVariableName, Environment.GetEnvironmentVariable(pathVariableName));
+            }
         }
         else
         {
