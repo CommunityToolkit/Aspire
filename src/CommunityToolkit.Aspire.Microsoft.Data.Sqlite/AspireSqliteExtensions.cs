@@ -71,7 +71,7 @@ public static class AspireSqliteExtensions
             var cbs = new DbConnectionStringBuilder { ConnectionString = settings.ConnectionString };
             if (cbs.TryGetValue("Extensions", out var extensions))
             {
-                settings.Extensions = JsonSerializer.Deserialize<IEnumerable<ExtensionMetadata>>((string)extensions) ?? [];
+                settings.Extensions = JsonSerializer.Deserialize<IEnumerable<SqliteExtensionMetadata>>((string)extensions) ?? [];
             }
         }
 

@@ -18,6 +18,7 @@
   <ItemGroup>
     <Compile Include="$(SharedDir)\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
     <Compile Include="$(SharedDir)\ConnectionStringValidation.cs" Link="Utils\ConnectionStringValidation.cs" />
+    <Compile Include="$(SharedDir)\Sqlite\SqliteExtensionMetadata.cs" Link="Utils\Sqlite\SqliteExtensionMetadata.cs" />
   </ItemGroup>
 
 </Project>
