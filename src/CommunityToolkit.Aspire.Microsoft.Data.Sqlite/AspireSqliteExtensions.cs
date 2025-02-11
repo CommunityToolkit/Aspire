@@ -243,7 +243,7 @@ public static class AspireSqliteExtensions
                 }
 
                 assetDirectory = Path.GetDirectoryName(assetFullPath);
-                logger.LogInformation("Found {Library} in {Package} runtime assets at {Path}", library, package, assetFullPath);
+                logger.LogInformation("Found {Library} in {Package} runtime assets at {Path} (using PROBING_DIRECTORIES: {ProbingDirectories})", library, package, assetFullPath, string.Join(",", probingDirectories));
             }
 
             var path = new HashSet<string>(Environment.GetEnvironmentVariable(pathVariableName)!.Split(Path.PathSeparator));
