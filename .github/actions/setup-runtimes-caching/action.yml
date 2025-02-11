@@ -55,7 +55,7 @@ runs:
     - uses: denoland/setup-deno@v2
       name: Setup Deno
       with:
-        deno-version: v2.1.4
+        deno-version: v2.1.9
 
     - uses: oven-sh/setup-bun@v2
       name: Setup Bun
@@ -121,3 +121,4 @@ runs:
       run: |
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version
+
