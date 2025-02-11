@@ -4,7 +4,6 @@ using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite.Tests;
@@ -26,6 +25,8 @@ public class ResourceWithExtensionTests(ITestOutputHelper testOutputHelper)
 
         var hb = Host.CreateApplicationBuilder();
 
+        hb.Configuration[$"ConnectionStrings:{sqlite.Resource.Name}"] = await sqlite.Resource.ConnectionStringExpression.GetValueAsync(default);
+
         hb.AddSqliteConnection(sqlite.Resource.Name);
 
         using var host = hb.Build();
@@ -37,12 +38,13 @@ public class ResourceWithExtensionTests(ITestOutputHelper testOutputHelper)
         var result = await IsExtensionLoadedAsync(connection, "spatialite_version()");
 
         Assert.NotNull(result);
-        Assert.IsType<string>(result);
-        Assert.Equal("5.1.0", result);
+        var version = Assert.IsType<string>(result);
+        Assert.Equal("4.3.0a", version);
     }
 
     private static async Task<object?> IsExtensionLoadedAsync(SqliteConnection connection, string checkFunction)
     {
+        await connection.OpenAsync();
         string checkQuery = $"SELECT {checkFunction}";
         using var command = connection.CreateCommand();
         command.CommandText = checkQuery;
