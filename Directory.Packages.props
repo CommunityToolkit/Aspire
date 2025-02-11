@@ -31,7 +31,6 @@
     <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="9.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="mod_spatialite" Version="4.3.0.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="$(DotNetExtensionsVersion)" />
@@ -55,6 +54,7 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.2" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version=" 9.0.0-beta.24568.1" />
+    <PackageVersion Include="mod_spatialite" Version="4.3.0.1" />
     <!-- External packages -->
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.0.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.3.0" />
