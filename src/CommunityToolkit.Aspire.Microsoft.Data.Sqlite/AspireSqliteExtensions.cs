@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -114,6 +115,7 @@ public static class AspireSqliteExtensions
 
         SqliteConnection CreateConnection(IServiceProvider sp, object? key)
         {
+            var logger = sp.GetRequiredService<ILogger<SqliteConnection>>();
             ConnectionStringValidation.ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
             var csb = new DbConnectionStringBuilder { ConnectionString = settings.ConnectionString };
             if (csb.ContainsKey("Extensions"))
@@ -131,7 +133,7 @@ public static class AspireSqliteExtensions
                         throw new InvalidOperationException("PackageName is required when loading an extension from a NuGet package.");
                     }
 
-                    EnsureLoadableFromNuGet(extension.Extension, extension.PackageName);
+                    EnsureLoadableFromNuGet(extension.Extension, extension.PackageName, logger);
                 }
                 else
                 {
@@ -150,11 +152,14 @@ public static class AspireSqliteExtensions
     }
 
     // Adapted from https://github.com/dotnet/docs/blob/dbbeda13bf016a6ff76b0baab1488c927a64ff24/samples/snippets/standard/data/sqlite/ExtensionsSample/Program.cs#L40
-    internal static void EnsureLoadableFromNuGet(string package, string library)
+    internal static void EnsureLoadableFromNuGet(string package, string library, ILogger<SqliteConnection> logger)
     {
         var runtimeLibrary = DependencyContext.Default?.RuntimeLibraries.FirstOrDefault(l => l.Name == package);
         if (runtimeLibrary is null)
+        {
+            logger.LogInformation("Could not find the runtime library for package {Package}", package);
             return;
+        }
 
         string sharedLibraryExtension;
         string pathVariableName = "PATH";
@@ -182,6 +187,9 @@ public static class AspireSqliteExtensions
         var rids = DependencyContext.Default?.RuntimeGraph.First(g => g.Runtime == rid).Fallbacks.ToList() ?? [];
         rids.Insert(0, rid);
 
+        logger.LogInformation("Looking for {Library} in {Package} runtime assets", library, package);
+        logger.LogInformation("Possible runtime identifiers: {Rids}", string.Join(", ", rids));
+
         foreach (var group in runtimeLibrary.NativeLibraryGroups)
         {
             foreach (var file in group.RuntimeFiles)
@@ -194,6 +202,7 @@ public static class AspireSqliteExtensions
                     var fallbacks = rids.IndexOf(group.Runtime);
                     if (fallbacks != -1)
                     {
+                        logger.LogInformation("Found {Library} in {Package} runtime assets at {Path}", library, package, file.Path);
                         candidateAssets.Add((runtimeLibrary.Path, file.Path), fallbacks);
                     }
                 }
@@ -213,6 +222,8 @@ public static class AspireSqliteExtensions
                 assetDirectory = Path.Combine(
                     AppContext.BaseDirectory,
                     Path.GetDirectoryName(assetPath.Asset.Replace('/', Path.DirectorySeparatorChar))!);
+
+                logger.LogInformation("Found {Library} in {Package} runtime assets at {Path}", library, package, assetPath.Asset);
             }
             else
             {
@@ -232,12 +243,17 @@ public static class AspireSqliteExtensions
                 }
 
                 assetDirectory = Path.GetDirectoryName(assetFullPath);
+                logger.LogInformation("Found {Library} in {Package} runtime assets at {Path}", library, package, assetFullPath);
             }
 
             var path = new HashSet<string>(Environment.GetEnvironmentVariable(pathVariableName)!.Split(Path.PathSeparator));
 
             if (assetDirectory is not null && path.Add(assetDirectory))
                 Environment.SetEnvironmentVariable(pathVariableName, string.Join(Path.PathSeparator, path));
+        }
+        else
+        {
+            logger.LogInformation("Could not find {Library} in {Package} runtime assets", library, package);
         }
     }
 
