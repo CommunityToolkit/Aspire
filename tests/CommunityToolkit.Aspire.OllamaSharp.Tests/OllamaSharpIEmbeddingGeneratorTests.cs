@@ -20,11 +20,11 @@ public class OllamaSharpIEmbeddingGeneratorTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpEmbeddingGenerator("Ollama");
+            builder.AddKeyedOllamaApiClient("Ollama").AddKeyedEmbeddingGenerator();
         }
         else
         {
-            builder.AddOllamaSharpEmbeddingGenerator("Ollama");
+            builder.AddOllamaApiClient("Ollama").AddEmbeddingGenerator();
         }
 
         using var host = builder.Build();
@@ -49,11 +49,11 @@ public class OllamaSharpIEmbeddingGeneratorTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpEmbeddingGenerator("Ollama", settings => settings.Endpoint = Endpoint);
+            builder.AddKeyedOllamaApiClient("Ollama", settings => settings.Endpoint = Endpoint).AddKeyedEmbeddingGenerator(); ;
         }
         else
         {
-            builder.AddOllamaSharpEmbeddingGenerator("Ollama", settings => settings.Endpoint = Endpoint);
+            builder.AddOllamaApiClient("Ollama", settings => settings.Endpoint = Endpoint).AddEmbeddingGenerator(); ;
         }
 
         using var host = builder.Build();
@@ -79,11 +79,11 @@ public class OllamaSharpIEmbeddingGeneratorTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpEmbeddingGenerator("Ollama");
+            builder.AddKeyedOllamaApiClient("Ollama").AddKeyedEmbeddingGenerator();
         }
         else
         {
-            builder.AddOllamaSharpEmbeddingGenerator("Ollama");
+            builder.AddOllamaApiClient("Ollama").AddEmbeddingGenerator();
         }
 
         using var host = builder.Build();
@@ -106,9 +106,9 @@ public class OllamaSharpIEmbeddingGeneratorTests
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "Endpoint=https://localhost:5003/")
         ]);
 
-        builder.AddOllamaSharpEmbeddingGenerator("Ollama");
-        builder.AddKeyedOllamaSharpEmbeddingGenerator("Ollama2");
-        builder.AddKeyedOllamaSharpEmbeddingGenerator("Ollama3");
+        builder.AddOllamaApiClient("Ollama").AddEmbeddingGenerator();
+        builder.AddKeyedOllamaApiClient("Ollama2").AddKeyedEmbeddingGenerator();
+        builder.AddKeyedOllamaApiClient("Ollama3").AddKeyedEmbeddingGenerator();
 
         using var host = builder.Build();
         var client = host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();

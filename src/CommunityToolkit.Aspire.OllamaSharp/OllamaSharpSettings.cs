@@ -32,4 +32,11 @@ public sealed class OllamaSharpSettings
     /// Gets or sets a integer value that indicates the Ollama health check timeout in milliseconds.
     /// </summary>
     public int? HealthCheckTimeout { get; set; }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether tracing is disabled or not.
+    /// </summary>
+    /// <remarks>Currently, the OllamaSharp SDK does not support tracing, but this is here for future use.</remarks>
+    internal bool DisableTracing { get; set; }
+
 }

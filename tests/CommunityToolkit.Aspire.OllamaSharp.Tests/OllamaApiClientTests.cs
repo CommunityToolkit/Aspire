@@ -133,18 +133,15 @@ public class OllamaApiClientTests
             new KeyValuePair<string, string?>("ConnectionStrings:Embedding", $"Endpoint={Endpoint};Model=Embedding")
         ]);
 
-        builder.AddOllamaSharpChatClient("Chat");
-        builder.AddOllamaSharpEmbeddingGenerator("Embedding");
+        builder.AddOllamaApiClient("Chat").AddChatClient();
+        builder.AddOllamaApiClient("Embedding").AddEmbeddingGenerator();
         using var host = builder.Build();
 
         var chatClient = host.Services.GetRequiredService<IChatClient>();
         var embeddingGenerator = host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
-        var chatAsOllama = (IOllamaApiClient)chatClient;
-        var embeddingAsOllama = (IOllamaApiClient)embeddingGenerator;
-
-        Assert.Equal("Chat", chatAsOllama.SelectedModel);
-        Assert.Equal("Embedding", embeddingAsOllama.SelectedModel);
+        Assert.Equal("Chat", chatClient.Metadata.ModelId);
+        Assert.Equal("Embedding", embeddingGenerator.Metadata.ModelId);
     }
 
     [Fact]
@@ -156,8 +153,8 @@ public class OllamaApiClientTests
             new KeyValuePair<string, string?>("ConnectionStrings:Embedding", $"Endpoint={Endpoint};Model=Embedding")
         ]);
 
-        builder.AddOllamaSharpChatClient("Chat");
-        builder.AddOllamaSharpEmbeddingGenerator("Embedding");
+        builder.AddOllamaApiClient("Chat").AddChatClient();
+        builder.AddOllamaApiClient("Embedding").AddEmbeddingGenerator();
         using var host = builder.Build();
 
         var ollamaApiClients = host.Services.GetServices<IOllamaApiClient>();

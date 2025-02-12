@@ -20,11 +20,11 @@ public class OllamaSharpIChatClientTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpChatClient("Ollama");
+            builder.AddKeyedOllamaApiClient("Ollama").AddKeyedChatClient();
         }
         else
         {
-            builder.AddOllamaSharpChatClient("Ollama");
+            builder.AddOllamaApiClient("Ollama").AddChatClient();
         }
 
         using var host = builder.Build();
@@ -49,11 +49,11 @@ public class OllamaSharpIChatClientTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpChatClient("Ollama", settings => settings.Endpoint = Endpoint);
+            builder.AddKeyedOllamaApiClient("Ollama", settings => settings.Endpoint = Endpoint).AddKeyedChatClient();
         }
         else
         {
-            builder.AddOllamaSharpChatClient("Ollama", settings => settings.Endpoint = Endpoint);
+            builder.AddOllamaApiClient("Ollama", settings => settings.Endpoint = Endpoint).AddChatClient();
         }
 
         using var host = builder.Build();
@@ -79,11 +79,11 @@ public class OllamaSharpIChatClientTests
 
         if (useKeyed)
         {
-            builder.AddKeyedOllamaSharpChatClient("Ollama");
+            builder.AddKeyedOllamaApiClient("Ollama").AddKeyedChatClient();
         }
         else
         {
-            builder.AddOllamaSharpChatClient("Ollama");
+            builder.AddOllamaApiClient("Ollama").AddChatClient();
         }
 
         using var host = builder.Build();
@@ -106,9 +106,9 @@ public class OllamaSharpIChatClientTests
             new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "Endpoint=https://localhost:5003/")
         ]);
 
-        builder.AddOllamaSharpChatClient("Ollama");
-        builder.AddKeyedOllamaSharpChatClient("Ollama2");
-        builder.AddKeyedOllamaSharpChatClient("Ollama3");
+        builder.AddOllamaApiClient("Ollama").AddChatClient();
+        builder.AddKeyedOllamaApiClient("Ollama2").AddKeyedChatClient();
+        builder.AddKeyedOllamaApiClient("Ollama3").AddKeyedChatClient();
 
         using var host = builder.Build();
         var client = host.Services.GetRequiredService<IChatClient>();

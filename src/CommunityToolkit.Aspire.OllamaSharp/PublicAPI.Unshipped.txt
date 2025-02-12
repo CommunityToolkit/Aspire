@@ -1,2 +1,16 @@
 #nullable enable
-
+Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder
+Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder.AspireOllamaApiClientBuilder(Microsoft.Extensions.Hosting.IHostApplicationBuilder! hostBuilder, string! serviceKey, bool disableTracing) -> void
+Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder.DisableTracing.get -> bool
+Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder.HostBuilder.get -> Microsoft.Extensions.Hosting.IHostApplicationBuilder!
+Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder.ServiceKey.get -> string!
+Microsoft.Extensions.Hosting.AspireOllamaChatClientExtensions
+Microsoft.Extensions.Hosting.AspireOllamaEmbeddingGeneratorExtensions
+static Microsoft.Extensions.Hosting.AspireOllamaChatClientExtensions.AddChatClient(this Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder! builder) -> Microsoft.Extensions.AI.ChatClientBuilder!
+static Microsoft.Extensions.Hosting.AspireOllamaChatClientExtensions.AddKeyedChatClient(this Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder! builder) -> Microsoft.Extensions.AI.ChatClientBuilder!
+static Microsoft.Extensions.Hosting.AspireOllamaEmbeddingGeneratorExtensions.AddEmbeddingGenerator(this Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder! builder) -> Microsoft.Extensions.AI.EmbeddingGeneratorBuilder<string!, Microsoft.Extensions.AI.Embedding<float>!>!
+static Microsoft.Extensions.Hosting.AspireOllamaEmbeddingGeneratorExtensions.AddKeyedEmbeddingGenerator(this Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder! builder) -> Microsoft.Extensions.AI.EmbeddingGeneratorBuilder<string!, Microsoft.Extensions.AI.Embedding<float>!>!
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddKeyedOllamaApiClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder!
+static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddOllamaApiClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> Microsoft.Extensions.Hosting.AspireOllamaApiClientBuilder!
+*REMOVED*static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddKeyedOllamaApiClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void
+*REMOVED*static Microsoft.Extensions.Hosting.AspireOllamaSharpExtensions.AddOllamaApiClient(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, string! connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings!>? configureSettings = null) -> void
