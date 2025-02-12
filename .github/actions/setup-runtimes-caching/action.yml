@@ -69,7 +69,7 @@ runs:
 
     - uses: dapr/setup-dapr@v2
       name: Setup Dapr
-      if: ${{ matrix.os == 'ubuntu-latest' }} && contains('Dapr', '${{ inputs.name }}')
+      if: ${{ matrix.os == 'ubuntu-latest' && contains(${{ inputs.name }}, 'Dapr') }}
       with:
         version: ${{ env.DAPR_VERSION }}
 
@@ -115,7 +115,7 @@ runs:
 
     - name: Init Dapr
       shell: bash
-      if: ${{ matrix.os == 'ubuntu-latest' }} && contains('Dapr', '${{ inputs.name }}')
+      if: ${{ matrix.os == 'ubuntu-latest' && contains(${{ inputs.name }}, 'Dapr') }}
       run: |
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version
