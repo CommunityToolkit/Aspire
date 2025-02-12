@@ -138,12 +138,13 @@ jobs:
         env:
           CI: false
         run: |
-          dotnet build ${{ github.workspace }}/${{ matrix.project }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }} --no-restore
+          dotnet build ${{ github.workspace }}/${{ matrix.project }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
 
       - name: Run tests
         id: run-tests
         run: |
           dotnet test ${{ github.workspace }}/${{ matrix.project }} \
+            --no-build \
             --configuration ${{ env.DOTNET_CONFIGURATION }} \
             --logger "console;verbosity=normal" \
             --logger "trx" \
