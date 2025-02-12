@@ -75,7 +75,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Oll
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.OllamaSharp.Tests", "tests\CommunityToolkit.Aspire.OllamaSharp.Tests\CommunityToolkit.Aspire.OllamaSharp.Tests.csproj", "{B170B19B-3FFA-4F71-AF12-A1E3955A0F8E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.Tests", "tests\CommunityToolkit.Aspire.Hosting.Meilisearch\CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj", "{C715669D-FBDE-4BFF-B9A3-75615D3C179A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Hosting.Meilisearch.Tests", "tests\CommunityToolkit.Aspire.Hosting.Meilisearch.Tests\CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj", "{C715669D-FBDE-4BFF-B9A3-75615D3C179A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommunityToolkit.Aspire.Meilisearch.Tests", "tests\CommunityToolkit.Aspire.Meilisearch.Tests\CommunityToolkit.Aspire.Meilisearch.Tests.csproj", "{0AACC135-9624-423D-8988-69701C0FE428}"
 EndProject
