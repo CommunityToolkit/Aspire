@@ -75,19 +75,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-nuget-
 
-    - name: Get NPM package root
-      id: npm-root
-      run: "echo path=$(npm root -g) >> $GITHUB_OUTPUT"
-      shell: bash
-
-    - uses: actions/cache@v4
-      name: Cache global npm packages
-      with:
-        path: ${{ steps.npm-root.outputs.path }}
-        key: ${{ runner.os }}-npm-${{ hashFiles('${{ inputs.hash-file }}') }}
-        restore-keys: |
-          ${{ runner.os }}-npm-
-
     - uses: Swatinem/rust-cache@v2
       name: Cache Rust packages
       with:
@@ -102,6 +89,7 @@ runs:
 
     - name: Setup Node projects
       shell: bash
+      if: ${{ contains(inputs.name, 'StaticWebApps') }}
       run: |
         npm install -g @azure/static-web-apps-cli
         cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
