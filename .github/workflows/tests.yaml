@@ -125,15 +125,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v4
+      - name: Setup Runtimes, Caching, and Tools
+        uses: ./.github/actions/setup-runtimes-caching
         with:
-          dotnet-version: |
-            8.x
-            9.x
-
-      - name: Trust HTTPS development certificate
-        run: dotnet dev-certs https --trust
+          hash-file: ".github/workflows/dotnet-ci.yml"
 
       - name: Verify Docker is running
         run: docker info
