@@ -13,6 +13,7 @@ jobs:
     env:
       DOTNET_CONFIGURATION: Release
       DAPR_VERSION: "1.14.1"
+      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}
     runs-on: "${{ matrix.os }}"
     timeout-minutes: 60
     name: ${{ matrix.name }}-${{ matrix.os }}
@@ -22,41 +23,41 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         name: [
             # Hosting integration tests
-            CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests,
-            CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests,
-            CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests,
-            CommunityToolkit.Aspire.Hosting.Bun.Tests,
-            CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions.Tests,
-            CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests,
-            CommunityToolkit.Aspire.Hosting.Dapr.Tests,
-            CommunityToolkit.Aspire.Hosting.DbGate.Tests,
-            CommunityToolkit.Aspire.Hosting.Deno.Tests,
-            CommunityToolkit.Aspire.Hosting.EventStore.Tests,
-            CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests,
-            CommunityToolkit.Aspire.Hosting.Golang.Tests,
-            CommunityToolkit.Aspire.Hosting.Java.Tests,
-            CommunityToolkit.Aspire.Hosting.Meilisearch.Tests,
-            CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests,
-            CommunityToolkit.Aspire.Hosting.Ngrok.Tests,
-            CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests,
-            CommunityToolkit.Aspire.Hosting.Ollama.Tests,
-            CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests,
-            CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests,
-            CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests,
-            CommunityToolkit.Aspire.Hosting.RavenDB.Tests,
-            CommunityToolkit.Aspire.Hosting.Rust.Tests,
-            CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests,
-            CommunityToolkit.Aspire.Hosting.Sqlite.Tests,
+            Hosting.ActiveMQ.Tests,
+            Hosting.Azure.DataApiBuilder.Tests,
+            Hosting.Azure.StaticWebApps.Tests,
+            Hosting.Bun.Tests,
+            Hosting.Dapr.AzureExtensions.Tests,
+            Hosting.Dapr.AzureRedis.Tests,
+            Hosting.Dapr.Tests,
+            Hosting.DbGate.Tests,
+            Hosting.Deno.Tests,
+            Hosting.EventStore.Tests,
+            Hosting.GoFeatureFlag.Tests,
+            Hosting.Golang.Tests,
+            Hosting.Java.Tests,
+            Hosting.Meilisearch.Tests,
+            Hosting.MongoDB.Extensions.Tests,
+            Hosting.Ngrok.Tests,
+            Hosting.NodeJS.Extensions.Tests,
+            Hosting.Ollama.Tests,
+            Hosting.PapercutSmtp.Tests,
+            Hosting.PostgreSQL.Extensions.Tests,
+            Hosting.Python.Extensions.Tests,
+            Hosting.RavenDB.Tests,
+            Hosting.Rust.Tests,
+            Hosting.SqlDatabaseProjects.Tests,
+            Hosting.Sqlite.Tests,
 
             # Client integration tests
-            CommunityToolkit.Aspire.EventStore.Tests,
-            CommunityToolkit.Aspire.GoFeatureFlag.Tests,
-            CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests,
-            CommunityToolkit.Aspire.Meilisearch.Tests,
-            CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests,
-            CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests,
-            CommunityToolkit.Aspire.OllamaSharp.Tests,
-            CommunityToolkit.Aspire.RavenDB.Client.Tests,
+            EventStore.Tests,
+            GoFeatureFlag.Tests,
+            MassTransit.RabbitMQ.Tests,
+            Meilisearch.Tests,
+            Microsoft.Data.Sqlite.Tests,
+            Microsoft.EntityFrameworkCore.Sqlite.Tests,
+            OllamaSharp.Tests,
+            RavenDB.Client.Tests,
           ]
 
     steps:
@@ -75,12 +76,12 @@ jobs:
         env:
           CI: false
         run: |
-          dotnet build ${{ github.workspace }}/tests/${{ matrix.name }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
+          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
 
       - name: Run tests
         id: run-tests
         run: |
-          dotnet test ${{ github.workspace }}/tests/${{ matrix.name }} \
+          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} \
             --no-build \
             --configuration ${{ env.DOTNET_CONFIGURATION }} \
             --logger "console;verbosity=normal" \
