@@ -79,7 +79,6 @@ jobs:
         run: |
           dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} \
           --configuration ${{ env.DOTNET_CONFIGURATION }} \
-          -s eng/testing/.runsettings \
           --logger "console;verbosity=normal" \
           --logger "trx" \
           --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" \
@@ -98,7 +97,6 @@ jobs:
         run: |
           dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} `
           --configuration ${{ env.DOTNET_CONFIGURATION }} `
-          -s eng/testing/.runsettings `
           --logger "console;verbosity=normal" `
           --logger "trx" `
           --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" `
