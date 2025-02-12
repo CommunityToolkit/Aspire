@@ -97,7 +97,7 @@ runs:
 
     - uses: dapr/setup-dapr@v2
       name: Setup Dapr
-      if: ${{ matrix.os == 'ubuntu-latest' && contains(inputs.name, 'Dapr') }}
+      if: ${{ contains(inputs.name, 'Dapr') }}
       with:
         version: ${{ env.DAPR_VERSION }}
 
