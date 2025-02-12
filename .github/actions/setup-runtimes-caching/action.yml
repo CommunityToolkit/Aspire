@@ -27,6 +27,8 @@ runs:
 
     - uses: astral-sh/setup-uv@v5
       name: Install uv
+      with:
+        enable-cache: false
 
     - uses: actions/setup-go@v5
       name: Set up Go
@@ -74,14 +76,6 @@ runs:
         key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
         restore-keys: |
           ${{ runner.os }}-nuget-
-
-    - uses: actions/cache@v4
-      name: Cache Java Docker images
-      with:
-        path: /var/lib/docker/image
-        key: ${{ runner.os }}-docker-${{ hashFiles('examples/java/CommunityToolkit.Aspire.Hosting.Java.Spring.Maven/Dockerfile') }}
-        restore-keys: |
-          ${{ runner.os }}-docker-
 
     - name: Get NPM package root
       id: npm-root
