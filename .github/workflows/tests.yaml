@@ -1,8 +1,7 @@
 name: Run Integration Tests
 
 on:
-  pull_request:
-    branches: [main]
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -83,6 +82,7 @@ jobs:
         run: |
           dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} \
           --configuration ${{ env.DOTNET_CONFIGURATION }} \
+          -s eng/testing/.runsettings \
           --logger "console;verbosity=normal" \
           --logger "trx" \
           --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" \
@@ -91,6 +91,7 @@ jobs:
           --blame-hang-timeout 7m \
           --blame-crash \
           --results-directory testresults \
+          --collect "XPlat Code Coverage" \
           --no-restore \
           --no-build -- RunConfiguration.CollectSourceInformation=true
         shell: bash
@@ -100,6 +101,7 @@ jobs:
         run: |
           dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} `
           --configuration ${{ env.DOTNET_CONFIGURATION }} `
+          -s eng/testing/.runsettings `
           --logger "console;verbosity=normal" `
           --logger "trx" `
           --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" `
@@ -108,6 +110,7 @@ jobs:
           --blame-hang-timeout 7m `
           --blame-crash `
           --results-directory testresults `
+          --collect "XPlat Code Coverage" `
           --no-restore `
           --no-build -- RunConfiguration.CollectSourceInformation=true
         shell: pwsh
