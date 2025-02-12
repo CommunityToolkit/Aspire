@@ -1,0 +1,183 @@
+name: Run Integration Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    env:
+      DOTNET_CONFIGURATION: Release
+    runs-on: "${{ matrix.os }}"
+    timeout-minutes: 60
+    name: ${{ matrix.name }}-${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          # Hosting integration tests
+          - project: tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Bun.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions.Tests/CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests/CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Dapr.Tests/CommunityToolkit.Aspire.Hosting.Dapr.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Dapr.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.DbGate.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Deno.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.EventStore.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Golang.Tests/CommunityToolkit.Aspire.Hosting.Golang.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Golang.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Java.Tests/CommunityToolkit.Aspire.Hosting.Java.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Java.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Meilisearch.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Ngrok.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Ollama.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.RavenDB.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Rust.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests.csproj
+            name: CommunityToolkit.Aspire.Hosting.Sqlite.Tests
+
+          # Client integration tests
+          - project: tests/CommunityToolkit.Aspire.EventStore.Tests/CommunityToolkit.Aspire.EventStore.Tests.csproj
+            name: CommunityToolkit.Aspire.EventStore.Tests
+
+          - project: tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj
+            name: CommunityToolkit.Aspire.GoFeatureFlag.Tests
+
+          - project: tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj
+            name: CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj
+            name: CommunityToolkit.Aspire.Meilisearch.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests.csproj
+            name: CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests
+
+          - project: tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests.csproj
+            name: CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests
+
+          - project: tests/CommunityToolkit.Aspire.OllamaSharp.Tests/CommunityToolkit.Aspire.OllamaSharp.Tests.csproj
+            name: CommunityToolkit.Aspire.OllamaSharp.Tests
+
+          - project: tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj
+            name: CommunityToolkit.Aspire.RavenDB.Client.Tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.x
+            9.x
+
+      - name: Trust HTTPS development certificate
+        run: dotnet dev-certs https --trust
+
+      - name: Verify Docker is running
+        run: docker info
+
+      - name: Build test project
+        env:
+          CI: false
+        run: |
+          dotnet build ${{ github.workspace }}/${{ matrix.project }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        id: run-tests
+        run: |
+          dotnet test ${{ github.workspace }}/${{ matrix.project }} \
+            --configuration ${{ env.DOTNET_CONFIGURATION }} \
+            --logger "console;verbosity=normal" \
+            --logger "trx" \
+            --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" \
+            /p:TrxLogFileNameSuffix=${{ matrix.os }} \
+            --blame \
+            --blame-hang-timeout 7m \
+            --blame-crash \
+            --results-directory testresults \
+            --no-restore \
+            --no-build -- RunConfiguration.CollectSourceInformation=true
+
+      - name: Dump docker info
+        if: always()
+        run: |
+          docker container ls --all
+          docker container ls --all --format json
+          docker volume ls
+          docker network ls
+
+      - name: Upload bin log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: binlog-${{ matrix.name }}
+          path: "**/*.binlog"
+
+      - name: Upload test results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testresults-${{ matrix.name }}
+          path: testresults/**
