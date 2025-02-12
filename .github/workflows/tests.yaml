@@ -80,21 +80,40 @@ jobs:
           dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
 
       - name: Run tests
-        id: run-tests
         run: |
-          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} \
-            --no-build \
-            --configuration ${{ env.DOTNET_CONFIGURATION }} \
-            --logger "console;verbosity=normal" \
-            --logger "trx" \
-            --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" \
-            /p:TrxLogFileNameSuffix=${{ matrix.os }} \
-            --blame \
-            --blame-hang-timeout 7m \
-            --blame-crash \
-            --results-directory testresults \
-            --no-restore \
-            --no-build -- RunConfiguration.CollectSourceInformation=true
+          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} ^
+          --no-build ^
+          --configuration ${{ env.DOTNET_CONFIGURATION }} ^
+          --logger "console;verbosity=normal" ^
+          --logger "trx" ^
+          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" ^
+          /p:TrxLogFileNameSuffix=${{ matrix.os }} ^
+          --blame ^
+          --blame-hang-timeout 7m ^
+          --blame-crash ^
+          --results-directory testresults ^
+          --no-restore ^
+          --no-build -- RunConfiguration.CollectSourceInformation=true
+        shell: bash
+        if: runner.os == 'Linux'
+
+      - name: Run tests
+        run: |
+          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} `
+          --no-build `
+          --configuration ${{ env.DOTNET_CONFIGURATION }} `
+          --logger "console;verbosity=normal" `
+          --logger "trx" `
+          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" `
+          /p:TrxLogFileNameSuffix=${{ matrix.os }} `
+          --blame `
+          --blame-hang-timeout 7m `
+          --blame-crash `
+          --results-directory testresults `
+          --no-restore `
+          --no-build -- RunConfiguration.CollectSourceInformation=true
+        shell: pwsh
+        if: runner.os == 'Windows'
 
       - name: Dump docker info
         if: always()
