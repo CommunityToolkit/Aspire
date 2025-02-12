@@ -4,6 +4,9 @@ inputs:
   hash-file:
     description: "The file to hash for caching"
     required: true
+  name:
+    description: "The name of the project or environment to configure"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -66,6 +69,7 @@ runs:
 
     - uses: dapr/setup-dapr@v2
       name: Setup Dapr
+      if: ${{ matrix.os == 'ubuntu-latest' }} && contains('Dapr', '${{ inputs.name }}')
       with:
         version: ${{ env.DAPR_VERSION }}
 
@@ -111,7 +115,7 @@ runs:
 
     - name: Init Dapr
       shell: bash
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+      if: ${{ matrix.os == 'ubuntu-latest' }} && contains('Dapr', '${{ inputs.name }}')
       run: |
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version

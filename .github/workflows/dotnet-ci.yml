@@ -33,6 +33,7 @@ jobs:
         uses: ./.github/actions/setup-runtimes-caching
         with:
           hash-file: ".github/workflows/dotnet-ci.yml"
+          name: "Full"
 
       - name: Restore dependencies
         run: dotnet restore
@@ -96,3 +97,4 @@ jobs:
     needs: build
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
+

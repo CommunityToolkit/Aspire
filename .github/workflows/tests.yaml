@@ -68,6 +68,7 @@ jobs:
         uses: ./.github/actions/setup-runtimes-caching
         with:
           hash-file: ".github/workflows/dotnet-ci.yml"
+          name: ${{ matrix.name }}
 
       - name: Verify Docker is running
         run: docker info
