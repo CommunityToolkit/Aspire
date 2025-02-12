@@ -81,17 +81,17 @@ jobs:
 
       - name: Run tests
         run: |
-          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} ^
-          --configuration ${{ env.DOTNET_CONFIGURATION }} ^
-          --logger "console;verbosity=normal" ^
-          --logger "trx" ^
-          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" ^
-          /p:TrxLogFileNameSuffix=${{ matrix.os }} ^
-          --blame ^
-          --blame-hang-timeout 7m ^
-          --blame-crash ^
-          --results-directory testresults ^
-          --no-restore ^
+          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} \
+          --configuration ${{ env.DOTNET_CONFIGURATION }} \
+          --logger "console;verbosity=normal" \
+          --logger "trx" \
+          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" \
+          /p:TrxLogFileNameSuffix=${{ matrix.os }} \
+          --blame \
+          --blame-hang-timeout 7m \
+          --blame-crash \
+          --results-directory testresults \
+          --no-restore \
           --no-build -- RunConfiguration.CollectSourceInformation=true
         shell: bash
         if: runner.os == 'Linux'
