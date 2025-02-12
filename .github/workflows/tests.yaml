@@ -12,6 +12,7 @@ jobs:
   test:
     env:
       DOTNET_CONFIGURATION: Release
+      DAPR_VERSION: "1.14.1"
     runs-on: "${{ matrix.os }}"
     timeout-minutes: 60
     name: ${{ matrix.name }}-${{ matrix.os }}
