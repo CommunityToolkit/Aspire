@@ -8,7 +8,7 @@ jobs:
     env:
       DOTNET_CONFIGURATION: Release
       DAPR_VERSION: "1.14.1"
-      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}
+      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.csproj
     runs-on: "${{ matrix.os }}"
     timeout-minutes: 60
     name: ${{ matrix.name }}-${{ matrix.os }}
