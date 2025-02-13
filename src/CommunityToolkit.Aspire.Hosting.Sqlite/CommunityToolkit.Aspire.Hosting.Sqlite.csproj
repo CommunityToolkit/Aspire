@@ -11,4 +11,8 @@
   <ItemGroup>
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Sqlite.Tests"></InternalsVisibleTo>
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\Sqlite\SqliteExtensionMetadata.cs" Link="Utils\Sqlite\SqliteExtensionMetadata.cs" />
+  </ItemGroup>
 </Project>

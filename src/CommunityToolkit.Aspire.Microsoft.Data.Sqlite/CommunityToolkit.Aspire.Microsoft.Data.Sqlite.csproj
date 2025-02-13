@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.Sqlite" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
@@ -16,6 +18,7 @@
   <ItemGroup>
     <Compile Include="$(SharedDir)\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
     <Compile Include="$(SharedDir)\ConnectionStringValidation.cs" Link="Utils\ConnectionStringValidation.cs" />
+    <Compile Include="$(SharedDir)\Sqlite\SqliteExtensionMetadata.cs" Link="Utils\Sqlite\SqliteExtensionMetadata.cs" />
   </ItemGroup>
 
 </Project>
