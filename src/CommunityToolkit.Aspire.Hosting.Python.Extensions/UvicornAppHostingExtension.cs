@@ -24,7 +24,7 @@ public static class UvicornAppHostingExtension
         [ResourceName] string name,
         string projectDirectory,
         string appName,
-        string[]? args = null)
+        params string[] args)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -36,7 +36,7 @@ public static class UvicornAppHostingExtension
         string projectDirectory,
         string appName,
         string virtualEnvironmentPath,
-        string[]? args = null)
+        params string[] args)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(appName);
@@ -50,23 +50,23 @@ public static class UvicornAppHostingExtension
             : Path.Join(projectDirectory, virtualEnvironmentPath));
 
         var instrumentationExecutable = virtualEnvironment.GetExecutable("opentelemetry-instrument");
+        var projectExecutable = instrumentationExecutable ?? "uvicorn";
 
-        string[] allArgs = args is { Length: > 0 }
-            ? [appName, .. args]
-            : [appName];
+        var projectResource = new UvicornAppResource(name, projectExecutable, projectDirectory);
 
-        var projectResource = new UvicornAppResource(name, projectDirectory);
+        var resourceBuilder = builder.AddResource(projectResource).WithArgs(context =>
+        {
+            // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
+            if (!string.IsNullOrEmpty(instrumentationExecutable))
+            {
+                AddOpenTelemetryArguments(context);
 
-        var resourceBuilder = builder.AddResource(projectResource)
-            .WithArgs(allArgs)
-            .WithArgs(context =>
-                {
-                    // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
-                    if (!string.IsNullOrEmpty(instrumentationExecutable))
-                    {
-                        AddOpenTelemetryArguments(context);
-                    }
-                });
+                // Add the uvicorn executable as the next argument so we can run the project.
+                context.Args.Add("uvicorn");
+            }
+
+            AddProjectArguments(appName, args, context);
+        });
 
         if (!string.IsNullOrEmpty(instrumentationExecutable))
         {
@@ -78,6 +78,16 @@ public static class UvicornAppHostingExtension
         }
 
         return resourceBuilder;
+    }
+
+    private static void AddProjectArguments(string scriptPath, string[] scriptArgs, CommandLineArgsCallbackContext context)
+    {
+        context.Args.Add(scriptPath);
+
+        foreach (var arg in scriptArgs)
+        {
+            context.Args.Add(arg);
+        }
     }
 
     private static void AddOpenTelemetryArguments(CommandLineArgsCallbackContext context)
