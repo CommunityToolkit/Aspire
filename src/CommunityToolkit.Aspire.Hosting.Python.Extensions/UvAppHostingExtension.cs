@@ -82,6 +82,7 @@ public static class UvAppHostingExtension
 
     private static void AddProjectArguments(string scriptPath, string[] scriptArgs, CommandLineArgsCallbackContext context)
     {
+        context.Args.Add("run");
         context.Args.Add(scriptPath);
 
         foreach (var arg in scriptArgs)
