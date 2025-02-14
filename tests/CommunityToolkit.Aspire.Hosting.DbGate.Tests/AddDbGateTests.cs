@@ -197,6 +197,18 @@ public class AddDbGateTests
 
         var postgresResource2 = postgresResourceBuilder2.Resource;
 
+        var redisResourceBuilder1 = builder.AddRedis("redis1")
+            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28017))
+            .WithDbGate();
+
+        var redisResource1 = redisResourceBuilder1.Resource;
+
+        var redisResourceBuilder2 = builder.AddRedis("redis2")
+            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28018))
+            .WithDbGate();
+
+        var redisResource2 = redisResourceBuilder2.Resource;
+
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -244,7 +256,7 @@ public class AddDbGateTests
             item =>
             {
                 Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1,mongodb2,postgres1,postgres2", item.Value);
+                Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2", item.Value);
             },
             item =>
             {
@@ -305,6 +317,36 @@ public class AddDbGateTests
             {
                 Assert.Equal("ENGINE_postgres2", item.Key);
                 Assert.Equal("postgres@dbgate-plugin-postgres", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("LABEL_redis1", item.Key);
+                Assert.Equal(redisResource1.Name, item.Value);
+            },
+            async item =>
+            {
+                Assert.Equal("URL_redis1", item.Key);
+                Assert.Equal(await redisResource1.ConnectionStringExpression.GetValueAsync(default), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_redis1", item.Key);
+                Assert.Equal("redis@dbgate-plugin-redis", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("LABEL_redis2", item.Key);
+                Assert.Equal(redisResource2.Name, item.Value);
+            },
+            async item =>
+            {
+                Assert.Equal("URL_redis2", item.Key);
+                Assert.Equal(await redisResource2.ConnectionStringExpression.GetValueAsync(default), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_redis2", item.Key);
+                Assert.Equal("redis@dbgate-plugin-redis", item.Value);
             });
     }
 
@@ -332,6 +374,16 @@ public class AddDbGateTests
             .WithDbGate();
 
         var postgresResource2 = postgresResourceBuilder2.Resource;
+
+        var redisResourceBuilder1 = builder.AddRedis("redis1")
+            .WithDbGate();
+
+        var redisResource1 = redisResourceBuilder1.Resource;
+
+        var redisResourceBuilder2 = builder.AddRedis("redis2")
+            .WithDbGate();
+
+        var redisResource2 = redisResourceBuilder2.Resource;
 
         using var app = builder.Build();
 
