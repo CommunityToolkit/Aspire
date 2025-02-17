@@ -88,9 +88,7 @@ public static class GoFeatureFlagBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "data"), "/goff_data");
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/goff_data");
     }
 
     /// <summary>

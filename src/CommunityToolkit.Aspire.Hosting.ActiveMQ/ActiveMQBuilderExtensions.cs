@@ -106,9 +106,7 @@ public static class ActiveMQBuilderExtensions
     public static IResourceBuilder<T> WithDataVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder
-#pragma warning disable CTASPIRE001
-            .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "data"),
-#pragma warning restore CTASPIRE001
+            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"),
                 builder.Resource.ActiveMqSettings.DataPath,
                 isReadOnly);
 
@@ -122,9 +120,7 @@ public static class ActiveMQBuilderExtensions
     public static IResourceBuilder<T> WithConfVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder
-#pragma warning disable CTASPIRE001
-            .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "conf"),
-#pragma warning restore CTASPIRE001
+            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "conf"),
                 builder.Resource.ActiveMqSettings.ConfPath,
                 isReadOnly);
 
