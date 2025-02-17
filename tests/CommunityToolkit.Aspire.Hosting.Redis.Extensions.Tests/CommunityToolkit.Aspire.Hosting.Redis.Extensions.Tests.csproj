@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\redis-ext\CommunityToolkit.Aspire.Hosting.Redis.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.Redis.Extensions.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Redis.Extensions\CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+</Project>

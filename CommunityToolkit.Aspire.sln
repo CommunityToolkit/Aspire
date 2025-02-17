@@ -317,6 +317,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dbgate", "dbgate", "{50FBAF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.DbGate.AppHost", "examples\dbgate\CommunityToolkit.Aspire.Hosting.DbGate.AppHost\CommunityToolkit.Aspire.Hosting.DbGate.AppHost.csproj", "{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Redis.Extensions", "src\CommunityToolkit.Aspire.Hosting.Redis.Extensions\CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj", "{50D628FD-9E2B-4ECB-B219-FBC008A5EBDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Redis.Extensions.AppHost", "examples\redis-ext\CommunityToolkit.Aspire.Hosting.Redis.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.Redis.Extensions.AppHost.csproj", "{CB491C52-A3D5-4F36-97C4-75C482F90A30}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "redis-ext", "redis-ext", "{734EF69D-EE4D-4E9B-96BD-A44E53C5D1EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests", "tests\CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests\CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj", "{958A251E-9D2A-4D67-9D1C-47D6A9E36B3A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -835,6 +843,18 @@ Global
 		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50D628FD-9E2B-4ECB-B219-FBC008A5EBDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50D628FD-9E2B-4ECB-B219-FBC008A5EBDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50D628FD-9E2B-4ECB-B219-FBC008A5EBDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50D628FD-9E2B-4ECB-B219-FBC008A5EBDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB491C52-A3D5-4F36-97C4-75C482F90A30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB491C52-A3D5-4F36-97C4-75C482F90A30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB491C52-A3D5-4F36-97C4-75C482F90A30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB491C52-A3D5-4F36-97C4-75C482F90A30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{958A251E-9D2A-4D67-9D1C-47D6A9E36B3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{958A251E-9D2A-4D67-9D1C-47D6A9E36B3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{958A251E-9D2A-4D67-9D1C-47D6A9E36B3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{958A251E-9D2A-4D67-9D1C-47D6A9E36B3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -994,6 +1014,10 @@ Global
 		{A461FE7E-2458-428C-B794-6CC388031F16} = {8406E585-3329-48C5-B268-8C2140B720B6}
 		{50FBAF3E-E0BB-44FF-884F-660357C1CC54} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{AFEAF08C-4959-4CF2-8806-4E75F8F73B2E} = {50FBAF3E-E0BB-44FF-884F-660357C1CC54}
+		{50D628FD-9E2B-4ECB-B219-FBC008A5EBDA} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{CB491C52-A3D5-4F36-97C4-75C482F90A30} = {734EF69D-EE4D-4E9B-96BD-A44E53C5D1EC}
+		{734EF69D-EE4D-4E9B-96BD-A44E53C5D1EC} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{958A251E-9D2A-4D67-9D1C-47D6A9E36B3A} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

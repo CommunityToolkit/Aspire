@@ -18,4 +18,7 @@ var mongodb2 = builder.AddMongoDB("mongodb2").WithDbGate();
 mongodb2.AddDatabase("db7");
 mongodb2.AddDatabase("db8");
 
+var redis1 = builder.AddRedis("redis1").WithDbGate();
+var redis2 = builder.AddRedis("redis2").WithDbGate();
+
 builder.Build().Run();
