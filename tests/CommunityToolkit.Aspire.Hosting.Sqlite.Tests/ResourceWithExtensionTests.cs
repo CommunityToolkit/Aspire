@@ -8,16 +8,15 @@ using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite.Tests;
 
-[RequiresWindows(Reason = "The NuGet package being used for the extension is Windows-only.")]
 public class ResourceWithExtensionTests(ITestOutputHelper testOutputHelper)
 {
-    [Fact]
+    [Fact(Skip = "Skipping until there is a viable NuGet package for sqlite-vec we can use.")]
     public async Task ResourceCreatedWithExtensionIsAccessible()
     {
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var sqlite = builder.AddSqlite("sqlite")
-            .WithNuGetExtension("mod_spatialite");
+            .WithNuGetExtension("sqlite-vec");
 
         await using var app = builder.Build();
 
@@ -35,11 +34,11 @@ public class ResourceWithExtensionTests(ITestOutputHelper testOutputHelper)
 
         var connection = host.Services.GetRequiredService<SqliteConnection>();
 
-        var result = await IsExtensionLoadedAsync(connection, "spatialite_version()");
+        var result = await IsExtensionLoadedAsync(connection, "vec_version()");
 
         Assert.NotNull(result);
         var version = Assert.IsType<string>(result);
-        Assert.Equal("4.3.0a", version);
+        Assert.Equal("0.1.16", version);
     }
 
     private static async Task<object?> IsExtensionLoadedAsync(SqliteConnection connection, string checkFunction)
