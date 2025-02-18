@@ -17,4 +17,9 @@ public sealed class SqliteConnectionSettings
     /// The default value is <see langword="false"/>.
     /// </value>
     public bool DisableHealthChecks { get; set; }
+
+    /// <summary>
+    /// Extensions to be loaded into the database.
+    /// </summary>
+    public IEnumerable<SqliteExtensionMetadata> Extensions { get; set; } = [];
 }
