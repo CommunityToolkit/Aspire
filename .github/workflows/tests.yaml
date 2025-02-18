@@ -41,6 +41,7 @@ jobs:
             Hosting.PostgreSQL.Extensions.Tests,
             Hosting.Python.Extensions.Tests,
             Hosting.RavenDB.Tests,
+            Hosting.Redis.Extensions.Tests,
             Hosting.Rust.Tests,
             Hosting.SqlDatabaseProjects.Tests,
             Hosting.Sqlite.Tests,
