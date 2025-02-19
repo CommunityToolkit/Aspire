@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting LavinMQ</AdditionalPackageTags>
+    <Description>A .NET Aspire hosting package for hosting LavinMQ.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.LavinMQ.Tests" />
+  </ItemGroup>
+
+</Project>
