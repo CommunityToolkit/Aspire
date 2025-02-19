@@ -36,6 +36,8 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
 
   run-tests:
     uses: ./.github/workflows/tests.yaml
