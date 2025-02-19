@@ -83,7 +83,6 @@ jobs:
           --logger "console;verbosity=normal" \
           --logger "trx" \
           --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" \
-          /p:TrxLogFileNameSuffix=${{ matrix.os }} \
           --blame \
           --blame-hang-timeout 7m \
           --blame-crash \
@@ -133,3 +132,4 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
+
