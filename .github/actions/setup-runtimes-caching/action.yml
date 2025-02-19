@@ -1,9 +1,6 @@
 name: "Setup Runtimes, Caching, and Tools"
 description: "Setup various runtimes, cache dependencies, and initialize tools"
 inputs:
-  hash-file:
-    description: "The file to hash for caching"
-    required: true
   name:
     description: "The name of the project or environment to configure"
     required: true
@@ -107,3 +104,4 @@ runs:
       run: |
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version
+

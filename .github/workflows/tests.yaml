@@ -64,7 +64,6 @@ jobs:
       - name: Setup Runtimes, Caching, and Tools
         uses: ./.github/actions/setup-runtimes-caching
         with:
-          hash-file: ".github/workflows/dotnet-ci.yml"
           name: ${{ matrix.name }}
 
       - name: Verify Docker is running
@@ -132,4 +131,3 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
-
