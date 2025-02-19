@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\lavinmq\CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost\CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\lavinmq\CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit\CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.LavinMQ\CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
