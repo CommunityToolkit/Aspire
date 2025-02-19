@@ -10,6 +10,7 @@ public class GoFeatureFlagClientPublicApiTests
     [Fact]
     public void AddGoFeatureFlagClientShouldThrowWhenBuilderIsNull()
     {
+        Assert.Fail("Test not implemented");
         IHostApplicationBuilder builder = null!;
 
         var connectionName = "goff";
