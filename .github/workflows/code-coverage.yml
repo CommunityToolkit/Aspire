@@ -12,7 +12,7 @@ jobs:
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
-          pattern: test-results*
+          pattern: testresults-*
 
       - name: Combine coverage reports
         uses: danielpalme/ReportGenerator-GitHub-Action@5.4.4
@@ -64,3 +64,4 @@ jobs:
       - name: Coverage on step summary
         if: always()
         run: cat "${{ github.workspace }}/report/SummaryGithub.md" >> $GITHUB_STEP_SUMMARY
+

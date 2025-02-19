@@ -11,18 +11,18 @@ public class AddSqlProjectTests
         // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.AddSqlProject<TestProject>("MySqlProject");
-        
+
         // Act
         using var app = appBuilder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        
+
         // Assert
         var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
         Assert.Equal("MySqlProject", sqlProjectResource.Name);
 
         var dacpacPath = ((IResourceWithDacpac)sqlProjectResource).GetDacpacPath();
         Assert.NotNull(dacpacPath);
-        Assert.True(File.Exists(dacpacPath));
+        Assert.True(File.Exists(dacpacPath), $"Dacpac file not found at '{dacpacPath}'");
     }
 
     [Fact]
@@ -31,11 +31,11 @@ public class AddSqlProjectTests
         // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.AddSqlProject("MySqlProject").WithDacpac(TestProject.RelativePath);
-        
+
         // Act
         using var app = appBuilder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        
+
         // Assert
         var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
         Assert.Equal("MySqlProject", sqlProjectResource.Name);
@@ -102,7 +102,7 @@ public class AddSqlProjectTests
         var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
         appBuilder.AddSqlProject<TestProject>("MySqlProject")
                   .WithReference(targetDatabase);
-        
+
         // Act
         using var app = appBuilder.Build();
 

@@ -97,6 +97,12 @@ GitHub Actions Windows runners do not support Linux container images, so if your
 
 If the resource your integration exposes does not integrate into the .NET Aspire health check model, you may need to parse its logs to determine when it is ready to accept requests. To do this, use the `WaitForTextAsync` extension method on the `DistributionApplication` object to wait for a specific message to appear in the logs. Do note that this method is marked with `CTASPIRE001` so you will need to disable that warning where you use it. You can learn more about `CTASPIRE001` in the [Diagnostics documentation](./diagnostics.md).
 
+### Adding Tests to the CI pipeline
+
+To ensure parallel execution of tests in the CI pipeline, and that the tests run in isolation from each other, you will need to update the `tests.yml` file in the `.github/workflows` folder to include your new test project. Our design is that we run each test project in its own GitHub Action workflow run using a [matrix strategy](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs), and combine that with the OS's that we test on. You'll find towards the top of the `tests.yml` file the list of all test projects that are run in the CI pipeline.
+
+The easiest way to update that list is to run the `./eng/testing/generate-test-list-for-workflow.sh` script which will output the formatted list of test projects to the console. You can then copy and paste that into the `tests.yml` file.
+
 ## 📃 Documentation
 
 You'll need to add a `README.md` file to the folder your integration is created in, this will be used in the NuGet package that is generated. This should be a high level overview of the integration and does not need to be a complete doc set.
