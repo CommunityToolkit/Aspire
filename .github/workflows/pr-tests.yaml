@@ -2,6 +2,10 @@ name: Verify Test List
 
 on:
   pull_request:
+    paths:
+      - "tests/**"
+      - ".github/workflows/tests.yaml"
+      - "eng/testing/generate-test-list-for-workflow.sh"
 
 jobs:
   verify-test-list:
@@ -15,4 +19,4 @@ jobs:
 
       - name: Verify test list
         run: |
-          diff -u <(grep -oP '(?<=name: \[)[^\]]+' .github/workflows/tests.yaml | tr ',' '\n' | sort) <(sort generated-test-list.txt) || exit 1
+          diff -u <(awk '/name: \[/{flag=1; next} /\]/{flag=0} flag' .github/workflows/tests.yaml | sort) <(sort generated-test-list.txt) || exit 1
