@@ -38,7 +38,7 @@ jobs:
           fi
 
           if [ -n "${{ inputs.version_suffix }}" ]; then
-          PACK_ARGS="$PACK_ARGS -p:VersionSuffix='${{ inputs.version_suffix }}'"
+          PACK_ARGS="$PACK_ARGS -p:VersionSuffix=${{ inputs.version_suffix }}"
           fi
 
           dotnet pack $PACK_ARGS
