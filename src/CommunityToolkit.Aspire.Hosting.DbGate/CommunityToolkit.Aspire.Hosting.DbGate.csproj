@@ -9,8 +9,4 @@
     <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
-  </ItemGroup>
-
 </Project>

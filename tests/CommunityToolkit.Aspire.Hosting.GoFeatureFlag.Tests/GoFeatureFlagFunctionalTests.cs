@@ -7,7 +7,6 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Xunit.Abstractions;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Testing;
 using OpenFeature.Contrib.Providers.GOFeatureFlag;
 using OpenFeature.Model;
 

@@ -68,9 +68,7 @@ public static partial class OllamaResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-#pragma warning disable CTASPIRE001
-        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "openwebui"), "/app/backend/data", isReadOnly);
-#pragma warning restore CTASPIRE001
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "openwebui"), "/app/backend/data", isReadOnly);
     }
 
     private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
