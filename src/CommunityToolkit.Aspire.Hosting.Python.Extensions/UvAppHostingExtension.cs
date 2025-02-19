@@ -50,28 +50,23 @@ public static class UvAppHostingExtension
             : Path.Join(projectDirectory, virtualEnvironmentPath));
 
         var instrumentationExecutable = virtualEnvironment.GetExecutable("opentelemetry-instrument");
-        // var pythonExecutable = virtualEnvironment.GetRequiredExecutable("python");
-        // var projectExecutable = instrumentationExecutable ?? pythonExecutable;
+        var projectExecutable = instrumentationExecutable ?? "uv";
 
-        string[] allArgs = args is { Length: > 0 }
-            ? ["run", scriptPath, .. args]
-            : ["run", scriptPath];
+        var projectResource = new UvAppResource(name, projectExecutable, projectDirectory);
 
-        var projectResource = new UvAppResource(name, projectDirectory);
-
-        var resourceBuilder = builder.AddResource(projectResource)
-            .WithArgs(allArgs)
-            .WithArgs(context =>
+        var resourceBuilder = builder.AddResource(projectResource).WithArgs(context =>
+        {
+            // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
+            if (!string.IsNullOrEmpty(instrumentationExecutable))
             {
-                // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
-                if (!string.IsNullOrEmpty(instrumentationExecutable))
-                {
-                    AddOpenTelemetryArguments(context);
+                AddOpenTelemetryArguments(context);
 
-                    // // Add the python executable as the next argument so we can run the project.
-                    // context.Args.Add(pythonExecutable!);
-                }
-            });
+                // Add the uvicorn executable as the next argument so we can run the project.
+                context.Args.Add("uv");
+            }
+
+            AddProjectArguments(scriptPath, args, context);
+        });
 
         if (!string.IsNullOrEmpty(instrumentationExecutable))
         {
@@ -83,6 +78,17 @@ public static class UvAppHostingExtension
         }
 
         return resourceBuilder;
+    }
+
+    private static void AddProjectArguments(string scriptPath, string[] scriptArgs, CommandLineArgsCallbackContext context)
+    {
+        context.Args.Add("run");
+        context.Args.Add(scriptPath);
+
+        foreach (var arg in scriptArgs)
+        {
+            context.Args.Add(arg);
+        }
     }
 
     private static void AddOpenTelemetryArguments(CommandLineArgsCallbackContext context)
