@@ -32,6 +32,8 @@ jobs:
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
             Hosting.Java.Tests,
+            Hosting.LavinMQ.Tests,
+            Hosting.MailPit.Tests,
             Hosting.Meilisearch.Tests,
             Hosting.MongoDB.Extensions.Tests,
             Hosting.Ngrok.Tests,
@@ -111,3 +113,4 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
+
