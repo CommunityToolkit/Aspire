@@ -351,6 +351,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SqlServer.Extensions", "src\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj", "{E83D626B-D2DC-488D-B2BE-CA4C6049F1E0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sqlserver-ext", "sqlserver-ext", "{A4E81DCC-B13D-4513-8933-E7E405439AE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost", "examples\sqlserver-ext\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj", "{C38B5A72-F717-4C7F-AB4C-54039A439D4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests", "tests\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj", "{B98C88E3-2AEE-4B9F-8736-4A7E746AE28B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -925,6 +931,14 @@ Global
 		{E83D626B-D2DC-488D-B2BE-CA4C6049F1E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E83D626B-D2DC-488D-B2BE-CA4C6049F1E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E83D626B-D2DC-488D-B2BE-CA4C6049F1E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C38B5A72-F717-4C7F-AB4C-54039A439D4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C38B5A72-F717-4C7F-AB4C-54039A439D4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C38B5A72-F717-4C7F-AB4C-54039A439D4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C38B5A72-F717-4C7F-AB4C-54039A439D4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B98C88E3-2AEE-4B9F-8736-4A7E746AE28B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B98C88E3-2AEE-4B9F-8736-4A7E746AE28B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B98C88E3-2AEE-4B9F-8736-4A7E746AE28B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B98C88E3-2AEE-4B9F-8736-4A7E746AE28B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1101,6 +1115,9 @@ Global
 		{547ED5DB-CD15-42B8-99C7-30274C5D843E} = {734EF69D-EE4D-4E9B-96BD-A44E53C5D2EC}
 		{69343427-D50D-4600-ADC0-C1B1910C0287} = {734EF69D-EE4D-4E9B-96BD-A44E53C5D2EC}
 		{E83D626B-D2DC-488D-B2BE-CA4C6049F1E0} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{A4E81DCC-B13D-4513-8933-E7E405439AE9} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{C38B5A72-F717-4C7F-AB4C-54039A439D4D} = {A4E81DCC-B13D-4513-8933-E7E405439AE9}
+		{B98C88E3-2AEE-4B9F-8736-4A7E746AE28B} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
