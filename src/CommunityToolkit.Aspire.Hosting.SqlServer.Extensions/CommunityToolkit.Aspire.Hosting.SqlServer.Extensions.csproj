@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting sqlserver dbgate</AdditionalPackageTags>
+    <Description>A .NET Aspire integration for extending sqlserver hosting.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+  </ItemGroup>
+
+</Project>

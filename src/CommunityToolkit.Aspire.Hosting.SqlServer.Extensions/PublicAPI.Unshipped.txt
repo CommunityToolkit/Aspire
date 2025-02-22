@@ -1,0 +1,2 @@
+Aspire.Hosting.SqlServerBuilderExtensions
+static Aspire.Hosting.SqlServerBuilderExtensions.WithDbGate(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlServerServerResource!>! builder, System.Action<Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!>? configureContainer = null, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.SqlServerServerResource!>!
