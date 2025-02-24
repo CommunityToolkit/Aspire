@@ -24,70 +24,25 @@ jobs:
       - name: Setup Runtimes, Caching, and Tools
         uses: ./.github/actions/setup-runtimes-caching
         with:
-          hash-file: ".github/workflows/dotnet-main.yml"
+          name: "Full"
 
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
-      - name: Test
-        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx /p:TrxLogFileNameSuffix=${{ matrix.os }}
 
-      - name: Publish NuGet package
-        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:VersionSuffix='beta.${{ github.run_number }}'
+  run-tests:
+    uses: ./.github/workflows/tests.yaml
 
-      - name: Publish NuGet packages as artifacts
-        uses: actions/upload-artifact@v4
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        with:
-          name: nuget-packages
-          path: ./nuget
-
-      - name: Upload Package List
-        uses: actions/upload-artifact@v4
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        with:
-          name: nuget-list
-          if-no-files-found: error
-          path: |
-            ${{ github.workspace }}/.github/workflows/SignClientFileList.txt
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results-${{ matrix.os }}
-          path: |
-            ${{ github.workspace }}/test-results/**
-
-      - name: List NuGet packages in step summary
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: ls -1 ${{ github.workspace }}/nuget/*.nupkg >> $GITHUB_STEP_SUMMARY
-
-  test-reporting:
-    permissions:
-      contents: read
-      actions: read
-      checks: write
-    runs-on: ubuntu-latest
-    needs: build
-    if: ${{ always() }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: ".NET Tests"
-          path: "*.trx"
-          reporter: dotnet-trx
+  package:
+    uses: ./.github/workflows/package.yml
+    with:
+      version_suffix: "beta.${{ github.run_number }}"
+    needs: run-tests
+    if: ${{ github.actor != 'dependabot[bot]' }}
 
   sign:
-    needs: build
+    needs: package
     runs-on: windows-latest
     permissions:
       id-token: write # Required for requesting the JWT

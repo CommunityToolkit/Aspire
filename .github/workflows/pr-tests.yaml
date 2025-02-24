@@ -1,0 +1,22 @@
+name: Verify Test List
+
+on:
+  pull_request:
+    paths:
+      - "tests/**"
+      - ".github/workflows/tests.yaml"
+      - "eng/testing/generate-test-list-for-workflow.sh"
+
+jobs:
+  verify-test-list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate test list
+        run: bash eng/testing/generate-test-list-for-workflow.sh > generated-test-list.txt
+
+      - name: Verify test list
+        run: |
+          diff -u <(awk '/name: \[/{flag=1; next} /\]/{flag=0} flag' .github/workflows/tests.yaml | sort) <(sort generated-test-list.txt) || exit 1
