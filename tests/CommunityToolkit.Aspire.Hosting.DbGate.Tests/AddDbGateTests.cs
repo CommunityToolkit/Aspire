@@ -209,6 +209,16 @@ public class AddDbGateTests
 
         var redisResource2 = redisResourceBuilder2.Resource;
 
+        var sqlserverResourceBuilder1 = builder.AddSqlServer("sqlserver1")
+            .WithDbGate();
+
+        var sqlserverResource1 = sqlserverResourceBuilder1.Resource;
+
+        var sqlserverResourceBuilder2 = builder.AddSqlServer("sqlserver2")
+            .WithDbGate();
+
+        var sqlserverResource2 = sqlserverResourceBuilder2.Resource;
+
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -256,7 +266,7 @@ public class AddDbGateTests
             item =>
             {
                 Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2", item.Value);
+                Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2", item.Value);
             },
             item =>
             {
@@ -347,6 +357,66 @@ public class AddDbGateTests
             {
                 Assert.Equal("ENGINE_redis2", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("LABEL_sqlserver1", item.Key);
+                Assert.Equal(sqlserverResource1.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_sqlserver1", item.Key);
+                Assert.Equal(sqlserverResource1.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_sqlserver1", item.Key);
+                Assert.Equal("sa", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PASSWORD_sqlserver1", item.Key);
+                Assert.Equal(sqlserverResource1.PasswordParameter.Value, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_sqlserver1", item.Key);
+                Assert.Equal(sqlserverResource1.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_sqlserver1", item.Key);
+                Assert.Equal("mssql@dbgate-plugin-mssql", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("LABEL_sqlserver2", item.Key);
+                Assert.Equal(sqlserverResource2.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_sqlserver2", item.Key);
+                Assert.Equal(sqlserverResource2.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_sqlserver2", item.Key);
+                Assert.Equal("sa", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PASSWORD_sqlserver2", item.Key);
+                Assert.Equal(sqlserverResource2.PasswordParameter.Value, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_sqlserver2", item.Key);
+                Assert.Equal(sqlserverResource2.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_sqlserver2", item.Key);
+                Assert.Equal("mssql@dbgate-plugin-mssql", item.Value);
             });
     }
 
@@ -355,35 +425,29 @@ public class AddDbGateTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var mongodbResourceBuilder1 = builder.AddMongoDB("mongodb1")
+        builder.AddMongoDB("mongodb1")
             .WithDbGate();
 
-        var mongodbResource1 = mongodbResourceBuilder1.Resource;
-
-        var mongodbResourceBuilder2 = builder.AddMongoDB("mongodb2")
+        builder.AddMongoDB("mongodb2")
             .WithDbGate();
 
-        var mongodbResource2 = mongodbResourceBuilder2.Resource;
-
-        var postgresResourceBuilder1 = builder.AddPostgres("postgres1")
-           .WithDbGate();
-
-        var postgresResource1 = postgresResourceBuilder1.Resource;
-
-        var postgresResourceBuilder2 = builder.AddPostgres("postgres2")
+        builder.AddPostgres("postgres1")
             .WithDbGate();
 
-        var postgresResource2 = postgresResourceBuilder2.Resource;
-
-        var redisResourceBuilder1 = builder.AddRedis("redis1")
+        builder.AddPostgres("postgres2")
             .WithDbGate();
 
-        var redisResource1 = redisResourceBuilder1.Resource;
-
-        var redisResourceBuilder2 = builder.AddRedis("redis2")
+        builder.AddRedis("redis1")
             .WithDbGate();
 
-        var redisResource2 = redisResourceBuilder2.Resource;
+        builder.AddRedis("redis2")
+            .WithDbGate();
+
+        builder.AddSqlServer("sqlserver1")
+            .WithDbGate();
+
+        builder.AddSqlServer("sqlserver2")
+            .WithDbGate();
 
         using var app = builder.Build();
 

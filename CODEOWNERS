@@ -98,3 +98,8 @@
 /src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/ @Alirexaa
 /tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/ @Alirexaa
 /examples/redis-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.SqlServer.Extensions
+/src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/ @Alirexaa
+/examples/sqlserver-ext/ @Alirexaa
