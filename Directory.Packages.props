@@ -25,14 +25,14 @@
     <PackageVersion Include="Dapr.Client" Version="1.14.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.12" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
     <PackageVersion Include="Microsoft.Extensions.AI" Version="$(MEAIVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="9.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <!-- .NET packages -->
