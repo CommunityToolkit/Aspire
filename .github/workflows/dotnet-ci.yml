@@ -32,40 +32,26 @@ jobs:
       - name: Setup Runtimes, Caching, and Tools
         uses: ./.github/actions/setup-runtimes-caching
         with:
-          hash-file: ".github/workflows/dotnet-ci.yml"
+          name: "Full"
 
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
-      - name: Test
-        run: dotnet test --no-build --configuration ${{ env.DOTNET_CONFIGURATION }} --collect "XPlat Code Coverage" --results-directory test-results --logger trx /p:TrxLogFileNameSuffix=${{ matrix.os }}
 
-      - name: Publish NuGet package
-        run: dotnet pack --no-build -c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:VersionSuffix='alpha.${{ github.run_number }}'
+  run-tests:
+    uses: ./.github/workflows/tests.yaml
 
-      - name: Publish NuGet packages as artifacts
-        if: ${{ matrix.os == 'ubuntu-latest' && github.actor != 'dependabot[bot]' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuget-packages
-          path: ./nuget
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results-${{ matrix.os }}
-          path: |
-            ${{ github.workspace }}/test-results/**
-
-      - name: List NuGet packages in step summary
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: ls -1 ${{ github.workspace }}/nuget/*.nupkg >> $GITHUB_STEP_SUMMARY
+  package:
+    uses: ./.github/workflows/package.yml
+    with:
+      version_suffix: "alpha.${{ github.run_number }}"
+    needs: run-tests
+    if: ${{ github.actor != 'dependabot[bot]' }}
 
   publish-azure-artifacts:
     if: github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
-    needs: build
+    needs: package
     runs-on: windows-latest
     environment:
       name: azure-artifacts
@@ -93,6 +79,6 @@ jobs:
 
   publish-coverage:
     if: github.actor != 'dependabot[bot]'
-    needs: build
+    needs: run-tests
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit

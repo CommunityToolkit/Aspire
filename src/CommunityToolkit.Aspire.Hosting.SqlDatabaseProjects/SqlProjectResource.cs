@@ -1,5 +1,6 @@
 using Microsoft.Build.Evaluation;
 using Microsoft.SqlServer.Dac;
+using System.Reflection;
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -15,6 +16,11 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
         {
             var projectPath = projectMetadata.ProjectPath;
             using var projectCollection = new ProjectCollection();
+
+            var attr = GetType().Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
+            if (attr is not null)
+                projectCollection.SetGlobalProperty("Configuration", attr.Configuration);
+
             var project = projectCollection.LoadProject(projectPath);
 
             // .sqlprojx has a SqlTargetPath property, so try that first
