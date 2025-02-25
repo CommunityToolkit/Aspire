@@ -33,8 +33,8 @@ public class OllamaSharpIEmbeddingGeneratorTests
             host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("Ollama") :
             host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
-        Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
+        Assert.NotNull(client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
     }
 
     [Theory]
@@ -61,9 +61,9 @@ public class OllamaSharpIEmbeddingGeneratorTests
             host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("Ollama") :
             host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
-        Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
-        Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
+        Assert.NotNull(client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.DoesNotContain("http://not-used", client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri?.ToString());
     }
 
     [Theory]
@@ -91,9 +91,9 @@ public class OllamaSharpIEmbeddingGeneratorTests
             host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("Ollama") :
             host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
-        Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
-        Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
+        Assert.NotNull(client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.DoesNotContain("http://not-used", client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri?.ToString());
     }
 
     [Fact]
@@ -115,9 +115,9 @@ public class OllamaSharpIEmbeddingGeneratorTests
         var client2 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("Ollama2");
         var client3 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("Ollama3");
 
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
-        Assert.Equal("https://localhost:5002/", client2.Metadata.ProviderUri?.ToString());
-        Assert.Equal("https://localhost:5003/", client3.Metadata.ProviderUri?.ToString());
+        Assert.Equal(Endpoint, client.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.Equal("https://localhost:5002/", client2.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri?.ToString());
+        Assert.Equal("https://localhost:5003/", client3.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri?.ToString());
 
         Assert.NotEqual(client, client2);
         Assert.NotEqual(client, client3);

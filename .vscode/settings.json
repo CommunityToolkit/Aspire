@@ -6,5 +6,8 @@
   },
   "rust-analyzer.linkedProjects": [
     "examples/rust/actix_api/Cargo.toml",
-  ]
+  ],
+  "[aspnetcorerazor]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  }
 }

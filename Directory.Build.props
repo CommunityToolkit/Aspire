@@ -20,7 +20,7 @@
     <DotNetExtensionsVersion>9.0.0</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.11.0</OpenTelemetryVersion>
     <TestContainersVersion>4.2.0</TestContainersVersion>
-    <MEAIVersion>9.1.0-preview.1.25064.3</MEAIVersion>
+    <MEAIVersion>9.3.0-preview.1.25114.11</MEAIVersion>
     <IsPackable>false</IsPackable>
     <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
 

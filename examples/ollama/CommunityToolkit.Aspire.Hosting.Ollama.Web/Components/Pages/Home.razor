@@ -14,13 +14,13 @@
         <div>
             <label>
                 <InputRadio Value="ServiceKeys.Phi3" />
-                @OllamaClient1.Metadata.ModelId
+                @(OllamaClient1.GetService<ChatClientMetadata>()?.ModelId)
             </label>
         </div>
         <div>
             <label>
                 <InputRadio Value="ServiceKeys.Llama" />
-                @OllamaClient2.Metadata.ModelId
+                @(OllamaClient2.GetService<ChatClientMetadata>()?.ModelId)
             </label>
         </div>
     </InputRadioGroup>
@@ -61,7 +61,7 @@
             bool gotResponse = false;
             _response = "Asking Ollama...";
 
-            var stream = client.CompleteStreamingAsync(_prompt);
+            var stream = client.GetStreamingResponseAsync(_prompt);
 
             await foreach (var answerToken in stream)
             {

@@ -62,7 +62,7 @@
     <!-- External packages -->
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.0.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.3.3" />
-    <PackageVersion Include="OllamaSharp" Version="5.0.6" />
+    <PackageVersion Include="OllamaSharp" Version="5.1.2" />
     <PackageVersion Include="OpenFeature.Contrib.GOFeatureFlag" Version="0.2.0" />
     <PackageVersion Include="MassTransit" Version="8.3.6" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.3.1" />

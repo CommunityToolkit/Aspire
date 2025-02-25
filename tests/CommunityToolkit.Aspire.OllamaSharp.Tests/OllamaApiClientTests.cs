@@ -140,8 +140,8 @@ public class OllamaApiClientTests
         var chatClient = host.Services.GetRequiredService<IChatClient>();
         var embeddingGenerator = host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
 
-        Assert.Equal("Chat", chatClient.Metadata.ModelId);
-        Assert.Equal("Embedding", embeddingGenerator.Metadata.ModelId);
+        Assert.Equal("Chat", chatClient.GetService<ChatClientMetadata>()?.ModelId);
+        Assert.Equal("Embedding", embeddingGenerator.GetService<EmbeddingGeneratorMetadata>()?.ModelId);
     }
 
     [Fact]
