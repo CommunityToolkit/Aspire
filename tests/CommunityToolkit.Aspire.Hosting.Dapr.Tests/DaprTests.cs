@@ -3,7 +3,6 @@
 
 using System.Runtime.CompilerServices;
 using Aspire.Hosting;
-using Aspire.Hosting.Tests.Utils;
 using Aspire.Hosting.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
@@ -55,7 +54,7 @@ public class DaprTests
         }
 
         var config = await container.GetEnvironmentVariableValuesAsync(DistributedApplicationOperation.Run);
-        var sidecarArgs = await ArgumentEvaluator.GetArgumentListAsync(sideCarCli);
+        var sidecarArgs = await sideCarCli.GetArgumentValuesAsync();
 
         Assert.Equal("3500", config["DAPR_HTTP_PORT"]);
         Assert.Equal("50001", config["DAPR_GRPC_PORT"]);
@@ -154,7 +153,7 @@ public class DaprTests
         }
 
         var config = await container.GetEnvironmentVariableValuesAsync(DistributedApplicationOperation.Run);
-        var sidecarArgs = await ArgumentEvaluator.GetArgumentListAsync(sideCarCli);
+        var sidecarArgs = await sideCarCli.GetArgumentValuesAsync();
 
         Assert.Equal("http://localhost:3500", config["DAPR_HTTP_ENDPOINT"]);
         Assert.Equal("http://localhost:50001", config["DAPR_GRPC_ENDPOINT"]);

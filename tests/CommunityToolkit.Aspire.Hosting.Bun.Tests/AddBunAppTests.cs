@@ -34,7 +34,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
+        var args = await resource.GetArgumentValuesAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
@@ -55,7 +55,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
+        var args = await resource.GetArgumentValuesAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("--watch", arg),
@@ -77,7 +77,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        var args = await ArgumentEvaluator.GetArgumentListAsync(resource);
+        var args = await resource.GetArgumentValuesAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
