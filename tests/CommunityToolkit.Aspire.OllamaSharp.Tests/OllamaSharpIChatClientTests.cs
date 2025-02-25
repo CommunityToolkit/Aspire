@@ -33,8 +33,8 @@ public class OllamaSharpIChatClientTests
             host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
             host.Services.GetRequiredService<IChatClient>();
 
-        Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
+        Assert.NotNull(client.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, client.GetService<ChatClientMetadata>()?.ProviderUri);
     }
 
     [Theory]
@@ -61,9 +61,9 @@ public class OllamaSharpIChatClientTests
             host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
             host.Services.GetRequiredService<IChatClient>();
 
-        Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
-        Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
+        Assert.NotNull(client.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, client.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.DoesNotContain("http://not-used", client.GetService<ChatClientMetadata>()?.ProviderUri?.ToString());
     }
 
     [Theory]
@@ -91,9 +91,9 @@ public class OllamaSharpIChatClientTests
             host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
             host.Services.GetRequiredService<IChatClient>();
 
-        Assert.NotNull(client.Metadata.ProviderUri);
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
-        Assert.DoesNotContain("http://not-used", client.Metadata.ProviderUri.ToString());
+        Assert.NotNull(client.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, client.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.DoesNotContain("http://not-used", client.GetService<ChatClientMetadata>()?.ProviderUri?.ToString());
     }
 
     [Fact]
@@ -115,9 +115,9 @@ public class OllamaSharpIChatClientTests
         var client2 = host.Services.GetRequiredKeyedService<IChatClient>("Ollama2");
         var client3 = host.Services.GetRequiredKeyedService<IChatClient>("Ollama3");
 
-        Assert.Equal(Endpoint, client.Metadata.ProviderUri);
-        Assert.Equal("https://localhost:5002/", client2.Metadata.ProviderUri?.ToString());
-        Assert.Equal("https://localhost:5003/", client3.Metadata.ProviderUri?.ToString());
+        Assert.Equal(Endpoint, client.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal("https://localhost:5002/", client2.GetService<ChatClientMetadata>()?.ProviderUri?.ToString());
+        Assert.Equal("https://localhost:5003/", client3.GetService<ChatClientMetadata>()?.ProviderUri?.ToString());
 
         Assert.NotEqual(client, client2);
         Assert.NotEqual(client, client3);
