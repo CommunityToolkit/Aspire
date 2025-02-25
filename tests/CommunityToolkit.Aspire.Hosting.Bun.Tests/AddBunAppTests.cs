@@ -1,5 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.Tests.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Bun.Tests;
 
