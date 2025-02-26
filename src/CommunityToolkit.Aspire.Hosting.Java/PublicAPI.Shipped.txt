@@ -30,7 +30,16 @@ Aspire.Hosting.ApplicationModel.JavaAppExecutableResourceOptions.OtelAgentPath.s
 Aspire.Hosting.ApplicationModel.JavaAppExecutableResourceOptions.Port.get -> int
 Aspire.Hosting.ApplicationModel.JavaAppExecutableResourceOptions.Port.set -> void
 Aspire.Hosting.JavaAppHostingExtension
+Aspire.Hosting.MavenOptions
+Aspire.Hosting.MavenOptions.Args.get -> string![]!
+Aspire.Hosting.MavenOptions.Args.set -> void
+Aspire.Hosting.MavenOptions.Command.get -> string!
+Aspire.Hosting.MavenOptions.Command.set -> void
+Aspire.Hosting.MavenOptions.MavenOptions() -> void
+Aspire.Hosting.MavenOptions.WorkingDirectory.get -> string?
+Aspire.Hosting.MavenOptions.WorkingDirectory.set -> void
 static Aspire.Hosting.JavaAppHostingExtension.AddJavaApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.ApplicationModel.JavaAppContainerResourceOptions! options) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppContainerResource!>!
 static Aspire.Hosting.JavaAppHostingExtension.AddJavaApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, Aspire.Hosting.ApplicationModel.JavaAppExecutableResourceOptions! options) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppExecutableResource!>!
 static Aspire.Hosting.JavaAppHostingExtension.AddSpringApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, Aspire.Hosting.ApplicationModel.JavaAppContainerResourceOptions! options) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppContainerResource!>!
 static Aspire.Hosting.JavaAppHostingExtension.AddSpringApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, Aspire.Hosting.ApplicationModel.JavaAppExecutableResourceOptions! options) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppExecutableResource!>!
+static Aspire.Hosting.JavaAppHostingExtension.WithMavenBuild(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppExecutableResource!>! builder, Aspire.Hosting.MavenOptions? mavenOptions = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.JavaAppExecutableResource!>!

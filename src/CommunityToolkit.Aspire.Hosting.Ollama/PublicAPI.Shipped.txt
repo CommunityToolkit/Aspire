@@ -14,6 +14,9 @@ Aspire.Hosting.ApplicationModel.OpenWebUIResource
 Aspire.Hosting.ApplicationModel.OpenWebUIResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
 Aspire.Hosting.ApplicationModel.OpenWebUIResource.OpenWebUIResource(string! name) -> void
 Aspire.Hosting.ApplicationModel.OpenWebUIResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
+Aspire.Hosting.OllamaGpuVendor
+Aspire.Hosting.OllamaGpuVendor.AMD = 1 -> Aspire.Hosting.OllamaGpuVendor
+Aspire.Hosting.OllamaGpuVendor.Nvidia = 0 -> Aspire.Hosting.OllamaGpuVendor
 Aspire.Hosting.OllamaResourceBuilderExtensions
 static Aspire.Hosting.OllamaResourceBuilderExtensions.AddHuggingFaceModel(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string! name, string! modelName) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaModelResource!>!
 static Aspire.Hosting.OllamaResourceBuilderExtensions.AddModel(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string! modelName) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaModelResource!>!
@@ -21,4 +24,5 @@ static Aspire.Hosting.OllamaResourceBuilderExtensions.AddModel(this Aspire.Hosti
 static Aspire.Hosting.OllamaResourceBuilderExtensions.AddOllama(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
 static Aspire.Hosting.OllamaResourceBuilderExtensions.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, string? name = null, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
 static Aspire.Hosting.OllamaResourceBuilderExtensions.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OpenWebUIResource!>! builder, string? name = null, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OpenWebUIResource!>!
+static Aspire.Hosting.OllamaResourceBuilderExtensions.WithGPUSupport(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>! builder, Aspire.Hosting.OllamaGpuVendor vendor = Aspire.Hosting.OllamaGpuVendor.Nvidia) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OllamaResource!>!
 static Aspire.Hosting.OllamaResourceBuilderExtensions.WithOpenWebUI<T>(this Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>! builder, System.Action<Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.OpenWebUIResource!>!>? configureContainer = null, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<T!>!
