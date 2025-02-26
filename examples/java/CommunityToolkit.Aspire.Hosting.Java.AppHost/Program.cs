@@ -17,12 +17,12 @@ var executableapp = builder.AddSpringApp("executableapp",
                                OtelAgentPath = "../../../agents",
                            })
                            .WithMavenBuild()
-                           .PublishAsDockerFile(
-                           [
-                               new DockerBuildArg("JAR_NAME", "spring-maven-0.0.1-SNAPSHOT.jar"),
-                               new DockerBuildArg("AGENT_PATH", "/agents"),
-                               new DockerBuildArg("SERVER_PORT", "8085"),
-                           ]);
+                           .PublishAsDockerFile(c =>
+                           {
+                               c.WithBuildArg("JAR_NAME", "spring-maven-0.0.1-SNAPSHOT.jar")
+                                .WithBuildArg("AGENT_PATH", "/agents")
+                                .WithBuildArg("SERVER_PORT", "8085");
+                           });
 
 var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_WebApp>("webapp")
                     .WithExternalHttpEndpoints()

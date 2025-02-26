@@ -212,8 +212,6 @@ public static class RavenDBBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-#pragma warning disable CTASPIRE001
-        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "data"), "/var/lib/ravendb/data", isReadOnly);
-#pragma warning restore CTASPIRE001
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/ravendb/data", isReadOnly);
     }
 }

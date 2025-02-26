@@ -13,11 +13,6 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IHostEnvironme
 
         try
         {
-            if (target is SqlServerDatabaseResource)
-            {
-                await resourceNotificationService.WaitForDependenciesAsync(resource, cancellationToken);
-            }
-
             var dacpacPath = resource.GetDacpacPath();
             if (!Path.IsPathRooted(dacpacPath))
             {

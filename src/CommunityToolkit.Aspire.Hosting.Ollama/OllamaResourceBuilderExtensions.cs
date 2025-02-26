@@ -84,9 +84,7 @@ public static partial class OllamaResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-#pragma warning disable CTASPIRE001
-        return builder.WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "ollama"), "/root/.ollama", isReadOnly);
-#pragma warning restore CTASPIRE001
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "ollama"), "/root/.ollama", isReadOnly);
     }
 
     /// <summary>
