@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OllamaSharp;
 
 namespace Microsoft.Extensions.Hosting;
@@ -18,7 +19,7 @@ public static class AspireOllamaEmbeddingGeneratorExtensions
         this AspireOllamaApiClientBuilder builder)
     {
         return builder.HostBuilder.Services.AddEmbeddingGenerator(
-            services => CreateInnerEmbeddingGenerator(services, builder)).UseAspireDefaults();
+            services => CreateInnerEmbeddingGenerator(services, builder));
     }
 
     /// <summary>
@@ -34,9 +35,14 @@ public static class AspireOllamaEmbeddingGeneratorExtensions
 
         return builder.HostBuilder.Services.AddKeyedEmbeddingGenerator(
             builder.ServiceKey,
-            services => CreateInnerEmbeddingGenerator(services, builder)).UseAspireDefaults();
+            services => CreateInnerEmbeddingGenerator(services, builder));
     }
 
+    /// <summary>
+    /// Wrap the <see cref="IOllamaApiClient"/> in a telemetry client if tracing is enabled.
+    /// Note that this doesn't use ".UseTelemetry()" because the order of the clients would be incorrect.
+    /// We want the telemetry client to be the innermost client, right next to the inner <see cref="IOllamaApiClient"/>.
+    /// </summary>
     private static IEmbeddingGenerator<string, Embedding<float>> CreateInnerEmbeddingGenerator(
         IServiceProvider services,
         AspireOllamaApiClientBuilder builder)
@@ -45,13 +51,14 @@ public static class AspireOllamaEmbeddingGeneratorExtensions
 
         var result = (IEmbeddingGenerator<string, Embedding<float>>)ollamaApiClient;
 
-        return builder.DisableTracing
-            ? result
-            : new OpenTelemetryEmbeddingGenerator<string, Embedding<float>>(result);
-    }
+        if (builder.DisableTracing)
+        {
+            return result;
+        }
 
-    private static EmbeddingGeneratorBuilder<TKey, TEmbedding> UseAspireDefaults<TKey, TEmbedding>(this EmbeddingGeneratorBuilder<TKey, TEmbedding> builder)
-        where TEmbedding : Embedding =>
-            builder.UseLogging()
-                .UseOpenTelemetry();
+        var loggerFactory = services.GetService<ILoggerFactory>();
+        return new OpenTelemetryEmbeddingGenerator<string, Embedding<float>>(
+            result,
+            loggerFactory?.CreateLogger(typeof(OpenTelemetryEmbeddingGenerator<string, Embedding<float>>)));
+    }
 }

@@ -1,6 +1,8 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using OllamaSharp;
+using System.Runtime.CompilerServices;
 
 namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 
@@ -122,4 +124,32 @@ public class OllamaSharpIChatClientTests
         Assert.NotEqual(client, client2);
         Assert.NotEqual(client, client3);
     }
+
+    [Fact]
+    public void CanChainUseMethodsCorrectly()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama",$"Endpoint={Endpoint}")
+        ]);
+
+        builder.Services.AddDistributedMemoryCache();
+
+        builder.AddOllamaApiClient("Ollama")
+            .AddChatClient()
+            .UseDistributedCache()
+            .UseFunctionInvocation();
+
+        using var host = builder.Build();
+        var client = host.Services.GetRequiredService<IChatClient>();
+        
+        var distributedCacheClient = Assert.IsType<DistributedCachingChatClient>(client);
+        var functionInvocationClient = Assert.IsType<FunctionInvokingChatClient>(GetInnerClient(distributedCacheClient));
+        var otelClient = Assert.IsType<OpenTelemetryChatClient>(GetInnerClient(functionInvocationClient));
+        
+        Assert.IsType<IOllamaApiClient>(GetInnerClient(otelClient), exactMatch: false);
+    }
+
+    [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_InnerClient")]
+    private static extern IChatClient GetInnerClient(DelegatingChatClient client);
 }

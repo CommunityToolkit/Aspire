@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OllamaSharp;
 
 namespace Microsoft.Extensions.Hosting;
@@ -19,8 +20,7 @@ public static class AspireOllamaChatClientExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
         return builder.HostBuilder.Services.AddChatClient(
-                services => CreateInnerChatClient(services, builder))
-            .UseAspireDefaults();
+                services => CreateInnerChatClient(services, builder));
     }
 
     /// <summary>
@@ -36,10 +36,14 @@ public static class AspireOllamaChatClientExtensions
 
         return builder.HostBuilder.Services.AddKeyedChatClient(
                 builder.ServiceKey,
-                services => CreateInnerChatClient(services, builder))
-            .UseAspireDefaults();
+                services => CreateInnerChatClient(services, builder));
     }
 
+    /// <summary>
+    /// Wrap the <see cref="IOllamaApiClient"/> in a telemetry client if tracing is enabled.
+    /// Note that this doesn't use ".UseTelemetry()" because the order of the clients would be incorrect.
+    /// We want the telemetry client to be the innermost client, right next to the inner <see cref="IOllamaApiClient"/>.
+    /// </summary>
     private static IChatClient CreateInnerChatClient(
         IServiceProvider services,
         AspireOllamaApiClientBuilder builder)
@@ -48,10 +52,12 @@ public static class AspireOllamaChatClientExtensions
 
         var result = (IChatClient)ollamaApiClient;
 
-        return builder.DisableTracing ? result : new OpenTelemetryChatClient(result);
-    }
+        if (builder.DisableTracing)
+        {
+            return result;
+        }
 
-    private static ChatClientBuilder UseAspireDefaults(this ChatClientBuilder builder) =>
-        builder.UseLogging()
-               .UseOpenTelemetry();
+        var loggerFactory = services.GetService<ILoggerFactory>();
+        return new OpenTelemetryChatClient(result, loggerFactory?.CreateLogger(typeof(OpenTelemetryChatClient)));
+    }
 }
