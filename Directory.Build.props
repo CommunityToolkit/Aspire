@@ -40,8 +40,8 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>1</ToolkitMinorVersion>
-    <ToolkitPatchVersion>1</ToolkitPatchVersion>
+    <ToolkitMinorVersion>2</ToolkitMinorVersion>
+    <ToolkitPatchVersion>0</ToolkitPatchVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
   </PropertyGroup>
