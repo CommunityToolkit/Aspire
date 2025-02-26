@@ -136,6 +136,6 @@ jobs:
 
   publish-coverage:
     if: github.actor != 'dependabot[bot]'
-    needs: build
+    needs: run-tests
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit

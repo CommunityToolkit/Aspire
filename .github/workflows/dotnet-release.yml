@@ -124,6 +124,6 @@ jobs:
         run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
 
   publish-coverage:
-    needs: build
+    needs: run-tests
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
