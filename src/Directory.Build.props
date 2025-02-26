@@ -8,6 +8,7 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <IsPreview>false</IsPreview>
   </PropertyGroup>
 
   <ItemGroup>

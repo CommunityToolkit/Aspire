@@ -29,6 +29,15 @@
     <PackageVersion>$(VersionPrefix)-$(VersionSuffix)</PackageVersion>
   </PropertyGroup>
 
+  <!--
+    Preview package suffixes
+  -->
+  <PropertyGroup Condition=" '$(ContinuousIntegrationBuild)' == 'true' AND  '$(VersionSuffix)' == '' AND '$(IsPreview)' == 'true' ">
+    <_VersionSuffix>$([System.DateTime]::Now.ToString(yyMMdd-HHmm))</_VersionSuffix>
+    <VersionSuffix>$(ToolkitPreviewVersion).$(_VersionSuffix)</VersionSuffix>
+    <PackageVersion>$(VersionPrefix)-$(VersionSuffix)</PackageVersion>
+  </PropertyGroup>
+
   <PropertyGroup>
     <WarningsAsErrors>$(DefaultWarningsAsErrors);$(WarningsAsErrors)</WarningsAsErrors>
   </PropertyGroup>

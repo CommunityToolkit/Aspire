@@ -1,5 +1,13 @@
 <Project>
-  <Target Name="FailBuildIfReleaseVersionWrong" BeforeTargets="Pack" Condition=" $(ReleaseBuild) == 'true' ">
+  <Target Name="FailBuildIfReleaseVersionWrong" BeforeTargets="Pack" Condition=" $(ReleaseBuild) == 'true' and '$(IsPreview)' == 'false' ">
     <Error Text="The supplied Version for packaging does not match what version has been used. Expected: '$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)', received: '$(PackageVersion)'" Condition="'$(PackageVersion)' != '$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)'" />
+  </Target>
+
+  <Target Name="FailBuildIfPreviewVersionWrong" BeforeTargets="Pack" Condition=" $(ReleaseBuild) == 'false' and '$(IsPreview)' == 'true' ">
+    <Error Text="The supplied Version for packaging does not match what version has been used. Expected: '$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)-$(ToolkitPreviewVersion)', received: '$(PackageVersion)'" Condition="'$(PackageVersion)' != '$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)-$(ToolkitPreviewVersion)'" />
+  </Target>
+
+  <Target Name="LogVersionInfo" BeforeTargets="Pack">
+    <Message Text="Current Package Version: '$(PackageVersion)'" Importance="high" />
   </Target>
 </Project>
