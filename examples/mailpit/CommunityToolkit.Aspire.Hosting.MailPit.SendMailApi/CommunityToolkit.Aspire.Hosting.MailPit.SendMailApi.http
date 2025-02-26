@@ -1,0 +1,13 @@
+@CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi_HostAddress = http://localhost:5075
+
+POST http://localhost:5075/send
+Accept: application/json
+Content-Type: application/json
+
+{
+    "From": "test@test.nl",
+    "To": "toTest@test.nl",
+    "Body": "Hello World",
+    "Subject": "Test"
+}
+###

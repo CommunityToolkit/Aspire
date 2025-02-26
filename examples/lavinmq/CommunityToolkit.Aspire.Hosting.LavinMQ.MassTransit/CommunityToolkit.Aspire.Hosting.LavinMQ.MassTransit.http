@@ -1,0 +1,13 @@
+@CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit_HostAddress = http://localhost:5004
+
+POST http://localhost:5004/send/Hello%20World
+Accept: application/json
+
+###
+GET http://localhost:5004/alive
+Accept: application/json
+
+###
+GET http://localhost:5004/received
+Accept: application/json
+

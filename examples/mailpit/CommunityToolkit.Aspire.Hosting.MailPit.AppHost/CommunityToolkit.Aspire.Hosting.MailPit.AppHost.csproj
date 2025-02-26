@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>f60c6ce9-5628-467c-a6fc-2fc7938b39ad</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.MailPit\CommunityToolkit.Aspire.Hosting.MailPit.csproj"  IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi\CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi.csproj" />
+  </ItemGroup>
+
+</Project>

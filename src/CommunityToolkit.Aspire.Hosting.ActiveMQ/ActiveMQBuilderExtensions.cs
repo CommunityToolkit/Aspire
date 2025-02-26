@@ -36,9 +36,10 @@ public static class ActiveMQBuilderExtensions
         string scheme = "tcp",
         int? webPort = null)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         ArgumentNullException.ThrowIfNull(scheme, nameof(scheme));
-        
+
         // don't use special characters in the password, since it goes into a URI
         ParameterResource passwordParameter = password?.Resource
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
@@ -71,7 +72,7 @@ public static class ActiveMQBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         ArgumentNullException.ThrowIfNull(scheme, nameof(scheme));
-        
+
         // don't use special characters in the password, since it goes into a URI
         ParameterResource passwordParameter = password?.Resource
                                               ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", special: false);
@@ -106,9 +107,7 @@ public static class ActiveMQBuilderExtensions
     public static IResourceBuilder<T> WithDataVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder
-#pragma warning disable CTASPIRE001
-            .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "data"),
-#pragma warning restore CTASPIRE001
+            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"),
                 builder.Resource.ActiveMqSettings.DataPath,
                 isReadOnly);
 
@@ -122,9 +121,7 @@ public static class ActiveMQBuilderExtensions
     public static IResourceBuilder<T> WithConfVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder
-#pragma warning disable CTASPIRE001
-            .WithVolume(name ?? VolumeNameGenerator.CreateVolumeName(builder, "conf"),
-#pragma warning restore CTASPIRE001
+            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "conf"),
                 builder.Resource.ActiveMqSettings.ConfPath,
                 isReadOnly);
 
@@ -135,7 +132,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<T> WithDataBindMount<T>(this IResourceBuilder<T> builder, string source, bool isReadOnly = false) 
+    public static IResourceBuilder<T> WithDataBindMount<T>(this IResourceBuilder<T> builder, string source, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder.WithBindMount(source, builder.Resource.ActiveMqSettings.DataPath, isReadOnly);
 
@@ -149,7 +146,7 @@ public static class ActiveMQBuilderExtensions
     public static IResourceBuilder<T> WithConfBindMount<T>(this IResourceBuilder<T> builder, string source, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder.WithBindMount(source, builder.Resource.ActiveMqSettings.ConfPath, isReadOnly);
-    
+
     private static IResourceBuilder<T> WithJolokiaHealthCheck<T>(
         this IResourceBuilder<T> builder)
     where T : ActiveMQServerResourceBase

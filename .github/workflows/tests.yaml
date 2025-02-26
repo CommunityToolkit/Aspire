@@ -1,0 +1,117 @@
+name: Run Integration Tests
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    env:
+      DOTNET_CONFIGURATION: Release
+      DAPR_VERSION: "1.14.1"
+      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.csproj
+      CI: true
+    runs-on: "${{ matrix.os }}"
+    timeout-minutes: 60
+    name: ${{ matrix.name }}-${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        name: [
+            # Hosting integration tests
+            Hosting.ActiveMQ.Tests,
+            Hosting.Azure.DataApiBuilder.Tests,
+            Hosting.Azure.StaticWebApps.Tests,
+            Hosting.Bun.Tests,
+            Hosting.Dapr.AzureExtensions.Tests,
+            Hosting.Dapr.AzureRedis.Tests,
+            Hosting.Dapr.Tests,
+            Hosting.DbGate.Tests,
+            Hosting.Deno.Tests,
+            Hosting.EventStore.Tests,
+            Hosting.GoFeatureFlag.Tests,
+            Hosting.Golang.Tests,
+            Hosting.Java.Tests,
+            Hosting.LavinMQ.Tests,
+            Hosting.MailPit.Tests,
+            Hosting.Meilisearch.Tests,
+            Hosting.MongoDB.Extensions.Tests,
+            Hosting.Ngrok.Tests,
+            Hosting.NodeJS.Extensions.Tests,
+            Hosting.Ollama.Tests,
+            Hosting.PapercutSmtp.Tests,
+            Hosting.PostgreSQL.Extensions.Tests,
+            Hosting.Python.Extensions.Tests,
+            Hosting.RavenDB.Tests,
+            Hosting.Redis.Extensions.Tests,
+            Hosting.Rust.Tests,
+            Hosting.SqlDatabaseProjects.Tests,
+            Hosting.Sqlite.Tests,
+            Hosting.SqlServer.Extensions.Tests,
+
+            # Client integration tests
+            EventStore.Tests,
+            GoFeatureFlag.Tests,
+            MassTransit.RabbitMQ.Tests,
+            Meilisearch.Tests,
+            Microsoft.Data.Sqlite.Tests,
+            Microsoft.EntityFrameworkCore.Sqlite.Tests,
+            OllamaSharp.Tests,
+            RavenDB.Client.Tests,
+          ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Runtimes, Caching, and Tools
+        uses: ./.github/actions/setup-runtimes-caching
+        with:
+          name: ${{ matrix.name }}
+
+      - name: Verify Docker is running
+        run: docker info
+
+      - name: Build test project
+        env:
+          CI: false
+        run: |
+          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
+
+      - name: Run tests
+        run: >-
+          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}
+          --configuration ${{ env.DOTNET_CONFIGURATION }}
+          --logger "console;verbosity=normal"
+          --logger "trx"
+          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
+          --blame
+          --blame-hang-timeout 7m
+          --blame-crash
+          --results-directory testresults
+          --collect "XPlat Code Coverage"
+          --no-restore
+          --no-build -- RunConfiguration.CollectSourceInformation=true
+
+      - name: Dump docker info
+        if: always()
+        run: |
+          docker container ls --all
+          docker container ls --all --format json
+          docker volume ls
+          docker network ls
+
+      - name: Upload bin log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: binlog-${{ matrix.name }}-${{ matrix.os }}
+          path: "**/*.binlog"
+
+      - name: Upload test results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testresults-${{ matrix.name }}-${{ matrix.os }}
+          path: testresults/**
+

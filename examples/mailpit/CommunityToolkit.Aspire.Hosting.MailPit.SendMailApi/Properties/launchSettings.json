@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:64858;http://localhost:64859"
+    }
+  }
+}

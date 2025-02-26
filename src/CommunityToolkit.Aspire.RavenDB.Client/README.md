@@ -118,7 +118,7 @@ dotnet add package CommunityToolkit.Aspire.Hosting.RavenDB
 In your AppHost's _Program.cs_ file, register a RavenDB server resource and consume the connection using the following methods:
 
 ```csharp
-var elasticsearch = builder.AddRavenDB("ravendb");
+var ravendb = builder.AddRavenDB("ravendb");
 
 var myService = builder.AddProject<Projects.MyService>()
                        .WithReference(ravendb);
@@ -132,7 +132,7 @@ builder.AddRavenDBClient("ravendb");
 
 ## Additional Documentation
 
-- https://ravendb.net/docs/article-page/6.2/csharp
+- https://ravendb.net/docs
 - https://github.com/ravendb/ravendb
 - https://learn.microsoft.com/dotnet/aspire/community-toolkit/ravendb <!-- TODO: Update the link once it is created -->
 

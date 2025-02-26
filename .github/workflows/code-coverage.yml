@@ -12,10 +12,10 @@ jobs:
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
-          pattern: test-results*
+          pattern: testresults-*
 
       - name: Combine coverage reports
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.4.2
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.4.4
         with:
           reports: "**/*.cobertura.xml"
           targetdir: "${{ github.workspace }}/report"
@@ -25,7 +25,7 @@ jobs:
           tag: "${{ github.run_number }}_${{ github.run_id }}"
           customSettings: ""
           toolpath: "reportgeneratortool"
-          assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.NodeJs;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis;-Aspire.Hosting.PostgreSQL"
+          assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.NodeJs;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis;-Aspire.Hosting.PostgreSQL;-Aspire.Hosting.MongoDB"
 
       - name: Upload combined coverage XML
         uses: actions/upload-artifact@v4
@@ -64,3 +64,4 @@ jobs:
       - name: Coverage on step summary
         if: always()
         run: cat "${{ github.workspace }}/report/SummaryGithub.md" >> $GITHUB_STEP_SUMMARY
+

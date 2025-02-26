@@ -83,5 +83,23 @@
 /src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/ @Alirexaa
 /tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/ @Alirexaa
 /examples/postgres-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.DbGate
+/src/CommunityToolkit.Aspire.Hosting.DbGate/ @Alirexaa
 /tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/ @Alirexaa
-/src/Shared/dbgate/ @Alirexaa
+/examples/dbgate/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.MongoDB.Extensions
+/src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/ @Alirexaa
+/examples/mongodb-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.Redis.Extensions
+/src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/ @Alirexaa
+/examples/redis-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.SqlServer.Extensions
+/src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/ @Alirexaa
+/examples/sqlserver-ext/ @Alirexaa

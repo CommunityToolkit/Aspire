@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\..\examples\dbgate\CommunityToolkit.Aspire.Hosting.DbGate.AppHost\CommunityToolkit.Aspire.Hosting.DbGate.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
-    <Compile Include="$(SharedDir)\dbgate\DbGateContainerImageTags.cs" Link="dbgate\DbGateContainerImageTags.cs" />
-    <Compile Include="$(SharedDir)\dbgate\DbGateContainerResource.cs" Link="dbgate\DbGateContainerResource.cs" />
-    <Compile Include="$(SharedDir)\dbgate\DbGateBuilderExtensions.cs" Link="dbgate\DbGateBuilderExtensions.cs" />
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.DbGate\DbGateContainerImageTags.cs" />
   </ItemGroup>
 </Project>

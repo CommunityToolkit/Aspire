@@ -1,0 +1,66 @@
+name: Generate NuGet packages
+on:
+  workflow_call:
+    inputs:
+      version_suffix:
+        required: false
+        type: string
+        default: "alpha.${{ github.run_number }}"
+      validate_version:
+        required: false
+        type: boolean
+        default: false
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CONFIGURATION: Release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: Get git tag
+        id: git_tag
+        run: "echo tag=${GITHUB_REF#refs/tags/v} >> $GITHUB_OUTPUT"
+
+      - name: Publish NuGet package
+        run: |
+          PACK_ARGS="-c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:CI=true"
+
+          if [ "${{ inputs.validate_version }}" = true ]; then
+          PACK_ARGS="$PACK_ARGS -p:PackageVersion=${{ steps.git_tag.outputs.tag }} -p:ReleaseBuild=true"
+          fi
+
+          if [ -n "${{ inputs.version_suffix }}" ]; then
+          PACK_ARGS="$PACK_ARGS -p:VersionSuffix=${{ inputs.version_suffix }}"
+          fi
+
+          dotnet pack $PACK_ARGS
+
+      - name: Publish NuGet packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./nuget
+
+      - name: List NuGet packages in step summary
+        run: |
+          GITHUB_SUMMARY=$(find nuget -type f -name '*.nupkg' -exec basename {} \;)
+          echo "## NuGet packages:" >> $GITHUB_STEP_SUMMARY
+          echo "$GITHUB_SUMMARY" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Package List
+        uses: actions/upload-artifact@v4
+        if: ${{ runner.os == 'linux' }}
+        with:
+          name: nuget-list
+          if-no-files-found: error
+          path: |
+            ${{ github.workspace }}/.github/workflows/SignClientFileList.txt
+

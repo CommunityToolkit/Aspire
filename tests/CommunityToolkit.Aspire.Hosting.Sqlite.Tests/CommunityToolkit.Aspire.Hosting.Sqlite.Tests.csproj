@@ -3,5 +3,6 @@
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Sqlite\CommunityToolkit.Aspire.Hosting.Sqlite.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
     <ProjectReference Include="../../examples/sqlite/CommunityToolkit.Aspire.Sqlite.AppHost/CommunityToolkit.Aspire.Sqlite.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Microsoft.Data.Sqlite\CommunityToolkit.Aspire.Microsoft.Data.Sqlite.csproj" />
   </ItemGroup>
 </Project>
