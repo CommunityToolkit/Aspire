@@ -41,7 +41,7 @@
   <!-- Versioning -->
   <PropertyGroup>
     <ToolkitMinorVersion>2</ToolkitMinorVersion>
-    <ToolkitPatchVersion>0</ToolkitPatchVersion>
+    <ToolkitPatchVersion>1</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
