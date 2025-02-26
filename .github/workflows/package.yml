@@ -31,7 +31,7 @@ jobs:
 
       - name: Publish NuGet package
         run: |
-          PACK_ARGS="-c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget"
+          PACK_ARGS="-c ${{ env.DOTNET_CONFIGURATION }} -o ./nuget -p:CI=true"
 
           if [ "${{ inputs.validate_version }}" = true ]; then
           PACK_ARGS="$PACK_ARGS -p:PackageVersion=${{ steps.git_tag.outputs.tag }} -p:ReleaseBuild=true"
@@ -63,3 +63,4 @@ jobs:
           if-no-files-found: error
           path: |
             ${{ github.workspace }}/.github/workflows/SignClientFileList.txt
+
