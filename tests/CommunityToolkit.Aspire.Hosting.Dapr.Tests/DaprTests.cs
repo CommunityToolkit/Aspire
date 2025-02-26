@@ -59,8 +59,8 @@ public class DaprTests
         Assert.Equal("3500", config["DAPR_HTTP_PORT"]);
         Assert.Equal("50001", config["DAPR_GRPC_PORT"]);
 
-        Assert.Equal("http://localhost:3500", config["DAPR_HTTP_ENDPOINT"]);
-        Assert.Equal("http://localhost:50001", config["DAPR_GRPC_ENDPOINT"]);
+        Assert.Equal("http://host.docker.internal:3500", config["DAPR_HTTP_ENDPOINT"]);
+        Assert.Equal("http://host.docker.internal:50001", config["DAPR_GRPC_ENDPOINT"]);
 
         var expectedArgs = new[]
         {
@@ -155,8 +155,8 @@ public class DaprTests
         var config = await container.GetEnvironmentVariableValuesAsync(DistributedApplicationOperation.Run);
         var sidecarArgs = await sideCarCli.GetArgumentValuesAsync();
 
-        Assert.Equal("http://localhost:3500", config["DAPR_HTTP_ENDPOINT"]);
-        Assert.Equal("http://localhost:50001", config["DAPR_GRPC_ENDPOINT"]);
+        Assert.Equal("http://host.docker.internal:3500", config["DAPR_HTTP_ENDPOINT"]);
+        Assert.Equal("http://host.docker.internal:50001", config["DAPR_GRPC_ENDPOINT"]);
 
         // because the order of the parameters is changing, we are just checking if the important ones here.
         var commandline = string.Join(" ", sidecarArgs);
