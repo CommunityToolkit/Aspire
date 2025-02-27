@@ -1,6 +1,9 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using OllamaSharp;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace CommunityToolkit.Aspire.OllamaSharp.Tests;
 
@@ -122,4 +125,33 @@ public class OllamaSharpIEmbeddingGeneratorTests
         Assert.NotEqual(client, client2);
         Assert.NotEqual(client, client3);
     }
+
+    [Fact]
+    public void CanChainUseMethodsCorrectly()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama",$"Endpoint={Endpoint}")
+        ]);
+
+        builder.Services.AddDistributedMemoryCache();
+
+        builder.AddOllamaApiClient("Ollama")
+            .AddEmbeddingGenerator()
+            .UseDistributedCache();
+
+        using var host = builder.Build();
+        var client = host.Services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
+
+        var distributedCacheClient = Assert.IsType<DistributedCachingEmbeddingGenerator<string, Embedding<float>>>(client);
+        var otelClient = Assert.IsType<OpenTelemetryEmbeddingGenerator<string, Embedding<float>>>(GetInnerGenerator(distributedCacheClient));
+
+        Assert.IsType<IOllamaApiClient>(GetInnerGenerator(otelClient), exactMatch: false);
+    }
+
+    private static IEmbeddingGenerator<TInput, TEmbedding> GetInnerGenerator<TInput, TEmbedding>(DelegatingEmbeddingGenerator<TInput, TEmbedding> generator)
+        where TEmbedding : Embedding =>
+        (IEmbeddingGenerator<TInput,TEmbedding>)(generator.GetType()
+            .GetProperty("InnerGenerator", BindingFlags.Instance | BindingFlags.NonPublic)?
+            .GetValue(generator, null) ?? throw new InvalidOperationException());
 }
