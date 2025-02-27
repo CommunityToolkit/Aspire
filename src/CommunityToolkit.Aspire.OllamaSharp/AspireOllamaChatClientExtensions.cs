@@ -41,7 +41,7 @@ public static class AspireOllamaChatClientExtensions
 
     /// <summary>
     /// Wrap the <see cref="IOllamaApiClient"/> in a telemetry client if tracing is enabled.
-    /// Note that this doesn't use ".UseTelemetry()" because the order of the clients would be incorrect.
+    /// Note that this doesn't use ".UseOpenTelemetry()" because the order of the clients would be incorrect.
     /// We want the telemetry client to be the innermost client, right next to the inner <see cref="IOllamaApiClient"/>.
     /// </summary>
     private static IChatClient CreateInnerChatClient(
