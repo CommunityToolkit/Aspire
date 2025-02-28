@@ -14,9 +14,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+    
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+          
       - name: Restore and build
-        run: ./eng/apicompat/generate-api-diffs.sh
+        run: |
+        
+          find src -type f -name "*.csproj" | while read -r csproj; do
+          dotnet build "$csproj" -f net8.0 --configuration Release --no-incremental -t:Build -t:GenAPIGenerateReferenceAssemblySource
+          done
         continue-on-error: true
 
       - name: Create or update pull request
