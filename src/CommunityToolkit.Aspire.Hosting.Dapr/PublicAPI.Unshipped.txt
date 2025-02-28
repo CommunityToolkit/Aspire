@@ -18,7 +18,5 @@ CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Key.get -> string!
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Key.init -> void
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Name.get -> string!
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSecretKeyRef.Name.init -> void
-CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.get -> string?
-CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.init -> void
 static Aspire.Hosting.DaprMetadataResourceBuilderExtensions.WithMetadata(this Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>! builder, string! name, Aspire.Hosting.ApplicationModel.ParameterResource! parameterResource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>!
 static Aspire.Hosting.DaprMetadataResourceBuilderExtensions.WithMetadata(this Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>! builder, string! name, string! value) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>!

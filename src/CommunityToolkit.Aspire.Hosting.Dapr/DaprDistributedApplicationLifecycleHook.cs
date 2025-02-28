@@ -56,7 +56,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                 ?? GetDefaultDaprPath()
                 ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
 
-
             var daprSidecar = daprAnnotation.Sidecar;
 
             var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
@@ -482,7 +481,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
         _logger.LogInformation("Unvalidated configuration {specType} for component '{ComponentName}'.", component.Type, component.Name);
         return await contentWriter(GetDaprComponent(component, component.Type)).ConfigureAwait(false);
     }
-    private async Task<string> GetBuildingBlockComponentAsync(DaprComponentResource component, Func<string, Task<string>> contentWriter, string inMemoryProvider, CancellationToken cancellationToken)
+    private async Task<string> GetBuildingBlockComponentAsync(DaprComponentResource component, Func<string, Task<string>> contentWriter, string defaultProvider, CancellationToken cancellationToken)
     {
         // Start by trying to get the component from the app host directory
         string daprAppHostRelativePath = GetAppHostRelativePath(component.Type);
@@ -511,7 +510,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
         // If the component is not found in the default components directory, use the in-memory secret store
         _logger.LogInformation("Using in-memory provider for dapr component '{ComponentName}'.", component.Name);
 
-        var content = new DaprComponentSchema(component.Name, inMemoryProvider).ToString();
+        var content = new DaprComponentSchema(component.Name, defaultProvider).ToString();
         return await contentWriter(content).ConfigureAwait(false);
     }
 
