@@ -58,6 +58,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
             var daprSidecar = daprAnnotation.Sidecar;
 
+
             var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
 
             var sidecarOptions = sidecarOptionsAnnotation?.Options;
@@ -263,6 +264,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
             // The CLI is an artifact of a local run, so it should not be published...
             daprCli.Annotations.Add(ManifestPublishingCallbackAnnotation.Ignore);
+
+            // https://github.com/CommunityToolkit/Aspire/issues/507
+            // The CLI should be a child of the resource that it is associated with.
+            daprCli.Annotations.Add(new ResourceRelationshipAnnotation(resource, "Parent"));
 
             daprSidecar.Annotations.Add(
                 new ManifestPublishingCallbackAnnotation(
