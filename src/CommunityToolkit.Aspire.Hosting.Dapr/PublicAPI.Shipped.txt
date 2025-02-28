@@ -1,4 +1,6 @@
 #nullable enable
+Aspire.Hosting.IDistributedApplicationBuilderExtensions
+Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions
 CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions
 CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions.LocalPath.get -> string?
 CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions.LocalPath.init -> void
@@ -77,6 +79,8 @@ CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.RunFile.get -> string?
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.RunFile.init -> void
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.RuntimePath.get -> string?
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.RuntimePath.init -> void
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.get -> string?
+CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.SchedulerHostAddress.init -> void
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.UnixDomainSocket.get -> string?
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions.UnixDomainSocket.init -> void
 CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptionsAnnotation
@@ -87,8 +91,6 @@ CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource
 CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource.Options.get -> CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions?
 CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource.Type.get -> string!
 CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource
-Aspire.Hosting.IDistributedApplicationBuilderExtensions
-Aspire.Hosting.IDistributedApplicationResourceBuilderExtensions
 static Aspire.Hosting.IDistributedApplicationBuilderExtensions.AddDapr(this Aspire.Hosting.IDistributedApplicationBuilder! builder, System.Action<CommunityToolkit.Aspire.Hosting.Dapr.DaprOptions!>? configure = null) -> Aspire.Hosting.IDistributedApplicationBuilder!
 static Aspire.Hosting.IDistributedApplicationBuilderExtensions.AddDaprComponent(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! type, CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions? options = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>!
 static Aspire.Hosting.IDistributedApplicationBuilderExtensions.AddDaprPubSub(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions? options = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource!>!

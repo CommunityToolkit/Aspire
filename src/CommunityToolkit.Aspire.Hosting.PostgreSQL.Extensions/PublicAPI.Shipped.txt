@@ -1,1 +1,3 @@
 #nullable enable
+Aspire.Hosting.PostgresBuilderExtensions
+static Aspire.Hosting.PostgresBuilderExtensions.WithDbGate(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.PostgresServerResource!>! builder, System.Action<Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DbGateContainerResource!>!>? configureContainer = null, string? containerName = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.PostgresServerResource!>!

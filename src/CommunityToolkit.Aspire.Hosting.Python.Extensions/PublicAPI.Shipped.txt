@@ -1,5 +1,9 @@
 #nullable enable
+Aspire.Hosting.ApplicationModel.UvAppResource
+Aspire.Hosting.ApplicationModel.UvAppResource.UvAppResource(string! name, string! executablePath, string! workingDirectory) -> void
 Aspire.Hosting.ApplicationModel.UvicornAppResource
 Aspire.Hosting.ApplicationModel.UvicornAppResource.UvicornAppResource(string! name, string! executablePath, string! workingDirectory) -> void
+Aspire.Hosting.UvAppHostingExtension
 Aspire.Hosting.UvicornAppHostingExtension
+static Aspire.Hosting.UvAppHostingExtension.AddUvApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! projectDirectory, string! scriptPath, params string![]! scriptArgs) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.UvAppResource!>!
 static Aspire.Hosting.UvicornAppHostingExtension.AddUvicornApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! projectDirectory, string! appName, params string![]! args) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.UvicornAppResource!>!
