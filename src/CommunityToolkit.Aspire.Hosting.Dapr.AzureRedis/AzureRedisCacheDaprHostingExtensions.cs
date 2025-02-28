@@ -43,7 +43,7 @@ public static class AzureRedisCacheDaprHostingExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(redisBuilder, nameof(redisBuilder));
 
-        var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1.0");
+        var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1");
 
         var redisHost = new ProvisioningParameter("redisHost", typeof(string));
         var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
