@@ -37,7 +37,14 @@ public static class MailPitHostingExtension
                 targetPort: MailPitContainerResource.HttpEndpointPort,
                 port: httpPort,
                 name: MailPitContainerResource.HttpEndpointName)
-            .WithHttpHealthCheck("/", httpPort, MailPitContainerResource.HttpEndpointName);
+            .WithHttpHealthCheck(
+                path: "/livez",
+                statusCode: 200,
+                endpointName: MailPitContainerResource.HttpEndpointName)
+            .WithHttpHealthCheck(
+                path: "/readyz",
+                statusCode: 200,
+                endpointName: MailPitContainerResource.HttpEndpointName);
 
         return rb;
     }
