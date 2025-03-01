@@ -46,6 +46,7 @@ public static class AzureRedisCacheDaprHostingExtensions
         var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprState, "state.redis", "v1");
 
         var redisHost = new ProvisioningParameter("redisHost", typeof(string));
+
         var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
 
         var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprComponent, [redisHost]);
@@ -53,12 +54,25 @@ public static class AzureRedisCacheDaprHostingExtensions
         var daprResourceBuilder = builder.AddAzureDaprResource(redisDaprState, configureInfrastructure);
 
 
+        daprResourceBuilder.WithParameter("redisHost", redisBuilder.GetOutput("daprConnectionString"));
+
+        bool useAccesskey = redisBuilder.Resource.UseAccessKeyAuthentication;
+
+        if (useAccesskey)
+        {
+            daprResourceBuilder.WithParameter("redisPasswordSecretUri", redisBuilder.GetOutput("redisPasswordSecretUri"));
+        }
+        else
+        {
+            daprResourceBuilder.ConfigureInfrastructure(infrastructure => infrastructure.Add(principalIdParameter));
+        }
+
+
         redisBuilder.ConfigureInfrastructure(infra =>
         {
             var redisCacheResource = infra.GetProvisionableResources().OfType<AzureRedisResource>().Single();
 
             // Make necessary changes to the redis resource
-            bool useEntraID = redisCacheResource.RedisConfiguration.IsAadEnabled.Value == "true";
             bool enableTLS = redisCacheResource.EnableNonSslPort.Value == false;
 
             BicepValue<int> port = enableTLS ? redisCacheResource.SslPort : redisCacheResource.Port;
@@ -68,35 +82,34 @@ public static class AzureRedisCacheDaprHostingExtensions
                 Value = BicepFunction.Interpolate($"{redisCacheResource.HostName}:{port}")
             });
 
-            daprResourceBuilder.WithParameter("redisHost", redisBuilder.GetOutput("daprConnectionString"));
-
             daprComponent.Metadata = [
                 new ContainerAppDaprMetadata { Name = "redisHost", Value = redisHost },
                 new ContainerAppDaprMetadata { Name = "enableTLS", Value = enableTLS? "true":"false"},
                 new ContainerAppDaprMetadata { Name = "actorStateStore", Value = "true" }
             ];
 
-
-            if (useEntraID)
+            if (useAccesskey)
+            {
+                infra.ConfigureSecretAccess(daprComponent, redisCacheResource);
+            }
+            else
             {
                 daprComponent.Metadata.Add(new ContainerAppDaprMetadata
                 {
                     Name = "useEntraID",
                     Value = "true"
                 });
+
                 daprComponent.Metadata.Add(new ContainerAppDaprMetadata
                 {
                     Name = "azureClientId",
                     Value = principalIdParameter
                 });
             }
-            else
-            {
-                infra.ConfigureSecretAccess(daprComponent, redisCacheResource);
-                daprResourceBuilder.WithParameter("redisPasswordSecretUri", redisBuilder.GetOutput("redisPasswordSecretUri"));
-            }
         });
-        
+
+      
+
         // return the original builder to allow chaining
         return builder;
     }
@@ -114,7 +127,7 @@ public static class AzureRedisCacheDaprHostingExtensions
         ArgumentNullException.ThrowIfNull(redisCache, nameof(redisCache));
         ArgumentNullException.ThrowIfNull(daprComponent, nameof(daprComponent));
         ArgumentNullException.ThrowIfNull(redisCacheResource, nameof(redisCacheResource));
-        
+
         var redisPasswordSecret = new ProvisioningParameter("redisPasswordSecretUri", typeof(Uri));
 
         var keyVault = redisCache.GetProvisionableResources()
