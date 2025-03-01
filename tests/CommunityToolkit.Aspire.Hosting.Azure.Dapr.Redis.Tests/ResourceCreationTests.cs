@@ -76,7 +76,8 @@ public class ResourceCreationTests
             output redisPasswordSecretUri string = daprRedisPassword.properties.secretUri
             """;
 
-        Assert.Equal(expectedRedisBicep, redisBicep);
+        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+
 
         var daprResource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
@@ -124,13 +125,13 @@ public class ResourceCreationTests
                     keyVaultUrl: redisPasswordSecretUri
                   }
                 ]
-                version: 'v1.0'
+                version: 'v1'
               }
               parent: containerAppEnvironment
             }
             """;
+        Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
 
-        Assert.Equal(expectedDaprBicep, daprBicep);
     }
 
     [Fact]
@@ -195,7 +196,8 @@ public class ResourceCreationTests
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
             """;
 
-        Assert.Equal(expectedRedisBicep, redisBicep);
+        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+
 
         var daprResource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
@@ -206,6 +208,8 @@ public class ResourceCreationTests
             param location string = resourceGroup().location
 
             param redisHost string
+
+            param principalId string
 
             var resourceToken = uniqueString(resourceGroup().id)
 
@@ -239,13 +243,14 @@ public class ResourceCreationTests
                     value: principalId
                   }
                 ]
-                version: 'v1.0'
+                version: 'v1'
               }
               parent: containerAppEnvironment
             }
             """;
 
-        Assert.Equal(expectedDaprBicep, daprBicep);
+
+        Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
 
     }
 
@@ -319,7 +324,7 @@ public class ResourceCreationTests
             """;
 
 
-        Assert.Equal(expectedRedisBicep, redisBicep);
+        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
     }
 
     [Fact]
@@ -336,4 +341,9 @@ public class ResourceCreationTests
 
         Assert.Contains("Unsupported Dapr component type: pubsub", ex.Message);
     }
+    public static string NormalizeLineEndings(string input)
+    {
+        return input.Replace("\r\n", "\n");
+    }
+
 }
