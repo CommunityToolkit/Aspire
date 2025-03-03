@@ -54,6 +54,7 @@
 
   <ItemGroup Label="Build Dependencies">
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
+    <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25065.25" />
   </ItemGroup>
 
   <ItemGroup Label="Integration Packages">

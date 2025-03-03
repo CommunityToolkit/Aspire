@@ -18,7 +18,19 @@
     <PackageReadmeFile>$(DocsPath)</PackageReadmeFile>
     <PackageOutputPath>../../nuget</PackageOutputPath>
     <PackageTags>aspire integration communitytoolkit dotnetcommunitytoolkit $(AdditionalPackageTags)</PackageTags>
+    
+    <!-- If the project is packable, we generate its API surface in a separate file to be used by the API review process. -->
+    <GenAPITargetPath Condition="'$(IsPackable)' == 'true'">$(MSBuildProjectDirectory)/api/$(AssemblyName).cs</GenAPITargetPath>
+
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="$(GenAPITargetPath)" />
+  </ItemGroup>
+
+  <Target Name="CreateGenAPITargetPathFolder" BeforeTargets="GenAPIGenerateReferenceAssemblySource">
+    <MakeDir Directories="$(MSBuildProjectDirectory)/api" Condition="!Exists('$(MSBuildProjectDirectory)/api')" />
+  </Target>
 
   <!--
     Create local branding
