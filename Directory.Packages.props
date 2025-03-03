@@ -74,7 +74,7 @@
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.8" />
     <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.8" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
-    <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
+    <PackageVersion Include="RavenDB.Client" Version="7.0.0" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />

@@ -13,7 +13,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <AspireMajorVersion>9</AspireMajorVersion>
+    <AspireMajorVersion>9.1.0</AspireMajorVersion>
     <AspireVersion>$(AspireMajorVersion).1.0</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
