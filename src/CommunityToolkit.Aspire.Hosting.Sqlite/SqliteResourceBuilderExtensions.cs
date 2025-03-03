@@ -64,9 +64,10 @@ public static class SqliteResourceBuilderExtensions
     /// Adds an Sqlite Web resource to the resource builder, to allow access to the Sqlite database via a web interface.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
+    /// <param name="configureContainer">Callback to configure SqliteWeb container resource.</param>
     /// <param name="containerName">The optional name of the container.</param>
     /// <returns>A resource builder for the Sqlite resource.</returns>
-    public static IResourceBuilder<SqliteResource> WithSqliteWeb(this IResourceBuilder<SqliteResource> builder, string? containerName = null)
+    public static IResourceBuilder<SqliteResource> WithSqliteWeb(this IResourceBuilder<SqliteResource> builder, Action<IResourceBuilder<SqliteWebResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
@@ -83,6 +84,8 @@ public static class SqliteResourceBuilderExtensions
                                 .WaitFor(builder)
                                 .WithHttpHealthCheck("/")
                                 .ExcludeFromManifest();
+
+        configureContainer?.Invoke(resourceBuilder);
 
         return builder;
     }
