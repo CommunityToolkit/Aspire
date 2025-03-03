@@ -23,8 +23,4 @@
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
-
 </Project>
