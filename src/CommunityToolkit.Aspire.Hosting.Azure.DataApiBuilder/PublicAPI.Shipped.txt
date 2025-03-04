@@ -1,6 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.DataApiBuilderContainerResource
-Aspire.Hosting.ApplicationModel.DataApiBuilderContainerResource.DataApiBuilderContainerResource(string! name, string? entrypoint = null) -> void
-Aspire.Hosting.DataApiBuilderHostingExtension
-static Aspire.Hosting.DataApiBuilderHostingExtension.AddDataAPIBuilder(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? httpPort = null, params string![]! configFilePaths) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DataApiBuilderContainerResource!>!
-static Aspire.Hosting.DataApiBuilderHostingExtension.AddDataAPIBuilder(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, params string![]! configFilePaths) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DataApiBuilderContainerResource!>!

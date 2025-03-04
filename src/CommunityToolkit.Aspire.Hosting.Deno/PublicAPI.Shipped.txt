@@ -1,7 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.DenoAppResource
-Aspire.Hosting.ApplicationModel.DenoAppResource.DenoAppResource(string! name, string! command, string! workingDirectory) -> void
-Aspire.Hosting.DenoAppHostingExtensions
-static Aspire.Hosting.DenoAppHostingExtensions.AddDenoApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! scriptPath, string? workingDirectory = null, string![]? permissionFlags = null, string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DenoAppResource!>!
-static Aspire.Hosting.DenoAppHostingExtensions.AddDenoTask(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? workingDirectory = null, string! taskName = "start", string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DenoAppResource!>!
-static Aspire.Hosting.DenoAppHostingExtensions.WithDenoPackageInstallation(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DenoAppResource!>! resource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.DenoAppResource!>!

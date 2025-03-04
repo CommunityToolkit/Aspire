@@ -1,6 +1,4 @@
 <Project>
-  <Import Project="eng\apicompat\PublicApiAnalyzer.props" />
-  <Import Project="eng\apicompat\PublicApiAnalyzer.targets" />
   
   <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
   <PropertyGroup>
@@ -22,7 +20,6 @@
     <TestContainersVersion>4.2.0</TestContainersVersion>
     <MEAIVersion>9.3.0-preview.1.25114.11</MEAIVersion>
     <IsPackable>false</IsPackable>
-    <UsePublicApiAnalyzers>true</UsePublicApiAnalyzers>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <SharedDir>$(RepoRoot)src\Shared</SharedDir>

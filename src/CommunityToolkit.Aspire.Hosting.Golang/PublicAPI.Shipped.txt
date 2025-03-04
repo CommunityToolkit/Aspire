@@ -1,5 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.GolangAppExecutableResource
-Aspire.Hosting.ApplicationModel.GolangAppExecutableResource.GolangAppExecutableResource(string! name, string! workingDirectory) -> void
-Aspire.Hosting.GolangAppHostingExtension
-static Aspire.Hosting.GolangAppHostingExtension.AddGolangApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.GolangAppExecutableResource!>!
