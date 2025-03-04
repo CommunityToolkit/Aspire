@@ -1,9 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.EventStoreResource
-Aspire.Hosting.ApplicationModel.EventStoreResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
-Aspire.Hosting.ApplicationModel.EventStoreResource.EventStoreResource(string! name) -> void
-Aspire.Hosting.ApplicationModel.EventStoreResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
-Aspire.Hosting.EventStoreBuilderExtensions
-static Aspire.Hosting.EventStoreBuilderExtensions.AddEventStore(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.EventStoreResource!>!
-static Aspire.Hosting.EventStoreBuilderExtensions.WithDataBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.EventStoreResource!>! builder, string! source) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.EventStoreResource!>!
-static Aspire.Hosting.EventStoreBuilderExtensions.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.EventStoreResource!>! builder, string? name = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.EventStoreResource!>!

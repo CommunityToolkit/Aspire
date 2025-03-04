@@ -1,3 +1,0 @@
-#nullable enable
-static Aspire.Hosting.NodeJSHostingExtensions.AddViteApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? workingDirectory = null, string! packageManager = "npm", bool useHttps = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
-*REMOVED*static Aspire.Hosting.NodeJSHostingExtensions.AddViteApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? workingDirectory = null, string! packageManager = "npm") -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!

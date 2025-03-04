@@ -1,6 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.PapercutSmtpContainerResource
-Aspire.Hosting.ApplicationModel.PapercutSmtpContainerResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
-Aspire.Hosting.ApplicationModel.PapercutSmtpContainerResource.PapercutSmtpContainerResource(string! name) -> void
-Aspire.Hosting.PapercutSmtpHostingExtension
-static Aspire.Hosting.PapercutSmtpHostingExtension.AddPapercutSmtp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? httpPort = null, int? smtpPort = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.PapercutSmtpContainerResource!>!

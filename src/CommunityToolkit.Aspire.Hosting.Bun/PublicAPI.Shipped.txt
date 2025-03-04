@@ -1,6 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.BunAppResource
-Aspire.Hosting.ApplicationModel.BunAppResource.BunAppResource(string! name, string! workingDirectory) -> void
-Aspire.Hosting.BunAppExtensions
-static Aspire.Hosting.BunAppExtensions.AddBunApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? workingDirectory = null, string! entryPoint = "index.ts", bool watch = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.BunAppResource!>!
-static Aspire.Hosting.BunAppExtensions.WithBunPackageInstallation(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.BunAppResource!>! resource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.BunAppResource!>!

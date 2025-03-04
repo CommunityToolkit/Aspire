@@ -1,9 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.GoFeatureFlagResource
-Aspire.Hosting.ApplicationModel.GoFeatureFlagResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
-Aspire.Hosting.ApplicationModel.GoFeatureFlagResource.GoFeatureFlagResource(string! name) -> void
-Aspire.Hosting.ApplicationModel.GoFeatureFlagResource.PrimaryEndpoint.get -> Aspire.Hosting.ApplicationModel.EndpointReference!
-Aspire.Hosting.GoFeatureFlagBuilderExtensions
-static Aspire.Hosting.GoFeatureFlagBuilderExtensions.AddGoFeatureFlag(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? pathToConfigFile = null, int? port = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.GoFeatureFlagResource!>!
-static Aspire.Hosting.GoFeatureFlagBuilderExtensions.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.GoFeatureFlagResource!>! builder, string? name = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.GoFeatureFlagResource!>!
-static Aspire.Hosting.GoFeatureFlagBuilderExtensions.WithGoffBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.GoFeatureFlagResource!>! builder, string! source) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.GoFeatureFlagResource!>!
