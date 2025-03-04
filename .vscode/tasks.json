@@ -2,12 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Generate PublicAPI files",
-      "type": "shell",
-      "command": "echo '#nullable enable' > src/${input:projectName}/PublicAPI.Shipped.txt && echo '#nullable enable' > src/${input:projectName}/PublicAPI.Unshipped.txt",
-      "problemMatcher": []
-    },
-    {
         "label": "build",
         "command": "dotnet",
         "type": "process",
