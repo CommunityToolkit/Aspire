@@ -1,5 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.RustAppExecutableResource
-Aspire.Hosting.ApplicationModel.RustAppExecutableResource.RustAppExecutableResource(string! name, string! workingDirectory) -> void
-Aspire.Hosting.RustAppHostingExtension
-static Aspire.Hosting.RustAppHostingExtension.AddRustApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.RustAppExecutableResource!>!

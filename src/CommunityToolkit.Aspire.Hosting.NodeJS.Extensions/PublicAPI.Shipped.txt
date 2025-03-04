@@ -1,8 +1,0 @@
-#nullable enable
-Aspire.Hosting.NodeJSHostingExtensions
-static Aspire.Hosting.NodeJSHostingExtensions.AddPnpmApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, string! scriptName = "start", string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
-static Aspire.Hosting.NodeJSHostingExtensions.AddViteApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string? workingDirectory = null, string! packageManager = "npm") -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
-static Aspire.Hosting.NodeJSHostingExtensions.AddYarnApp(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! workingDirectory, string! scriptName = "start", string![]? args = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
-static Aspire.Hosting.NodeJSHostingExtensions.WithNpmPackageInstallation(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>! resource, bool useCI = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
-static Aspire.Hosting.NodeJSHostingExtensions.WithPnpmPackageInstallation(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>! resource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!
-static Aspire.Hosting.NodeJSHostingExtensions.WithYarnPackageInstallation(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>! resource) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.NodeAppResource!>!

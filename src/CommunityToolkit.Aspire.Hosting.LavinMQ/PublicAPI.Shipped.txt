@@ -1,8 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.LavinMQContainerResource
-Aspire.Hosting.ApplicationModel.LavinMQContainerResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
-Aspire.Hosting.ApplicationModel.LavinMQContainerResource.LavinMQContainerResource(string! name) -> void
-Aspire.Hosting.LavinMQHostingExtension
-static Aspire.Hosting.LavinMQHostingExtension.AddLavinMQ(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int amqpPort = 5672, int managementPort = 15672) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.LavinMQContainerResource!>!
-static Aspire.Hosting.LavinMQHostingExtension.WithDataBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.LavinMQContainerResource!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.LavinMQContainerResource!>!
-static Aspire.Hosting.LavinMQHostingExtension.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.LavinMQContainerResource!>! builder, string! name, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.LavinMQContainerResource!>!

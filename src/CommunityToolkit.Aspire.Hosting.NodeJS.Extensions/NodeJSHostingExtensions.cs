@@ -19,9 +19,10 @@ public static class NodeJSHostingExtensions
     /// <param name="name">The name of the Vite app.</param>
     /// <param name="workingDirectory">The working directory of the Vite app. If not specified, it will be set to a path that is a sibling of the AppHost directory using the <paramref name="name"/> as the folder.</param>
     /// <param name="packageManager">The package manager to use. Default is npm.</param>
+    /// <param name="useHttps">When true use HTTPS for the endpoints, otherwise use HTTP.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This uses the specified package manager (default npm) method internally but sets defaults that would be expected to run a Vite app, such as the command to run the dev server and exposing the HTTP endpoints.</remarks>
-    public static IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? workingDirectory = null, string packageManager = "npm")
+    public static IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? workingDirectory = null, string packageManager = "npm", bool useHttps = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -36,8 +37,9 @@ public static class NodeJSHostingExtensions
             _ => builder.AddNpmApp(name, wd, "dev")
         };
 
-        return resource.WithHttpEndpoint(env: "PORT")
-                       .WithExternalHttpEndpoints();
+        return useHttps
+            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
+            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
     }
 
     /// <summary>

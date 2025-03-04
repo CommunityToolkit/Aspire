@@ -120,6 +120,27 @@ public class ResourceCreationTests
     }
 
     [Fact]
+    public void ViteAppHasExposedHttpsEndpoints()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddViteApp("vite", useHttps: true);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<NodeAppResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
+
+        Assert.Contains(endpoints, e => e.UriScheme == "https");
+    }
+
+
+    [Fact]
     public void ViteAppHasExposedExternalHttpEndpoints()
     {
         var builder = DistributedApplication.CreateBuilder();
