@@ -38,7 +38,6 @@ indent_size = 2
 # C# files
 [*.cs]
 
-dotnet_public_api_analyzer.require_api_files = true
 #### .NET Coding Conventions ####
 
 # Organize usings

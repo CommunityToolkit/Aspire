@@ -26,6 +26,10 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IHostEnvironme
                     state => state with { State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error) });
                 return;
             }
+            else
+            {
+                logger.LogInformation("SQL Server Database project package found at path {DacpacPath}.", dacpacPath);
+            }
 
             var options = resource.GetDacpacDeployOptions();
 

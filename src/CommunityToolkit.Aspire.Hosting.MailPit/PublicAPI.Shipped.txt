@@ -1,8 +1,0 @@
-#nullable enable
-Aspire.Hosting.ApplicationModel.MailPitContainerResource
-Aspire.Hosting.ApplicationModel.MailPitContainerResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
-Aspire.Hosting.ApplicationModel.MailPitContainerResource.MailPitContainerResource(string! name) -> void
-Aspire.Hosting.MailPitHostingExtension
-static Aspire.Hosting.MailPitHostingExtension.AddMailPit(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, int? httpPort = null, int? smtpPort = null) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MailPitContainerResource!>!
-static Aspire.Hosting.MailPitHostingExtension.WithDataBindMount(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MailPitContainerResource!>! builder, string! source, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MailPitContainerResource!>!
-static Aspire.Hosting.MailPitHostingExtension.WithDataVolume(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MailPitContainerResource!>! builder, string! name, bool isReadOnly = false) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.MailPitContainerResource!>!
