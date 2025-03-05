@@ -27,6 +27,7 @@ public static class IDistributedApplicationBuilderExtensions
         {
             builder.Services.Configure(configure);
         }
+
         builder.Services.TryAddLifecycleHook<DaprDistributedApplicationLifecycleHook>();
 
         return builder;
@@ -77,6 +78,7 @@ public static class IDistributedApplicationBuilderExtensions
     {
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.StateStore, options);
     }
+    
 
     private static void WriteDaprComponentResourceToManifest(ManifestPublishingContext context, DaprComponentResource resource)
     {

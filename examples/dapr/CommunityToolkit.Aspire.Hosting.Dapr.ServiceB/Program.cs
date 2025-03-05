@@ -19,6 +19,12 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
+app.MapGet("/secrets", (DaprClient client) =>
+{
+    var secrets = client.GetBulkSecretAsync("secretstore");
+    return secrets;
+});
+
 app.MapGet("/weatherforecast", async (DaprClient client) =>
 {
     await client.PublishEventAsync("pubsub", "weather", new WeatherForecastMessage("Weather forecast requested!"));
