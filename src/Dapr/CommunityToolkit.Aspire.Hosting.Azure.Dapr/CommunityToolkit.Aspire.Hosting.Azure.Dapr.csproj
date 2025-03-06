@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>aspire integration hosting dapr azure</AdditionalPackageTags>
+    <Description>Azure Dapr support for .NET Aspire.</Description>
+  </PropertyGroup>
+
+  
+<ItemGroup>
+  <Compile Include="$(DaprSharedDir)\Core\*.cs">
+    <Link>%(Filename)%(Extension)</Link>
+  </Compile>
+</ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\Utf8JsonWriterExtensions.cs" Link="Utils\Utf8JsonWriterExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" />
+    <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+
+</Project>

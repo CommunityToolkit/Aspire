@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis\CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.csproj"/>
+    <ProjectReference Include="..\..\src\Dapr\CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis\CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj"/>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 </Project>
