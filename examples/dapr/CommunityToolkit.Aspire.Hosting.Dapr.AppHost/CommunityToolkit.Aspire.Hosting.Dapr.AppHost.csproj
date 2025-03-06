@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../src/Dapr/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceA/CommunityToolkit.Aspire.Hosting.Dapr.ServiceA.csproj" />
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceB/CommunityToolkit.Aspire.Hosting.Dapr.ServiceB.csproj" />
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceC/CommunityToolkit.Aspire.Hosting.Dapr.ServiceC.csproj" />
