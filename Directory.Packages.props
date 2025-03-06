@@ -35,6 +35,7 @@
     <PackageVersion Include="Microsoft.Extensions.AI" Version="$(MEAIVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(DotNetExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
     <!-- .NET packages -->
