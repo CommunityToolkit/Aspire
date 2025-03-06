@@ -24,7 +24,7 @@ jobs:
             Hosting.Azure.StaticWebApps.Tests,
             Hosting.Bun.Tests,
             Hosting.Dapr.AzureExtensions.Tests,
-            Hosting.Dapr.AzureRedis.Tests,
+            Hosting.Azure.Dapr.Redis.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,

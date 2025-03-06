@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests" />
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests" />
   </ItemGroup>
 
   <ItemGroup>
