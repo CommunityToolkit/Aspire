@@ -63,11 +63,7 @@ public static partial class IDistributedApplicationBuilderExtensions
     }
     private static IDistributedApplicationBuilder AddDaprInternal<TPublishingHelper>(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null) where TPublishingHelper : class, IDaprPublishingHelper
     {
-        builder.Services.AddScoped<IDaprPublishingHelper, TPublishingHelper>();
-        return builder.AddDaprInternal(configure);
-    }
-    private static IDistributedApplicationBuilder AddDaprInternal(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null)
-    {
+        builder.Services.AddSingleton<IDaprPublishingHelper, TPublishingHelper>();
         if (configure is not null)
         {
             builder.Services.Configure(configure);
