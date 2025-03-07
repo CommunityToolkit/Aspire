@@ -302,7 +302,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     }));
 
 
-            await publishingHelper.ExecuteProviderSpecificRequirements(resource, sidecarOptions);
+            await publishingHelper.ExecuteProviderSpecificRequirements(appModel, resource, sidecarOptions,cancellationToken);
 
             sideCars.Add(daprCli);
         }

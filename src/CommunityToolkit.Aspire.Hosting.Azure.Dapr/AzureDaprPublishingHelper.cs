@@ -2,14 +2,19 @@
 using Aspire.Hosting.Azure;
 using Azure.Provisioning.AppContainers;
 using CommunityToolkit.Aspire.Hosting.Dapr;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 
 internal class AzureDaprPublishingHelper : IDaprPublishingHelper
 {
-    public ValueTask ExecuteProviderSpecificRequirements(IResource resource, DaprSidecarOptions? daprSidecarOptions)
+    public ValueTask ExecuteProviderSpecificRequirements(
+        DistributedApplicationModel appModel, 
+        IResource resource, 
+        DaprSidecarOptions? daprSidecarOptions,
+        CancellationToken cancellationToken)
     {
-        if (resource.Annotations.OfType<AzureContainerAppCustomizationAnnotation>().Any())
+        if (appModel.Resources.Any(r=>r.HasAnnotationOfType<AzureContainerAppCustomizationAnnotation>()))
         {
             var configureAction = (AzureResourceInfrastructure infrastructure, ContainerApp containerApp) =>
             {
