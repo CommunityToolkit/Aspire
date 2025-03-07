@@ -2,7 +2,6 @@
 using Aspire.Hosting.Azure;
 using Azure.Provisioning.AppContainers;
 using CommunityToolkit.Aspire.Hosting.Dapr;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 
