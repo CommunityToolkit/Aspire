@@ -71,6 +71,22 @@ public static partial class OllamaResourceBuilderExtensions
         return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "openwebui"), "/app/backend/data", isReadOnly);
     }
 
+    /// <summary>
+    /// Configures the host port that the Open WebUI resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Open WebUI.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Open WebUI.</returns>
+    public static IResourceBuilder<OpenWebUIResource> WithHostPort(this IResourceBuilder<OpenWebUIResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint("http", endpoint =>
+        {
+            endpoint.Port = port;
+        });
+    }
+
     private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
     {
         context.EnvironmentVariables.Add("ENABLE_SIGNUP", "false");

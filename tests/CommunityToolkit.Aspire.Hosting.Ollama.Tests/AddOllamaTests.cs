@@ -157,6 +157,22 @@ public class AddOllamaTests
         Assert.False(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out _));
     }
 
+    [Fact]
+    public void OpenWebUIHostPortCanBeSet()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI(r => r.WithHostPort(1234));
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        var annotation = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        Assert.Equal(1234, annotation.Port);
+    }
+
     [Theory]
     [InlineData("volumeName")]
     [InlineData(null)]
