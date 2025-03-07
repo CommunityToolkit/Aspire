@@ -1,0 +1,6 @@
+@CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.ExampleAPI_HostAddress = http://localhost:5156
+
+GET {{CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.ExampleAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.ApiService/CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.ApiService.csproj" />
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis\CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.ApiService/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.ApiService.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis\CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

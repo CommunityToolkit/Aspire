@@ -21,4 +21,4 @@ This package provides extension methods and resource definitions that support th
 
 ## Notes
 
-  This designed to be consumed by more focused packages (such as `CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis`), which build on top of these shared infrastructure definitions.
+  This designed to be consumed by more focused packages (such as `CommunityToolkit.Aspire.Hosting.Redis.Dapr.Azure`), which build on top of these shared infrastructure definitions.

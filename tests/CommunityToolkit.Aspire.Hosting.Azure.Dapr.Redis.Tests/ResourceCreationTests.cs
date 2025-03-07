@@ -4,7 +4,7 @@ using Aspire.Hosting.Azure;
 
 using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
 
-namespace CommunityToolkit.Aspire.Hosting.Dapr.AzureRedis.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests;
 
 public class ResourceCreationTests
 {

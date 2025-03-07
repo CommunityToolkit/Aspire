@@ -9,7 +9,7 @@ var daprState = builder.AddDaprStateStore("daprState")
     .WithReference(redisState);
 
 // API does not provide any functional example of Dapr - it simply demonstrates referencing the dapr state
-var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_AzureRedis_ApiService>("example-api")
+var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Azure_Dapr_Redis_ApiService>("example-api")
     .WithReference(daprState)
     .WithDaprSidecar();
 

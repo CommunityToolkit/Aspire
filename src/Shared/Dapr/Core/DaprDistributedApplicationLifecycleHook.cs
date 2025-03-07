@@ -16,24 +16,16 @@ using static CommunityToolkit.Aspire.Hosting.Dapr.CommandLineArgs;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
-internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedApplicationLifecycleHook, IDisposable
+internal sealed class DaprDistributedApplicationLifecycleHook(
+    IDaprPublishingHelper publishingHelper,
+    IConfiguration configuration,
+    IHostEnvironment environment,
+    ILogger<DaprDistributedApplicationLifecycleHook> logger,
+    IOptions<DaprOptions> options) : IDistributedApplicationLifecycleHook, IDisposable
 {
-    private readonly IConfiguration _configuration;
-    private readonly IHostEnvironment _environment;
-    private readonly ILogger<DaprDistributedApplicationLifecycleHook> _logger;
-    private readonly ResourceLoggerService _resourceLoggerService;
-    private readonly DaprOptions _options;
+    private readonly DaprOptions _options = options.Value;
 
     private string? _onDemandResourcesRootPath;
-
-    public DaprDistributedApplicationLifecycleHook(IConfiguration configuration, IHostEnvironment environment, ILogger<DaprDistributedApplicationLifecycleHook> logger, IOptions<DaprOptions> options, ResourceLoggerService resourceLoggerService)
-    {
-        _configuration = configuration;
-        _environment = environment;
-        _logger = logger;
-        _resourceLoggerService = resourceLoggerService;
-        _options = options.Value;
-    }
 
     public async Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
     {
@@ -219,7 +211,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
             // NOTE: Telemetry is enabled by default.
             if (_options.EnableTelemetry != false)
             {
-                OtlpConfigurationExtensions.AddOtlpEnvironment(daprCli, _configuration, _environment);
+                OtlpConfigurationExtensions.AddOtlpEnvironment(daprCli, configuration, environment);
             }
 
             daprCli.Annotations.Add(
@@ -309,6 +301,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                         context.Writer.WriteEndObject();
                     }));
 
+
+            await publishingHelper.ExecuteProviderSpecificRequirements(resource, sidecarOptions);
+
             sideCars.Add(daprCli);
         }
 
@@ -317,7 +312,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     }
 
     private string GetAppHostDirectory() =>
-        _configuration["AppHost:Directory"]
+        configuration["AppHost:Directory"]
         ?? throw new InvalidOperationException("Unable to obtain the application host directory.");
 
 
@@ -412,7 +407,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     {
         if (_onDemandResourcesRootPath is not null)
         {
-            _logger.LogInformation("Stopping Dapr-related resources...");
+            logger.LogInformation("Stopping Dapr-related resources...");
 
             try
             {
@@ -420,7 +415,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to delete temporary Dapr resources directory: {OnDemandResourcesRootPath}", _onDemandResourcesRootPath);
+                logger.LogWarning(ex, "Failed to delete temporary Dapr resources directory: {OnDemandResourcesRootPath}", _onDemandResourcesRootPath);
             }
         }
     }
@@ -444,7 +439,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
         if (onDemandComponents.Any())
         {
-            _logger.LogInformation("Starting Dapr-related resources...");
+            logger.LogInformation("Starting Dapr-related resources...");
 
             _onDemandResourcesRootPath = Directory.CreateTempSubdirectory("aspire-dapr.").FullName;
 
@@ -453,7 +448,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
                 Func<string, Task<string>> contentWriter =
                     async content =>
                     {
-                        _logger.LogDebug("Creating on-demand configuration for component '{ComponentName}' with content: {content}.", component.Name, content);
+                        logger.LogDebug("Creating on-demand configuration for component '{ComponentName}' with content: {content}.", component.Name, content);
                         string componentDirectory = Path.Combine(_onDemandResourcesRootPath, component.Name);
 
                         Directory.CreateDirectory(componentDirectory);
@@ -483,7 +478,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
     private async Task<string> GetComponentAsync(DaprComponentResource component, Func<string, Task<string>> contentWriter, CancellationToken cancellationToken)
     {
         // We should try to read content from a known location (such as aspire root directory)
-        _logger.LogInformation("Unvalidated configuration {specType} for component '{ComponentName}'.", component.Type, component.Name);
+        logger.LogInformation("Unvalidated configuration {specType} for component '{ComponentName}'.", component.Type, component.Name);
         return await contentWriter(GetDaprComponent(component, component.Type)).ConfigureAwait(false);
     }
     private async Task<string> GetBuildingBlockComponentAsync(DaprComponentResource component, Func<string, Task<string>> contentWriter, string defaultProvider, CancellationToken cancellationToken)
@@ -493,7 +488,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
         if (File.Exists(daprAppHostRelativePath))
         {
-            _logger.LogInformation("Using apphost relative path for dapr component '{ComponentName}'.", component.Name);
+            logger.LogInformation("Using apphost relative path for dapr component '{ComponentName}'.", component.Name);
 
             string newContent = await GetDefaultContent(component, daprAppHostRelativePath, cancellationToken).ConfigureAwait(false);
 
@@ -505,7 +500,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
 
         if (File.Exists(daprDefaultStorePath))
         {
-            _logger.LogInformation("Using default dapr path for component '{ComponentName}'.", component.Name);
+            logger.LogInformation("Using default dapr path for component '{ComponentName}'.", component.Name);
 
             string newContent = await GetDefaultContent(component, daprDefaultStorePath, cancellationToken).ConfigureAwait(false);
 
@@ -513,7 +508,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook : IDistributedAppl
         }
 
         // If the component is not found in the default components directory, use the in-memory secret store
-        _logger.LogInformation("Using in-memory provider for dapr component '{ComponentName}'.", component.Name);
+        logger.LogInformation("Using in-memory provider for dapr component '{ComponentName}'.", component.Name);
 
         var content = new DaprComponentSchema(component.Name, defaultProvider).ToString();
         return await contentWriter(content).ConfigureAwait(false);
