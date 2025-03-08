@@ -365,6 +365,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Dapr", "src\CommunityToolkit.Aspire.Hosting.Dapr\CommunityToolkit.Aspire.Hosting.Dapr.csproj", "{27144ED2-9F74-4A86-AABA-38CD061D8984}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Zitadel", "src\CommunityToolkit.Aspire.Hosting.Zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.csproj", "{35C570A9-8109-4DE0-8F67-B665DF56BE2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -955,6 +957,10 @@ Global
 		{27144ED2-9F74-4A86-AABA-38CD061D8984}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27144ED2-9F74-4A86-AABA-38CD061D8984}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27144ED2-9F74-4A86-AABA-38CD061D8984}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35C570A9-8109-4DE0-8F67-B665DF56BE2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35C570A9-8109-4DE0-8F67-B665DF56BE2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35C570A9-8109-4DE0-8F67-B665DF56BE2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35C570A9-8109-4DE0-8F67-B665DF56BE2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1138,6 +1144,7 @@ Global
 		{72652F7E-CFC0-4E3D-AD96-74C206A110BA} = {41ACF613-EE5A-5900-F4D1-9FB713A32BE8}
 		{92D490BC-B953-45DC-8F9D-A992B2AEF96A} = {41ACF613-EE5A-5900-F4D1-9FB713A32BE8}
 		{27144ED2-9F74-4A86-AABA-38CD061D8984} = {41ACF613-EE5A-5900-F4D1-9FB713A32BE8}
+		{35C570A9-8109-4DE0-8F67-B665DF56BE2B} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
