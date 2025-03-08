@@ -1,5 +1,8 @@
 ﻿namespace CommunityToolkit.Aspire.Hosting.Zitadel;
 
+/// <summary>
+/// Contains strings which describes the Zitadel container registry.
+/// </summary>
 internal static class ZitadelContainerImageTags
 {
     /// <summary>

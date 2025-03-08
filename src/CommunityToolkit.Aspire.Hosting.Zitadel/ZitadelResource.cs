@@ -23,6 +23,9 @@ public sealed class ZitadelResource(string name, ParameterResource? admin, Param
     /// </summary>
     public ParameterResource? AdminUserNameParameter { get; } = admin;
 
+    /// <summary>
+    /// Gets the parameter that contains the Zitadel admin username.
+    /// </summary>
     internal ReferenceExpression AdminReference
         => AdminUserNameParameter is not null
             ? ReferenceExpression.Create($"{AdminUserNameParameter}")
