@@ -14,13 +14,23 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// Gets the protocol used for the primary endpoint, based on the security setting ("http" or "https").
     /// </summary>
     internal string PrimaryEndpointName => IsSecured ? "https" : "http";
+    /// <summary>
+    /// Gets the name for the TCP Endpoint
+    /// </summary>
+    internal string TcpEndpointName = "tcp";
 
     private EndpointReference? _primaryEndpoint;
+    private EndpointReference? tcpEndpoint;
 
     /// <summary>
     /// Gets the primary endpoint for the RavenDB server.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
+
+    /// <summary>
+    /// Gets the TCP endpoint for the RavenDB server.
+    /// </summary>
+    public EndpointReference TcpEndpoint => tcpEndpoint ??= new(this, TcpEndpointName);
 
     /// <summary>
     /// Gets the connection string expression for the RavenDB server, 
