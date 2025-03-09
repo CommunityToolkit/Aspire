@@ -131,6 +131,23 @@ public static class AspireOllamaSharpExtensions
 
         configureSettings?.Invoke(settings);
 
+        string httpClientKey = $"{connectionName}_httpClient";
+
+        builder.Services.AddHttpClient(httpClientKey, client =>
+        {
+            if (settings.Endpoint is not null)
+            {
+                client.BaseAddress = settings.Endpoint;
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"An OllamaApiClient could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or either " +
+                    $"{nameof(settings.Endpoint)} must be provided " +
+                    $"in the '{configurationSectionName}' configuration section.");
+            }
+        });
+
         if (serviceKey is not null)
         {
             builder.Services.AddKeyedSingleton(serviceKey, (sp, _) => ConfigureOllamaClient(sp));
@@ -147,22 +164,16 @@ public static class AspireOllamaSharpExtensions
 
         IOllamaApiClient ConfigureOllamaClient(IServiceProvider serviceProvider)
         {
-            if (settings.Endpoint is not null)
-            {
-                var client = new OllamaApiClient(new HttpClient { BaseAddress = settings.Endpoint });
-                if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
-                {
-                    client.SelectedModel = settings.SelectedModel;
-                    client.Config.Model = settings.SelectedModel;
-                }
+            HttpClient httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(httpClientKey);
 
-                return client;
+            OllamaApiClient client = new(httpClient);
+            if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
+            {
+                client.SelectedModel = settings.SelectedModel;
+                client.Config.Model = settings.SelectedModel;
             }
 
-            throw new InvalidOperationException(
-                        $"An OllamaApiClient could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or either " +
-                        $"{nameof(settings.Endpoint)} must be provided " +
-                        $"in the '{configurationSectionName}' configuration section.");
+            return client;
         }
     }
 
