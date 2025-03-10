@@ -18,7 +18,7 @@ namespace Aspire.Hosting
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> WithNuGetExtension(this ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> builder, string extension, string? packageName = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> WithSqliteWeb(this ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> builder, string? containerName = null) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> WithSqliteWeb(this ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.SqliteWebResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }
 

@@ -30,6 +30,8 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> WithGPUSupport(this ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> builder, OllamaGpuVendor vendor = OllamaGpuVendor.Nvidia) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> builder, int? port) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<T> WithOpenWebUI<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource>>? configureContainer = null, string? containerName = null)
             where T : ApplicationModel.OllamaResource { throw null; }
     }
