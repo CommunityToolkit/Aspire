@@ -31,7 +31,6 @@ internal static class AzureDaprHostingExtensions
 
         builder.ExcludeFromManifest();
 
-        
         var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
 
         return builder.ApplicationBuilder
