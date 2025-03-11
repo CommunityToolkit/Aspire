@@ -117,7 +117,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take('daprComponent${resourceToken}', 24)
+              name: take(toLower('daprComponent${resourceToken}'), 60)
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -159,7 +159,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take('daprComponent${resourceToken}', 24)
+              name: take(toLower('daprComponent${resourceToken}'), 60)
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -219,7 +219,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take('daprComponent${resourceToken}', 24)
+              name: take(toLower('daprComponent${resourceToken}'), 60)
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -282,7 +282,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take('daprComponent${resourceToken}', 24)
+              name: take(toLower('daprComponent${resourceToken}'), 60)
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
