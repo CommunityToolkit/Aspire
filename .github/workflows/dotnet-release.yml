@@ -25,6 +25,8 @@ jobs:
         uses: ./.github/actions/setup-runtimes-caching
         with:
           name: "Full"
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Restore dependencies
         run: dotnet restore
@@ -127,3 +129,4 @@ jobs:
     needs: run-tests
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
+
