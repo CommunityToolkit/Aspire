@@ -133,6 +133,16 @@ public class AddSqliteTests
         var bindMountAnnotation = Assert.Single(bindMountAnnotations);
         Assert.Equal(sqlite.Resource.DatabasePath, bindMountAnnotation.Source);
         Assert.Equal("/data", bindMountAnnotation.Target);
+
+        var relationshipAnnotations = sqliteWeb.Annotations.OfType<ResourceRelationshipAnnotation>();
+
+        var waitForAnnotation = relationshipAnnotations.FirstOrDefault(a => a.Type == "WaitFor");
+        var parentAnnotation = relationshipAnnotations.FirstOrDefault(a => a.Type == "Parent");
+
+        Assert.NotNull(waitForAnnotation);
+        Assert.NotNull(parentAnnotation);
+        Assert.Equal("sqlite", waitForAnnotation.Resource.Name);
+        Assert.Equal("sqlite", parentAnnotation.Resource.Name);
     }
 
     [Fact]
