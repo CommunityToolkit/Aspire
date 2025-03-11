@@ -49,6 +49,7 @@ public static partial class OllamaResourceBuilderExtensions
                                                         .WithEnvironment(context => ConfigureOpenWebUIContainer(context, builder.Resource))
                                                         .WaitFor(builder)
                                                         .WithHttpHealthCheck("/health")
+                                                        .WithParentRelationship(builder.Resource)
                                                         .ExcludeFromManifest();
 
         configureContainer?.Invoke(resourceBuilder);

@@ -155,6 +155,16 @@ public class AddOllamaTests
         Assert.Equal(OllamaContainerImageTags.OpenWebUIRegistry, imageAnnotation.Registry);
 
         Assert.False(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out _));
+
+        var relationshipAnnotations = resource.Annotations.OfType<ResourceRelationshipAnnotation>();
+
+        var waitForAnnotation = relationshipAnnotations.FirstOrDefault(a => a.Type == "WaitFor");
+        var parentAnnotation = relationshipAnnotations.FirstOrDefault(a => a.Type == "Parent");
+
+        Assert.NotNull(waitForAnnotation);
+        Assert.NotNull(parentAnnotation);
+        Assert.Equal("ollama", waitForAnnotation.Resource.Name);
+        Assert.Equal("ollama", parentAnnotation.Resource.Name);
     }
 
     [Fact]
