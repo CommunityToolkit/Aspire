@@ -31,6 +31,7 @@ internal static class AzureDaprHostingExtensions
 
         builder.ExcludeFromManifest();
 
+        
         var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
 
         return builder.ApplicationBuilder
@@ -67,7 +68,7 @@ internal static class AzureDaprHostingExtensions
 
             if (!daprComponent.ProvisionableProperties.TryGetValue("Name", out IBicepValue? name) || name.IsEmpty)
             {
-                daprComponent.Name = BicepFunction.Take(BicepFunction.Interpolate($"{daprComponent.BicepIdentifier}{resourceToken}"), 24);
+                daprComponent.Name = BicepFunction.Take(BicepFunction.ToLower(BicepFunction.Interpolate($"{daprComponent.BicepIdentifier}{resourceToken}")), 60);
             }
 
             infrastructure.Add(daprComponent);
