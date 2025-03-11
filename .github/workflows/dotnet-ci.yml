@@ -44,6 +44,7 @@ jobs:
 
   run-tests:
     uses: ./.github/workflows/tests.yaml
+    secrets: inherit
 
   package:
     uses: ./.github/workflows/package.yml
