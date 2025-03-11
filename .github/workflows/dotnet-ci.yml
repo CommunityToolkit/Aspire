@@ -11,6 +11,7 @@ on:
       - Directory.Build.targets
       - Directory.Packages.props
       - ".github/workflows/**"
+      - ".github/actions/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -82,3 +83,4 @@ jobs:
     needs: run-tests
     uses: ./.github/workflows/code-coverage.yml
     secrets: inherit
+
