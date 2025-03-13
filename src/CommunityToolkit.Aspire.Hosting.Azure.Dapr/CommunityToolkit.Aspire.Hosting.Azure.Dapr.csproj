@@ -24,4 +24,7 @@
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Azure.Dapr.Tests" />
+  </ItemGroup>
 </Project>
