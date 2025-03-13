@@ -57,7 +57,7 @@ public class AddRavenDBTests
     }
 
     [Fact]
-    public void VerifyDefaultPort()
+    public void VerifyDefaultPorts()
     {
         var builder = DistributedApplication.CreateBuilder();
         builder.AddRavenDB("raven");
@@ -68,9 +68,11 @@ public class AddRavenDBTests
 
         var resource = Assert.Single(appModel.Resources.OfType<RavenDBServerResource>());
 
-        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>(), x => x.Name == resource.PrimaryEndpoint.EndpointName);
+        var tcpEndpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>(), x => x.Name == resource.TcpEndpoint.EndpointName);
 
         Assert.Equal(8080, endpoint.TargetPort);
+        Assert.Equal(38888, tcpEndpoint.TargetPort);
     }
 
     [Fact]
