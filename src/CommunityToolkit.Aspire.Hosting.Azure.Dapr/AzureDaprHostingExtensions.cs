@@ -66,10 +66,12 @@ public static class AzureDaprHostingExtensions
     /// <summary>
     /// Configures the infrastructure for a Dapr component in a container app managed environment.
     /// </summary>
+    /// <param name="builder"></param>
     /// <param name="daprComponent">The Dapr component to configure.</param>
     /// <param name="parameters">The parameters to provide to the component</param>
     /// <returns>An action to configure the Azure resource infrastructure.</returns>
     public static Action<AzureResourceInfrastructure> GetInfrastructureConfigurationAction(
+        this IResourceBuilder<IDaprComponentResource> builder,
         ContainerAppManagedEnvironmentDaprComponent daprComponent,
         IEnumerable<ProvisioningParameter>? parameters = null) =>
         (AzureResourceInfrastructure infrastructure) =>
@@ -95,6 +97,33 @@ public static class AzureDaprHostingExtensions
                 daprComponent.Name = BicepFunction.Take(BicepFunction.ToLower(BicepFunction.Interpolate($"{daprComponent.BicepIdentifier}{resourceToken}")), 60);
             }
 
+            daprComponent.Scopes = [];
+
+            foreach (var resource in builder.ApplicationBuilder.Resources)
+            {
+
+                if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation) ||
+                !resource.TryGetAnnotationsOfType<DaprComponentReferenceAnnotation>(out var daprComponentReferenceAnnotations))
+                {
+                    continue;
+                }
+
+                foreach (var reference in daprComponentReferenceAnnotations)
+                {
+                    if (reference.Component.Name == builder.Resource.Name)
+                    {
+                        var daprSidecar = daprAnnotation.Sidecar;
+                        var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
+
+                        var sidecarOptions = sidecarOptionsAnnotation?.Options;
+
+                        var appId = sidecarOptions?.AppId ?? resource.Name;
+                        daprComponent.Scopes.Add(appId);
+                    }
+
+                }
+            }
+
             infrastructure.Add(daprComponent);
 
             foreach (var parameter in parameters ?? [])
@@ -104,7 +133,7 @@ public static class AzureDaprHostingExtensions
         };
 
 
-   
+
     /// <summary>
     /// Creates a new Dapr component for a container app managed environment.
     /// </summary>

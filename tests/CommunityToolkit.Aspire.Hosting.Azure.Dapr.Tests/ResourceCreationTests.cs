@@ -45,12 +45,14 @@ public class ResourceCreationTests
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
     var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
 
     daprResource.Name = "myDaprComponent";
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
-             .AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+
+    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+
+    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
     using var app = builder.Build();
 
@@ -92,10 +94,12 @@ public class ResourceCreationTests
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
     var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
-             .AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+
+    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+
+    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
     using var app = builder.Build();
 
@@ -136,10 +140,12 @@ public class ResourceCreationTests
     using var builder = TestDistributedApplicationBuilder.Create();
 
     var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource);
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
-             .AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+
+    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource);
+
+    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
     using var app = builder.Build();
 
@@ -179,10 +185,10 @@ public class ResourceCreationTests
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
     var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
 
     var keyVaultName = new ProvisioningParameter(AzureBicepResource.KnownParameters.KeyVaultName, typeof(string));
-    
+
+
     var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
                                           .ConfigureKeyVaultSecretsComponent(keyVaultName);
 

@@ -30,7 +30,7 @@ public static class AzureKeyVaultDaprHostingExtensions
 
         var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(secretStore, "secretstores.azure.keyvault", "v1");
 
-        var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprComponent, [principalIdParameter]);
+        var configureInfrastructure = builder.GetInfrastructureConfigurationAction(daprComponent, [principalIdParameter]);
 
         return builder.AddAzureDaprResource(secretStore, configureInfrastructure).ConfigureInfrastructure(infrastructure =>
         {

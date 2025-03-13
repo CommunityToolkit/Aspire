@@ -138,7 +138,10 @@ public static class AzureRedisCacheDaprHostingExtensions
         daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(redisDaprComponent, "state.redis", "v1");
 
         // Set up infrastructure configuration for the Dapr component.
-        var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprComponent, provisioningParameters);
+        var configureInfrastructure = builder.GetInfrastructureConfigurationAction(daprComponent, provisioningParameters);
+
+        
+
         // Create the Dapr resource builder
         return builder.AddAzureDaprResource(redisDaprComponent, configureInfrastructure);
     }
