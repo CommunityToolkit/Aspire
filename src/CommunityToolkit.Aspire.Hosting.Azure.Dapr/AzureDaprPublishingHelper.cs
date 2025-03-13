@@ -1,6 +1,7 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
 using Azure.Provisioning.AppContainers;
+using Azure.ResourceManager.KeyVault;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr;
