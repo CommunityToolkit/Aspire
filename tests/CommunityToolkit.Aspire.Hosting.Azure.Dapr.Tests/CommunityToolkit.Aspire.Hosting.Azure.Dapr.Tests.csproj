@@ -11,12 +11,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Azure.Dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
+  
+<ItemGroup>
+  <Compile Include="..\dapr-shared\*.cs">
+    <Link>%(Filename)%(Extension)</Link>
+  </Compile>
+</ItemGroup>
 
- <ItemGroup>
-    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprComponentResource.cs" Link="ApplicationModel\AzureDaprComponentResource.cs" />
-    <Compile Include="$(SharedDir)\DaprAzureExtensions\AzureDaprHostingExtensions.cs" Link="AzureDaprHostingExtensions.cs" />
-  </ItemGroup>
 </Project>

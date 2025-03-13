@@ -11,8 +11,33 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for configuring Dapr components in an Azure hosting environment.
 /// </summary>
-internal static class AzureDaprHostingExtensions
+public static class AzureDaprHostingExtensions
 {
+
+
+    /// <summary>
+    /// Adds an Azure Dapr resource to the resource builder.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="name">The name of the Dapr resource.</param>
+    /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
+    /// <returns>The updated resource builder.</returns>
+    public static IResourceBuilder<AzureDaprComponentResource> AddAzureDaprResource(
+        this IResourceBuilder<AzureDaprComponentResource> builder,
+        [ResourceName] string name,
+        Action<AzureResourceInfrastructure> configureInfrastructure)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(configureInfrastructure, nameof(configureInfrastructure));
+
+        var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
+
+        return builder.ApplicationBuilder
+                                    .AddResource(azureDaprComponentResource)
+                                    .WithManifestPublishingCallback(azureDaprComponentResource.WriteToManifest);
+    }
+
     /// <summary>
     /// Adds an Azure Dapr resource to the resource builder.
     /// </summary>
@@ -79,31 +104,7 @@ internal static class AzureDaprHostingExtensions
         };
 
 
-    /// <summary>
-    /// Configures Key Vault secrets for the Azure resource infrastructure.
-    /// </summary>
-    /// <param name="infrastructure">The Azure resource infrastructure.</param>
-    /// <param name="keyVaultSecrets">The Key Vault secrets to configure.</param>
-    /// <returns>The configured Key Vault service.</returns>
-    public static KeyVaultService ConfigureKeyVaultSecrets(
-        this AzureResourceInfrastructure infrastructure, IEnumerable<KeyVaultSecret>? keyVaultSecrets = null)
-    {
-        ArgumentNullException.ThrowIfNull(infrastructure, nameof(infrastructure));
-
-        var kvNameParam = new ProvisioningParameter("keyVaultName", typeof(string));
-        infrastructure.Add(kvNameParam);
-
-        var keyVault = KeyVaultService.FromExisting("keyVault");
-        keyVault.Name = kvNameParam;
-        infrastructure.Add(keyVault);
-
-        foreach (var secret in keyVaultSecrets ?? [])
-        {
-            secret.Parent = keyVault;
-            infrastructure.Add(secret);
-        }
-        return keyVault;
-    }
+   
     /// <summary>
     /// Creates a new Dapr component for a container app managed environment.
     /// </summary>
