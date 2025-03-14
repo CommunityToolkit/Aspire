@@ -1,5 +1,4 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.RavenDB;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -97,9 +96,10 @@ public static class RavenDBBuilderExtensions
         return builder
             .AddResource(serverResource)
             .WithEndpoint(port: port, targetPort: secured ? 443 : 8080, scheme: serverResource.PrimaryEndpointName, name: serverResource.PrimaryEndpointName, isProxied: false)
+            .WithEndpoint(port: 38888, name: serverResource.TcpEndpointName, isProxied: false)
             .WithImage(RavenDBContainerImageTags.Image, RavenDBContainerImageTags.Tag)
             .WithImageRegistry(RavenDBContainerImageTags.Registry)
-            .WithEnvironment(context => ConfigureEnvironmentVariables(context, environmentVariables))
+            .WithEnvironment(context => ConfigureEnvironmentVariables(context, serverResource, environmentVariables))
             .WithHealthCheck(healthCheckKey);
     }
 
@@ -123,7 +123,7 @@ public static class RavenDBBuilderExtensions
         {
             environmentVariables.TryAdd("RAVEN_PublicServerUrl", securedServerSettings.PublicServerUrl);
             environmentVariables.TryAdd("RAVEN_Security_Certificate_Path", securedServerSettings.CertificatePath);
-            
+
             if (securedServerSettings.CertificatePassword is not null)
                 environmentVariables.TryAdd("RAVEN_Security_Certificate_Password", securedServerSettings.CertificatePassword);
         }
@@ -131,8 +131,11 @@ public static class RavenDBBuilderExtensions
         return environmentVariables;
     }
 
-    private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, Dictionary<string, object>? environmentVariables = null)
+    private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, RavenDBServerResource serverResource, Dictionary<string, object>? environmentVariables = null)
     {
+        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{serverResource.TcpEndpoint.Port}");
+        context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
+
         if (environmentVariables is null)
         {
             context.EnvironmentVariables.TryAdd("RAVEN_Setup_Mode", "None");
