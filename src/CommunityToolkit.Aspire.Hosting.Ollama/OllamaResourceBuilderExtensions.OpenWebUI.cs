@@ -35,6 +35,7 @@ public static partial class OllamaResourceBuilderExtensions
         if (builder.ApplicationBuilder.Resources.OfType<OpenWebUIResource>().SingleOrDefault() is { } existingOpenWebUIResource)
         {
             var builderForExistingResource = builder.ApplicationBuilder.CreateResourceBuilder(existingOpenWebUIResource);
+            existingOpenWebUIResource.AddOllamaResource(builder.Resource);
             configureContainer?.Invoke(builderForExistingResource);
             return builder;
         }
@@ -42,11 +43,13 @@ public static partial class OllamaResourceBuilderExtensions
         containerName ??= $"{builder.Resource.Name}-openwebui";
 
         var openWebUI = new OpenWebUIResource(containerName);
+        openWebUI.AddOllamaResource(builder.Resource);
+
         var resourceBuilder = builder.ApplicationBuilder.AddResource(openWebUI)
                                                         .WithImage(OllamaContainerImageTags.OpenWebUIImage, OllamaContainerImageTags.OpenWebUITag)
                                                         .WithImageRegistry(OllamaContainerImageTags.OpenWebUIRegistry)
                                                         .WithHttpEndpoint(targetPort: 8080, name: "http")
-                                                        .WithEnvironment(context => ConfigureOpenWebUIContainer(context, builder.Resource))
+                                                        .WithEnvironment(context => ConfigureOpenWebUIContainer(context, openWebUI))
                                                         .WaitFor(builder)
                                                         .WithHttpHealthCheck("/health")
                                                         .ExcludeFromManifest();
@@ -87,11 +90,11 @@ public static partial class OllamaResourceBuilderExtensions
         });
     }
 
-    private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OllamaResource resource)
+    private static void ConfigureOpenWebUIContainer(EnvironmentCallbackContext context, OpenWebUIResource resource)
     {
         context.EnvironmentVariables.Add("ENABLE_SIGNUP", "false");
         context.EnvironmentVariables.Add("ENABLE_COMMUNITY_SHARING", "false"); // by default don't enable sharing
         context.EnvironmentVariables.Add("WEBUI_AUTH", "false"); // https://docs.openwebui.com/#quick-start-with-docker--recommended
-        context.EnvironmentVariables.Add("OLLAMA_BASE_URL", $"http://{resource.Name}:{resource.PrimaryEndpoint.TargetPort}");
+        context.EnvironmentVariables.Add("OLLAMA_BASE_URLS", string.Join(";", resource.OllamaResources.Select(resource => $"http://{resource.Name}:{resource.PrimaryEndpoint.TargetPort}")));
     }
 }
