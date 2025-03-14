@@ -30,7 +30,7 @@ public class ResourceCreationTests
   [Fact]
   public void CreateDaprComponent_ReturnsPopulatedComponent()
   {
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     Assert.NotNull(daprResource);
     Assert.Equal("daprComponent", daprResource.BicepIdentifier);
@@ -44,7 +44,7 @@ public class ResourceCreationTests
     using var builder = TestDistributedApplicationBuilder.Create();
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     daprResource.Name = "myDaprComponent";
 
@@ -93,7 +93,7 @@ public class ResourceCreationTests
     using var builder = TestDistributedApplicationBuilder.Create();
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
 
@@ -122,7 +122,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take(toLower('daprComponent${resourceToken}'), 60)
+              name: toLower('componentName')
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -139,7 +139,7 @@ public class ResourceCreationTests
   {
     using var builder = TestDistributedApplicationBuilder.Create();
 
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
 
@@ -166,7 +166,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take(toLower('daprComponent${resourceToken}'), 60)
+              name: toLower('componentName')
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -184,7 +184,7 @@ public class ResourceCreationTests
     using var builder = TestDistributedApplicationBuilder.Create();
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     var keyVaultName = new ProvisioningParameter(AzureBicepResource.KnownParameters.KeyVaultName, typeof(string));
 
@@ -215,7 +215,7 @@ public class ResourceCreationTests
             }
 
             resource secretStore 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take(toLower('secretStore${resourceToken}'), 60)
+              name: toLower('daprState-secretstore')
               properties: {
                 componentType: 'secretstores.azure.keyvault'
                 metadata: [
@@ -233,7 +233,7 @@ public class ResourceCreationTests
               parent: containerAppEnvironment
             }
 
-            output secretStoreComponent string = take(toLower('secretStore${resourceToken}'), 60)
+            output secretStoreComponent string = toLower('daprState-secretstore')
             """;
 
     Assert.Equal(expectedBicep, bicepTemplate);
