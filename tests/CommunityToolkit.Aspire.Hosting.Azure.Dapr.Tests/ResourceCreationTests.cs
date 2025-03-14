@@ -13,7 +13,7 @@ public class ResourceCreationTests
   {
     var builder = DistributedApplication.CreateBuilder();
 
-    var daprStateBuilder = builder.AddDaprStateStore("daprState")
+    var daprStateBuilder = builder.AddDaprStateStore("statestore")
                                   .AddAzureDaprResource("AzureDaprResource", _ =>
                                   {
                                     // no-op
@@ -141,7 +141,7 @@ public class ResourceCreationTests
 
     var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore");
 
     var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource);
 
@@ -189,7 +189,7 @@ public class ResourceCreationTests
     var keyVaultName = new ProvisioningParameter(AzureBicepResource.KnownParameters.KeyVaultName, typeof(string));
 
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore")
                                           .ConfigureKeyVaultSecretsComponent(keyVaultName);
 
     using var app = builder.Build();
@@ -215,7 +215,7 @@ public class ResourceCreationTests
             }
 
             resource secretStore 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: 'daprState-secretstore'
+              name: 'statestore-secretstore'
               properties: {
                 componentType: 'secretstores.azure.keyvault'
                 metadata: [
@@ -233,7 +233,7 @@ public class ResourceCreationTests
               parent: containerAppEnvironment
             }
 
-            output secretStoreComponent string = 'daprState-secretstore'
+            output secretStoreComponent string = 'statestore-secretstore'
             """;
 
     Assert.Equal(expectedBicep, bicepTemplate);

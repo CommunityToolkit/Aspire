@@ -17,7 +17,7 @@ public class ResourceCreationTests
                             .WithAccessKeyAuthentication()
                             .RunAsContainer();
 
-    var daprState = builder.AddDaprStateStore("daprState")
+    var daprState = builder.AddDaprStateStore("statestore")
         .WithReference(redisState);
 
     using var app = builder.Build();
@@ -98,7 +98,7 @@ public class ResourceCreationTests
             }
 
             resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: 'daprState'
+              name: 'statestore'
               properties: {
                 componentType: 'state.redis'
                 metadata: [
@@ -136,7 +136,7 @@ public class ResourceCreationTests
 
     var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
 
-    var daprState = builder.AddDaprStateStore("daprState")
+    var daprState = builder.AddDaprStateStore("statestore")
         .WithReference(redisState);
 
     using var app = builder.Build();
@@ -214,7 +214,7 @@ public class ResourceCreationTests
             }
 
             resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: 'daprState'
+              name: 'statestore'
               properties: {
                 componentType: 'state.redis'
                 metadata: [
@@ -263,7 +263,7 @@ public class ResourceCreationTests
                             })
                             .RunAsContainer();
 
-    var daprState = builder.AddDaprStateStore("daprState")
+    var daprState = builder.AddDaprStateStore("statestore")
         .WithReference(redisState);
 
     using var app = builder.Build();
@@ -331,7 +331,7 @@ public class ResourceCreationTests
     var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
     var ex = Assert.Throws<InvalidOperationException>(() =>
     {
-      var daprPubSub = builder.AddDaprPubSub("daprState")
+      var daprPubSub = builder.AddDaprPubSub("statestore")
               .WithReference(redisState);
     });
 

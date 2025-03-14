@@ -3,7 +3,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("redis").WithRedisInsight();
 
 
-var stateStore = builder.AddDaprStateStore("stateStore");
+var stateStore = builder.AddDaprStateStore("statestore");
 
 var pubSub = builder.AddDaprPubSub("pubSub")
                     .WithMetadata("redisHost", "localhost:6379")
