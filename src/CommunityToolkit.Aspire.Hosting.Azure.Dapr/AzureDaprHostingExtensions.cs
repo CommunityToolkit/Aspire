@@ -162,7 +162,7 @@ public static class AzureDaprHostingExtensions
 
         return new(bicepIdentifier)
         {
-            Name = BicepFunction.ToLower(name),
+            Name = name,
             ComponentType = componentType,
             Version = version
         };

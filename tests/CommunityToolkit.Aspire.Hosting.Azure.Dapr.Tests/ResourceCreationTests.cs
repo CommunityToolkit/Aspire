@@ -122,7 +122,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: toLower('componentName')
+              name: 'componentName'
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -166,7 +166,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: toLower('componentName')
+              name: 'componentName'
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'

@@ -98,7 +98,7 @@ public class ResourceCreationTests
             }
 
             resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: toLower('daprState')
+              name: 'daprState'
               properties: {
                 componentType: 'state.redis'
                 metadata: [
@@ -214,7 +214,7 @@ public class ResourceCreationTests
             }
 
             resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: toLower('daprState')
+              name: 'daprState'
               properties: {
                 componentType: 'state.redis'
                 metadata: [
