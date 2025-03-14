@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>068ca29f-dd8a-4898-9ba1-5839fd6a13db</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis\CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceA/CommunityToolkit.Aspire.Hosting.Dapr.ServiceA.csproj" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceB/CommunityToolkit.Aspire.Hosting.Dapr.ServiceB.csproj" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceC/CommunityToolkit.Aspire.Hosting.Dapr.ServiceC.csproj" />
+
+  </ItemGroup>
+
+</Project>

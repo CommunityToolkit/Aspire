@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Aspire.Hosting</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Azure.Redis" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Azure.Dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -11,6 +11,7 @@ on:
       - Directory.Build.targets
       - Directory.Packages.props
       - ".github/workflows/**"
+      - ".github/actions/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,7 +26,7 @@ jobs:
     runs-on: "${{ matrix.os }}"
     env:
       DOTNET_CONFIGURATION: Release
-      DAPR_VERSION: "1.14.1"
+      DAPR_VERSION: "1.15.0"
 
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +34,8 @@ jobs:
         uses: ./.github/actions/setup-runtimes-caching
         with:
           name: "Full"
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Restore dependencies
         run: dotnet restore
@@ -41,6 +44,7 @@ jobs:
 
   run-tests:
     uses: ./.github/workflows/tests.yaml
+    secrets: inherit
 
   package:
     uses: ./.github/workflows/package.yml

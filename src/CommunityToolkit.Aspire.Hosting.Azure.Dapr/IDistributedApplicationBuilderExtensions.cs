@@ -1,3 +1,4 @@
+using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 namespace Aspire.Hosting;
@@ -12,6 +13,6 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <returns>The distributed application builder instance.</returns>
     public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null)
     {
-        return builder.AddDaprInternal<DefaultDaprPublishingHelper>(configure);
+        return builder.AddDaprInternal<AzureDaprPublishingHelper>(configure);
     }
 }

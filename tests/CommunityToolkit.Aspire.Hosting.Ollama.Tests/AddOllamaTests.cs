@@ -155,6 +155,52 @@ public class AddOllamaTests
         Assert.Equal(OllamaContainerImageTags.OpenWebUIRegistry, imageAnnotation.Registry);
 
         Assert.False(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out _));
+
+        var relationshipAnnotations = resource.Annotations.OfType<ResourceRelationshipAnnotation>();
+
+        var waitForAnnotation = relationshipAnnotations.FirstOrDefault(a => a.Type == "WaitFor");
+
+        Assert.NotNull(waitForAnnotation);
+        Assert.Equal("ollama", waitForAnnotation.Resource.Name);
+
+        Assert.Single(resource.OllamaResources);
+    }
+
+    [Fact]
+    public void OpenWebUIConfiguredWithMultipleOllamaServers()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI();
+        _ = builder.AddOllama("ollama2", port: null).WithOpenWebUI();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.Equal(2, resource.OllamaResources.Count);
+        Assert.Multiple(() =>
+        {
+            Assert.Equal("ollama", resource.OllamaResources[0].Name);
+            Assert.Equal("ollama2", resource.OllamaResources[1].Name);
+        });
+    }
+
+    [Fact]
+    public void OpenWebUIHostPortCanBeSet()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI(r => r.WithHostPort(1234));
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        var annotation = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        Assert.Equal(1234, annotation.Port);
     }
 
     [Theory]

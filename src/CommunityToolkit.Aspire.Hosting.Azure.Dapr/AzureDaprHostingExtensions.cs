@@ -11,8 +11,33 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for configuring Dapr components in an Azure hosting environment.
 /// </summary>
-internal static class AzureDaprHostingExtensions
+public static class AzureDaprHostingExtensions
 {
+
+
+    /// <summary>
+    /// Adds an Azure Dapr resource to the resource builder.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="name">The name of the Dapr resource.</param>
+    /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
+    /// <returns>The updated resource builder.</returns>
+    public static IResourceBuilder<AzureDaprComponentResource> AddAzureDaprResource(
+        this IResourceBuilder<AzureDaprComponentResource> builder,
+        [ResourceName] string name,
+        Action<AzureResourceInfrastructure> configureInfrastructure)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(configureInfrastructure, nameof(configureInfrastructure));
+
+        var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
+
+        return builder.ApplicationBuilder
+                                    .AddResource(azureDaprComponentResource)
+                                    .WithManifestPublishingCallback(azureDaprComponentResource.WriteToManifest);
+    }
+
     /// <summary>
     /// Adds an Azure Dapr resource to the resource builder.
     /// </summary>
@@ -41,12 +66,15 @@ internal static class AzureDaprHostingExtensions
     /// <summary>
     /// Configures the infrastructure for a Dapr component in a container app managed environment.
     /// </summary>
+    /// <param name="builder"></param>
     /// <param name="daprComponent">The Dapr component to configure.</param>
     /// <param name="parameters">The parameters to provide to the component</param>
+    /// <param name="requireScopes">Whether scopes need to be assigned to the component</param>
     /// <returns>An action to configure the Azure resource infrastructure.</returns>
     public static Action<AzureResourceInfrastructure> GetInfrastructureConfigurationAction(
+        this IResourceBuilder<IDaprComponentResource> builder,
         ContainerAppManagedEnvironmentDaprComponent daprComponent,
-        IEnumerable<ProvisioningParameter>? parameters = null) =>
+        IEnumerable<ProvisioningParameter>? parameters = null, bool? requireScopes = false) =>
         (AzureResourceInfrastructure infrastructure) =>
         {
             ArgumentNullException.ThrowIfNull(daprComponent, nameof(daprComponent));
@@ -65,11 +93,11 @@ internal static class AzureDaprHostingExtensions
             infrastructure.Add(containerAppEnvironment);
             daprComponent.Parent = containerAppEnvironment;
 
-            if (!daprComponent.ProvisionableProperties.TryGetValue("Name", out IBicepValue? name) || name.IsEmpty)
-            {
-                daprComponent.Name = BicepFunction.Take(BicepFunction.Interpolate($"{daprComponent.BicepIdentifier}{resourceToken}"), 24);
-            }
 
+            if (requireScopes == true)
+            {
+                builder.AddScopes(daprComponent);
+            }
             infrastructure.Add(daprComponent);
 
             foreach (var parameter in parameters ?? [])
@@ -78,41 +106,53 @@ internal static class AzureDaprHostingExtensions
             }
         };
 
-
     /// <summary>
-    /// Configures Key Vault secrets for the Azure resource infrastructure.
+    /// Adds scopes to the specified Dapr component in a container app managed environment.
     /// </summary>
-    /// <param name="infrastructure">The Azure resource infrastructure.</param>
-    /// <param name="keyVaultSecrets">The Key Vault secrets to configure.</param>
-    /// <returns>The configured Key Vault service.</returns>
-    public static KeyVaultService ConfigureKeyVaultSecrets(
-        this AzureResourceInfrastructure infrastructure, IEnumerable<KeyVaultSecret>? keyVaultSecrets = null)
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="daprComponent">The Dapr component to add scopes to.</param>
+    public static void AddScopes(this IResourceBuilder<IDaprComponentResource> builder, ContainerAppManagedEnvironmentDaprComponent daprComponent)
     {
-        ArgumentNullException.ThrowIfNull(infrastructure, nameof(infrastructure));
-
-        var kvNameParam = new ProvisioningParameter("keyVaultName", typeof(string));
-        infrastructure.Add(kvNameParam);
-
-        var keyVault = KeyVaultService.FromExisting("keyVault");
-        keyVault.Name = kvNameParam;
-        infrastructure.Add(keyVault);
-
-        foreach (var secret in keyVaultSecrets ?? [])
+        daprComponent.Scopes = [];
+        foreach (var resource in builder.ApplicationBuilder.Resources)
         {
-            secret.Parent = keyVault;
-            infrastructure.Add(secret);
+
+            if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation) ||
+            !resource.TryGetAnnotationsOfType<DaprComponentReferenceAnnotation>(out var daprComponentReferenceAnnotations))
+            {
+                continue;
+            }
+
+            foreach (var reference in daprComponentReferenceAnnotations)
+            {
+                if (reference.Component.Name == builder.Resource.Name)
+                {
+                    var daprSidecar = daprAnnotation.Sidecar;
+                    var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
+
+                    var sidecarOptions = sidecarOptionsAnnotation?.Options;
+
+                    var appId = sidecarOptions?.AppId ?? resource.Name;
+                    daprComponent.Scopes.Add(appId);
+                }
+
+            }
         }
-        return keyVault;
     }
+
+
+
     /// <summary>
     /// Creates a new Dapr component for a container app managed environment.
     /// </summary>
     /// <param name="bicepIdentifier">The name of the resource.</param>
+    /// <param name="name">The name of the dapr component</param>
     /// <param name="componentType">The type of the Dapr component.</param>
     /// <param name="version">The version of the Dapr component.</param>
     /// <returns>A new instance of <see cref="ContainerAppManagedEnvironmentDaprComponent"/>.</returns>
     public static ContainerAppManagedEnvironmentDaprComponent CreateDaprComponent(
         string bicepIdentifier,
+        BicepValue<string> name,
         string componentType,
         string version)
     {
@@ -122,6 +162,7 @@ internal static class AzureDaprHostingExtensions
 
         return new(bicepIdentifier)
         {
+            Name = name,
             ComponentType = componentType,
             Version = version
         };

@@ -7,7 +7,7 @@ jobs:
   test:
     env:
       DOTNET_CONFIGURATION: Release
-      DAPR_VERSION: "1.14.1"
+      DAPR_VERSION: "1.15.0"
       TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.csproj
       CI: true
     runs-on: "${{ matrix.os }}"
@@ -23,8 +23,8 @@ jobs:
             Hosting.Azure.DataApiBuilder.Tests,
             Hosting.Azure.StaticWebApps.Tests,
             Hosting.Bun.Tests,
-            Hosting.Dapr.AzureExtensions.Tests,
-            Hosting.Dapr.AzureRedis.Tests,
+            Hosting.Azure.Dapr.Tests,
+            Hosting.Azure.Dapr.Redis.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,
@@ -68,6 +68,8 @@ jobs:
         uses: ./.github/actions/setup-runtimes-caching
         with:
           name: ${{ matrix.name }}
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Verify Docker is running
         run: docker info
@@ -114,4 +116,3 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
-

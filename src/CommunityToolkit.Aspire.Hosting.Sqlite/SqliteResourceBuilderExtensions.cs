@@ -83,6 +83,7 @@ public static class SqliteResourceBuilderExtensions
                                 .WithBindMount(builder.Resource.DatabasePath, "/data")
                                 .WaitFor(builder)
                                 .WithHttpHealthCheck("/")
+                                .WithParentRelationship(builder.Resource)
                                 .ExcludeFromManifest();
 
         configureContainer?.Invoke(resourceBuilder);

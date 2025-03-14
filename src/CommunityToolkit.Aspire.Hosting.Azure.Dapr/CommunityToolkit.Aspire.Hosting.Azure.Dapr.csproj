@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AdditionalPackageTags>aspire integration hosting dapr</AdditionalPackageTags>
-    <Description>Dapr support for .NET Aspire.</Description>
+    <AdditionalPackageTags>aspire integration hosting dapr azure</AdditionalPackageTags>
+    <Description>Azure Dapr support for .NET Aspire.</Description>
   </PropertyGroup>
+
+  
 
 <ItemGroup>
   <Compile Include="$(SharedDir)\Dapr\Core\*.cs">
@@ -18,10 +20,11 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Dapr.Tests" />
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Azure.Dapr.Tests" />
   </ItemGroup>
 </Project>

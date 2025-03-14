@@ -50,7 +50,8 @@ public static class UvicornAppHostingExtension
             : Path.Join(projectDirectory, virtualEnvironmentPath));
 
         var instrumentationExecutable = virtualEnvironment.GetExecutable("opentelemetry-instrument");
-        var projectExecutable = instrumentationExecutable ?? "uvicorn";
+        var uvicornExecutable = virtualEnvironment.GetExecutable("uvicorn") ?? "uvicorn";
+        var projectExecutable = instrumentationExecutable ?? uvicornExecutable;
 
         var projectResource = new UvicornAppResource(name, projectExecutable, projectDirectory);
 
