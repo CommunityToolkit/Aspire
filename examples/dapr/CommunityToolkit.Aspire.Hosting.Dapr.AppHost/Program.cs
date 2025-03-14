@@ -5,7 +5,7 @@ var redis = builder.AddRedis("redis").WithRedisInsight();
 
 var stateStore = builder.AddDaprStateStore("statestore");
 
-var pubSub = builder.AddDaprPubSub("pubSub")
+var pubSub = builder.AddDaprPubSub("pubsub")
                     .WithMetadata("redisHost", "localhost:6379")
                     .WaitFor(redis);
 
