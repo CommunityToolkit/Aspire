@@ -215,7 +215,7 @@ public class ResourceCreationTests
             }
 
             resource secretStore 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: toLower('daprState-secretstore')
+              name: 'daprState-secretstore'
               properties: {
                 componentType: 'secretstores.azure.keyvault'
                 metadata: [
@@ -233,7 +233,7 @@ public class ResourceCreationTests
               parent: containerAppEnvironment
             }
 
-            output secretStoreComponent string = toLower('daprState-secretstore')
+            output secretStoreComponent string = 'daprState-secretstore'
             """;
 
     Assert.Equal(expectedBicep, bicepTemplate);
