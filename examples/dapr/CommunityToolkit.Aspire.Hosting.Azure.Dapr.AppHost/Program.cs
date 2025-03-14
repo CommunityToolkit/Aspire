@@ -4,7 +4,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddAzureRedis("redisState").WithAccessKeyAuthentication().RunAsContainer();
 
 // local development still uses dapr redis state container
-var stateStore = builder.AddDaprStateStore("daprState")
+var stateStore = builder.AddDaprStateStore("statestore")
                         .WithReference(redis);
 
 var pubSub = builder.AddDaprPubSub("pubsub")

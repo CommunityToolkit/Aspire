@@ -13,7 +13,7 @@ public class ResourceCreationTests
   {
     var builder = DistributedApplication.CreateBuilder();
 
-    var daprStateBuilder = builder.AddDaprStateStore("daprState")
+    var daprStateBuilder = builder.AddDaprStateStore("statestore")
                                   .AddAzureDaprResource("AzureDaprResource", _ =>
                                   {
                                     // no-op
@@ -30,7 +30,7 @@ public class ResourceCreationTests
   [Fact]
   public void CreateDaprComponent_ReturnsPopulatedComponent()
   {
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     Assert.NotNull(daprResource);
     Assert.Equal("daprComponent", daprResource.BicepIdentifier);
@@ -44,13 +44,15 @@ public class ResourceCreationTests
     using var builder = TestDistributedApplicationBuilder.Create();
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     daprResource.Name = "myDaprComponent";
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
-             .AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+
+    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+
+    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
     using var app = builder.Build();
 
@@ -91,11 +93,13 @@ public class ResourceCreationTests
     using var builder = TestDistributedApplicationBuilder.Create();
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
-             .AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+
+    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+
+    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
     using var app = builder.Build();
 
@@ -118,7 +122,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take(toLower('daprComponent${resourceToken}'), 60)
+              name: 'componentName'
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -135,11 +139,13 @@ public class ResourceCreationTests
   {
     using var builder = TestDistributedApplicationBuilder.Create();
 
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource);
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
-             .AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore");
+
+    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource);
+
+    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
     using var app = builder.Build();
 
@@ -160,7 +166,7 @@ public class ResourceCreationTests
             }
 
             resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take(toLower('daprComponent${resourceToken}'), 60)
+              name: 'componentName'
               properties: {
                 componentType: 'state.redis'
                 version: 'v1'
@@ -178,12 +184,12 @@ public class ResourceCreationTests
     using var builder = TestDistributedApplicationBuilder.Create();
 
     var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "state.redis", "v1");
-    var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
     var keyVaultName = new ProvisioningParameter(AzureBicepResource.KnownParameters.KeyVaultName, typeof(string));
-    
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState")
+
+
+    var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore")
                                           .ConfigureKeyVaultSecretsComponent(keyVaultName);
 
     using var app = builder.Build();
@@ -209,7 +215,7 @@ public class ResourceCreationTests
             }
 
             resource secretStore 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: take(toLower('secretStore${resourceToken}'), 60)
+              name: 'statestore-secretstore'
               properties: {
                 componentType: 'secretstores.azure.keyvault'
                 metadata: [
@@ -227,7 +233,7 @@ public class ResourceCreationTests
               parent: containerAppEnvironment
             }
 
-            output secretStoreComponent string = take(toLower('secretStore${resourceToken}'), 60)
+            output secretStoreComponent string = 'statestore-secretstore'
             """;
 
     Assert.Equal(expectedBicep, bicepTemplate);
