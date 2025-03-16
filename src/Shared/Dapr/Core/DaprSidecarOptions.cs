@@ -78,7 +78,16 @@ public sealed record DaprSidecarOptions
     /// <summary>
     /// Gets or sets the maximum size, in MB, of a Dapr request body.
     /// </summary>
+    [Obsolete($"Use {nameof(DaprMaxBodySize)}", false)]
     public int? DaprHttpMaxRequestSize { get; init; }
+
+    /// <summary>
+    /// Gets or sets the max size of request body
+    /// Inreasing the request max body size to handle large file uploads using http and grpc protocols. 
+    /// Set the value using size units (e.g., 16Mi for 16MB). 
+    /// The default is 4Mi.
+    /// </summary>
+    public string? DaprMaxBodySize { get; init; }
 
     /// <summary>
     ///  Gets or sets the HTTP port on which the Dapr sidecard should listen.
@@ -88,7 +97,17 @@ public sealed record DaprSidecarOptions
     /// <summary>
     /// Gets or sets the maximum size, in KB, of the HTTP header read buffer.
     /// </summary>
+    [Obsolete($"Use {nameof(DaprMaxBodySize)}", false)]
     public int? DaprHttpReadBufferSize { get; init; }
+
+    /// <summary>
+    /// Gets or sets the maximum size, read buffer.
+    /// Increasing max size of http header read buffer in KB to to support larger header values. 
+    /// Set the value using size units, for example 32Ki will support headers up to 32KB . 
+    /// Default is 4Ki for 4KB
+    /// </summary>
+    /// 
+    public string? DaprReadBufferSize { get; init; }
 
     /// <summary>
     /// Gets or sets the gRPC port on which the Dapr sidecar should listen for sidecar-to-sidecar calls.
