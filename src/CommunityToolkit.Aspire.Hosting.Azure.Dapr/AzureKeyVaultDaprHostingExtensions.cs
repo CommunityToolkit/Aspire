@@ -2,6 +2,7 @@
 using Aspire.Hosting.Azure;
 using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
+using Azure.Provisioning.Expressions;
 using Azure.Provisioning.KeyVault;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
@@ -28,9 +29,15 @@ public static class AzureKeyVaultDaprHostingExtensions
 
         var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
 
-        var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(secretStore, "secretstores.azure.keyvault", "v1");
+        var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
+            secretStore,
+            BicepFunction.Interpolate($"{builder.Resource.Name}-secretstore"),
+            "secretstores.azure.keyvault",
+            "v1");
+            
+        daprComponent.Scopes = [];
 
-        var configureInfrastructure = AzureDaprHostingExtensions.GetInfrastructureConfigurationAction(daprComponent, [principalIdParameter]);
+        var configureInfrastructure = builder.GetInfrastructureConfigurationAction(daprComponent, [principalIdParameter]);
 
         return builder.AddAzureDaprResource(secretStore, configureInfrastructure).ConfigureInfrastructure(infrastructure =>
         {
