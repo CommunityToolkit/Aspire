@@ -34,6 +34,11 @@ builder.Build().Run();
 
 https://dapr.io/
 
+## Notes
+
+Note that Aspire is only tested for compatibility with the most recently stable version of Dapr.
+Currently 1.15.3 for the Dapr runtime and 1.15.0 for the Dapr CLI.
+
 ## Feedback & contributing
 
 https://github.com/dotnet/aspire

@@ -143,6 +143,11 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var appId = sidecarOptions?.AppId ?? resource.Name;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+            string? maxBodySize = GetValueIfSet(sidecarOptions?.DaprMaxBodySize, sidecarOptions?.DaprHttpMaxRequestSize, "Mi");
+            string? readBufferSize = GetValueIfSet(sidecarOptions?.DaprReadBufferSize, sidecarOptions?.DaprHttpReadBufferSize, "Ki");
+#pragma warning restore CS0618 // Type or member is obsolete
+
             var daprCommandLine =
                 CommandLineBuilder
                     .Create(
@@ -309,6 +314,13 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
 
         appModel.Resources.AddRange(sideCars);
+    }
+
+    private static string? GetValueIfSet(string? newValue, int? obsoleteValue, string notation)
+    {
+        if (newValue is not null) return newValue;
+        if (obsoleteValue is not null) return $"{obsoleteValue}{notation}";
+        return null;
     }
 
     private string GetAppHostDirectory() =>
