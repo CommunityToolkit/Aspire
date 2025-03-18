@@ -143,11 +143,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var appId = sidecarOptions?.AppId ?? resource.Name;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-            string? maxBodySize = GetValueIfSet(sidecarOptions?.DaprMaxBodySize, sidecarOptions?.DaprHttpMaxRequestSize, "Mi");
-            string? readBufferSize = GetValueIfSet(sidecarOptions?.DaprReadBufferSize, sidecarOptions?.DaprHttpReadBufferSize, "Ki");
-#pragma warning restore CS0618 // Type or member is obsolete
-
             var daprCommandLine =
                 CommandLineBuilder
                     .Create(
@@ -163,8 +158,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         ModelNamedArg("--app-max-concurrency", sidecarOptions?.AppMaxConcurrency),
                         ModelNamedArg("--app-protocol", sidecarOptions?.AppProtocol),
                         ModelNamedArg("--config", NormalizePath(sidecarOptions?.Config)),
-                        ModelNamedArg("--max-body-size", maxBodySize),
-                        ModelNamedArg("--read-buffer-size", readBufferSize),
+                        ModelNamedArg("--max-body-size", sidecarOptions?.DaprMaxBodySize),
+                        ModelNamedArg("--read-buffer-size", sidecarOptions?.DaprReadBufferSize),
                         ModelNamedArg("--dapr-internal-grpc-port", sidecarOptions?.DaprInternalGrpcPort),
                         ModelNamedArg("--dapr-listen-addresses", sidecarOptions?.DaprListenAddresses),
                         Flag("--enable-api-logging", sidecarOptions?.EnableApiLogging),
@@ -314,13 +309,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
 
         appModel.Resources.AddRange(sideCars);
-    }
-
-    private static string? GetValueIfSet(string? newValue, int? obsoleteValue, string notation)
-    {
-        if (newValue is not null) return newValue;
-        if (obsoleteValue is not null) return $"{obsoleteValue}{notation}";
-        return null;
     }
 
     private string GetAppHostDirectory() =>

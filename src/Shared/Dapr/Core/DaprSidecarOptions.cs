@@ -75,11 +75,23 @@ public sealed record DaprSidecarOptions
     /// </summary>
     public int? DaprGrpcPort { get; init; }
 
+    private int? _daprHttpMaxRequestSize;
+    private string? _daprMaxBodySize;
     /// <summary>
     /// Gets or sets the maximum size, in MB, of a Dapr request body.
     /// </summary>
     [Obsolete($"Use {nameof(DaprMaxBodySize)}", false)]
-    public int? DaprHttpMaxRequestSize { get; init; }
+    public int? DaprHttpMaxRequestSize
+    {
+        get
+        {
+            return _daprHttpMaxRequestSize;
+        }
+        init
+        {
+            _daprHttpMaxRequestSize = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the max size of request body
@@ -87,18 +99,44 @@ public sealed record DaprSidecarOptions
     /// Set the value using size units (e.g., 16Mi for 16MB). 
     /// The default is 4Mi.
     /// </summary>
-    public string? DaprMaxBodySize { get; init; }
+    public string? DaprMaxBodySize
+    {
+        get
+        {
+            if (_daprMaxBodySize == null && _daprHttpMaxRequestSize != null)
+                return $"{_daprHttpMaxRequestSize}Mi";
+            return _daprMaxBodySize;
+        }
+        init
+        {
+            _daprMaxBodySize = value;
+        }
+    }
 
     /// <summary>
     ///  Gets or sets the HTTP port on which the Dapr sidecard should listen.
     /// </summary>
     public int? DaprHttpPort { get; init; }
 
+
+    private int? _daprHttpReadBufferSize;
+    private string? _daprReadBufferSize;
+
     /// <summary>
     /// Gets or sets the maximum size, in KB, of the HTTP header read buffer.
     /// </summary>
     [Obsolete($"Use {nameof(DaprMaxBodySize)}", false)]
-    public int? DaprHttpReadBufferSize { get; init; }
+    public int? DaprHttpReadBufferSize
+    {
+        get
+        {
+            return _daprHttpReadBufferSize;
+        }
+        init
+        {
+            _daprHttpReadBufferSize = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the maximum size, read buffer.
@@ -106,8 +144,19 @@ public sealed record DaprSidecarOptions
     /// Set the value using size units, for example 32Ki will support headers up to 32KB . 
     /// Default is 4Ki for 4KB
     /// </summary>
-    /// 
-    public string? DaprReadBufferSize { get; init; }
+    public string? DaprReadBufferSize
+    {
+        get
+        {
+            if (_daprReadBufferSize == null && _daprHttpReadBufferSize != null)
+                return $"{_daprHttpReadBufferSize}Mi";
+            return _daprReadBufferSize;
+        }
+        init
+        {
+            _daprReadBufferSize = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the gRPC port on which the Dapr sidecar should listen for sidecar-to-sidecar calls.
