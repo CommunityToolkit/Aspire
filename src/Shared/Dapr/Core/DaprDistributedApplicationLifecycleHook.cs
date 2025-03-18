@@ -143,11 +143,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var appId = sidecarOptions?.AppId ?? resource.Name;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-            string? maxBodySize = GetValueIfSet(sidecarOptions?.DaprMaxBodySize, sidecarOptions?.DaprHttpMaxRequestSize, "Mi");
-            string? readBufferSize = GetValueIfSet(sidecarOptions?.DaprReadBufferSize, sidecarOptions?.DaprHttpReadBufferSize, "Ki");
-#pragma warning restore CS0618 // Type or member is obsolete
-
             var daprCommandLine =
                 CommandLineBuilder
                     .Create(
