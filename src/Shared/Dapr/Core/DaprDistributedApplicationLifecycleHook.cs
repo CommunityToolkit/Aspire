@@ -282,9 +282,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         context.Writer.TryWriteStringArray("components", componentReferenceAnnotations.Select(componentReferenceAnnotation => componentReferenceAnnotation.Component.Name));
                         context.Writer.TryWriteString("config", context.GetManifestRelativePath(sidecarOptions?.Config));
                         context.Writer.TryWriteNumber("daprGrpcPort", sidecarOptions?.DaprGrpcPort);
-                        context.Writer.TryWriteNumber("daprHttpMaxRequestSize", sidecarOptions?.DaprHttpMaxRequestSize);
+                        context.Writer.TryWriteString("daprMaxBodySize", sidecarOptions?.DaprMaxBodySize);
                         context.Writer.TryWriteNumber("daprHttpPort", sidecarOptions?.DaprHttpPort);
-                        context.Writer.TryWriteNumber("daprHttpReadBufferSize", sidecarOptions?.DaprHttpReadBufferSize);
+                        context.Writer.TryWriteString("daprReadBufferSize", sidecarOptions?.DaprReadBufferSize);
                         context.Writer.TryWriteNumber("daprInternalGrpcPort", sidecarOptions?.DaprInternalGrpcPort);
                         context.Writer.TryWriteString("daprListenAddresses", sidecarOptions?.DaprListenAddresses);
                         context.Writer.TryWriteBoolean("enableApiLogging", sidecarOptions?.EnableApiLogging);
