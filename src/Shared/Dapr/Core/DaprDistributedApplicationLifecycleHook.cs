@@ -158,8 +158,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         ModelNamedArg("--app-max-concurrency", sidecarOptions?.AppMaxConcurrency),
                         ModelNamedArg("--app-protocol", sidecarOptions?.AppProtocol),
                         ModelNamedArg("--config", NormalizePath(sidecarOptions?.Config)),
-                        ModelNamedArg("--max-body-size", sidecarOptions?.DaprHttpMaxRequestSize),
-                        ModelNamedArg("--read-buffer-size", sidecarOptions?.DaprHttpReadBufferSize),
+                        ModelNamedArg("--max-body-size", sidecarOptions?.DaprMaxBodySize),
+                        ModelNamedArg("--read-buffer-size", sidecarOptions?.DaprReadBufferSize),
                         ModelNamedArg("--dapr-internal-grpc-port", sidecarOptions?.DaprInternalGrpcPort),
                         ModelNamedArg("--dapr-listen-addresses", sidecarOptions?.DaprListenAddresses),
                         Flag("--enable-api-logging", sidecarOptions?.EnableApiLogging),
@@ -302,7 +302,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     }));
 
 
-            await publishingHelper.ExecuteProviderSpecificRequirements(appModel, resource, sidecarOptions,cancellationToken);
+            await publishingHelper.ExecuteProviderSpecificRequirements(appModel, resource, sidecarOptions, cancellationToken);
 
             sideCars.Add(daprCli);
         }
