@@ -46,6 +46,8 @@ namespace Aspire.Hosting.ApplicationModel
         public System.Collections.Generic.IReadOnlyDictionary<string, string> Databases { get { throw null; } }
 
         public EndpointReference PrimaryEndpoint { get { throw null; } }
+
+        public EndpointReference TcpEndpoint { get { throw null; } }
     }
 }
 
