@@ -12,7 +12,7 @@ namespace Aspire.Hosting
     {
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddPnpmApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string scriptName = "start", string[]? args = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string packageManager = "npm") { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string packageManager = "npm", bool useHttps = false) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddYarnApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string scriptName = "start", string[]? args = null) { throw null; }
 
