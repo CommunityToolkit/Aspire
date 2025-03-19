@@ -143,6 +143,11 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var appId = sidecarOptions?.AppId ?? resource.Name;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+            string? maxBodySize = GetValueIfSet(sidecarOptions?.DaprMaxBodySize, sidecarOptions?.DaprHttpMaxRequestSize, "Mi");
+            string? readBufferSize = GetValueIfSet(sidecarOptions?.DaprReadBufferSize, sidecarOptions?.DaprHttpReadBufferSize, "Ki");
+#pragma warning restore CS0618 // Type or member is obsolete
+
             var daprCommandLine =
                 CommandLineBuilder
                     .Create(
@@ -158,8 +163,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         ModelNamedArg("--app-max-concurrency", sidecarOptions?.AppMaxConcurrency),
                         ModelNamedArg("--app-protocol", sidecarOptions?.AppProtocol),
                         ModelNamedArg("--config", NormalizePath(sidecarOptions?.Config)),
-                        ModelNamedArg("--max-body-size", sidecarOptions?.DaprHttpMaxRequestSize),
-                        ModelNamedArg("--read-buffer-size", sidecarOptions?.DaprHttpReadBufferSize),
+                        ModelNamedArg("--max-body-size", sidecarOptions?.DaprMaxBodySize),
+                        ModelNamedArg("--read-buffer-size", sidecarOptions?.DaprReadBufferSize),
                         ModelNamedArg("--dapr-internal-grpc-port", sidecarOptions?.DaprInternalGrpcPort),
                         ModelNamedArg("--dapr-listen-addresses", sidecarOptions?.DaprListenAddresses),
                         Flag("--enable-api-logging", sidecarOptions?.EnableApiLogging),
@@ -282,9 +287,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         context.Writer.TryWriteStringArray("components", componentReferenceAnnotations.Select(componentReferenceAnnotation => componentReferenceAnnotation.Component.Name));
                         context.Writer.TryWriteString("config", context.GetManifestRelativePath(sidecarOptions?.Config));
                         context.Writer.TryWriteNumber("daprGrpcPort", sidecarOptions?.DaprGrpcPort);
-                        context.Writer.TryWriteNumber("daprHttpMaxRequestSize", sidecarOptions?.DaprHttpMaxRequestSize);
+                        context.Writer.TryWriteString("daprMaxBodySize", sidecarOptions?.DaprMaxBodySize);
                         context.Writer.TryWriteNumber("daprHttpPort", sidecarOptions?.DaprHttpPort);
-                        context.Writer.TryWriteNumber("daprHttpReadBufferSize", sidecarOptions?.DaprHttpReadBufferSize);
+                        context.Writer.TryWriteString("daprReadBufferSize", sidecarOptions?.DaprReadBufferSize);
                         context.Writer.TryWriteNumber("daprInternalGrpcPort", sidecarOptions?.DaprInternalGrpcPort);
                         context.Writer.TryWriteString("daprListenAddresses", sidecarOptions?.DaprListenAddresses);
                         context.Writer.TryWriteBoolean("enableApiLogging", sidecarOptions?.EnableApiLogging);
@@ -302,13 +307,20 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     }));
 
 
-            await publishingHelper.ExecuteProviderSpecificRequirements(appModel, resource, sidecarOptions,cancellationToken);
+            await publishingHelper.ExecuteProviderSpecificRequirements(appModel, resource, sidecarOptions, cancellationToken);
 
             sideCars.Add(daprCli);
         }
 
 
         appModel.Resources.AddRange(sideCars);
+    }
+
+    private static string? GetValueIfSet(string? newValue, int? obsoleteValue, string notation)
+    {
+        if (newValue is not null) return newValue;
+        if (obsoleteValue is not null) return $"{obsoleteValue}{notation}";
+        return null;
     }
 
     private string GetAppHostDirectory() =>
