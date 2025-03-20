@@ -3,7 +3,6 @@
 
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Dapr;
-using Humanizer.Localisation;
 
 namespace Aspire.Hosting;
 
@@ -56,13 +55,10 @@ public static class IDistributedApplicationResourceBuilderExtensions
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
     {
         var sideCarResourceBuilder = builder.ApplicationBuilder.CreateResourceBuilder(new DaprSidecarResource($"{builder.Resource.Name}-dapr"));
+            
         configureSidecar(sideCarResourceBuilder);
 
-        var configureSidecarResource = (IDaprSidecarResource resource) =>
-        {
-            resource = sideCarResourceBuilder.Resource;
-        };
-        return builder.AddDaprSidecar(configureSidecarResource);
+        return builder.WithAnnotation(new DaprSidecarAnnotation(sideCarResourceBuilder.Resource));
     }
 
     /// <summary>
@@ -110,6 +106,6 @@ public static class IDistributedApplicationResourceBuilderExtensions
         builder.ApplicationBuilder.AddDapr();
 
 
-        return builder.WithAnnotation(new DaprSidecarAnnotation(configureSidecar));
+        return builder.WithAnnotation(new DaprSidecarConfigurationAnnotation(configureSidecar));
     }
 }

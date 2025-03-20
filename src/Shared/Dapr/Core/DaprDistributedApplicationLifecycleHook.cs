@@ -39,7 +39,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         foreach (var resource in appModel.Resources)
         {
 
-            if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation))
+            var hasConfigAnnotations = resource.TryGetAnnotationsOfType<DaprSidecarConfigurationAnnotation>(out var daprSidecarConfigurationAnnotations);
+            var hasSidecarAnnotation = resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation);
+            if (!hasSidecarAnnotation && !hasConfigAnnotations)
             {
                 continue;
             }
@@ -48,8 +50,15 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 ?? GetDefaultDaprPath()
                 ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
 
+            var daprSidecar = daprAnnotation is not null ? daprAnnotation.Sidecar : new DaprSidecarResource($"{resource.Name}-dapr");
 
-            var daprSidecar = new DaprSidecarResource($"{resource.Name}-dapr");
+            if (daprSidecarConfigurationAnnotations is not null)
+                foreach (var annotation in daprSidecarConfigurationAnnotations)
+                {
+                    annotation.ConfigurationAction(daprSidecar);
+                }
+
+
             daprSidecar.Annotations.Add(new ResourceSnapshotAnnotation(new()
             {
                 Properties = [],
@@ -58,7 +67,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             }));
             appModel.Resources.Add(daprSidecar);
 
-            var sidecarOptionsAnnotation = resource.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
+
+            var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
 
             var sidecarOptions = sidecarOptionsAnnotation?.Options;
 
@@ -150,6 +160,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var appId = sidecarOptions?.AppId ?? resource.Name;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+            string? maxBodySize = GetValueIfSet(sidecarOptions?.DaprMaxBodySize, sidecarOptions?.DaprHttpMaxRequestSize, "Mi");
+            string? readBufferSize = GetValueIfSet(sidecarOptions?.DaprReadBufferSize, sidecarOptions?.DaprHttpReadBufferSize, "Ki");
+#pragma warning restore CS0618 // Type or member is obsolete
 
             var daprCommandLine =
                 CommandLineBuilder
@@ -317,6 +331,13 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
 
         appModel.Resources.AddRange(sideCars);
+    }
+
+    private static string? GetValueIfSet(string? newValue, int? obsoleteValue, string notation)
+    {
+        if (newValue is not null) return newValue;
+        if (obsoleteValue is not null) return $"{obsoleteValue}{notation}";
+        return null;
     }
 
     private string GetAppHostDirectory() =>
