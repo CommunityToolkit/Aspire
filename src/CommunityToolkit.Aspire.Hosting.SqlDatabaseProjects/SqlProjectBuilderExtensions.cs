@@ -192,7 +192,7 @@ public static class SqlProjectBuilderExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeployer, DacpacDeployer>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
 
-        builder.WithRelationship(target.Resource, "Reference");
+        builder.WithParentRelationship(target.Resource);
 
         if (target.Resource is SqlServerDatabaseResource)
         {
