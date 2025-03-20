@@ -3,6 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Dapr;
+using Humanizer.Localisation;
 
 namespace Aspire.Hosting;
 
@@ -18,6 +19,7 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="appId">The ID for the application, used for service discovery.</param>
     /// <returns>The resource builder instance.</returns>
+    [Obsolete]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, string appId) where T : IResource
     {
         return builder.WithDaprSidecar(new DaprSidecarOptions { AppId = appId });
@@ -30,6 +32,7 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="options">Options for configuring the Dapr sidecar, if any.</param>
     /// <returns>The resource builder instance.</returns>
+    [Obsolete]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, DaprSidecarOptions? options = null) where T : IResource
     {
         return builder.WithDaprSidecar(
@@ -49,22 +52,17 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="configureSidecar">A callback that can be use to configure the Dapr sidecar.</param>
     /// <returns>The resource builder instance.</returns>
+    [Obsolete]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
     {
-        // Add Dapr is idempotent, so we can call it multiple times.
-        builder.ApplicationBuilder.AddDapr();
+        var sideCarResourceBuilder = builder.ApplicationBuilder.CreateResourceBuilder(new DaprSidecarResource($"{builder.Resource.Name}-dapr"));
+        configureSidecar(sideCarResourceBuilder);
 
-        var sidecarBuilder = builder.ApplicationBuilder.AddResource(new DaprSidecarResource($"{builder.Resource.Name}-dapr"))
-                                                       .WithInitialState(new()
-                                                       {
-                                                           Properties = [],
-                                                           ResourceType = "DaprSidecar",
-                                                           State = KnownResourceStates.Hidden
-                                                       });
-
-        configureSidecar(sidecarBuilder);
-
-        return builder.WithAnnotation(new DaprSidecarAnnotation(sidecarBuilder.Resource));
+        var configureSidecarResource = (IDaprSidecarResource resource) =>
+        {
+            resource = sideCarResourceBuilder.Resource;
+        };
+        return builder.AddDaprSidecar(configureSidecarResource);
     }
 
     /// <summary>
@@ -73,10 +71,24 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The Dapr sidecar resource builder instance.</param>
     /// <param name="options">Options for configuring the Dapr sidecar.</param>
     /// <returns>The Dapr sidecar resource builder instance.</returns>
+    [Obsolete]
     public static IResourceBuilder<IDaprSidecarResource> WithOptions(this IResourceBuilder<IDaprSidecarResource> builder, DaprSidecarOptions options)
     {
         return builder.WithAnnotation(new DaprSidecarOptionsAnnotation(options));
     }
+
+    /// <summary>
+    /// Configure options for the project 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="builder"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<T> WithDaprSidecarOptions<T>(this IResourceBuilder<T> builder, DaprSidecarOptions options) where T : IResource
+    {
+        return builder.WithAnnotation(new DaprSidecarOptionsAnnotation(options));
+    }
+
 
     /// <summary>
     /// Associates a Dapr component with the Dapr sidecar started for the resource.
@@ -86,6 +98,18 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="component">The Dapr component to use with the sidecar.</param>
     public static IResourceBuilder<TDestination> WithReference<TDestination>(this IResourceBuilder<TDestination> builder, IResourceBuilder<IDaprComponentResource> component) where TDestination : IResource
     {
-        return builder.WithAnnotation(new DaprComponentReferenceAnnotation(component.Resource));
+        // If we're adding a component - then we also need a sidecar. 
+        return builder.AddDaprSidecar(_ => { }).WithAnnotation(new DaprComponentReferenceAnnotation(component.Resource));
+    }
+
+
+    // 
+    private static IResourceBuilder<T> AddDaprSidecar<T>(this IResourceBuilder<T> builder, Action<IDaprSidecarResource> configureSidecar) where T : IResource
+    {
+        // Add Dapr is idempotent, so we can call it multiple times.
+        builder.ApplicationBuilder.AddDapr();
+
+
+        return builder.WithAnnotation(new DaprSidecarAnnotation(configureSidecar));
     }
 }
