@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr.Tests;
 public class AzureDaprPublishingHelperTests
 {
-    [Fact(Skip ="Not currently functional")]
+    [Fact]
     public async Task ExecuteProviderSpecificRequirements_AddsAzureContainerAppCustomizationAnnotation_WhenPublishAsAzureContainerAppIsUsed()
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
@@ -18,10 +18,8 @@ public class AzureDaprPublishingHelperTests
         var daprState = builder.AddDaprStateStore("daprState");
 
         builder.AddContainer("name", "image")
-                .PublishAsAzureContainerApp((infrastructure, container) =>
-                {
-                    container.WithDaprSidecar();
-                })
+                .PublishAsAzureContainerApp((infrastructure, container) => { })
+                .PublishWithDaprSidecar()
                 .WithReference(daprState);
 
         using var app = builder.Build();

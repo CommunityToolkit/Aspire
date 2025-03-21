@@ -133,7 +133,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     {
                         context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
                     }
-
                 }));
             }
             // It is possible that we have duplicate wait annotations so we just dedupe them here.
