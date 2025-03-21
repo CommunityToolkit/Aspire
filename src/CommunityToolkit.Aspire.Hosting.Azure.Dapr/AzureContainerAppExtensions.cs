@@ -17,9 +17,14 @@ public static class AzureContainerAppExtensions
     /// TODO: Validate whether this can be called implicitly
     /// </summary>
     /// <param name="builder"></param>
+    /// <param name="options"></param>
     /// <returns></returns>
-    public static IResourceBuilder<T> PublishWithDaprSidecar<T>(this IResourceBuilder<T> builder) where T : ContainerResource
+    public static IResourceBuilder<T> PublishWithDaprSidecar<T>(this IResourceBuilder<T> builder, DaprSidecarOptions? options = null) where T : ContainerResource
     {
+        if (options is not null)
+        {
+            builder.WithDaprSidecarOptions(options);
+        }
         return builder.PublishAsAzureContainerApp((infrastructure, containerApp) => infrastructure.AddDaprSidecarInfrastructure(containerApp));
     }
     /// <summary>
@@ -27,9 +32,14 @@ public static class AzureContainerAppExtensions
     /// TODO: Validate whether this can be called implicitly
     /// </summary>
     /// <param name="builder"></param>
+    /// <param name="options"></param>
     /// <returns></returns>
-    public static IResourceBuilder<ProjectResource> PublishWithDaprSidecar(this IResourceBuilder<ProjectResource> builder)
+    public static IResourceBuilder<ProjectResource> PublishWithDaprSidecar(this IResourceBuilder<ProjectResource> builder, DaprSidecarOptions? options = null)
     {
+        if(options is not null)
+        {
+            builder.WithDaprSidecarOptions(options);
+        }
         return builder.PublishAsAzureContainerApp((infrastructure, containerApp) => infrastructure.AddDaprSidecarInfrastructure(containerApp));
     }
 

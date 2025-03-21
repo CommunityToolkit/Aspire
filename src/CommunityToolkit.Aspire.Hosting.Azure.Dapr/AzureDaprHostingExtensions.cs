@@ -116,7 +116,6 @@ public static class AzureDaprHostingExtensions
         daprComponent.Scopes = [];
         foreach (var resource in builder.ApplicationBuilder.Resources)
         {
-
             if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation) ||
             !resource.TryGetAnnotationsOfType<DaprComponentReferenceAnnotation>(out var daprComponentReferenceAnnotations))
             {
@@ -126,17 +125,16 @@ public static class AzureDaprHostingExtensions
             foreach (var reference in daprComponentReferenceAnnotations)
             {
 
-                // TODO: Figure this out
-                //if (reference.Component.Name == builder.Resource.Name)
-                //{
-                //    var daprSidecar = daprAnnotation.Sidecar;
-                //    var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
+                if (reference.Component.Name == builder.Resource.Name)
+                {
+                    var daprSidecar = daprAnnotation.Sidecar;
+                    var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
 
-                //    var sidecarOptions = sidecarOptionsAnnotation?.Options;
+                    var sidecarOptions = sidecarOptionsAnnotation?.Options;
 
-                //    var appId = sidecarOptions?.AppId ?? resource.Name;
-                //    daprComponent.Scopes.Add(appId);
-                //}
+                    var appId = sidecarOptions?.AppId ?? resource.Name;
+                    daprComponent.Scopes.Add(appId);
+                }
 
             }
         }

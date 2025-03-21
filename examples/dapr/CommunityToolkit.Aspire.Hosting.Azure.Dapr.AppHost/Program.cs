@@ -22,6 +22,7 @@ builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("serv
        .WaitFor(redis);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
+       .PublishWithDaprSidecar(new DaprSidecarOptions { AppId = "serviceb"})
        .WithReference(pubSub)
        .WaitFor(redis);
 
