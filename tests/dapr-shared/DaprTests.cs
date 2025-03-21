@@ -20,13 +20,14 @@ public class DaprTests
             o.DaprPath = "dapr";
         });
 
+
         builder.AddContainer("name", "image")
             .WithEndpoint("http", e =>
             {
                 e.Port = 8000;
                 e.AllocatedEndpoint = new(e, "localhost", 80);
             })
-            .WithDaprSidecar();
+            .WithDaprServiceInvocation();
 
         using var app = builder.Build();
 
@@ -34,9 +35,9 @@ public class DaprTests
 
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Equal(3, model.Resources.Count);
+        Assert.Equal(2, model.Resources.Count); // we're no longer adding a sidecar resource
         var container = Assert.Single(model.Resources.OfType<ContainerResource>());
-        var sidecarResource = Assert.Single(model.Resources.OfType<IDaprSidecarResource>());
+        //var sidecarResource = Assert.Single(model.Resources.OfType<IDaprSidecarResource>());
         var sideCarCli = Assert.Single(model.Resources.OfType<ExecutableResource>());
 
         Assert.True(sideCarCli.TryGetEndpoints(out var endpoints));
@@ -102,6 +103,8 @@ public class DaprTests
             o.DaprPath = "dapr";
         });
 
+        var pubsub = builder.AddDaprPubSub("pubsub");
+
         var containerResource = builder.AddContainer("name", "image")
             .WithEndpoint("http", e =>
             {
@@ -114,14 +117,11 @@ public class DaprTests
                 e.Port = 8001;
                 e.UriScheme = "https";
                 e.AllocatedEndpoint = new(e, "localhost", 8001);
-            });
-        if (schema is null && endPoint is null && port is null)
+            }).WithReference(pubsub);
+            
+        if (schema is not null || endPoint is not null || port is not null)
         {
-            containerResource.WithDaprSidecar();
-        }
-        else
-        {
-            containerResource.WithDaprSidecar(new DaprSidecarOptions()
+            containerResource.WithDaprSidecarOptions(new DaprSidecarOptions()
             {
                 AppProtocol = schema,
                 AppEndpoint = endPoint,
@@ -135,7 +135,7 @@ public class DaprTests
 
         Assert.Equal(3, model.Resources.Count);
         var container = Assert.Single(model.Resources.OfType<ContainerResource>());
-        var sidecarResource = Assert.Single(model.Resources.OfType<IDaprSidecarResource>());
+        //var sidecarResource = Assert.Single(model.Resources.OfType<IDaprSidecarResource>());
         var sideCarCli = Assert.Single(model.Resources.OfType<ExecutableResource>());
 
         Assert.True(sideCarCli.TryGetEndpoints(out var endpoints));

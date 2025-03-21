@@ -1,3 +1,4 @@
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 
@@ -13,20 +14,21 @@ var pubSub = builder.AddDaprPubSub("pubsub")
 
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
+       .PublishAsAzureContainerApp((infrastructure, container) => { })
+       .PublishWithDaprSidecar()
        .WithReference(stateStore)
        .WithReference(pubSub)
-       .WithDaprSidecar()
+       .WithDaprSidecarOptions(new DaprSidecarOptions { LogLevel = "Information" }) // LogLevel.Information TODO: Update Dapr Sidecar options to use LogLevel 
        .WaitFor(redis);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
+       .PublishWithDaprSidecar(new DaprSidecarOptions { AppId = "serviceb"})
        .WithReference(pubSub)
-       .WithDaprSidecar()
        .WaitFor(redis);
 
 // console app with no appPort (sender only)
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceC>("servicec")
        .WithReference(stateStore)
-       .WithDaprSidecar()
        .WaitFor(redis);
 
 builder.Build().Run();
