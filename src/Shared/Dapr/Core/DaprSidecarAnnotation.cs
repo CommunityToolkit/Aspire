@@ -9,9 +9,3 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr;
 /// Indicates that a Dapr sidecar should be started for the associated resource.
 /// </summary>
 public sealed record DaprSidecarAnnotation(IDaprSidecarResource Sidecar) : IResourceAnnotation;
-
-/// <summary>
-/// Allows for configuration of a dapr sidecar
-/// </summary>
-/// <param name="ConfigurationAction"></param>
-public sealed record DaprSidecarConfigurationAnnotation(Action<IDaprSidecarResource> ConfigurationAction): IResourceAnnotation;

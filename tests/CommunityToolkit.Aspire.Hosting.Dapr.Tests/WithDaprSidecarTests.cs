@@ -8,6 +8,7 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
 public class WithDaprSidecarTests
 {
     [Fact]
+    [Obsolete]
     public void ParentResourceConfiguredWithSidecarAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -18,7 +19,8 @@ public class WithDaprSidecarTests
         Assert.Single(rb.Resource.Annotations.OfType<DaprSidecarAnnotation>());
     }
 
-    [Fact]
+    [Fact(Skip = "Sidecar resource no longer added to the resource builder")]
+    [Obsolete]
     public void ResourceAddedWithHiddenInitialState()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -39,15 +41,16 @@ public class WithDaprSidecarTests
         var builder = DistributedApplication.CreateBuilder();
 
         builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
-            .WithDaprSidecar(new DaprSidecarOptions { AppId = "appId" });
+            .WithDaprSidecarOptions(new DaprSidecarOptions { AppId = "appId" });
 
-        var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        var resource = Assert.Single(builder.Resources.OfType<ProjectResource>());
         var annotation = Assert.Single(resource.Annotations.OfType<DaprSidecarOptionsAnnotation>());
 
         Assert.Equal("appId", annotation.Options.AppId);
     }
 
     [Fact]
+    [Obsolete]
     public void OptionsCanBeConfiguredUsingCallback()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -55,7 +58,7 @@ public class WithDaprSidecarTests
         builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
             .WithDaprSidecar(b => b.WithOptions(new DaprSidecarOptions { AppId = "appId" }));
 
-        var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        var resource = Assert.Single(builder.Resources.OfType<ProjectResource>());
         var annotation = Assert.Single(resource.Annotations.OfType<DaprSidecarOptionsAnnotation>());
 
         Assert.Equal("appId", annotation.Options.AppId);

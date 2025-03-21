@@ -15,10 +15,5 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
   
-<ItemGroup>
-  <Compile Include="..\dapr-shared\*.cs">
-    <Link>%(Filename)%(Extension)</Link>
-  </Compile>
-</ItemGroup>
 
 </Project>
