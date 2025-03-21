@@ -29,15 +29,19 @@ internal class BunPackageInstallerLifecycleHook(
         var lockbFilePath = Path.Combine(resource.WorkingDirectory, "bun.lockb");
         var lockFilePath = Path.Combine(resource.WorkingDirectory, "bun.lock");
 
+        // Bun supports workspaces in package.json (https://bun.sh/docs/install/workspaces)
+        var packageJsonPath = Path.Combine(resource.WorkingDirectory, "package.json");
 
-        if (!(File.Exists(lockbFilePath) || File.Exists(lockFilePath)))
+        string[] filePaths = [lockbFilePath, lockFilePath, packageJsonPath];
+
+        if (!filePaths.Any(File.Exists))
         {
             await notificationService.PublishUpdateAsync(resource, state => state with
             {
-                State = new($"No bun.lock or bun.lockb file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
+                State = new($"No package manager file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
             }).ConfigureAwait(false);
 
-            throw new InvalidOperationException($"No bun.lock or bun.lockb file found in {resource.WorkingDirectory}");
+            throw new InvalidOperationException($"No package manager file found in {resource.WorkingDirectory}");
         }
 
         await notificationService.PublishUpdateAsync(resource, state => state with
