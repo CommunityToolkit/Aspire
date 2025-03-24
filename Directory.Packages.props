@@ -67,7 +67,7 @@
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.3.6" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
     <PackageVersion Include="MeiliSearch" Version="0.16.0" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.13" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.5.57" />
