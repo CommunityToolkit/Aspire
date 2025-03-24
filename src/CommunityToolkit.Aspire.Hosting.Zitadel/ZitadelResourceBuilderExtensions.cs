@@ -39,12 +39,7 @@ public static class ZitadelResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         var passwordParameter = adminPassword?.Resource ??
-                                builder.AddParameter
-                                (
-                                    name: $"{name}-password",
-                                    valueGetter: () => "Password1!",
-                                    secret: true
-                                ).Resource;
+                                ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
         
         var resource = new ZitadelResource(name, adminUsername?.Resource, passwordParameter);
 

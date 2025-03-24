@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
-    <PackageReference Include="Zitadel" />
   </ItemGroup>
 
 </Project>
