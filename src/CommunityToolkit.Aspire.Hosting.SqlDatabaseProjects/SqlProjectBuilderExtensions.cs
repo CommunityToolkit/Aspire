@@ -37,7 +37,7 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        return builder.AddSqlProject(name, Assembly.GetCallingAssembly())
+        return builder.AddSqlProject(name)
                       .WithAnnotation(new TProject());
     }
 
@@ -52,22 +52,7 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        return builder.AddSqlProject(name, Assembly.GetCallingAssembly());
-    }
-
-    /// <summary>
-    /// Adds a SQL Server Database Project resource to the application.
-    /// </summary>
-    /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
-    /// <param name="name">Name of the resource.</param>
-    /// <param name="appHostAssembly">The app host assembly to determine the build configuration</param>
-    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    internal static IResourceBuilder<SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, [ResourceName] string name, Assembly appHostAssembly)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNull(name, nameof(name));
-
-        var resource = new SqlProjectResource(name, appHostAssembly);
+        var resource = new SqlProjectResource(name);
         
         return builder.AddResource(resource)
                       .WithInitialState(new CustomResourceSnapshot
