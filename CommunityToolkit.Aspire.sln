@@ -363,6 +363,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.k6", "src\CommunityToolkit.Aspire.Hosting.k6\CommunityToolkit.Aspire.Hosting.k6.csproj", "{C72E4CF1-EDEF-4AA8-A116-DAD99A86B531}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "k6", "k6", "{612ECA40-80B7-4365-9A6A-C35A6BE30FED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.k6.AppHost", "examples\k6\CommunityToolkit.Aspire.Hosting.k6.AppHost\CommunityToolkit.Aspire.Hosting.k6.AppHost.csproj", "{744F01AD-B28E-4B25-B6BA-42821157CA72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults", "examples\k6\CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults\CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults.csproj", "{15BBCE34-82A2-489C-A65B-5BAEA299F07E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.k6.ApiService", "examples\k6\CommunityToolkit.Aspire.Hosting.k6.ApiService\CommunityToolkit.Aspire.Hosting.k6.ApiService.csproj", "{9DB0C7B2-31D3-481C-9C0C-EEAEC9B2AA6A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -953,6 +961,18 @@ Global
 		{C72E4CF1-EDEF-4AA8-A116-DAD99A86B531}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C72E4CF1-EDEF-4AA8-A116-DAD99A86B531}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C72E4CF1-EDEF-4AA8-A116-DAD99A86B531}.Release|Any CPU.Build.0 = Release|Any CPU
+		{744F01AD-B28E-4B25-B6BA-42821157CA72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{744F01AD-B28E-4B25-B6BA-42821157CA72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{744F01AD-B28E-4B25-B6BA-42821157CA72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{744F01AD-B28E-4B25-B6BA-42821157CA72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15BBCE34-82A2-489C-A65B-5BAEA299F07E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15BBCE34-82A2-489C-A65B-5BAEA299F07E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15BBCE34-82A2-489C-A65B-5BAEA299F07E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15BBCE34-82A2-489C-A65B-5BAEA299F07E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DB0C7B2-31D3-481C-9C0C-EEAEC9B2AA6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DB0C7B2-31D3-481C-9C0C-EEAEC9B2AA6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DB0C7B2-31D3-481C-9C0C-EEAEC9B2AA6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DB0C7B2-31D3-481C-9C0C-EEAEC9B2AA6A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1135,6 +1155,10 @@ Global
 		{27144ED2-9F74-4A86-AABA-38CD061D8984} = {41ACF613-EE5A-5900-F4D1-9FB713A32BE8}
 		{39A6C03B-52AB-45F4-8D01-C3A1E5095765} = {E3C2B4B7-B3B0-4E7F-A975-A6C7FD926792}
 		{C72E4CF1-EDEF-4AA8-A116-DAD99A86B531} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{612ECA40-80B7-4365-9A6A-C35A6BE30FED} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{744F01AD-B28E-4B25-B6BA-42821157CA72} = {612ECA40-80B7-4365-9A6A-C35A6BE30FED}
+		{15BBCE34-82A2-489C-A65B-5BAEA299F07E} = {612ECA40-80B7-4365-9A6A-C35A6BE30FED}
+		{9DB0C7B2-31D3-481C-9C0C-EEAEC9B2AA6A} = {612ECA40-80B7-4365-9A6A-C35A6BE30FED}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

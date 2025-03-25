@@ -55,7 +55,52 @@ public static class K6BuilderExtensions
             .WithImage(K6ContainerImageTags.Image, tag)
             .WithImageRegistry(K6ContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: K6Port, port: port, name: K6Resource.PrimaryEndpointName)
-            .WithHttpHealthCheck("/health")
-            .WithOtlpExporter();
+            .WithHttpHealthCheck("/health");
+            //.WithOtlpExporter(prefix: "K6_"); // Allow prefix, see https://grafana.com/docs/k6/latest/results-output/real-time/opentelemetry/#configuration
+    }
+
+    /// <summary>
+    /// Runs a k6 JS script when starting the Grafana k6 container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="scriptPath">The path to the JS script to run.</param>
+    /// <param name="virtualUsers">The number of virtual users for the test. Defaults to `10`.</param>
+    /// <param name="duration">The duration of the test. Defaults to `30s`.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <example>
+    /// Add a Grafana k6 container to the application model and reference it in a .NET project. Additionally, in this
+    /// example a script runs when the container starts.
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api");
+    /// var k6 = builder.AddK6("k6")
+    ///     .WithBindMount("scripts", "/scripts", true)
+    ///     .WithScript("/scripts/main.js")
+    ///     .WithReference(api)
+    ///     .WaitFor(api);
+    ///  
+    /// builder.Build().Run(); 
+    /// </code>
+    /// </example>
+    /// </remarks>
+    public static IResourceBuilder<K6Resource> WithScript(
+        this IResourceBuilder<K6Resource> builder, 
+        string scriptPath,
+        int virtualUsers = 10,
+        string duration = "30s")
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithArgs(
+            "run", 
+            "--address",
+            $"0.0.0.0:{K6Port}",
+            "--vus", 
+            virtualUsers, 
+            "--duration", 
+            duration, 
+            scriptPath);
     }
 }
