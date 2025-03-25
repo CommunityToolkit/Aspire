@@ -1,4 +1,5 @@
 using Microsoft.Build.Evaluation;
+using Microsoft.Extensions.Hosting;
 using Microsoft.SqlServer.Dac;
 using System.Reflection;
 
@@ -8,7 +9,8 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Represents a SQL Server Database project resource.
 /// </summary>
 /// <param name="name">Name of the resource.</param>
-public sealed class SqlProjectResource(string name) : Resource(name), IResourceWithWaitSupport, IResourceWithDacpac
+/// <param name="appHostAssembly">The app host assembly to determine the build configuration</param>
+public sealed class SqlProjectResource(string name, Assembly appHostAssembly) : Resource(name), IResourceWithWaitSupport, IResourceWithDacpac
 {
     string IResourceWithDacpac.GetDacpacPath()
     {
@@ -17,7 +19,7 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
             var projectPath = projectMetadata.ProjectPath;
             using var projectCollection = new ProjectCollection();
 
-            var attr = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyConfigurationAttribute>();
+            var attr = appHostAssembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
             if (attr is not null)
                 projectCollection.SetGlobalProperty("Configuration", attr.Configuration);
 
