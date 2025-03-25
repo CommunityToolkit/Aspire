@@ -18,7 +18,7 @@
     <DotNetExtensionsVersion>9.0.2</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.11.0</OpenTelemetryVersion>
     <TestContainersVersion>4.3.0</TestContainersVersion>
-    <MEAIVersion>9.3.0-preview.1.25114.11</MEAIVersion>
+    <MEAIVersion>9.3.0-preview.1.25161.3</MEAIVersion>
     <IsPackable>false</IsPackable>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
