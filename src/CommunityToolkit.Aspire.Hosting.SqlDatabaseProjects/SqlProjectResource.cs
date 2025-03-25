@@ -1,5 +1,4 @@
 using Microsoft.Build.Evaluation;
-using Microsoft.Extensions.Hosting;
 using Microsoft.SqlServer.Dac;
 using System.Reflection;
 

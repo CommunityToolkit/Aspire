@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 using Microsoft.SqlServer.Dac;
-using System.Reflection;
 
 namespace Aspire.Hosting;
 
