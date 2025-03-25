@@ -69,7 +69,7 @@ jobs:
           path: ${{ github.workspace }}
 
       - name: Install Signing Tool
-        run: dotnet tool install --tool-path ./tools sign --version 0.9.1-beta.23356.1
+        run: dotnet tool install --tool-path ./tools sign --version 0.9.1-beta.25169.2
 
       - name: Sign Packages
         run: >
