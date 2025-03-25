@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.k6\K6ContainerImageTags.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\k6\CommunityToolkit.Aspire.Hosting.k6.AppHost\CommunityToolkit.Aspire.Hosting.k6.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.k6\CommunityToolkit.Aspire.Hosting.k6.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

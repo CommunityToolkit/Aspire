@@ -92,6 +92,9 @@ public static class K6BuilderExtensions
         string duration = "30s")
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(scriptPath);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(virtualUsers);
+        ArgumentNullException.ThrowIfNull(duration);
 
         return builder.WithArgs(
             "run", 
