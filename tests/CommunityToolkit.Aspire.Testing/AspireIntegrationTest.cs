@@ -1,5 +1,6 @@
 ﻿using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Testing;
@@ -29,6 +30,18 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
             .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 
         base.OnBuilderCreated(applicationBuilder);
+    }
+
+    protected override void OnBuilderCreating(DistributedApplicationOptions applicationOptions, HostApplicationBuilderSettings hostOptions)
+    {
+        // In CI we use a custom container registry to pull images from so that we can avoid hitting the rate limit on Docker Hub
+        // see: https://github.com/CommunityToolkit/Aspire/issues/556
+        if (Environment.GetEnvironmentVariable("CUSTOM_CONTAINER_REGISTRY") is not null)
+        {
+            applicationOptions.ContainerRegistryOverride = Environment.GetEnvironmentVariable("CUSTOM_CONTAINER_REGISTRY");
+        }
+
+        base.OnBuilderCreating(applicationOptions, hostOptions);
     }
 
     public async override ValueTask DisposeAsync()
