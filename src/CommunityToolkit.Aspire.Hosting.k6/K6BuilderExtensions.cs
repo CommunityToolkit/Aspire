@@ -55,8 +55,9 @@ public static class K6BuilderExtensions
             .WithImage(K6ContainerImageTags.Image, tag)
             .WithImageRegistry(K6ContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: K6Port, port: port, name: K6Resource.PrimaryEndpointName)
-            .WithHttpHealthCheck("/health");
-            //.WithOtlpExporter(prefix: "K6_"); // Allow prefix, see https://grafana.com/docs/k6/latest/results-output/real-time/opentelemetry/#configuration
+            .WithHttpHealthCheck("/health")
+            .WithOtlpExporter();
+
     }
 
     /// <summary>
@@ -86,7 +87,7 @@ public static class K6BuilderExtensions
     /// </example>
     /// </remarks>
     public static IResourceBuilder<K6Resource> WithScript(
-        this IResourceBuilder<K6Resource> builder, 
+        this IResourceBuilder<K6Resource> builder,
         string scriptPath,
         int virtualUsers = 10,
         string duration = "30s")
@@ -105,5 +106,26 @@ public static class K6BuilderExtensions
             "--duration", 
             duration, 
             scriptPath);
+    }
+
+    /// <summary>
+    /// Set K6 environment variables from the existing OTEL environment set for this resource.
+    /// See https://grafana.com/docs/k6/latest/results-output/real-time/opentelemetry/#configuration.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<K6Resource> WithK6OtlpEnvironment(
+        this IResourceBuilder<K6Resource> builder)
+    {
+        return builder.WithEnvironment(context =>
+        {
+            foreach (var (key, value) in context.EnvironmentVariables.ToList())
+            {
+                if (key.StartsWith("OTEL_"))
+                {
+                    context.EnvironmentVariables.TryAdd($"K6_{key}", value);
+                }
+            }
+        });
     }
 }
