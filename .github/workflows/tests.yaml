@@ -95,6 +95,8 @@ jobs:
           --collect "XPlat Code Coverage"
           --no-restore
           --no-build -- RunConfiguration.CollectSourceInformation=true
+        env:
+          CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
 
       - name: Dump docker info
         if: always()
@@ -117,4 +119,3 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
-
