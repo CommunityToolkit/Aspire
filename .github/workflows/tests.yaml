@@ -70,6 +70,7 @@ jobs:
           name: ${{ matrix.name }}
           docker-username: ${{ secrets.DOCKER_USERNAME }}
           docker-password: ${{ secrets.DOCKER_PASSWORD }}
+          docker-registry: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
 
       - name: Verify Docker is running
         run: docker info
@@ -116,3 +117,4 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
+
