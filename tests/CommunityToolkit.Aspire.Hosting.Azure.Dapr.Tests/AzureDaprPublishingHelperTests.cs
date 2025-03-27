@@ -19,12 +19,12 @@ public class AzureDaprPublishingHelperTests
 
         builder.AddContainer("name", "image")
                 .PublishAsAzureContainerApp((infrastructure, container) => { })
-                .WithReference(daprState)
-                .WithDaprSidecar();
+                .PublishWithDaprSidecar()
+                .WithReference(daprState);
 
         using var app = builder.Build();
 
-       await ExecuteBeforeStartHooksAsync(app, default);
+        await ExecuteBeforeStartHooksAsync(app, default);
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
