@@ -1,0 +1,3 @@
+#nullable enable
+Aspire.Hosting.CollectorExtensions
+static Aspire.Hosting.CollectorExtensions.AddOpenTelemetryCollector(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name, string! configFileLocation, string! collectorVersion = "latest", string! collectorImage = "ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib") -> Aspire.Hosting.ApplicationModel.IResourceBuilder<PracticalOtel.OtelCollector.Aspire.CollectorResource!>!
