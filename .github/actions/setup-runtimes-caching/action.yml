@@ -10,6 +10,9 @@ inputs:
   docker-password:
     description: "The Docker password"
     required: true
+  docker-registry:
+    description: "The Docker registry"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -107,6 +110,7 @@ runs:
       with:
         username: ${{ inputs.docker-username }}
         password: ${{ inputs.docker-password }}
+        registry: ${{ inputs.docker-registry }}
 
     - uses: dapr/setup-dapr@v2
       name: Setup Dapr
