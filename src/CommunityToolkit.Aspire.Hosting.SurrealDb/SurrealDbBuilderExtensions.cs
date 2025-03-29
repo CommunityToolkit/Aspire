@@ -299,6 +299,7 @@ public static class SurrealDbBuilderExtensions
             .WithImageRegistry(SurrealDbContainerImageTags.SurrealistRegistry)
             .WithHttpEndpoint(targetPort: 8080, name: "http")
             .WithBindMount(Path.GetTempFileName(), CONNECTIONS_FILE_PATH)
+            .WithRelationship(builder.Resource, "Surrealist")
             .ExcludeFromManifest();
         
         builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>( (e, ct) =>
@@ -398,9 +399,6 @@ public static class SurrealDbBuilderExtensions
         
         configureContainer?.Invoke(surrealistContainerBuilder);
 
-        // TODO : missing
-        //surrealistContainerBuilder.WithRelationship(builder.Resource, "Surrealist");
-        
         return builder;
     }
 }
