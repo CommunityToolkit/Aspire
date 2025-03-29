@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.SurrealDb\SurrealDbHealthCheck.cs" Link="SurrealDbHealthCheck.cs"></Compile>
   </ItemGroup>
 
