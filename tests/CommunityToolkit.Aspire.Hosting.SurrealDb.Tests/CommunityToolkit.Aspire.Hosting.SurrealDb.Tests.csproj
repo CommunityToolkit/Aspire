@@ -6,8 +6,6 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.SurrealDb\SurrealDbContainerImageTags.cs" />
-    <Compile Include="$(SharedDir)\VolumeNameGenerator.cs" Link="Utils\VolumeNameGenerator.cs" />
-
   </ItemGroup>
 
   <ItemGroup>
