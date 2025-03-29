@@ -78,7 +78,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         {
             using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
-            var surrealServer1 = builder1.AddSurrealServer("surreal");
+            var surrealServer1 = builder1.AddSurrealServer("surreal", path: "rocksdb://data");
 
             var db1 = surrealServer1
                 .AddNamespace("ns")
@@ -133,7 +133,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
             using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
-            var surrealServer2 = builder2.AddSurrealServer("surreal");
+            var surrealServer2 = builder2.AddSurrealServer("surreal", path: "rocksdb://data");
             
             var db2 = surrealServer2
                 .AddNamespace("ns")

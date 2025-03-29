@@ -77,7 +77,9 @@ public static class AspireSurrealDbExtensions
 
         if (settings.Options is null)
         {
-            throw new NullReferenceException("SurrealDB configured options cannot be null.");
+            // Ensures that when the connection information is missing, an exception isn't thrown before the host
+            // is built, so any exception can be logged with ILogger.
+            return;
         }
 
         if (serviceKey is null)

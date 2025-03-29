@@ -87,9 +87,9 @@ public class AspireSurrealClientExtensionsTest(SurrealDbContainerFixture contain
         var builder = Host.CreateEmptyApplicationBuilder(null);
         
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:surreal1", "http://localhost:19530"),
-            new KeyValuePair<string, string?>("ConnectionStrings:surreal2", "http://localhost:19531"),
-            new KeyValuePair<string, string?>("ConnectionStrings:surreal3", "http://localhost:19532"),
+            new KeyValuePair<string, string?>("ConnectionStrings:surreal1", "Endpoint=http://localhost:19530"),
+            new KeyValuePair<string, string?>("ConnectionStrings:surreal2", "Endpoint=http://localhost:19531"),
+            new KeyValuePair<string, string?>("ConnectionStrings:surreal3", "Endpoint=http://localhost:19532"),
         ]);
 
         builder.AddSurrealClient("surreal1");
