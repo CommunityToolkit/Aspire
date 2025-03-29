@@ -7,7 +7,7 @@
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
-		<PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.NodeJS" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
@@ -21,8 +21,10 @@
     <!-- AspNetCore packages -->
     <PackageVersion Include="AspNetCore.HealthChecks.EventStore.gRPC" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Sqlite" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.SurrealDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
     <PackageVersion Include="Dapr.AspNetCore" Version="1.15.2" />
     <PackageVersion Include="Dapr.Client" Version="1.15.2" />
@@ -53,11 +55,9 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="$(OpenTelemetryVersion)" />
   </ItemGroup>
-
   <ItemGroup Label="Build Dependencies">
     <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25065.25" />
   </ItemGroup>
-
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.0.0" />
@@ -79,12 +79,10 @@
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
-    <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="SurrealDb.Net" Version="0.8.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
   </ItemGroup>
-
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
@@ -104,7 +102,6 @@
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
   </ItemGroup>
-
   <ItemGroup Label=".NET 9 Overrides" Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
   </ItemGroup>
