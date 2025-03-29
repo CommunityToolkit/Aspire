@@ -50,6 +50,7 @@ jobs:
             Hosting.Sqlite.Tests,
             Hosting.SqlServer.Extensions.Tests,
             Hosting.Adminer.Tests,
+            Hosting.SurrealDb.Tests,
 
             # Client integration tests
             EventStore.Tests,
@@ -60,6 +61,7 @@ jobs:
             Microsoft.EntityFrameworkCore.Sqlite.Tests,
             OllamaSharp.Tests,
             RavenDB.Client.Tests,
+            SurrealDb.Tests,
           ]
 
     steps:
