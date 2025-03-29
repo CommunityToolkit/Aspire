@@ -53,6 +53,7 @@ jobs:
             Hosting.Sqlite.Tests,
             Hosting.k6.Tests,
             Hosting.Minio.Tests,
+            Hosting.SurrealDb.Tests,
 
             # Client integration tests
             EventStore.Tests,
@@ -64,6 +65,7 @@ jobs:
             OllamaSharp.Tests,
             RavenDB.Client.Tests,
             Minio.Client.Tests,
+            SurrealDb.Tests,
           ]
 
     steps:
