@@ -63,8 +63,8 @@
     <PackageVersion Include="JsonSchema.Net" Version="7.3.3" />
     <PackageVersion Include="OllamaSharp" Version="5.1.7" />
     <PackageVersion Include="OpenFeature.Contrib.GOFeatureFlag" Version="0.2.0" />
-    <PackageVersion Include="MassTransit" Version="8.3.6" />
-    <PackageVersion Include="MassTransit.ActiveMQ" Version="8.3.6" />
+    <PackageVersion Include="MassTransit" Version="8.4.0" />
+    <PackageVersion Include="MassTransit.ActiveMQ" Version="8.4.0" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
     <PackageVersion Include="MeiliSearch" Version="0.16.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.3" />
