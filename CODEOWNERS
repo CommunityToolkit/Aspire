@@ -21,7 +21,6 @@
 /tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/ @tommasodotNET @FBoucher
 
 # CommunityToolkit.Aspire.Meilisearch
-
 # CommunityToolkit.Aspire.Hosting.Meilisearch
 
 /examples/meilisearch/ @Alirexaa
@@ -43,7 +42,6 @@
 /tests/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
 
 # CommunityToolkit.Aspire.EventStore
-
 # CommunityToolkit.Aspire.Hosting.EventStore
 
 /examples/eventstore/ @fredimachado
@@ -64,14 +62,13 @@
 /src/CommunityToolkit.Aspire.Hosting.Ngrok/ @esskar
 /tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/ @esskar
 
-# CommunityToolkit.Aspire.Dapr.\*
+# CommunityToolkit.Aspire.Dapr.*
 
 /examples/dapr**/ @FullStackChef @WhitWaldo @Paule96
 /src/CommunityToolkit.Aspire.Hosting.Dapr**/ @FullStackChef @WhitWaldo @Paule96
-/tests/CommunityToolkit.Aspire.Hosting.Dapr\*\*.Tests/ @FullStackChef @WhitWaldo @Paule96
+/tests/CommunityToolkit.Aspire.Hosting.Dapr**.Tests/ @FullStackChef @WhitWaldo @Paule96
 
 # CommunityToolkit.Aspire.RavenDB.Client
-
 # CommunityToolkit.Aspire.Hosting.RavenDB
 
 /examples/ravendb/ @shiranshalom
@@ -109,10 +106,8 @@
 /src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/ @Alirexaa
 /tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/ @Alirexaa
 /examples/sqlserver-ext/ @Alirexaa
-<<<<<<< HEAD
 
 # CommunityToolkit.Aspire.Minio.Client
-
 # CommunityToolkit.Aspire.Hosting.Minio
 
 /examples/minio/ @Harold-Morgan
@@ -123,7 +118,6 @@
 /tests/CommunityToolkit.Aspire.Minio.Client.Tests/ @Harold-Morgan
 
 # CommunityToolkit.Aspire.SurrealDb
-
 # CommunityToolkit.Aspire.Hosting.SurrealDb
 
 /examples/surrealdb/ @Odonno
