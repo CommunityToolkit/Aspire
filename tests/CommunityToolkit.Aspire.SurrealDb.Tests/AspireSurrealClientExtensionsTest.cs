@@ -14,7 +14,7 @@ public class AspireSurrealClientExtensionsTest(SurrealDbContainerFixture contain
     private const string DefaultConnectionName = "db";
 
     private string DefaultConnectionString =>
-            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "http://localhost:27011";
+            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "Endpoint=http://localhost:27011";
 
     [Theory]
     [InlineData(true)]
