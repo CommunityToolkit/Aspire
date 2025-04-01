@@ -5,7 +5,6 @@ using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Bogus;
-using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using SurrealDb.Net;
@@ -22,7 +21,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
     static SurrealDbFunctionalTests()
     {
-        _todoList = new TodoFaker().Generate(_generatedTodoCount).ToArray();
+        _todoList = [.. new TodoFaker().Generate(_generatedTodoCount)];
 
         int index = 0;
         foreach (var todo in _todoList)
@@ -30,10 +29,12 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             todo.Id = (Todo.Table, (++index).ToString());
         }
     }
-    
+
     [Fact]
     public async Task VerifySurrealDbResource()
     {
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        var ct = cts.Token;
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var surrealServer = builder.AddSurrealServer("surreal");
@@ -41,14 +42,12 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         var db = surrealServer
             .AddNamespace("ns")
             .AddDatabase("db");
-        
+
         using var app = builder.Build();
 
         await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        await app.WaitForTextAsync("Started web server on", surrealServer.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer.Resource.Name, ct);
 
         var hb = Host.CreateApplicationBuilder();
 
@@ -58,12 +57,12 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         using var host = hb.Build();
 
-        await host.StartAsync();
+        await host.StartAsync(ct);
 
         var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
 
-        await CreateTestData(surrealDbClient);
-        await AssertTestData(surrealDbClient);
+        await CreateTestData(surrealDbClient, ct);
+        await AssertTestData(surrealDbClient, ct);
     }
 
     [Theory]
@@ -71,19 +70,24 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
     {
+        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
         string? volumeName = null;
         string? bindMountPath = null;
 
         try
         {
             using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
-
-            var surrealServer1 = builder1.AddSurrealServer("surreal", path: "rocksdb://data");
+            
+            var password1 = builder1.AddParameter("surreal-password", secret: true);
+            password1.Resource.Default = new PasswordConstantDefault();
+            
+            var surrealServer1 = builder1.AddSurrealServer("surreal", path: "rocksdb://data/db.db", password: password1);
 
             var db1 = surrealServer1
                 .AddNamespace("ns")
                 .AddDatabase("db");
-            
+
             if (useVolume)
             {
                 // Use a deterministic volume name to prevent them from exhausting the machines if deletion fails
@@ -97,48 +101,52 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             {
                 bindMountPath = Directory.CreateTempSubdirectory().FullName;
                 surrealServer1.WithDataBindMount(bindMountPath);
+
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(bindMountPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
+                }
             }
 
             using (var app = builder1.Build())
             {
-                await app.StartAsync();
+                await app.StartAsync(cts.Token);
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                await app.WaitForTextAsync("Started web server on", surrealServer1.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer1.Resource.Name, cts.Token);
 
                 try
                 {
                     var hb = Host.CreateApplicationBuilder();
 
-                    hb.Configuration[$"ConnectionStrings:{db1.Resource.Name}"] = await db1.Resource.ConnectionStringExpression.GetValueAsync(default);
+                    hb.Configuration[$"ConnectionStrings:{db1.Resource.Name}"] = await db1.Resource.ConnectionStringExpression.GetValueAsync(cts.Token);
 
                     hb.AddSurrealClient(db1.Resource.Name);
 
-                    using (var host = hb.Build())
-                    {
-                        await host.StartAsync();
+                    using var host = hb.Build();
+                    await host.StartAsync(cts.Token);
 
-                        var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
-                        await CreateTestData(surrealDbClient);
-                        await AssertTestData(surrealDbClient);
-                    }
+                    await using var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
+                    await CreateTestData(surrealDbClient, cts.Token);
+                    await AssertTestData(surrealDbClient, cts.Token);
                 }
                 finally
                 {
                     // Stops the container, or the Volume would still be in use
-                    await app.StopAsync();
+                    await app.StopAsync(cts.Token);
                 }
             }
 
             using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
-
-            var surrealServer2 = builder2.AddSurrealServer("surreal", path: "rocksdb://data");
             
+            var password2 = builder2.AddParameter("surreal-password", secret: true);
+            password2.Resource.Default = new PasswordConstantDefault();
+            
+            var surrealServer2 = builder2.AddSurrealServer("surreal", path: "rocksdb://data/db.db", password: password2);
+
             var db2 = surrealServer2
                 .AddNamespace("ns")
                 .AddDatabase("db");
-            
+
             if (useVolume)
             {
                 surrealServer2.WithDataVolume(volumeName);
@@ -150,31 +158,27 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
             using (var app = builder2.Build())
             {
-                await app.StartAsync();
+                await app.StartAsync(cts.Token);
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                await app.WaitForTextAsync("Started web server on", surrealServer2.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer2.Resource.Name, cts.Token);
 
                 try
                 {
                     var hb = Host.CreateApplicationBuilder();
 
-                    hb.Configuration[$"ConnectionStrings:{db2.Resource.Name}"] = await db2.Resource.ConnectionStringExpression.GetValueAsync(default);
+                    hb.Configuration[$"ConnectionStrings:{db2.Resource.Name}"] = await db2.Resource.ConnectionStringExpression.GetValueAsync(cts.Token);
 
                     hb.AddSurrealClient(db2.Resource.Name);
 
-                    using (var host = hb.Build())
-                    {
-                        await host.StartAsync();
-                        var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
-                        await AssertTestData(surrealDbClient);
-                    }
+                    using var host = hb.Build();
+                    await host.StartAsync(cts.Token);
+                    await using var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
+                    await AssertTestData(surrealDbClient, cts.Token);
                 }
                 finally
                 {
                     // Stops the container, or the Volume would still be in use
-                    await app.StopAsync();
+                    await app.StopAsync(cts.Token);
                 }
             }
 
@@ -239,12 +243,12 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         await app.StopAsync();
     }
 
-    private static async Task CreateTestData(SurrealDbClient surrealDbClient)
+    private static async Task CreateTestData(SurrealDbClient surrealDbClient, CancellationToken ct)
     {
-        await surrealDbClient.Insert(Todo.Table, _todoList);
+        await surrealDbClient.Insert(Todo.Table, _todoList, ct);
     }
 
-    private static async Task AssertTestData(SurrealDbClient surrealDbClient)
+    private static async Task AssertTestData(SurrealDbClient surrealDbClient, CancellationToken ct)
     {
         var records = await surrealDbClient.Select<Todo>(Todo.Table);
         Assert.Equal(_generatedTodoCount, records.Count());
@@ -253,7 +257,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         Assert.NotNull(firstRecord);
         Assert.Equivalent(firstRecord, _todoList[0]);
     }
-    
+
     private sealed class Todo : SurrealRecord
     {
         internal const string Table = "todo";
