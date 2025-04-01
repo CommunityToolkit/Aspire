@@ -2,10 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.SurrealDb;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using SurrealDb.Net;
 using System.Text.Json;
 
@@ -112,8 +109,8 @@ public static class SurrealDbBuilderExtensions
     /// </example>
     /// </remarks>
     public static IResourceBuilder<SurrealDbNamespaceResource> AddNamespace(
-        this IResourceBuilder<SurrealDbServerResource> builder, 
-        [ResourceName] string name, 
+        this IResourceBuilder<SurrealDbServerResource> builder,
+        [ResourceName] string name,
         string? namespaceName = null
     )
     {
@@ -152,8 +149,8 @@ public static class SurrealDbBuilderExtensions
     /// </example>
     /// </remarks>
     public static IResourceBuilder<SurrealDbDatabaseResource> AddDatabase(
-        this IResourceBuilder<SurrealDbNamespaceResource> builder, 
-        [ResourceName] string name, 
+        this IResourceBuilder<SurrealDbNamespaceResource> builder,
+        [ResourceName] string name,
         string? databaseName = null
     )
     {
@@ -175,17 +172,17 @@ public static class SurrealDbBuilderExtensions
             {
                 throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerDatabase}' resource but the connection string was null.");
             }
-            
+
             var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
             surrealDbClient = new SurrealDbClient(options);
         });
 
         string namespaceName = builder.Resource.Name;
         string serverName = builder.Resource.Parent.Name;
-        
+
         string healthCheckKey = $"{serverName}_{namespaceName}_{name}_check";
         builder.ApplicationBuilder.Services.AddHealthChecks().AddSurreal(_ => surrealDbClient!, healthCheckKey);
-        
+
         return builder.ApplicationBuilder.AddResource(surrealServerDatabase)
             .WithHealthCheck(healthCheckKey);
     }
@@ -219,7 +216,7 @@ public static class SurrealDbBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/opt/surreal");
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/data");
     }
 
     /// <summary>
@@ -252,9 +249,9 @@ public static class SurrealDbBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(source);
 
-        return builder.WithBindMount(source, "/var/opt/surreal");
+        return builder.WithBindMount(source, "/data");
     }
-    
+
     /// <summary>
     /// Adds a Surrealist UI instance for SurrealDB to the application model.
     /// The default image is <inheritdoc cref="SurrealDbContainerImageTags.SurrealistImage"/> and the tag is <inheritdoc cref="SurrealDbContainerImageTags.SurrealistTag"/>.
@@ -271,19 +268,19 @@ public static class SurrealDbBuilderExtensions
         where T : SurrealDbServerResource
     {
         ArgumentNullException.ThrowIfNull(builder);
-        
+
         if (builder.ApplicationBuilder.Resources.OfType<SurrealistContainerResource>().SingleOrDefault() is { } existingSurrealistResource)
         {
             var builderForExistingResource = builder.ApplicationBuilder.CreateResourceBuilder(existingSurrealistResource);
             configureContainer?.Invoke(builderForExistingResource);
-            
+
             return builder;
         }
-        
+
         containerName ??= $"{builder.Resource.Name}-surrealist";
-        
+
         const string CONNECTIONS_FILE_PATH = "/usr/share/nginx/html/connections.json";
-        
+
         var surrealistContainer = new SurrealistContainerResource(containerName);
         var surrealistContainerBuilder = builder.ApplicationBuilder.AddResource(surrealistContainer)
             .WithImage(SurrealDbContainerImageTags.SurrealistImage, SurrealDbContainerImageTags.SurrealistTag)
@@ -292,15 +289,15 @@ public static class SurrealDbBuilderExtensions
             .WithBindMount(Path.GetTempFileName(), CONNECTIONS_FILE_PATH)
             .WithRelationship(builder.Resource, "Surrealist")
             .ExcludeFromManifest();
-        
-        builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>( (e, ct) =>
+
+        builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
             {
                 var serverFileMount = surrealistContainer.Annotations.OfType<ContainerMountAnnotation>().Single(v => v.Target == CONNECTIONS_FILE_PATH);
                 var surrealDbServerResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbServerResource>().ToList();
 
                 using var stream = new FileStream(serverFileMount.Source!, FileMode.Create);
                 using var writer = new Utf8JsonWriter(stream);
-                
+
                 // Need to grant read access to the config file on unix like systems.
                 if (!OperatingSystem.IsWindows())
                 {
@@ -316,7 +313,7 @@ public static class SurrealDbBuilderExtensions
                 }
 
                 writer.WriteStartArray("connections");
-                
+
                 var surrealDbNamespaceResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbNamespaceResource>().ToList();
                 var surrealDbDatabaseResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbDatabaseResource>().ToList();
 
@@ -326,7 +323,7 @@ public static class SurrealDbBuilderExtensions
                     {
                         SurrealDbNamespaceResource? uniqueNamespace = null;
                         SurrealDbDatabaseResource? uniqueDatabase = null;
-                        
+
                         var serverNamespaces = surrealDbNamespaceResources
                             .Where(ns => ns.Parent == surrealInstance)
                             .ToList();
@@ -334,24 +331,24 @@ public static class SurrealDbBuilderExtensions
                         if (serverNamespaces.Count == 1)
                         {
                             uniqueNamespace = serverNamespaces.First();
-                            
+
                             var nsDatabases = surrealDbDatabaseResources
                                 .Where(db => db.Parent == uniqueNamespace)
                                 .ToList();
-                            
+
                             if (nsDatabases.Count == 1)
                             {
                                 uniqueDatabase = nsDatabases.First();
                             }
                         }
-                        
+
                         var endpoint = surrealInstance.PrimaryEndpoint;
 
                         writer.WriteStartObject();
 
                         writer.WriteString("id", surrealInstance.Name);
                         writer.WriteString("name", surrealInstance.Name);
-                        
+
                         if (uniqueNamespace is not null)
                         {
                             writer.WriteString("defaultNamespace", uniqueNamespace.NamespaceName);
@@ -360,7 +357,7 @@ public static class SurrealDbBuilderExtensions
                         {
                             writer.WriteString("defaultDatabase", uniqueDatabase.DatabaseName);
                         }
-                        
+
                         writer.WriteStartObject("authentication");
                         writer.WriteString("protocol", "ws");
                         // How to do host resolution?
@@ -374,20 +371,20 @@ public static class SurrealDbBuilderExtensions
                         {
                             writer.WriteString("database", uniqueDatabase.DatabaseName);
                         }
-                        
+
                         writer.WriteEndObject();
-                        
+
                         writer.WriteEndObject();
                     }
                 }
 
                 writer.WriteEndArray();
-                
+
                 writer.WriteEndObject();
-                
+
                 return Task.CompletedTask;
             });
-        
+
         configureContainer?.Invoke(surrealistContainerBuilder);
 
         return builder;
