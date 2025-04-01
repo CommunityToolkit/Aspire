@@ -17,7 +17,6 @@ using static CommunityToolkit.Aspire.Hosting.Dapr.CommandLineArgs;
 namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
 internal sealed class DaprDistributedApplicationLifecycleHook(
-    IDaprPublishingHelper publishingHelper,
     IConfiguration configuration,
     IHostEnvironment environment,
     ILogger<DaprDistributedApplicationLifecycleHook> logger,
@@ -38,8 +37,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
         foreach (var resource in appModel.Resources)
         {
-
-            if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation))
+            var hasSidecarAnnotation = resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation);
+            if (!hasSidecarAnnotation)
             {
                 continue;
             }
@@ -48,10 +47,16 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 ?? GetDefaultDaprPath()
                 ?? throw new DistributedApplicationException("Unable to locate the Dapr CLI.");
 
-            var daprSidecar = daprAnnotation.Sidecar;
+            var daprSidecar = daprAnnotation is not null ? daprAnnotation.Sidecar : new DaprSidecarResource($"{resource.Name}-dapr");
 
+            daprSidecar.Annotations.Add(new ResourceSnapshotAnnotation(new()
+            {
+                Properties = [],
+                ResourceType = "DaprSidecar",
+                State = KnownResourceStates.Hidden
+            }));
 
-            var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
+            var sidecarOptionsAnnotation = resource.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
 
             var sidecarOptions = sidecarOptionsAnnotation?.Options;
 
@@ -127,10 +132,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     {
                         context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
                     }
-
                 }));
             }
-            // It is possible that we have duplicate wate annotations so we just dedupe them here.
+            // It is possible that we have duplicate wait annotations so we just dedupe them here.
             var distinctWaitAnnotationsToCopyToDaprCli = waitAnnotationsToCopyToDaprCli.DistinctBy(w => (w.Resource, w.WaitType));
 
             var daprAppPortArg = (int? port) => ModelNamedArg("--app-port", port);
@@ -142,11 +146,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             var daprAppProtocol = (string? protocol) => ModelNamedArg("--app-protocol", protocol);
 
             var appId = sidecarOptions?.AppId ?? resource.Name;
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            string? maxBodySize = GetValueIfSet(sidecarOptions?.DaprMaxBodySize, sidecarOptions?.DaprHttpMaxRequestSize, "Mi");
-            string? readBufferSize = GetValueIfSet(sidecarOptions?.DaprReadBufferSize, sidecarOptions?.DaprHttpReadBufferSize, "Ki");
-#pragma warning restore CS0618 // Type or member is obsolete
 
             var daprCommandLine =
                 CommandLineBuilder
@@ -305,9 +304,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         context.Writer.TryWriteString("unixDomainSocket", sidecarOptions?.UnixDomainSocket);
                         context.Writer.WriteEndObject();
                     }));
-
-
-            await publishingHelper.ExecuteProviderSpecificRequirements(appModel, resource, sidecarOptions, cancellationToken);
 
             sideCars.Add(daprCli);
         }
