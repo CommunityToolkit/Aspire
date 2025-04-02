@@ -14,13 +14,13 @@
         <div>
             <label>
                 <InputRadio Value="ServiceKeys.Phi3" />
-                @(OllamaClient1.GetService<ChatClientMetadata>()?.ModelId)
+                @(OllamaClient1.GetService<ChatClientMetadata>()?.DefaultModelId)
             </label>
         </div>
         <div>
             <label>
                 <InputRadio Value="ServiceKeys.Llama" />
-                @(OllamaClient2.GetService<ChatClientMetadata>()?.ModelId)
+                @(OllamaClient2.GetService<ChatClientMetadata>()?.DefaultModelId)
             </label>
         </div>
     </InputRadioGroup>

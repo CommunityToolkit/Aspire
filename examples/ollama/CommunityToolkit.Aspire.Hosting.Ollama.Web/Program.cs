@@ -12,8 +12,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.AddOllamaApiClient(ServiceKeys.Phi3).AddChatClient();
-builder.AddOllamaApiClient(ServiceKeys.Llama).AddChatClient();
+builder.AddKeyedOllamaApiClient(ServiceKeys.Phi3).AddKeyedChatClient();
+builder.AddKeyedOllamaApiClient(ServiceKeys.Llama).AddKeyedChatClient();
 
 var app = builder.Build();
 
