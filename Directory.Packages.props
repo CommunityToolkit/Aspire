@@ -68,7 +68,7 @@
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
     <PackageVersion Include="MeiliSearch" Version="0.16.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.3" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.13" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.5.57" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
@@ -100,6 +100,6 @@
   </ItemGroup>
 
   <ItemGroup Label=".NET 9 Overrides" Condition="'$(TargetFramework)' == 'net9.0'">
-    <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" />
+    <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
   </ItemGroup>
 </Project>
