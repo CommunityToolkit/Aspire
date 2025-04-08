@@ -24,7 +24,7 @@ public static class McpInspectorResourceBuilderExtensions
         return resource
             .WithEnvironment(ctx =>
             {
-                ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = resource.GetEndpoint("server-proxy").Url;
+                ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = resource.GetEndpoint("server-proxy");
             });
     }
 
@@ -43,7 +43,8 @@ public static class McpInspectorResourceBuilderExtensions
         {
             var httpEndpoint = mcpServer.Resource.GetEndpoint("http");
 
-            ctx.Args.Add($"{httpEndpoint.Url}{route}");
+            var url = ReferenceExpression.Create($"{httpEndpoint}{route}");
+            ctx.Args.Add(url);
         });
     }
 }
