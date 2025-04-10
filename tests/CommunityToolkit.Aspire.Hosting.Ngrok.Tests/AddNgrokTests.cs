@@ -41,8 +41,7 @@ public class AddNgrokTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var name = "";
-        Assert.Throws<ArgumentException>(() => builder.AddNgrok(name));
+        Assert.Throws<ArgumentException>(() => builder.AddNgrok(""));
     }
     
     [Fact]
@@ -65,18 +64,16 @@ public class AddNgrokTests
     public void AddNgrokEmptyEndpointNameFolderThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var endpointName = "";
 
-        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", endpointName));
+        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", endpointName: ""));
     }
     
     [Fact]
     public void AddNgrokWhitespaceEndpointNameFolderThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var endpointName = "   ";
 
-        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", endpointName));
+        Assert.Throws<ArgumentException>(() => builder.AddNgrok("ngrok", endpointName: "   "));
     }
     
     [Fact]

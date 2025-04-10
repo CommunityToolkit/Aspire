@@ -107,18 +107,16 @@ public static partial class JavaAppHostingExtension
                 await BuildWithMaven(builder.Resource, context.ServiceProvider, context.CancellationToken, false).ConfigureAwait(false) ?
                     new ExecuteCommandResult { Success = true } :
                     new ExecuteCommandResult { Success = false, ErrorMessage = "Failed to build with Maven" },
-            new CommandOptions()
+            (context) => context.ResourceSnapshot.State switch
             {
-                IconName = "build",
-                UpdateState = (context) => context.ResourceSnapshot.State switch
-                {
-                    { Text: "Stopped" } or
-                    { Text: "Exited" } or
-                    { Text: "Finished" } or
-                    { Text: "FailedToStart" } => ResourceCommandState.Enabled,
-                    _ => ResourceCommandState.Disabled
-                },
-            });
+                { Text: "Stopped" } or
+                { Text: "Exited" } or
+                { Text: "Finished" } or
+                { Text: "FailedToStart" } => ResourceCommandState.Enabled,
+                _ => ResourceCommandState.Disabled
+            },
+            iconName: "build"
+        );
 
         return builder;
 

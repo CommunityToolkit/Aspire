@@ -145,6 +145,10 @@ public static partial class OllamaResourceBuilderExtensions
             builder.WithCommand(
                 name: name,
                 displayName: displayName,
+                updateState: context =>
+                    context.ResourceSnapshot.State?.Text == KnownResourceStates.Running ?
+                        ResourceCommandState.Enabled :
+                        ResourceCommandState.Disabled,
                 executeCommand: async context =>
                 {
                     var modelResource = builder.Resource;
@@ -161,15 +165,13 @@ public static partial class OllamaResourceBuilderExtensions
 
                     return await executeCommand(modelResource, ollamaClient, logger, notificationService, context.CancellationToken);
                 },
-                commandOptions: new()
-                {
-                    Description = displayDescription,
-                    Parameter = parameter,
-                    ConfirmationMessage = confirmationMessage,
-                    IconName = iconName,
-                    IconVariant = iconVariant,
-                    IsHighlighted = isHighlighted
-                });
+                displayDescription: displayDescription,
+                parameter: parameter,
+                confirmationMessage: confirmationMessage,
+                iconName: iconName,
+                iconVariant: iconVariant,
+                isHighlighted: isHighlighted
+            );
 
     private static IResourceBuilder<OllamaModelResource> WithModelDownload(this IResourceBuilder<OllamaModelResource> builder)
     {
