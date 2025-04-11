@@ -8,27 +8,27 @@ namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests;
 
 public class ResourceCreationTests
 {
-  [Fact]
-  public void WithReference_WhenAADDisabled_UsesPasswordSecret()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+    [Fact]
+    public void WithReference_WhenAADDisabled_UsesPasswordSecret()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-    var redisState = builder.AddAzureRedis("redisState")
-                            .WithAccessKeyAuthentication()
-                            .RunAsContainer();
+        var redisState = builder.AddAzureRedis("redisState")
+                                .WithAccessKeyAuthentication()
+                                .RunAsContainer();
 
-    var daprState = builder.AddDaprStateStore("statestore")
-        .WithReference(redisState);
+        var daprState = builder.AddDaprStateStore("statestore")
+            .WithReference(redisState);
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
 
-    string redisBicep = redisCache.GetBicepTemplateString();
+        string redisBicep = redisCache.GetBicepTemplateString();
 
-    string expectedRedisBicep = $$"""
+        string expectedRedisBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -56,7 +56,7 @@ public class ResourceCreationTests
             }
 
             resource connectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-              name: 'connectionString'
+              name: 'connectionstrings--redisState'
               properties: {
                 value: '${redisState.properties.hostName},ssl=true,password=${redisState.listKeys().primaryKey}'
               }
@@ -71,19 +71,21 @@ public class ResourceCreationTests
               parent: keyVault
             }
 
+            output name string = redisState.name
+
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
 
             output redisKeyVaultName string = keyVaultName
             """;
 
-    Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
 
-    var componentResources = appModel.Resources.OfType<AzureDaprComponentResource>();
-    var daprResource = Assert.Single(componentResources, _ => _.Name == "redisDaprComponent");
+        var componentResources = appModel.Resources.OfType<AzureDaprComponentResource>();
+        var daprResource = Assert.Single(componentResources, _ => _.Name == "redisDaprComponent");
 
-    string daprBicep = daprResource.GetBicepTemplateString();
+        string daprBicep = daprResource.GetBicepTemplateString();
 
-    string expectedDaprBicep = $$"""
+        string expectedDaprBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -125,29 +127,30 @@ public class ResourceCreationTests
               parent: containerAppEnvironment
             }
             """;
-    Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
+        Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
 
-  }
+    }
 
-  [Fact]
-  public void WithReference_WhenAADEnabled_SkipsPasswordSecret()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+    [Fact]
+    public void WithReference_WhenAADEnabled_SkipsPasswordSecret()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-    var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
+        var redisState = builder.AddAzureRedis("redisState")
+            .RunAsContainer();
 
-    var daprState = builder.AddDaprStateStore("statestore")
-        .WithReference(redisState);
+        var daprState = builder.AddDaprStateStore("statestore")
+            .WithReference(redisState);
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
 
-    string redisBicep = redisCache.GetBicepTemplateString();
+        string redisBicep = redisCache.GetBicepTemplateString();
 
-    string expectedRedisBicep = $$"""
+        string expectedRedisBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -191,15 +194,15 @@ public class ResourceCreationTests
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
             """;
 
-    Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
 
 
-    var componentResources = appModel.Resources.OfType<AzureDaprComponentResource>();
-    var daprResource = Assert.Single(componentResources, _ => _.Name == "redisDaprComponent");
+        var componentResources = appModel.Resources.OfType<AzureDaprComponentResource>();
+        var daprResource = Assert.Single(componentResources, _ => _.Name == "redisDaprComponent");
 
-    string daprBicep = daprResource.GetBicepTemplateString();
+        string daprBicep = daprResource.GetBicepTemplateString();
 
-    string expectedDaprBicep = $$"""
+        string expectedDaprBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -246,36 +249,36 @@ public class ResourceCreationTests
             """;
 
 
-    Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
+        Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
 
-  }
+    }
 
-  [Fact]
-  public void WithReference_WhenTLSDisabled_UsesNonSslPort()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+    [Fact]
+    public void WithReference_WhenTLSDisabled_UsesNonSslPort()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-    var redisState = builder.AddAzureRedis("redisState")
-                            .ConfigureInfrastructure(infr =>
-                            {
-                              var redis = infr.GetProvisionableResources().OfType<AzureRedisResource>().Single();
-                              redis.EnableNonSslPort = true;
-                            })
-                            .RunAsContainer();
+        var redisState = builder.AddAzureRedis("redisState")
+                                .ConfigureInfrastructure(infr =>
+                                {
+                                    var redis = infr.GetProvisionableResources().OfType<AzureRedisResource>().Single();
+                                    redis.EnableNonSslPort = true;
+                                })
+                                .RunAsContainer();
 
-    var daprState = builder.AddDaprStateStore("statestore")
-        .WithReference(redisState);
+        var daprState = builder.AddDaprStateStore("statestore")
+            .WithReference(redisState);
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
 
-    string redisBicep = redisCache.GetBicepTemplateString();
+        string redisBicep = redisCache.GetBicepTemplateString();
 
 
-    string expectedRedisBicep = $$"""
+        string expectedRedisBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -320,26 +323,26 @@ public class ResourceCreationTests
             """;
 
 
-    Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
-  }
+        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+    }
 
-  [Fact]
-  public void WithReference_WhenNonStateType_ThrowsException()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
-
-    var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
-    var ex = Assert.Throws<InvalidOperationException>(() =>
+    [Fact]
+    public void WithReference_WhenNonStateType_ThrowsException()
     {
-      var daprPubSub = builder.AddDaprPubSub("statestore")
-              .WithReference(redisState);
-    });
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-    Assert.Contains("Unsupported Dapr component type: pubsub", ex.Message);
-  }
-  public static string NormalizeLineEndings(string input)
-  {
-    return input.Replace("\r\n", "\n");
-  }
+        var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+        {
+            var daprPubSub = builder.AddDaprPubSub("statestore")
+                .WithReference(redisState);
+        });
+
+        Assert.Contains("Unsupported Dapr component type: pubsub", ex.Message);
+    }
+    public static string NormalizeLineEndings(string input)
+    {
+        return input.Replace("\r\n", "\n");
+    }
 
 }
