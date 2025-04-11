@@ -215,11 +215,14 @@ public static class SqlProjectBuilderExtensions
             var service = context.ServiceProvider.GetRequiredService<SqlProjectPublishService>();
             await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
-        }, updateState: (context) => context.ResourceSnapshot?.State?.Text == KnownResourceStates.Finished ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
-           displayDescription: "Redeploys the SQL Server Database Project to the target database.",
-           iconName: "ArrowReset",
-           iconVariant: IconVariant.Filled,
-           isHighlighted: true);
+        }, new CommandOptions()
+        {
+            Description = "Redeploys the SQL Server Database Project to the target database.",
+            IconName = "ArrowReset",
+            IconVariant = IconVariant.Filled,
+            IsHighlighted = true,
+            UpdateState = (context) => context.ResourceSnapshot?.State?.Text == KnownResourceStates.Finished ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
+        });
 
         return builder;
     }
