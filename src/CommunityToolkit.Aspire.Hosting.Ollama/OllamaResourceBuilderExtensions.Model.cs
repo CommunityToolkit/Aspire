@@ -168,7 +168,11 @@ public static partial class OllamaResourceBuilderExtensions
                     ConfirmationMessage = confirmationMessage,
                     IconName = iconName,
                     IconVariant = iconVariant,
-                    IsHighlighted = isHighlighted
+                    IsHighlighted = isHighlighted,
+                    UpdateState = context =>
+                    context.ResourceSnapshot.State?.Text == KnownResourceStates.Running ?
+                        ResourceCommandState.Enabled :
+                        ResourceCommandState.Disabled,
                 });
 
     private static IResourceBuilder<OllamaModelResource> WithModelDownload(this IResourceBuilder<OllamaModelResource> builder)
