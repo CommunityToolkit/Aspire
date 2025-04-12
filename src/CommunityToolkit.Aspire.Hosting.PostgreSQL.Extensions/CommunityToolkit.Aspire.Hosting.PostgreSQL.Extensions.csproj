@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Adminer\CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
   </ItemGroup>
 

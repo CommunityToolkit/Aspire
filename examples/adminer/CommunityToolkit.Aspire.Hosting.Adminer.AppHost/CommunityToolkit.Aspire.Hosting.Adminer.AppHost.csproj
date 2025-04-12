@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Adminer\CommunityToolkit.Aspire.Hosting.Adminer.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

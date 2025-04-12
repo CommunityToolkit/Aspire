@@ -1,5 +1,8 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.Adminer;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Aspire.Hosting;
 
@@ -50,6 +53,29 @@ public static class PostgresBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="configureContainer"></param>
+    /// <param name="containerName"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<PostgresServerResource> WithAdminer(this IResourceBuilder<PostgresServerResource> builder, Action<IResourceBuilder<AdminerContainerResource>>? configureContainer = null, string? containerName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        containerName ??= $"{builder.Resource.Name}-adminer";
+        var adminerBuilder = AdminerBuilderExtensions.AddAdminer(builder.ApplicationBuilder, containerName);
+
+        adminerBuilder
+            .WithEnvironment(context => ConfigureAdminerContainer(context, builder.ApplicationBuilder))
+            .WaitFor(builder);
+
+        configureContainer?.Invoke(adminerBuilder);
+
+        return builder;
+    }
+
     private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
     {
         var postgresInstances = applicationBuilder.Resources.OfType<PostgresServerResource>();
@@ -95,5 +121,44 @@ public static class PostgresBuilderExtensions
                 context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
             }
         }
+    }
+
+
+    internal static void ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    {
+        var postgresInstances = applicationBuilder.Resources.OfType<PostgresServerResource>();
+
+        string ADMINER_SERVERS = context.EnvironmentVariables.GetValueOrDefault("ADMINER_SERVERS")?.ToString() ?? string.Empty;
+
+        var new_servers = postgresInstances.ToDictionary(
+             postgresServer => postgresServer.Name,
+             postgresServer =>
+             {
+                 var user = postgresServer.UserNameParameter?.Value ?? "postgres";
+                 return new AdminerLoginServer
+                 {
+                     Server = postgresServer.Name,
+                     UserName = user,
+                     Password = postgresServer.PasswordParameter.Value,
+                     Driver = "pgsql"
+                 };
+             });
+
+        if (string.IsNullOrEmpty(ADMINER_SERVERS))
+        {
+            string servers_json = JsonSerializer.Serialize(new_servers);
+            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+        }
+        else
+        {
+            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS);
+            foreach (var server in new_servers)
+            {
+                servers!.Add(server.Key, server.Value);
+            }
+            string servers_json = JsonSerializer.Serialize(new_servers);
+            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+        }
+
     }
 }
