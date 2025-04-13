@@ -42,8 +42,7 @@ public static class PostgresBuilderExtensions
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
-            
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));            
 
         configureContainer?.Invoke(dbGateBuilder);
 
