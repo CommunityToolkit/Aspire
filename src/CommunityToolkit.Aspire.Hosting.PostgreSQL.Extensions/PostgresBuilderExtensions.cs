@@ -175,7 +175,7 @@ public static class PostgresBuilderExtensions
                     servers!.Add(server.Key, server.Value);
                 }
             }
-            string servers_json = JsonSerializer.Serialize(new_servers);
+            string servers_json = JsonSerializer.Serialize(servers);
             context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
         }
 
