@@ -14,6 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions"/>
+    <Compile Include="$(SharedDir)\Adminer\AdminerLoginServer.cs" Link="AdminerLoginServer.cs" />
   </ItemGroup>
 </Project>

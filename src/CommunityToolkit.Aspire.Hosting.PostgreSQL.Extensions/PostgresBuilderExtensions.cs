@@ -1,5 +1,4 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Hosting.Adminer;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -68,8 +67,7 @@ public static class PostgresBuilderExtensions
         var adminerBuilder = AdminerBuilderExtensions.AddAdminer(builder.ApplicationBuilder, containerName);
 
         adminerBuilder
-            .WithEnvironment(context => ConfigureAdminerContainer(context, builder.ApplicationBuilder))
-            .WaitFor(builder);
+            .WithEnvironment(context => ConfigureAdminerContainer(context, builder.ApplicationBuilder));
 
         configureContainer?.Invoke(adminerBuilder);
 
@@ -151,10 +149,13 @@ public static class PostgresBuilderExtensions
         }
         else
         {
-            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS);
+            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
             foreach (var server in new_servers)
             {
-                servers!.Add(server.Key, server.Value);
+                if (!servers.ContainsKey(server.Key))
+                {
+                    servers!.Add(server.Key, server.Value);
+                }
             }
             string servers_json = JsonSerializer.Serialize(new_servers);
             context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;

@@ -15,4 +15,8 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\Adminer\AdminerLoginServer.cs" Link="AdminerLoginServer.cs" />
+  </ItemGroup>
+
 </Project>

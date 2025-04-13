@@ -1,7 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace CommunityToolkit.Aspire.Hosting.Adminer;
-
 internal class AdminerLoginServer
 {
     [JsonPropertyName("server")]
