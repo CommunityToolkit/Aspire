@@ -1,5 +1,4 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Utils;
 using System.Reflection;
 
 namespace Aspire.Hosting;

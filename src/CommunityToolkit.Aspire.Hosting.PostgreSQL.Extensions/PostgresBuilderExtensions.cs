@@ -53,12 +53,30 @@ public static class PostgresBuilderExtensions
     }
 
     /// <summary>
-    /// 
+    /// Adds an administration and development platform for PostgreSQL to the application model using Adminer.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="configureContainer"></param>
-    /// <param name="containerName"></param>
-    /// <returns></returns>
+    /// <remarks>
+    /// This version of the package defaults to the <inheritdoc cref="AdminerContainerImageTags.Tag"/> tag of the <inheritdoc cref="AdminerContainerImageTags.Image"/> container image.
+    /// <param name="builder">The Postgres server resource builder.</param>
+    /// <param name="configureContainer">Configuration callback for Adminer container resource.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <example>
+    /// Use in application host with a Postgres resource
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var postgres = builder.AddPostgres("postgres")
+    ///    .WithAdminer();
+    /// var db = postgres.AddDatabase("db");
+    ///
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
+    ///   .WithReference(db);
+    ///
+    /// builder.Build().Run();
+    /// </code>
+    /// </example>
+    /// </remarks>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<PostgresServerResource> WithAdminer(this IResourceBuilder<PostgresServerResource> builder, Action<IResourceBuilder<AdminerContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
