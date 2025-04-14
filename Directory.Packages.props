@@ -55,7 +55,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Build Dependencies">
-    <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25065.25" />
+    <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25071.13" />
   </ItemGroup>
 
   <ItemGroup Label="Integration Packages">
