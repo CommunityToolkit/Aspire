@@ -101,5 +101,6 @@
 
   <ItemGroup Label=".NET 9 Overrides" Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.0" />
   </ItemGroup>
 </Project>
