@@ -15,7 +15,7 @@
     <AspireVersion>$(AspireMajorVersion).1.0</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>9.0.3</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>9.0.4</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.11.1</OpenTelemetryVersion>
     <TestContainersVersion>4.3.0</TestContainersVersion>
     <MEAIVersion>9.4.0-preview.1.25207.5</MEAIVersion>
