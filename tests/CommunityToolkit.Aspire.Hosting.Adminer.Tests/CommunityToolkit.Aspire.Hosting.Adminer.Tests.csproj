@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\adminer\CommunityToolkit.Aspire.Hosting.Adminer.AppHost\CommunityToolkit.Aspire.Hosting.Adminer.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Adminer\CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\Adminer\AdminerLoginServer.cs" Link="AdminerLoginServer.cs" />
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.Adminer\AdminerContainerImageTags.cs" />
+  </ItemGroup>
+</Project>
