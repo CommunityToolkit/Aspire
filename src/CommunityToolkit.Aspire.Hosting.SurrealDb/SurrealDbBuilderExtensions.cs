@@ -279,7 +279,7 @@ public static class SurrealDbBuilderExtensions
 
         containerName ??= $"{builder.Resource.Name}-surrealist";
 
-        const string CONNECTIONS_FILE_PATH = "/usr/share/nginx/html/connections.json";
+        const string CONNECTIONS_FILE_PATH = "/usr/share/nginx/html/instance.json";
 
         var surrealistContainer = new SurrealistContainerResource(containerName);
         var surrealistContainerBuilder = builder.ApplicationBuilder.AddResource(surrealistContainer)
@@ -305,12 +305,6 @@ public static class SurrealDbBuilderExtensions
                 }
 
                 writer.WriteStartObject();
-
-                if (surrealDbServerResources.Count == 1)
-                {
-                    var uniqueSurrealDbResource = surrealDbServerResources[0];
-                    writer.WriteString("defaultConnection", uniqueSurrealDbResource.Name);
-                }
 
                 writer.WriteStartArray("connections");
 
