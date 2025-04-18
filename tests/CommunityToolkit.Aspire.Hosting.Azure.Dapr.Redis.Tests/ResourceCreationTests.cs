@@ -154,10 +154,6 @@ public class ResourceCreationTests
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
-            param principalId string
-
-            param principalName string
-
             resource redisState 'Microsoft.Cache/redis@2024-03-01' = {
               name: take('redisState-${uniqueString(resourceGroup().id)}', 63)
               location: location
@@ -179,17 +175,9 @@ public class ResourceCreationTests
               }
             }
 
-            resource redisState_contributor 'Microsoft.Cache/redis/accessPolicyAssignments@2024-03-01' = {
-              name: take('redisstatecontributor${uniqueString(resourceGroup().id)}', 24)
-              properties: {
-                accessPolicyName: 'Data Contributor'
-                objectId: principalId
-                objectIdAlias: principalName
-              }
-              parent: redisState
-            }
-
             output connectionString string = '${redisState.properties.hostName},ssl=true'
+
+            output name string = redisState.name
 
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
             """;
@@ -282,10 +270,6 @@ public class ResourceCreationTests
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
-            param principalId string
-
-            param principalName string
-
             resource redisState 'Microsoft.Cache/redis@2024-03-01' = {
               name: take('redisState-${uniqueString(resourceGroup().id)}', 63)
               location: location
@@ -307,17 +291,9 @@ public class ResourceCreationTests
               }
             }
 
-            resource redisState_contributor 'Microsoft.Cache/redis/accessPolicyAssignments@2024-03-01' = {
-              name: take('redisstatecontributor${uniqueString(resourceGroup().id)}', 24)
-              properties: {
-                accessPolicyName: 'Data Contributor'
-                objectId: principalId
-                objectIdAlias: principalName
-              }
-              parent: redisState
-            }
-
             output connectionString string = '${redisState.properties.hostName},ssl=true'
+
+            output name string = redisState.name
 
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.port}'
             """;
