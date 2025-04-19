@@ -36,6 +36,8 @@ public class ResourceCreationTests
             },
             async item =>
             {
+                var redisUrl = redisResource.PasswordParameter is not null ?
+                $"redis://:{redisResource.PasswordParameter.Value}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis1", item.Key);
                 Assert.Equal(await redisResource.ConnectionStringExpression.GetValueAsync(default), item.Value);
             },
@@ -139,10 +141,13 @@ public class ResourceCreationTests
                 Assert.Equal("LABEL_redis1", item.Key);
                 Assert.Equal(redisResource1.Name, item.Value);
             },
-            async item =>
+            item =>
             {
+                var redisUrl = redisResource1.PasswordParameter is not null ?
+                $"redis://:{redisResource1.PasswordParameter.Value}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
+
                 Assert.Equal("URL_redis1", item.Key);
-                Assert.Equal(await redisResource1.ConnectionStringExpression.GetValueAsync(default), item.Value);
+                Assert.Equal(redisUrl, item.Value);
             },
             item =>
             {
@@ -154,10 +159,13 @@ public class ResourceCreationTests
                 Assert.Equal("LABEL_redis2", item.Key);
                 Assert.Equal(redisResource2.Name, item.Value);
             },
-            async item =>
+            item =>
             {
+                var redisUrl = redisResource2.PasswordParameter is not null ?
+                $"redis://:{redisResource2.PasswordParameter.Value}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
+
                 Assert.Equal("URL_redis2", item.Key);
-                Assert.Equal(await redisResource2.ConnectionStringExpression.GetValueAsync(default), item.Value);
+                Assert.Equal(redisUrl, item.Value);
             },
             item =>
             {

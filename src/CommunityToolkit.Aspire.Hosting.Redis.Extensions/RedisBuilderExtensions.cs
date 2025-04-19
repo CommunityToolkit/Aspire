@@ -68,7 +68,7 @@ public static class RedisBuilderExtensions
                 $"redis://:{redisResource.PasswordParameter.Value}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
 
             context.EnvironmentVariables.Add($"LABEL_redis{counter}", redisResource.Name);
-            context.EnvironmentVariables.Add($"URL_redis{counter}", $"redis://:{redisResource.PasswordParameter!.Value}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}");
+            context.EnvironmentVariables.Add($"URL_redis{counter}", redisUrl);
             context.EnvironmentVariables.Add($"ENGINE_redis{counter}", "redis@dbgate-plugin-redis");
 
             counter++;
