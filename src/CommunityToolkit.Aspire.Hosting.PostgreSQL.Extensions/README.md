@@ -2,7 +2,7 @@
 
 This integration contains extensions for the [PostgreSQL hosting package](https://nuget.org/packages/Aspire.Hosting.PostgreSQL) for .NET Aspire.
 
-The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) to interact with the PostgreSQL database.
+The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) and [Adminer](https://github.com/vrana/adminer) to interact with the PostgreSQL database.
 
 ## Getting Started
 
@@ -20,7 +20,8 @@ Then, in the _Program.cs_ file of `AppHost`, define an Postgres resource, then c
 
 ```csharp
 var postgres = builder.AddPostgres("postgres")
-    .WithDbGate();
+    .WithDbGate()
+    .WithAdminer();
 ```
 
 ## Additional Information

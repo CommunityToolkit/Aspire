@@ -55,14 +55,14 @@
   </ItemGroup>
 
   <ItemGroup Label="Build Dependencies">
-    <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25065.25" />
+    <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25071.13" />
   </ItemGroup>
 
   <ItemGroup Label="Integration Packages">
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.0.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.3.3" />
-    <PackageVersion Include="OllamaSharp" Version="5.1.7" />
-    <PackageVersion Include="OpenFeature.Contrib.GOFeatureFlag" Version="0.2.0" />
+    <PackageVersion Include="OllamaSharp" Version="5.1.12" />
+    <PackageVersion Include="OpenFeature.Contrib.GOFeatureFlag" Version="0.2.1" />
     <PackageVersion Include="MassTransit" Version="8.4.0" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.4.0" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
@@ -101,5 +101,6 @@
 
   <ItemGroup Label=".NET 9 Overrides" Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.0" />
   </ItemGroup>
 </Project>

@@ -49,6 +49,7 @@ jobs:
             Hosting.SqlDatabaseProjects.Tests,
             Hosting.Sqlite.Tests,
             Hosting.SqlServer.Extensions.Tests,
+            Hosting.Adminer.Tests,
 
             # Client integration tests
             EventStore.Tests,
