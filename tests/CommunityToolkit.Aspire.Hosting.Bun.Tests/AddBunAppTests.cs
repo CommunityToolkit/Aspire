@@ -120,8 +120,9 @@ public class AddBunAppTests
     public void AddBunEmptyNameThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var name = "";
 
-        Assert.Throws<ArgumentException>(() => builder.AddBunApp(""));
+        Assert.Throws<ArgumentException>(() => builder.AddBunApp(name));
     }
 
     [Fact]
