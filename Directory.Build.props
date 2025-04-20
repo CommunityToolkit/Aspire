@@ -37,7 +37,7 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>4</ToolkitMinorVersion>
+    <ToolkitMinorVersion>5</ToolkitMinorVersion>
     <ToolkitPatchVersion>0</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 
