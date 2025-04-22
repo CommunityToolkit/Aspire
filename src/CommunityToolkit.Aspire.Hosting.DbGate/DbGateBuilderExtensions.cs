@@ -80,6 +80,7 @@ public static class DbGateBuilderExtensions
                                                .WithImage(DbGateContainerImageTags.Image, DbGateContainerImageTags.Tag)
                                                .WithImageRegistry(DbGateContainerImageTags.Registry)
                                                .WithHttpEndpoint(targetPort: 3000, port: port, name: DbGateContainerResource.PrimaryEndpointName)
+                                               .WithUrlForEndpoint(DbGateContainerResource.PrimaryEndpointName, e => e.DisplayText = "DbGate Dashboard")
                                                .ExcludeFromManifest();
 
             return dbGateContainerBuilder;
