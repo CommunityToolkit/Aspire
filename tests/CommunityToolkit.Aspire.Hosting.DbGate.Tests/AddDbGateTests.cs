@@ -467,7 +467,7 @@ public class AddDbGateTests
 
     [Fact]
     [RequiresDocker]
-    public async Task AddAddDbGateWithDefaultsAddsUrlAnnotations()
+    public async Task AddDbGateWithDefaultsAddsUrlAnnotations()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
 
