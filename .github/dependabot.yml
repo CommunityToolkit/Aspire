@@ -9,6 +9,10 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      # Ignore Aspire.Hosting and Aspire.Hosting.*   . We have a separate process for updating them
+      - dependency-name: "Aspire.Hosting"
+      - dependency-name: "Aspire.Hosting.*"
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
