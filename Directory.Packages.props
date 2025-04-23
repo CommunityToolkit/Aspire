@@ -65,7 +65,7 @@
     <PackageVersion Include="OpenFeature.Contrib.GOFeatureFlag" Version="0.2.1" />
     <PackageVersion Include="MassTransit" Version="8.4.0" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.4.0" />
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.4.0" />
     <PackageVersion Include="MeiliSearch" Version="0.16.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
