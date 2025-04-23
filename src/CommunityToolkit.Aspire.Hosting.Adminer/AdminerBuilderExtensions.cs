@@ -51,6 +51,7 @@ public static class AdminerBuilderExtensions
                                                .WithImage(AdminerContainerImageTags.Image, AdminerContainerImageTags.Tag)
                                                .WithImageRegistry(AdminerContainerImageTags.Registry)
                                                .WithHttpEndpoint(targetPort: 8080, port: port, name: AdminerContainerResource.PrimaryEndpointName)
+                                               .WithUrlForEndpoint(AdminerContainerResource.PrimaryEndpointName, e => e.DisplayText = "Adminer Dashboard")
                                                .ExcludeFromManifest();
 
             var assembly = Assembly.GetExecutingAssembly();

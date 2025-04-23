@@ -1,5 +1,7 @@
 using System.Net.Sockets;
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
+using Aspire.Hosting.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
 public class AddDbGateTests
@@ -461,5 +463,30 @@ public class AddDbGateTests
 
         var containerResource = Assert.Single(appModel.Resources.OfType<DbGateContainerResource>());
         Assert.Equal("mongodb1-dbgate", containerResource.Name);
+    }
+
+    [Fact]
+    [RequiresDocker]
+    public async Task AddDbGateWithDefaultsAddsUrlAnnotations()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var dbgate = builder.AddDbGate("dbgate");
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
+        {
+            tcs.SetResult();
+            return Task.CompletedTask;
+        });
+
+        var app = await builder.BuildAsync();
+        await app.StartAsync();
+        await tcs.Task;
+
+        var urls = dbgate.Resource.Annotations.OfType<ResourceUrlAnnotation>();
+        Assert.Single(urls, u => u.DisplayText == "DbGate Dashboard");
+
+        await app.StopAsync();
     }
 }
