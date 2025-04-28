@@ -38,7 +38,7 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.1.0" />
