@@ -72,7 +72,7 @@
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.13" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.5.57" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
-    <PackageVersion Include="Microsoft.Build.Locator" Version="1.7.8" />
+    <PackageVersion Include="Microsoft.Build.Locator" Version="1.9.1" />
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.8" />
     <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.8" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
