@@ -70,7 +70,7 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.13" />
-    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.5.57" />
+    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.0.94" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.7.8" />
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.8" />
