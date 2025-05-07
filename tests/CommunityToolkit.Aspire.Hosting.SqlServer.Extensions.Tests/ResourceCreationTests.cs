@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests;
 
@@ -212,4 +213,160 @@ public class ResourceCreationTests
                 Assert.Equal("sqlserver1,sqlserver2", item.Value);
             });
     }
+
+    [Fact]
+    public async Task WithAdminerAddsAnnotations()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var sqlServerResourceBuilder = builder.AddSqlServer("sqlserver")
+            .WithAdminer();
+
+        var sqlserverResource = sqlServerResourceBuilder.Resource;
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var adminerResource = appModel.Resources.OfType<AdminerContainerResource>().SingleOrDefault();
+
+        Assert.NotNull(adminerResource);
+
+        Assert.Equal("sqlserver-adminer", adminerResource.Name);
+
+        var envs = await adminerResource.GetEnvironmentVariableValuesAsync();
+
+        Assert.NotEmpty(envs);
+
+        var servers = new Dictionary<string, AdminerLoginServer>
+        {
+            {
+                "sqlserver",
+                new AdminerLoginServer
+                {
+                    Driver = "mssql",
+                    Server = sqlserverResource.Name,
+                    Password = sqlserverResource.PasswordParameter.Value,
+                    UserName = "sa"
+                }
+            },
+        };
+
+        var envValue = JsonSerializer.Serialize(servers);
+        var item = Assert.Single(envs);
+        Assert.Equal("ADMINER_SERVERS", item.Key);
+        Assert.Equal(envValue, item.Value);
+    }
+
+    [Fact]
+    public void MultipleWithAdminerCallsAddsOneDbGateResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddSqlServer("sqlserver1").WithAdminer();
+        builder.AddSqlServer("sqlserver2").WithAdminer();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var adminerContainer = appModel.Resources.OfType<AdminerContainerResource>().SingleOrDefault();
+        Assert.NotNull(adminerContainer);
+
+        Assert.Equal("sqlserver1-adminer", adminerContainer.Name);
+    }
+
+    [Fact]
+    public void WithAdminerShouldChangeAdminerHostPort()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlserverResourceBuilder = builder.AddSqlServer("sqlserver")
+            .WithAdminer(c => c.WithHostPort(8068));
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var adminerContainer = appModel.Resources.OfType<AdminerContainerResource>().SingleOrDefault();
+        Assert.NotNull(adminerContainer);
+
+        var primaryEndpoint = adminerContainer.Annotations.OfType<EndpointAnnotation>().Single();
+        Assert.Equal(8068, primaryEndpoint.Port);
+    }
+
+    [Fact]
+    public void WithAdminerShouldChangeAdminerContainerImageTag()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlserverResourceBuilder = builder.AddSqlServer("sqlserver")
+            .WithAdminer(c => c.WithImageTag("manualTag"));
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var adminerContainer = appModel.Resources.OfType<AdminerContainerResource>().SingleOrDefault();
+        Assert.NotNull(adminerContainer);
+
+        var containerImageAnnotation = adminerContainer.Annotations.OfType<ContainerImageAnnotation>().Single();
+        Assert.Equal("manualTag", containerImageAnnotation.Tag);
+    }
+
+    [Fact]
+    public async Task WithAdminerAddsAnnotationsForMultipleSqlServerResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var sqlserverResourceBuilder1 = builder.AddSqlServer("sqlserver1")
+            .WithAdminer();
+
+        var sqlserverResource1 = sqlserverResourceBuilder1.Resource;
+
+        var sqlserverResourceBuilder2 = builder.AddSqlServer("sqlserver2")
+            .WithDbGate();
+
+        var sqlserverResource2 = sqlserverResourceBuilder2.Resource;
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var adminerContainer = appModel.Resources.OfType<AdminerContainerResource>().SingleOrDefault();
+
+        Assert.NotNull(adminerContainer);
+
+        Assert.Equal("sqlserver1-adminer", adminerContainer.Name);
+
+        var envs = await adminerContainer.GetEnvironmentVariableValuesAsync();
+
+        Assert.NotEmpty(envs);
+
+        var servers = new Dictionary<string, AdminerLoginServer>
+        {
+            {
+                "sqlserver1",
+                new AdminerLoginServer
+                {
+                    Driver = "mssql",
+                    Server = sqlserverResource1.Name,
+                    Password = sqlserverResource1.PasswordParameter.Value,
+                    UserName = "sa"
+                }
+            },
+            {
+                "sqlserver2",
+                new AdminerLoginServer
+                {
+                    Driver = "mssql",
+                    Server = sqlserverResource2.Name,
+                    Password = sqlserverResource2.PasswordParameter.Value,
+                    UserName = "sa"
+                }
+            }
+        };
+
+        var envValue = JsonSerializer.Serialize(servers);
+        var item = Assert.Single(envs);
+        Assert.Equal("ADMINER_SERVERS", item.Key);
+        Assert.Equal(envValue, item.Value);
+    }
+
 }

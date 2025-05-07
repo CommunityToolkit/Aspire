@@ -2,7 +2,7 @@
 
 This integration contains extensions for the [SqlServer hosting package](https://nuget.org/packages/Aspire.Hosting.SqlServer) for .NET Aspire.
 
-The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) to interact with the SqlServer database.
+The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) and [Adminer](https://github.com/vrana/adminer) to interact with the SqlServer database.
 
 ## Getting Started
 
@@ -20,7 +20,8 @@ Then, in the _Program.cs_ file of `AppHost`, define an SqlServer resource, then 
 
 ```csharp
 var sqlserver = builder.AddSqlServer("sqlserver")
-    .WithDbGate();
+    .WithDbGate()
+    .WithAdminer();
 ```
 
 ## Additional Information
