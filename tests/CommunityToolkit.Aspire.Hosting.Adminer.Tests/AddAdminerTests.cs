@@ -146,6 +146,16 @@ public class AddAdminerTests
 
         var postgresResource2 = postgresResourceBuilder2.Resource;
 
+        var sqlserverResourceBuilder1 = builder.AddSqlServer("sqlserver1")
+            .WithAdminer();
+
+        var sqlserverResource1 = sqlserverResourceBuilder1.Resource;
+
+        var sqlserverResourceBuilder2 = builder.AddSqlServer("sqlserver2")
+            .WithAdminer();
+
+        var sqlserverResource2 = sqlserverResourceBuilder2.Resource;
+
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -181,6 +191,26 @@ public class AddAdminerTests
                     Password = postgresResource2.PasswordParameter.Value,
                     UserName = postgresResource2.UserNameParameter?.Value ?? "postgres"
                 }
+            },
+            {
+                "sqlserver1",
+                new AdminerLoginServer
+                {
+                    Driver = "mssql",
+                    Server = sqlserverResource1.Name,
+                    Password = sqlserverResource1.PasswordParameter.Value,
+                    UserName = "sa"
+                }
+            },
+            {
+                "sqlserver2",
+                new AdminerLoginServer
+                {
+                    Driver = "mssql",
+                    Server = sqlserverResource2.Name,
+                    Password = sqlserverResource2.PasswordParameter.Value,
+                    UserName = "sa"
+                }
             }
         };
 
@@ -199,6 +229,12 @@ public class AddAdminerTests
             .WithAdminer();
 
         builder.AddPostgres("postgres2")
+            .WithAdminer();
+
+        builder.AddSqlServer("sqlserver1")
+            .WithAdminer();
+
+        builder.AddSqlServer("sqlserver2")
             .WithAdminer();
 
         using var app = builder.Build();
