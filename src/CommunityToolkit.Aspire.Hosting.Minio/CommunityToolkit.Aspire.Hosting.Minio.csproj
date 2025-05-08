@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>MinioS3 Hosting integration</AdditionalPackageTags>
+    <Description>A .NET Aspire hosting integration for MinioS#</Description>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Minio" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Minio.Client\CommunityToolkit.Aspire.Minio.Client.csproj" />
+  </ItemGroup>
+  
+</Project>
