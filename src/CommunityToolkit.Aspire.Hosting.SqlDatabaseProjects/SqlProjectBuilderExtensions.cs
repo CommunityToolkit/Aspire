@@ -244,7 +244,7 @@ public static class SqlProjectBuilderExtensions
             },
         };           
 
-        builder.WithCommand( "redeploy", "Deploy", async (context) =>
+        builder.WithCommand("deploy", "Deploy", async (context) =>
         {
             var service = context.ServiceProvider.GetRequiredService<SqlProjectPublishService>();
             await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, context.CancellationToken);
