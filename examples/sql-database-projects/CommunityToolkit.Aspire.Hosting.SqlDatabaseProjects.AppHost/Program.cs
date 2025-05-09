@@ -21,4 +21,8 @@ var connection = builder.AddConnectionString("Aspire");
 builder.AddSqlProject<Projects.SdkProject>("existing-db")
         .WithReference(connection);
 
+var delayedProject = builder.AddSqlProject<Projects.SdkProject>("sdk-project-delayed")
+       .WithReference(database)
+       .WithExplicitStart();
+
 builder.Build().Run();
