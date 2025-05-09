@@ -198,28 +198,14 @@ public static class SqlProjectBuilderExtensions
         {
             builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
             {
-                if (builder.Resource.HasAnnotationOfType<ExplicitStartupAnnotation>())
-                {
-                    await MarkNotStarted(builder, resourceReady.Services);
-                }
-                else
-                {
-                    await RunPublish(builder, target, targetDatabaseName, resourceReady.Services, ct);
-                }
+                await PublishOrMark(builder, target, targetDatabaseName, resourceReady.Services, ct);
             });
         }
         else
         {
             builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => 
             {
-                if (builder.Resource.HasAnnotationOfType<ExplicitStartupAnnotation>())
-                {
-                    await MarkNotStarted(builder, @event.Services);
-                }
-                else
-                {
-                    await RunPublish(builder, target, targetDatabaseName, @event.Services, ct);
-                }
+                await PublishOrMark(builder, target, targetDatabaseName, @event.Services, ct);
             });
         }
 
@@ -252,6 +238,18 @@ public static class SqlProjectBuilderExtensions
         }, commandOptions);
 
         return builder;
+    }
+
+    private static async Task PublishOrMark<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider services, CancellationToken ct) where TResource : IResourceWithDacpac
+    {
+        if (builder.Resource.HasAnnotationOfType<ExplicitStartupAnnotation>())
+        {
+            await MarkNotStarted(builder, services);
+        }
+        else
+        {
+            await RunPublish(builder, target, targetDatabaseName, services, ct);
+        }
     }
 
     private static async Task MarkNotStarted<TResource>(IResourceBuilder<TResource> builder, IServiceProvider serviceProvider)
