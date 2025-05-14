@@ -110,4 +110,25 @@ public class AddSqlProjectTests
         Assert.Single(app.Services.GetServices<SqlProjectPublishService>());
         Assert.Single(app.Services.GetServices<IDacpacDeployer>());
     }
+
+    [Fact]
+    public void AddSqlProject_WithExplicitStart()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
+        appBuilder.AddSqlProject<TestProject>("MySqlProject")
+            .WithReference(targetDatabase)
+            .WithExplicitStart();
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
+        Assert.Equal("MySqlProject", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.HasAnnotationOfType<ExplicitStartupAnnotation>());
+    }
 }

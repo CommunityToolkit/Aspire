@@ -198,33 +198,66 @@ public static class SqlProjectBuilderExtensions
         {
             builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
             {
-                await RunPublish(builder, target, targetDatabaseName, resourceReady.Services, ct);
+                await PublishOrMark(builder, target, targetDatabaseName, resourceReady.Services, ct);
             });
         }
-        else 
+        else
         {
-            builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => {
-                await RunPublish(builder, target, targetDatabaseName, @event.Services, ct);
+            builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => 
+            {
+                await PublishOrMark(builder, target, targetDatabaseName, @event.Services, ct);
             });
         }
 
         builder.WaitFor(target);
 
-        builder.WithCommand("redeploy", "Redeploy", async (context) =>
+        var commandOptions = new CommandOptions
+        {
+            IconName = "ArrowReset",
+            IconVariant = IconVariant.Filled,
+            IsHighlighted = true,
+            Description = "Deploy the SQL Server Database Project to the target database.",
+            UpdateState = (context) =>
+            {
+                if (context.ResourceSnapshot?.State?.Text is string stateText && (stateText == KnownResourceStates.Finished || stateText == KnownResourceStates.NotStarted))
+                {
+                    return ResourceCommandState.Enabled;
+                }
+                else
+                {
+                    return ResourceCommandState.Disabled;
+                }
+            },
+        };           
+
+        builder.WithCommand("deploy", "Deploy", async (context) =>
         {
             var service = context.ServiceProvider.GetRequiredService<SqlProjectPublishService>();
             await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
-        }, new CommandOptions()
-        {
-            Description = "Redeploys the SQL Server Database Project to the target database.",
-            IconName = "ArrowReset",
-            IconVariant = IconVariant.Filled,
-            IsHighlighted = true,
-            UpdateState = (context) => context.ResourceSnapshot?.State?.Text == KnownResourceStates.Finished ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
-        });
+        }, commandOptions);
 
         return builder;
+    }
+
+    private static async Task PublishOrMark<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider services, CancellationToken ct) where TResource : IResourceWithDacpac
+    {
+        if (builder.Resource.HasAnnotationOfType<ExplicitStartupAnnotation>())
+        {
+            await MarkNotStarted(builder, services);
+        }
+        else
+        {
+            await RunPublish(builder, target, targetDatabaseName, services, ct);
+        }
+    }
+
+    private static async Task MarkNotStarted<TResource>(IResourceBuilder<TResource> builder, IServiceProvider serviceProvider)
+        where TResource : IResourceWithDacpac
+    {
+        var resourceNotificationService = serviceProvider.GetRequiredService<ResourceNotificationService>();
+        await resourceNotificationService.PublishUpdateAsync(builder.Resource,
+            state => state with { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, KnownResourceStateStyles.Info) });
     }
 
     private static async Task RunPublish<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider serviceProvider, CancellationToken ct) 
