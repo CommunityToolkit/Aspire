@@ -15,7 +15,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Minio.ApiService\CommunityToolkit.Aspire.Hosting.Minio.ApiService.csproj" />
-    <ProjectReference Include="..\src\CommunityToolkit.Aspire.Hosting.Minio\CommunityToolkit.Aspire.Hosting.Minio.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Minio\CommunityToolkit.Aspire.Hosting.Minio.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

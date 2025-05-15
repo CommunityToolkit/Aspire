@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\src\CommunityToolkit.Aspire.Minio.Client\CommunityToolkit.Aspire.Minio.Client.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Minio.Client\CommunityToolkit.Aspire.Minio.Client.csproj" />
   </ItemGroup>
 
 </Project>

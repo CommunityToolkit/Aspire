@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Aspire.Minio.Client;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Minio;
 using Minio.DataModel.Args;
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Minio;
 using System.Data.Common;
 
 namespace CommunityToolkit.Aspire.Minio.Client;
@@ -9,6 +10,8 @@ namespace CommunityToolkit.Aspire.Minio.Client;
 public sealed class MinioClientSettings
 {
     private const string ConnectionStringEndpoint = "Endpoint";
+    private const string AccessKey = "AccessKey";
+    private const string SecretKey = "SecretKey";
     
     /// <summary>
     /// Endpoint URL
@@ -32,9 +35,10 @@ public sealed class MinioClientSettings
     public ServiceLifetime ServiceLifetime = ServiceLifetime.Singleton;
     
     /// <summary>
-    /// Turn on tracing
+    /// Turn on tracing.
+    /// Isn't aspire tracing compatible yet. <see cref="MinioClient.SetTraceOn"/>
     /// </summary>
-    public bool SetTraceOn { get; set; } = true;
+    public bool SetTraceOn { get; set; } = false;
     
     internal void ParseConnectionString(string? connectionString)
     {
@@ -56,6 +60,17 @@ public sealed class MinioClientSettings
                 Endpoint = serviceUri;
             }
             
+            if (connectionBuilder.TryGetValue(AccessKey, out var accessKey)
+                &&
+                connectionBuilder.TryGetValue(SecretKey, out var secretKey)
+                && 
+                !string.IsNullOrEmpty(accessKey.ToString()) && !string.IsNullOrEmpty(secretKey.ToString()))
+            {
+                Credentials = new MinioCredentials
+                {
+                    AccessKey = accessKey.ToString()!, SecretKey = secretKey.ToString()!
+                };
+            }
         }
     }
 }
