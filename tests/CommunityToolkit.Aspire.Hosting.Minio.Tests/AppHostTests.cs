@@ -23,4 +23,21 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+    
+    [Fact]
+    public async Task ApiServiceCreateData()
+    {
+        var resourceName = "apiservice";
+    
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("minio").WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
+        var httpClient = fixture.CreateHttpClient(resourceName);
+    
+        var bucketName = "somebucket";
+        var createResponse = await httpClient.PutAsync($"/buckets/{bucketName}", null).WaitAsync(TimeSpan.FromMinutes(5));
+        Assert.Equal(HttpStatusCode.OK, createResponse.StatusCode);
+    
+        var getResponse = await httpClient.GetAsync($"/buckets/{bucketName}");
+        Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
+    }
 }
