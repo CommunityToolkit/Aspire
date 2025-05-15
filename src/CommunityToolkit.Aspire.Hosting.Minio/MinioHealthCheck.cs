@@ -9,9 +9,9 @@ internal sealed class MinioHealthCheck : IHealthCheck
     private readonly Uri _minioHealthClusterUri;
     private readonly Uri _minioHealthClusterReadUri;
     
-    public MinioHealthCheck(string minioBaseUrl)
+    public MinioHealthCheck(string minioBaseUrl, HttpClient? httpClient = null)
     {
-        _httpClient = new HttpClient();
+        _httpClient = httpClient ?? new HttpClient();
         _httpClient.BaseAddress = new Uri(minioBaseUrl);
         _minioHealthLiveUri = new Uri("/minio/health/live", UriKind.Relative);
         _minioHealthClusterUri = new Uri("/minio/health/cluster", UriKind.Relative);

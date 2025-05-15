@@ -1,6 +1,4 @@
-﻿using System.Net.Sockets;
-using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Publishing;
+﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Minio;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -38,19 +36,20 @@ public static class MinioBuilderExtensions
         
         var rootPasswordParameter = rootPassword?.Resource ??
                            ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-rootPassword");
+
+        var rootUserParameter = rootUser?.Resource ?? new ParameterResource("user", _ => MinioContainerResource.DefaultUserName);
         
-        var minioContainer = new MinioContainerResource(name, rootUser?.Resource, rootPasswordParameter);
+        var minioContainer = new MinioContainerResource(name, rootUserParameter, rootPasswordParameter);
 
         var builderWithResource = builder
             .AddResource(minioContainer)
-            .WithManifestPublishingCallback(context => WriteMinioContainerToManifest(context, minioContainer))
+            .WithImage(MinioContainerImageTags.Image, MinioContainerImageTags.Tag)
+            .WithImageRegistry(MinioContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: 9000, port: minioPort, name: MinioContainerResource.PrimaryEndpointName)
             .WithHttpEndpoint(targetPort: 9001, port: minioConsolePort, name: "console")
-            .WithAnnotation(new ContainerImageAnnotation { Image = "minio/minio", Tag = "latest" })
             .WithEnvironment("MINIO_ADDRESS", $":{minioPort.ToString()}")
             .WithEnvironment("MINIO_CONSOLE_ADDRESS", $":{minioConsolePort.ToString()}")
-            .WithEnvironment("MINIO_PROMETHEUS_AUTH_TYPE", "public")
-            .WithEnvironment(RootUserEnvVarName, minioContainer.RootUser?.Value ?? MinioContainerResource.DefaultUserName)
+            .WithEnvironment(RootUserEnvVarName, minioContainer.RootUser.Value)
             .WithEnvironment(RootPasswordEnvVarName, minioContainer.RootPassword.Value)
             .WithArgs("server", "/data");
 
@@ -60,7 +59,12 @@ public static class MinioBuilderExtensions
         builder.Services.AddHealthChecks()
             .Add(new HealthCheckRegistration(
                 healthCheckKey,
-                sp => new MinioHealthCheck(endpoint.Url),
+                sp =>
+                {
+                    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("miniohealth");
+                    
+                    return new MinioHealthCheck(endpoint.Url, httpClient);
+                },
                 failureStatus: default,
                 tags: default,
                 timeout: default));
@@ -68,11 +72,5 @@ public static class MinioBuilderExtensions
         builderWithResource.WithHealthCheck(healthCheckKey);
         
         return builderWithResource;
-    }
-
-    private static async Task WriteMinioContainerToManifest(ManifestPublishingContext context, MinioContainerResource resource)
-    {
-        // Want to see if there is interest 
-        await context.WriteContainerAsync(resource);
     }
 }

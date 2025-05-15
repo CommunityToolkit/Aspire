@@ -397,11 +397,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hos
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "minio", "minio", "{0E07BC23-F3CD-490A-AAE4-584155CCC9BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Minio.AppHost", "CommunityToolkit.Aspire.Hosting.Minio.AppHost\CommunityToolkit.Aspire.Hosting.Minio.AppHost.csproj", "{1E5C4C71-C4A3-4097-A98B-3F9903305418}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Minio", "Minio", "{9312BC05-0D3E-47DC-8207-D52B9C09776E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Minio.ApiService", "CommunityToolkit.Aspire.Hosting.Minio.ApiService\CommunityToolkit.Aspire.Hosting.Minio.ApiService.csproj", "{0D7E0D00-52C6-46F5-A386-BFE39A2D0FC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Minio.ApiService", "examples\minio\CommunityToolkit.Aspire.Hosting.Minio.ApiService\CommunityToolkit.Aspire.Hosting.Minio.ApiService.csproj", "{EA012598-A9DA-4B16-B739-809C38FE9C85}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults", "CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults.csproj", "{5E2FEB8D-4C9A-49F7-BE59-6EBD2BB9DBA7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Minio.AppHost", "examples\minio\CommunityToolkit.Aspire.Hosting.Minio.AppHost\CommunityToolkit.Aspire.Hosting.Minio.AppHost.csproj", "{E27961EB-1373-454A-803F-E37928AEC417}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults", "examples\minio\CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults.csproj", "{327B2B1D-6F80-40AF-92F3-27692CC0FFCD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Minio.Client.Tests", "tests\CommunityToolkit.Aspire.Minio.Client.Tests\CommunityToolkit.Aspire.Minio.Client.Tests.csproj", "{8BB20AD3-7175-4ABE-A289-89EA3F9FDF27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1045,18 +1049,22 @@ Global
 		{2FE9355C-E90F-4A32-9D47-F366B498FA84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FE9355C-E90F-4A32-9D47-F366B498FA84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FE9355C-E90F-4A32-9D47-F366B498FA84}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1E5C4C71-C4A3-4097-A98B-3F9903305418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1E5C4C71-C4A3-4097-A98B-3F9903305418}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1E5C4C71-C4A3-4097-A98B-3F9903305418}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1E5C4C71-C4A3-4097-A98B-3F9903305418}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0D7E0D00-52C6-46F5-A386-BFE39A2D0FC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0D7E0D00-52C6-46F5-A386-BFE39A2D0FC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0D7E0D00-52C6-46F5-A386-BFE39A2D0FC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0D7E0D00-52C6-46F5-A386-BFE39A2D0FC2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5E2FEB8D-4C9A-49F7-BE59-6EBD2BB9DBA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5E2FEB8D-4C9A-49F7-BE59-6EBD2BB9DBA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5E2FEB8D-4C9A-49F7-BE59-6EBD2BB9DBA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5E2FEB8D-4C9A-49F7-BE59-6EBD2BB9DBA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA012598-A9DA-4B16-B739-809C38FE9C85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA012598-A9DA-4B16-B739-809C38FE9C85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA012598-A9DA-4B16-B739-809C38FE9C85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA012598-A9DA-4B16-B739-809C38FE9C85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E27961EB-1373-454A-803F-E37928AEC417}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E27961EB-1373-454A-803F-E37928AEC417}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E27961EB-1373-454A-803F-E37928AEC417}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E27961EB-1373-454A-803F-E37928AEC417}.Release|Any CPU.Build.0 = Release|Any CPU
+		{327B2B1D-6F80-40AF-92F3-27692CC0FFCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{327B2B1D-6F80-40AF-92F3-27692CC0FFCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{327B2B1D-6F80-40AF-92F3-27692CC0FFCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{327B2B1D-6F80-40AF-92F3-27692CC0FFCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BB20AD3-7175-4ABE-A289-89EA3F9FDF27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BB20AD3-7175-4ABE-A289-89EA3F9FDF27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BB20AD3-7175-4ABE-A289-89EA3F9FDF27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BB20AD3-7175-4ABE-A289-89EA3F9FDF27}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1254,11 +1262,13 @@ Global
 		{D511F986-68DF-4285-A099-A34AA9224FB3} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{A72C168B-DA5E-4890-B27B-20A73B00D0ED} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
 		{1B06E93D-5E78-415E-B003-EFA042B43BE8} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
-		{2FE9355C-E90F-4A32-9D47-F366B498FA84} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 		{0E07BC23-F3CD-490A-AAE4-584155CCC9BC} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
-		{1E5C4C71-C4A3-4097-A98B-3F9903305418} = {0E07BC23-F3CD-490A-AAE4-584155CCC9BC}
-		{0D7E0D00-52C6-46F5-A386-BFE39A2D0FC2} = {0E07BC23-F3CD-490A-AAE4-584155CCC9BC}
-		{5E2FEB8D-4C9A-49F7-BE59-6EBD2BB9DBA7} = {0E07BC23-F3CD-490A-AAE4-584155CCC9BC}
+		{9312BC05-0D3E-47DC-8207-D52B9C09776E} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{2FE9355C-E90F-4A32-9D47-F366B498FA84} = {9312BC05-0D3E-47DC-8207-D52B9C09776E}
+		{EA012598-A9DA-4B16-B739-809C38FE9C85} = {0E07BC23-F3CD-490A-AAE4-584155CCC9BC}
+		{E27961EB-1373-454A-803F-E37928AEC417} = {0E07BC23-F3CD-490A-AAE4-584155CCC9BC}
+		{327B2B1D-6F80-40AF-92F3-27692CC0FFCD} = {0E07BC23-F3CD-490A-AAE4-584155CCC9BC}
+		{8BB20AD3-7175-4ABE-A289-89EA3F9FDF27} = {9312BC05-0D3E-47DC-8207-D52B9C09776E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}

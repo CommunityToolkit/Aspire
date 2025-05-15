@@ -2,8 +2,8 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var username = builder.AddParameter("user", "admin");
-var password = builder.AddParameter("password", "adminpasswordreallysecret", secret: true);
+var username = builder.AddParameter("user", "minioadmin");
+var password = builder.AddParameter("password", "minioadmin", secret: true);
 
 var minio = builder.AddMinioContainer("minio", username, password);
 

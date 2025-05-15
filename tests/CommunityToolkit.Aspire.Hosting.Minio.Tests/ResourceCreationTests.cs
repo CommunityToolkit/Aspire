@@ -5,11 +5,11 @@ namespace CommunityToolkit.Aspire.Hosting.Minio.Tests;
 public class ResourceCreationTests
 {
     [Fact]
-    public void MinioResourseGetsAdded()
+    public void MinioResourceGetsAdded()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddMinioContainer( "minio");
+        builder.AddMinioContainer("minio");
 
         using var app = builder.Build();
 
@@ -25,7 +25,7 @@ public class ResourceCreationTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddMinioContainer( "minio");
+        builder.AddMinioContainer("minio");
 
         using var app = builder.Build();
 

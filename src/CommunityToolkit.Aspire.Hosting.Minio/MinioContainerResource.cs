@@ -8,17 +8,17 @@
 /// <param name="rootPassword"> A parameter that contains the Minio server admin password</param>
 public sealed class MinioContainerResource(
     string name,
-    ParameterResource? rootUser,
+    ParameterResource rootUser,
     ParameterResource rootPassword) : ContainerResource(name),
     IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
-    internal const string DefaultUserName = "admin";
+    internal const string DefaultUserName = "minioadmin";
 
     /// <summary>
     /// The MiniO root user.
     /// </summary>
-    public ParameterResource? RootUser { get; set; } = rootUser;
+    public ParameterResource RootUser { get; set; } = rootUser;
 
     /// <summary>
     /// The MiniO root password.
@@ -31,15 +31,22 @@ public sealed class MinioContainerResource(
     /// Gets the primary endpoint for the Minio. This endpoint is used for all API calls over HTTP.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
-
-    internal ReferenceExpression RootUserNameReference =>
-        RootUser is not null ?
-            ReferenceExpression.Create($"{RootUser}") :
-            ReferenceExpression.Create($"{DefaultUserName}");
     
     /// <summary>
     /// Gets the connection string expression for the Minio
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression =>
-        ReferenceExpression.Create($"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+    public ReferenceExpression ConnectionStringExpression => GetConnectionString();
+        
+    private ReferenceExpression GetConnectionString()
+    {
+        var builder = new ReferenceExpressionBuilder();
+
+        builder.Append(
+            $"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+            
+        builder.Append($";AccessKey={RootUser.Value}");
+        builder.Append($";SecretKey={RootPassword.Value}");
+
+        return builder.Build();
+    }
 }
