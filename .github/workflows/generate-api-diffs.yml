@@ -12,6 +12,7 @@ permissions:
 jobs:
   generate-and-pr:
     runs-on: ubuntu-latest
+    if: github.repository == 'CommunityToolkit/Aspire'    
     steps:
       - uses: actions/checkout@v4
     

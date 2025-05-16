@@ -7,6 +7,7 @@ on:
       - "src/**"
       - "examples/**"
       - "tests/**"
+      - "tests-app-hosts/**"
       - Directory.Build.props
       - Directory.Build.targets
       - Directory.Packages.props

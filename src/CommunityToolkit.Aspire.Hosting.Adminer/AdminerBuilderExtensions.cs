@@ -46,26 +46,35 @@ public static class AdminerBuilderExtensions
         }
         else
         {
-            var AdminerContainer = new AdminerContainerResource(name);
-            var AdminerContainerBuilder = builder.AddResource(AdminerContainer)
+            var adminerContainer = new AdminerContainerResource(name);
+            var adminerContainerBuilder = builder.AddResource(adminerContainer)
                                                .WithImage(AdminerContainerImageTags.Image, AdminerContainerImageTags.Tag)
                                                .WithImageRegistry(AdminerContainerImageTags.Registry)
                                                .WithHttpEndpoint(targetPort: 8080, port: port, name: AdminerContainerResource.PrimaryEndpointName)
+                                               .WithUrlForEndpoint(AdminerContainerResource.PrimaryEndpointName, e => e.DisplayText = "Adminer Dashboard")
                                                .ExcludeFromManifest();
 
-            var assembly = Assembly.GetExecutingAssembly();
-            var stream = assembly.GetManifestResourceStream("CommunityToolkit.Aspire.Hosting.Adminer.login-servers.php") ?? throw new InvalidOperationException("Unable to load embedded resource 'login-servers.php'.");
-            var tempFile = Path.GetTempFileName();
+            adminerContainerBuilder.WithContainerFiles(
+                destinationPath: "/var/www/html/plugins-enabled",
+                callback: async (context, ct) =>
+                {
+                    var assembly = Assembly.GetExecutingAssembly();
+                    using var stream = assembly.GetManifestResourceStream("CommunityToolkit.Aspire.Hosting.Adminer.login-servers.php") ?? throw new InvalidOperationException("Unable to load embedded resource 'login-servers.php'.");
 
-            using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write))
-            {
-                stream.CopyTo(fileStream);
-            }
+                    using var reader = new StreamReader(stream);
+                    var contents = await reader.ReadToEndAsync(ct);
 
-            // Refactor this to use WithContainerFiles API when Aspire 9.2 available
-            AdminerContainerBuilder.WithBindMount(tempFile, "/var/www/html/plugins-enabled/login-servers.php", isReadOnly: true);
+                    return [
+                        new ContainerFile
+                        {
+                            Contents = contents,
+                            Name = "login-servers.php",
+                        }
+                    ];
+                }
+            );
 
-            return AdminerContainerBuilder;
+            return adminerContainerBuilder;
         }
     }
 }

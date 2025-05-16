@@ -41,8 +41,7 @@ public static class RedisBuilderExtensions
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder))
-            .WaitFor(builder);
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
 
         configureContainer?.Invoke(dbGateBuilder);
 
@@ -65,9 +64,11 @@ public static class RedisBuilderExtensions
         {
 
             // DbGate assumes Redis is being accessed over a default Aspire container network and hardcodes the resource address
-            // This will need to be refactored once updated service discovery APIs are available
+            var redisUrl = redisResource.PasswordParameter is not null ?
+                $"redis://:{redisResource.PasswordParameter.Value}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
+
             context.EnvironmentVariables.Add($"LABEL_redis{counter}", redisResource.Name);
-            context.EnvironmentVariables.Add($"URL_redis{counter}", redisResource.ConnectionStringExpression);
+            context.EnvironmentVariables.Add($"URL_redis{counter}", redisUrl);
             context.EnvironmentVariables.Add($"ENGINE_redis{counter}", "redis@dbgate-plugin-redis");
 
             counter++;

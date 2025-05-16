@@ -10,6 +10,8 @@ namespace Aspire.Hosting
 {
     public static partial class PostgresBuilderExtensions
     {
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> WithAdminer(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.AdminerContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }

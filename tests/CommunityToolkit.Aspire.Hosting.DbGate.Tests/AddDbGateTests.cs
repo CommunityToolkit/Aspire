@@ -1,5 +1,7 @@
 using System.Net.Sockets;
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
+using Aspire.Hosting.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
 public class AddDbGateTests
@@ -333,10 +335,12 @@ public class AddDbGateTests
                 Assert.Equal("LABEL_redis1", item.Key);
                 Assert.Equal(redisResource1.Name, item.Value);
             },
-            async item =>
+            item =>
             {
+                var redisUrl = redisResource1.PasswordParameter is not null ?
+                $"redis://:{redisResource1.PasswordParameter.Value}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis1", item.Key);
-                Assert.Equal(await redisResource1.ConnectionStringExpression.GetValueAsync(default), item.Value);
+                Assert.Equal(redisUrl, item.Value);
             },
             item =>
             {
@@ -348,10 +352,12 @@ public class AddDbGateTests
                 Assert.Equal("LABEL_redis2", item.Key);
                 Assert.Equal(redisResource2.Name, item.Value);
             },
-            async item =>
+            item =>
             {
+                var redisUrl = redisResource2.PasswordParameter is not null ?
+                $"redis://:{redisResource2.PasswordParameter.Value}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis2", item.Key);
-                Assert.Equal(await redisResource2.ConnectionStringExpression.GetValueAsync(default), item.Value);
+                Assert.Equal(redisUrl, item.Value);
             },
             item =>
             {
@@ -457,5 +463,30 @@ public class AddDbGateTests
 
         var containerResource = Assert.Single(appModel.Resources.OfType<DbGateContainerResource>());
         Assert.Equal("mongodb1-dbgate", containerResource.Name);
+    }
+
+    [Fact]
+    [RequiresDocker]
+    public async Task AddDbGateWithDefaultsAddsUrlAnnotations()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var dbgate = builder.AddDbGate("dbgate");
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
+        {
+            tcs.SetResult();
+            return Task.CompletedTask;
+        });
+
+        var app = await builder.BuildAsync();
+        await app.StartAsync();
+        await tcs.Task;
+
+        var urls = dbgate.Resource.Annotations.OfType<ResourceUrlAnnotation>();
+        Assert.Single(urls, u => u.DisplayText == "DbGate Dashboard");
+
+        await app.StopAsync();
     }
 }

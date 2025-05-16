@@ -129,8 +129,6 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             }
             else
             {
-                //EventStore shutdown can be slightly delayed, so second instance might fail to start when using the same bind mount before shutdown.
-                await Task.Delay(TimeSpan.FromSeconds(5));
                 eventstore2.WithDataBindMount(bindMountPath!);
             }
 

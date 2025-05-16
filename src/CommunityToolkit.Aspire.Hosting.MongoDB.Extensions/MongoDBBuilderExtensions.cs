@@ -42,8 +42,7 @@ public static class MongoDBBuilderExtensions
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder))
-            .WaitFor(builder);
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
 
         configureContainer?.Invoke(dbGateBuilder);
 

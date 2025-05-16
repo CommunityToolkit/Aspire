@@ -24,12 +24,12 @@
     <PackageVersion Include="AspNetCore.HealthChecks.Sqlite" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
-    <PackageVersion Include="Dapr.AspNetCore" Version="1.15.2" />
-    <PackageVersion Include="Dapr.Client" Version="1.15.2" />
+    <PackageVersion Include="Dapr.AspNetCore" Version="1.15.3" />
+    <PackageVersion Include="Dapr.Client" Version="1.15.3" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.15" />
     <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
@@ -38,9 +38,9 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
     <!-- .NET packages -->
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.1.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.1.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
@@ -60,15 +60,15 @@
 
   <ItemGroup Label="Integration Packages">
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.0.0" />
-    <PackageVersion Include="JsonSchema.Net" Version="7.3.3" />
+    <PackageVersion Include="JsonSchema.Net" Version="7.3.4" />
     <PackageVersion Include="OllamaSharp" Version="5.1.12" />
     <PackageVersion Include="OpenFeature.Contrib.GOFeatureFlag" Version="0.2.1" />
     <PackageVersion Include="MassTransit" Version="8.4.0" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.4.0" />
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.6" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.4.0" />
     <PackageVersion Include="MeiliSearch" Version="0.16.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.3" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.13" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="162.5.57" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.4" />
@@ -100,6 +100,7 @@
   </ItemGroup>
 
   <ItemGroup Label=".NET 9 Overrides" Condition="'$(TargetFramework)' == 'net9.0'">
-    <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
+    <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.4" />
   </ItemGroup>
 </Project>
