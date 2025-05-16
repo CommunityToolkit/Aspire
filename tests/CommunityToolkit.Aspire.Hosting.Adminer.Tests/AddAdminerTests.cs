@@ -156,6 +156,17 @@ public class AddAdminerTests
 
         var sqlserverResource2 = sqlserverResourceBuilder2.Resource;
 
+
+        var mysqlResourceBuilder1 = builder.AddMySql("mysql1")
+            .WithAdminer();
+
+        var mysqlResource1 = mysqlResourceBuilder1.Resource;
+
+        var mysqlResourceBuilder2 = builder.AddMySql("mysql2")
+            .WithAdminer();
+
+        var mysqlResource2 = mysqlResourceBuilder2.Resource;
+
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -211,6 +222,26 @@ public class AddAdminerTests
                     Password = sqlserverResource2.PasswordParameter.Value,
                     UserName = "sa"
                 }
+            },
+            {
+                "mysql1",
+                new AdminerLoginServer
+                {
+                    Driver = "server",
+                    Server = mysqlResource1.Name,
+                    Password = mysqlResource1.PasswordParameter.Value,
+                    UserName = "root"
+                }
+            },
+            {
+                "mysql2",
+                new AdminerLoginServer
+                {
+                    Driver = "server",
+                    Server = mysqlResource2.Name,
+                    Password = mysqlResource2.PasswordParameter.Value,
+                    UserName = "root"
+                }
             }
         };
 
@@ -236,6 +267,13 @@ public class AddAdminerTests
 
         builder.AddSqlServer("sqlserver2")
             .WithAdminer();
+
+        builder.AddMySql("mysql1")
+            .WithAdminer();
+
+        builder.AddMySql("mysql2")
+            .WithAdminer();
+
 
         using var app = builder.Build();
 
