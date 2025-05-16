@@ -11,7 +11,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var appName = "vite-demo";
         var httpClient = fixture.CreateHttpClient(appName);
 
-        await fixture.App.WaitForTextAsync("VITE", appName).WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(appName).WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/");
 
@@ -24,7 +24,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var appName = "oak-demo";
         var httpClient = fixture.CreateHttpClient(appName);
 
-        await fixture.App.WaitForTextAsync("Server listening on port ", appName).WaitAsync(TimeSpan.FromSeconds(30));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(appName).WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/weather");
 
