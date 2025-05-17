@@ -20,4 +20,14 @@ var sqlserver2 = builder.AddSqlServer("sqlserver2")
 sqlserver2.AddDatabase("db7");
 sqlserver2.AddDatabase("db8");
 
+var mysql1 = builder.AddMySql("mysql1")
+    .WithAdminer();
+mysql1.AddDatabase("db9");
+mysql1.AddDatabase("db10");
+
+var mysql2 = builder.AddMySql("mysql2")
+    .WithAdminer();
+mysql2.AddDatabase("db11");
+mysql2.AddDatabase("db12");
+
 builder.Build().Run();
