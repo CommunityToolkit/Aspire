@@ -57,7 +57,7 @@ public class AddDaprPubSubTests
         Assert.True(daprResource.TryGetAnnotationsOfType<ResourceSnapshotAnnotation>(out var annotations));
         var annotation = Assert.Single(annotations);
 
-        Assert.Equal(KnownResourceStates.Hidden, annotation.InitialSnapshot.State?.Text);
+        Assert.True(annotation.InitialSnapshot.IsHidden);
     }
 
     [Fact]
