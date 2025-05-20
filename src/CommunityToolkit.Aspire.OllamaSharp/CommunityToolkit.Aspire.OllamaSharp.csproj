@@ -3,7 +3,6 @@
   <PropertyGroup>
     <Description>A .NET Aspire client integration for the OllamaSharp library.</Description>
     <AdditionalPackageTags>ollama ai ollamasharp client</AdditionalPackageTags>
-    <IsPreview>true</IsPreview>
   </PropertyGroup>
 
   <ItemGroup>
