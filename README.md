@@ -47,6 +47,8 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`Hosting.LavinMQ`][lavinmq-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.LavinMQ][lavinmq-shields]][lavinmq-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.LavinMQ][lavinmq-shields-preview]][lavinmq-nuget-preview]                                                                                                       | An Aspire hosting integration for [LavinMQ](https://www.lavinmq.com).                                                                                                                                                          |
 | - **Learn More**: [`Hosting.MailPit`][mailpit-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.MailPit][mailpit-ext-shields]][mailpit-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.MailPit][mailpit-ext-shields-preview]][mailpit-ext-nuget-preview]                                                                                       | An Aspire integration leveraging the [MailPit](https://mailpit.axllent.org/) container.                                                                                                                                        |
 | - **Learn More**: [`Hosting.k6`][k6-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.k6][k6-shields]][k6-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.k6][k6-shields-preview]][k6-nuget-preview]                                                                                       | An Aspire integration leveraging the [Grafana k6](https://k6.io/) container.                                                                                                                                        |
+| - **Learn More**: [`Hosting.MySql.Extensions`][mysql-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.MySql.Extensions][mysql-ext-shields]][mysql-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.MySql.Extensions][mysql-ext-shields-preview]][mysql-ext-nuget-preview]                                                          | An integration that contains some additional extensions for hosting MySql container.                                                                                                                                      |
+
 
 ## 🙌 Getting Started
 
@@ -246,3 +248,8 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [k6-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.k6/
 [k6-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.k6?label=nuget%20(preview)
 [k6-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.k6/absoluteLatest
+[mysql-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-mysql-extensions
+[mysql-ext-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.MySql.Extensions
+[mysql-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.MySql.Extensions/
+[mysql-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.MySql.Extensions?label=nuget%20(preview)
+[mysql-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.MySql.Extensions/absoluteLatest
