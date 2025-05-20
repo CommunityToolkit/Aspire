@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Redis.Extensions\CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.MySql.Extensions\CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 

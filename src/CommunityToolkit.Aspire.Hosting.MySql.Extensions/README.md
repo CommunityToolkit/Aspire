@@ -2,7 +2,7 @@
 
 This integration contains extensions for the [MySql hosting package](https://nuget.org/packages/Aspire.Hosting.MySql) for .NET Aspire.
 
-The integration provides support for running [Adminer](https://github.com/vrana/adminer) to interact with the MySql database.
+The integration provides support for running [Adminer](https://github.com/vrana/adminer) and [DbGate](https://github.com/dbgate/dbgate) to interact with the MySql database.
 
 ## Getting Started
 
@@ -20,6 +20,7 @@ Then, in the _Program.cs_ file of `AppHost`, define an MySql resource, then call
 
 ```csharp
 var mysql = builder.AddMySql("mysql")
+    .WithDbGate()
     .WithAdminer();
 ```
 
