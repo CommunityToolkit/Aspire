@@ -4,8 +4,9 @@ var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiA
     .WithHttpHealthCheck("/health");
 
 var web = builder
-    .AddNpmApp("web", Path.Combine(builder.AppHostDirectory, "..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"), "dev")
-    .WithHttpEndpoint(env: "PORT")
+    .AddViteApp("web", Path.Combine(builder.AppHostDirectory, "..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"))
+    .WithNpmPackageInstallation()
+    //.AddNpmApp("web", Path.Combine(builder.AppHostDirectory, "..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"), "dev")
     .WithHttpHealthCheck("/");
 
 _ = builder
