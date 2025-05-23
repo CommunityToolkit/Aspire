@@ -9,7 +9,7 @@ public class SwaResourceOptions
     /// Gets or sets the port number on which the Static Web App will run.
     /// Default value is 4280.
     /// </summary>
-    public int Port { get; set; } = Random.Shared.Next(4280, 5280);
+    public int Port { get; set; } = 4280;
 
     /// <summary>
     /// Gets or sets the timeout duration (in seconds) for the development server.

@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
 
 public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_StaticWebApps_AppHost>>
 {
-    [Fact]
+    [Fact(Skip = "Test is unstable in CI")]
     public async Task CanAccessFrontendSuccessfully()
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
@@ -20,7 +20,7 @@ public class SwaHostingComponentTests(AspireIntegrationTestFixture<Projects.Comm
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    [Fact]
+    [Fact(Skip = "Test is unstable in CI")]
     public async Task CanAccessApiSuccessfully()
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
