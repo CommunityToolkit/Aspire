@@ -6,12 +6,13 @@ var api = builder.AddProject<Projects.CommunityToolkit_Aspire_StaticWebApps_ApiA
 var web = builder
     .AddViteApp("web", Path.Combine(builder.AppHostDirectory, "..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"))
     .WithNpmPackageInstallation()
-    //.AddNpmApp("web", Path.Combine(builder.AppHostDirectory, "..", "CommunityToolkit.Aspire.StaticWebApps.WebApp"), "dev")
     .WithHttpHealthCheck("/");
 
+#pragma warning disable CTASPIRE003 // Type or member is obsolete
 _ = builder
     .AddSwaEmulator("swa")
     .WithAppResource(web)
     .WithApiResource(api);
+#pragma warning restore CTASPIRE003 // Type or member is obsolete
 
 builder.Build().Run();

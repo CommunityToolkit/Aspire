@@ -7,6 +7,11 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Initializes a new instance of the <see cref="SwaAppEndpointAnnotation"/> class.
 /// </remarks>
 /// <param name="resource">The resource builder for the endpoint.</param>
+[Obsolete(
+    message: "The SWA emulator integration is going to be removed in a future release.",
+    error: false,
+    DiagnosticId = "CTASPIRE003",
+    UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
 public class SwaAppEndpointAnnotation(IResourceBuilder<IResourceWithEndpoints> resource) : IResourceAnnotation
 {
     /// <summary>
