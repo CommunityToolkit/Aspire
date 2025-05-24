@@ -5,6 +5,11 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for adding and configuring Static Web Apps emulator.
 /// </summary>
+[Obsolete(
+    message: "The SWA emulator integration is going to be removed in a future release.",
+    error: false,
+    DiagnosticId = "CTASPIRE003",
+    UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
 public static class SwaAppHostingExtension
 {
     /// <summary>
@@ -14,6 +19,11 @@ public static class SwaAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This resource will not be included in the published manifest.</remarks>
+    [Obsolete(
+        message: "The SWA emulator integration is going to be removed in a future release.",
+        error: false,
+        DiagnosticId = "CTASPIRE003",
+        UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, [ResourceName] string name) =>
         builder.AddSwaEmulator(name, new SwaResourceOptions());
 
@@ -25,6 +35,11 @@ public static class SwaAppHostingExtension
     /// <param name="options">The <see cref="SwaResourceOptions"/> to configure the SWA CLI.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This resource will not be included in the published manifest.</remarks>
+    [Obsolete(
+        message: "The SWA emulator integration is going to be removed in a future release.",
+        error: false,
+        DiagnosticId = "CTASPIRE003",
+        UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public static IResourceBuilder<SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, [ResourceName] string name, SwaResourceOptions options)
     {
         var resource = new SwaResource(name, Environment.CurrentDirectory);
@@ -62,6 +77,11 @@ public static class SwaAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="appResource">The existing <see cref="IResourceBuilder{IResourceWithEndpoint}"/> to use as the <c>--app-devserver-url</c> argument.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [Obsolete(
+        message: "The SWA emulator integration is going to be removed in a future release.",
+        error: false,
+        DiagnosticId = "CTASPIRE003",
+        UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public static IResourceBuilder<SwaResource> WithAppResource(this IResourceBuilder<SwaResource> builder, IResourceBuilder<IResourceWithEndpoints> appResource) =>
         builder.WithAnnotation<SwaAppEndpointAnnotation>(new(appResource), ResourceAnnotationMutationBehavior.Replace).WaitFor(appResource);
 
@@ -71,6 +91,11 @@ public static class SwaAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="apiResource">The existing <see cref="IResourceBuilder{IResourceWithEndpoint}"/> to use as the <c>--api-devserver-url</c> argument.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [Obsolete(
+        message: "The SWA emulator integration is going to be removed in a future release.",
+        error: false,
+        DiagnosticId = "CTASPIRE003",
+        UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public static IResourceBuilder<SwaResource> WithApiResource(this IResourceBuilder<SwaResource> builder, IResourceBuilder<IResourceWithEndpoints> apiResource) =>
         builder.WithAnnotation<SwaApiEndpointAnnotation>(new(apiResource), ResourceAnnotationMutationBehavior.Replace).WaitFor(apiResource);
 }
