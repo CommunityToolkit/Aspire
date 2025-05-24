@@ -51,30 +51,184 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var minioClient = host.Services.GetRequiredService<IMinioClient>();
 
-        var bucketName = "somebucket";
+        await TestApi(minioClient);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
+    {
+        string? volumeName = null;
+        string? bindMountPath = null;
+
+        try
+        {
+            using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+            var rootUser = "minioadmin";
+            var port = 9000;
+
+            var passwordParameter = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder1,
+                $"rootPassword");
+            builder1.Configuration["Parameters:rootPassword"] = passwordParameter.Value;
+            var rootPasswordParameter = builder1.AddParameter(passwordParameter.Name);
+            
+            var minio = builder1.AddMinioContainer("minio",
+                builder1.AddParameter("username", rootUser),
+                rootPasswordParameter,
+                minioPort: port);
+            
+            if (useVolume)
+            {
+                // Use a deterministic volume name to prevent them from exhausting the machines if deletion fails
+                volumeName = VolumeNameGenerator.Generate(minio, nameof(WithDataShouldPersistStateBetweenUsages));
+
+                // if the volume already exists (because of a crashing previous run), delete it
+                DockerUtils.AttemptDeleteDockerVolume(volumeName, throwOnFailure: true);
+                minio.WithDataVolume(volumeName);
+            }
+            else
+            {
+                bindMountPath = Directory.CreateTempSubdirectory().FullName;
+                minio.WithDataBindMount(bindMountPath);
+            }
+
+            using (var app = builder1.Build())
+            {
+                await app.StartAsync();
+
+                var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+                await rns.WaitForResourceHealthyAsync(minio.Resource.Name);
+                
+                try
+                {
+                    var webApplicationBuilder = Host.CreateApplicationBuilder();
         
-        var mbArgs = new MakeBucketArgs()
-            .WithBucket(bucketName);
-        await minioClient.MakeBucketAsync(mbArgs);
-
-        var res = await minioClient.ListBucketsAsync();
-
-        Assert.NotEmpty(res.Buckets);
-
-        var bytearr = "Hey, I'm using minio client! It's awesome!"u8.ToArray();
-        var stream = new MemoryStream(bytearr);
-
-        var objectName = "someobj";
-        var contentType = "text/plain";
+                    webApplicationBuilder.Services.AddMinio(configureClient => configureClient
+                        .WithEndpoint("localhost", port)
+                        .WithCredentials(rootUser, passwordParameter.Value)
+                        .WithSSL(false)
+                        .Build());
         
-        var putObjectArgs = new PutObjectArgs()
-            .WithBucket(bucketName)
-            .WithObject(objectName)
-            .WithStreamData(stream)
-            .WithObjectSize(stream.Length)
-            .WithContentType(contentType);
+                    using var host = webApplicationBuilder.Build();
+
+                    await host.StartAsync();
+
+                    var minioClient = host.Services.GetRequiredService<IMinioClient>();
+                    await TestApi(minioClient);
+                }
+                finally
+                {
+                    // Stops the container, or the Volume would still be in use
+                    await app.StopAsync();
+                }
+            }
+            
+            using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
+            builder2.Configuration["Parameters:rootPassword"] = passwordParameter.Value;
+            var rootPasswordParameter2 = builder2.AddParameter(passwordParameter.Name);
+            
+            
+            var minio2 = builder2.AddMinioContainer("minio",
+                builder2.AddParameter("username", rootUser),
+                rootPasswordParameter2,
+                minioPort: port);
+
+            if (useVolume)
+            {
+                minio2.WithDataVolume(volumeName);
+            }
+            else
+            {
+                minio2.WithDataBindMount(bindMountPath!);
+            }
+
+            using (var app = builder2.Build())
+            {
+                await app.StartAsync();
+
+                var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+                await rns.WaitForResourceHealthyAsync(minio.Resource.Name);
+                
+                
+                try
+                {
+                    var webApplicationBuilder = Host.CreateApplicationBuilder();
         
-        await minioClient.PutObjectAsync(putObjectArgs);
+                    webApplicationBuilder.Services.AddMinio(configureClient => configureClient
+                        .WithEndpoint("localhost", port)
+                        .WithCredentials(rootUser, passwordParameter.Value)
+                        .WithSSL(false)
+                        .Build());
+        
+                    using var host = webApplicationBuilder.Build();
+
+                    await host.StartAsync();
+
+                    var minioClient = host.Services.GetRequiredService<IMinioClient>();
+                    await TestApi(minioClient, isDataPreGenerated: false);
+                }
+                finally
+                {
+                    // Stops the container, or the Volume would still be in use
+                    await app.StopAsync();
+                }
+            }
+
+        }
+        finally
+        {
+            if (volumeName is not null)
+            {
+                DockerUtils.AttemptDeleteDockerVolume(volumeName);
+            }
+
+            if (bindMountPath is not null)
+            {
+                try
+                {
+                    Directory.Delete(bindMountPath, recursive: true);
+                }
+                catch
+                {
+                    // Don't fail test if we can't clean the temporary folder
+                }
+            }
+        }
+    }
+
+    private static async Task TestApi(IMinioClient minioClient, bool isDataPreGenerated = true)
+    {
+        const string bucketName = "somebucket";
+
+        const string objectName = "someobj";
+        const string contentType = "text/plain";
+        
+        if (isDataPreGenerated)
+        {
+            var mbArgs = new MakeBucketArgs()
+                .WithBucket(bucketName);
+            await minioClient.MakeBucketAsync(mbArgs);
+
+            var res = await minioClient.ListBucketsAsync();
+
+            Assert.NotEmpty(res.Buckets);
+
+            var bytearr = "Hey, I'm using minio client! It's awesome!"u8.ToArray();
+            var stream = new MemoryStream(bytearr);
+        
+            var putObjectArgs = new PutObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName)
+                .WithStreamData(stream)
+                .WithObjectSize(stream.Length)
+                .WithContentType(contentType);
+        
+            await minioClient.PutObjectAsync(putObjectArgs);
+        }
         
         var statObject = new StatObjectArgs()
             .WithBucket(bucketName)

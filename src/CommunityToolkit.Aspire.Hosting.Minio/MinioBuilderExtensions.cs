@@ -73,4 +73,63 @@ public static class MinioBuilderExtensions
         
         return builderWithResource;
     }
+    
+    /// <summary>
+    /// Adds a named volume for the data folder to a Minio container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <example>
+    /// Add an Minio container to the application model and reference it in a .NET project. Additionally, in this
+    /// example a data volume is added to the container to allow data to be persisted across container restarts.
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var minio = builder.AddMinio("minio")
+    /// .WithDataVolume();
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
+    ///   .WithReference(minio);
+    ///  
+    /// builder.Build().Run(); 
+    /// </code>
+    /// </example>
+    /// </remarks>
+    public static IResourceBuilder<MinioContainerResource> WithDataVolume(this IResourceBuilder<MinioContainerResource> builder, string? name = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/data");
+    }
+
+    /// <summary>
+    /// Adds a bind mount for the data folder to a Minio container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="source">The source directory on the host to mount into the container.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <example>
+    /// Add an Minio container to the application model and reference it in a .NET project. Additionally, in this
+    /// example a bind mount is added to the container to allow data to be persisted across container restarts.
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var minio = builder.AddMinio("minio")
+    /// .WithDataBindMount("./data/minio/data");
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
+    ///   .WithReference(minio);
+    ///  
+    /// builder.Build().Run(); 
+    /// </code>
+    /// </example>
+    /// </remarks>
+    public static IResourceBuilder<MinioContainerResource> WithDataBindMount(this IResourceBuilder<MinioContainerResource> builder, string source)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(source);
+
+        return builder.WithBindMount(source, "/data");
+    }
 }
