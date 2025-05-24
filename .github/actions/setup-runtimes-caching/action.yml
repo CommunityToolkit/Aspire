@@ -100,6 +100,7 @@ runs:
         npm install -g @azure/static-web-apps-cli
         cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
         npm ci
+        dotnet dev-certs https --trust
 
     - name: Login to docker
       uses: docker/login-action@v3
