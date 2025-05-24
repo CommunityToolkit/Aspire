@@ -159,4 +159,213 @@ public class ResourceCreationTests
         Assert.Equal("ADMINER_SERVERS", item.Key);
         Assert.Equal(envValue, item.Value);
     }
+
+    [Fact]
+    public async Task WithDbGateAddsAnnotations()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var mysqlResourceBuilder = builder.AddMySql("mysql")
+            .WithDbGate();
+
+        var mysqlResource = mysqlResourceBuilder.Resource;
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
+
+        Assert.NotNull(dbGateResource);
+
+        Assert.Equal("mysql-dbgate", dbGateResource.Name);
+
+        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+
+        Assert.NotEmpty(envs);
+        Assert.Collection(envs,
+            item =>
+            {
+                Assert.Equal("LABEL_mysql1", item.Key);
+                Assert.Equal(mysqlResource.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_mysql1", item.Key);
+                Assert.Equal(mysqlResource.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_mysql1", item.Key);
+                Assert.Equal("root", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PASSWORD_mysql1", item.Key);
+                Assert.Equal(mysqlResource.PasswordParameter.Value, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_mysql1", item.Key);
+                Assert.Equal(mysqlResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_mysql1", item.Key);
+                Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("CONNECTIONS", item.Key);
+                Assert.Equal("mysql1", item.Value);
+            });
+    }
+
+    [Fact]
+    public void MultipleWithDbGateCallsAddsOneDbGateResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddMySql("mysql1").WithDbGate();
+        builder.AddMySql("mysql2").WithDbGate();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
+        Assert.NotNull(dbGateResource);
+
+        Assert.Equal("mysql1-dbgate", dbGateResource.Name);
+    }
+
+    [Fact]
+    public void WithDbGateShouldChangeDbGateHostPort()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var mysqlResourceBuilder = builder.AddMySql("mysql")
+            .WithDbGate(c => c.WithHostPort(8068));
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
+        Assert.NotNull(dbGateResource);
+
+        var primaryEndpoint = dbGateResource.Annotations.OfType<EndpointAnnotation>().Single();
+        Assert.Equal(8068, primaryEndpoint.Port);
+    }
+
+    [Fact]
+    public void WithDbGateShouldChangeDbGateContainerImageTag()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var mysqlResourceBuilder = builder.AddMySql("mysql")
+            .WithDbGate(c => c.WithImageTag("manualTag"));
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
+        Assert.NotNull(dbGateResource);
+
+        var containerImageAnnotation = dbGateResource.Annotations.OfType<ContainerImageAnnotation>().Single();
+        Assert.Equal("manualTag", containerImageAnnotation.Tag);
+    }
+
+    [Fact]
+    public async Task WithDbGateAddsAnnotationsForMultipleMySqlResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var mysqlResourceBuilder1 = builder.AddMySql("mysql1")
+            .WithDbGate();
+
+        var mysqlResource1 = mysqlResourceBuilder1.Resource;
+
+        var mysqlResourceBuilder2 = builder.AddMySql("mysql2")
+            .WithDbGate();
+
+        var mysqlResource2 = mysqlResourceBuilder2.Resource;
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
+
+        Assert.NotNull(dbGateResource);
+
+        Assert.Equal("mysql1-dbgate", dbGateResource.Name);
+
+        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+
+        Assert.NotEmpty(envs);
+        Assert.Collection(envs,
+            item =>
+            {
+                Assert.Equal("LABEL_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_mysql1", item.Key);
+                Assert.Equal("root", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PASSWORD_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.PasswordParameter.Value, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_mysql1", item.Key);
+                Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("LABEL_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_mysql2", item.Key);
+                Assert.Equal("root", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PASSWORD_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.PasswordParameter.Value, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_mysql2", item.Key);
+                Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("CONNECTIONS", item.Key);
+                Assert.Equal("mysql1,mysql2", item.Value);
+            });
+    }
 }
