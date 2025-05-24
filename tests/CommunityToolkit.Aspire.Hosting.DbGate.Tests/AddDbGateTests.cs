@@ -221,6 +221,16 @@ public class AddDbGateTests
 
         var sqlserverResource2 = sqlserverResourceBuilder2.Resource;
 
+        var mysqlResourceBuilder1 = builder.AddMySql("mysql1")
+            .WithDbGate();
+
+        var mysqlResource1 = mysqlResourceBuilder1.Resource;
+
+        var mysqlResourceBuilder2 =builder.AddMySql("mysql2")
+            .WithDbGate();
+
+        var mysqlResource2 = mysqlResourceBuilder2.Resource;
+
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -268,7 +278,7 @@ public class AddDbGateTests
             item =>
             {
                 Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2", item.Value);
+                Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2,mysql1,mysql2", item.Value);
             },
             item =>
             {
@@ -423,6 +433,66 @@ public class AddDbGateTests
             {
                 Assert.Equal("ENGINE_sqlserver2", item.Key);
                 Assert.Equal("mssql@dbgate-plugin-mssql", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("LABEL_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_mysql1", item.Key);
+                Assert.Equal("root", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PASSWORD_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.PasswordParameter.Value, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_mysql1", item.Key);
+                Assert.Equal(mysqlResource1.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_mysql1", item.Key);
+                Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("LABEL_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_mysql2", item.Key);
+                Assert.Equal("root", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PASSWORD_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.PasswordParameter.Value, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_mysql2", item.Key);
+                Assert.Equal(mysqlResource2.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_mysql2", item.Key);
+                Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
             });
     }
 
@@ -453,6 +523,12 @@ public class AddDbGateTests
             .WithDbGate();
 
         builder.AddSqlServer("sqlserver2")
+            .WithDbGate();
+
+        builder.AddMySql("mysql1")
+            .WithDbGate();
+
+        builder.AddMySql("mysql2")
             .WithDbGate();
 
         using var app = builder.Build();

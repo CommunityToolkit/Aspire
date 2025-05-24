@@ -3,6 +3,11 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Represents the configuration options for a Static Web App resource.
 /// </summary>
+[Obsolete(
+    message: "The SWA emulator integration is going to be removed in a future release.",
+    error: false,
+    DiagnosticId = "CTASPIRE003",
+    UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
 public class SwaResourceOptions
 {
     /// <summary>

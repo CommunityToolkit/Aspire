@@ -1,3 +1,4 @@
+#pragma warning disable CTASPIRE003
 using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests;
