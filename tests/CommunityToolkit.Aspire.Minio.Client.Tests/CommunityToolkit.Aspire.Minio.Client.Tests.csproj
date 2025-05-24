@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  
   <ItemGroup>
     <PackageReference Include="Testcontainers" />
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Minio\CommunityToolkit.Aspire.Hosting.Minio.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Minio.Client\CommunityToolkit.Aspire.Minio.Client.csproj" />
@@ -11,4 +13,5 @@
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.Minio\MinioContainerImageTags.cs" />
   </ItemGroup>
+  
 </Project>
