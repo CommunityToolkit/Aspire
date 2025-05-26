@@ -27,7 +27,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
             .AddMinioContainer("minio",
                 distributedApplicationBuilder.AddParameter("username", rootUser),
                 rootPasswordParameter,
-                minioPort: port);
+                port: port);
 
         await using var app = await distributedApplicationBuilder.BuildAsync();
         
@@ -77,7 +77,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
             var minio = builder1.AddMinioContainer("minio",
                 builder1.AddParameter("username", rootUser),
                 rootPasswordParameter,
-                minioPort: port);
+                port: port);
             
             if (useVolume)
             {
@@ -134,7 +134,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
             var minio2 = builder2.AddMinioContainer("minio",
                 builder2.AddParameter("username", rootUser),
                 rootPasswordParameter2,
-                minioPort: port);
+                port: port);
 
             if (useVolume)
             {
