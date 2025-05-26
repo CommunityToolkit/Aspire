@@ -18,18 +18,16 @@ public static class MinioBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
-    /// <param name="minioConsolePort">The host port for MinioO Admin.</param>
-    /// <param name="minioPort">The host port for MiniO.</param>
-    /// <param name="rootUser">The root user for the MiniO server.</param>
-    /// <param name="rootPassword">The password for the MiniO root user.</param>
+    /// <param name="port">The host port for MiniO.</param>
+    /// <param name="rootUser">The parameter used to provide the root user name for the MiniO resource. If <see langword="null"/> a default value will be used.</param>
+    /// <param name="rootPassword">The parameter used to provide the administrator password for the MiniO resource. If <see langword="null"/> a random password will be generated.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{MinioContainerResource}"/>.</returns>
     public static IResourceBuilder<MinioContainerResource> AddMinioContainer(
         this IDistributedApplicationBuilder builder,
-        string name,
+        [ResourceName] string name,
         IResourceBuilder<ParameterResource>? rootUser = null,
         IResourceBuilder<ParameterResource>? rootPassword = null,
-        int minioPort = 9000,
-        int minioConsolePort = 9001)
+        int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -39,18 +37,16 @@ public static class MinioBuilderExtensions
 
         var rootUserParameter = rootUser?.Resource ?? new ParameterResource("user", _ => MinioContainerResource.DefaultUserName);
         
-        var minioContainer = new MinioContainerResource(name, rootUserParameter, rootPasswordParameter);
+        var resource = new MinioContainerResource(name, rootUserParameter, rootPasswordParameter);
 
         var builderWithResource = builder
-            .AddResource(minioContainer)
+            .AddResource(resource)
             .WithImage(MinioContainerImageTags.Image, MinioContainerImageTags.Tag)
             .WithImageRegistry(MinioContainerImageTags.Registry)
-            .WithHttpEndpoint(targetPort: 9000, port: minioPort, name: MinioContainerResource.PrimaryEndpointName)
-            .WithHttpEndpoint(targetPort: 9001, port: minioConsolePort, name: "console")
-            .WithEnvironment("MINIO_ADDRESS", $":{minioPort.ToString()}")
-            .WithEnvironment("MINIO_CONSOLE_ADDRESS", $":{minioConsolePort.ToString()}")
-            .WithEnvironment(RootUserEnvVarName, minioContainer.RootUser.Value)
-            .WithEnvironment(RootPasswordEnvVarName, minioContainer.RootPassword.Value)
+            .WithHttpEndpoint(targetPort: 9000, port: port, name: MinioContainerResource.PrimaryEndpointName)
+            .WithHttpEndpoint(targetPort: 9001, name: MinioContainerResource.ConsoleEndpointName)
+            .WithEnvironment(RootUserEnvVarName, resource.RootUser.Value)
+            .WithEnvironment(RootPasswordEnvVarName, resource.PasswordParameter.Value)
             .WithArgs("server", "/data");
 
         var endpoint = builderWithResource.Resource.GetEndpoint(MinioContainerResource.PrimaryEndpointName);
@@ -72,6 +68,52 @@ public static class MinioBuilderExtensions
         builderWithResource.WithHealthCheck(healthCheckKey);
         
         return builderWithResource;
+    }
+    
+    
+    /// <summary>
+    /// Configures the user name that the Minio resource uses.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="userName">The parameter used to provide the user name for the PostgreSQL resource.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<MinioContainerResource> WithUserName(this IResourceBuilder<MinioContainerResource> builder, IResourceBuilder<ParameterResource> userName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(userName);
+
+        builder.Resource.RootUser = userName.Resource;
+        return builder;
+    }
+    
+    /// <summary>
+    /// Configures the password that the MiniO resource is used.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="password">The parameter used to provide the password for the MiniO resource. If <see langword="null"/>, no password will be configured.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<MinioContainerResource> WithPassword(this IResourceBuilder<MinioContainerResource> builder, IResourceBuilder<ParameterResource> password)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.Resource.SetPassword(password.Resource);
+        return builder;
+    }
+    
+    /// <summary>
+    /// Configures the host port that the PGAdmin resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for PGAdmin.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used, a random port will be assigned.</param>
+    /// <returns>The resource builder for PGAdmin.</returns>
+    public static IResourceBuilder<MinioContainerResource> WithHostPort(this IResourceBuilder<MinioContainerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint("http", endpoint =>
+        {
+            endpoint.Port = port;
+        });
     }
     
     /// <summary>
