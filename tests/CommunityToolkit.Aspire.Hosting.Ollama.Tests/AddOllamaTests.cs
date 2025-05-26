@@ -581,13 +581,11 @@ public class AddOllamaTests
         Assert.Equal(ResourceCommandState.Enabled, state);
     }
 
-    [Theory]
-    [InlineData(OllamaGpuVendor.Nvidia, "--gpus", "all")]
-    [InlineData(OllamaGpuVendor.AMD, "--device", "/dev/kfd")]
-    public async Task WithGPUSupport(OllamaGpuVendor vendor, string expectedArg, string expectedValue)
+    [Fact]
+    public async Task WithNvidiaGPUSupport()
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").WithGPUSupport(vendor);
+        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.Nvidia);
 
         using var app = builder.Build();
 
@@ -603,12 +601,53 @@ public class AddOllamaTests
             context.Args,
             arg =>
             {
-                Assert.Equal(expectedArg, arg);
+                Assert.Equal("--gpus", arg);
             },
             arg =>
             {
-                Assert.Equal(expectedValue, arg);
+                Assert.Equal("all", arg);
             }
         );
+    }
+
+    [Fact]
+    public async Task WithAMDGPUSupport()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.AMD);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.True(resource.TryGetLastAnnotation(out ContainerRuntimeArgsCallbackAnnotation? argsAnnotations));
+        ContainerRuntimeArgsCallbackContext context = new([]);
+        await argsAnnotations.Callback(context);
+
+        Assert.Collection(
+            context.Args,
+            arg =>
+            {
+                Assert.Equal("--device", arg);
+            },
+            arg =>
+            {
+                Assert.Equal("/dev/kfd", arg);
+            },
+            arg =>
+            {
+                Assert.Equal("--device", arg);
+            },
+            arg =>
+            {
+                Assert.Equal("/dev/dri", arg);
+            }
+        );
+
+        Assert.True(resource.TryGetLastAnnotation<ContainerImageAnnotation>(out var imageAnnotation));
+        Assert.NotNull(imageAnnotation);
+        Assert.EndsWith("-rocm", imageAnnotation.Tag, StringComparison.OrdinalIgnoreCase);
     }
 }
