@@ -8,17 +8,23 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
+    [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public static partial class SwaAppHostingExtension
     {
+        [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, string name, SwaResourceOptions options) { throw null; }
 
+        [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SwaResource> AddSwaEmulator(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
+        [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SwaResource> WithApiResource(this ApplicationModel.IResourceBuilder<ApplicationModel.SwaResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.IResourceWithEndpoints> apiResource) { throw null; }
 
+        [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SwaResource> WithAppResource(this ApplicationModel.IResourceBuilder<ApplicationModel.SwaResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.IResourceWithEndpoints> appResource) { throw null; }
     }
 
+    [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public partial class SwaResourceOptions
     {
         public int DevServerTimeout { get { throw null; } set { } }
@@ -29,6 +35,7 @@ namespace Aspire.Hosting
 
 namespace Aspire.Hosting.ApplicationModel
 {
+    [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public partial class SwaApiEndpointAnnotation : IResourceAnnotation
     {
         public SwaApiEndpointAnnotation(IResourceBuilder<IResourceWithEndpoints> resource) { }
@@ -36,6 +43,7 @@ namespace Aspire.Hosting.ApplicationModel
         public string Endpoint { get { throw null; } }
     }
 
+    [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public partial class SwaAppEndpointAnnotation : IResourceAnnotation
     {
         public SwaAppEndpointAnnotation(IResourceBuilder<IResourceWithEndpoints> resource) { }
@@ -43,6 +51,7 @@ namespace Aspire.Hosting.ApplicationModel
         public string Endpoint { get { throw null; } }
     }
 
+    [System.Obsolete("The SWA emulator integration is going to be removed in a future release.", false, DiagnosticId = "CTASPIRE003", UrlFormat = "https://github.com/CommunityToolit/aspire/issues/698")]
     public partial class SwaResource : ExecutableResource
     {
         public SwaResource(string name, string workingDirectory) : base(default!, default!, default!) { }

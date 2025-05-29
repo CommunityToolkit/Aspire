@@ -32,4 +32,14 @@ sqlserver2.AddDatabase("db11");
 sqlserver2.AddDatabase("db12");
 
 
+var mysql1 = builder.AddMySql("mysql1")
+    .WithDbGate(c => c.WithHostPort(8068));
+mysql1.AddDatabase("db13");
+mysql1.AddDatabase("db14");
+
+var mysql2 = builder.AddMySql("mysql2")
+    .WithDbGate();
+mysql2.AddDatabase("db15");
+mysql2.AddDatabase("db16");
+
 builder.Build().Run();

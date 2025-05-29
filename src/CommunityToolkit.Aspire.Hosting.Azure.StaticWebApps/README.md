@@ -1,5 +1,7 @@
 # CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps library
 
+**Deprecation warning**: This library is deprecated and will be removed in a future release, refer to https://github.com/CommunityToolkit/Aspire/issues/698 for more information.
+
 Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Azure Static Web Apps locally using the emulator using the [Azure Static Web App CLI](https://learn.microsoft.com/azure/static-web-apps/local-development).
 
 ## Getting Started
