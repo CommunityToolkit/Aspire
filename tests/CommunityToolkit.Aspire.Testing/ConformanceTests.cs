@@ -356,6 +356,7 @@ public abstract class ConformanceTests<TService, TOptions>
     public void ConnectionInformationIsDelayValidated(bool useKey)
     {
         SetupConnectionInformationIsDelayValidated();
+        SkipIfKeyedRegistrationIsNotSupported(useKey);
 
         var builder = Host.CreateEmptyApplicationBuilder(null);
 
