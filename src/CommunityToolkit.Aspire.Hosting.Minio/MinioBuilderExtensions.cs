@@ -53,17 +53,13 @@ public static class MinioBuilderExtensions
         var healthCheckKey = $"{name}_check";
         
         builder.Services.AddHealthChecks()
-            .Add(new HealthCheckRegistration(
-                healthCheckKey,
-                sp =>
-                {
-                    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient("miniohealth");
-                    
-                    return new MinioHealthCheck(endpoint.Url, httpClient);
-                },
-                failureStatus: default,
-                tags: default,
-                timeout: default));
+            .AddUrlGroup(options =>
+            {
+                var uri = new Uri(endpoint.Url);
+                options.AddUri(new Uri(uri,"/minio/health/live"), setup => setup.ExpectHttpCode(200));
+                options.AddUri(new Uri(uri, "/minio/health/cluster"), setup => setup.ExpectHttpCode(200));
+                options.AddUri(new Uri(uri, "/minio/health/cluster/read"), setup => setup.ExpectHttpCode(200));
+            }, healthCheckKey);
 
         builderWithResource.WithHealthCheck(healthCheckKey);
         

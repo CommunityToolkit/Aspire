@@ -79,7 +79,7 @@ public sealed class TestDistributedApplicationBuilder : IDistributedApplicationB
             var cfg = hostBuilderOptions.Configuration ??= new();
             cfg.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["DcpPublisher:RandomizePorts"] = "false",
+                ["DcpPublisher:RandomizePorts"] = "true",
                 ["DcpPublisher:DeleteResourcesOnShutdown"] = "true",
                 ["DcpPublisher:ResourceNameSuffix"] = $"{Random.Shared.Next():x}",
             });
