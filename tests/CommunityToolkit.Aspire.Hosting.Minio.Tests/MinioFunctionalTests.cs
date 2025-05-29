@@ -16,7 +16,6 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
     {
         using var distributedApplicationBuilder = TestDistributedApplicationBuilder.Create(testOutputHelper);
         var rootUser = "minioadmin";
-        var port = 9000;
 
         var passwordParameter = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(distributedApplicationBuilder,
             $"rootPassword");
@@ -26,8 +25,9 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
         var minio = distributedApplicationBuilder
             .AddMinioContainer("minio",
                 distributedApplicationBuilder.AddParameter("username", rootUser),
-                rootPasswordParameter,
-                port: port);
+                rootPasswordParameter);
+
+        var minioEndpoint = minio.GetEndpoint("http");
 
         await using var app = await distributedApplicationBuilder.BuildAsync();
         
@@ -40,7 +40,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
         var webApplicationBuilder = Host.CreateApplicationBuilder();
         
         webApplicationBuilder.Services.AddMinio(configureClient => configureClient
-            .WithEndpoint("localhost", port)
+            .WithEndpoint("localhost", minioEndpoint.Port)
             .WithCredentials(rootUser, passwordParameter.Value)
             .WithSSL(false)
             .Build());
@@ -67,31 +67,31 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
             using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
             var rootUser = "minioadmin";
-            var port = 9000;
 
             var passwordParameter = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder1,
                 $"rootPassword");
             builder1.Configuration["Parameters:rootPassword"] = passwordParameter.Value;
             var rootPasswordParameter = builder1.AddParameter(passwordParameter.Name);
             
-            var minio = builder1.AddMinioContainer("minio",
+            var minio1 = builder1.AddMinioContainer("minio",
                 builder1.AddParameter("username", rootUser),
-                rootPasswordParameter,
-                port: port);
+                rootPasswordParameter);
+
+            var minio1Endpoint = minio1.GetEndpoint("http");
             
             if (useVolume)
             {
                 // Use a deterministic volume name to prevent them from exhausting the machines if deletion fails
-                volumeName = VolumeNameGenerator.Generate(minio, nameof(WithDataShouldPersistStateBetweenUsages));
+                volumeName = VolumeNameGenerator.Generate(minio1, nameof(WithDataShouldPersistStateBetweenUsages));
 
                 // if the volume already exists (because of a crashing previous run), delete it
                 DockerUtils.AttemptDeleteDockerVolume(volumeName, throwOnFailure: true);
-                minio.WithDataVolume(volumeName);
+                minio1.WithDataVolume(volumeName);
             }
             else
             {
                 bindMountPath = Directory.CreateTempSubdirectory().FullName;
-                minio.WithDataBindMount(bindMountPath);
+                minio1.WithDataBindMount(bindMountPath);
             }
 
             using (var app = builder1.Build())
@@ -100,14 +100,14 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(minio.Resource.Name);
+                await rns.WaitForResourceHealthyAsync(minio1.Resource.Name);
                 
                 try
                 {
                     var webApplicationBuilder = Host.CreateApplicationBuilder();
         
                     webApplicationBuilder.Services.AddMinio(configureClient => configureClient
-                        .WithEndpoint("localhost", port)
+                        .WithEndpoint("localhost", minio1Endpoint.Port)
                         .WithCredentials(rootUser, passwordParameter.Value)
                         .WithSSL(false)
                         .Build());
@@ -133,8 +133,9 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
             
             var minio2 = builder2.AddMinioContainer("minio",
                 builder2.AddParameter("username", rootUser),
-                rootPasswordParameter2,
-                port: port);
+                rootPasswordParameter2);
+            
+            var minio2Endpoint = minio2.GetEndpoint("http");
 
             if (useVolume)
             {
@@ -151,7 +152,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(minio.Resource.Name);
+                await rns.WaitForResourceHealthyAsync(minio1.Resource.Name);
                 
                 
                 try
@@ -159,7 +160,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
                     var webApplicationBuilder = Host.CreateApplicationBuilder();
         
                     webApplicationBuilder.Services.AddMinio(configureClient => configureClient
-                        .WithEndpoint("localhost", port)
+                        .WithEndpoint("localhost", minio2Endpoint.Port)
                         .WithCredentials(rootUser, passwordParameter.Value)
                         .WithSSL(false)
                         .Build());
