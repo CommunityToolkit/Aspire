@@ -68,8 +68,8 @@ public sealed class MinioContainerResource : ContainerResource, IResourceWithCon
         builder.Append(
             $"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
 
-        builder.Append($";AccessKey={RootUser.Value}");
-        builder.Append($";SecretKey={PasswordParameter.Value}");
+        builder.Append($";AccessKey={RootUser}");
+        builder.Append($";SecretKey={PasswordParameter}");
 
         return builder.Build();
     }
