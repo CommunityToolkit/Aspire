@@ -389,6 +389,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mysql-ext", "mysql-ext", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests", "tests\CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests\CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj", "{D511F986-68DF-4285-A099-A34AA9224FB3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.PowerShell", "src\CommunityToolkit.Aspire.Hosting.PowerShell\CommunityToolkit.Aspire.Hosting.PowerShell.csproj", "{9D595162-58C0-5058-5497-5983A3718F84}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "powershell", "powershell", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.PowerShell.AppHost", "examples\powershell\CommunityToolkit.Aspire.PowerShell.AppHost\CommunityToolkit.Aspire.PowerShell.AppHost.csproj", "{85EFF43E-E056-FD85-25AC-12C7C7326144}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityToolkit.Aspire.Hosting.PowerShell.Tests", "tests\CommunityToolkit.Aspire.Hosting.PowerShell.Tests\CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj", "{62D64A2F-A3A9-2019-D09F-53D28F335D5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1019,6 +1027,18 @@ Global
 		{D511F986-68DF-4285-A099-A34AA9224FB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D511F986-68DF-4285-A099-A34AA9224FB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D511F986-68DF-4285-A099-A34AA9224FB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D595162-58C0-5058-5497-5983A3718F84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D595162-58C0-5058-5497-5983A3718F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D595162-58C0-5058-5497-5983A3718F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D595162-58C0-5058-5497-5983A3718F84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85EFF43E-E056-FD85-25AC-12C7C7326144}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85EFF43E-E056-FD85-25AC-12C7C7326144}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85EFF43E-E056-FD85-25AC-12C7C7326144}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85EFF43E-E056-FD85-25AC-12C7C7326144}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62D64A2F-A3A9-2019-D09F-53D28F335D5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62D64A2F-A3A9-2019-D09F-53D28F335D5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62D64A2F-A3A9-2019-D09F-53D28F335D5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62D64A2F-A3A9-2019-D09F-53D28F335D5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1214,6 +1234,10 @@ Global
 		{DE2AB6D9-383A-45EA-8628-8473641054B3} = {11658448-BDD9-4C57-BF02-CEA70CEB8A55}
 		{11658448-BDD9-4C57-BF02-CEA70CEB8A55} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
 		{D511F986-68DF-4285-A099-A34AA9224FB3} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
+		{9D595162-58C0-5058-5497-5983A3718F84} = {414151D4-7009-4E78-A5C6-D99EBD1E67D1}
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {8519CC01-1370-47C8-AD94-B0F326B1563F}
+		{85EFF43E-E056-FD85-25AC-12C7C7326144} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{62D64A2F-A3A9-2019-D09F-53D28F335D5E} = {899F0713-7FC6-4750-BAFC-AC650B35B453}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {08B1D4B8-D2C5-4A64-BB8B-E1A2B29525F0}
