@@ -6,7 +6,7 @@
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.3.0" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
@@ -17,8 +17,7 @@
     <PackageVersion Include="Aspire.Hosting.Redis" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
-    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
+    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />    
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -82,6 +81,7 @@
     <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
