@@ -6,8 +6,9 @@
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.3.0" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
-		<PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.NodeJS" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
@@ -17,6 +18,7 @@
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
+    <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -54,11 +56,9 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
     <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="$(OpenTelemetryVersion)" />
   </ItemGroup>
-
   <ItemGroup Label="Build Dependencies">
     <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25071.13" />
   </ItemGroup>
-
   <ItemGroup Label="Integration Packages">
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.0.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.3.4" />
@@ -84,7 +84,6 @@
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
   </ItemGroup>
-
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
@@ -100,7 +99,6 @@
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
   </ItemGroup>
-
   <ItemGroup Label=".NET 9 Overrides" Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.4" />
