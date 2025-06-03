@@ -47,7 +47,7 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
                 _ = notificationService
                     .WaitForDependenciesAsync(scriptResource, ct)
                     .ContinueWith(
-                        async (_) => await scriptResource.StartAsync(scriptLogger, notificationService, ct),
+                        _ => scriptResource.StartAsync(scriptLogger, notificationService, ct),
                         ct);
             }
             catch (Exception ex)
