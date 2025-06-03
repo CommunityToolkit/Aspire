@@ -167,7 +167,7 @@ public class AddOllamaTests
     }
 
     [Fact]
-    public void OpenWebUIResourceIncludedInManifestByDefault()
+    public void OpenWebUIResourceExcludedFromManifestByDefault()
     {
         var builder = DistributedApplication.CreateBuilder();
         _ = builder.AddOllama("ollama", port: null).WithOpenWebUI();
@@ -178,7 +178,7 @@ public class AddOllamaTests
 
         var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
 
-        Assert.False(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
+        Assert.True(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
     }
 
     [Fact]
