@@ -74,9 +74,7 @@ public static class DistributedApplicationBuilderExtensions
                 var poolLogger = loggerService.GetLogger(poolName);
 
                 _ = notificationService.WaitForDependenciesAsync(poolResource, ct)
-                    .ContinueWith(
-                        async _ =>
-                            await poolResource.StartAsync(sessionState, notificationService, poolLogger, ct),
+                    .ContinueWith(_ => poolResource.StartAsync(sessionState, notificationService, poolLogger, ct),
                         ct);
             }
         });
