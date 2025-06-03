@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AdditionalPackageTags>MinioS3 Client integration</AdditionalPackageTags>
-    <Description>A .NET Aspire client integration for MinioS#</Description>
+    <AdditionalPackageTags>minio hosting cloud storage</AdditionalPackageTags>
+    <Description>A .NET Aspire client integration for MinIO</Description>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

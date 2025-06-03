@@ -5,7 +5,7 @@ using System.Data.Common;
 namespace CommunityToolkit.Aspire.Minio.Client;
 
 /// <summary>
-/// Minio client configuration
+/// MinIO client configuration
 /// </summary>
 public sealed class MinioClientSettings
 {
@@ -30,7 +30,7 @@ public sealed class MinioClientSettings
     public HeaderAppInformation? UserAgentHeaderInfo { get; set; }
 
     /// <summary>
-    /// Minio client service lifetime
+    /// MinIO client service lifetime
     /// </summary>
     public ServiceLifetime ServiceLifetime = ServiceLifetime.Singleton;
     
@@ -92,17 +92,17 @@ public class HeaderAppInformation
 }
 
 /// <summary>
-/// Minio credentials (access and secret keys)
+/// MinIO credentials (access and secret keys)
 /// </summary>
 public class MinioCredentials
 {
     /// <summary>
-    /// Minio Access Key
+    /// MinIO Access Key
     /// </summary>
     public string AccessKey { get; set; } = string.Empty;
     
     /// <summary>
-    /// Minio Secret Key
+    /// MinIO Secret Key
     /// </summary>
     public string SecretKey { get; set; } = string.Empty;
 }

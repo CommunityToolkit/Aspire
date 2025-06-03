@@ -7,14 +7,14 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Microsoft.Extensions.Hosting;
 
 /// <summary>
-/// Provides extension methods for registering MiniO-related services in an <see cref="IHostApplicationBuilder"/>.
+/// Provides extension methods for registering MinIO-related services in an <see cref="IHostApplicationBuilder"/>.
 /// </summary>
 public static class MinioClientBuilderExtensionMethods
 {
     private const string DefaultConfigSectionName = "Aspire:Minio:Client";
 
     /// <summary>
-    /// Adds Minio Client to ASPNet host
+    /// Adds MinIO Client to ASPNet host
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder"/> used to add services.</param>
     /// <param name="configurationSectionName">Name of the configuration settings section</param>
@@ -37,7 +37,7 @@ public static class MinioClientBuilderExtensionMethods
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        // Add the Minio client to the service collection.
+        // Add the MinIO client to the service collection.
         void ConfigureClient(IMinioClient configureClient)
         {
             var client = configureClient.WithEndpoint(settings.Endpoint)
@@ -59,7 +59,7 @@ public static class MinioClientBuilderExtensionMethods
         IMinioClient GetClient()
         {
             if (settings.Endpoint is null)
-                throw new InvalidOperationException("The MiniO endpoint must be provided either in configuration section, or as a part of connection string or settings delegate");
+                throw new InvalidOperationException("The MinIO endpoint must be provided either in configuration section, or as a part of connection string or settings delegate");
             
             return minioClientFactory.CreateClient();
         }

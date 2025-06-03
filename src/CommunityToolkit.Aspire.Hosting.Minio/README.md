@@ -1,6 +1,6 @@
-# CommunityToolkit.Aspire.Hosting.MinoO library
+# CommunityToolkit.Aspire.Hosting.MinIO library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [MiniO](https://min.io/) containers.
+Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [MinIO](https://min.io/) containers.
 
 ## Getting Started
 
@@ -14,7 +14,7 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Minio
 
 ### Example usage
 
-Then, in the _Program.cs_ file of `AppHost`, add a Minio resource and consume the connection using the following methods:
+Then, in the _Program.cs_ file of `AppHost`, add a MinIO resource and consume the connection using the following methods:
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
