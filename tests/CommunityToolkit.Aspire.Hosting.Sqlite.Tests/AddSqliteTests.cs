@@ -45,15 +45,12 @@ public class AddSqliteTests
     }
 
     [Fact]
-    public void ResourceExcludedFromManifestByDefault()
+    public void ResourceIncludedInManifestByDefault()
     {
         var builder = DistributedApplication.CreateBuilder();
         var sqlite = builder.AddSqlite("sqlite");
 
-        Assert.True(sqlite.Resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
-        var annotation = Assert.Single(annotations);
-
-        Assert.Null(annotation.Callback);
+        Assert.False(sqlite.Resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
     }
 
     [Fact]
@@ -143,6 +140,18 @@ public class AddSqliteTests
         Assert.NotNull(parentAnnotation);
         Assert.Equal("sqlite", waitForAnnotation.Resource.Name);
         Assert.Equal("sqlite", parentAnnotation.Resource.Name);
+    }
+
+    [Fact]
+    public void SqliteWebResourceIncludedInManifestByDefault()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var sqlite = builder.AddSqlite("sqlite")
+            .WithSqliteWeb();
+
+        var sqliteWeb = Assert.Single(builder.Resources.OfType<SqliteWebResource>());
+
+        Assert.False(sqliteWeb.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
     }
 
     [Fact]

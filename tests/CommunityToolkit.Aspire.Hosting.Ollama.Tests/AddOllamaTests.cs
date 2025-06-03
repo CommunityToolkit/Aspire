@@ -167,6 +167,21 @@ public class AddOllamaTests
     }
 
     [Fact]
+    public void OpenWebUIResourceIncludedInManifestByDefault()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.False(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
+    }
+
+    [Fact]
     public void OpenWebUIConfiguredWithMultipleOllamaServers()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -381,6 +396,21 @@ public class AddOllamaTests
         Assert.Contains("http", annotation.Key);
         Assert.Contains("/", annotation.Key);
         Assert.Contains(resource.Name, annotation.Key);
+    }
+
+    [Fact]
+    public void ResourceIncludedInManifestByDefault()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllama("ollama");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+
+        Assert.False(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
     }
 
     [Fact]
