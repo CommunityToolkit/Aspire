@@ -31,8 +31,7 @@ public static class DistributedApplicationBuilderExtensions
         int minRunspaces = 1,
         int maxRunspaces = 5)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+        ArgumentNullException.ThrowIfNullOrEmpty(name);
 
         if (builder.Resources.OfType<PowerShellRunspacePoolResource>().Any(
             rsp => rsp.Name == name))
