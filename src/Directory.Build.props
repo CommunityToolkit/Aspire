@@ -1,7 +1,7 @@
 <Project>
   <Import Project="..\Directory.Build.props" />
   <PropertyGroup>
-    <TargetFrameworks>$(AllTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(DefaultTargetFramework)</TargetFrameworks>
     <IsPackable>true</IsPackable>
 
     <DocsPath>README.md</DocsPath>
