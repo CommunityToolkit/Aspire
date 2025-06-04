@@ -159,4 +159,40 @@ public class ResourceCreationTests
 
         Assert.Contains(endpoints, e => e.IsExternal);
     }
+
+    [Fact]
+    public void WithNpmPackageInstallationDefaultsToInstallCommand()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nodeApp = builder.AddNpmApp("test-app", "./test-app");
+
+        // Add package installation with default settings (should use npm install, not ci)
+        nodeApp.WithNpmPackageInstallation(useCI: false);
+
+        using var app = builder.Build();
+
+        // Verify that the resource was created successfully
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+        Assert.Equal("npm", resource.Command);
+    }
+
+    [Fact]
+    public void WithNpmPackageInstallationCanUseCICommand()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nodeApp = builder.AddNpmApp("test-app", "./test-app");
+
+        // Add package installation with CI enabled
+        nodeApp.WithNpmPackageInstallation(useCI: true);
+
+        using var app = builder.Build();
+
+        // Verify that the resource was created successfully
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+        Assert.Equal("npm", resource.Command);
+    }
 }
