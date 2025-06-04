@@ -21,7 +21,7 @@ dotnet add package CommunityToolkit.Aspire.Minio.Client
 In the _Program.cs_ file of your project, call the `AddMinioClient` extension method to register a `MinioClient` for use via the dependency injection container. The method takes a connection name parameter.
 
 ```csharp
-builder.AddMinioClient();
+builder.AddMinioClient("minio");
 ```
 
 ## Configuration
