@@ -14,20 +14,20 @@ public class PackageInstallationTests
     public void WithNpmPackageInstallation_CanBeConfiguredWithInstallAndCIOptions()
     {
         var builder = DistributedApplication.CreateBuilder();
-        
-        var nodeApp = builder.AddNpmApp("test-app");
-        
+
+        var nodeApp = builder.AddNpmApp("test-app", "./test-app");
+
         // Test that both configurations can be set up without errors
         nodeApp.WithNpmPackageInstallation(useCI: false); // Uses npm install
-        
-        var nodeApp2 = builder.AddNpmApp("test-app-ci");
+
+        var nodeApp2 = builder.AddNpmApp("test-app-ci", "./test-app-ci");
         nodeApp2.WithNpmPackageInstallation(useCI: true);  // Uses npm ci
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resources = appModel.Resources.OfType<NodeAppResource>().ToList();
-        
+
         Assert.Equal(2, resources.Count);
         Assert.All(resources, resource => Assert.Equal("npm", resource.Command));
     }

@@ -164,9 +164,9 @@ public class ResourceCreationTests
     public void WithNpmPackageInstallationDefaultsToInstallCommand()
     {
         var builder = DistributedApplication.CreateBuilder();
-        
-        var nodeApp = builder.AddNpmApp("test-app");
-        
+
+        var nodeApp = builder.AddNpmApp("test-app", "./test-app");
+
         // Add package installation with default settings (should use npm install, not ci)
         nodeApp.WithNpmPackageInstallation(useCI: false);
 
@@ -182,9 +182,9 @@ public class ResourceCreationTests
     public void WithNpmPackageInstallationCanUseCICommand()
     {
         var builder = DistributedApplication.CreateBuilder();
-        
-        var nodeApp = builder.AddNpmApp("test-app");
-        
+
+        var nodeApp = builder.AddNpmApp("test-app", "./test-app");
+
         // Add package installation with CI enabled
         nodeApp.WithNpmPackageInstallation(useCI: true);
 
