@@ -32,4 +32,46 @@ app.MapGet("/buckets/{bucketName}", async (string bucketName, [FromServices] IMi
      return Results.NotFound();
 });
 
+app.MapPost("/buckets/{bucketName}/{fileName}/upload",
+    async ([FromRoute] string bucketName,
+        [FromRoute] string fileName,
+        HttpRequest request,
+        [FromServices] IMinioClient minioClient) =>
+    {
+        var memstream = new MemoryStream();
+        
+        await request.Body.CopyToAsync(memstream);
+        
+        var length = memstream.Length;
+        memstream.Seek(0, SeekOrigin.Begin);
+        
+        var putObjectArgs = new PutObjectArgs()
+            .WithObject(fileName)
+            .WithBucket(bucketName)
+            .WithStreamData(memstream)
+            .WithObjectSize(length);
+
+        await minioClient.PutObjectAsync(putObjectArgs);
+
+        return Results.Ok();
+    }).DisableAntiforgery();
+
+app.MapGet("/buckets/{bucketName}/{fileName}/download",
+    async (string bucketName, string fileName, [FromServices] IMinioClient minioClient) =>
+    {
+        var memStream = new MemoryStream();
+        
+        var getObjectArgs = new GetObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(fileName)
+            .WithCallbackStream(stream =>
+            {
+                stream.CopyToAsync(memStream);
+            });
+        
+        await minioClient.GetObjectAsync(getObjectArgs);
+        
+        return Results.File(memStream.ToArray(), "application/octet-stream", fileName);
+    });
+
 app.Run();

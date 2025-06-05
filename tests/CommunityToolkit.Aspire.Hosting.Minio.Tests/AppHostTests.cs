@@ -2,10 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Components.Common.Tests;
-using Aspire.Hosting;
 using CommunityToolkit.Aspire.Testing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
+using System.Text;
 
 namespace CommunityToolkit.Aspire.Hosting.Minio.Tests;
 
@@ -41,5 +39,19 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     
         var getBucketResponse = await httpClient.GetAsync($"/buckets/{bucketName}");
         Assert.Equal(HttpStatusCode.OK, getBucketResponse.StatusCode);
+
+        var uploadedString = "Hello World";
+        var bytes = Encoding.UTF8.GetBytes(uploadedString);
+        using var content = new ByteArrayContent(bytes);
+        content.Headers.ContentType = new("plain/text");
+
+        var uploadFileResponse = await httpClient.PostAsync($"/buckets/{bucketName}/fileName/upload", content);
+        Assert.Equal(HttpStatusCode.OK, uploadFileResponse.StatusCode);
+        
+        var downloadFileResponse = await httpClient.GetAsync($"/buckets/{bucketName}/fileName/download");
+        Assert.Equal(HttpStatusCode.OK, downloadFileResponse.StatusCode);
+
+        var downloadedString = await downloadFileResponse.Content.ReadAsStringAsync();
+        Assert.Equal(uploadedString, downloadedString);
     }
 }
