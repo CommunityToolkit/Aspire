@@ -3,33 +3,25 @@
 /// <summary>
 /// A resource that represents a MinIO storage
 /// </summary>
-public sealed class MinioContainerResource : ContainerResource, IResourceWithConnectionString
+/// <param name="name">The name of the resource.</param>
+/// <param name="rootUser">A parameter that contains the MinIO server root username.</param>
+/// <param name="passwordParameter">A parameter that contains the MinIO server root password.</param>
+public sealed class MinioContainerResource(string name, ParameterResource rootUser, ParameterResource passwordParameter) : ContainerResource(name),
+    IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
     internal const string ConsoleEndpointName = "console";
     internal const string DefaultUserName = "minioadmin";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="MinioContainerResource"/> class.
-    /// </summary>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="user">A parameter that contains the MinIO server root user name.</param>
-    /// <param name="password">A parameter that contains the MinIO server root password.</param>
-    public MinioContainerResource(string name, ParameterResource user, ParameterResource password) : base(name)
-    {
-        RootUser = user;
-        PasswordParameter = password;
-    }
-
-    /// <summary>
     /// The MinIO root user.
     /// </summary>
-    public ParameterResource RootUser { get; set; }
+    public ParameterResource RootUser { get; set; } = rootUser;
 
     /// <summary>
     /// The MinIO root password.
     /// </summary>
-    public ParameterResource PasswordParameter { get; set; } 
+    public ParameterResource PasswordParameter { get; private set; } = passwordParameter;
 
     private EndpointReference? _primaryEndpoint;
 
