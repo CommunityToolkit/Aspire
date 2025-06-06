@@ -29,7 +29,7 @@ public static class VaultResourceBuilderExtensions
 
         IHealthChecksBuilder health = builder.Services.AddHealthChecks();
         return builder.AddResource(resource)
-            .WithContainerName($"heshicorp-{name}")
+            .WithContainerName($"HashiCorp-{name}")
             .WithContainerRuntimeArgs("--cap-add", "IPC_LOCK")
             .WithAnnotation(new ContainerImageAnnotation
             {
