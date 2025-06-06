@@ -9,11 +9,18 @@ namespace CommunityToolkit.Aspire.Hosting.Apache.Tika;
 public static class ApacheTikaBuilderExtensions
 {
     /// <summary>
-    /// 
+    /// Adds an Apache Tika server resource to the distributed application builder.
+    /// Apache Tika is a content analysis toolkit that detects and extracts metadata and text from various document types.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="name">The name of the Apache Tika resource.</param>
+    /// <returns>A resource builder for the Apache Tika resource.</returns>
+    /// <remarks>
+    /// This method configures an Apache Tika server with:
+    /// - HTTP endpoint on port 9998
+    /// - Health check on the /version endpoint
+    /// - Default Apache Tika container image
+    /// </remarks>
     public static IResourceBuilder<ApacheTikaResource> AddApacheTika(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder);
