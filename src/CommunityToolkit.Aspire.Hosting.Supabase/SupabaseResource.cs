@@ -22,12 +22,12 @@ public class SupabaseResource : ContainerResource, IResourceWithConnectionString
     /// <summary>
     /// Gets the primary endpoint for Supabase. This endpoint is used for API calls over HTTP.
     /// </summary>
-    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
+    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, PrimaryEndpointName);
 
     /// <summary>
     /// Gets the database endpoint for Supabase PostgreSQL database.
     /// </summary>
-    public EndpointReference DatabaseEndpoint => _databaseEndpoint ??= new(this, DatabaseEndpointName);
+    public EndpointReference DatabaseEndpoint => _databaseEndpoint ??= new EndpointReference(this, DatabaseEndpointName);
 
     /// <summary>
     /// Gets the parameter that contains the Supabase database password.

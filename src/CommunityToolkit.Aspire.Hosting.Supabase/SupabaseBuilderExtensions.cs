@@ -28,10 +28,10 @@ public static class SupabaseBuilderExtensions
 
         modules ??= new SupabaseModuleOptions();
 
-        var passwordParam = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
-        var resource = new SupabaseResource(name, passwordParam);
+        ParameterResource passwordParam = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
+        SupabaseResource resource = new(name, passwordParam);
 
-        var builderResult = builder.AddResource(resource)
+        IResourceBuilder<SupabaseResource> builderResult = builder.AddResource(resource)
             .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
             .WithImageRegistry(SupabaseContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: SupabaseApiPort, port: apiPort, name: SupabaseResource.PrimaryEndpointName)
@@ -39,7 +39,6 @@ public static class SupabaseBuilderExtensions
             .WithEnvironment(context =>
             {
                 context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter;
-                // Add more Supabase env vars as needed
             });
 
         // Add/skip modules based on options
