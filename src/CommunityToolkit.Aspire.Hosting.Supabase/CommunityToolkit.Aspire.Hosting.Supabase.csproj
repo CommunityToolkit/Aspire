@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting supabase</AdditionalPackageTags>
+    <Description>Supabase support for .NET Aspire.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+</Project>
