@@ -131,7 +131,11 @@
   <Folder Name="/examples/sqlserver-ext/">
     <Project Path="examples/sqlserver-ext/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj" />
   </Folder>
-  <Folder Name="/examples/supabase/" />
+  <Folder Name="/examples/supabase/">
+    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.Api\CommunityToolkit.Aspire.Supabase.Api.csproj" Type="Classic C#" />
+    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.AppHost\CommunityToolkit.Aspire.Supabase.AppHost.csproj" Type="Classic C#" />
+    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.ServiceDefaults\CommunityToolkit.Aspire.Supabase.ServiceDefaults.csproj" Type="Classic C#" />
+  </Folder>
   <Folder Name="/examples/swa/">
     <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.ApiApp/CommunityToolkit.Aspire.StaticWebApps.ApiApp.csproj" />
     <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.AppHost/CommunityToolkit.Aspire.StaticWebApps.AppHost.csproj" />

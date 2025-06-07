@@ -1,0 +1,48 @@
+# Get all movies
+GET {{host}}/movies
+Accept: application/json
+
+###
+
+# Get a single movie by ID
+GET {{host}}/movies/1
+Accept: application/json
+
+###
+
+# Create a new movie
+POST {{host}}/movies
+Content-Type: application/json
+
+{
+  "Title": "Inception",
+  "Director": "Christopher Nolan",
+  "yearReleased": 2010,
+  "genre": "Sci-Fi"
+}
+
+###
+
+# Update a movie
+PUT {{host}}/movies/1
+Content-Type: application/json
+
+{
+  "title": "Inception",
+  "director": "Christopher Nolan",
+  "yearReleased": 2010,
+  "genre": "Sci-Fi, Thriller"
+}
+
+###
+
+# Delete a movie
+DELETE {{host}}/movies/1
+Accept: application/json
+
+###
+
+GET {{host}}/
+Accept: text/plain
+
+###
