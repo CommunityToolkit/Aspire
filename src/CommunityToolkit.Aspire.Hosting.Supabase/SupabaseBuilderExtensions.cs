@@ -1,8 +1,8 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Supabase;
 
-namespace Aspire.Hosting;
+namespace CommunityToolkit.Aspire.Hosting.Supabase;
 
 /// <summary>
 /// Provides extension methods for adding Supabase resources to the application model.
@@ -39,7 +39,20 @@ public static class SupabaseBuilderExtensions
             .WithImageRegistry(SupabaseContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: SupabaseApiPort, port: apiPort, name: SupabaseResource.PrimaryEndpointName)
             .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort, name: SupabaseResource.DatabaseEndpointName)
-            .WithEnvironment(context => context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter);
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter;
+                context.EnvironmentVariables["POSTGRES_DB"] = "postgres";
+                context.EnvironmentVariables["POSTGRES_USER"] = "postgres";
+                context.EnvironmentVariables["PGDATA"] = "/var/lib/postgresql/data";
+                context.EnvironmentVariables["PGHOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
+                context.EnvironmentVariables["PGPORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
+                context.EnvironmentVariables["PGPASSWORD"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PGDATABASE"] = "postgres";
+            })
+            .WithDataBindMount("./volumes/db/data")
+            .WithBindMount("./volumes/db/migrations", "/docker-entrypoint-initdb.d/migrations")
+            .WithBindMount("./volumes/db/init-scripts", "/docker-entrypoint-initdb.d/init-scripts");
     }
 
     /// <summary>
