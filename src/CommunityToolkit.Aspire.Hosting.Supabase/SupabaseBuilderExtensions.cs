@@ -13,62 +13,152 @@ public static class SupabaseBuilderExtensions
     private const int SupabaseDatabasePort = 5432;
 
     /// <summary>
-    /// Adds a Supabase container resource to the application model.
+    /// Adds a Supabase core Postgres and HTTP API container to the application model.
     /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the Supabase resource.</param>
+    /// <param name="password">Optional password parameter resource builder.</param>
+    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
+    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
+    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
     public static IResourceBuilder<SupabaseResource> AddSupabase(
         this IDistributedApplicationBuilder builder,
         string name,
         IResourceBuilder<ParameterResource>? password = null,
         int? apiPort = null,
-        int? dbPort = null,
-        SupabaseModuleOptions? modules = null)
+        int? dbPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        modules ??= new SupabaseModuleOptions();
-
         ParameterResource passwordParam = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
         SupabaseResource resource = new(name, passwordParam);
 
-        IResourceBuilder<SupabaseResource> builderResult = builder.AddResource(resource)
+        return builder.AddResource(resource)
             .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
             .WithImageRegistry(SupabaseContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: SupabaseApiPort, port: apiPort, name: SupabaseResource.PrimaryEndpointName)
             .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort, name: SupabaseResource.DatabaseEndpointName)
-            .WithEnvironment(context =>
-            {
-                context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter;
-            });
-
-        // Add/skip modules based on options
-        if (modules.EnableAuth)
-        {
-            // Add Auth container/resource setup here
-        }
-        if (modules.EnableStorage)
-        {
-            // Add Storage container/resource setup here
-        }
-        if (modules.EnableMinio)
-        {
-            // Add Minio container/resource setup here
-        }
-        if (modules.EnableEdgeFunctions)
-        {
-            // Add Edge Functions container/resource setup here
-        }
-        if (modules.EnableVector)
-        {
-            // Add Vector container/resource setup here
-        }
-
-        return builderResult;
+            .WithEnvironment(context => context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter);
     }
+
+    /// <summary>
+    /// Adds all Supabase modules (child services) to the Supabase resource.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the Supabase resource.</param>
+    /// <param name="password">Optional password parameter resource builder.</param>
+    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
+    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
+    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
+    public static IResourceBuilder<SupabaseResource> AddAllSupabase(
+        this IDistributedApplicationBuilder builder,
+        string name,
+        IResourceBuilder<ParameterResource>? password = null,
+        int? apiPort = null,
+        int? dbPort = null)
+        => builder.AddSupabase(name, password, apiPort, dbPort)
+            .WithKong()
+            .WithStudio()
+            .WithRest()
+            .WithRealtime()
+            .WithStorageService()
+            .WithAuthService()
+            .WithMetaService()
+            .WithInbucketService()
+            .WithImageProxyService()
+            .WithLogflareService()
+            .WithEdgeRuntimeService();
+
+    // Individual module extension methods
+    private static IResourceBuilder<SupabaseResource> WithModule(
+        this IResourceBuilder<SupabaseResource> builder,
+        string suffix,
+        string image,
+        string tag)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        var resource = builder.Resource;
+        var container = new ContainerResource($"{resource.Name}-{suffix}");
+        builder.ApplicationBuilder.AddResource(container)
+            .WithImage(image, tag)
+            .WithImageRegistry(SupabaseContainerImageTags.Registry)
+            .WithParentRelationship(resource);
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds the Kong gateway module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithKong(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("kong", SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag);
+
+    /// <summary>
+    /// Adds the Studio module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithStudio(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("studio", SupabaseContainerImageTags.StudioImage, SupabaseContainerImageTags.StudioTag);
+
+    /// <summary>
+    /// Adds the REST module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithRest(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("rest", SupabaseContainerImageTags.RestImage, SupabaseContainerImageTags.RestTag);
+
+    /// <summary>
+    /// Adds the Realtime module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithRealtime(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("realtime", SupabaseContainerImageTags.RealtimeImage, SupabaseContainerImageTags.RealtimeTag);
+
+    /// <summary>
+    /// Adds the Storage module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithStorageService(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("storage", SupabaseContainerImageTags.StorageImage, SupabaseContainerImageTags.StorageTag);
+
+    /// <summary>
+    /// Adds the Auth module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithAuthService(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("auth", SupabaseContainerImageTags.AuthImage, SupabaseContainerImageTags.AuthTag);
+
+    /// <summary>
+    /// Adds the Meta module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithMetaService(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("meta", SupabaseContainerImageTags.MetaImage, SupabaseContainerImageTags.MetaTag);
+
+    /// <summary>
+    /// Adds the Inbucket module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithInbucketService(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("inbucket", SupabaseContainerImageTags.InbucketImage, SupabaseContainerImageTags.InbucketTag);
+
+    /// <summary>
+    /// Adds the Image Proxy module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithImageProxyService(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("image-proxy", SupabaseContainerImageTags.ImageProxyImage, SupabaseContainerImageTags.ImageProxyTag);
+
+    /// <summary>
+    /// Adds the Logflare module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithLogflareService(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("logflare", SupabaseContainerImageTags.LogflareImage, SupabaseContainerImageTags.LogflareTag);
+
+    /// <summary>
+    /// Adds the Edge Runtime module to the Supabase resource.
+    /// </summary>
+    public static IResourceBuilder<SupabaseResource> WithEdgeRuntimeService(this IResourceBuilder<SupabaseResource> builder)
+        => builder.WithModule("edge-runtime", SupabaseContainerImageTags.EdgeRuntimeImage, SupabaseContainerImageTags.EdgeRuntimeTag);
 
     /// <summary>
     /// Adds a named volume for the data folder to a Supabase container resource.
     /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
+    /// <param name="name">Optional name for the volume.</param>
+    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
     public static IResourceBuilder<SupabaseResource> WithDataVolume(
         this IResourceBuilder<SupabaseResource> builder,
         string? name = null)
@@ -80,6 +170,9 @@ public static class SupabaseBuilderExtensions
     /// <summary>
     /// Adds a bind mount for the data folder to a Supabase container resource.
     /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
+    /// <param name="source">The source path on the host machine.</param>
+    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
     public static IResourceBuilder<SupabaseResource> WithDataBindMount(
         this IResourceBuilder<SupabaseResource> builder,
         string source)
