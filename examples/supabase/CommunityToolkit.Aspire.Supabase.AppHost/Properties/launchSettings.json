@@ -1,28 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "https": {
+    "Supabase.AppHost": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:17150;http://localhost:15255",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "DOTNET_ENVIRONMENT": "Development",
-        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21209",
-        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22068"
-      }
-    },
-    "http": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "http://localhost:15255",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "DOTNET_ENVIRONMENT": "Development",
-        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:19286",
-        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20247"
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "\"\"",
+        "DISABLE_OTLP": "true",
+        "ASPNETCORE_URLS": "http://localhost:5000",
+        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true"
       }
     }
   }

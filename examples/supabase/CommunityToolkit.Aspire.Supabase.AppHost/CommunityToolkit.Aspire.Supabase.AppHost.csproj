@@ -1,13 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <UserSecretsId>e4908653-4185-4af0-8df0-2723c70ae57f</UserSecretsId>
-    </PropertyGroup>
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+  
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>e4908653-4185-4af0-8df0-2723c70ae57f</UserSecretsId>
+    <IsAspireHost>true</IsAspireHost>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Aspire.Hosting.AppHost"/>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Supabase\CommunityToolkit.Aspire.Hosting.Supabase.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Supabase.Api\CommunityToolkit.Aspire.Supabase.Api.csproj"/>
+  </ItemGroup>
 
 </Project>

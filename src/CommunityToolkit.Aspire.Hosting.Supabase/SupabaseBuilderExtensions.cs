@@ -25,7 +25,7 @@ public static class SupabaseBuilderExtensions
         this IDistributedApplicationBuilder builder,
         string name,
         IResourceBuilder<ParameterResource>? password = null,
-        int? apiPort = null,
+        int? apiPort = 8080,
         int? dbPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -157,8 +157,11 @@ public static class SupabaseBuilderExtensions
     /// <summary>
     /// Adds the Logflare module to the Supabase resource.
     /// </summary>
-    public static IResourceBuilder<SupabaseResource> WithLogflareService(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("logflare", SupabaseContainerImageTags.LogflareImage, SupabaseContainerImageTags.LogflareTag);
+    public static IResourceBuilder<SupabaseResource> WithLogflareService(this IResourceBuilder<SupabaseResource> builder, int? port = 4000)
+    {
+        return builder.WithModule("logflare", SupabaseContainerImageTags.LogflareImage, SupabaseContainerImageTags.LogflareTag)
+            .WithHttpEndpoint(port);
+    }
 
     /// <summary>
     /// Adds the Edge Runtime module to the Supabase resource.

@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <ProjectReference Include="..\..\examples\supabase\CommunityToolkit.Aspire.Supabase.Api\CommunityToolkit.Aspire.Supabase.Api.csproj" />
+
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Supabase\CommunityToolkit.Aspire.Hosting.Supabase.csproj" />
+
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
