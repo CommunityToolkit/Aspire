@@ -3,11 +3,14 @@
   "profiles": {
     "Supabase.AppHost": {
       "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:15237",
       "environmentVariables": {
-        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "\"\"",
-        "DISABLE_OTLP": "true",
-        "ASPNETCORE_URLS": "http://localhost:5000",
-        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development",
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:19168",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20064"
       }
     }
   }

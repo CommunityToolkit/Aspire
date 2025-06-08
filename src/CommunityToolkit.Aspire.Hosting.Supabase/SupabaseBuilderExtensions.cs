@@ -2,7 +2,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Supabase;
 
-namespace CommunityToolkit.Aspire.Hosting.Supabase;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for adding Supabase resources to the application model.
@@ -104,70 +104,114 @@ public static class SupabaseBuilderExtensions
     /// Adds the Kong gateway module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithKong(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("kong", SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("kong", SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag)
+            .WithHttpEndpoint(targetPort: 8000, port: null, name: $"{builder.Resource.Name}-kong");
+    }
 
     /// <summary>
     /// Adds the Studio module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithStudio(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("studio", SupabaseContainerImageTags.StudioImage, SupabaseContainerImageTags.StudioTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("studio", SupabaseContainerImageTags.StudioImage, SupabaseContainerImageTags.StudioTag)
+            .WithHttpEndpoint(targetPort: 3000, port: null, name: $"{builder.Resource.Name}-studio");
+    }
 
     /// <summary>
     /// Adds the REST module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithRest(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("rest", SupabaseContainerImageTags.RestImage, SupabaseContainerImageTags.RestTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("rest", SupabaseContainerImageTags.RestImage, SupabaseContainerImageTags.RestTag)
+            .WithHttpEndpoint(targetPort: 3000, port: null, name: $"{builder.Resource.Name}-rest");
+    }
 
     /// <summary>
     /// Adds the Realtime module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithRealtime(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("realtime", SupabaseContainerImageTags.RealtimeImage, SupabaseContainerImageTags.RealtimeTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("realtime", SupabaseContainerImageTags.RealtimeImage, SupabaseContainerImageTags.RealtimeTag)
+            .WithHttpEndpoint(targetPort: 4000, port: null, name: $"{builder.Resource.Name}-realtime");
+    }
 
     /// <summary>
     /// Adds the Storage module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithStorageService(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("storage", SupabaseContainerImageTags.StorageImage, SupabaseContainerImageTags.StorageTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("storage", SupabaseContainerImageTags.StorageImage, SupabaseContainerImageTags.StorageTag)
+            .WithHttpEndpoint(targetPort: 5000, port: null, name: $"{builder.Resource.Name}-storage");
+    }
 
     /// <summary>
     /// Adds the Auth module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithAuthService(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("auth", SupabaseContainerImageTags.AuthImage, SupabaseContainerImageTags.AuthTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("auth", SupabaseContainerImageTags.AuthImage, SupabaseContainerImageTags.AuthTag)
+            .WithHttpEndpoint(targetPort: 9999, port: null, name: $"{builder.Resource.Name}-auth");
+    }
 
     /// <summary>
     /// Adds the Meta module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithMetaService(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("meta", SupabaseContainerImageTags.MetaImage, SupabaseContainerImageTags.MetaTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("meta", SupabaseContainerImageTags.MetaImage, SupabaseContainerImageTags.MetaTag)
+            .WithHttpEndpoint(targetPort: 8080, port: null, name: $"{builder.Resource.Name}-meta");
+    }
 
     /// <summary>
     /// Adds the Inbucket module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithInbucketService(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("inbucket", SupabaseContainerImageTags.InbucketImage, SupabaseContainerImageTags.InbucketTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("inbucket", SupabaseContainerImageTags.InbucketImage, SupabaseContainerImageTags.InbucketTag)
+            .WithHttpEndpoint(targetPort: 9000, port: null, name: $"{builder.Resource.Name}-inbucket");
+    }
 
     /// <summary>
     /// Adds the Image Proxy module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithImageProxyService(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("image-proxy", SupabaseContainerImageTags.ImageProxyImage, SupabaseContainerImageTags.ImageProxyTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("image-proxy", SupabaseContainerImageTags.ImageProxyImage, SupabaseContainerImageTags.ImageProxyTag)
+            .WithHttpEndpoint(targetPort: 5001, port: null, name: $"{builder.Resource.Name}-image-proxy");
+    }
 
     /// <summary>
     /// Adds the Logflare module to the Supabase resource.
     /// </summary>
-    public static IResourceBuilder<SupabaseResource> WithLogflareService(this IResourceBuilder<SupabaseResource> builder, int? port = 4000)
+    public static IResourceBuilder<SupabaseResource> WithLogflareService(
+        this IResourceBuilder<SupabaseResource> builder,
+        int? port = 4000)
     {
+        var builderUniqueName = builder.Resource.Name;
+        var endpointName = $"{builderUniqueName}-logflare";
         return builder.WithModule("logflare", SupabaseContainerImageTags.LogflareImage, SupabaseContainerImageTags.LogflareTag)
-            .WithHttpEndpoint(port);
+            .WithHttpEndpoint(targetPort: 4000, port: port, name: endpointName);
     }
 
     /// <summary>
     /// Adds the Edge Runtime module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithEdgeRuntimeService(this IResourceBuilder<SupabaseResource> builder)
-        => builder.WithModule("edge-runtime", SupabaseContainerImageTags.EdgeRuntimeImage, SupabaseContainerImageTags.EdgeRuntimeTag);
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithModule("edge-runtime", SupabaseContainerImageTags.EdgeRuntimeImage, SupabaseContainerImageTags.EdgeRuntimeTag)
+            .WithHttpEndpoint(targetPort: 8000, port: null, name: $"{builder.Resource.Name}-edge-runtime");
+    }
 
     /// <summary>
     /// Adds a named volume for the data folder to a Supabase container resource.
