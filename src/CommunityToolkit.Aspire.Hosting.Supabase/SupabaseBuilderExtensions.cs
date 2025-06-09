@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Supabase;
+using System;
 
 namespace Aspire.Hosting;
 
@@ -17,19 +18,26 @@ public static class SupabaseBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the Supabase resource.</param>
+    /// <param name="password">Optional password parameter resource builder.</param>
+    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
+    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> AddSupabase(this IDistributedApplicationBuilder builder,
-        string name, IResourceBuilder<ParameterResource>? password = null)
+    public static IResourceBuilder<SupabaseResource> AddSupabase(
+        this IDistributedApplicationBuilder builder,
+        string name,
+        IResourceBuilder<ParameterResource>? password = null,
+        int? apiPort = null,
+        int? dbPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        ParameterResource passwordParam = password?.Resource ??
-                                          ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
+        ParameterResource passwordParam = password?.Resource
+                                          ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
                                               $"{name}-password");
         // create meta resource without image
         SupabaseResource resource = new(name, passwordParam);
-        var metaBuilder = builder.AddResource(resource);
+        IResourceBuilder<SupabaseResource> metaBuilder = builder.AddResource(resource);
 
         // separate Postgres database container
         metaBuilder.ApplicationBuilder.AddResource(
@@ -37,17 +45,15 @@ public static class SupabaseBuilderExtensions
             .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
             .WithImageRegistry(SupabaseContainerImageTags.Registry)
             .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort,
-                name: SupabaseDatabaseResource.DatabaseEndpointName)
+                name: SupabaseResource.DatabaseEndpointName)
             .WithEnvironment(context =>
             {
                 context.EnvironmentVariables["POSTGRES_PASSWORD"] = passwordParam;
                 context.EnvironmentVariables["POSTGRES_DB"] = "postgres";
                 context.EnvironmentVariables["POSTGRES_USER"] = "postgres";
                 context.EnvironmentVariables["PGDATA"] = "/var/lib/postgresql/data";
-                context.EnvironmentVariables["PGHOST"] =
-                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Host);
-                context.EnvironmentVariables["PGPORT"] =
-                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Port);
+                context.EnvironmentVariables["PGHOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
+                context.EnvironmentVariables["PGPORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
                 context.EnvironmentVariables["PGPASSWORD"] = passwordParam;
                 context.EnvironmentVariables["PGDATABASE"] = "postgres";
             })
@@ -75,12 +81,12 @@ public static class SupabaseBuilderExtensions
         int? apiPort = null,
         int? dbPort = null)
     {
-        ParameterResource passwordParam = password?.Resource ??
-                                          ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
+        ParameterResource passwordParam = password?.Resource
+                                          ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
                                               $"{name}-password");
 
-        return builder.AddSupabase(name)
-            .WithPostgres(passwordParam)
+        return builder.AddSupabase(name, password, apiPort, dbPort)
+            .WithPostgres(passwordParam, dbPort)
             .WithKong()
             .WithStudio()
             .WithRest()
@@ -102,8 +108,8 @@ public static class SupabaseBuilderExtensions
         string tag)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        var resource = builder.Resource;
-        var container = new ContainerResource($"{resource.Name}-{suffix}");
+        SupabaseResource resource = builder.Resource;
+        ContainerResource container = new ContainerResource($"{resource.Name}-{suffix}");
         builder.ApplicationBuilder.AddResource(container)
             .WithImage(image, tag)
             .WithImageRegistry(SupabaseContainerImageTags.Registry)
@@ -112,36 +118,33 @@ public static class SupabaseBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a Supabase core Postgres and HTTP API container to the application model.
+    /// Adds a Supabase core Postgres container to the application model.
     /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="name">The name of the Supabase resource.</param>
-    /// <param name="password">Optional password parameter resource builder.</param>
-    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
+    /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
+    /// <param name="passwordParam">The parameter that contains the Supabase database password.</param>
     /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
-    /// <param name="passwordParam"></param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> WithPostgres(this IResourceBuilder<SupabaseResource> builder,
-        ParameterResource passwordParam)
+    public static IResourceBuilder<SupabaseResource> WithPostgres(
+        this IResourceBuilder<SupabaseResource> builder,
+        ParameterResource passwordParam,
+        int? dbPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        // separate Postgres database container
         builder.WithModule("postgres", SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
             .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
             .WithImageRegistry(SupabaseContainerImageTags.Registry)
             .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort,
-                name: SupabaseDatabaseResource.DatabaseEndpointName)
+                name: SupabaseResource.DatabaseEndpointName)
             .WithEnvironment(context =>
             {
+                SupabaseResource resource = builder.Resource;
                 context.EnvironmentVariables["POSTGRES_PASSWORD"] = passwordParam;
                 context.EnvironmentVariables["POSTGRES_DB"] = "postgres";
                 context.EnvironmentVariables["POSTGRES_USER"] = "postgres";
                 context.EnvironmentVariables["PGDATA"] = "/var/lib/postgresql/data";
-                context.EnvironmentVariables["PGHOST"] =
-                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Host);
-                context.EnvironmentVariables["PGPORT"] =
-                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Port);
+                context.EnvironmentVariables["PGHOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
+                context.EnvironmentVariables["PGPORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
                 context.EnvironmentVariables["PGPASSWORD"] = passwordParam;
                 context.EnvironmentVariables["PGDATABASE"] = "postgres";
             })
@@ -190,7 +193,7 @@ public static class SupabaseBuilderExtensions
                 SupabaseContainerImageTags.StudioTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 // Meta service connection
                 context.EnvironmentVariables["STUDIO_PG_META_URL"] = "http://meta:8080";
@@ -229,7 +232,7 @@ public static class SupabaseBuilderExtensions
         return builder.WithModule("rest", SupabaseContainerImageTags.RestImage, SupabaseContainerImageTags.RestTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 context.EnvironmentVariables["PGRST_DB_URI"] =
                     $"postgres://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
@@ -259,7 +262,7 @@ public static class SupabaseBuilderExtensions
                 SupabaseContainerImageTags.RealtimeTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 // Basic configuration
                 context.EnvironmentVariables["PORT"] = "4000";
@@ -302,7 +305,7 @@ public static class SupabaseBuilderExtensions
                 SupabaseContainerImageTags.StorageTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 // API keys
                 context.EnvironmentVariables["ANON_KEY"] = resource.PasswordParameter;
@@ -343,7 +346,7 @@ public static class SupabaseBuilderExtensions
         return builder.WithModule("auth", SupabaseContainerImageTags.AuthImage, SupabaseContainerImageTags.AuthTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 context.EnvironmentVariables["GOTRUE_API_HOST"] = "0.0.0.0";
                 context.EnvironmentVariables["GOTRUE_API_PORT"] = "9999";
@@ -432,7 +435,7 @@ public static class SupabaseBuilderExtensions
         return builder.WithModule("meta", SupabaseContainerImageTags.MetaImage, SupabaseContainerImageTags.MetaTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 // Configuration
                 context.EnvironmentVariables["PG_META_PORT"] = "8080";
@@ -496,13 +499,13 @@ public static class SupabaseBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var builderUniqueName = builder.Resource.Name;
-        var endpointName = $"{builderUniqueName}-logflare";
+        string builderUniqueName = builder.Resource.Name;
+        string endpointName = $"{builderUniqueName}-logflare";
         return builder.WithModule("logflare", SupabaseContainerImageTags.LogflareImage,
                 SupabaseContainerImageTags.LogflareTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 // Core settings
                 context.EnvironmentVariables["LOGFLARE_NODE_HOST"] = "127.0.0.1";
@@ -548,7 +551,7 @@ public static class SupabaseBuilderExtensions
                 SupabaseContainerImageTags.EdgeRuntimeTag)
             .WithEnvironment(context =>
             {
-                var resource = builder.Resource;
+                SupabaseResource resource = builder.Resource;
 
                 // Authentication
                 context.EnvironmentVariables["JWT_SECRET"] = resource.PasswordParameter;
