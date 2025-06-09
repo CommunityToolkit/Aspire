@@ -3,9 +3,9 @@
   <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
   <PropertyGroup>
     
-    <DefaultTargetFramework>net8.0</DefaultTargetFramework>
+    <DefaultTargetFramework>net9.0</DefaultTargetFramework>
     <TargetFrameworks>$(DefaultTargetFramework)</TargetFrameworks>
-    <AllTargetFrameworks>$(DefaultTargetFramework);net9.0</AllTargetFrameworks>
+    <AllTargetFrameworks>$(DefaultTargetFramework);net8.0</AllTargetFrameworks>
     <LangVersion>latest</LangVersion>
 
     <ImplicitUsings>enable</ImplicitUsings>

@@ -107,6 +107,19 @@ public static class SupabaseBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         return builder.WithModule("kong", SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag)
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables["KONG_DATABASE"] = "off";
+                context.EnvironmentVariables["KONG_DECLARATIVE_CONFIG"] = "/home/kong/kong.yml";
+                context.EnvironmentVariables["KONG_DNS_ORDER"] = "LAST,A,CNAME";
+                context.EnvironmentVariables["KONG_PLUGINS"] = "request-transformer,cors,key-auth,acl,basic-auth";
+                context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFER_SIZE"] = "160k";
+                context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFERS"] = "64 160k";
+                context.EnvironmentVariables["SUPABASE_ANON_KEY"] = builder.Resource.PasswordParameter; // Replace with actual anon key
+                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] = builder.Resource.PasswordParameter; // Replace with actual service role key
+                context.EnvironmentVariables["DASHBOARD_USERNAME"] = "admin"; // Replace with actual dashboard username
+                context.EnvironmentVariables["DASHBOARD_PASSWORD"] = builder.Resource.PasswordParameter; // Replace with actual dashboard password
+            })
             .WithHttpEndpoint(targetPort: 8000, port: null, name: $"{builder.Resource.Name}-kong");
     }
 
@@ -127,6 +140,22 @@ public static class SupabaseBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         return builder.WithModule("rest", SupabaseContainerImageTags.RestImage, SupabaseContainerImageTags.RestTag)
+            .WithEnvironment(context =>
+            {
+                var resource = builder.Resource;
+
+                context.EnvironmentVariables["PGRST_DB_URI"] = $"postgres://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
+                context.EnvironmentVariables["PGRST_DB_SCHEMA"] = "public";
+                context.EnvironmentVariables["PGRST_DB_ANON_ROLE"] = "anon";
+                context.EnvironmentVariables["PGRST_JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PGRST_DB_USE_LEGACY_GUCS"] = "false";
+                //context.EnvironmentVariables["PGRST_OPENAPI_SERVER_HOST"] = resource.PrimaryEndpoint.Property(EndpointProperty.Host);
+                //context.EnvironmentVariables["PGRST_OPENAPI_SERVER_PORT"] = resource.PrimaryEndpoint.Property(EndpointProperty.Port);
+                
+                context.EnvironmentVariables["PGRST_APP_SETTINGS_JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PGRST_APP_SETTINGS_JWT_EXP"] = "3600"; // 1 hour
+            })
+            .WithArgs("postgrest")
             .WithHttpEndpoint(targetPort: 3000, port: null, name: $"{builder.Resource.Name}-rest");
     }
 
@@ -157,6 +186,45 @@ public static class SupabaseBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         return builder.WithModule("auth", SupabaseContainerImageTags.AuthImage, SupabaseContainerImageTags.AuthTag)
+            .WithEnvironment(context =>
+            {
+                var resource = builder.Resource;
+
+                context.EnvironmentVariables["GOTRUE_API_HOST"] = "0.0.0.0";
+                context.EnvironmentVariables["GOTRUE_API_PORT"] = "9999";
+                context.EnvironmentVariables["API_EXTERNAL_URL"] = resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+                
+                context.EnvironmentVariables["GOTRUE_DB_DRIVER"] = "postgres";
+                context.EnvironmentVariables["GOTRUE_DB_DATABASE_URL"] = $"postgres://supabase_auth_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
+                
+                context.EnvironmentVariables["GOTRUE_SITE_URL"] = resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+                context.EnvironmentVariables["GOTRUE_URI_ALLOW_LIST"] = resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+                context.EnvironmentVariables["GOTRUE_DISABLE_SIGNUP"] = "false"; // Set to true to disable signup
+                
+                context.EnvironmentVariables["GOTRUE_JWT_ADMIN_ROLES"] = "service_role";
+                context.EnvironmentVariables["GOTRUE_JWT_AUD"] = "authenticated";
+                context.EnvironmentVariables["GOTRUE_JWT_DEFAULT_GROUP_NAME"] = "authenticated";
+                context.EnvironmentVariables["GOTRUE_JWT_EXP"] = "3600"; // 1 hour
+                context.EnvironmentVariables["GOTRUE_JWT_SECRET"] = resource.PasswordParameter;
+                
+                context.EnvironmentVariables["GOTRUE_EXTERNAL_EMAIL_ENABLED"] = "true"; // Enable email signup
+                context.EnvironmentVariables["GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED"] = "true"; // Enable anonymous users
+                context.EnvironmentVariables["GOTRUE_MAILER_AUTOCONFIRM"] = "true"; // Automatically confirm email signups
+                
+                context.EnvironmentVariables["GOTRUE_SMTP_ADMIN_EMAIL"] = "";
+                context.EnvironmentVariables["GOTRUE_SMTP_HOST"] = "smtp.example.com"; // Replace with actual SMTP host
+                context.EnvironmentVariables["GOTRUE_SMTP_PORT"] = "587"; // Replace with actual SMTP port
+                context.EnvironmentVariables["GOTRUE_SMTP_USER"] = "";
+                context.EnvironmentVariables["GOTRUE_SMTP_PASS"] = "";
+                context.EnvironmentVariables["GOTRUE_SMTP_SENDER_NAME"] = "Supabase";
+                context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_INVITE"] = "/invite";
+                context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_CONFIRMATION"] = "/confirmation";
+                context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_RECOVERY"] = "/recovery";
+                context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE"] = "/email-change";
+                
+                context.EnvironmentVariables["GOTRUE_EXTERNAL_PHONE_ENABLED"] = "false"; // Disable phone signup
+                context.EnvironmentVariables["GOTRUE_SMS_AUTOCONFIRM"] = "false"; // Disable phone autoconfirm
+            })
             .WithHttpEndpoint(targetPort: 9999, port: null, name: $"{builder.Resource.Name}-auth");
     }
 
