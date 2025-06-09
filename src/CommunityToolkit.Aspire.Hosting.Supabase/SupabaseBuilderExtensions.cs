@@ -13,46 +13,50 @@ public static class SupabaseBuilderExtensions
     private const int SupabaseDatabasePort = 5432;
 
     /// <summary>
-    /// Adds a Supabase core Postgres and HTTP API container to the application model.
+    /// Adds a Supabase meta resource, with essential components like Postgres and HTTP API, to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the Supabase resource.</param>
-    /// <param name="password">Optional password parameter resource builder.</param>
-    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
-    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> AddSupabase(
-        this IDistributedApplicationBuilder builder,
-        string name,
-        IResourceBuilder<ParameterResource>? password = null,
-        int? apiPort = 8080,
-        int? dbPort = null)
+    public static IResourceBuilder<SupabaseResource> AddSupabase(this IDistributedApplicationBuilder builder,
+        string name, IResourceBuilder<ParameterResource>? password = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        ParameterResource passwordParam = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
+        ParameterResource passwordParam = password?.Resource ??
+                                          ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
+                                              $"{name}-password");
+        // create meta resource without image
         SupabaseResource resource = new(name, passwordParam);
+        var metaBuilder = builder.AddResource(resource);
 
-        return builder.AddResource(resource)
+        // separate Postgres database container
+        metaBuilder.ApplicationBuilder.AddResource(
+                new SupabaseResource($"{name}-database", passwordParam))
             .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
             .WithImageRegistry(SupabaseContainerImageTags.Registry)
-            .WithHttpEndpoint(targetPort: SupabaseApiPort, port: apiPort, name: SupabaseResource.PrimaryEndpointName)
-            .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort, name: SupabaseResource.DatabaseEndpointName)
+            .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort,
+                name: SupabaseDatabaseResource.DatabaseEndpointName)
             .WithEnvironment(context =>
             {
-                context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter;
+                context.EnvironmentVariables["POSTGRES_PASSWORD"] = passwordParam;
                 context.EnvironmentVariables["POSTGRES_DB"] = "postgres";
                 context.EnvironmentVariables["POSTGRES_USER"] = "postgres";
                 context.EnvironmentVariables["PGDATA"] = "/var/lib/postgresql/data";
-                context.EnvironmentVariables["PGHOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
-                context.EnvironmentVariables["PGPORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
-                context.EnvironmentVariables["PGPASSWORD"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PGHOST"] =
+                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Host);
+                context.EnvironmentVariables["PGPORT"] =
+                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Port);
+                context.EnvironmentVariables["PGPASSWORD"] = passwordParam;
                 context.EnvironmentVariables["PGDATABASE"] = "postgres";
             })
             .WithDataBindMount("./volumes/db/data")
             .WithBindMount("./volumes/db/migrations", "/docker-entrypoint-initdb.d/migrations")
-            .WithBindMount("./volumes/db/init-scripts", "/docker-entrypoint-initdb.d/init-scripts");
+            .WithBindMount("./volumes/db/init-scripts", "/docker-entrypoint-initdb.d/init-scripts")
+            .WithParentRelationship(resource);
+
+        return metaBuilder;
     }
 
     /// <summary>
@@ -70,7 +74,13 @@ public static class SupabaseBuilderExtensions
         IResourceBuilder<ParameterResource>? password = null,
         int? apiPort = null,
         int? dbPort = null)
-        => builder.AddSupabase(name, password, apiPort, dbPort)
+    {
+        ParameterResource passwordParam = password?.Resource ??
+                                          ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
+                                              $"{name}-password");
+
+        return builder.AddSupabase(name)
+            .WithPostgres(passwordParam)
             .WithKong()
             .WithStudio()
             .WithRest()
@@ -82,6 +92,7 @@ public static class SupabaseBuilderExtensions
             .WithImageProxyService()
             .WithLogflareService()
             .WithEdgeRuntimeService();
+    }
 
     // Individual module extension methods
     private static IResourceBuilder<SupabaseResource> WithModule(
@@ -101,6 +112,47 @@ public static class SupabaseBuilderExtensions
     }
 
     /// <summary>
+    /// Adds a Supabase core Postgres and HTTP API container to the application model.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the Supabase resource.</param>
+    /// <param name="password">Optional password parameter resource builder.</param>
+    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
+    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
+    /// <param name="passwordParam"></param>
+    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
+    public static IResourceBuilder<SupabaseResource> WithPostgres(this IResourceBuilder<SupabaseResource> builder,
+        ParameterResource passwordParam)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        // separate Postgres database container
+        builder.WithModule("postgres", SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
+            .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
+            .WithImageRegistry(SupabaseContainerImageTags.Registry)
+            .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort,
+                name: SupabaseDatabaseResource.DatabaseEndpointName)
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables["POSTGRES_PASSWORD"] = passwordParam;
+                context.EnvironmentVariables["POSTGRES_DB"] = "postgres";
+                context.EnvironmentVariables["POSTGRES_USER"] = "postgres";
+                context.EnvironmentVariables["PGDATA"] = "/var/lib/postgresql/data";
+                context.EnvironmentVariables["PGHOST"] =
+                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Host);
+                context.EnvironmentVariables["PGPORT"] =
+                    context.Resource.DatabaseEndpoint.Property(EndpointProperty.Port);
+                context.EnvironmentVariables["PGPASSWORD"] = passwordParam;
+                context.EnvironmentVariables["PGDATABASE"] = "postgres";
+            })
+            .WithDataBindMount("./volumes/db/data")
+            .WithBindMount("./volumes/db/migrations", "/docker-entrypoint-initdb.d/migrations")
+            .WithBindMount("./volumes/db/init-scripts", "/docker-entrypoint-initdb.d/init-scripts");
+
+        return builder;
+    }
+
+    /// <summary>
     /// Adds the Kong gateway module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithKong(this IResourceBuilder<SupabaseResource> builder)
@@ -115,10 +167,13 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["KONG_PLUGINS"] = "request-transformer,cors,key-auth,acl,basic-auth";
                 context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFER_SIZE"] = "160k";
                 context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFERS"] = "64 160k";
-                context.EnvironmentVariables["SUPABASE_ANON_KEY"] = builder.Resource.PasswordParameter; // Replace with actual anon key
-                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] = builder.Resource.PasswordParameter; // Replace with actual service role key
+                context.EnvironmentVariables["SUPABASE_ANON_KEY"] =
+                    builder.Resource.PasswordParameter; // Replace with actual anon key
+                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
+                    builder.Resource.PasswordParameter; // Replace with actual service role key
                 context.EnvironmentVariables["DASHBOARD_USERNAME"] = "admin"; // Replace with actual dashboard username
-                context.EnvironmentVariables["DASHBOARD_PASSWORD"] = builder.Resource.PasswordParameter; // Replace with actual dashboard password
+                context.EnvironmentVariables["DASHBOARD_PASSWORD"] =
+                    builder.Resource.PasswordParameter; // Replace with actual dashboard password
             })
             .WithHttpEndpoint(targetPort: 8000, port: null, name: $"{builder.Resource.Name}-kong");
     }
@@ -131,27 +186,31 @@ public static class SupabaseBuilderExtensions
     public static IResourceBuilder<SupabaseResource> WithStudio(this IResourceBuilder<SupabaseResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("studio", SupabaseContainerImageTags.StudioImage, SupabaseContainerImageTags.StudioTag)
+        return builder.WithModule("studio", SupabaseContainerImageTags.StudioImage,
+                SupabaseContainerImageTags.StudioTag)
             .WithEnvironment(context =>
             {
                 var resource = builder.Resource;
-                
+
                 // Meta service connection
                 context.EnvironmentVariables["STUDIO_PG_META_URL"] = "http://meta:8080";
                 context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter;
-                
+
                 // Organization and project settings
                 context.EnvironmentVariables["DEFAULT_ORGANIZATION_NAME"] = "Default Organization";
                 context.EnvironmentVariables["DEFAULT_PROJECT_NAME"] = "Default Project";
                 context.EnvironmentVariables["OPENAI_API_KEY"] = ""; // Optional
-                
+
                 // Supabase API connection
                 context.EnvironmentVariables["SUPABASE_URL"] = "http://kong:8000";
-                context.EnvironmentVariables["SUPABASE_PUBLIC_URL"] = resource.PrimaryEndpoint.Property(EndpointProperty.Url);
-                context.EnvironmentVariables["SUPABASE_ANON_KEY"] = resource.PasswordParameter; // Using password as anon key
-                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] = resource.PasswordParameter; // Using password as service role key
+                context.EnvironmentVariables["SUPABASE_PUBLIC_URL"] =
+                    resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+                context.EnvironmentVariables["SUPABASE_ANON_KEY"] =
+                    resource.PasswordParameter; // Using password as anon key
+                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
+                    resource.PasswordParameter; // Using password as service role key
                 context.EnvironmentVariables["AUTH_JWT_SECRET"] = resource.PasswordParameter;
-                
+
                 // Logging configuration
                 context.EnvironmentVariables["LOGFLARE_PRIVATE_ACCESS_TOKEN"] = "private_placeholder_token";
                 context.EnvironmentVariables["LOGFLARE_URL"] = "http://analytics:4000";
@@ -172,14 +231,15 @@ public static class SupabaseBuilderExtensions
             {
                 var resource = builder.Resource;
 
-                context.EnvironmentVariables["PGRST_DB_URI"] = $"postgres://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
+                context.EnvironmentVariables["PGRST_DB_URI"] =
+                    $"postgres://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
                 context.EnvironmentVariables["PGRST_DB_SCHEMA"] = "public";
                 context.EnvironmentVariables["PGRST_DB_ANON_ROLE"] = "anon";
                 context.EnvironmentVariables["PGRST_JWT_SECRET"] = resource.PasswordParameter;
                 context.EnvironmentVariables["PGRST_DB_USE_LEGACY_GUCS"] = "false";
                 //context.EnvironmentVariables["PGRST_OPENAPI_SERVER_HOST"] = resource.PrimaryEndpoint.Property(EndpointProperty.Host);
                 //context.EnvironmentVariables["PGRST_OPENAPI_SERVER_PORT"] = resource.PrimaryEndpoint.Property(EndpointProperty.Port);
-                
+
                 context.EnvironmentVariables["PGRST_APP_SETTINGS_JWT_SECRET"] = resource.PasswordParameter;
                 context.EnvironmentVariables["PGRST_APP_SETTINGS_JWT_EXP"] = "3600"; // 1 hour
             })
@@ -195,14 +255,15 @@ public static class SupabaseBuilderExtensions
     public static IResourceBuilder<SupabaseResource> WithRealtime(this IResourceBuilder<SupabaseResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("realtime", SupabaseContainerImageTags.RealtimeImage, SupabaseContainerImageTags.RealtimeTag)
+        return builder.WithModule("realtime", SupabaseContainerImageTags.RealtimeImage,
+                SupabaseContainerImageTags.RealtimeTag)
             .WithEnvironment(context =>
             {
                 var resource = builder.Resource;
 
                 // Basic configuration
                 context.EnvironmentVariables["PORT"] = "4000";
-                
+
                 // Database connection
                 context.EnvironmentVariables["DB_HOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
                 context.EnvironmentVariables["DB_PORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
@@ -211,16 +272,16 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["DB_NAME"] = "postgres";
                 context.EnvironmentVariables["DB_AFTER_CONNECT_QUERY"] = "SET search_path TO _realtime";
                 context.EnvironmentVariables["DB_ENC_KEY"] = "supabaserealtime";
-                
+
                 // API configuration
                 context.EnvironmentVariables["API_JWT_SECRET"] = resource.PasswordParameter;
-                
+
                 // Erlang settings
                 context.EnvironmentVariables["SECRET_KEY_BASE"] = "supabase_realtime_secret_key_base";
                 context.EnvironmentVariables["ERL_AFLAGS"] = "-proto_dist inet_tcp";
                 context.EnvironmentVariables["DNS_NODES"] = "''";
                 context.EnvironmentVariables["RLIMIT_NOFILE"] = "10000";
-                
+
                 // App settings
                 context.EnvironmentVariables["APP_NAME"] = "realtime";
                 context.EnvironmentVariables["SEED_SELF_HOST"] = "true";
@@ -237,32 +298,34 @@ public static class SupabaseBuilderExtensions
     public static IResourceBuilder<SupabaseResource> WithStorageService(this IResourceBuilder<SupabaseResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("storage", SupabaseContainerImageTags.StorageImage, SupabaseContainerImageTags.StorageTag)
+        return builder.WithModule("storage", SupabaseContainerImageTags.StorageImage,
+                SupabaseContainerImageTags.StorageTag)
             .WithEnvironment(context =>
             {
                 var resource = builder.Resource;
-                
+
                 // API keys
                 context.EnvironmentVariables["ANON_KEY"] = resource.PasswordParameter;
                 context.EnvironmentVariables["SERVICE_KEY"] = resource.PasswordParameter;
-                
+
                 // API connections
                 context.EnvironmentVariables["POSTGREST_URL"] = "http://rest:3000";
                 context.EnvironmentVariables["PGRST_JWT_SECRET"] = resource.PasswordParameter;
-                
+
                 // Database connection
-                context.EnvironmentVariables["DATABASE_URL"] = $"postgres://supabase_storage_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
-                
+                context.EnvironmentVariables["DATABASE_URL"] =
+                    $"postgres://supabase_storage_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
+
                 // Storage configuration
                 context.EnvironmentVariables["FILE_SIZE_LIMIT"] = "52428800"; // 50MB
                 context.EnvironmentVariables["STORAGE_BACKEND"] = "file";
                 context.EnvironmentVariables["FILE_STORAGE_BACKEND_PATH"] = "/var/lib/storage";
-                
+
                 // Tenant settings
                 context.EnvironmentVariables["TENANT_ID"] = "stub";
                 context.EnvironmentVariables["REGION"] = "stub";
                 context.EnvironmentVariables["GLOBAL_S3_BUCKET"] = "stub";
-                
+
                 // Image transformation
                 context.EnvironmentVariables["ENABLE_IMAGE_TRANSFORMATION"] = "true";
                 context.EnvironmentVariables["IMGPROXY_URL"] = "http://imgproxy:5001";
@@ -284,25 +347,31 @@ public static class SupabaseBuilderExtensions
 
                 context.EnvironmentVariables["GOTRUE_API_HOST"] = "0.0.0.0";
                 context.EnvironmentVariables["GOTRUE_API_PORT"] = "9999";
-                context.EnvironmentVariables["API_EXTERNAL_URL"] = resource.PrimaryEndpoint.Property(EndpointProperty.Url);
-                
+                context.EnvironmentVariables["API_EXTERNAL_URL"] =
+                    resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+
                 context.EnvironmentVariables["GOTRUE_DB_DRIVER"] = "postgres";
-                context.EnvironmentVariables["GOTRUE_DB_DATABASE_URL"] = $"postgres://supabase_auth_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
-                
-                context.EnvironmentVariables["GOTRUE_SITE_URL"] = resource.PrimaryEndpoint.Property(EndpointProperty.Url);
-                context.EnvironmentVariables["GOTRUE_URI_ALLOW_LIST"] = resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+                context.EnvironmentVariables["GOTRUE_DB_DATABASE_URL"] =
+                    $"postgres://supabase_auth_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
+
+                context.EnvironmentVariables["GOTRUE_SITE_URL"] =
+                    resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+                context.EnvironmentVariables["GOTRUE_URI_ALLOW_LIST"] =
+                    resource.PrimaryEndpoint.Property(EndpointProperty.Url);
                 context.EnvironmentVariables["GOTRUE_DISABLE_SIGNUP"] = "false"; // Set to true to disable signup
-                
+
                 context.EnvironmentVariables["GOTRUE_JWT_ADMIN_ROLES"] = "service_role";
                 context.EnvironmentVariables["GOTRUE_JWT_AUD"] = "authenticated";
                 context.EnvironmentVariables["GOTRUE_JWT_DEFAULT_GROUP_NAME"] = "authenticated";
                 context.EnvironmentVariables["GOTRUE_JWT_EXP"] = "3600"; // 1 hour
                 context.EnvironmentVariables["GOTRUE_JWT_SECRET"] = resource.PasswordParameter;
-                
+
                 context.EnvironmentVariables["GOTRUE_EXTERNAL_EMAIL_ENABLED"] = "true"; // Enable email signup
-                context.EnvironmentVariables["GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED"] = "true"; // Enable anonymous users
-                context.EnvironmentVariables["GOTRUE_MAILER_AUTOCONFIRM"] = "true"; // Automatically confirm email signups
-                
+                context.EnvironmentVariables["GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED"] =
+                    "true"; // Enable anonymous users
+                context.EnvironmentVariables["GOTRUE_MAILER_AUTOCONFIRM"] =
+                    "true"; // Automatically confirm email signups
+
                 // SMTP configuration
                 context.EnvironmentVariables["GOTRUE_SMTP_ADMIN_EMAIL"] = "admin@example.com";
                 context.EnvironmentVariables["GOTRUE_SMTP_HOST"] = "smtp.example.com";
@@ -310,39 +379,41 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["GOTRUE_SMTP_USER"] = "smtp_user";
                 context.EnvironmentVariables["GOTRUE_SMTP_PASS"] = "smtp_password";
                 context.EnvironmentVariables["GOTRUE_SMTP_SENDER_NAME"] = "Supabase";
-                
+
                 // URL paths for auth flows
                 context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_INVITE"] = "/auth/v1/verify";
                 context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_CONFIRMATION"] = "/auth/v1/verify";
                 context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_RECOVERY"] = "/auth/v1/verify";
                 context.EnvironmentVariables["GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE"] = "/auth/v1/verify";
-                
+
                 // Phone authentication
-                context.EnvironmentVariables["GOTRUE_EXTERNAL_PHONE_ENABLED"] = "false"; // Disable phone signup by default
-                context.EnvironmentVariables["GOTRUE_SMS_AUTOCONFIRM"] = "false"; // Disable phone autoconfirm by default
-                
+                context.EnvironmentVariables["GOTRUE_EXTERNAL_PHONE_ENABLED"] =
+                    "false"; // Disable phone signup by default
+                context.EnvironmentVariables["GOTRUE_SMS_AUTOCONFIRM"] =
+                    "false"; // Disable phone autoconfirm by default
+
                 // Additional configurations from docker-compose
                 // Uncomment and configure as needed
                 // context.EnvironmentVariables["GOTRUE_EXTERNAL_SKIP_NONCE_CHECK"] = "true"; // Bypass nonce check in ID Token flow for mobile
                 // context.EnvironmentVariables["GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED"] = "true"; // Require confirmation for email change
                 // context.EnvironmentVariables["GOTRUE_SMTP_MAX_FREQUENCY"] = "1s"; // Minimum time between emails
-                
+
                 // Hook configurations
                 // Uncomment and configure as needed
                 // context.EnvironmentVariables["GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED"] = "true";
                 // context.EnvironmentVariables["GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI"] = "pg-functions://postgres/public/custom_access_token_hook";
                 // context.EnvironmentVariables["GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_SECRETS"] = "<base64-secret>";
-                
+
                 // context.EnvironmentVariables["GOTRUE_HOOK_MFA_VERIFICATION_ATTEMPT_ENABLED"] = "true";
                 // context.EnvironmentVariables["GOTRUE_HOOK_MFA_VERIFICATION_ATTEMPT_URI"] = "pg-functions://postgres/public/mfa_verification_attempt";
-                
+
                 // context.EnvironmentVariables["GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_ENABLED"] = "true";
                 // context.EnvironmentVariables["GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_URI"] = "pg-functions://postgres/public/password_verification_attempt";
-                
+
                 // context.EnvironmentVariables["GOTRUE_HOOK_SEND_SMS_ENABLED"] = "false";
                 // context.EnvironmentVariables["GOTRUE_HOOK_SEND_SMS_URI"] = "pg-functions://postgres/public/custom_access_token_hook";
                 // context.EnvironmentVariables["GOTRUE_HOOK_SEND_SMS_SECRETS"] = "v1,whsec_someBaseSecret";
-                
+
                 // context.EnvironmentVariables["GOTRUE_HOOK_SEND_EMAIL_ENABLED"] = "false";
                 // context.EnvironmentVariables["GOTRUE_HOOK_SEND_EMAIL_URI"] = "http://host.docker.internal:54321/functions/v1/email_sender";
                 // context.EnvironmentVariables["GOTRUE_HOOK_SEND_EMAIL_SECRETS"] = "v1,whsec_someBaseSecret";
@@ -362,13 +433,15 @@ public static class SupabaseBuilderExtensions
             .WithEnvironment(context =>
             {
                 var resource = builder.Resource;
-                
+
                 // Configuration
                 context.EnvironmentVariables["PG_META_PORT"] = "8080";
-                
+
                 // Database connection
-                context.EnvironmentVariables["PG_META_DB_HOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
-                context.EnvironmentVariables["PG_META_DB_PORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
+                context.EnvironmentVariables["PG_META_DB_HOST"] =
+                    resource.DatabaseEndpoint.Property(EndpointProperty.Host);
+                context.EnvironmentVariables["PG_META_DB_PORT"] =
+                    resource.DatabaseEndpoint.Property(EndpointProperty.Port);
                 context.EnvironmentVariables["PG_META_DB_NAME"] = "postgres";
                 context.EnvironmentVariables["PG_META_DB_USER"] = "supabase_admin";
                 context.EnvironmentVariables["PG_META_DB_PASSWORD"] = resource.PasswordParameter;
@@ -379,10 +452,12 @@ public static class SupabaseBuilderExtensions
     /// <summary>
     /// Adds the Inbucket module to the Supabase resource.
     /// </summary>
-    public static IResourceBuilder<SupabaseResource> WithInbucketService(this IResourceBuilder<SupabaseResource> builder)
+    public static IResourceBuilder<SupabaseResource> WithInbucketService(
+        this IResourceBuilder<SupabaseResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("inbucket", SupabaseContainerImageTags.InbucketImage, SupabaseContainerImageTags.InbucketTag)
+        return builder.WithModule("inbucket", SupabaseContainerImageTags.InbucketImage,
+                SupabaseContainerImageTags.InbucketTag)
             .WithHttpEndpoint(targetPort: 9000, port: null, name: $"{builder.Resource.Name}-inbucket");
     }
 
@@ -391,10 +466,12 @@ public static class SupabaseBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> WithImageProxyService(this IResourceBuilder<SupabaseResource> builder)
+    public static IResourceBuilder<SupabaseResource> WithImageProxyService(
+        this IResourceBuilder<SupabaseResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("image-proxy", SupabaseContainerImageTags.ImageProxyImage, SupabaseContainerImageTags.ImageProxyTag)
+        return builder.WithModule("image-proxy", SupabaseContainerImageTags.ImageProxyImage,
+                SupabaseContainerImageTags.ImageProxyTag)
             .WithEnvironment(context =>
             {
                 // Core settings
@@ -403,7 +480,7 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["IMGPROXY_USE_ETAG"] = "true";
                 context.EnvironmentVariables["IMGPROXY_ENABLE_WEBP_DETECTION"] = "true";
             })
-            .WithBindMount("./volumes/storage", "/var/lib/storage")
+            /*.WithBindMount("./volumes/storage", "/var/lib/storage")*/
             .WithHttpEndpoint(targetPort: 5001, port: null, name: $"{builder.Resource.Name}-image-proxy");
     }
 
@@ -418,10 +495,11 @@ public static class SupabaseBuilderExtensions
         int? port = 4000)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        
+
         var builderUniqueName = builder.Resource.Name;
         var endpointName = $"{builderUniqueName}-logflare";
-        return builder.WithModule("logflare", SupabaseContainerImageTags.LogflareImage, SupabaseContainerImageTags.LogflareTag)
+        return builder.WithModule("logflare", SupabaseContainerImageTags.LogflareImage,
+                SupabaseContainerImageTags.LogflareTag)
             .WithEnvironment(context =>
             {
                 var resource = builder.Resource;
@@ -431,7 +509,7 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["LOGFLARE_SINGLE_TENANT"] = "true";
                 context.EnvironmentVariables["LOGFLARE_SUPABASE_MODE"] = "true";
                 context.EnvironmentVariables["LOGFLARE_MIN_CLUSTER_SIZE"] = "1";
-                
+
                 // Database connection
                 context.EnvironmentVariables["DB_USERNAME"] = "supabase_admin";
                 context.EnvironmentVariables["DB_DATABASE"] = "_supabase";
@@ -443,12 +521,13 @@ public static class SupabaseBuilderExtensions
                 // Access tokens
                 context.EnvironmentVariables["LOGFLARE_PUBLIC_ACCESS_TOKEN"] = "public_placeholder_token";
                 context.EnvironmentVariables["LOGFLARE_PRIVATE_ACCESS_TOKEN"] = "private_placeholder_token";
-                
+
                 // Postgres backend configuration (default)
-                context.EnvironmentVariables["POSTGRES_BACKEND_URL"] = $"postgresql://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/_supabase";
+                context.EnvironmentVariables["POSTGRES_BACKEND_URL"] =
+                    $"postgresql://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/_supabase";
                 context.EnvironmentVariables["POSTGRES_BACKEND_SCHEMA"] = "_analytics";
                 context.EnvironmentVariables["LOGFLARE_FEATURE_FLAG_OVERRIDE"] = "multibackend=true";
-                
+
                 // BigQuery backend configuration (commented out by default)
                 // context.EnvironmentVariables["GOOGLE_PROJECT_ID"] = "your_google_project_id";
                 // context.EnvironmentVariables["GOOGLE_PROJECT_NUMBER"] = "your_google_project_number";
@@ -461,23 +540,26 @@ public static class SupabaseBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> WithEdgeRuntimeService(this IResourceBuilder<SupabaseResource> builder)
+    public static IResourceBuilder<SupabaseResource> WithEdgeRuntimeService(
+        this IResourceBuilder<SupabaseResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("edge-runtime", SupabaseContainerImageTags.EdgeRuntimeImage, SupabaseContainerImageTags.EdgeRuntimeTag)
+        return builder.WithModule("edge-runtime", SupabaseContainerImageTags.EdgeRuntimeImage,
+                SupabaseContainerImageTags.EdgeRuntimeTag)
             .WithEnvironment(context =>
             {
                 var resource = builder.Resource;
-                
+
                 // Authentication
                 context.EnvironmentVariables["JWT_SECRET"] = resource.PasswordParameter;
-                
+
                 // Supabase connections
                 context.EnvironmentVariables["SUPABASE_URL"] = "http://kong:8000";
                 context.EnvironmentVariables["SUPABASE_ANON_KEY"] = resource.PasswordParameter;
                 context.EnvironmentVariables["SUPABASE_SERVICE_ROLE_KEY"] = resource.PasswordParameter;
-                context.EnvironmentVariables["SUPABASE_DB_URL"] = $"postgresql://postgres:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
-                
+                context.EnvironmentVariables["SUPABASE_DB_URL"] =
+                    $"postgresql://postgres:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
+
                 // Security configuration
                 context.EnvironmentVariables["FUNCTIONS_VERIFY_JWT"] = "true";
             })

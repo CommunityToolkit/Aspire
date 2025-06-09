@@ -1,7 +1,7 @@
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// A resource that represents a Supabase container.
+/// A resource that represents a meta resource for all Supabases containers.
 /// </summary>
 public class SupabaseResource : ContainerResource, IResourceWithConnectionString
 {
