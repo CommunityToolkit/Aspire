@@ -38,8 +38,8 @@ public static class NodeJSHostingExtensions
         };
 
         var endpointBuilder = useHttps
-            ? resource.WithHttpsEndpoint().WithExternalHttpEndpoints()
-            : resource.WithHttpEndpoint().WithExternalHttpEndpoints();
+            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
+            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
 
         builder.Eventing.Subscribe<ResourceEndpointsAllocatedEvent>((@event, ct) =>
         {
