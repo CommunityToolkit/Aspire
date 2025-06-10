@@ -253,6 +253,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
             _isDisposed = true;
             _ps.Stop();
             _ps.Dispose();
+            _cts?.Dispose();
         }
     }
 }
