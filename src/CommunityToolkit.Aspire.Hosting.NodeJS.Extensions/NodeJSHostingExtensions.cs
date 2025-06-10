@@ -2,6 +2,7 @@
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 using CommunityToolkit.Aspire.Utils;
+using k8s.KubeConfigModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Runtime.InteropServices;
@@ -42,7 +43,17 @@ public static class NodeJSHostingExtensions
             ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
             : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
 
-        return resource.WithArgs("--", "--port", RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%PORT%" : "$PORT");
+        return resource.WithArgs(ctx =>
+        {
+            if (packageManager != "yarn")
+            {
+                ctx.Args.Add("--");
+            }
+
+            var targetEndpoint = resource.Resource.GetEndpoint(useHttps ? "https" : "http");
+            ctx.Args.Add("--port");
+            ctx.Args.Add(targetEndpoint.Property(EndpointProperty.TargetPort));
+        });
     }
 
     /// <summary>

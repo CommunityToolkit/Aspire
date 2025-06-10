@@ -227,7 +227,7 @@ public class ResourceCreationTests
             arg => Assert.Equal("dev", arg),
             arg => Assert.Equal("--", arg),
             arg => Assert.Equal("--port", arg),
-            arg => Assert.Equal(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%PORT%" : "$PORT", arg)
+            arg => Assert.IsType<EndpointReferenceExpression>(arg)
         );
     }
 }
