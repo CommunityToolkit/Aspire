@@ -2,10 +2,8 @@
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 using CommunityToolkit.Aspire.Utils;
-using k8s.KubeConfigModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Runtime.InteropServices;
 
 namespace Aspire.Hosting;
 

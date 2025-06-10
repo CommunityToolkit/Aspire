@@ -1,9 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using static Google.Protobuf.Reflection.GeneratedCodeInfo.Types;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
