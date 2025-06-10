@@ -39,15 +39,16 @@ public static class MinioBuilderExtensions
         
         var resource = new MinioContainerResource(name, rootUserParameter, rootPasswordParameter);
 
+        const int consoleTargetPort = 9001;
         var builderWithResource = builder
             .AddResource(resource)
             .WithImage(MinioContainerImageTags.Image, MinioContainerImageTags.Tag)
             .WithImageRegistry(MinioContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: 9000, port: port, name: MinioContainerResource.PrimaryEndpointName)
-            .WithHttpEndpoint(targetPort: 9001, name: MinioContainerResource.ConsoleEndpointName)
+            .WithHttpEndpoint(targetPort: consoleTargetPort, name: MinioContainerResource.ConsoleEndpointName)
             .WithEnvironment(RootUserEnvVarName, resource.RootUser.Value)
             .WithEnvironment(RootPasswordEnvVarName, resource.PasswordParameter.Value)
-            .WithArgs("server", "/data");
+            .WithArgs("server", "/data", "--console-address", $":{consoleTargetPort}");
 
         var endpoint = builderWithResource.Resource.GetEndpoint(MinioContainerResource.PrimaryEndpointName);
         var healthCheckKey = $"{name}_check";
