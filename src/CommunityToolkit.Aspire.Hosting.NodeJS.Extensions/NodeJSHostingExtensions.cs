@@ -1,9 +1,10 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Aspire.Utils;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Runtime.InteropServices;
 
 namespace Aspire.Hosting;
 
@@ -37,34 +38,11 @@ public static class NodeJSHostingExtensions
             _ => builder.AddNpmApp(name, wd, "dev")
         };
 
-        var endpointBuilder = useHttps
+        _ = useHttps
             ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
             : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
 
-        builder.Eventing.Subscribe<ResourceEndpointsAllocatedEvent>((@event, ct) =>
-        {
-            if (@event.Resource.Name != name)
-            {
-                return Task.CompletedTask;
-            }
-
-            endpointBuilder.WithArgs(ctx =>
-            {
-                if (@event.Resource.TryGetEndpoints(out var endpoints))
-                {
-                    // Set the PORT environment variable to the first endpoint's port
-                    var firstEndpoint = endpoints.FirstOrDefault();
-
-                    ctx.Args.Add("--");
-                    ctx.Args.Add("--port");
-                    ctx.Args.Add(firstEndpoint?.AllocatedEndpoint?.Port.ToString() ?? "5173");
-                }
-            });
-
-            return Task.CompletedTask;
-        });
-
-        return resource;
+        return resource.WithArgs("--", "--port", RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%PORT%" : "$PORT");
     }
 
     /// <summary>
