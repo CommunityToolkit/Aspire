@@ -20,12 +20,21 @@ var script1 = ps.AddScript("script1", """
 
     write-information "`$myblob is $myblob"
 
-    az storage container create --connection-string $myblob -n demo
-    az storage blob upload --connection-string $myblob -c demo --file ./scripts/script.ps1
-    
+    # only run this if Azure CLI is installed
+    if ((gcm az -ErrorAction SilentlyContinue) -ne $null) {
+
+        az storage container create --connection-string $myblob -n demo
+        az storage blob upload --connection-string $myblob -c demo --file ./scripts/script.ps1
+        write-information "Blob uploaded"
+
+    } else {
+
+        write-warning "Azure CLI not found, skipping blob upload"
+
+    }
     write-information $pwd
 
-    write-information "Blob uploaded"
+    
 """).WithArgs("world");
 
 // outputs "the sum of 2 and 3 is 5"
