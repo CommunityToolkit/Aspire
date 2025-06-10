@@ -217,9 +217,5 @@ public class ResourceCreationTests
         var httpEndpoint = endpoints.FirstOrDefault(e => e.UriScheme == "http");
         Assert.NotNull(httpEndpoint);
         Assert.Equal("PORT", httpEndpoint.EnvVar);
-
-        // Verify that command line arguments callback is configured
-        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsCallbacks));
-        Assert.NotEmpty(argsCallbacks);
     }
 }

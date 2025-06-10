@@ -37,34 +37,9 @@ public static class NodeJSHostingExtensions
             _ => builder.AddNpmApp(name, wd, "dev")
         };
 
-        var endpointBuilder = useHttps
+        return useHttps
             ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
             : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
-
-        builder.Eventing.Subscribe<ResourceEndpointsAllocatedEvent>((@event, ct) =>
-        {
-            if (@event.Resource.Name != name)
-            {
-                return Task.CompletedTask;
-            }
-
-            endpointBuilder.WithArgs(ctx =>
-            {
-                if (@event.Resource.TryGetEndpoints(out var endpoints))
-                {
-                    // Set the PORT environment variable to the first endpoint's port
-                    var firstEndpoint = endpoints.FirstOrDefault();
-
-                    ctx.Args.Add("--");
-                    ctx.Args.Add("--port");
-                    ctx.Args.Add(firstEndpoint?.AllocatedEndpoint?.Port.ToString() ?? "5173");
-                }
-            });
-
-            return Task.CompletedTask;
-        });
-
-        return resource;
     }
 
     /// <summary>
