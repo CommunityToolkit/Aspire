@@ -51,6 +51,7 @@ jobs:
             Hosting.SqlServer.Extensions.Tests,
             Hosting.Sqlite.Tests,
             Hosting.k6.Tests,
+            Hosting.Minio.Tests,
 
             # Client integration tests
             EventStore.Tests,
@@ -61,6 +62,7 @@ jobs:
             Microsoft.EntityFrameworkCore.Sqlite.Tests,
             OllamaSharp.Tests,
             RavenDB.Client.Tests,
+            Minio.Client.Tests,
           ]
 
     steps:

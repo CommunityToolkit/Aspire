@@ -46,16 +46,29 @@ internal class NodePackageInstaller(string packageManager, string installCommand
     {
         var logger = loggerService.GetLogger(resource);
 
-        var packageJsonPath = Path.Combine(resource.WorkingDirectory, lockfile);
+        // For 'ci' command, we need the lockfile. For 'install' command, package.json is sufficient
+        string requiredFile;
+        string requiredFilePath;
+        
+        if (installCommand == "ci")
+        {
+            requiredFile = lockfile;
+            requiredFilePath = Path.Combine(resource.WorkingDirectory, lockfile);
+        }
+        else
+        {
+            requiredFile = "package.json";
+            requiredFilePath = Path.Combine(resource.WorkingDirectory, "package.json");
+        }
 
-        if (!File.Exists(packageJsonPath))
+        if (!File.Exists(requiredFilePath))
         {
             await notificationService.PublishUpdateAsync(resource, state => state with
             {
-                State = new($"No {lockfile} file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
+                State = new($"No {requiredFile} file found in {resource.WorkingDirectory}", KnownResourceStates.FailedToStart)
             }).ConfigureAwait(false);
 
-            throw new InvalidOperationException($"No {lockfile} file found in {resource.WorkingDirectory}");
+            throw new InvalidOperationException($"No {requiredFile} file found in {resource.WorkingDirectory}");
         }
 
         await notificationService.PublishUpdateAsync(resource, state => state with

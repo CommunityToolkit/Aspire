@@ -68,8 +68,7 @@ public static partial class OllamaResourceBuilderExtensions
         return builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
-          .WithHttpHealthCheck("/")
-          .ExcludeFromManifest();
+          .WithHttpHealthCheck("/");
     }
 
     /// <summary>
