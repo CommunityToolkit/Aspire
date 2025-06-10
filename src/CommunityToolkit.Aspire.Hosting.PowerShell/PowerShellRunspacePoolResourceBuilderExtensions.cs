@@ -32,36 +32,34 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
 
         var scriptResource = new PowerShellScriptResource(name, scriptBlock, builder.Resource);
 
-        builder.ApplicationBuilder.Eventing.Subscribe<InitializeResourceEvent>(scriptResource, (e, ct) =>
+        builder.ApplicationBuilder.Eventing.Subscribe<InitializeResourceEvent>(scriptResource, async (e, ct) =>
         {
             var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
             var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
 
             var scriptName = scriptResource.Name;
             var scriptLogger = loggerService.GetLogger(scriptName);
+
             try
             {
-                // TODO: capture script streams and log them
+                // this will block until the runspace pool is started, which is implied by the WaitFor call
+                await builder.ApplicationBuilder.Eventing.PublishAsync(
+                    new BeforeResourceStartedEvent(scriptResource, e.Services), ct);
+
                 scriptLogger.LogInformation("Starting script '{ScriptName}'", scriptName);
 
-                _ = notificationService
-                    .WaitForDependenciesAsync(scriptResource, ct)
-                    .ContinueWith(
-                        _ => scriptResource.StartAsync(scriptLogger, notificationService, ct),
-                        ct);
+                _ = scriptResource.StartAsync(scriptLogger, notificationService, ct);
             }
             catch (Exception ex)
             {
                 scriptLogger.LogError(ex, "Failed to start script '{ScriptName}'", scriptName);
             }
-
-            return Task.CompletedTask;
         });
 
         return builder.ApplicationBuilder
             .AddResource(scriptResource)
-            .WaitFor(builder) // wait for pool resource
-            .WithParentRelationship(builder.Resource) // owned by pool
+            .WithParentRelationship(builder.Resource)
+            .WaitFor(builder)
             .WithInitialState(new()
             {
                 ResourceType = "PowerShellScript",

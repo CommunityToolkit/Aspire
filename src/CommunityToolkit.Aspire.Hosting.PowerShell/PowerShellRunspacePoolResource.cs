@@ -39,6 +39,10 @@ public class PowerShellRunspacePoolResource(
 
     internal Task StartAsync(InitialSessionState sessionState, ResourceNotificationService notificationService, ILogger logger, CancellationToken token = default)
     {
+        logger.LogInformation(
+            "Starting PowerShell runspace pool '{PoolName}' with {MinRunspaces} to {MaxRunspaces} runspaces",
+            Name, MinRunspaces, MaxRunspaces);
+
         sessionState.LanguageMode = this.LanguageMode;
         sessionState.AuthorizationManager = new AuthorizationManager("Aspire");
         Pool = RunspaceFactory.CreateRunspacePool(MinRunspaces, MaxRunspaces, sessionState, new AspirePSHost(logger));
@@ -73,39 +77,25 @@ public class PowerShellRunspacePoolResource(
                     nameof(poolState), poolState, $"Unexpected runspace pool state {poolState}")
             };
 
+            logger.LogInformation(
+                "Runspace pool '{PoolName}' state mapped to known state '{KnownState}'", Name, knownState);
+
             await notificationService.PublishUpdateAsync(this,
-                state => {
-                    state = state with
-                    {
-                        State = knownState,
-                        Properties = [.. state.Properties,
+                state => state with
+                {
+                    State = knownState,
+                    Properties = [
+                        .. state.Properties,
                         new("RunspacePoolState", poolState.ToString()),
                         new("Reason", reason?.ToString() ?? string.Empty)
-                        ]
-                    };
-
-                    if (knownState == KnownResourceStates.Running)
-                    {
-                        state = state with
-                        {
-                            StartTimeStamp = DateTime.Now,
-                        };
-                    }
-
-                    if (KnownResourceStates.TerminalStates.Contains(knownState))
-                    {
-                        state = state with
-                        {
-                            StopTimeStamp = DateTime.Now,
-                        };
-                    }
-
-                    return state;
+                    ],
+                    StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
+                    StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
                 });
         };
     }
 
-    // absolutely brain dead and deficient (minimal) PSHost implementation
+    // minimal PSHost implementation (aspire does not support interaction with the host, yet)
     private class AspirePSHost(ILogger logger) : PSHost
     {
         public override void SetShouldExit(int exitCode)
