@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
 
@@ -194,5 +195,31 @@ public class ResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
         Assert.Equal("npm", resource.Command);
+    }
+
+    [Fact]
+    public void ViteAppConfiguresPortFromEnvironment()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddViteApp("vite");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<NodeAppResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        // Verify that the resource has endpoint with PORT environment variable
+        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
+        var httpEndpoint = endpoints.FirstOrDefault(e => e.UriScheme == "http");
+        Assert.NotNull(httpEndpoint);
+        Assert.Equal("PORT", httpEndpoint.EnvVar);
+
+        // Verify that command line arguments are configured to pass port to Vite
+        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsCallbacks));
+        Assert.NotEmpty(argsCallbacks);
     }
 }
