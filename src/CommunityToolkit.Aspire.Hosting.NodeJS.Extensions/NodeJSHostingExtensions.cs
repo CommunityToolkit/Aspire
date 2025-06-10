@@ -37,20 +37,28 @@ public static class NodeJSHostingExtensions
             _ => builder.AddNpmApp(name, wd, "dev")
         };
 
-        // Configure Vite to use the PORT environment variable for the dev server
-        resource = resource.WithArgs(ctx =>
+        var endpointBuilder = useHttps
+            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
+            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
+
+        // Configure Vite to use the assigned port from the endpoint
+        return endpointBuilder.WithArgs(ctx =>
         {
             // Add -- separator to pass arguments to the underlying command (vite dev)
             ctx.Args.Add("--");
             ctx.Args.Add("--port");
-            // Read the PORT environment variable at runtime
-            var port = ctx.EnvironmentVariables.TryGetValue("PORT", out var portValue) ? portValue : "5173";
-            ctx.Args.Add(port);
+            
+            // Try to get the port from the environment variable set by the endpoint
+            if (ctx.EnvironmentVariables.TryGetValue("PORT", out var portValue))
+            {
+                ctx.Args.Add(portValue);
+            }
+            else
+            {
+                // Fallback to Vite's default port
+                ctx.Args.Add("5173");
+            }
         });
-
-        return useHttps
-            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
-            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
     }
 
     /// <summary>
