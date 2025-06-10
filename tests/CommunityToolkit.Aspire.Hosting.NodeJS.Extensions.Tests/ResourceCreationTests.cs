@@ -139,7 +139,7 @@ public class ResourceCreationTests
 
 
     [Fact]
-    public void ViteAppHasExposedExternalHttpEndpoints()
+    public void ViteAppDoesNotExposeExternalHttpEndpointsByDefault()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -155,7 +155,7 @@ public class ResourceCreationTests
 
         Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
 
-        Assert.Contains(endpoints, e => e.IsExternal);
+        Assert.DoesNotContain(endpoints, e => e.IsExternal);
     }
 
     [Fact]

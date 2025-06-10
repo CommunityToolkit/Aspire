@@ -38,8 +38,8 @@ public static class NodeJSHostingExtensions
         };
 
         _ = useHttps
-            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
-            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
+            ? resource.WithHttpsEndpoint(env: "PORT")
+            : resource.WithHttpEndpoint(env: "PORT");
 
         return resource.WithArgs(ctx =>
         {
