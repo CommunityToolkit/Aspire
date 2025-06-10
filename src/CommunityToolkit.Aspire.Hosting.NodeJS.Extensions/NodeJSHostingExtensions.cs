@@ -38,27 +38,33 @@ public static class NodeJSHostingExtensions
         };
 
         var endpointBuilder = useHttps
-            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
-            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
+            ? resource.WithHttpsEndpoint().WithExternalHttpEndpoints()
+            : resource.WithHttpEndpoint().WithExternalHttpEndpoints();
 
-        // Configure Vite to use the assigned port from the endpoint
-        return endpointBuilder.WithArgs(ctx =>
+        builder.Eventing.Subscribe<ResourceEndpointsAllocatedEvent>((@event, ct) =>
         {
-            // Add -- separator to pass arguments to the underlying command (vite dev)
-            ctx.Args.Add("--");
-            ctx.Args.Add("--port");
-            
-            // Try to get the port from the environment variable set by the endpoint
-            if (ctx.EnvironmentVariables.TryGetValue("PORT", out var portValue))
+            if (@event.Resource.Name != name)
             {
-                ctx.Args.Add(portValue);
+                return Task.CompletedTask;
             }
-            else
+
+            endpointBuilder.WithArgs(ctx =>
             {
-                // Fallback to Vite's default port
-                ctx.Args.Add("5173");
-            }
+                if (@event.Resource.TryGetEndpoints(out var endpoints))
+                {
+                    // Set the PORT environment variable to the first endpoint's port
+                    var firstEndpoint = endpoints.FirstOrDefault();
+
+                    ctx.Args.Add("--");
+                    ctx.Args.Add("--port");
+                    ctx.Args.Add(firstEndpoint?.AllocatedEndpoint?.Port.ToString() ?? "5173");
+                }
+            });
+
+            return Task.CompletedTask;
         });
+
+        return resource;
     }
 
     /// <summary>
