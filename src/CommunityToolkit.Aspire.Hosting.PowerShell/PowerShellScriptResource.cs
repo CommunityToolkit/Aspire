@@ -15,7 +15,6 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
     {
         private readonly System.Management.Automation.PowerShell _ps;
         private readonly CancellationTokenSource _cts;
-        private readonly PowerShellRunspacePoolResource _parent;
         private readonly PSDataCollection<PSObject> _output;
         private readonly PSDataCollection<PSObject> _emptyInput;
         private ILogger? _scriptLogger;
@@ -31,12 +30,12 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
         /// <param name="name">The name of the resource. This must be a valid resource name.</param>
         /// <param name="script">The ScriptBlock to be executed.</param>
         /// <param name="parent">The parent <see cref="PowerShellRunspacePoolResource"/> that provides the runspace pool for script
-        /// execution. Cannot be null.</param>         
+        /// execution. Cannot be null.</param>
         public PowerShellScriptResource([ResourceName] string name,
             ScriptBlock script,
             PowerShellRunspacePoolResource parent) : base(name)
         {
-            _parent = parent;
+            Parent = parent;
             _cts = new CancellationTokenSource();
             _ps = System.Management.Automation.PowerShell.Create();
 
@@ -69,7 +68,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
             FileInfo scriptFile,
             PowerShellRunspacePoolResource parent) : base(name)
         {
-            _parent = parent;
+            Parent = parent;
             _cts = new CancellationTokenSource();
             _ps = System.Management.Automation.PowerShell.Create();
 
@@ -87,6 +86,11 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
             // add scriptFile to the PowerShell instance to be executed
             _ps.AddCommand(scriptFile.FullName);
         }
+
+        /// <summary>
+        /// Parent PowerShell runspace pool resource that provides the runspace pool for script execution.
+        /// </summary>
+        public PowerShellRunspacePoolResource Parent { get; }
 
         /// <summary>
         /// Breaks the PowerShell script execution.
@@ -121,11 +125,13 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
             ResourceNotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
+            scriptLogger.LogInformation("Starting PowerShell script '{ScriptName}'", Name);
+           
             Debug.Assert(scriptLogger != null);
             _scriptLogger = scriptLogger;
 
-            Debug.Assert(_parent.Pool != null);
-            _ps.RunspacePool = _parent.Pool;
+            Debug.Assert(Parent.Pool != null);
+            _ps.RunspacePool = Parent.Pool;
 
             ConfigurePSDataStreams(scriptLogger, notificationService);
 
@@ -145,36 +151,19 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
                         "Unknown PowerShell invocation state")
                 };
 
+                scriptLogger.LogInformation("Publishing script {ScriptName} state as known state: {ScriptState}", Name, knownState);
+
                 await notificationService.PublishUpdateAsync(this,
-                    state =>
+                    state => state with
                     {
-                        state = state with
-                        {
-                            State = knownState,
-                            Properties = [
+                        State = knownState,
+                        Properties = [
                                 .. state.Properties,
                                 new( "PSInvocationState", args.InvocationStateInfo.State.ToString() ),
                                 new( "Reason", args.InvocationStateInfo.Reason?.Message ?? string.Empty ),
-                            ]
-                        };
-
-                        if (knownState == KnownResourceStates.Running)
-                        {
-                            state = state with
-                            {
-                                StartTimeStamp = DateTime.Now,
-                            };
-                        }
-
-                        if (KnownResourceStates.TerminalStates.Contains(knownState))
-                        {
-                            state = state with
-                            {
-                                StopTimeStamp = DateTime.Now,
-                            };
-                        }
-
-                        return state;
+                            ],
+                        StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
+                        StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
                     });
             };
 

@@ -2,7 +2,6 @@
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
-using System.Globalization;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 
@@ -13,6 +12,8 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell;
 /// </summary>
 public static class DistributedApplicationBuilderExtensions
 {
+    private static bool _eventingSubscribed = false;
+
     /// <summary>
     /// Adds a PowerShell runspace pool resource to the distributed application.
     /// </summary>
@@ -31,32 +32,32 @@ public static class DistributedApplicationBuilderExtensions
         int minRunspaces = 1,
         int maxRunspaces = 5)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(name);
-
-        if (builder.Resources.OfType<PowerShellRunspacePoolResource>().Any(
-            rsp => rsp.Name == name))
-        {
-            throw new DistributedApplicationException("AddPowerShell failed",
-                new InvalidOperationException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "A PowerShell resource with the name '{0}' already exists.", name)));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         var pool = new PowerShellRunspacePoolResource(name, languageMode, minRunspaces, maxRunspaces);
 
-        builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>(async (e, ct) =>
+        if (!_eventingSubscribed)
         {
-            var pools = e.Model.Resources.OfType<PowerShellRunspacePoolResource>().ToList();
+            _eventingSubscribed = true;
 
-            foreach (var poolResource in pools)
+            builder.Eventing.Subscribe<InitializeResourceEvent>(pool, async (e, ct) =>
             {
+                //var pools = e..Resources.OfType<PowerShellRunspacePoolResource>().ToList();
+
+                //foreach (var poolResource in pools)
+                //{
+                var poolResource = e.Resource as PowerShellRunspacePoolResource;
+
                 Debug.Assert(poolResource is not null);
 
                 var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
                 var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
 
                 var sessionState = InitialSessionState.CreateDefault();
+
+                // publish the BeforeResourceStartedEvent to allow other resources to prepare
+                await builder.Eventing.PublishAsync(
+                    new BeforeResourceStartedEvent(poolResource, e.Services), ct);
 
                 foreach (var annotation in poolResource.Annotations)
                 {
@@ -73,11 +74,14 @@ public static class DistributedApplicationBuilderExtensions
                 var poolName = poolResource.Name;
                 var poolLogger = loggerService.GetLogger(poolName);
 
-                _ = notificationService.WaitForDependenciesAsync(poolResource, ct)
-                    .ContinueWith(_ => poolResource.StartAsync(sessionState, notificationService, poolLogger, ct),
-                        ct);
-            }
-        });
+                //_ = notificationService.WaitForDependenciesAsync(poolResource, ct)
+                //    .ContinueWith(_ => poolResource.StartAsync(sessionState, notificationService, poolLogger, ct),
+                //        ct);
+
+                _ = poolResource.StartAsync(sessionState, notificationService, poolLogger, ct);
+                //}
+            });
+        }
 
         return builder.AddResource(pool)
             .WithInitialState(new()
