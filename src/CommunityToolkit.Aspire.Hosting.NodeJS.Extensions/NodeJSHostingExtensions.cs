@@ -45,7 +45,7 @@ public static class NodeJSHostingExtensions
 
         return resource.WithArgs(ctx =>
         {
-            if (packageManager != "yarn")
+            if (packageManager == "npm")
             {
                 ctx.Args.Add("--");
             }
