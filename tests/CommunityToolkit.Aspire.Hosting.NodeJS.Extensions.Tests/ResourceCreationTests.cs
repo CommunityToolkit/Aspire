@@ -2,6 +2,8 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using static Google.Protobuf.Reflection.GeneratedCodeInfo.Types;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -208,18 +210,24 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<NodeAppResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
-
-        // Verify that the resource has endpoint with PORT environment variable
-        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
-        var httpEndpoint = endpoints.FirstOrDefault(e => e.UriScheme == "http");
-        Assert.NotNull(httpEndpoint);
-        Assert.Equal("PORT", httpEndpoint.EnvVar);
+        var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
 
         // Verify that command line arguments callback is configured
-        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsCallbacks));
-        Assert.NotEmpty(argsCallbacks);
+        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsCallbackAnnotations));
+        List<object> args = [];
+        var ctx = new CommandLineArgsCallbackContext(args);
+
+        foreach (var annotation in argsCallbackAnnotations)
+        {
+            annotation.Callback(ctx);
+        }
+
+        Assert.Collection(args,
+            arg => Assert.Equal("run", arg),
+            arg => Assert.Equal("dev", arg),
+            arg => Assert.Equal("--", arg),
+            arg => Assert.Equal("--port", arg),
+            arg => Assert.Equal(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%PORT%" : "$PORT", arg)
+        );
     }
 }
