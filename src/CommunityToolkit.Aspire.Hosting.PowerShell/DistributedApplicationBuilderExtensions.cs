@@ -42,10 +42,6 @@ public static class DistributedApplicationBuilderExtensions
 
             builder.Eventing.Subscribe<InitializeResourceEvent>(pool, async (e, ct) =>
             {
-                //var pools = e..Resources.OfType<PowerShellRunspacePoolResource>().ToList();
-
-                //foreach (var poolResource in pools)
-                //{
                 var poolResource = e.Resource as PowerShellRunspacePoolResource;
 
                 Debug.Assert(poolResource is not null);
@@ -55,7 +51,7 @@ public static class DistributedApplicationBuilderExtensions
 
                 var sessionState = InitialSessionState.CreateDefault();
 
-                // publish the BeforeResourceStartedEvent to allow other resources to prepare
+                // This will block until explicit and implied WaitFor calls are completed
                 await builder.Eventing.PublishAsync(
                     new BeforeResourceStartedEvent(poolResource, e.Services), ct);
 
@@ -74,12 +70,8 @@ public static class DistributedApplicationBuilderExtensions
                 var poolName = poolResource.Name;
                 var poolLogger = loggerService.GetLogger(poolName);
 
-                //_ = notificationService.WaitForDependenciesAsync(poolResource, ct)
-                //    .ContinueWith(_ => poolResource.StartAsync(sessionState, notificationService, poolLogger, ct),
-                //        ct);
-
                 _ = poolResource.StartAsync(sessionState, notificationService, poolLogger, ct);
-                //}
+
             });
         }
 
