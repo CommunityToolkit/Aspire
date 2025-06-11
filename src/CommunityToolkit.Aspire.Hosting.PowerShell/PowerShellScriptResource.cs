@@ -127,10 +127,10 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
         {
             scriptLogger.LogInformation("Starting PowerShell script '{ScriptName}'", Name);
            
-            Debug.Assert(scriptLogger != null);
+            Debug.Assert(scriptLogger is not null);
             _scriptLogger = scriptLogger;
 
-            Debug.Assert(Parent.Pool != null);
+            Debug.Assert(Parent.Pool is not null);
             _ps.RunspacePool = Parent.Pool;
 
             ConfigurePSDataStreams(scriptLogger, notificationService);
