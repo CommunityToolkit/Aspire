@@ -3,6 +3,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Postgres;
 using CommunityToolkit.Aspire.Hosting.Supabase;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
 using System.Data;
@@ -89,7 +90,6 @@ public static class SupabaseBuilderExtensions
 
                         context.EnvironmentVariables["POSTGRES_HOST"] = "/var/run/postgresql";
 
-                        //TODO need to check how to fix this error: System.InvalidOperationException: The endpoint `postgres` is not allocated for the resource `supabase`.
                         context.EnvironmentVariables["PGPORT"] =
                             pgResource.Endpoint.Property(EndpointProperty.Port);
                         context.EnvironmentVariables["POSTGRES_PORT"] =
@@ -98,11 +98,11 @@ public static class SupabaseBuilderExtensions
                         context.EnvironmentVariables["PGPASSWORD"] = pgResource.PasswordParameter;
                         context.EnvironmentVariables["POSTGRES_PASSWORD"] = pgResource.PasswordParameter;
 
-                        context.EnvironmentVariables["PGDATABASE"] = pgResource.DatabaseNameParameter;
-                        context.EnvironmentVariables["POSTGRES_DB"] = pgResource.DatabaseNameParameter;
+                        context.EnvironmentVariables["PGDATABASE"] = pgResource.DatabaseName;
+                        context.EnvironmentVariables["POSTGRES_DB"] = pgResource.DatabaseName;
 
-                        context.EnvironmentVariables["JWT_SECRET"] = pgResource.DatabaseNameParameter;
-                        context.EnvironmentVariables["JWT_EXP"] = pgResource.DatabaseNameParameter;
+                        context.EnvironmentVariables["JWT_SECRET"] = pgResource.DatabaseName; //TODO
+                        context.EnvironmentVariables["JWT_EXP"] = pgResource.DatabaseName; //TODO
                     });
 
                 string? connectionString = null;
@@ -140,6 +140,8 @@ public static class SupabaseBuilderExtensions
                         throw new InvalidOperationException(
                             $"Could not open connection to '{supabasePostgresResource.Name}'");
                     }
+                    
+                    await CreateDatabaseAsync(npgsqlConnection, supabasePostgresResource, @event.Services, ct).ConfigureAwait(false);
 
                     /*foreach (var name in resource.Databases.Keys)
                     {
@@ -187,7 +189,7 @@ public static class SupabaseBuilderExtensions
                             postgresEndpoint.Property(EndpointProperty.Host);
                         context.EnvironmentVariables["PG_META_DB_PORT"] =
                             postgresEndpoint.Property(EndpointProperty.Port);
-                        context.EnvironmentVariables["PG_META_DB_NAME"] = postgresResource.DatabaseNameParameter;
+                        context.EnvironmentVariables["PG_META_DB_NAME"] = postgresResource.DatabaseName;
                         context.EnvironmentVariables["PG_META_DB_USER"] = postgresResource.UserNameReference;
                         context.EnvironmentVariables["PG_META_DB_PASSWORD"] = postgresResource.PasswordParameter;
                     });
@@ -210,11 +212,14 @@ public static class SupabaseBuilderExtensions
                 containerBuilder.WithReference(postgresEndpoint);
                 EndpointReference kongEndpoint = kongResource.GetEndpoint(SupabaseKongResource.EndpointName);
                 containerBuilder.WithReference(kongEndpoint);
+                
+                EndpointReference metaEndpoint = metaResource.GetEndpoint(SupabaseMetaResource.EndpointName);
+                containerBuilder.WithReference(metaEndpoint);
 
                 containerBuilder.WithEnvironment(context =>
                     {
                         // Meta service connection
-                        context.EnvironmentVariables["STUDIO_PG_META_URL"] = "http://meta:8080";
+                        context.EnvironmentVariables["STUDIO_PG_META_URL"] = metaEndpoint.Property(EndpointProperty.Url);
                         context.EnvironmentVariables["POSTGRES_PASSWORD"] = supabaseResource.DashboardPasswordParameter;
 
                         // Organization and project settings
@@ -223,8 +228,9 @@ public static class SupabaseBuilderExtensions
                         context.EnvironmentVariables["OPENAI_API_KEY"] = ""; // Optional
 
                         // Supabase API connection
-                        context.EnvironmentVariables["SUPABASE_URL"] = "http://kong:8000";
-                        context.EnvironmentVariables["SUPABASE_PUBLIC_URL"] = kongEndpoint;
+                        //context.EnvironmentVariables["SUPABASE_URL"] = "http://kong:8000";
+                        context.EnvironmentVariables["SUPABASE_URL"] = kongEndpoint.Property(EndpointProperty.Url);
+                        context.EnvironmentVariables["SUPABASE_PUBLIC_URL"] = kongEndpoint.Property(EndpointProperty.Url);
                         context.EnvironmentVariables["SUPABASE_ANON_KEY"] =
                             supabaseResource.DashboardPasswordParameter; // Using password as anon key
                         context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
@@ -304,8 +310,9 @@ public static class SupabaseBuilderExtensions
 
         #endregion
 
-        var kongEndpoint = kong.Resource.GetEndpoint(SupabaseKongResource.EndpointName);
-        supabaseBuilder.WithHttpHealthCheck(() => kongEndpoint);
+        //This does not work as it adds the health check to the postgres resource instead of the Supabase resource
+        /*var kongEndpoint = kong.Resource.GetEndpoint(SupabaseKongResource.EndpointName);
+        supabaseBuilder.WithHttpHealthCheck(() => kongEndpoint);*/
 
         return supabaseBuilder;
     }
@@ -864,4 +871,30 @@ public static class SupabaseBuilderExtensions
     }*/
 
     #endregion
+    
+    private static async Task CreateDatabaseAsync(NpgsqlConnection npgsqlConnection, SupabasePostgresResource npgsqlDatabase, IServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        //var scriptAnnotation = npgsqlDatabase.Annotations.OfType<PostgresCreateDatabaseScriptAnnotation>().LastOrDefault();
+
+        ILogger logger = serviceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(npgsqlDatabase.Parent);
+        logger.LogDebug("Creating database '{DatabaseName}'", npgsqlDatabase.DatabaseName);
+
+        try
+        {
+            string quotedDatabaseIdentifier = new NpgsqlCommandBuilder().QuoteIdentifier(npgsqlDatabase.DatabaseName);
+            await using NpgsqlCommand command = npgsqlConnection.CreateCommand();
+            command.CommandText = /*scriptAnnotation?.Script ??*/ $"CREATE DATABASE {quotedDatabaseIdentifier}";
+            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogDebug("Database '{DatabaseName}' created successfully", npgsqlDatabase.DatabaseName);
+        }
+        catch (PostgresException p) when (p.SqlState == "42P04")
+        {
+            // Ignore the error if the database already exists.
+            logger.LogDebug("Database '{DatabaseName}' already exists", npgsqlDatabase.DatabaseName);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to create database '{DatabaseName}'", npgsqlDatabase.DatabaseName);
+        }
+    }
 }

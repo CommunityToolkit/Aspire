@@ -5,7 +5,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 public class SupabasePostgresResource : ContainerResource,  IResourceWithParent<SupabaseResource>, IResourceWithConnectionString
 {
-    internal const string EndpointName = "postgres";
+    internal const string EndpointName = "tcp";
 
     private const string DefaultUserName = "postgres";
 
@@ -27,7 +27,7 @@ public class SupabasePostgresResource : ContainerResource,  IResourceWithParent<
     /// <summary>
     /// Gets or sets the parameter for the database name.
     /// </summary>
-    public ParameterResource DatabaseNameParameter { get; set; } = new("database-name", _ => "postgres");
+    public string DatabaseName { get; set; } = "postgres";
 
     internal ReferenceExpression UserNameReference =>
         UserNameParameter is not null
@@ -36,7 +36,7 @@ public class SupabasePostgresResource : ContainerResource,  IResourceWithParent<
 
     private ReferenceExpression ConnectionString =>
         ReferenceExpression.Create(
-            $"Host={Endpoint.Property(EndpointProperty.Host)};Port={Endpoint.Property(EndpointProperty.Port)};Database={DatabaseNameParameter};Username={UserNameReference};Password={PasswordParameter}");
+            $"Host={Endpoint.Property(EndpointProperty.Host)};Port={Endpoint.Property(EndpointProperty.Port)};Database={DatabaseName};Username={UserNameReference};Password={PasswordParameter}");
 
     /// <summary>
     /// Gets the connection string expression for the PostgreSQL database.
