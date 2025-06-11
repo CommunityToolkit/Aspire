@@ -132,9 +132,9 @@
     <Project Path="examples/sqlserver-ext/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/supabase/">
-    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.Api\CommunityToolkit.Aspire.Supabase.Api.csproj" Type="Classic C#" />
-    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.AppHost\CommunityToolkit.Aspire.Supabase.AppHost.csproj" Type="Classic C#" />
-    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.ServiceDefaults\CommunityToolkit.Aspire.Supabase.ServiceDefaults.csproj" Type="Classic C#" />
+    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.Api\CommunityToolkit.Aspire.Supabase.Api.csproj"  />
+    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.AppHost\CommunityToolkit.Aspire.Supabase.AppHost.csproj"  />
+    <Project Path="examples\supabase\CommunityToolkit.Aspire.Supabase.ServiceDefaults\CommunityToolkit.Aspire.Supabase.ServiceDefaults.csproj"  />
   </Folder>
   <Folder Name="/examples/swa/">
     <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.ApiApp/CommunityToolkit.Aspire.StaticWebApps.ApiApp.csproj" />
@@ -142,7 +142,7 @@
     <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults/CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="CommunityToolkit.Aspire.Supabase.Client\CommunityToolkit.Aspire.Supabase.Client.csproj" Type="Classic C#" />
+    <Project Path="CommunityToolkit.Aspire.Supabase.Client\CommunityToolkit.Aspire.Supabase.Client.csproj"  />
     <Project Path="src/CommunityToolkit.Aspire.EventStore/CommunityToolkit.Aspire.EventStore.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
@@ -180,7 +180,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
-    <Project Path="src\CommunityToolkit.Aspire.Hosting.Supabase\CommunityToolkit.Aspire.Hosting.Supabase.csproj" Type="Classic C#" />
+    <Project Path="src\CommunityToolkit.Aspire.Hosting.Supabase\CommunityToolkit.Aspire.Hosting.Supabase.csproj"  />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
@@ -227,7 +227,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.OllamaSharp.Tests/CommunityToolkit.Aspire.OllamaSharp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
-    <Project Path="tests\CommunityToolkit.Aspire.Hosting.Supabase.Tests\CommunityToolkit.Aspire.Hosting.Supabase.Tests.csproj" />
+    <Project Path="tests\CommunityToolkit.Aspire.Hosting.Supabase.Tests\CommunityToolkit.Aspire.Hosting.Supabase.Tests.csproj"  />
   </Folder>
   <Folder Name="/tests/Dapr/">
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />

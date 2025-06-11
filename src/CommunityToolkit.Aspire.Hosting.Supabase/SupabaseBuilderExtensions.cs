@@ -360,25 +360,6 @@ public static class SupabaseBuilderExtensions
     }
 
     /*
-    /// <summary>
-    /// Adds all Supabase modules (child services) to the Supabase resource.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> WithAllModules(
-        this IResourceBuilder<SupabaseResource> builder)
-    {
-        return builder
-            .WithRest()
-            .WithRealtime()
-            .WithStorageService()
-            .WithAuthService()
-            .WithMetaService()
-            .WithInbucketService()
-            .WithImageProxyService()
-            .WithLogflareService()
-            .WithEdgeRuntimeService();
-    }
 
     /// <summary>
     /// Adds the REST module to the Supabase resource.
