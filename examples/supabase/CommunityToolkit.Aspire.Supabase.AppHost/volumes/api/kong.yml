@@ -209,7 +209,8 @@ services:
   ## Secure Database routes
   - name: meta
     _comment: 'pg-meta: /pg/* -> http://pg-meta:8080/*'
-    url: http://meta:8080/
+    #url: http://meta:8080/
+    url: $META_ENDPOINT
     routes:
       - name: meta-all
         strip_path: true
@@ -228,7 +229,8 @@ services:
   ## Protected Dashboard - catch all remaining routes
   - name: dashboard
     _comment: 'Studio: /* -> http://studio:3000/*'
-    url: http://studio:3000/
+    #url: http://studio:3000/
+    url: $STUDIO_ENDPOINT
     routes:
       - name: dashboard-all
         strip_path: true

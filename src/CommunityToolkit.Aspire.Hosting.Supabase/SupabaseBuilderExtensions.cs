@@ -45,13 +45,15 @@ public static class SupabaseBuilderExtensions
         ArgumentNullException.ThrowIfNull(name);
 
         //Create default parameters if not provided
-        var dashboardPasswordParameter = dashboardUserName?.Resource ??
-                                         ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
-                                             $"{name}-password");
+        ParameterResource dashboardPasswordParameter = dashboardUserName?.Resource ??
+                                                       ParameterResourceBuilderExtensions
+                                                           .CreateDefaultPasswordParameter(builder,
+                                                               $"{name}-password");
 
-        var databasePasswordParameter = databasePassword?.Resource ??
-                                        ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
-                                            $"{name}-database-password");
+        ParameterResource databasePasswordParameter = databasePassword?.Resource ??
+                                                      ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(
+                                                          builder,
+                                                          $"{name}-database-password");
 
         SupabaseResource supabaseResource = new(name,
             databaseUserName?.Resource,
@@ -72,7 +74,8 @@ public static class SupabaseBuilderExtensions
             SupabaseContainerImageTags.PostgresImage,
             SupabaseContainerImageTags.PostgresTag, moduleBuilder =>
             {
-                var postgresResourceBuilder = moduleBuilder.WithEndpoint(port: databasePort,
+                IResourceBuilder<SupabasePostgresResource> postgresResourceBuilder = moduleBuilder.WithEndpoint(
+                        port: databasePort,
                         targetPort: PostgresDatabasePort,
                         name: SupabasePostgresResource.EndpointName, protocol: ProtocolType.Tcp,
                         scheme: "tcp") //TODO check this
@@ -167,25 +170,18 @@ public static class SupabaseBuilderExtensions
         #region Meta
 
         SupabaseMetaResource metaResource = new(supabaseResource, $"{name}-meta");
-        var meta = supabaseBuilder
+        IResourceBuilder<SupabaseMetaResource> meta = supabaseBuilder
             .WithModule(metaResource, SupabaseContainerImageTags.MetaImage, SupabaseContainerImageTags.MetaTag,
                 moduleBuilder =>
                 {
                     //moduleBuilder.WaitFor(postgres); TODO
 
-                    var postgresEndpoint = postgres.Resource.GetEndpoint(SupabasePostgresResource.EndpointName);
+                    EndpointReference postgresEndpoint =
+                        postgres.Resource.GetEndpoint(SupabasePostgresResource.EndpointName);
                     moduleBuilder.WithReference(postgresEndpoint);
 
                     moduleBuilder.WithEnvironment(context =>
                     {
-                        /*
-                           PG_META_PORT: 8080
-                           PG_META_DB_HOST: ${POSTGRES_HOST}
-                           PG_META_DB_PORT: ${POSTGRES_PORT}
-                           PG_META_DB_NAME: ${POSTGRES_DB}
-                           PG_META_DB_USER: supabase_admin
-                           PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
-                         */
                         context.EnvironmentVariables["PG_META_PORT"] = "8080";
                         context.EnvironmentVariables["PG_META_DB_HOST"] =
                             postgresEndpoint.Property(EndpointProperty.Host);
@@ -196,64 +192,12 @@ public static class SupabaseBuilderExtensions
                         context.EnvironmentVariables["PG_META_DB_PASSWORD"] = postgresResource.PasswordParameter;
                     });
 
-
-                    moduleBuilder.WithHttpEndpoint(targetPort: 8080, name: SupabaseKongResource.EndpointName);
+                    moduleBuilder.WithHttpEndpoint(targetPort: 8080, name: SupabaseMetaResource.EndpointName);
                 });
 
         #endregion
-
-        #region Kong
-        
 
         SupabaseKongResource kongResource = new(supabaseResource, $"{name}-kong");
-        var kong = supabaseBuilder
-            .WithModule(kongResource, SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag,
-                moduleBuilder =>
-                {
-                    //moduleBuilder.WaitFor(postgres);
-
-                    moduleBuilder.WithEnvironment(context =>
-                    {
-                        context.EnvironmentVariables["KONG_DATABASE"] = "off";
-                        context.EnvironmentVariables["KONG_DECLARATIVE_CONFIG"] = "/home/kong/kong.yml";
-                        context.EnvironmentVariables["KONG_DNS_ORDER"] = "LAST,A,CNAME";
-                        context.EnvironmentVariables["KONG_PLUGINS"] =
-                            "request-transformer,cors,key-auth,acl,basic-auth";
-                        context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFER_SIZE"] = "160k";
-                        context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFERS"] = "64 160k";
-                        //context.EnvironmentVariables["SUPABASE_ANON_KEY"] = resource.DashboardPasswordParameter; // Replace with actual anon key
-                        context.EnvironmentVariables["SUPABASE_ANON_KEY"] = "anonkey"; // Replace with actual anon key
-                        //context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] = resource.DashboardPasswordParameter; // Replace with actual service role key
-                        context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
-                            "serviceKey"; // Replace with actual service role key
-                        context.EnvironmentVariables["DASHBOARD_USERNAME"] =
-                            "admin"; // Replace with actual dashboard username
-                        //context.EnvironmentVariables["DASHBOARD_PASSWORD"] = resource.DashboardPasswordParameter; // Replace with actual dashboard password
-                        context.EnvironmentVariables["DASHBOARD_PASSWORD"] =
-                            "admin"; // Replace with actual dashboard password
-                    });
-
-
-                    moduleBuilder.WithHttpEndpoint(targetPort: 8000, name: SupabaseKongResource.EndpointName);
-
-                    /*moduleBuilder.WithContainerFiles("/home/kong/kong.yml", [new ContainerFile
-                    {
-                        Name = "kong.yml",
-                        Contents = File.ReadAllText("./volumes/api/kong.yml"),
-                    }]);*/
-                    moduleBuilder.WithBindMount("./volumes/api/kong.yml", "/home/kong/temp.yml", true);
-
-                    // bash -c 'eval "echo \"$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
-                    moduleBuilder
-                        .WithEntrypoint("bash")
-                        .WithArgs(
-                            "-c",
-                            "eval \"echo \\\"$(cat /home/kong/temp.yml)\\\"\" > /home/kong/kong.yml && exec /docker-entrypoint.sh kong docker-start"
-                        );
-                    
-                });
-
-        #endregion
 
         #region Studio
 
@@ -264,7 +208,7 @@ public static class SupabaseBuilderExtensions
                 EndpointReference postgresEndpoint =
                     postgres.Resource.GetEndpoint(SupabasePostgresResource.EndpointName);
                 containerBuilder.WithReference(postgresEndpoint);
-                EndpointReference kongEndpoint = kong.Resource.GetEndpoint(SupabaseKongResource.EndpointName);
+                EndpointReference kongEndpoint = kongResource.GetEndpoint(SupabaseKongResource.EndpointName);
                 containerBuilder.WithReference(kongEndpoint);
 
                 containerBuilder.WithEnvironment(context =>
@@ -293,13 +237,75 @@ public static class SupabaseBuilderExtensions
                         context.EnvironmentVariables["NEXT_PUBLIC_ENABLE_LOGS"] = "true";
                         context.EnvironmentVariables["NEXT_ANALYTICS_BACKEND_PROVIDER"] = "postgres";
                     })
-                    .WithHttpEndpoint(targetPort: 3000, port: null, name: $"{supabaseResource.Name}-studio");
+                    .WithHttpEndpoint(targetPort: 3000, port: null, name: SupabaseStudioResource.EndpointName);
 
 
                 //containerBuilder.WaitFor(postgres);
             });
 
         #endregion
+
+        #region Kong
+
+        IResourceBuilder<SupabaseKongResource> kong = supabaseBuilder
+            .WithModule(kongResource, SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag,
+                moduleBuilder =>
+                {
+                    //moduleBuilder.WaitFor(postgres);
+
+                    EndpointReference metaEndpoint = metaResource.GetEndpoint(SupabaseMetaResource.EndpointName);
+                    moduleBuilder.WithReference(metaEndpoint);
+
+                    EndpointReference studioEndpoint = studioResource.GetEndpoint(SupabaseStudioResource.EndpointName);
+                    moduleBuilder.WithReference(studioEndpoint);
+
+                    moduleBuilder.WithEnvironment(context =>
+                    {
+                        context.EnvironmentVariables["KONG_DATABASE"] = "off";
+                        context.EnvironmentVariables["KONG_DECLARATIVE_CONFIG"] = "/home/kong/kong.yml";
+                        context.EnvironmentVariables["KONG_DNS_ORDER"] = "LAST,A,CNAME";
+                        context.EnvironmentVariables["KONG_PLUGINS"] =
+                            "request-transformer,cors,key-auth,acl,basic-auth";
+                        context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFER_SIZE"] = "160k";
+                        context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFERS"] = "64 160k";
+                        //context.EnvironmentVariables["SUPABASE_ANON_KEY"] = resource.DashboardPasswordParameter; // Replace with actual anon key
+                        context.EnvironmentVariables["SUPABASE_ANON_KEY"] = "anonkey"; // Replace with actual anon key
+                        //context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] = resource.DashboardPasswordParameter; // Replace with actual service role key
+                        context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
+                            "serviceKey"; // Replace with actual service role key
+                        context.EnvironmentVariables["DASHBOARD_USERNAME"] =
+                            "admin"; // Replace with actual dashboard username
+                        //context.EnvironmentVariables["DASHBOARD_PASSWORD"] = resource.DashboardPasswordParameter; // Replace with actual dashboard password
+                        context.EnvironmentVariables["DASHBOARD_PASSWORD"] =
+                            "admin"; // Replace with actual dashboard password
+
+                        //Endpoints
+                        context.EnvironmentVariables["META_ENDPOINT"] = metaEndpoint.Property(EndpointProperty.Url);
+                        context.EnvironmentVariables["STUDIO_ENDPOINT"] = studioEndpoint.Property(EndpointProperty.Url);
+                    });
+
+
+                    moduleBuilder.WithHttpEndpoint(targetPort: 8000, name: SupabaseKongResource.EndpointName);
+                    
+                    /*moduleBuilder.WithContainerFiles("/home/kong/kong.yml", [new ContainerFile
+                    {
+                        Name = "kong.yml",
+                        Contents = File.ReadAllText("./volumes/api/kong.yml"),
+                    }]);*/
+                    moduleBuilder.WithBindMount("./volumes/api/kong.yml", "/home/kong/temp.yml", true);
+
+                    moduleBuilder
+                        .WithEntrypoint("bash")
+                        .WithArgs(
+                            "-c",
+                            "eval \"echo \\\"$(cat /home/kong/temp.yml)\\\"\" > /home/kong/kong.yml && exec /docker-entrypoint.sh kong docker-start"
+                        );
+                });
+
+        #endregion
+
+        var kongEndpoint = kong.Resource.GetEndpoint(SupabaseKongResource.EndpointName);
+        supabaseBuilder.WithHttpHealthCheck(() => kongEndpoint);
 
         return supabaseBuilder;
     }
