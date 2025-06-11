@@ -77,7 +77,7 @@ public class PowerShellRunspacePoolResource(
                     nameof(poolState), poolState, $"Unexpected runspace pool state {poolState}")
             };
 
-            logger.LogInformation(
+            logger.LogDebug(
                 "Runspace pool '{PoolName}' state mapped to known state '{KnownState}'", Name, knownState);
 
             await notificationService.PublishUpdateAsync(this,

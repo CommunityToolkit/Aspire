@@ -151,7 +151,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
                         "Unknown PowerShell invocation state")
                 };
 
-                scriptLogger.LogInformation("Publishing script {ScriptName} state as known state: {ScriptState}", Name, knownState);
+                scriptLogger.LogDebug("Publishing script {ScriptName} state as known state: {ScriptState}", Name, knownState);
 
                 await notificationService.PublishUpdateAsync(this,
                     state => state with
