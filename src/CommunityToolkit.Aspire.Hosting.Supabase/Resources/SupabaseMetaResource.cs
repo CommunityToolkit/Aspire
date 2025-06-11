@@ -3,7 +3,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents the Kong API gateway for Supabase.
 /// </summary>
-public class SupabaseKongResource : ContainerResource/*, IResourceWithParent<SupabaseResource>*/
+public class SupabaseMetaResource : ContainerResource/*, IResourceWithParent<SupabaseResource>*/
 {
     internal const string EndpointName = "http";
 
@@ -17,7 +17,7 @@ public class SupabaseKongResource : ContainerResource/*, IResourceWithParent<Sup
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="name">The name of the resource.</param>
-    public SupabaseKongResource(SupabaseResource parent, string name)
+    public SupabaseMetaResource(SupabaseResource parent, string name)
         : base(name)
     {
         Parent = parent;

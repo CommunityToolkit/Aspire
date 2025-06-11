@@ -3,7 +3,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents the Supabase Studio module.
 /// </summary>
-public class SupabaseStudioResource : ContainerResource, IResourceWithParent<SupabaseResource>
+public class SupabaseStudioResource : ContainerResource/*, IResourceWithParent<SupabaseResource>*/
 {
     internal const string EndpointName = "studio";
     
