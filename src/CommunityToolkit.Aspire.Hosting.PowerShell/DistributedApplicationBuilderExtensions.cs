@@ -12,8 +12,6 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell;
 /// </summary>
 public static class DistributedApplicationBuilderExtensions
 {
-    private static bool _eventingSubscribed = false;
-
     /// <summary>
     /// Adds a PowerShell runspace pool resource to the distributed application.
     /// </summary>
@@ -36,45 +34,39 @@ public static class DistributedApplicationBuilderExtensions
 
         var pool = new PowerShellRunspacePoolResource(name, languageMode, minRunspaces, maxRunspaces);
 
-        if (!_eventingSubscribed)
+
+        builder.Eventing.Subscribe<InitializeResourceEvent>(pool, async (e, ct) =>
         {
-            _eventingSubscribed = true;
+            var poolResource = e.Resource as PowerShellRunspacePoolResource;
 
-            builder.Eventing.Subscribe<InitializeResourceEvent>(pool, async (e, ct) =>
-            {
-                var poolResource = e.Resource as PowerShellRunspacePoolResource;
+            Debug.Assert(poolResource is not null);
 
-                Debug.Assert(poolResource is not null);
+            var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
+            var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
 
-                var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
-                var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
+            var sessionState = InitialSessionState.CreateDefault();
 
-                var sessionState = InitialSessionState.CreateDefault();
-
-                // This will block until explicit and implied WaitFor calls are completed
-                await builder.Eventing.PublishAsync(
-                    new BeforeResourceStartedEvent(poolResource, e.Services), ct);
+            // This will block until explicit and implied WaitFor calls are completed
+            await builder.Eventing.PublishAsync(
+                new BeforeResourceStartedEvent(poolResource, e.Services), ct);
 
             foreach (var annotation in poolResource.Annotations.OfType<PowerShellVariableReferenceAnnotation<ConnectionStringReference>>())
-                {
+            {
                 if (annotation is { } reference)
-                    {
-                        var connectionString = await reference.Value.Resource.GetConnectionStringAsync(ct);
-                        sessionState.Variables.Add(
-                            new SessionStateVariableEntry(reference.Name, connectionString,
-                                $"ConnectionString for {reference.Value.Resource.GetType().Name} '{reference.Name}'",
-                                ScopedItemOptions.ReadOnly | ScopedItemOptions.AllScope));
-                    }
+                {
+                    var connectionString = await reference.Value.Resource.GetConnectionStringAsync(ct);
+                    sessionState.Variables.Add(
+                        new SessionStateVariableEntry(reference.Name, connectionString,
+                            $"ConnectionString for {reference.Value.Resource.GetType().Name} '{reference.Name}'",
+                            ScopedItemOptions.ReadOnly | ScopedItemOptions.AllScope));
                 }
+            }
 
-                var poolName = poolResource.Name;
-                var poolLogger = loggerService.GetLogger(poolName);
+            var poolName = poolResource.Name;
+            var poolLogger = loggerService.GetLogger(poolName);
 
-                _ = poolResource.StartAsync(sessionState, notificationService, poolLogger, ct);
+            _ = poolResource.StartAsync(sessionState, notificationService, poolLogger, ct);
         });
-
-            });
-        }
 
         return builder.AddResource(pool)
             .WithInitialState(new()
