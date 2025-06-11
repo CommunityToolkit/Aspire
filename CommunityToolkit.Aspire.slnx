@@ -8,6 +8,9 @@
     <Folder Name="/examples/adminer/">
         <Project Path="examples/adminer/CommunityToolkit.Aspire.Hosting.Adminer.AppHost/CommunityToolkit.Aspire.Hosting.Adminer.AppHost.csproj" />
     </Folder>
+    <Folder Name="/examples/apache-tika/">
+        <Project Path="examples/apache-tika/CommunityToolkit.Aspire.Hosting.Apache.Tika.AppHost/CommunityToolkit.Aspire.Hosting.Apache.Tika.AppHost.csproj" />
+    </Folder>
     <Folder Name="/examples/bun/">
         <Project Path="examples/bun/CommunityToolkit.Aspire.Hosting.Bun.AppHost/CommunityToolkit.Aspire.Hosting.Bun.AppHost.csproj" />
     </Folder>
@@ -146,6 +149,7 @@
         <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
         <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
         <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
+        <Project Path="src/CommunityToolkit.Aspire.Hosting.Apache.Tika/CommunityToolkit.Aspire.Hosting.Apache.Tika.csproj" Id="1c82b51a-2c28-45ea-8bbd-b9ffcae020fb" />
         <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj" />
         <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.csproj" />
         <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
@@ -192,6 +196,7 @@
         <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
         <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
         <Project Path="tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests.csproj" />
+        <Project Path="tests/CommunityToolkit.Aspire.Hosting.Apache.Tika.Tests/CommunityToolkit.Aspire.Hosting.Apache.Tika.Tests.csproj" Id="21bb91f8-f964-42d0-8f5c-243a713183ce" />
         <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests.csproj" />
         <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests.csproj" />
         <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
