@@ -2,7 +2,7 @@ using Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var supabase = builder.AddAllSupabase("supabase");
+var supabase = builder.AddSupabase("supabase");
 
 var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Supabase_Api>("api")
     .WithReference(supabase)

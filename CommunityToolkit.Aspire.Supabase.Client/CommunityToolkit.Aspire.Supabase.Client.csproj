@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>A .NET Aspire client integration for the RavenDB.Client library.</Description>
+    <AdditionalPackageTags>client ravendb</AdditionalPackageTags>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Supabase" />
+  </ItemGroup>
+</Project>

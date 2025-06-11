@@ -15,9 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Supabase\CommunityToolkit.Aspire.Hosting.Supabase.csproj">
-      <IsAspireProjectResource>false</IsAspireProjectResource>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Supabase\CommunityToolkit.Aspire.Hosting.Supabase.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Supabase.Api\CommunityToolkit.Aspire.Supabase.Api.csproj"/>
   </ItemGroup>
 

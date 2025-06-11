@@ -8,13 +8,11 @@ using Supabase.Postgrest.Responses;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-string url = Environment.GetEnvironmentVariable("SUPABASE_URL") ?? "";
-string key = Environment.GetEnvironmentVariable("SUPABASE_KEY") ?? "";
 
 builder.Services.AddScoped<Supabase.Client>(
     provider => new Supabase.Client(
-        url,
-        key,
+        "url",
+        "key",
         new Supabase.SupabaseOptions
         {
             AutoConnectRealtime = true,

@@ -1,7 +1,13 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Postgres;
 using CommunityToolkit.Aspire.Hosting.Supabase;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using System;
+using System.Data;
+
+// ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
 
 namespace Aspire.Hosting;
 
@@ -11,84 +17,181 @@ namespace Aspire.Hosting;
 public static class SupabaseBuilderExtensions
 {
     private const int SupabaseApiPort = 8000;
-    private const int SupabaseDatabasePort = 5432;
+    private const int PostgresDatabasePort = 5432;
 
     /// <summary>
     /// Adds a Supabase meta resource, with essential components like Postgres and HTTP API, to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the Supabase resource.</param>
-    /// <param name="password">Optional password parameter resource builder.</param>
-    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
-    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
+    /// <param name="databasePort"></param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
     public static IResourceBuilder<SupabaseResource> AddSupabase(
         this IDistributedApplicationBuilder builder,
-        string name,
-        IResourceBuilder<ParameterResource>? password = null,
-        int? apiPort = null,
-        int? dbPort = null)
+        string name, int? databasePort = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        ParameterResource passwordParam = password?.Resource
-                                          ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
-                                              $"{name}-password");
-        // create meta resource without image
-        SupabaseResource resource = new(name, passwordParam);
+        SupabaseResource resource = new(name);
+
+        //Create default parameters if not provided
+
+        resource.DashboardPasswordParameter ??=
+            ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
+
+        resource.DatabasePasswordParameter ??=
+            ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-db-password");
+
         IResourceBuilder<SupabaseResource> metaBuilder = builder.AddResource(resource);
 
+        #region Postgres
+        
         // separate Postgres database container
-        metaBuilder.ApplicationBuilder.AddResource(
-                new SupabaseResource($"{name}-database", passwordParam))
-            .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
-            .WithImageRegistry(SupabaseContainerImageTags.Registry)
-            .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort,
-                name: SupabaseResource.DatabaseEndpointName)
+        metaBuilder.WithModule("postgres", SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
+            .WithEndpoint(targetPort: PostgresDatabasePort, port: databasePort,
+                name: SupabaseResource.DatabaseEndpointName) //TODO check this
             .WithEnvironment(context =>
             {
-                context.EnvironmentVariables["POSTGRES_PASSWORD"] = passwordParam;
+                context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.DatabasePasswordParameter;
                 context.EnvironmentVariables["POSTGRES_DB"] = "postgres";
                 context.EnvironmentVariables["POSTGRES_USER"] = "postgres";
                 context.EnvironmentVariables["PGDATA"] = "/var/lib/postgresql/data";
                 context.EnvironmentVariables["PGHOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
                 context.EnvironmentVariables["PGPORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
-                context.EnvironmentVariables["PGPASSWORD"] = passwordParam;
-                context.EnvironmentVariables["PGDATABASE"] = "postgres";
+                context.EnvironmentVariables["PGPASSWORD"] = resource.DatabasePasswordParameter;
+                context.EnvironmentVariables["PGDATABASE"] = resource.DatabaseNameParameter;
             })
-            .WithDataBindMount("./volumes/db/data")
-            .WithBindMount("./volumes/db/migrations", "/docker-entrypoint-initdb.d/migrations")
-            .WithBindMount("./volumes/db/init-scripts", "/docker-entrypoint-initdb.d/init-scripts")
             .WithParentRelationship(resource);
+
+        string? connectionString = null;
+
+        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(resource, async (@event, ct) =>
+        {
+            connectionString = await resource.GetConnectionStringAsync(ct).ConfigureAwait(false);
+
+            if (connectionString == null)
+            {
+                throw new DistributedApplicationException(
+                    $"ConnectionStringAvailableEvent was published for the '{resource.Name}' resource but the connection string was null.");
+            }
+        });
+
+        builder.Eventing.Subscribe<ResourceReadyEvent>(resource, async (@event, ct) =>
+        {
+            if (connectionString is null)
+            {
+                throw new DistributedApplicationException(
+                    $"ResourceReadyEvent was published for the '{resource.Name}' resource but the connection string was null.");
+            }
+
+            // Non-database scoped connection string
+            await using NpgsqlConnection npgsqlConnection = new(connectionString + ";Database=postgres;");
+
+            await npgsqlConnection.OpenAsync(ct).ConfigureAwait(false);
+
+            if (npgsqlConnection.State != ConnectionState.Open)
+            {
+                throw new InvalidOperationException($"Could not open connection to '{resource.Name}'");
+            }
+
+            /*foreach (var name in resource.Databases.Keys)
+            {
+                if (builder.Resources.FirstOrDefault(n => string.Equals(n.Name, name, StringComparisons.ResourceName)) is PostgresDatabaseResource postgreDatabase)
+                {
+                    await CreateDatabaseAsync(npgsqlConnection, postgreDatabase, @event.Services, ct).ConfigureAwait(false);
+                }
+            }*/
+        });
+
+        string healthCheckKey = $"{name}_check";
+        builder.Services.AddHealthChecks().AddNpgSql(
+            sp => connectionString ?? throw new InvalidOperationException("Connection string is unavailable"),
+            name: healthCheckKey, configure: (connection) =>
+            {
+                // HACK: The Npgsql client defaults to using the username in the connection string if the database is not specified. Here
+                //       we override this default behavior because we are working with a non-database scoped connection string. The Aspirified
+                //       package doesn't have to deal with this because it uses a datasource from DI which doesn't have this issue:
+                //
+                //       https://github.com/npgsql/npgsql/blob/c3b31c393de66a4b03fba0d45708d46a2acb06d2/src/Npgsql/NpgsqlConnection.cs#L445
+                //
+                connection.ConnectionString += ";Database=postgres;";
+            });
+
+        #endregion
+
+        #region Kong
+
+        metaBuilder.WithModule("kong", SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag)
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables["KONG_DATABASE"] = "off";
+                context.EnvironmentVariables["KONG_DECLARATIVE_CONFIG"] = "/home/kong/kong.yml";
+                context.EnvironmentVariables["KONG_DNS_ORDER"] = "LAST,A,CNAME";
+                context.EnvironmentVariables["KONG_PLUGINS"] = "request-transformer,cors,key-auth,acl,basic-auth";
+                context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFER_SIZE"] = "160k";
+                context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFERS"] = "64 160k";
+                context.EnvironmentVariables["SUPABASE_ANON_KEY"] =
+                    resource.DashboardPasswordParameter; // Replace with actual anon key
+                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
+                    resource.DashboardPasswordParameter; // Replace with actual service role key
+                context.EnvironmentVariables["DASHBOARD_USERNAME"] = "admin"; // Replace with actual dashboard username
+                context.EnvironmentVariables["DASHBOARD_PASSWORD"] =
+                    resource.DashboardPasswordParameter; // Replace with actual dashboard password
+            })
+            .WithHttpEndpoint(targetPort: 8000, port: null, name: $"{resource.Name}-kong");
+
+        #endregion
+
+        #region Studio
+        
+        metaBuilder.WithModule("studio", SupabaseContainerImageTags.StudioImage,
+                SupabaseContainerImageTags.StudioTag)
+            .WithEnvironment(context =>
+            {
+                // Meta service connection
+                context.EnvironmentVariables["STUDIO_PG_META_URL"] = "http://meta:8080";
+                context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.DashboardPasswordParameter;
+
+                // Organization and project settings
+                context.EnvironmentVariables["DEFAULT_ORGANIZATION_NAME"] = "Default Organization";
+                context.EnvironmentVariables["DEFAULT_PROJECT_NAME"] = "Default Project";
+                context.EnvironmentVariables["OPENAI_API_KEY"] = ""; // Optional
+
+                // Supabase API connection
+                context.EnvironmentVariables["SUPABASE_URL"] = "http://kong:8000";
+                context.EnvironmentVariables["SUPABASE_PUBLIC_URL"] =
+                    resource.PrimaryEndpoint.Property(EndpointProperty.Url);
+                context.EnvironmentVariables["SUPABASE_ANON_KEY"] =
+                    resource.DashboardPasswordParameter; // Using password as anon key
+                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
+                    resource.DashboardPasswordParameter; // Using password as service role key
+                context.EnvironmentVariables["AUTH_JWT_SECRET"] = resource.DashboardPasswordParameter;
+
+                // Logging configuration
+                context.EnvironmentVariables["LOGFLARE_PRIVATE_ACCESS_TOKEN"] = "private_placeholder_token";
+                context.EnvironmentVariables["LOGFLARE_URL"] = "http://analytics:4000";
+                context.EnvironmentVariables["NEXT_PUBLIC_ENABLE_LOGS"] = "true";
+                context.EnvironmentVariables["NEXT_ANALYTICS_BACKEND_PROVIDER"] = "postgres";
+            })
+            .WithHttpEndpoint(targetPort: 3000, port: null, name: $"{resource.Name}-studio");
+
+        #endregion
 
         return metaBuilder;
     }
+
+    #region Modules
 
     /// <summary>
     /// Adds all Supabase modules (child services) to the Supabase resource.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="name">The name of the Supabase resource.</param>
-    /// <param name="password">Optional password parameter resource builder.</param>
-    /// <param name="apiPort">Optional host port for the Supabase HTTP API.</param>
-    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> AddAllSupabase(
-        this IDistributedApplicationBuilder builder,
-        string name,
-        IResourceBuilder<ParameterResource>? password = null,
-        int? apiPort = null,
-        int? dbPort = null)
+    public static IResourceBuilder<SupabaseResource> WithAllModules(
+        this IResourceBuilder<SupabaseResource> builder)
     {
-        ParameterResource passwordParam = password?.Resource
-                                          ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder,
-                                              $"{name}-password");
-
-        return builder.AddSupabase(name, password, apiPort, dbPort)
-            .WithPostgres(passwordParam, dbPort)
-            .WithKong()
-            .WithStudio()
+        return builder
             .WithRest()
             .WithRealtime()
             .WithStorageService()
@@ -118,112 +221,6 @@ public static class SupabaseBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a Supabase core Postgres container to the application model.
-    /// </summary>
-    /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
-    /// <param name="passwordParam">The parameter that contains the Supabase database password.</param>
-    /// <param name="dbPort">Optional host port for the PostgreSQL database.</param>
-    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> WithPostgres(
-        this IResourceBuilder<SupabaseResource> builder,
-        ParameterResource passwordParam,
-        int? dbPort = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        builder.WithModule("postgres", SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
-            .WithImage(SupabaseContainerImageTags.PostgresImage, SupabaseContainerImageTags.PostgresTag)
-            .WithImageRegistry(SupabaseContainerImageTags.Registry)
-            .WithEndpoint(targetPort: SupabaseDatabasePort, port: dbPort,
-                name: SupabaseResource.DatabaseEndpointName)
-            .WithEnvironment(context =>
-            {
-                SupabaseResource resource = builder.Resource;
-                context.EnvironmentVariables["POSTGRES_PASSWORD"] = passwordParam;
-                context.EnvironmentVariables["POSTGRES_DB"] = "postgres";
-                context.EnvironmentVariables["POSTGRES_USER"] = "postgres";
-                context.EnvironmentVariables["PGDATA"] = "/var/lib/postgresql/data";
-                context.EnvironmentVariables["PGHOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
-                context.EnvironmentVariables["PGPORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
-                context.EnvironmentVariables["PGPASSWORD"] = passwordParam;
-                context.EnvironmentVariables["PGDATABASE"] = "postgres";
-            })
-            .WithDataBindMount("./volumes/db/data")
-            .WithBindMount("./volumes/db/migrations", "/docker-entrypoint-initdb.d/migrations")
-            .WithBindMount("./volumes/db/init-scripts", "/docker-entrypoint-initdb.d/init-scripts");
-
-        return builder;
-    }
-
-    /// <summary>
-    /// Adds the Kong gateway module to the Supabase resource.
-    /// </summary>
-    public static IResourceBuilder<SupabaseResource> WithKong(this IResourceBuilder<SupabaseResource> builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("kong", SupabaseContainerImageTags.KongImage, SupabaseContainerImageTags.KongTag)
-            .WithEnvironment(context =>
-            {
-                context.EnvironmentVariables["KONG_DATABASE"] = "off";
-                context.EnvironmentVariables["KONG_DECLARATIVE_CONFIG"] = "/home/kong/kong.yml";
-                context.EnvironmentVariables["KONG_DNS_ORDER"] = "LAST,A,CNAME";
-                context.EnvironmentVariables["KONG_PLUGINS"] = "request-transformer,cors,key-auth,acl,basic-auth";
-                context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFER_SIZE"] = "160k";
-                context.EnvironmentVariables["KONG_NGINX_PROXY_PROXY_BUFFERS"] = "64 160k";
-                context.EnvironmentVariables["SUPABASE_ANON_KEY"] =
-                    builder.Resource.PasswordParameter; // Replace with actual anon key
-                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
-                    builder.Resource.PasswordParameter; // Replace with actual service role key
-                context.EnvironmentVariables["DASHBOARD_USERNAME"] = "admin"; // Replace with actual dashboard username
-                context.EnvironmentVariables["DASHBOARD_PASSWORD"] =
-                    builder.Resource.PasswordParameter; // Replace with actual dashboard password
-            })
-            .WithHttpEndpoint(targetPort: 8000, port: null, name: $"{builder.Resource.Name}-kong");
-    }
-
-    /// <summary>
-    /// Adds the Studio module to the Supabase resource.
-    /// </summary>
-    /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
-    /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> WithStudio(this IResourceBuilder<SupabaseResource> builder)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithModule("studio", SupabaseContainerImageTags.StudioImage,
-                SupabaseContainerImageTags.StudioTag)
-            .WithEnvironment(context =>
-            {
-                SupabaseResource resource = builder.Resource;
-
-                // Meta service connection
-                context.EnvironmentVariables["STUDIO_PG_META_URL"] = "http://meta:8080";
-                context.EnvironmentVariables["POSTGRES_PASSWORD"] = resource.PasswordParameter;
-
-                // Organization and project settings
-                context.EnvironmentVariables["DEFAULT_ORGANIZATION_NAME"] = "Default Organization";
-                context.EnvironmentVariables["DEFAULT_PROJECT_NAME"] = "Default Project";
-                context.EnvironmentVariables["OPENAI_API_KEY"] = ""; // Optional
-
-                // Supabase API connection
-                context.EnvironmentVariables["SUPABASE_URL"] = "http://kong:8000";
-                context.EnvironmentVariables["SUPABASE_PUBLIC_URL"] =
-                    resource.PrimaryEndpoint.Property(EndpointProperty.Url);
-                context.EnvironmentVariables["SUPABASE_ANON_KEY"] =
-                    resource.PasswordParameter; // Using password as anon key
-                context.EnvironmentVariables["SUPABASE_SERVICE_KEY"] =
-                    resource.PasswordParameter; // Using password as service role key
-                context.EnvironmentVariables["AUTH_JWT_SECRET"] = resource.PasswordParameter;
-
-                // Logging configuration
-                context.EnvironmentVariables["LOGFLARE_PRIVATE_ACCESS_TOKEN"] = "private_placeholder_token";
-                context.EnvironmentVariables["LOGFLARE_URL"] = "http://analytics:4000";
-                context.EnvironmentVariables["NEXT_PUBLIC_ENABLE_LOGS"] = "true";
-                context.EnvironmentVariables["NEXT_ANALYTICS_BACKEND_PROVIDER"] = "postgres";
-            })
-            .WithHttpEndpoint(targetPort: 3000, port: null, name: $"{builder.Resource.Name}-studio");
-    }
-
-    /// <summary>
     /// Adds the REST module to the Supabase resource.
     /// </summary>
     public static IResourceBuilder<SupabaseResource> WithRest(this IResourceBuilder<SupabaseResource> builder)
@@ -235,15 +232,15 @@ public static class SupabaseBuilderExtensions
                 SupabaseResource resource = builder.Resource;
 
                 context.EnvironmentVariables["PGRST_DB_URI"] =
-                    $"postgres://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
+                    $"postgres://supabase_admin:{resource.DashboardPasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
                 context.EnvironmentVariables["PGRST_DB_SCHEMA"] = "public";
                 context.EnvironmentVariables["PGRST_DB_ANON_ROLE"] = "anon";
-                context.EnvironmentVariables["PGRST_JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PGRST_JWT_SECRET"] = resource.DashboardPasswordParameter;
                 context.EnvironmentVariables["PGRST_DB_USE_LEGACY_GUCS"] = "false";
                 //context.EnvironmentVariables["PGRST_OPENAPI_SERVER_HOST"] = resource.PrimaryEndpoint.Property(EndpointProperty.Host);
                 //context.EnvironmentVariables["PGRST_OPENAPI_SERVER_PORT"] = resource.PrimaryEndpoint.Property(EndpointProperty.Port);
 
-                context.EnvironmentVariables["PGRST_APP_SETTINGS_JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PGRST_APP_SETTINGS_JWT_SECRET"] = resource.DashboardPasswordParameter;
                 context.EnvironmentVariables["PGRST_APP_SETTINGS_JWT_EXP"] = "3600"; // 1 hour
             })
             .WithArgs("postgrest")
@@ -271,13 +268,13 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["DB_HOST"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
                 context.EnvironmentVariables["DB_PORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
                 context.EnvironmentVariables["DB_USER"] = "supabase_admin";
-                context.EnvironmentVariables["DB_PASSWORD"] = resource.PasswordParameter;
+                context.EnvironmentVariables["DB_PASSWORD"] = resource.DashboardPasswordParameter;
                 context.EnvironmentVariables["DB_NAME"] = "postgres";
                 context.EnvironmentVariables["DB_AFTER_CONNECT_QUERY"] = "SET search_path TO _realtime";
                 context.EnvironmentVariables["DB_ENC_KEY"] = "supabaserealtime";
 
                 // API configuration
-                context.EnvironmentVariables["API_JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["API_JWT_SECRET"] = resource.DashboardPasswordParameter;
 
                 // Erlang settings
                 context.EnvironmentVariables["SECRET_KEY_BASE"] = "supabase_realtime_secret_key_base";
@@ -308,16 +305,16 @@ public static class SupabaseBuilderExtensions
                 SupabaseResource resource = builder.Resource;
 
                 // API keys
-                context.EnvironmentVariables["ANON_KEY"] = resource.PasswordParameter;
-                context.EnvironmentVariables["SERVICE_KEY"] = resource.PasswordParameter;
+                context.EnvironmentVariables["ANON_KEY"] = resource.DashboardPasswordParameter;
+                context.EnvironmentVariables["SERVICE_KEY"] = resource.DashboardPasswordParameter;
 
                 // API connections
                 context.EnvironmentVariables["POSTGREST_URL"] = "http://rest:3000";
-                context.EnvironmentVariables["PGRST_JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PGRST_JWT_SECRET"] = resource.DashboardPasswordParameter;
 
                 // Database connection
                 context.EnvironmentVariables["DATABASE_URL"] =
-                    $"postgres://supabase_storage_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
+                    $"postgres://supabase_storage_admin:{resource.DashboardPasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
 
                 // Storage configuration
                 context.EnvironmentVariables["FILE_SIZE_LIMIT"] = "52428800"; // 50MB
@@ -355,7 +352,7 @@ public static class SupabaseBuilderExtensions
 
                 context.EnvironmentVariables["GOTRUE_DB_DRIVER"] = "postgres";
                 context.EnvironmentVariables["GOTRUE_DB_DATABASE_URL"] =
-                    $"postgres://supabase_auth_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
+                    $"postgres://supabase_auth_admin:{resource.DashboardPasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/database";
 
                 context.EnvironmentVariables["GOTRUE_SITE_URL"] =
                     resource.PrimaryEndpoint.Property(EndpointProperty.Url);
@@ -367,7 +364,7 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["GOTRUE_JWT_AUD"] = "authenticated";
                 context.EnvironmentVariables["GOTRUE_JWT_DEFAULT_GROUP_NAME"] = "authenticated";
                 context.EnvironmentVariables["GOTRUE_JWT_EXP"] = "3600"; // 1 hour
-                context.EnvironmentVariables["GOTRUE_JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["GOTRUE_JWT_SECRET"] = resource.DashboardPasswordParameter;
 
                 context.EnvironmentVariables["GOTRUE_EXTERNAL_EMAIL_ENABLED"] = "true"; // Enable email signup
                 context.EnvironmentVariables["GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED"] =
@@ -447,7 +444,7 @@ public static class SupabaseBuilderExtensions
                     resource.DatabaseEndpoint.Property(EndpointProperty.Port);
                 context.EnvironmentVariables["PG_META_DB_NAME"] = "postgres";
                 context.EnvironmentVariables["PG_META_DB_USER"] = "supabase_admin";
-                context.EnvironmentVariables["PG_META_DB_PASSWORD"] = resource.PasswordParameter;
+                context.EnvironmentVariables["PG_META_DB_PASSWORD"] = resource.DashboardPasswordParameter;
             })
             .WithHttpEndpoint(targetPort: 8080, port: null, name: $"{builder.Resource.Name}-meta");
     }
@@ -518,7 +515,7 @@ public static class SupabaseBuilderExtensions
                 context.EnvironmentVariables["DB_DATABASE"] = "_supabase";
                 context.EnvironmentVariables["DB_HOSTNAME"] = resource.DatabaseEndpoint.Property(EndpointProperty.Host);
                 context.EnvironmentVariables["DB_PORT"] = resource.DatabaseEndpoint.Property(EndpointProperty.Port);
-                context.EnvironmentVariables["DB_PASSWORD"] = resource.PasswordParameter;
+                context.EnvironmentVariables["DB_PASSWORD"] = resource.DashboardPasswordParameter;
                 context.EnvironmentVariables["DB_SCHEMA"] = "_analytics";
 
                 // Access tokens
@@ -527,7 +524,7 @@ public static class SupabaseBuilderExtensions
 
                 // Postgres backend configuration (default)
                 context.EnvironmentVariables["POSTGRES_BACKEND_URL"] =
-                    $"postgresql://supabase_admin:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/_supabase";
+                    $"postgresql://supabase_admin:{resource.DashboardPasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/_supabase";
                 context.EnvironmentVariables["POSTGRES_BACKEND_SCHEMA"] = "_analytics";
                 context.EnvironmentVariables["LOGFLARE_FEATURE_FLAG_OVERRIDE"] = "multibackend=true";
 
@@ -554,14 +551,14 @@ public static class SupabaseBuilderExtensions
                 SupabaseResource resource = builder.Resource;
 
                 // Authentication
-                context.EnvironmentVariables["JWT_SECRET"] = resource.PasswordParameter;
+                context.EnvironmentVariables["JWT_SECRET"] = resource.DashboardPasswordParameter;
 
                 // Supabase connections
                 context.EnvironmentVariables["SUPABASE_URL"] = "http://kong:8000";
-                context.EnvironmentVariables["SUPABASE_ANON_KEY"] = resource.PasswordParameter;
-                context.EnvironmentVariables["SUPABASE_SERVICE_ROLE_KEY"] = resource.PasswordParameter;
+                context.EnvironmentVariables["SUPABASE_ANON_KEY"] = resource.DashboardPasswordParameter;
+                context.EnvironmentVariables["SUPABASE_SERVICE_ROLE_KEY"] = resource.DashboardPasswordParameter;
                 context.EnvironmentVariables["SUPABASE_DB_URL"] =
-                    $"postgresql://postgres:{resource.PasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
+                    $"postgresql://postgres:{resource.DashboardPasswordParameter}@{resource.DatabaseEndpoint.Property(EndpointProperty.Host)}:{resource.DatabaseEndpoint.Property(EndpointProperty.Port)}/postgres";
 
                 // Security configuration
                 context.EnvironmentVariables["FUNCTIONS_VERIFY_JWT"] = "true";
@@ -571,15 +568,106 @@ public static class SupabaseBuilderExtensions
             .WithHttpEndpoint(targetPort: 8000, port: null, name: $"{builder.Resource.Name}-edge-runtime");
     }
 
+    #endregion
+
+    #region Configuration
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="userName"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<SupabaseResource> WithDashboardUserName(
+        this IResourceBuilder<SupabaseResource> builder, IResourceBuilder<ParameterResource> userName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(userName);
+
+        builder.Resource.DashboardUserNameParameter = userName.Resource;
+        return builder;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="password"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<SupabaseResource> WithDashboardPassword(
+        this IResourceBuilder<SupabaseResource> builder,
+        IResourceBuilder<ParameterResource> password)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(password);
+
+        builder.Resource.DashboardPasswordParameter = password.Resource;
+        return builder;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="userName"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<SupabaseResource> WithDatabaseUserName(
+        this IResourceBuilder<SupabaseResource> builder,
+        IResourceBuilder<ParameterResource> userName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(userName);
+
+        builder.Resource.DatabaseUserNameParameter = userName.Resource;
+        return builder;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="password"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<SupabaseResource> WithDatabasePassword(
+        this IResourceBuilder<SupabaseResource> builder,
+        IResourceBuilder<ParameterResource> password)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(password);
+
+        builder.Resource.DatabasePasswordParameter = password.Resource;
+        return builder;
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="script"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<SupabaseResource> WithCreationScript(this IResourceBuilder<SupabaseResource> builder,
+        string script)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(script);
+
+        builder.WithAnnotation(new SupabaseCreationScriptAnnotation(script));
+
+        return builder;
+    }
+
+
     /// <summary>
     /// Adds a named volume for the data folder to a Supabase container resource.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
     /// <param name="name">Optional name for the volume.</param>
+    /// <param name="isReadOnly"></param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
     public static IResourceBuilder<SupabaseResource> WithDataVolume(
         this IResourceBuilder<SupabaseResource> builder,
-        string? name = null)
+        string? name = null, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
         return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/postgresql/data");
@@ -590,13 +678,37 @@ public static class SupabaseBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{SupabaseResource}"/>.</param>
     /// <param name="source">The source path on the host machine.</param>
+    /// <param name="isReadOnly"></param>
     /// <returns>A <see cref="IResourceBuilder{SupabaseResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<SupabaseResource> WithDataBindMount(
-        this IResourceBuilder<SupabaseResource> builder,
-        string source)
+    public static IResourceBuilder<SupabaseResource> WithDataBindMount(this IResourceBuilder<SupabaseResource> builder,
+        string source, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
-        return builder.WithBindMount(source, "/var/lib/postgresql/data");
+        ArgumentException.ThrowIfNullOrEmpty(source);
+
+        return builder.WithBindMount(source, "/var/lib/postgresql/data", isReadOnly);
     }
+
+    /* TODO: fix the WithContainerFiles
+                 .WithBindMount("./volumes/db/migrations", "/docker-entrypoint-initdb.d/migrations")
+       .WithBindMount("./volumes/db/init-scripts", "/docker-entrypoint-initdb.d/init-scripts")
+    /// <summary>
+    /// Copies init files to a PostgreSQL container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="source">The source directory or files on the host to copy into the container.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<SupabaseResource> WithInitFiles(this IResourceBuilder<SupabaseResource> builder, string source)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(source);
+
+        const string initPath = "/docker-entrypoint-initdb.d";
+
+        var importFullPath = Path.GetFullPath(source, builder.ApplicationBuilder.AppHostDirectory);
+
+        return builder.WithContainerFiles(initPath, importFullPath);
+    }*/
+
+    #endregion
 }

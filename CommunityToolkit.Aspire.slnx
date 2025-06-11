@@ -142,6 +142,7 @@
     <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults/CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="CommunityToolkit.Aspire.Supabase.Client\CommunityToolkit.Aspire.Supabase.Client.csproj" Type="Classic C#" />
     <Project Path="src/CommunityToolkit.Aspire.EventStore/CommunityToolkit.Aspire.EventStore.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
@@ -186,6 +187,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
   </Folder>
+  <Folder Name="/src/Supabase/" />
   <Folder Name="/tests/">
     <Project Path="tests/CommunityToolkit.Aspire.EventStore.Tests/CommunityToolkit.Aspire.EventStore.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
