@@ -1,6 +1,4 @@
 using Aspire.Hosting;
-using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -141,7 +139,7 @@ public class ResourceCreationTests
 
 
     [Fact]
-    public void ViteAppHasExposedExternalHttpEndpoints()
+    public void ViteAppDoesNotExposeExternalHttpEndpointsByDefault()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -157,7 +155,7 @@ public class ResourceCreationTests
 
         Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpoints));
 
-        Assert.Contains(endpoints, e => e.IsExternal);
+        Assert.DoesNotContain(endpoints, e => e.IsExternal);
     }
 
     [Fact]
@@ -194,5 +192,37 @@ public class ResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
         Assert.Equal("npm", resource.Command);
+    }
+
+    [Fact]
+    public void ViteAppConfiguresPortFromEnvironment()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddViteApp("vite");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+
+        // Verify that command line arguments callback is configured
+        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsCallbackAnnotations));
+        List<object> args = [];
+        var ctx = new CommandLineArgsCallbackContext(args);
+
+        foreach (var annotation in argsCallbackAnnotations)
+        {
+            annotation.Callback(ctx);
+        }
+
+        Assert.Collection(args,
+            arg => Assert.Equal("run", arg),
+            arg => Assert.Equal("dev", arg),
+            arg => Assert.Equal("--", arg),
+            arg => Assert.Equal("--port", arg),
+            arg => Assert.IsType<EndpointReferenceExpression>(arg)
+        );
     }
 }
