@@ -135,10 +135,7 @@ Use the provided `ConnectionStringExpression` to wire up downstream resources:
 
 ```csharp
 builder.AddProject<MyApp>("api")
-       .WithReference(supabase)
-       .WithDbContext<MyDbContext>((sp, options) =>
-           options.UseNpgsql(
-               supabase.ConnectionStringExpression.GetValueAsync().Result));
+       .WithReference(supabase);
 ```
 
 ## License
