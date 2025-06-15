@@ -37,6 +37,19 @@ public sealed class SqlPackageResource<TPackage>(string name) : Resource(name), 
     {
         var options = new DacDeployOptions();
 
+        if (this.TryGetLastAnnotation<DacDeployOptionsAnnotation>(out var optionsAnnotation))
+        {
+            var profile = DacProfile.Load(optionsAnnotation.OptionsPath);
+
+            if (profile == null)
+            {
+                throw new InvalidOperationException($"Unable to load DacProfile from path {optionsAnnotation.OptionsPath} for resource {Name}.");
+            }
+
+            options = profile.DeployOptions;
+            return options;
+        }
+
         if (this.TryGetLastAnnotation<ConfigureDacDeployOptionsAnnotation>(out var configureAnnotation))
         {
             configureAnnotation.ConfigureDeploymentOptions(options);

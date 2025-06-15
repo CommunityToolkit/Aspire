@@ -23,7 +23,7 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
 
             var project = projectCollection.LoadProject(projectPath);
 
-            // .sqlprojx has a SqlTargetPath property, so try that first
+            // Microsoft.Build.Sql .sqlproj has a SqlTargetPath property, so try that first
             var targetPath = project.GetPropertyValue("SqlTargetPath");
             if (string.IsNullOrWhiteSpace(targetPath))
             {
@@ -44,6 +44,19 @@ public sealed class SqlProjectResource(string name) : Resource(name), IResourceW
     DacDeployOptions IResourceWithDacpac.GetDacpacDeployOptions()
     {
         var options = new DacDeployOptions();
+
+        if (this.TryGetLastAnnotation<DacDeployOptionsAnnotation>(out var optionsAnnotation))
+        {
+            var profile = DacProfile.Load(optionsAnnotation.OptionsPath);
+
+            if (profile == null)
+            {
+                throw new InvalidOperationException($"Unable to load DacProfile from path {optionsAnnotation.OptionsPath} for resource {Name}.");
+            }
+
+            options = profile.DeployOptions;
+            return options;
+        }
 
         if (this.TryGetLastAnnotation<ConfigureDacDeployOptionsAnnotation>(out var configureAnnotation))
         {

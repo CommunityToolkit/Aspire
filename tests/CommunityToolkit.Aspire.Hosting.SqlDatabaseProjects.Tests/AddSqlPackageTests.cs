@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Microsoft.SqlServer.Dac;
+using System.Configuration;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
@@ -90,5 +91,30 @@ public class AddSqlPackageTests
 
         var options = ((IResourceWithDacpac)sqlProjectResource).GetDacpacDeployOptions();
         Assert.True(options.IncludeCompositeObjects);
+    }
+
+    [Fact]
+    public void AddSqlPackage_WithDeploymentOptions_FromFile()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var optionsPath = "Database.publish.xml";
+
+        appBuilder.AddSqlPackage<TestPackage>("chinook").WithDacDeployOptions(optionsPath);
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlPackageResource<TestPackage>>());
+        Assert.Equal("chinook", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.TryGetLastAnnotation(out DacDeployOptionsAnnotation? dacDeployOptionsAnnotation));
+        Assert.Equal(optionsPath, dacDeployOptionsAnnotation.OptionsPath);
+
+        var options = ((IResourceWithDacpac)sqlProjectResource).GetDacpacDeployOptions();
+        Assert.False(options.BlockOnPossibleDataLoss);
     }
 }
