@@ -23,6 +23,18 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     }
     
     [Fact]
+    public async Task ResourceStartsAndUiRespondsOk()
+    {
+        var resourceName = "minio";
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
+        var httpClient = fixture.CreateHttpClient(resourceName, "console");
+
+        var response = await httpClient.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+    
+    [Fact]
     public async Task ApiServiceCreateData()
     {
         const string resourceName = "apiservice";
