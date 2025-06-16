@@ -1,9 +1,9 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Aspire.Utils;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Aspire.Hosting;
 
@@ -37,9 +37,21 @@ public static class NodeJSHostingExtensions
             _ => builder.AddNpmApp(name, wd, "dev")
         };
 
-        return useHttps
-            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
-            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
+        _ = useHttps
+            ? resource.WithHttpsEndpoint(env: "PORT")
+            : resource.WithHttpEndpoint(env: "PORT");
+
+        return resource.WithArgs(ctx =>
+        {
+            if (packageManager == "npm")
+            {
+                ctx.Args.Add("--");
+            }
+
+            var targetEndpoint = resource.Resource.GetEndpoint(useHttps ? "https" : "http");
+            ctx.Args.Add("--port");
+            ctx.Args.Add(targetEndpoint.Property(EndpointProperty.TargetPort));
+        });
     }
 
     /// <summary>
