@@ -23,18 +23,19 @@ public static class GolangAppHostingExtension
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory, nameof(workingDirectory));
 
-        string[] allArgs;
+        var allArgs = new List<string> { "run" };
+
         if (buildTags is { Length: > 0 })
         {
-            allArgs = args is { Length: > 0 }
-                ? ["run", "-tags", string.Join(",", buildTags), ".", .. args ?? []]
-                : ["run", "-tags", string.Join(",", buildTags), "."];
+            allArgs.Add("-tags");
+            allArgs.Add(string.Join(",", buildTags));
         }
-        else
+
+        allArgs.Add(".");
+
+        if (args is { Length: > 0 })
         {
-            allArgs = args is { Length: > 0 }
-                ? ["run", ".", .. args]
-                : ["run", ".",];
+            allArgs.AddRange(args);
         }
 
         workingDirectory = Path.Combine(builder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
@@ -42,7 +43,7 @@ public static class GolangAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithGolangDefaults()
-                      .WithArgs(allArgs);
+                      .WithArgs(allArgs.ToArray());
     }
 
     private static IResourceBuilder<GolangAppExecutableResource> WithGolangDefaults(
