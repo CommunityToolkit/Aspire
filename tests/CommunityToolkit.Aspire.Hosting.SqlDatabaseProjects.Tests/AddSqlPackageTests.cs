@@ -1,6 +1,5 @@
 using Aspire.Hosting;
 using Microsoft.SqlServer.Dac;
-using System.Configuration;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 
