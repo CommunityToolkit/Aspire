@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -170,10 +171,28 @@ public class ResourceCreationTests
 
         using var app = builder.Build();
 
-        // Verify that the resource was created successfully
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
-        Assert.Equal("npm", resource.Command);
+        
+        // Verify the NodeApp resource exists
+        var nodeResource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+        Assert.Equal("npm", nodeResource.Command);
+
+        // Verify the installer resource was created
+        var installerResource = Assert.Single(appModel.Resources.OfType<NpmInstallerResource>());
+        Assert.Equal("test-app-npm-install", installerResource.Name);
+        Assert.Equal("install", installerResource.InstallCommand);
+        Assert.False(installerResource.UseCI);
+
+        // Verify the parent-child relationship
+        Assert.True(installerResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var relationships));
+        var relationship = Assert.Single(relationships);
+        Assert.Same(nodeResource, relationship.Resource);
+        Assert.Equal("Parent", relationship.Relationship);
+
+        // Verify the wait annotation on the parent
+        Assert.True(nodeResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Same(installerResource, waitAnnotation.Resource);
     }
 
     [Fact]
@@ -188,10 +207,28 @@ public class ResourceCreationTests
 
         using var app = builder.Build();
 
-        // Verify that the resource was created successfully
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
-        Assert.Equal("npm", resource.Command);
+        
+        // Verify the NodeApp resource exists
+        var nodeResource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+        Assert.Equal("npm", nodeResource.Command);
+
+        // Verify the installer resource was created with CI enabled
+        var installerResource = Assert.Single(appModel.Resources.OfType<NpmInstallerResource>());
+        Assert.Equal("test-app-npm-install", installerResource.Name);
+        Assert.Equal("ci", installerResource.InstallCommand);
+        Assert.True(installerResource.UseCI);
+
+        // Verify the parent-child relationship
+        Assert.True(installerResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var relationships));
+        var relationship = Assert.Single(relationships);
+        Assert.Same(nodeResource, relationship.Resource);
+        Assert.Equal("Parent", relationship.Relationship);
+
+        // Verify the wait annotation on the parent
+        Assert.True(nodeResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Same(installerResource, waitAnnotation.Resource);
     }
 
     [Fact]
@@ -224,5 +261,72 @@ public class ResourceCreationTests
             arg => Assert.Equal("--port", arg),
             arg => Assert.IsType<EndpointReferenceExpression>(arg)
         );
+    }
+
+    [Fact]
+    public void WithYarnPackageInstallationCreatesInstallerResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nodeApp = builder.AddYarnApp("test-app", "./test-app");
+        nodeApp.WithYarnPackageInstallation();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        
+        // Verify the NodeApp resource exists
+        var nodeResource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+        Assert.Equal("yarn", nodeResource.Command);
+
+        // Verify the installer resource was created
+        var installerResource = Assert.Single(appModel.Resources.OfType<YarnInstallerResource>());
+        Assert.Equal("test-app-yarn-install", installerResource.Name);
+        Assert.Equal("install", installerResource.InstallCommand);
+
+        // Verify the parent-child relationship
+        Assert.True(installerResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var relationships));
+        var relationship = Assert.Single(relationships);
+        Assert.Same(nodeResource, relationship.Resource);
+        Assert.Equal("Parent", relationship.Relationship);
+
+        // Verify the wait annotation on the parent
+        Assert.True(nodeResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Same(installerResource, waitAnnotation.Resource);
+    }
+
+    [Fact]
+    public void WithPnpmPackageInstallationCreatesInstallerResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nodeApp = builder.AddPnpmApp("test-app", "./test-app");
+        nodeApp.WithPnpmPackageInstallation();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        
+        // Verify the NodeApp resource exists
+        var nodeResource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+        Assert.Equal("pnpm", nodeResource.Command);
+
+        // Verify the installer resource was created
+        var installerResource = Assert.Single(appModel.Resources.OfType<PnpmInstallerResource>());
+        Assert.Equal("test-app-pnpm-install", installerResource.Name);
+        Assert.Equal("install", installerResource.InstallCommand);
+
+        // Verify the parent-child relationship
+        Assert.True(installerResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var relationships));
+        var relationship = Assert.Single(relationships);
+        Assert.Same(nodeResource, relationship.Resource);
+        Assert.Equal("Parent", relationship.Relationship);
+
+        // Verify the wait annotation on the parent
+        Assert.True(nodeResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Same(installerResource, waitAnnotation.Resource);
+    }
     }
 }
