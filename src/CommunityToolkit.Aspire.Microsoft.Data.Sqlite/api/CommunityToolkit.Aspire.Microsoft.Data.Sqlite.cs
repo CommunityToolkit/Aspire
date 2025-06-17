@@ -20,11 +20,5 @@ namespace Microsoft.Extensions.Hosting
         public string? ConnectionString { get { throw null; } set { } }
 
         public bool DisableHealthChecks { get { throw null; } set { } }
-
-        public System.Collections.Generic.IEnumerable<SqliteExtensionMetadata> Extensions { get { throw null; } set { } }
-    }
-
-    public partial record SqliteExtensionMetadata(string Extension, string? PackageName, bool IsNuGetPackage, string? ExtensionFolder)
-    {
     }
 }
