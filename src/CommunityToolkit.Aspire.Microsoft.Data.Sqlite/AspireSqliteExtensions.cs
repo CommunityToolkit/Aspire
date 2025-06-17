@@ -102,8 +102,7 @@ public static class AspireSqliteExtensions
         SqliteConnection CreateConnection(IServiceProvider sp, object? key)
         {
             ConnectionStringValidation.ValidateConnectionString(settings.ConnectionString, connectionName, DefaultConfigSectionName);
-            var connection = new SqliteConnection(settings.ConnectionString);
-            return connection;
+            return new SqliteConnection(settings.ConnectionString);
         }
     }
 }
