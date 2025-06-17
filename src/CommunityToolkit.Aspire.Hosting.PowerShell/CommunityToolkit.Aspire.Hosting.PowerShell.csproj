@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <AdditionalPackageTags>powershell; pwsh; scripting; script; hosting</AdditionalPackageTags>
     <Description>Run powershell scripts in-process with your Aspire AppHost, injecting aspire resources and/or object instances as variables, using the command lines tools of your choice like azure cli, azd, or any other terminal tools.</Description>
   </PropertyGroup>
