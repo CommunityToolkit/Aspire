@@ -15,23 +15,35 @@ public static class GolangAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
     /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
+    /// <param name="buildTags">The optional build tags to be used when building the Golang application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[]? args = null)
+    public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[]? args = null, string[]? buildTags = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory, nameof(workingDirectory));
 
-        string[] allArgs = args is { Length: > 0 }
-            ? ["run", ".", .. args]
-            : ["run", ".",];
+        var allArgs = new List<string> { "run" };
+
+        if (buildTags is { Length: > 0 })
+        {
+            allArgs.Add("-tags");
+            allArgs.Add(string.Join(",", buildTags));
+        }
+
+        allArgs.Add(".");
+
+        if (args is { Length: > 0 })
+        {
+            allArgs.AddRange(args);
+        }
 
         workingDirectory = Path.Combine(builder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         var resource = new GolangAppExecutableResource(name, workingDirectory);
 
         return builder.AddResource(resource)
                       .WithGolangDefaults()
-                      .WithArgs(allArgs);
+                      .WithArgs(allArgs.ToArray());
     }
 
     private static IResourceBuilder<GolangAppExecutableResource> WithGolangDefaults(
