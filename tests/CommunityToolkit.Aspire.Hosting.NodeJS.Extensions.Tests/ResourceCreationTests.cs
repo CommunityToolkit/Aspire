@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using System.Runtime.InteropServices;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -327,6 +328,5 @@ public class ResourceCreationTests
         Assert.True(nodeResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
         var waitAnnotation = Assert.Single(waitAnnotations);
         Assert.Same(installerResource, waitAnnotation.Resource);
-    }
     }
 }

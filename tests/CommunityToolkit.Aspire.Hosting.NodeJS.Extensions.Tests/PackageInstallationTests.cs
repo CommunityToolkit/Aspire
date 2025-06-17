@@ -41,4 +41,31 @@ public class PackageInstallationTests
         Assert.Equal("ci", ciResource.InstallCommand);
         Assert.True(ciResource.UseCI);
     }
+
+    [Fact]
+    public void WithNpmPackageInstallation_ExcludedFromPublishMode()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        
+        // Mock being in publish mode
+        builder.Services.Configure<DistributedApplicationExecutionContext>(ctx => ctx.IsPublishMode = true);
+
+        var nodeApp = builder.AddNpmApp("test-app", "./test-app");
+        nodeApp.WithNpmPackageInstallation(useCI: false);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        
+        // Verify the NodeApp resource exists
+        var nodeResource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
+        Assert.Equal("npm", nodeResource.Command);
+
+        // Verify NO installer resource was created in publish mode
+        var installerResources = appModel.Resources.OfType<NpmInstallerResource>().ToList();
+        Assert.Empty(installerResources);
+
+        // Verify no wait annotations were added
+        Assert.False(nodeResource.TryGetAnnotationsOfType<WaitAnnotation>(out _));
+    }
 }
