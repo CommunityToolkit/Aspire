@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Grpc.Core;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -10,7 +11,7 @@ public class PackageInstallationTests
     /// installer resources with proper arguments and relationships.
     /// </summary>
     [Fact]
-    public void WithNpmPackageInstallation_CanBeConfiguredWithInstallAndCIOptions()
+    public async Task WithNpmPackageInstallation_CanBeConfiguredWithInstallAndCIOptions()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -34,21 +35,22 @@ public class PackageInstallationTests
         // Verify install vs ci commands
         var installResource = installerResources.Single(r => r.Name == "test-app-npm-install");
         var ciResource = installerResources.Single(r => r.Name == "test-app-ci-npm-install");
-        
-        Assert.Equal("install", installResource.InstallCommand);
-        Assert.False(installResource.UseCI);
-        
-        Assert.Equal("ci", ciResource.InstallCommand);
-        Assert.True(ciResource.UseCI);
+
+        Assert.Equal("npm", installResource.Command);
+        var args = await installResource.GetArgumentValuesAsync();
+        Assert.Single(args);
+        Assert.Equal("install", args[0]);
+
+        Assert.Equal("npm", ciResource.Command);
+        args = await ciResource.GetArgumentValuesAsync();
+        Assert.Single(args);
+        Assert.Equal("ci", args[0]);
     }
 
     [Fact]
     public void WithNpmPackageInstallation_ExcludedFromPublishMode()
     {
-        var builder = DistributedApplication.CreateBuilder();
-        
-        // Mock being in publish mode
-        builder.Services.Configure<DistributedApplicationExecutionContext>(ctx => ctx.IsPublishMode = true);
+        var builder = DistributedApplication.CreateBuilder(["Publishing:Publisher=manifest", "Publishing:OutputPath=./publish"]);
 
         var nodeApp = builder.AddNpmApp("test-app", "./test-app");
         nodeApp.WithNpmPackageInstallation(useCI: false);
@@ -56,7 +58,7 @@ public class PackageInstallationTests
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        
+
         // Verify the NodeApp resource exists
         var nodeResource = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
         Assert.Equal("npm", nodeResource.Command);

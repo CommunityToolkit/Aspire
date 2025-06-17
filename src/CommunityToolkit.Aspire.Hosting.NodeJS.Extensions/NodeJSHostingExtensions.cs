@@ -1,5 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
+using Microsoft.Extensions.Hosting;
 
 namespace Aspire.Hosting;
 
@@ -116,11 +117,11 @@ public static class NodeJSHostingExtensions
         if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
         {
             var installerName = $"{resource.Resource.Name}-npm-install";
-            var installer = new NpmInstallerResource(installerName, resource.Resource.WorkingDirectory, useCI);
-            
+            var installer = new NpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
+
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(installer.GetArguments())
-                .WithAnnotation(new ResourceRelationshipAnnotation(resource.Resource, "Parent"))
+                .WithArgs([useCI ? "ci" : "install"])
+                .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
@@ -142,10 +143,10 @@ public static class NodeJSHostingExtensions
         {
             var installerName = $"{resource.Resource.Name}-yarn-install";
             var installer = new YarnInstallerResource(installerName, resource.Resource.WorkingDirectory);
-            
+
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(installer.GetArguments())
-                .WithAnnotation(new ResourceRelationshipAnnotation(resource.Resource, "Parent"))
+                .WithArgs(["install"])
+                .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
@@ -167,10 +168,10 @@ public static class NodeJSHostingExtensions
         {
             var installerName = $"{resource.Resource.Name}-pnpm-install";
             var installer = new PnpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
-            
+
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(installer.GetArguments())
-                .WithAnnotation(new ResourceRelationshipAnnotation(resource.Resource, "Parent"))
+                .WithArgs(["install"])
+                .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete

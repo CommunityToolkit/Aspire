@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
@@ -51,7 +52,7 @@ public class IntegrationTests
         {
             Assert.True(installer.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var relationships));
             Assert.Single(relationships);
-            Assert.Equal("Parent", relationships.First().Relationship);
+            Assert.Equal("Parent", relationships.First().Type);
         }
 
         // Verify all Node.js apps wait for their installers
@@ -59,7 +60,7 @@ public class IntegrationTests
         {
             Assert.True(nodeApp.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
             Assert.Single(waitAnnotations);
-            
+
             var waitedResource = waitAnnotations.First().Resource;
             Assert.True(waitedResource is NpmInstallerResource ||
                        waitedResource is YarnInstallerResource ||
@@ -82,13 +83,12 @@ public class IntegrationTests
 
         // Verify it's configured as an ExecutableResource
         Assert.IsAssignableFrom<ExecutableResource>(installer);
-        
+
         // Verify working directory matches parent
         var parentApp = Assert.Single(appModel.Resources.OfType<NodeAppResource>());
         Assert.Equal(parentApp.WorkingDirectory, installer.WorkingDirectory);
 
         // Verify command arguments are configured
-        Assert.True(installer.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsAnnotations) ||
-                   installer.TryGetAnnotationsOfType<CommandLineArgsAnnotation>(out var directArgs));
+        Assert.True(installer.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsAnnotations));
     }
 }
