@@ -1,9 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Lifecycle;
-using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 using CommunityToolkit.Aspire.Utils;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace Aspire.Hosting;
 
@@ -116,8 +112,21 @@ public static class NodeJSHostingExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, bool useCI = false)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<NpmPackageInstallerLifecycleHook>(sp =>
-            new(useCI, sp.GetRequiredService<ResourceLoggerService>(), sp.GetRequiredService<ResourceNotificationService>(), sp.GetRequiredService<DistributedApplicationExecutionContext>()));
+        // Only install packages during development, not in publish mode
+        if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{resource.Resource.Name}-npm-install";
+            var installer = new NpmInstallerResource(installerName, resource.Resource.WorkingDirectory, useCI);
+            
+            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithArgs(installer.GetArguments())
+                .WithAnnotation(new ResourceRelationshipAnnotation(resource.Resource, "Parent"))
+                .ExcludeFromManifest();
+
+            // Make the parent resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
+        }
+
         return resource;
     }
 
@@ -128,7 +137,21 @@ public static class NodeJSHostingExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<YarnPackageInstallerLifecycleHook>();
+        // Only install packages during development, not in publish mode
+        if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{resource.Resource.Name}-yarn-install";
+            var installer = new YarnInstallerResource(installerName, resource.Resource.WorkingDirectory);
+            
+            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithArgs(installer.GetArguments())
+                .WithAnnotation(new ResourceRelationshipAnnotation(resource.Resource, "Parent"))
+                .ExcludeFromManifest();
+
+            // Make the parent resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
+        }
+
         return resource;
     }
 
@@ -139,7 +162,21 @@ public static class NodeJSHostingExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<PnpmPackageInstallerLifecycleHook>();
+        // Only install packages during development, not in publish mode
+        if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{resource.Resource.Name}-pnpm-install";
+            var installer = new PnpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
+            
+            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithArgs(installer.GetArguments())
+                .WithAnnotation(new ResourceRelationshipAnnotation(resource.Resource, "Parent"))
+                .ExcludeFromManifest();
+
+            // Make the parent resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
+        }
+
         return resource;
     }
 
