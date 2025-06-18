@@ -125,7 +125,7 @@ public static class NodeJSHostingExtensions
                 .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
+            resource.WaitForCompletion(installerBuilder);
         }
 
         return resource;
@@ -150,7 +150,7 @@ public static class NodeJSHostingExtensions
                 .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
+            resource.WaitForCompletion(installerBuilder);
         }
 
         return resource;
@@ -175,7 +175,7 @@ public static class NodeJSHostingExtensions
                 .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
+            resource.WaitForCompletion(installerBuilder);
         }
 
         return resource;
