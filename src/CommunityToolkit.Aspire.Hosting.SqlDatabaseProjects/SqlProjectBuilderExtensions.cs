@@ -143,6 +143,34 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
+    /// Adds a path to a publish profile for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
+    /// <param name="optionsPath">Path to the publish profile xml file</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlProjectResource> WithDacDeployOptions(this IResourceBuilder<SqlProjectResource> builder, string optionsPath)
+        => InternalWithDacDeployOptions(builder, optionsPath);
+
+    /// <summary>
+    /// Adds a path to a publish profile for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
+    /// <param name="optionsPath">Path to the publish profile xml file</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlPackageResource<TPackage>> WithDacDeployOptions<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder, string optionsPath)
+        where TPackage : IPackageMetadata => InternalWithDacDeployOptions(builder, optionsPath);
+
+    internal static IResourceBuilder<TResource> InternalWithDacDeployOptions<TResource>(this IResourceBuilder<TResource> builder, string optionsPath)
+        where TResource : IResourceWithDacpac
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(optionsPath);
+
+        return builder
+            .WithAnnotation(new DacDeployOptionsAnnotation(optionsPath));
+    }
+
+    /// <summary>
     /// Publishes the SQL Server Database project to the target <see cref="SqlServerDatabaseResource"/>.
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
