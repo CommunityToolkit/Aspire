@@ -23,3 +23,21 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource) { throw null; }
     }
 }
+
+namespace Aspire.Hosting.ApplicationModel
+{
+    public partial class NpmInstallerResource : ExecutableResource
+    {
+        public NpmInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    public partial class PnpmInstallerResource : ExecutableResource
+    {
+        public PnpmInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    public partial class YarnInstallerResource : ExecutableResource
+    {
+        public YarnInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+    }
+}
