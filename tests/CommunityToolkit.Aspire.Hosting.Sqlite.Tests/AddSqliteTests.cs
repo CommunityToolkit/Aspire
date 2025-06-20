@@ -1,7 +1,6 @@
 ﻿using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite;
-#pragma warning disable CTASPIRE002
 public class AddSqliteTests
 {
     [Fact]
@@ -99,7 +98,7 @@ public class AddSqliteTests
 
         var connectionString = await sqlite.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
 
-        Assert.Equal($"Data Source={sqlite.Resource.DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate;Extensions=[]", connectionString);
+        Assert.Equal($"Data Source={sqlite.Resource.DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate", connectionString);
     }
 
     [Fact]
@@ -154,37 +153,4 @@ public class AddSqliteTests
         Assert.False(sqliteWeb.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
     }
 
-    [Fact]
-    public void ResourceWithExtensionFromNuGet()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var sqlite = builder.AddSqlite("sqlite")
-            .WithNuGetExtension("FTS5");
-
-        Assert.Single(sqlite.Resource.Extensions, static e => e.Extension == "FTS5" && e.PackageName == "FTS5" && e.IsNuGetPackage && e.ExtensionFolder is null);
-    }
-
-    [Fact]
-    public void ResourceWithExtensionFromLocal()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var sqlite = builder.AddSqlite("sqlite")
-            .WithLocalExtension("FTS5", "/path/to/extension");
-
-        Assert.Single(sqlite.Resource.Extensions, static e => e.Extension == "FTS5" && e.PackageName is null && !e.IsNuGetPackage && e.ExtensionFolder == "/path/to/extension");
-    }
-
-    [Fact]
-    public async Task ConnectionStringContainsExtensions()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var sqlite = builder.AddSqlite("sqlite")
-            .WithNuGetExtension("FTS5")
-            .WithNuGetExtension("mod_spatialite");
-
-        var connectionString = await sqlite.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None);
-
-        Assert.Contains("FTS5", connectionString);
-        Assert.Contains("mod_spatialite", connectionString);
-    }
 }

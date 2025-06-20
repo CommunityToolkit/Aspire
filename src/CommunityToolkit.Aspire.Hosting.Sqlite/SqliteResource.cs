@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Hosting;
-using System.Text.Json;
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -18,18 +15,6 @@ public class SqliteResource(string name, string databasePath, string databaseFil
     internal string DatabaseFilePath => Path.Combine(DatabasePath, DatabaseFileName);
 
     /// <inheritdoc/>
-    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"Data Source={DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate;Extensions={JsonSerializer.Serialize(Extensions)}");
-
-    private readonly List<SqliteExtensionMetadata> extensions = [];
-
-    /// <summary>
-    /// Gets the extensions to be loaded into the database.
-    /// </summary>
-    /// <remarks>
-    /// Extensions are not loaded by the hosting integration, the information is provided for the client to load the extensions.
-    /// </remarks>
-    public IReadOnlyCollection<SqliteExtensionMetadata> Extensions => extensions;
-
-    internal void AddExtension(SqliteExtensionMetadata extension) => extensions.Add(extension);
+    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"Data Source={DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate");
 }
 
