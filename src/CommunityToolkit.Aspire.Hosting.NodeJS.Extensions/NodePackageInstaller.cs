@@ -14,6 +14,7 @@ namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 /// <param name="lockfile">The name of the lockfile to use.</param>
 /// <param name="loggerService">The logger service to use.</param>
 /// <param name="notificationService">The notification service to use.</param>
+[Obsolete("This class is used by deprecated lifecycle hooks. Package installation is now handled by installer resources.")]
 internal class NodePackageInstaller(string packageManager, string installCommand, string lockfile, ResourceLoggerService loggerService, ResourceNotificationService notificationService)
 {
     private readonly bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
