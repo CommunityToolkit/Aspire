@@ -120,14 +120,9 @@ public static class NodeJSHostingExtensions
             var installerName = $"{resource.Resource.Name}-npm-install";
             var installer = new NpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
-            var baseArgs = new List<string> { useCI ? "ci" : "install" };
-            if (args != null)
-            {
-                baseArgs.AddRange(args);
-            }
-
+            args ??= [];
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(baseArgs.ToArray())
+                .WithArgs([useCI ? "ci" : "install", .. args])
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
@@ -152,14 +147,9 @@ public static class NodeJSHostingExtensions
             var installerName = $"{resource.Resource.Name}-yarn-install";
             var installer = new YarnInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
-            var baseArgs = new List<string> { "install" };
-            if (args != null)
-            {
-                baseArgs.AddRange(args);
-            }
-
+            args ??= [];
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(baseArgs.ToArray())
+                .WithArgs(["install", .. args])
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
@@ -184,14 +174,9 @@ public static class NodeJSHostingExtensions
             var installerName = $"{resource.Resource.Name}-pnpm-install";
             var installer = new PnpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
-            var baseArgs = new List<string> { "install" };
-            if (args != null)
-            {
-                baseArgs.AddRange(args);
-            }
-
+            args ??= [];
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(baseArgs.ToArray())
+                .WithArgs(["install", .. args])
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 

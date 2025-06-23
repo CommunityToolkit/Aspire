@@ -1,6 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Grpc.Core;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -95,16 +93,20 @@ public class PackageInstallationTests
 
         // Verify install command with additional args
         var installArgs = await installResource.GetArgumentValuesAsync();
-        Assert.Equal(2, installArgs.Count);
-        Assert.Equal("install", installArgs[0]);
-        Assert.Equal("--legacy-peer-deps", installArgs[1]);
+        Assert.Collection(
+            installArgs,
+            arg => Assert.Equal("install", arg),
+            arg => Assert.Equal("--legacy-peer-deps", arg)
+        );
 
         // Verify ci command with additional args
         var ciArgs = await ciResource.GetArgumentValuesAsync();
-        Assert.Equal(3, ciArgs.Count);
-        Assert.Equal("ci", ciArgs[0]);
-        Assert.Equal("--verbose", ciArgs[1]);
-        Assert.Equal("--no-optional", ciArgs[2]);
+        Assert.Collection(
+            ciArgs,
+            arg => Assert.Equal("ci", arg),
+            arg => Assert.Equal("--verbose", arg),
+            arg => Assert.Equal("--no-optional", arg)
+        );
     }
 
     [Fact]
@@ -124,10 +126,12 @@ public class PackageInstallationTests
         Assert.Equal("test-yarn-app-yarn-install", installerResource.Name);
 
         var args = await installerResource.GetArgumentValuesAsync();
-        Assert.Equal(3, args.Count);
-        Assert.Equal("install", args[0]);
-        Assert.Equal("--frozen-lockfile", args[1]);
-        Assert.Equal("--verbose", args[2]);
+        Assert.Collection(
+            args,
+            arg => Assert.Equal("install", arg),
+            arg => Assert.Equal("--frozen-lockfile", arg),
+            arg => Assert.Equal("--verbose", arg)
+        );
     }
 
     [Fact]
@@ -147,8 +151,10 @@ public class PackageInstallationTests
         Assert.Equal("test-pnpm-app-pnpm-install", installerResource.Name);
 
         var args = await installerResource.GetArgumentValuesAsync();
-        Assert.Equal(2, args.Count);
-        Assert.Equal("install", args[0]);
-        Assert.Equal("--frozen-lockfile", args[1]);
+        Assert.Collection(
+            args,
+            arg => Assert.Equal("install", arg),
+            arg => Assert.Equal("--frozen-lockfile", arg)
+        );
     }
 }
