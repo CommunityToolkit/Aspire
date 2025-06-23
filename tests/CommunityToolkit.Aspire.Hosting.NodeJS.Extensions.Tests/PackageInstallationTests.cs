@@ -1,6 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Grpc.Core;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
@@ -69,5 +67,94 @@ public class PackageInstallationTests
 
         // Verify no wait annotations were added
         Assert.False(nodeResource.TryGetAnnotationsOfType<WaitAnnotation>(out _));
+    }
+
+    [Fact]
+    public async Task WithNpmPackageInstallation_CanAcceptAdditionalArgs()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nodeApp = builder.AddNpmApp("test-app", "./test-app");
+        var nodeAppWithArgs = builder.AddNpmApp("test-app-args", "./test-app-args");
+
+        // Test npm install with additional args
+        nodeApp.WithNpmPackageInstallation(useCI: false, args: ["--legacy-peer-deps"]);
+        nodeAppWithArgs.WithNpmPackageInstallation(useCI: true, args: ["--verbose", "--no-optional"]);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResources = appModel.Resources.OfType<NpmInstallerResource>().ToList();
+
+        Assert.Equal(2, installerResources.Count);
+
+        var installResource = installerResources.Single(r => r.Name == "test-app-npm-install");
+        var ciResource = installerResources.Single(r => r.Name == "test-app-args-npm-install");
+
+        // Verify install command with additional args
+        var installArgs = await installResource.GetArgumentValuesAsync();
+        Assert.Collection(
+            installArgs,
+            arg => Assert.Equal("install", arg),
+            arg => Assert.Equal("--legacy-peer-deps", arg)
+        );
+
+        // Verify ci command with additional args
+        var ciArgs = await ciResource.GetArgumentValuesAsync();
+        Assert.Collection(
+            ciArgs,
+            arg => Assert.Equal("ci", arg),
+            arg => Assert.Equal("--verbose", arg),
+            arg => Assert.Equal("--no-optional", arg)
+        );
+    }
+
+    [Fact]
+    public async Task WithYarnPackageInstallation_CanAcceptAdditionalArgs()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nodeApp = builder.AddYarnApp("test-yarn-app", "./test-yarn-app");
+        nodeApp.WithYarnPackageInstallation(args: ["--frozen-lockfile", "--verbose"]);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResources = appModel.Resources.OfType<YarnInstallerResource>().ToList();
+
+        var installerResource = Assert.Single(installerResources);
+        Assert.Equal("test-yarn-app-yarn-install", installerResource.Name);
+
+        var args = await installerResource.GetArgumentValuesAsync();
+        Assert.Collection(
+            args,
+            arg => Assert.Equal("install", arg),
+            arg => Assert.Equal("--frozen-lockfile", arg),
+            arg => Assert.Equal("--verbose", arg)
+        );
+    }
+
+    [Fact]
+    public async Task WithPnpmPackageInstallation_CanAcceptAdditionalArgs()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nodeApp = builder.AddPnpmApp("test-pnpm-app", "./test-pnpm-app");
+        nodeApp.WithPnpmPackageInstallation(args: ["--frozen-lockfile"]);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResources = appModel.Resources.OfType<PnpmInstallerResource>().ToList();
+
+        var installerResource = Assert.Single(installerResources);
+        Assert.Equal("test-pnpm-app-pnpm-install", installerResource.Name);
+
+        var args = await installerResource.GetArgumentValuesAsync();
+        Assert.Collection(
+            args,
+            arg => Assert.Equal("install", arg),
+            arg => Assert.Equal("--frozen-lockfile", arg)
+        );
     }
 }

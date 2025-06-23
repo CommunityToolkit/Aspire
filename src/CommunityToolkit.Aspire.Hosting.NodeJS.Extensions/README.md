@@ -24,6 +24,27 @@ builder.AddPnpmApp("pnpm-demo")
     .WithExternalHttpEndpoints();
 ```
 
+### Package installation with custom flags
+
+You can pass additional flags to package managers during installation:
+
+```csharp
+// npm with legacy peer deps support
+builder.AddNpmApp("npm-app", "./path/to/app")
+    .WithNpmPackageInstallation(useCI: false, args: ["--legacy-peer-deps"])
+    .WithExternalHttpEndpoints();
+
+// yarn with frozen lockfile
+builder.AddYarnApp("yarn-app", "./path/to/app")  
+    .WithYarnPackageInstallation(args: ["--frozen-lockfile", "--verbose"])
+    .WithExternalHttpEndpoints();
+
+// pnpm with frozen lockfile
+builder.AddPnpmApp("pnpm-app", "./path/to/app")
+    .WithPnpmPackageInstallation(args: ["--frozen-lockfile"])
+    .WithExternalHttpEndpoints();
+```
+
 ## Additional Information
 
 https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-nodejs-extensions

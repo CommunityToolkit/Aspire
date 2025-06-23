@@ -1,12 +1,15 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddViteApp("vite-demo")
-    .WithNpmPackageInstallation();
+    .WithNpmPackageInstallation()
+    .WithHttpHealthCheck();
 
 builder.AddViteApp("yarn-demo", packageManager: "yarn")
-    .WithYarnPackageInstallation();
+    .WithYarnPackageInstallation()
+    .WithHttpHealthCheck();
 
 builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
-    .WithPnpmPackageInstallation();
+    .WithPnpmPackageInstallation()
+    .WithHttpHealthCheck();
 
 builder.Build().Run();
