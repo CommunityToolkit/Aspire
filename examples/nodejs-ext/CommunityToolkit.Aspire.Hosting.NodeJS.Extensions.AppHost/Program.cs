@@ -9,4 +9,9 @@ builder.AddViteApp("yarn-demo", packageManager: "yarn")
 builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
     .WithPnpmPackageInstallation();
 
+// Example of using custom args - useful for legacy packages
+builder.AddNpmApp("npm-with-flags", "../vite-demo")
+    .WithNpmPackageInstallation(useCI: false, args: ["--legacy-peer-deps"])
+    .WithHttpEndpoint(env: "PORT");
+
 builder.Build().Run();
