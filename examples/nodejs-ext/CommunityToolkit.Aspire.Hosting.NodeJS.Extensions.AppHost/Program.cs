@@ -1,17 +1,15 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddViteApp("vite-demo")
-    .WithNpmPackageInstallation();
+    .WithNpmPackageInstallation()
+    .WithHttpHealthCheck();
 
 builder.AddViteApp("yarn-demo", packageManager: "yarn")
-    .WithYarnPackageInstallation();
+    .WithYarnPackageInstallation()
+    .WithHttpHealthCheck();
 
 builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
-    .WithPnpmPackageInstallation();
-
-// Example of using custom args - useful for legacy packages
-builder.AddNpmApp("npm-with-flags", "../vite-demo")
-    .WithNpmPackageInstallation(useCI: false, args: ["--legacy-peer-deps"])
-    .WithHttpEndpoint(env: "PORT");
+    .WithPnpmPackageInstallation()
+    .WithHttpHealthCheck();
 
 builder.Build().Run();
