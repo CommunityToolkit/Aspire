@@ -110,8 +110,9 @@ public static class NodeJSHostingExtensions
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
     /// <param name="useCI">When true use <code>npm ci</code> otherwise use <code>npm install</code> when installing packages.</param>
+    /// <param name="args">Additional arguments to pass to the npm command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, bool useCI = false)
+    public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, bool useCI = false, string[]? args = null)
     {
         // Only install packages during development, not in publish mode
         if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
@@ -119,8 +120,14 @@ public static class NodeJSHostingExtensions
             var installerName = $"{resource.Resource.Name}-npm-install";
             var installer = new NpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
+            var baseArgs = new List<string> { useCI ? "ci" : "install" };
+            if (args != null)
+            {
+                baseArgs.AddRange(args);
+            }
+
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs([useCI ? "ci" : "install"])
+                .WithArgs(baseArgs.ToArray())
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
@@ -135,8 +142,9 @@ public static class NodeJSHostingExtensions
     /// Ensures the Node.js packages are installed before the application starts using yarn as the package manager.
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
+    /// <param name="args">Additional arguments to pass to the yarn command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
+    public static IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this IResourceBuilder<NodeAppResource> resource, string[]? args = null)
     {
         // Only install packages during development, not in publish mode
         if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
@@ -144,8 +152,14 @@ public static class NodeJSHostingExtensions
             var installerName = $"{resource.Resource.Name}-yarn-install";
             var installer = new YarnInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
+            var baseArgs = new List<string> { "install" };
+            if (args != null)
+            {
+                baseArgs.AddRange(args);
+            }
+
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(["install"])
+                .WithArgs(baseArgs.ToArray())
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
@@ -160,8 +174,9 @@ public static class NodeJSHostingExtensions
     /// Ensures the Node.js packages are installed before the application starts using pnpm as the package manager.
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
+    /// <param name="args">Additional arguments to pass to the pnpm command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
+    public static IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, string[]? args = null)
     {
         // Only install packages during development, not in publish mode
         if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
@@ -169,8 +184,14 @@ public static class NodeJSHostingExtensions
             var installerName = $"{resource.Resource.Name}-pnpm-install";
             var installer = new PnpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
+            var baseArgs = new List<string> { "install" };
+            if (args != null)
+            {
+                baseArgs.AddRange(args);
+            }
+
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithArgs(["install"])
+                .WithArgs(baseArgs.ToArray())
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
