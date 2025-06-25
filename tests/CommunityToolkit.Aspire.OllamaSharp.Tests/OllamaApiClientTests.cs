@@ -174,6 +174,43 @@ public class OllamaApiClientTests
     }
 
     [Fact]
+    public void CanUseSameConnectionWithDifferentServiceKeys()
+    {
+        // This test demonstrates the main use case from the issue:
+        // Using the same connection but different service keys for different models
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:LocalAI", $"Endpoint={Endpoint}")
+        ]);
+
+        // Same connection, different service keys and models
+        builder.AddKeyedOllamaApiClient("ChatModel", "LocalAI", settings =>
+        {
+            settings.SelectedModel = "llama3.2";
+        });
+
+        builder.AddKeyedOllamaApiClient("VisionModel", "LocalAI", settings =>
+        {
+            settings.SelectedModel = "llava";
+        });
+
+        using var host = builder.Build();
+        var chatClient = host.Services.GetRequiredKeyedService<IOllamaApiClient>("ChatModel");
+        var visionClient = host.Services.GetRequiredKeyedService<IOllamaApiClient>("VisionModel");
+
+        // Both use the same endpoint
+        Assert.Equal(Endpoint, chatClient.Uri);
+        Assert.Equal(Endpoint, visionClient.Uri);
+
+        // But have different models
+        Assert.Equal("llama3.2", chatClient.SelectedModel);
+        Assert.Equal("llava", visionClient.SelectedModel);
+
+        // And are different instances
+        Assert.NotEqual(chatClient, visionClient);
+    }
+
+    [Fact]
     public void RegisteringChatClientAndEmbeddingGeneratorReturnsCorrectModelForServices()
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
