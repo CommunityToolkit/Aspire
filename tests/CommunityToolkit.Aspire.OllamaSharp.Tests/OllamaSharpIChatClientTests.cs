@@ -150,6 +150,29 @@ public class OllamaSharpIChatClientTests
         Assert.IsType<IOllamaApiClient>(GetInnerClient(otelClient), exactMatch: false);
     }
 
+    [Fact]
+    public void CanSetMultipleKeyedChatClientsWithCustomServiceKeys()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama2", "Endpoint=https://localhost:5002/")
+        ]);
+
+        // Use custom service keys for different chat clients
+        builder.AddKeyedOllamaApiClient("ChatModel", "Ollama").AddKeyedChatClient();
+        builder.AddKeyedOllamaApiClient("VisionModel", "Ollama2").AddKeyedChatClient();
+
+        using var host = builder.Build();
+        var chatClient = host.Services.GetRequiredKeyedService<IChatClient>("ChatModel");
+        var visionClient = host.Services.GetRequiredKeyedService<IChatClient>("VisionModel");
+
+        Assert.Equal(Endpoint, chatClient.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal("https://localhost:5002/", visionClient.GetService<ChatClientMetadata>()?.ProviderUri?.ToString());
+
+        Assert.NotEqual(chatClient, visionClient);
+    }
+
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_InnerClient")]
     private static extern IChatClient GetInnerClient(DelegatingChatClient client);
 }

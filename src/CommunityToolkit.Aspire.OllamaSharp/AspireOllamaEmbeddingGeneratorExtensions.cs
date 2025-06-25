@@ -31,7 +31,7 @@ public static class AspireOllamaEmbeddingGeneratorExtensions
         this AspireOllamaApiClientBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(builder.ServiceKey, nameof(builder.ServiceKey));
+        ArgumentNullException.ThrowIfNull(builder.ServiceKey, nameof(builder.ServiceKey));
 
         return builder.HostBuilder.Services.AddKeyedEmbeddingGenerator(
             builder.ServiceKey,

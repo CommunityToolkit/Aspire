@@ -125,6 +125,55 @@ public class OllamaApiClientTests
     }
 
     [Fact]
+    public void CanSetMultipleKeyedClientsWithCustomServiceKeys()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama2", "Endpoint=https://localhost:5002/"),
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama3", "Endpoint=https://localhost:5003/")
+        ]);
+
+        // Use custom service keys instead of connection names
+        builder.AddKeyedOllamaApiClient("ChatModel", "Ollama");
+        builder.AddKeyedOllamaApiClient("VisionModel", "Ollama2");
+        builder.AddKeyedOllamaApiClient("EmbeddingModel", "Ollama3");
+
+        using var host = builder.Build();
+        var chatClient = host.Services.GetRequiredKeyedService<IOllamaApiClient>("ChatModel");
+        var visionClient = host.Services.GetRequiredKeyedService<IOllamaApiClient>("VisionModel");
+        var embeddingClient = host.Services.GetRequiredKeyedService<IOllamaApiClient>("EmbeddingModel");
+
+        Assert.Equal(Endpoint, chatClient.Uri);
+        Assert.Equal("https://localhost:5002/", visionClient.Uri?.ToString());
+        Assert.Equal("https://localhost:5003/", embeddingClient.Uri?.ToString());
+
+        Assert.NotEqual(chatClient, visionClient);
+        Assert.NotEqual(chatClient, embeddingClient);
+        Assert.NotEqual(visionClient, embeddingClient);
+    }
+
+    [Fact]
+    public void CanSetKeyedClientWithSettingsOverload()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        
+        var settings = new OllamaSharpSettings
+        {
+            Endpoint = Endpoint,
+            SelectedModel = "testmodel"
+        };
+
+        builder.AddKeyedOllamaApiClient("TestService", settings);
+
+        using var host = builder.Build();
+        var client = host.Services.GetRequiredKeyedService<IOllamaApiClient>("TestService");
+
+        Assert.Equal(Endpoint, client.Uri);
+        Assert.Equal("testmodel", client.SelectedModel);
+    }
+
+    [Fact]
     public void RegisteringChatClientAndEmbeddingGeneratorReturnsCorrectModelForServices()
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
