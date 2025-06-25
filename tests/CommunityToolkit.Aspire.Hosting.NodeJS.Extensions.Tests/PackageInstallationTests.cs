@@ -78,8 +78,14 @@ public class PackageInstallationTests
         var nodeAppWithArgs = builder.AddNpmApp("test-app-args", "./test-app-args");
 
         // Test npm install with additional args
-        nodeApp.WithNpmPackageInstallation(useCI: false, args: ["--legacy-peer-deps"]);
-        nodeAppWithArgs.WithNpmPackageInstallation(useCI: true, args: ["--verbose", "--no-optional"]);
+        nodeApp.WithNpmPackageInstallation(useCI: false, configureInstaller: installerBuilder =>
+        {
+            installerBuilder.WithArgs("--legacy-peer-deps");
+        });
+        nodeAppWithArgs.WithNpmPackageInstallation(useCI: true, configureInstaller: installerBuilder =>
+        {
+            installerBuilder.WithArgs("--verbose", "--no-optional");
+        });
 
         using var app = builder.Build();
 
@@ -115,7 +121,10 @@ public class PackageInstallationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var nodeApp = builder.AddYarnApp("test-yarn-app", "./test-yarn-app");
-        nodeApp.WithYarnPackageInstallation(args: ["--frozen-lockfile", "--verbose"]);
+        nodeApp.WithYarnPackageInstallation(configureInstaller: installerBuilder =>
+        {
+            installerBuilder.WithArgs("--frozen-lockfile", "--verbose");
+        });
 
         using var app = builder.Build();
 
@@ -140,7 +149,10 @@ public class PackageInstallationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var nodeApp = builder.AddPnpmApp("test-pnpm-app", "./test-pnpm-app");
-        nodeApp.WithPnpmPackageInstallation(args: ["--frozen-lockfile"]);
+        nodeApp.WithPnpmPackageInstallation(configureInstaller: installerBuilder =>
+        {
+            installerBuilder.WithArgs("--frozen-lockfile");
+        });
 
         using var app = builder.Build();
 
