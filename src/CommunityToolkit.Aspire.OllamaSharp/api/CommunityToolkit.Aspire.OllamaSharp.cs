@@ -40,6 +40,8 @@ namespace Microsoft.Extensions.Hosting
         public static AI.ChatClientBuilder AddChatClient(this AspireOllamaApiClientBuilder builder) { throw null; }
 
         public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder) { throw null; }
+
+        public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder, object serviceKey) { throw null; }
     }
 
     public static partial class AspireOllamaEmbeddingGeneratorExtensions
@@ -47,6 +49,8 @@ namespace Microsoft.Extensions.Hosting
         public static AI.EmbeddingGeneratorBuilder<string, AI.Embedding<float>> AddEmbeddingGenerator(this AspireOllamaApiClientBuilder builder) { throw null; }
 
         public static AI.EmbeddingGeneratorBuilder<string, AI.Embedding<float>> AddKeyedEmbeddingGenerator(this AspireOllamaApiClientBuilder builder) { throw null; }
+
+        public static AI.EmbeddingGeneratorBuilder<string, AI.Embedding<float>> AddKeyedEmbeddingGenerator(this AspireOllamaApiClientBuilder builder, object serviceKey) { throw null; }
     }
 
     public static partial class AspireOllamaSharpExtensions

@@ -149,6 +149,52 @@ public class OllamaSharpIEmbeddingGeneratorTests
         Assert.IsType<IOllamaApiClient>(GetInnerGenerator(otelClient), exactMatch: false);
     }
 
+    [Fact]
+    public void CanSetMultipleEmbeddingGeneratorsWithDifferentServiceKeys()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        // Use one Ollama API client with multiple embedding generators using different service keys
+        builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama")
+            .AddKeyedEmbeddingGenerator("EmbedKey1")
+            .AddKeyedEmbeddingGenerator("EmbedKey2");
+
+        using var host = builder.Build();
+        var embedGenerator1 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("EmbedKey1");
+        var embedGenerator2 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("EmbedKey2");
+
+        Assert.Equal(Endpoint, embedGenerator1.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, embedGenerator2.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+
+        Assert.NotEqual(embedGenerator1, embedGenerator2);
+    }
+
+    [Fact]
+    public void CanMixChatClientsAndEmbeddingGeneratorsWithCustomServiceKeys()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        // Use one Ollama API client with both chat clients and embedding generators using different service keys
+        var ollamaBuilder = builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama");
+        ollamaBuilder.AddKeyedChatClient("ChatKey");
+        ollamaBuilder.AddKeyedEmbeddingGenerator("EmbedKey");
+
+        using var host = builder.Build();
+        var chatClient = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey");
+        var embedGenerator = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("EmbedKey");
+
+        Assert.Equal(Endpoint, chatClient.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, embedGenerator.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+
+        Assert.NotEqual(chatClient, embedGenerator);
+    }
+
     private static IEmbeddingGenerator<TInput, TEmbedding> GetInnerGenerator<TInput, TEmbedding>(DelegatingEmbeddingGenerator<TInput, TEmbedding> generator)
         where TEmbedding : Embedding =>
         (IEmbeddingGenerator<TInput,TEmbedding>)(generator.GetType()

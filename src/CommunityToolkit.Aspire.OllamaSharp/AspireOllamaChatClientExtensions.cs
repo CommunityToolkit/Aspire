@@ -40,6 +40,24 @@ public static class AspireOllamaChatClientExtensions
     }
 
     /// <summary>
+    /// Registers a keyed singleton <see cref="IChatClient"/> in the services provided by the <paramref name="builder"/> using the specified service key.
+    /// </summary>
+    /// <param name="builder">An <see cref="AspireOllamaApiClientBuilder" />.</param>
+    /// <param name="serviceKey">The service key to use for registering the <see cref="IChatClient"/>.</param>
+    /// <returns>A <see cref="ChatClientBuilder"/> that can be used to build a pipeline around the inner <see cref="IChatClient"/>.</returns>
+    public static ChatClientBuilder AddKeyedChatClient(
+        this AspireOllamaApiClientBuilder builder,
+        object serviceKey)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(serviceKey, nameof(serviceKey));
+
+        return builder.HostBuilder.Services.AddKeyedChatClient(
+                serviceKey,
+                services => CreateInnerChatClient(services, builder));
+    }
+
+    /// <summary>
     /// Wrap the <see cref="IOllamaApiClient"/> in a telemetry client if tracing is enabled.
     /// Note that this doesn't use ".UseOpenTelemetry()" because the order of the clients would be incorrect.
     /// We want the telemetry client to be the innermost client, right next to the inner <see cref="IOllamaApiClient"/>.

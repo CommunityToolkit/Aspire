@@ -173,6 +173,52 @@ public class OllamaSharpIChatClientTests
         Assert.NotEqual(chatClient, visionClient);
     }
 
+    [Fact]
+    public void CanSetMultipleChatClientsWithDifferentServiceKeys()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        // Use one Ollama API client with multiple chat clients using different service keys
+        builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama")
+            .AddKeyedChatClient("ChatKey1")
+            .AddKeyedChatClient("ChatKey2");
+
+        using var host = builder.Build();
+        var chatClient1 = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey1");
+        var chatClient2 = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey2");
+
+        Assert.Equal(Endpoint, chatClient1.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, chatClient2.GetService<ChatClientMetadata>()?.ProviderUri);
+
+        Assert.NotEqual(chatClient1, chatClient2);
+    }
+
+    [Fact]
+    public void CanMixChatClientsAndEmbeddingGeneratorsWithCustomServiceKeys()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        // Use one Ollama API client with both chat clients and embedding generators using different service keys
+        builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama")
+            .AddKeyedChatClient("ChatKey1")
+            .AddKeyedChatClient("ChatKey2");
+
+        using var host = builder.Build();
+        var chatClient1 = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey1");
+        var chatClient2 = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey2");
+
+        Assert.Equal(Endpoint, chatClient1.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, chatClient2.GetService<ChatClientMetadata>()?.ProviderUri);
+
+        Assert.NotEqual(chatClient1, chatClient2);
+    }
+
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_InnerClient")]
     private static extern IChatClient GetInnerClient(DelegatingChatClient client);
 }
