@@ -9,6 +9,8 @@ public sealed class DockerUtils
 {
     public static void AttemptDeleteDockerVolume(string volumeName, bool throwOnFailure = false)
     {
+        string containerRuntime = Environment.GetEnvironmentVariable("DOTNET_ASPIRE_CONTAINER_RUNTIME") ?? "docker";
+        
         for (var i = 0; i < 3; i++)
         {
             if (i != 0)
@@ -16,7 +18,7 @@ public sealed class DockerUtils
                 Thread.Sleep(1000);
             }
 
-            if (Process.Start("docker", $"volume rm {volumeName}") is { } process)
+            if (Process.Start(containerRuntime, $"volume rm {volumeName}") is { } process)
             {
                 var exited = process.WaitForExit(TimeSpan.FromSeconds(3));
                 var done = exited && process.ExitCode == 0;
@@ -32,7 +34,7 @@ public sealed class DockerUtils
 
         if (throwOnFailure)
         {
-            if (Process.Start("docker", $"volume inspect {volumeName}") is { } process)
+            if (Process.Start(containerRuntime, $"volume inspect {volumeName}") is { } process)
             {
                 var exited = process.WaitForExit(TimeSpan.FromSeconds(3));
                 var exitCode = process.ExitCode;
