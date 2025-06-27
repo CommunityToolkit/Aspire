@@ -134,18 +134,12 @@
   <Folder Name="/examples/sqlserver-ext/">
     <Project Path="examples/sqlserver-ext/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj" />
   </Folder>
-  <Folder Name="/examples/swa/">
-    <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.ApiApp/CommunityToolkit.Aspire.StaticWebApps.ApiApp.csproj" />
-    <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.AppHost/CommunityToolkit.Aspire.StaticWebApps.AppHost.csproj" />
-    <Project Path="examples/swa/CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults/CommunityToolkit.Aspire.StaticWebApps.ServiceDefaults.csproj" />
-  </Folder>
   <Folder Name="/src/">
     <Project Path="src/CommunityToolkit.Aspire.EventStore/CommunityToolkit.Aspire.EventStore.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj" />
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
@@ -190,7 +184,6 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests/CommunityToolkit.Aspire.Hosting.Azure.StaticWebApps.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
