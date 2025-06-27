@@ -142,11 +142,11 @@ public class OllamaSharpIChatClientTests
 
         using var host = builder.Build();
         var client = host.Services.GetRequiredService<IChatClient>();
-        
+
         var distributedCacheClient = Assert.IsType<DistributedCachingChatClient>(client);
         var functionInvocationClient = Assert.IsType<FunctionInvokingChatClient>(GetInnerClient(distributedCacheClient));
         var otelClient = Assert.IsType<OpenTelemetryChatClient>(GetInnerClient(functionInvocationClient));
-        
+
         Assert.IsType<IOllamaApiClient>(GetInnerClient(otelClient), exactMatch: false);
     }
 
@@ -182,9 +182,9 @@ public class OllamaSharpIChatClientTests
         ]);
 
         // Use one Ollama API client with multiple chat clients using different service keys
-        builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama")
-            .AddKeyedChatClient("ChatKey1")
-            .AddKeyedChatClient("ChatKey2");
+        var cb = builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama");
+        cb.AddKeyedChatClient("ChatKey1");
+        cb.AddKeyedChatClient("ChatKey2");
 
         using var host = builder.Build();
         var chatClient1 = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey1");
@@ -205,18 +205,18 @@ public class OllamaSharpIChatClientTests
         ]);
 
         // Use one Ollama API client with both chat clients and embedding generators using different service keys
-        builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama")
-            .AddKeyedChatClient("ChatKey1")
-            .AddKeyedChatClient("ChatKey2");
+        var cb = builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama");
+        cb.AddKeyedChatClient("ChatKey1");
+        cb.AddKeyedEmbeddingGenerator("EmbeddingKey1");
 
         using var host = builder.Build();
         var chatClient1 = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey1");
-        var chatClient2 = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey2");
+        var embeddingGenerator = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("EmbeddingKey1");
 
         Assert.Equal(Endpoint, chatClient1.GetService<ChatClientMetadata>()?.ProviderUri);
-        Assert.Equal(Endpoint, chatClient2.GetService<ChatClientMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, embeddingGenerator.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
 
-        Assert.NotEqual(chatClient1, chatClient2);
+        Assert.Equal(chatClient1 as IOllamaApiClient, embeddingGenerator as IOllamaApiClient);
     }
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_InnerClient")]

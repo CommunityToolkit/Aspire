@@ -32,11 +32,8 @@ public static class AspireOllamaChatClientExtensions
         this AspireOllamaApiClientBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNull(builder.ServiceKey, nameof(builder.ServiceKey));
 
-        return builder.HostBuilder.Services.AddKeyedChatClient(
-                builder.ServiceKey,
-                services => CreateInnerChatClient(services, builder));
+        return builder.AddKeyedChatClient(builder.ServiceKey);
     }
 
     /// <summary>

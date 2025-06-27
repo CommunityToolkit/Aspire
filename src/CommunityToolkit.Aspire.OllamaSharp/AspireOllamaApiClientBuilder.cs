@@ -8,7 +8,7 @@ namespace Microsoft.Extensions.Hosting;
 /// <param name="hostBuilder">The <see cref="IHostApplicationBuilder"/> with which services are being registered.</param>
 /// <param name="serviceKey">The service key used to register the <see cref="OllamaApiClient"/> service, if any.</param>
 /// <param name="disableTracing">A flag to indicate whether tracing should be disabled.</param>
-public class AspireOllamaApiClientBuilder(IHostApplicationBuilder hostBuilder, object? serviceKey, bool disableTracing)
+public class AspireOllamaApiClientBuilder(IHostApplicationBuilder hostBuilder, object serviceKey, bool disableTracing)
 {
     /// <summary>
     /// The host application builder used to configure the application.
@@ -18,7 +18,7 @@ public class AspireOllamaApiClientBuilder(IHostApplicationBuilder hostBuilder, o
     /// <summary>
     /// Gets the service key used to register the <see cref="OllamaApiClient"/> service, if any.
     /// </summary>
-    public object? ServiceKey { get; } = serviceKey;
+    public object ServiceKey { get; } = serviceKey;
 
     /// <summary>
     /// Gets a flag indicating whether tracing should be disabled.

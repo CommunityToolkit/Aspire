@@ -2,7 +2,6 @@ using CommunityToolkit.Aspire.OllamaSharp;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using OllamaSharp;
 using System.Data.Common;
 
