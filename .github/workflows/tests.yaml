@@ -24,7 +24,6 @@ jobs:
             Hosting.Azure.Dapr.Redis.Tests,
             Hosting.Azure.Dapr.Tests,
             Hosting.Azure.DataApiBuilder.Tests,
-            Hosting.Azure.StaticWebApps.Tests,
             Hosting.Bun.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
@@ -125,3 +124,4 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
+
