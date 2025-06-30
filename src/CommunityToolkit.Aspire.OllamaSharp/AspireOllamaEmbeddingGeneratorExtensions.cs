@@ -31,10 +31,24 @@ public static class AspireOllamaEmbeddingGeneratorExtensions
         this AspireOllamaApiClientBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(builder.ServiceKey, nameof(builder.ServiceKey));
+        return builder.AddKeyedEmbeddingGenerator(builder.ServiceKey);
+    }
+
+    /// <summary>
+    /// Registers a keyed singleton <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/> in the services provided by the <paramref name="builder"/> using the specified service key.
+    /// </summary>
+    /// <param name="builder">An <see cref="AspireOllamaApiClientBuilder" />.</param>
+    /// <param name="serviceKey">The service key to use for registering the <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/>.</param>
+    /// <returns>A <see cref="EmbeddingGeneratorBuilder{TInput, TEmbedding}"/> that can be used to build a pipeline around the inner <see cref="IEmbeddingGenerator{TInput, TEmbedding}"/>.</returns>
+    public static EmbeddingGeneratorBuilder<string, Embedding<float>> AddKeyedEmbeddingGenerator(
+        this AspireOllamaApiClientBuilder builder,
+        object serviceKey)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(serviceKey, nameof(serviceKey));
 
         return builder.HostBuilder.Services.AddKeyedEmbeddingGenerator(
-            builder.ServiceKey,
+            serviceKey,
             services => CreateInnerEmbeddingGenerator(services, builder));
     }
 

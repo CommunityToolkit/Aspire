@@ -32,10 +32,25 @@ public static class AspireOllamaChatClientExtensions
         this AspireOllamaApiClientBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(builder.ServiceKey, nameof(builder.ServiceKey));
+
+        return builder.AddKeyedChatClient(builder.ServiceKey);
+    }
+
+    /// <summary>
+    /// Registers a keyed singleton <see cref="IChatClient"/> in the services provided by the <paramref name="builder"/> using the specified service key.
+    /// </summary>
+    /// <param name="builder">An <see cref="AspireOllamaApiClientBuilder" />.</param>
+    /// <param name="serviceKey">The service key to use for registering the <see cref="IChatClient"/>.</param>
+    /// <returns>A <see cref="ChatClientBuilder"/> that can be used to build a pipeline around the inner <see cref="IChatClient"/>.</returns>
+    public static ChatClientBuilder AddKeyedChatClient(
+        this AspireOllamaApiClientBuilder builder,
+        object serviceKey)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(serviceKey, nameof(serviceKey));
 
         return builder.HostBuilder.Services.AddKeyedChatClient(
-                builder.ServiceKey,
+                serviceKey,
                 services => CreateInnerChatClient(services, builder));
     }
 

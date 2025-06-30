@@ -149,9 +149,32 @@ public class OllamaSharpIEmbeddingGeneratorTests
         Assert.IsType<IOllamaApiClient>(GetInnerGenerator(otelClient), exactMatch: false);
     }
 
+    [Fact]
+    public void CanSetMultipleEmbeddingGeneratorsWithDifferentServiceKeys()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        // Use one Ollama API client with multiple embedding generators using different service keys
+        var cb = builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama");
+        cb.AddKeyedEmbeddingGenerator("EmbedKey1");
+        cb.AddKeyedEmbeddingGenerator("EmbedKey2");
+
+        using var host = builder.Build();
+        var embedGenerator1 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("EmbedKey1");
+        var embedGenerator2 = host.Services.GetRequiredKeyedService<IEmbeddingGenerator<string, Embedding<float>>>("EmbedKey2");
+
+        Assert.Equal(Endpoint, embedGenerator1.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+        Assert.Equal(Endpoint, embedGenerator2.GetService<EmbeddingGeneratorMetadata>()?.ProviderUri);
+
+        Assert.NotEqual(embedGenerator1, embedGenerator2);
+    }
+
     private static IEmbeddingGenerator<TInput, TEmbedding> GetInnerGenerator<TInput, TEmbedding>(DelegatingEmbeddingGenerator<TInput, TEmbedding> generator)
         where TEmbedding : Embedding =>
-        (IEmbeddingGenerator<TInput,TEmbedding>)(generator.GetType()
+        (IEmbeddingGenerator<TInput, TEmbedding>)(generator.GetType()
             .GetProperty("InnerGenerator", BindingFlags.Instance | BindingFlags.NonPublic)?
             .GetValue(generator, null) ?? throw new InvalidOperationException());
 }
