@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class GolangAppHostingExtension
     {
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[]? args = null) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[]? args = null, string[]? buildTags = null) { throw null; }
     }
 }
 
