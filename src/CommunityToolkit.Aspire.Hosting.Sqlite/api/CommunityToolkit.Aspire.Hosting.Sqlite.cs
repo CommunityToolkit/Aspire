@@ -12,12 +12,6 @@ namespace Aspire.Hosting
     {
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> AddSqlite(this IDistributedApplicationBuilder builder, string name, string? databasePath = null, string? databaseFileName = null) { throw null; }
 
-        [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> WithLocalExtension(this ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> builder, string extension, string extensionPath) { throw null; }
-
-        [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002", UrlFormat = "https://aka.ms/communitytoolkit/aspire/diagnostics#{0}")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> WithNuGetExtension(this ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> builder, string extension, string? packageName = null) { throw null; }
-
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> WithSqliteWeb(this ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.SqliteWebResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }
@@ -29,8 +23,6 @@ namespace Aspire.Hosting.ApplicationModel
         public SqliteResource(string name, string databasePath, string databaseFileName) : base(default!) { }
 
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
-
-        public System.Collections.Generic.IReadOnlyCollection<Microsoft.Extensions.Hosting.SqliteExtensionMetadata> Extensions { get { throw null; } }
     }
 
     public partial class SqliteWebResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
@@ -40,12 +32,5 @@ namespace Aspire.Hosting.ApplicationModel
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
         public EndpointReference PrimaryEndpoint { get { throw null; } }
-    }
-}
-
-namespace Microsoft.Extensions.Hosting
-{
-    public partial record SqliteExtensionMetadata(string Extension, string? PackageName, bool IsNuGetPackage, string? ExtensionFolder)
-    {
     }
 }

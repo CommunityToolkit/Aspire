@@ -7,11 +7,13 @@ on:
       - "src/**"
       - "examples/**"
       - "tests/**"
+      - "tests-app-hosts/**"
       - Directory.Build.props
       - Directory.Build.targets
       - Directory.Packages.props
       - ".github/workflows/**"
       - ".github/actions/**"
+      - "CommunityToolkit.Aspire.slnx"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

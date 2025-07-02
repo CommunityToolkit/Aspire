@@ -20,11 +20,11 @@ jobs:
         name: [
             # Hosting integration tests
             Hosting.ActiveMQ.Tests,
-            Hosting.Azure.DataApiBuilder.Tests,
-            Hosting.Azure.StaticWebApps.Tests,
-            Hosting.Bun.Tests,
-            Hosting.Azure.Dapr.Tests,
+            Hosting.Adminer.Tests,
             Hosting.Azure.Dapr.Redis.Tests,
+            Hosting.Azure.Dapr.Tests,
+            Hosting.Azure.DataApiBuilder.Tests,
+            Hosting.Bun.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,
@@ -32,23 +32,26 @@ jobs:
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
             Hosting.Java.Tests,
-            Hosting.k6.Tests,
             Hosting.LavinMQ.Tests,
             Hosting.MailPit.Tests,
             Hosting.Meilisearch.Tests,
             Hosting.MongoDB.Extensions.Tests,
+            Hosting.MySql.Extensions.Tests,
             Hosting.Ngrok.Tests,
             Hosting.NodeJS.Extensions.Tests,
             Hosting.Ollama.Tests,
             Hosting.PapercutSmtp.Tests,
             Hosting.PostgreSQL.Extensions.Tests,
+            Hosting.PowerShell.Tests,
             Hosting.Python.Extensions.Tests,
             Hosting.RavenDB.Tests,
             Hosting.Redis.Extensions.Tests,
             Hosting.Rust.Tests,
             Hosting.SqlDatabaseProjects.Tests,
-            Hosting.Sqlite.Tests,
             Hosting.SqlServer.Extensions.Tests,
+            Hosting.Sqlite.Tests,
+            Hosting.k6.Tests,
+            Hosting.Minio.Tests,
 
             # Client integration tests
             EventStore.Tests,
@@ -59,6 +62,7 @@ jobs:
             Microsoft.EntityFrameworkCore.Sqlite.Tests,
             OllamaSharp.Tests,
             RavenDB.Client.Tests,
+            Minio.Client.Tests,
           ]
 
     steps:
@@ -120,3 +124,4 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
+

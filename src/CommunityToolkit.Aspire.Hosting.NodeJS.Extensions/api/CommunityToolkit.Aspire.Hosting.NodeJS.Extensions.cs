@@ -16,10 +16,10 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddYarnApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string scriptName = "start", string[]? args = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, bool useCI = false) { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, bool useCI = false, string[]? args = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource) { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, string[]? args = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource) { throw null; }
+        public static ApplicationModel.IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, string[]? args = null) { throw null; }
     }
 }

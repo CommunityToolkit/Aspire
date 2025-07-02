@@ -1,9 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Lifecycle;
-using CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Aspire.Utils;
+using Microsoft.Extensions.Hosting;
 
 namespace Aspire.Hosting;
 
@@ -37,9 +34,21 @@ public static class NodeJSHostingExtensions
             _ => builder.AddNpmApp(name, wd, "dev")
         };
 
-        return useHttps
-            ? resource.WithHttpsEndpoint(env: "PORT").WithExternalHttpEndpoints()
-            : resource.WithHttpEndpoint(env: "PORT").WithExternalHttpEndpoints();
+        _ = useHttps
+            ? resource.WithHttpsEndpoint(env: "PORT")
+            : resource.WithHttpEndpoint(env: "PORT");
+
+        return resource.WithArgs(ctx =>
+        {
+            if (packageManager == "npm")
+            {
+                ctx.Args.Add("--");
+            }
+
+            var targetEndpoint = resource.Resource.GetEndpoint(useHttps ? "https" : "http");
+            ctx.Args.Add("--port");
+            ctx.Args.Add(targetEndpoint.Property(EndpointProperty.TargetPort));
+        });
     }
 
     /// <summary>
@@ -101,11 +110,27 @@ public static class NodeJSHostingExtensions
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
     /// <param name="useCI">When true use <code>npm ci</code> otherwise use <code>npm install</code> when installing packages.</param>
+    /// <param name="configureInstaller">Configure the npm installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, bool useCI = false)
+    public static IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, bool useCI = false, Action<IResourceBuilder<NpmInstallerResource>>? configureInstaller = null)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<NpmPackageInstallerLifecycleHook>(sp =>
-            new(useCI, sp.GetRequiredService<ResourceLoggerService>(), sp.GetRequiredService<ResourceNotificationService>(), sp.GetRequiredService<DistributedApplicationExecutionContext>()));
+        // Only install packages during development, not in publish mode
+        if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{resource.Resource.Name}-npm-install";
+            var installer = new NpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
+
+            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithArgs([useCI ? "ci" : "install"])
+                .WithParentRelationship(resource.Resource)
+                .ExcludeFromManifest();
+
+            configureInstaller?.Invoke(installerBuilder);
+
+            // Make the parent resource wait for the installer to complete
+            resource.WaitForCompletion(installerBuilder);
+        }
+
         return resource;
     }
 
@@ -113,10 +138,27 @@ public static class NodeJSHostingExtensions
     /// Ensures the Node.js packages are installed before the application starts using yarn as the package manager.
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
+    /// <param name="configureInstaller">Configure the yarn installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
+    public static IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this IResourceBuilder<NodeAppResource> resource, Action<IResourceBuilder<YarnInstallerResource>>? configureInstaller = null)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<YarnPackageInstallerLifecycleHook>();
+        // Only install packages during development, not in publish mode
+        if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{resource.Resource.Name}-yarn-install";
+            var installer = new YarnInstallerResource(installerName, resource.Resource.WorkingDirectory);
+
+            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithArgs("install")
+                .WithParentRelationship(resource.Resource)
+                .ExcludeFromManifest();
+
+            configureInstaller?.Invoke(installerBuilder);
+
+            // Make the parent resource wait for the installer to complete
+            resource.WaitForCompletion(installerBuilder);
+        }
+
         return resource;
     }
 
@@ -124,10 +166,27 @@ public static class NodeJSHostingExtensions
     /// Ensures the Node.js packages are installed before the application starts using pnpm as the package manager.
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
+    /// <param name="configureInstaller">Configure the pnpm installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource)
+    public static IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this IResourceBuilder<NodeAppResource> resource, Action<IResourceBuilder<PnpmInstallerResource>>? configureInstaller = null)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<PnpmPackageInstallerLifecycleHook>();
+        // Only install packages during development, not in publish mode
+        if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{resource.Resource.Name}-pnpm-install";
+            var installer = new PnpmInstallerResource(installerName, resource.Resource.WorkingDirectory);
+
+            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithArgs("install")
+                .WithParentRelationship(resource.Resource)
+                .ExcludeFromManifest();
+
+            configureInstaller?.Invoke(installerBuilder);
+
+            // Make the parent resource wait for the installer to complete
+            resource.WaitForCompletion(installerBuilder);
+        }
+
         return resource;
     }
 

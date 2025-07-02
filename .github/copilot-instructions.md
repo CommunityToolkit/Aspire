@@ -7,6 +7,8 @@
     -   Use file-scoped namespaces.
 -   All public members require doc comments.
 -   Prefer type declarations over `var` when the type isn't obvious.
+-   Use the C# Collection Initializer syntax, `List<T> items = []` (where `List<T>` could be any collection type), rather than `new()`.
+-   Use `is not null` or `is null` over `!= null` and `== null`.
 
 ## Sample hosting integration
 

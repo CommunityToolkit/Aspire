@@ -103,3 +103,13 @@
 /src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/ @Alirexaa
 /tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/ @Alirexaa
 /examples/sqlserver-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Minio.Client
+# CommunityToolkit.Aspire.Hosting.Minio
+
+/examples/minio/ @Harold-Morgan
+/src/CommunityToolkit.Aspire.Hosting.Minio/ @Harold-Morgan
+/tests/CommunityToolkit.Aspire.Hosting.Minio.Tests/ @Harold-Morgan
+
+/src/CommunityToolkit.Aspire.Minio.Client/ @Harold-Morgan
+/tests/CommunityToolkit.Aspire.Minio.Client.Tests/ @Harold-Morgan

@@ -95,6 +95,55 @@ public class AddSqlProjectTests
     }
 
     [Fact]
+    public void AddSqlProject_WithDeploymentOptions_FromFile_NonExisting()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var optionsPath = "/folder/project.publish.xml";
+
+        appBuilder.AddSqlProject("MySqlProject").WithDacDeployOptions(optionsPath);
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
+        Assert.Equal("MySqlProject", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.TryGetLastAnnotation(out DacDeployOptionsAnnotation? dacDeployOptionsAnnotation));
+        Assert.Equal(optionsPath, dacDeployOptionsAnnotation.OptionsPath);
+
+        Assert.Throws<DirectoryNotFoundException>(() => ((IResourceWithDacpac)sqlProjectResource).GetDacpacDeployOptions());
+    }
+
+    [Fact]
+    public void AddSqlProject_WithDeploymentOptions_FromFile()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var optionsPath = "Database.publish.xml";
+
+        appBuilder.AddSqlProject("MySqlProject").WithDacDeployOptions(optionsPath);
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
+        Assert.Equal("MySqlProject", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.TryGetLastAnnotation(out DacDeployOptionsAnnotation? dacDeployOptionsAnnotation));
+        Assert.Equal(optionsPath, dacDeployOptionsAnnotation.OptionsPath);
+
+        var options = ((IResourceWithDacpac)sqlProjectResource).GetDacpacDeployOptions();
+        Assert.False(options.BlockOnPossibleDataLoss);
+    }
+
+    [Fact]
     public void WithReference_AddsRequiredServices()
     {
         // Arrange
@@ -109,5 +158,26 @@ public class AddSqlProjectTests
         // Assert
         Assert.Single(app.Services.GetServices<SqlProjectPublishService>());
         Assert.Single(app.Services.GetServices<IDacpacDeployer>());
+    }
+
+    [Fact]
+    public void AddSqlProject_WithExplicitStart()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
+        appBuilder.AddSqlProject<TestProject>("MySqlProject")
+            .WithReference(targetDatabase)
+            .WithExplicitStart();
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
+        Assert.Equal("MySqlProject", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.HasAnnotationOfType<ExplicitStartupAnnotation>());
     }
 }

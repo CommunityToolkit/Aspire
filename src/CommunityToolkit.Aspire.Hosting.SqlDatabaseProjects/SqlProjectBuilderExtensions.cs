@@ -143,6 +143,34 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
+    /// Adds a path to a publish profile for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
+    /// <param name="optionsPath">Path to the publish profile xml file</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlProjectResource> WithDacDeployOptions(this IResourceBuilder<SqlProjectResource> builder, string optionsPath)
+        => InternalWithDacDeployOptions(builder, optionsPath);
+
+    /// <summary>
+    /// Adds a path to a publish profile for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
+    /// <param name="optionsPath">Path to the publish profile xml file</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlPackageResource<TPackage>> WithDacDeployOptions<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder, string optionsPath)
+        where TPackage : IPackageMetadata => InternalWithDacDeployOptions(builder, optionsPath);
+
+    internal static IResourceBuilder<TResource> InternalWithDacDeployOptions<TResource>(this IResourceBuilder<TResource> builder, string optionsPath)
+        where TResource : IResourceWithDacpac
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(optionsPath);
+
+        return builder
+            .WithAnnotation(new DacDeployOptionsAnnotation(optionsPath));
+    }
+
+    /// <summary>
     /// Publishes the SQL Server Database project to the target <see cref="SqlServerDatabaseResource"/>.
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
@@ -198,30 +226,66 @@ public static class SqlProjectBuilderExtensions
         {
             builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
             {
-                await RunPublish(builder, target, targetDatabaseName, resourceReady.Services, ct);
+                await PublishOrMark(builder, target, targetDatabaseName, resourceReady.Services, ct);
             });
         }
-        else 
+        else
         {
-            builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => {
-                await RunPublish(builder, target, targetDatabaseName, @event.Services, ct);
+            builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => 
+            {
+                await PublishOrMark(builder, target, targetDatabaseName, @event.Services, ct);
             });
         }
 
         builder.WaitFor(target);
 
-        builder.WithCommand("redeploy", "Redeploy", async (context) =>
+        var commandOptions = new CommandOptions
+        {
+            IconName = "ArrowReset",
+            IconVariant = IconVariant.Filled,
+            IsHighlighted = true,
+            Description = "Deploy the SQL Server Database Project to the target database.",
+            UpdateState = (context) =>
+            {
+                if (context.ResourceSnapshot?.State?.Text is string stateText && (stateText == KnownResourceStates.Finished || stateText == KnownResourceStates.NotStarted))
+                {
+                    return ResourceCommandState.Enabled;
+                }
+                else
+                {
+                    return ResourceCommandState.Disabled;
+                }
+            },
+        };           
+
+        builder.WithCommand("deploy", "Deploy", async (context) =>
         {
             var service = context.ServiceProvider.GetRequiredService<SqlProjectPublishService>();
             await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
-        }, updateState: (context) => context.ResourceSnapshot?.State?.Text == KnownResourceStates.Finished ? ResourceCommandState.Enabled : ResourceCommandState.Disabled,
-           displayDescription: "Redeploys the SQL Server Database Project to the target database.",
-           iconName: "ArrowReset",
-           iconVariant: IconVariant.Filled,
-           isHighlighted: true);
+        }, commandOptions);
 
         return builder;
+    }
+
+    private static async Task PublishOrMark<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider services, CancellationToken ct) where TResource : IResourceWithDacpac
+    {
+        if (builder.Resource.HasAnnotationOfType<ExplicitStartupAnnotation>())
+        {
+            await MarkNotStarted(builder, services);
+        }
+        else
+        {
+            await RunPublish(builder, target, targetDatabaseName, services, ct);
+        }
+    }
+
+    private static async Task MarkNotStarted<TResource>(IResourceBuilder<TResource> builder, IServiceProvider serviceProvider)
+        where TResource : IResourceWithDacpac
+    {
+        var resourceNotificationService = serviceProvider.GetRequiredService<ResourceNotificationService>();
+        await resourceNotificationService.PublishUpdateAsync(builder.Resource,
+            state => state with { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, KnownResourceStateStyles.Info) });
     }
 
     private static async Task RunPublish<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider serviceProvider, CancellationToken ct) 

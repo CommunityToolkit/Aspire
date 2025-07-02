@@ -14,6 +14,7 @@ namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 /// <param name="loggerService">The logger service used for logging.</param>
 /// <param name="notificationService">The notification service used for sending notifications.</param>
 /// <param name="context">The execution context of the distributed application.</param>
+[Obsolete("Use WithNpmPackageInstallation which now creates installer resources instead of lifecycle hooks. This class will be removed in a future version.")]
 internal class NpmPackageInstallerLifecycleHook(
     bool useCI,
     ResourceLoggerService loggerService,

@@ -10,6 +10,7 @@ namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions;
 /// <param name="loggerService">The <see cref="ResourceLoggerService"/> to use for logging.</param>
 /// <param name="notificationService">The <see cref="ResourceNotificationService"/> to use for notifications to Aspire on install progress.</param>
 /// <param name="context">The <see cref="DistributedApplicationExecutionContext"/> to use for determining if the application is in publish mode.</param>
+[Obsolete("Use WithYarnPackageInstallation which now creates installer resources instead of lifecycle hooks. This class will be removed in a future version.")]
 internal class YarnPackageInstallerLifecycleHook(
     ResourceLoggerService loggerService,
     ResourceNotificationService notificationService,

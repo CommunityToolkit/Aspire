@@ -1,5 +1,7 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Aspire.Hosting;
 
@@ -42,10 +44,49 @@ public static class PostgresBuilderExtensions
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder))
-            .WaitFor(builder);
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));            
 
         configureContainer?.Invoke(dbGateBuilder);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds an administration and development platform for PostgreSQL to the application model using Adminer.
+    /// </summary>
+    /// <remarks>
+    /// This version of the package defaults to the <inheritdoc cref="AdminerContainerImageTags.Tag"/> tag of the <inheritdoc cref="AdminerContainerImageTags.Image"/> container image.
+    /// <param name="builder">The Postgres server resource builder.</param>
+    /// <param name="configureContainer">Configuration callback for Adminer container resource.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <example>
+    /// Use in application host with a Postgres resource
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var postgres = builder.AddPostgres("postgres")
+    ///    .WithAdminer();
+    /// var db = postgres.AddDatabase("db");
+    ///
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
+    ///   .WithReference(db);
+    ///
+    /// builder.Build().Run();
+    /// </code>
+    /// </example>
+    /// </remarks>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<PostgresServerResource> WithAdminer(this IResourceBuilder<PostgresServerResource> builder, Action<IResourceBuilder<AdminerContainerResource>>? configureContainer = null, string? containerName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        containerName ??= $"{builder.Resource.Name}-adminer";
+        var adminerBuilder = AdminerBuilderExtensions.AddAdminer(builder.ApplicationBuilder, containerName);
+
+        adminerBuilder
+            .WithEnvironment(context => ConfigureAdminerContainer(context, builder.ApplicationBuilder));
+
+        configureContainer?.Invoke(adminerBuilder);
 
         return builder;
     }
@@ -95,5 +136,47 @@ public static class PostgresBuilderExtensions
                 context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
             }
         }
+    }
+
+
+    internal static void ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    {
+        var postgresInstances = applicationBuilder.Resources.OfType<PostgresServerResource>();
+
+        string ADMINER_SERVERS = context.EnvironmentVariables.GetValueOrDefault("ADMINER_SERVERS")?.ToString() ?? string.Empty;
+
+        var new_servers = postgresInstances.ToDictionary(
+             postgresServer => postgresServer.Name,
+             postgresServer =>
+             {
+                 var user = postgresServer.UserNameParameter?.Value ?? "postgres";
+                 return new AdminerLoginServer
+                 {
+                     Server = postgresServer.Name,
+                     UserName = user,
+                     Password = postgresServer.PasswordParameter.Value,
+                     Driver = "pgsql"
+                 };
+             });
+
+        if (string.IsNullOrEmpty(ADMINER_SERVERS))
+        {
+            string servers_json = JsonSerializer.Serialize(new_servers);
+            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+        }
+        else
+        {
+            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
+            foreach (var server in new_servers)
+            {
+                if (!servers.ContainsKey(server.Key))
+                {
+                    servers!.Add(server.Key, server.Value);
+                }
+            }
+            string servers_json = JsonSerializer.Serialize(servers);
+            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+        }
+
     }
 }
