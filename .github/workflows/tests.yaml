@@ -34,7 +34,7 @@ jobs:
             Hosting.Java.Tests,
             Hosting.LavinMQ.Tests,
             Hosting.MailPit.Tests,
-            Hosting.McpInspector.Tests
+            Hosting.McpInspector.Tests,
             Hosting.Meilisearch.Tests,
             Hosting.MongoDB.Extensions.Tests,
             Hosting.MySql.Extensions.Tests,
@@ -125,4 +125,3 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
-
