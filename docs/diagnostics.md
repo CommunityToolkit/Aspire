@@ -13,4 +13,3 @@ Once a release of .NET Aspire with that API is available, the API in the .NET As
 ## CTASPIRE003
 
 The API is marked for deprecation and will be removed in a future release.
-
