@@ -5,8 +5,8 @@ namespace CommunityToolkit.Aspire.Hosting.McpInspector.Tests;
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_AppHost>>
 {
     [Theory]
-    [InlineData("client", "/")]
-    [InlineData("server-proxy", "/config")]
+    [InlineData(McpInspectorResource.ClientEndpointName, "/")]
+    [InlineData(McpInspectorResource.ServerProxyEndpointName, "/config")]
     public async Task ResourceStartsAndRespondsOk(string endpointName, string route)
     {
         var resourceName = "mcp-inspector";

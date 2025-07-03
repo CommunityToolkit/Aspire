@@ -17,9 +17,11 @@ public static class McpInspectorResourceBuilderExtensions
         var resource = builder.AddResource(new McpInspectorResource(name))
             .WithArgs(["-y", $"@modelcontextprotocol/inspector@{McpInspectorResource.InspectorVersion}"])
             .ExcludeFromManifest()
-            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(3000, 4000), env: "CLIENT_PORT", name: "client")
-            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(4000, 5000), env: "SERVER_PORT", name: "server-proxy")
-            .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true");
+            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(3000, 4000), env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
+            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(4000, 5000), env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
+            .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true")
+            .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
+            .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName);
 
         builder.Eventing.Subscribe<BeforeResourceStartedEvent>(resource.Resource, async (@event, ct) =>
         {
@@ -52,8 +54,8 @@ public static class McpInspectorResourceBuilderExtensions
         return resource
             .WithEnvironment(ctx =>
             {
-                var clientEndpoint = resource.GetEndpoint("client");
-                var serverProxyEndpoint = resource.GetEndpoint("server-proxy");
+                var clientEndpoint = resource.GetEndpoint(McpInspectorResource.ClientEndpointName);
+                var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
 
                 if (clientEndpoint is null || serverProxyEndpoint is null)
                 {

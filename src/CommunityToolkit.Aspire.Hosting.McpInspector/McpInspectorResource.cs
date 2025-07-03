@@ -11,6 +11,16 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     internal readonly string ConfigPath = Path.GetTempFileName();
 
     /// <summary>
+    /// The name of the client endpoint.
+    /// </summary>
+    public const string ClientEndpointName = "client";
+
+    /// <summary>
+    /// The name of the server proxy endpoint.
+    /// </summary>
+    public const string ServerProxyEndpointName = "server-proxy";
+
+    /// <summary>
     /// Gets the version of the MCP Inspector.
     /// </summary>
     public const string InspectorVersion = "0.15.0";
