@@ -34,6 +34,7 @@ jobs:
             Hosting.Java.Tests,
             Hosting.LavinMQ.Tests,
             Hosting.MailPit.Tests,
+            Hosting.McpInspector.Tests
             Hosting.Meilisearch.Tests,
             Hosting.MongoDB.Extensions.Tests,
             Hosting.MySql.Extensions.Tests,
