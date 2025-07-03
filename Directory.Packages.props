@@ -83,8 +83,8 @@
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
-    <PackageVersion Include="ModelContextProtocol" Version="0.1.0-preview.6" />
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.1.0-preview.6" />
+    <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.1" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->

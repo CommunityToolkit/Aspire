@@ -1,5 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-#pragma warning disable CTASPIRE003
 
 namespace Aspire.Hosting;
 
@@ -16,15 +15,74 @@ public static class McpInspectorResourceBuilderExtensions
     public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         var resource = builder.AddResource(new McpInspectorResource(name))
-            .WithArgs(["-y", "@modelcontextprotocol/inspector"])
+            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{McpInspectorResource.InspectorVersion}"])
             .ExcludeFromManifest()
             .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(3000, 4000), env: "CLIENT_PORT", name: "client")
-            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(4000, 5000), env: "SERVER_PORT", name: "server-proxy");
+            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(4000, 5000), env: "SERVER_PORT", name: "server-proxy")
+            .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true");
+
+        builder.Eventing.Subscribe<BeforeResourceStartedEvent>(resource.Resource, async (@event, ct) =>
+        {
+            if (@event.Resource is not McpInspectorResource inspectorResource)
+            {
+                return;
+            }
+
+            if (inspectorResource.DefaultMcpServer is null && inspectorResource.McpServers.Count > 0)
+            {
+                throw new InvalidOperationException("No default MCP server has been configured for the MCP Inspector resource, yet servers have been provided.");
+            }
+
+            var servers = inspectorResource.McpServers.ToDictionary(s => s.Name, s => new
+            {
+                transport = s.TransportType switch
+                {
+                    McpTransportType.StreamableHttp => "streamable-http",
+                    McpTransportType.Sse => "sse",
+                    _ => throw new NotSupportedException($"The transport type {s.TransportType} is not supported.")
+                },
+                endpoint = s.Endpoint.Url
+            });
+
+            var config = new { mcpServers = servers };
+
+            await File.WriteAllTextAsync(inspectorResource.ConfigPath, System.Text.Json.JsonSerializer.Serialize(config), ct);
+        });
 
         return resource
             .WithEnvironment(ctx =>
             {
-                ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = resource.GetEndpoint("server-proxy");
+                var clientEndpoint = resource.GetEndpoint("client");
+                var serverProxyEndpoint = resource.GetEndpoint("server-proxy");
+
+                if (clientEndpoint is null || serverProxyEndpoint is null)
+                {
+                    throw new InvalidOperationException("The MCP Inspector resource must have both 'client' and 'server-proxy' endpoints defined.");
+                }
+
+                ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = serverProxyEndpoint.Url;
+                ctx.EnvironmentVariables["CLIENT_PORT"] = clientEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'client' endpoint must have a target port defined.");
+                ctx.EnvironmentVariables["SERVER_PORT"] = serverProxyEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'server-proxy' endpoint must have a target port defined.");
+            })
+            .WithArgs(ctx =>
+            {
+                McpInspectorResource inspectorResource = resource.Resource;
+                McpServerMetadata? defaultMcpServer = inspectorResource.DefaultMcpServer;
+                if ((defaultMcpServer is null && inspectorResource.McpServers.Count > 0) || (defaultMcpServer is not null && inspectorResource.McpServers.Count == 0))
+                {
+                    throw new InvalidOperationException("No default MCP server has been configured for the MCP Inspector resource, yet servers have been provided.");
+                }
+
+
+                if (defaultMcpServer is null && inspectorResource.McpServers.Count == 0)
+                {
+                    return;
+                }
+
+                ctx.Args.Add("--config");
+                ctx.Args.Add(inspectorResource.ConfigPath);
+                ctx.Args.Add("--server");
+                ctx.Args.Add(defaultMcpServer?.Name ?? throw new InvalidOperationException("The MCP Inspector resource must have a default MCP server defined."));
             });
     }
 
@@ -34,17 +92,20 @@ public static class McpInspectorResourceBuilderExtensions
     /// <typeparam name="TResource">The type of the MCP server resource.</typeparam>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> used to configure the MCP Inspector resource.</param>
     /// <param name="mcpServer">The <see cref="IResourceBuilder{T}"/> for the MCP server resource.</param>
-    /// <param name="route">The route that the SSE connection will use.</param>
+    /// <param name="isDefault">Indicates whether this MCP server should be considered the default server for the MCP Inspector.</param>
+    /// <param name="transportType">The transport type to use for the MCP server. Defaults to <see cref="McpTransportType.StreamableHttp"/>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
-    public static IResourceBuilder<McpInspectorResource> WithMcpServer<TResource>(this IResourceBuilder<McpInspectorResource> builder, IResourceBuilder<TResource> mcpServer, string route = "/sse")
+    public static IResourceBuilder<McpInspectorResource> WithMcpServer<TResource>(
+        this IResourceBuilder<McpInspectorResource> builder,
+        IResourceBuilder<TResource> mcpServer,
+        bool isDefault = true,
+        McpTransportType transportType = McpTransportType.StreamableHttp)
         where TResource : IResourceWithEndpoints
     {
-        return builder.WithArgs(ctx =>
-        {
-            var httpEndpoint = mcpServer.Resource.GetEndpoint("http");
+        ArgumentNullException.ThrowIfNull(mcpServer);
+        ArgumentNullException.ThrowIfNull(builder);
 
-            var url = ReferenceExpression.Create($"{httpEndpoint}{route}");
-            ctx.Args.Add(url);
-        });
+        builder.Resource.AddMcpServer(mcpServer.Resource, isDefault, transportType);
+        return builder;
     }
 }
