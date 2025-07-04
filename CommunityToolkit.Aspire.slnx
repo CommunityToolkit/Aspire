@@ -72,6 +72,10 @@
     <Project Path="examples/masstransit-rabbitmq/CommunityToolkit.Aspire.MassTransit.RabbitMQ.MessageTypes/CommunityToolkit.Aspire.MassTransit.RabbitMQ.MessageTypes.csproj" />
     <Project Path="examples/masstransit-rabbitmq/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher.csproj" />
   </Folder>
+  <Folder Name="/examples/mcp-inspector/">
+    <Project Path="examples/mcp-inspector/CommunityToolkit.Aspire.Hosting.McpInspector.AppHost/CommunityToolkit.Aspire.Hosting.McpInspector.AppHost.csproj" />
+    <Project Path="examples/mcp-inspector/CommunityToolkit.Aspire.Hosting.McpInspector.McpServer/CommunityToolkit.Aspire.Hosting.McpInspector.McpServer.csproj" />
+  </Folder>
   <Folder Name="/examples/meilisearch/">
     <Project Path="examples/meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService/CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService.csproj" />
     <Project Path="examples/meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost/CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost.csproj" />
@@ -150,6 +154,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.k6/CommunityToolkit.Aspire.Hosting.k6.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MailPit/CommunityToolkit.Aspire.Hosting.MailPit.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.McpInspector/CommunityToolkit.Aspire.Hosting.McpInspector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" />
@@ -194,6 +199,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.k6.Tests/CommunityToolkit.Aspire.Hosting.k6.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj" />

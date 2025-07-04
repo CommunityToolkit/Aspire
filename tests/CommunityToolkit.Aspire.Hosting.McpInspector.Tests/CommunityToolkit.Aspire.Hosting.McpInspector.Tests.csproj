@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../examples/mcp-inspector/CommunityToolkit.Aspire.Hosting.McpInspector.AppHost/CommunityToolkit.Aspire.Hosting.McpInspector.AppHost.csproj" />
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.McpInspector/CommunityToolkit.Aspire.Hosting.McpInspector.csproj" />
+    <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+</Project>
