@@ -12,16 +12,28 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
     /// <param name="name">The name of the MCP Inspector container resource.</param>
-    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name)
+    /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>
+    /// <param name="serverPort">The port for the server proxy application. Defaults to 6277.</param>
+    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int clientPort = 6274, int serverPort = 6277)
     {
         var resource = builder.AddResource(new McpInspectorResource(name))
             .WithArgs(["-y", $"@modelcontextprotocol/inspector@{McpInspectorResource.InspectorVersion}"])
             .ExcludeFromManifest()
-            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(3000, 4000), env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
-            .WithHttpEndpoint(isProxied: false, port: Random.Shared.Next(4000, 5000), env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
+            .WithHttpEndpoint(isProxied: false, port: clientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
+            .WithHttpEndpoint(isProxied: false, port: serverPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
             .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true")
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
-            .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName);
+            .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName)
+            .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
+            {
+                annotation.DisplayText = "Client";
+                annotation.DisplayOrder = 2;
+            })
+            .WithUrlForEndpoint(McpInspectorResource.ServerProxyEndpointName, annotation =>
+            {
+                annotation.DisplayText = "Server Proxy";
+                annotation.DisplayOrder = 1;
+            });
 
         builder.Eventing.Subscribe<BeforeResourceStartedEvent>(resource.Resource, async (@event, ct) =>
         {

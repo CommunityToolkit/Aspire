@@ -15,10 +15,24 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// </summary>
     public const string ClientEndpointName = "client";
 
+    private EndpointReference? _clientEndpoint;
+
+    /// <summary>
+    /// Gets the client endpoint reference for the MCP Inspector.
+    /// </summary>
+    public EndpointReference ClientEndpoint => _clientEndpoint ??= new(this, ClientEndpointName);
+
     /// <summary>
     /// The name of the server proxy endpoint.
     /// </summary>
     public const string ServerProxyEndpointName = "server-proxy";
+
+    private EndpointReference? _serverProxyEndpoint;
+
+    /// <summary>
+    /// Gets the server proxy endpoint reference for the MCP Inspector.
+    /// </summary>
+    public EndpointReference ServerProxyEndpoint => _serverProxyEndpoint ??= new(this, ServerProxyEndpointName);
 
     /// <summary>
     /// Gets the version of the MCP Inspector.
