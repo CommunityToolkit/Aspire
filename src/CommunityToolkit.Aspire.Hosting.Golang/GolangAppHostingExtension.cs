@@ -16,8 +16,9 @@ public static class GolangAppHostingExtension
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
     /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [Obsolete("Use AddGolangApp with buildTags parameter instead. This method will be removed in a future version.")]
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[] args)
-        => AddGolangApp(builder, name, workingDirectory, args);
+        => AddGolangApp(builder, name, workingDirectory, args, null);
 
     /// <summary>
     /// Adds a Golang application to the application model. Executes the executable Golang app.
