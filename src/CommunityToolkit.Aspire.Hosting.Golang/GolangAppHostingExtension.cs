@@ -54,7 +54,7 @@ public static class GolangAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithGolangDefaults()
-                      .WithArgs(allArgs);
+                      .WithArgs([.. allArgs]);
     }
 
     private static IResourceBuilder<GolangAppExecutableResource> WithGolangDefaults(
