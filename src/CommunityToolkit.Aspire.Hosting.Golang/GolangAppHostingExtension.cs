@@ -15,6 +15,17 @@ public static class GolangAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
     /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[] args)
+        => AddGolangApp(builder, name, workingDirectory, args);
+
+    /// <summary>
+    /// Adds a Golang application to the application model. Executes the executable Golang app.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
     /// <param name="buildTags">The optional build tags to be used when building the Golang application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[]? args = null, string[]? buildTags = null)
@@ -43,7 +54,7 @@ public static class GolangAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithGolangDefaults()
-                      .WithArgs(allArgs.ToArray());
+                      .WithArgs([.. allArgs]);
     }
 
     private static IResourceBuilder<GolangAppExecutableResource> WithGolangDefaults(
