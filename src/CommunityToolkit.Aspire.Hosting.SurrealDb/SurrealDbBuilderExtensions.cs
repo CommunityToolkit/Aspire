@@ -3,6 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SurrealDb.Net;
 using System.Text.Json;
 
@@ -67,14 +68,18 @@ public static class SurrealDbBuilderExtensions
         {
             args.Add("--strict");
         }
-
+        
         // The password must be at least 8 characters long and contain characters from three of the following four sets: Uppercase letters, Lowercase letters, Base 10 digits, and Symbols
         var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", minLower: 1, minUpper: 1, minNumeric: 1);
 
+        string imageTag = builder.ExecutionContext.IsRunMode
+            ? $"{SurrealDbContainerImageTags.Tag}-dev"
+            : SurrealDbContainerImageTags.Tag;
+        
         var surrealServer = new SurrealDbServerResource(name, userName?.Resource, passwordParameter);
         return builder.AddResource(surrealServer)
                       .WithEndpoint(port: port, targetPort: SurrealDbPort, name: SurrealDbServerResource.PrimaryEndpointName)
-                      .WithImage(SurrealDbContainerImageTags.Image, SurrealDbContainerImageTags.Tag)
+                      .WithImage(SurrealDbContainerImageTags.Image, imageTag)
                       .WithImageRegistry(SurrealDbContainerImageTags.Registry)
                       .WithEnvironment(context =>
                       {

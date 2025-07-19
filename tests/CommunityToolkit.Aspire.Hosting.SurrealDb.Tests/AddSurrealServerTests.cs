@@ -53,7 +53,7 @@ public class AddSurrealServerTests
         Assert.Equal("tcp", endpoint.UriScheme);
     
         var containerAnnotation = Assert.Single(containerResource.Annotations.OfType<ContainerImageAnnotation>());
-        Assert.Equal(SurrealDbContainerImageTags.Tag, containerAnnotation.Tag);
+        Assert.Equal(SurrealDbContainerImageTags.Tag + "-dev", containerAnnotation.Tag);
         Assert.Equal(SurrealDbContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(SurrealDbContainerImageTags.Registry, containerAnnotation.Registry);
     
