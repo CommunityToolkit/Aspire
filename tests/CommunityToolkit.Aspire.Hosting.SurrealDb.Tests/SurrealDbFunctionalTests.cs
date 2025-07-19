@@ -47,7 +47,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await app.StartAsync();
 
-        await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer.Resource.Name, ct);
+        await app.ResourceNotifications.WaitForResourceHealthyAsync(db.Resource.Name, ct);
 
         var hb = Host.CreateApplicationBuilder();
 
@@ -113,6 +113,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                 await app.StartAsync(cts.Token);
 
                 await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer1.Resource.Name, cts.Token);
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(db1.Resource.Name, cts.Token);
 
                 try
                 {
@@ -161,6 +162,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                 await app.StartAsync(cts.Token);
 
                 await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer2.Resource.Name, cts.Token);
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(db2.Resource.Name, cts.Token);
 
                 try
                 {
