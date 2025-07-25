@@ -125,10 +125,10 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
-            configureInstaller?.Invoke(installerBuilder);
-
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
+
+            configureInstaller?.Invoke(installerBuilder);
         }
 
         return resource;
@@ -153,10 +153,10 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
-            configureInstaller?.Invoke(installerBuilder);
-
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
+
+            configureInstaller?.Invoke(installerBuilder);
         }
 
         return resource;
@@ -181,10 +181,10 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
-            configureInstaller?.Invoke(installerBuilder);
-
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
+
+            configureInstaller?.Invoke(installerBuilder);
         }
 
         return resource;
