@@ -3,8 +3,8 @@
 
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using SurrealDb.Net;
+using System.Text;
 using System.Text.Json;
 
 namespace Aspire.Hosting;
@@ -284,108 +284,125 @@ public static class SurrealDbBuilderExtensions
 
         containerName ??= $"{builder.Resource.Name}-surrealist";
 
-        const string CONNECTIONS_FILE_PATH = "/usr/share/nginx/html/instance.json";
-
         var surrealistContainer = new SurrealistContainerResource(containerName);
         var surrealistContainerBuilder = builder.ApplicationBuilder.AddResource(surrealistContainer)
             .WithImage(SurrealDbContainerImageTags.SurrealistImage, SurrealDbContainerImageTags.SurrealistTag)
             .WithImageRegistry(SurrealDbContainerImageTags.SurrealistRegistry)
             .WithHttpEndpoint(targetPort: 8080, name: "http")
-            .WithBindMount(Path.GetTempFileName(), CONNECTIONS_FILE_PATH)
             .WithRelationship(builder.Resource, "Surrealist")
             .ExcludeFromManifest();
-
-        builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
+        
+        surrealistContainerBuilder.WithContainerFiles(
+            destinationPath: "/usr/share/nginx/html",
+            callback: async (_, cancellationToken) =>
             {
-                var serverFileMount = surrealistContainer.Annotations.OfType<ContainerMountAnnotation>().Single(v => v.Target == CONNECTIONS_FILE_PATH);
-                var surrealDbServerResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbServerResource>().ToList();
+                var surrealDbServerInstances = 
+                    builder.ApplicationBuilder.Resources.OfType<SurrealDbServerResource>().ToList();
+                var surrealDbNamespaceResources = 
+                    builder.ApplicationBuilder.Resources.OfType<SurrealDbNamespaceResource>().ToList();
+                var surrealDbDatabaseResources = 
+                    builder.ApplicationBuilder.Resources.OfType<SurrealDbDatabaseResource>().ToList();
 
-                using var stream = new FileStream(serverFileMount.Source!, FileMode.Create);
-                using var writer = new Utf8JsonWriter(stream);
-
-                // Need to grant read access to the config file on unix like systems.
-                if (!OperatingSystem.IsWindows())
-                {
-                    File.SetUnixFileMode(serverFileMount.Source!, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.GroupRead | UnixFileMode.OtherRead);
-                }
-
-                writer.WriteStartObject();
-
-                writer.WriteStartArray("connections");
-
-                var surrealDbNamespaceResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbNamespaceResource>().ToList();
-                var surrealDbDatabaseResources = builder.ApplicationBuilder.Resources.OfType<SurrealDbDatabaseResource>().ToList();
-
-                foreach (var surrealInstance in surrealDbServerResources)
-                {
-                    if (surrealInstance.PrimaryEndpoint.IsAllocated)
+                return [
+                    new ContainerFile
                     {
-                        SurrealDbNamespaceResource? uniqueNamespace = null;
-                        SurrealDbDatabaseResource? uniqueDatabase = null;
-
-                        var serverNamespaces = surrealDbNamespaceResources
-                            .Where(ns => ns.Parent == surrealInstance)
-                            .ToList();
-
-                        if (serverNamespaces.Count == 1)
-                        {
-                            uniqueNamespace = serverNamespaces.First();
-
-                            var nsDatabases = surrealDbDatabaseResources
-                                .Where(db => db.Parent == uniqueNamespace)
-                                .ToList();
-
-                            if (nsDatabases.Count == 1)
-                            {
-                                uniqueDatabase = nsDatabases.First();
-                            }
-                        }
-
-                        var endpoint = surrealInstance.PrimaryEndpoint;
-
-                        writer.WriteStartObject();
-
-                        writer.WriteString("id", surrealInstance.Name);
-                        writer.WriteString("name", surrealInstance.Name);
-
-                        if (uniqueNamespace is not null)
-                        {
-                            writer.WriteString("defaultNamespace", uniqueNamespace.NamespaceName);
-                        }
-                        if (uniqueDatabase is not null)
-                        {
-                            writer.WriteString("defaultDatabase", uniqueDatabase.DatabaseName);
-                        }
-
-                        writer.WriteStartObject("authentication");
-                        writer.WriteString("protocol", "ws");
-                        // How to do host resolution?
-                        writer.WriteString("hostname", $"localhost:{endpoint.Port}");
-                        writer.WriteString("mode", "root");
-                        if (uniqueNamespace is not null)
-                        {
-                            writer.WriteString("namespace", uniqueNamespace.NamespaceName);
-                        }
-                        if (uniqueDatabase is not null)
-                        {
-                            writer.WriteString("database", uniqueDatabase.DatabaseName);
-                        }
-
-                        writer.WriteEndObject();
-
-                        writer.WriteEndObject();
-                    }
-                }
-
-                writer.WriteEndArray();
-
-                writer.WriteEndObject();
-
-                return Task.CompletedTask;
+                        Name = "instance.json",
+                        Contents = await WriteSurrealistInstanceJson(
+                            surrealDbServerInstances,
+                            surrealDbNamespaceResources, 
+                            surrealDbDatabaseResources, 
+                            cancellationToken
+                        ).ConfigureAwait(false),
+                    },
+                ];
             });
 
         configureContainer?.Invoke(surrealistContainerBuilder);
 
         return builder;
+    }
+    
+    private static async Task<string> WriteSurrealistInstanceJson(
+        IList<SurrealDbServerResource> surrealDbServerInstances,
+        IList<SurrealDbNamespaceResource> surrealDbNamespaceResources,
+        IList<SurrealDbDatabaseResource> surrealDbDatabaseResources,
+        CancellationToken cancellationToken
+    )
+    {
+        using var stream = new MemoryStream();
+        await using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
+
+        writer.WriteStartObject();
+
+        writer.WriteStartArray("connections");
+
+        foreach (var surrealInstance in surrealDbServerInstances)
+        {
+            if (surrealInstance.PrimaryEndpoint.IsAllocated)
+            {
+                SurrealDbNamespaceResource? uniqueNamespace = null;
+                SurrealDbDatabaseResource? uniqueDatabase = null;
+
+                var serverNamespaces = surrealDbNamespaceResources
+                    .Where(ns => ns.Parent == surrealInstance)
+                    .ToList();
+
+                if (serverNamespaces.Count == 1)
+                {
+                    uniqueNamespace = serverNamespaces.First();
+
+                    var nsDatabases = surrealDbDatabaseResources
+                        .Where(db => db.Parent == uniqueNamespace)
+                        .ToList();
+
+                    if (nsDatabases.Count == 1)
+                    {
+                        uniqueDatabase = nsDatabases.First();
+                    }
+                }
+
+                var endpoint = surrealInstance.PrimaryEndpoint;
+
+                writer.WriteStartObject();
+
+                writer.WriteString("id", surrealInstance.Name);
+                writer.WriteString("name", surrealInstance.Name);
+
+                if (uniqueNamespace is not null)
+                {
+                    writer.WriteString("defaultNamespace", uniqueNamespace.NamespaceName);
+                }
+                if (uniqueDatabase is not null)
+                {
+                    writer.WriteString("defaultDatabase", uniqueDatabase.DatabaseName);
+                }
+
+                writer.WriteStartObject("authentication");
+                writer.WriteString("protocol", "ws");
+                // How to do host resolution?
+                writer.WriteString("hostname", $"localhost:{endpoint.Port}");
+                writer.WriteString("mode", "root");
+                if (uniqueNamespace is not null)
+                {
+                    writer.WriteString("namespace", uniqueNamespace.NamespaceName);
+                }
+                if (uniqueDatabase is not null)
+                {
+                    writer.WriteString("database", uniqueDatabase.DatabaseName);
+                }
+
+                writer.WriteEndObject();
+
+                writer.WriteEndObject();
+            }
+        }
+
+        writer.WriteEndArray();
+
+        writer.WriteEndObject();
+        
+        await writer.FlushAsync(cancellationToken);
+        
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 }
