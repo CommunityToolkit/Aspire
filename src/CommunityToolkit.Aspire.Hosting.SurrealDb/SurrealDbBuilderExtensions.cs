@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.SurrealDb;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using SurrealDb.Net;
 using System.Text;
 using System.Text.Json;
@@ -186,8 +188,16 @@ public static class SurrealDbBuilderExtensions
         string serverName = builder.Resource.Parent.Name;
 
         string healthCheckKey = $"{serverName}_{namespaceName}_{name}_check";
-        builder.ApplicationBuilder.Services.AddHealthChecks().AddSurreal(_ => surrealDbClient!, healthCheckKey);
-
+        // TODO : Bug to be fixed
+        //builder.ApplicationBuilder.Services.AddHealthChecks().AddSurreal(_ => surrealDbClient!, healthCheckKey);
+        builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
+                name: healthCheckKey,
+                _ => new SurrealDbHealthCheck(surrealDbClient!),
+                failureStatus: null,
+                tags: null
+            )
+        );
+        
         return builder.ApplicationBuilder.AddResource(surrealServerDatabase)
             .WithHealthCheck(healthCheckKey);
     }
@@ -380,7 +390,7 @@ public static class SurrealDbBuilderExtensions
                 writer.WriteStartObject("authentication");
                 writer.WriteString("protocol", "ws");
                 // How to do host resolution?
-                writer.WriteString("hostname", $"localhost:{endpoint.Port}");
+                writer.WriteString("hostname", $"{endpoint.Host}:{endpoint.Port}");
                 writer.WriteString("mode", "root");
                 if (uniqueNamespace is not null)
                 {
