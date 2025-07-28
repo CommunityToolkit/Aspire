@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
@@ -298,7 +299,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_postgres1", item.Key);
-                var expectedPassword = await postgresResource1.PasswordParameter.GetValueAsync(default);
+                var expectedPassword = await ((IValueProvider)postgresResource1.PasswordParameter).GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -329,7 +330,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_postgres2", item.Key);
-                var expectedPassword = await postgresResource2.PasswordParameter.GetValueAsync(default);
+                var expectedPassword = await ((IValueProvider)postgresResource2.PasswordParameter).GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -350,7 +351,7 @@ public class AddDbGateTests
             async item =>
             {
                 var expectedRedisUrl = redisResource1.PasswordParameter is not null ?
-                $"redis://:{await redisResource1.PasswordParameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
+                $"redis://:{await ((IValueProvider)redisResource1.PasswordParameter).GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis1", item.Key);
                 Assert.Equal(expectedRedisUrl, item.Value);
             },
@@ -367,7 +368,7 @@ public class AddDbGateTests
             async item =>
             {
                 var expectedRedisUrl = redisResource2.PasswordParameter is not null ?
-                $"redis://:{await redisResource2.PasswordParameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
+                $"redis://:{await ((IValueProvider)redisResource2.PasswordParameter).GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis2", item.Key);
                 Assert.Equal(expectedRedisUrl, item.Value);
             },
@@ -394,7 +395,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver1", item.Key);
-                var expectedPassword = await sqlserverResource1.PasswordParameter.GetValueAsync(default);
+                var expectedPassword = await ((IValueProvider)sqlserverResource1.PasswordParameter).GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -425,7 +426,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver2", item.Key);
-                var expectedPassword = await sqlserverResource2.PasswordParameter.GetValueAsync(default);
+                var expectedPassword = await ((IValueProvider)sqlserverResource2.PasswordParameter).GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -456,7 +457,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_mysql1", item.Key);
-                var expectedPassword = await mysqlResource1.PasswordParameter.GetValueAsync(default);
+                var expectedPassword = await ((IValueProvider)mysqlResource1.PasswordParameter).GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -487,7 +488,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_mysql2", item.Key);
-                var expectedPassword = await mysqlResource2.PasswordParameter.GetValueAsync(default);
+                var expectedPassword = await ((IValueProvider)mysqlResource2.PasswordParameter).GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
