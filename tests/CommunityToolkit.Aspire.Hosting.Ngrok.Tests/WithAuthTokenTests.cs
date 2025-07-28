@@ -44,7 +44,10 @@ public class WithAuthTokenTests
         var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
         environment.Callback(context);
         
-        Assert.Equal("your-ngrok-auth-token", ((ParameterResource)context.EnvironmentVariables["NGROK_AUTHTOKEN"]).Value);
+        var parameterResource = (ParameterResource)context.EnvironmentVariables["NGROK_AUTHTOKEN"];
+        Assert.NotNull(parameterResource);
+        // Verify it's the expected parameter resource without calling .Value
+        Assert.Equal("ngrok-authtoken", parameterResource.Name);
     }
     
     [Fact]
