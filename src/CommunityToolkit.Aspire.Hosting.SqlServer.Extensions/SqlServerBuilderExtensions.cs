@@ -109,7 +109,7 @@ public static class SqlServerBuilderExtensions
             context.EnvironmentVariables.Add($"LABEL_sqlserver{counter}", sqlServerResource.Name);
             context.EnvironmentVariables.Add($"SERVER_sqlserver{counter}", sqlServerResource.Name);
             context.EnvironmentVariables.Add($"USER_sqlserver{counter}", "sa");
-            context.EnvironmentVariables.Add($"PASSWORD_sqlserver{counter}", sqlServerResource.PasswordParameter.Value);
+            context.EnvironmentVariables.Add($"PASSWORD_sqlserver{counter}", sqlServerResource.PasswordParameter);
             context.EnvironmentVariables.Add($"PORT_sqlserver{counter}", sqlServerResource.PrimaryEndpoint.TargetPort!.ToString()!);
             context.EnvironmentVariables.Add($"ENGINE_sqlserver{counter}", "mssql@dbgate-plugin-mssql");
 

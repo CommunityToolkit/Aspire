@@ -109,7 +109,7 @@ public static class MySqlBuilderExtensions
             context.EnvironmentVariables.Add($"LABEL_mysql{counter}", mySqlServerResource.Name);
             context.EnvironmentVariables.Add($"SERVER_mysql{counter}", mySqlServerResource.Name);
             context.EnvironmentVariables.Add($"USER_mysql{counter}", "root");
-            context.EnvironmentVariables.Add($"PASSWORD_mysql{counter}", mySqlServerResource.PasswordParameter.Value);
+            context.EnvironmentVariables.Add($"PASSWORD_mysql{counter}", mySqlServerResource.PasswordParameter);
             context.EnvironmentVariables.Add($"PORT_mysql{counter}", mySqlServerResource.PrimaryEndpoint.TargetPort!.ToString()!);
             context.EnvironmentVariables.Add($"ENGINE_mysql{counter}", "mysql@dbgate-plugin-mysql");
 

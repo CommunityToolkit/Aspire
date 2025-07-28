@@ -177,7 +177,7 @@ public static class ActiveMQBuilderExtensions
         {
             Uri baseUri = new Uri(endpoint.Url, UriKind.Absolute);
             string userName = (await builder.Resource.UserNameReference.GetValueAsync(ct))!;
-            string password = builder.Resource.PasswordParameter.Value;
+            string password = (await builder.Resource.PasswordParameter.GetValueAsync(ct))!;
             basicAuthentication = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
             uri = new UriBuilder(baseUri)
             {
