@@ -5,6 +5,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
+
 public class AddDbGateTests
 {
     [Fact]
@@ -227,7 +228,7 @@ public class AddDbGateTests
 
         var mysqlResource1 = mysqlResourceBuilder1.Resource;
 
-        var mysqlResourceBuilder2 =builder.AddMySql("mysql2")
+        var mysqlResourceBuilder2 = builder.AddMySql("mysql2")
             .WithDbGate();
 
         var mysqlResource2 = mysqlResourceBuilder2.Resource;
@@ -350,8 +351,11 @@ public class AddDbGateTests
             },
             async item =>
             {
-                var expectedRedisUrl = redisResource1.PasswordParameter is not null ?
-                $"redis://:{await ((IValueProvider)redisResource1.PasswordParameter).GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
+                var expectedRedisUrl = redisResource1.PasswordParameter switch
+                {
+                    IValueProvider parameter => $"redis://:{await parameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}",
+                    _ => $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}"
+                };
                 Assert.Equal("URL_redis1", item.Key);
                 Assert.Equal(expectedRedisUrl, item.Value);
             },
@@ -367,8 +371,11 @@ public class AddDbGateTests
             },
             async item =>
             {
-                var expectedRedisUrl = redisResource2.PasswordParameter is not null ?
-                $"redis://:{await ((IValueProvider)redisResource2.PasswordParameter).GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
+                var expectedRedisUrl = redisResource2.PasswordParameter switch
+                {
+                    IValueProvider parameter => $"redis://:{await parameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}",
+                    _ => $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}"
+                };
                 Assert.Equal("URL_redis2", item.Key);
                 Assert.Equal(expectedRedisUrl, item.Value);
             },
