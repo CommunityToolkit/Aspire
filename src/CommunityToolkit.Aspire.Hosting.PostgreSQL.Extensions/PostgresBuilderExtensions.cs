@@ -105,7 +105,9 @@ public static class PostgresBuilderExtensions
 
         foreach (var postgresServer in postgresInstances)
         {
-            var userParameter = postgresServer.UserNameParameter ?? ReferenceExpression.Create("postgres");
+            var userParameter = postgresServer.UserNameParameter is null 
+             ?  ReferenceExpression.Create($"postgres")
+             :  ReferenceExpression.Create($"{postgresServer.UserNameParameter}");
 
             // DbGate assumes Postgres is being accessed over a default Aspire container network and hardcodes the resource address
             // This will need to be refactored once updated service discovery APIs are available
