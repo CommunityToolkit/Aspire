@@ -2,7 +2,6 @@ using System.Net.Sockets;
 using System.Text.Json;
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Adminer.Tests;
@@ -190,8 +189,8 @@ public class AddAdminerTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource1.Name,
-                    Password = await ((IValueProvider)postgresResource1.PasswordParameter).GetValueAsync(CancellationToken.None),
-                    UserName = postgresResource1.UserNameParameter is not null ? await ((IValueProvider)postgresResource1.UserNameParameter).GetValueAsync(CancellationToken.None) : "postgres"
+                    Password = postgresResource1.PasswordParameter.Value,
+                    UserName = postgresResource1.UserNameParameter?.Value ?? "postgres"
                 }
             },
             {
@@ -200,8 +199,8 @@ public class AddAdminerTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource2.Name,
-                    Password = await ((IValueProvider)postgresResource2.PasswordParameter).GetValueAsync(CancellationToken.None),
-                    UserName = postgresResource2.UserNameParameter is not null ? await ((IValueProvider)postgresResource2.UserNameParameter).GetValueAsync(CancellationToken.None) : "postgres"
+                    Password = postgresResource2.PasswordParameter.Value,
+                    UserName = postgresResource2.UserNameParameter?.Value ?? "postgres"
                 }
             },
             {
@@ -210,7 +209,7 @@ public class AddAdminerTests
                 {
                     Driver = "mssql",
                     Server = sqlserverResource1.Name,
-                    Password = await ((IValueProvider)sqlserverResource1.PasswordParameter).GetValueAsync(CancellationToken.None),
+                    Password = sqlserverResource1.PasswordParameter.Value,
                     UserName = "sa"
                 }
             },
@@ -220,7 +219,7 @@ public class AddAdminerTests
                 {
                     Driver = "mssql",
                     Server = sqlserverResource2.Name,
-                    Password = await ((IValueProvider)sqlserverResource2.PasswordParameter).GetValueAsync(CancellationToken.None),
+                    Password = sqlserverResource2.PasswordParameter.Value,
                     UserName = "sa"
                 }
             },
@@ -230,7 +229,7 @@ public class AddAdminerTests
                 {
                     Driver = "server",
                     Server = mysqlResource1.Name,
-                    Password = await ((IValueProvider)mysqlResource1.PasswordParameter).GetValueAsync(CancellationToken.None),
+                    Password = mysqlResource1.PasswordParameter.Value,
                     UserName = "root"
                 }
             },
@@ -240,7 +239,7 @@ public class AddAdminerTests
                 {
                     Driver = "server",
                     Server = mysqlResource2.Name,
-                    Password = await ((IValueProvider)mysqlResource2.PasswordParameter).GetValueAsync(CancellationToken.None),
+                    Password = mysqlResource2.PasswordParameter.Value,
                     UserName = "root"
                 }
             }
