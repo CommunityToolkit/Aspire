@@ -3,6 +3,7 @@
 
 using System.Net.Sockets;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.Meilisearch.Tests;
 public class AddMeilisearchTests
@@ -101,7 +102,7 @@ public class AddMeilisearchTests
         var connectionStringResource = Assert.Single(appModel.Resources.OfType<MeilisearchResource>()) as IResourceWithConnectionString;
         var connectionString = await connectionStringResource.GetConnectionStringAsync();
 
-        Assert.Equal($"Endpoint=http://localhost:27020;MasterKey={meilisearch.Resource.MasterKeyParameter.Value}", connectionString);
+        Assert.Equal($"Endpoint=http://localhost:27020;MasterKey={await ((IValueProvider)meilisearch.Resource.MasterKeyParameter).GetValueAsync(CancellationToken.None)}", connectionString);
         Assert.Equal("Endpoint=http://{meilisearch.bindings.http.host}:{meilisearch.bindings.http.port};MasterKey={meilisearch-masterKey.value}", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 }

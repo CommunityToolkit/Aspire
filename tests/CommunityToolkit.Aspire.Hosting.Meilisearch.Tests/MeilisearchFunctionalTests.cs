@@ -3,6 +3,7 @@
 
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Polly;
@@ -69,7 +70,7 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
 
             var meilisearch1 = builder1.AddMeilisearch("meilisearch");
 
-            var masterKey = meilisearch1.Resource.MasterKeyParameter.Value;
+            var masterKey = await ((IValueProvider)meilisearch1.Resource.MasterKeyParameter).GetValueAsync(CancellationToken.None);
 
             if (useVolume)
             {

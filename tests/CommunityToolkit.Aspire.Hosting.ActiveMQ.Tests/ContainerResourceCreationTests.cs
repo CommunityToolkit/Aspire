@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests;
 
@@ -29,7 +30,7 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
-    public void AddActiveMqApiBuilderContainerDetailsSetOnResource()
+    public async Task AddActiveMqApiBuilderContainerDetailsSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
@@ -44,8 +45,8 @@ public class ContainerResourceCreationTests
 
         Assert.NotNull(resource);
         Assert.Equal("amq", resource.Name);
-        Assert.Equal("admin", resource.UserNameParameter!.Value);
-        Assert.Equal("admin", resource.PasswordParameter.Value);
+        Assert.Equal(await ((IValueProvider)resource.UserNameParameter!).GetValueAsync(CancellationToken.None), "admin");
+        Assert.Equal(await ((IValueProvider)resource.PasswordParameter).GetValueAsync(CancellationToken.None), "admin");
         Assert.Equal("ACTIVEMQ_CONNECTION_PASSWORD", resource.ActiveMqSettings.EnvironmentVariablePassword);
         Assert.Equal("ACTIVEMQ_CONNECTION_USER", resource.ActiveMqSettings.EnvironmentVariableUsername);
 
@@ -59,7 +60,7 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
-    public void AddActiveMqArtemisApiBuilderContainerDetailsSetOnResource()
+    public async Task AddActiveMqArtemisApiBuilderContainerDetailsSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
@@ -74,8 +75,8 @@ public class ContainerResourceCreationTests
 
         Assert.NotNull(resource);
         Assert.Equal("amq", resource.Name);
-        Assert.Equal("admin", resource.UserNameParameter!.Value);
-        Assert.Equal("admin", resource.PasswordParameter.Value);
+        Assert.Equal(await ((IValueProvider)resource.UserNameParameter!).GetValueAsync(CancellationToken.None), "admin");
+        Assert.Equal(await ((IValueProvider)resource.PasswordParameter).GetValueAsync(CancellationToken.None), "admin");
         Assert.Equal("ARTEMIS_PASSWORD", resource.ActiveMqSettings.EnvironmentVariablePassword);
         Assert.Equal("ARTEMIS_USER", resource.ActiveMqSettings.EnvironmentVariableUsername);
 

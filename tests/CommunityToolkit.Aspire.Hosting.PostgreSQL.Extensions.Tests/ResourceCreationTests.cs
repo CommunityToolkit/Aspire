@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests;
@@ -47,7 +48,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("PASSWORD_postgres1", item.Key);
-                Assert.Equal(postgresResource.PasswordParameter.Value, item.Value);
+                Assert.Equal(await ((IValueProvider)postgresResource.PasswordParameter).GetValueAsync(CancellationToken.None), item.Value);
             },
             item =>
             {
@@ -165,7 +166,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("PASSWORD_postgres1", item.Key);
-                Assert.Equal(postgresResource1.PasswordParameter.Value, item.Value);
+                Assert.Equal(await ((IValueProvider)postgresResource1.PasswordParameter).GetValueAsync(CancellationToken.None), item.Value);
             },
             item =>
             {
@@ -195,7 +196,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("PASSWORD_postgres2", item.Key);
-                Assert.Equal(postgresResource2.PasswordParameter.Value, item.Value);
+                Assert.Equal(await ((IValueProvider)postgresResource2.PasswordParameter).GetValueAsync(CancellationToken.None), item.Value);
             },
             item =>
             {
@@ -312,8 +313,8 @@ public class ResourceCreationTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource.Name,
-                    Password = postgresResource.PasswordParameter.Value,
-                    UserName = postgresResource.UserNameParameter?.Value ?? "postgres"
+                    Password = await ((IValueProvider)postgresResource.PasswordParameter).GetValueAsync(CancellationToken.None),
+                    UserName = postgresResource.UserNameParameter is not null ? await ((IValueProvider)postgresResource.UserNameParameter).GetValueAsync(CancellationToken.None) : "postgres"
                 }
             },
         };
@@ -413,8 +414,8 @@ public class ResourceCreationTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource1.Name,
-                    Password = postgresResource1.PasswordParameter.Value,
-                    UserName = postgresResource1.UserNameParameter?.Value ?? "postgres"
+                    Password = await ((IValueProvider)postgresResource1.PasswordParameter).GetValueAsync(CancellationToken.None),
+                    UserName = postgresResource1.UserNameParameter is not null ? await ((IValueProvider)postgresResource1.UserNameParameter).GetValueAsync(CancellationToken.None) : "postgres"
                 }
             },
             {
@@ -423,8 +424,8 @@ public class ResourceCreationTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource2.Name,
-                    Password = postgresResource2.PasswordParameter.Value,
-                    UserName = postgresResource2.UserNameParameter?.Value ?? "postgres"
+                    Password = await ((IValueProvider)postgresResource2.PasswordParameter).GetValueAsync(CancellationToken.None),
+                    UserName = postgresResource2.UserNameParameter is not null ? await ((IValueProvider)postgresResource2.UserNameParameter).GetValueAsync(CancellationToken.None) : "postgres"
                 }
             }
         };

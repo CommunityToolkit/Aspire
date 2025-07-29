@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests;
 
@@ -37,7 +38,7 @@ public class ResourceCreationTests
             item =>
             {
                 var redisUrl = redisResource.PasswordParameter is not null ?
-                $"redis://:{redisResource.PasswordParameter.Value}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
+                $"redis://:{await ((IValueProvider)redisResource.PasswordParameter).GetValueAsync(CancellationToken.None)}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis1", item.Key);
                 Assert.Equal(redisUrl, item.Value);
             },
@@ -144,7 +145,7 @@ public class ResourceCreationTests
             item =>
             {
                 var redisUrl = redisResource1.PasswordParameter is not null ?
-                $"redis://:{redisResource1.PasswordParameter.Value}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
+                $"redis://:{await ((IValueProvider)redisResource1.PasswordParameter).GetValueAsync(CancellationToken.None)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
 
                 Assert.Equal("URL_redis1", item.Key);
                 Assert.Equal(redisUrl, item.Value);
@@ -162,7 +163,7 @@ public class ResourceCreationTests
             item =>
             {
                 var redisUrl = redisResource2.PasswordParameter is not null ?
-                $"redis://:{redisResource2.PasswordParameter.Value}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
+                $"redis://:{await ((IValueProvider)redisResource2.PasswordParameter).GetValueAsync(CancellationToken.None)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
 
                 Assert.Equal("URL_redis2", item.Key);
                 Assert.Equal(redisUrl, item.Value);

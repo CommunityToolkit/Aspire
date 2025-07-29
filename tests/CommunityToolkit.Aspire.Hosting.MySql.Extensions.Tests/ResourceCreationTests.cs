@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests;
@@ -37,7 +38,7 @@ public class ResourceCreationTests
                 {
                     Driver = "server",
                     Server = mysqlResource.Name,
-                    Password = mysqlResource.PasswordParameter.Value,
+                    Password = await ((IValueProvider)mysqlResource.PasswordParameter).GetValueAsync(CancellationToken.None),
                     UserName = "root"
                 }
             },
@@ -138,7 +139,7 @@ public class ResourceCreationTests
                 {
                     Driver = "server",
                     Server = mysqlResource1.Name,
-                    Password = mysqlResource1.PasswordParameter.Value,
+                    Password = await ((IValueProvider)mysqlResource1.PasswordParameter).GetValueAsync(CancellationToken.None),
                     UserName = "root"
                 }
             },
@@ -148,7 +149,7 @@ public class ResourceCreationTests
                 {
                     Driver = "server",
                     Server = mysqlResource2.Name,
-                    Password = mysqlResource2.PasswordParameter.Value,
+                    Password = await ((IValueProvider)mysqlResource2.PasswordParameter).GetValueAsync(CancellationToken.None),
                     UserName = "root"
                 }
             }
@@ -202,7 +203,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("PASSWORD_mysql1", item.Key);
-                Assert.Equal(mysqlResource.PasswordParameter.Value, item.Value);
+                Assert.Equal(await ((IValueProvider)mysqlResource.PasswordParameter).GetValueAsync(CancellationToken.None), item.Value);
             },
             item =>
             {
@@ -320,7 +321,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("PASSWORD_mysql1", item.Key);
-                Assert.Equal(mysqlResource1.PasswordParameter.Value, item.Value);
+                Assert.Equal(await ((IValueProvider)mysqlResource1.PasswordParameter).GetValueAsync(CancellationToken.None), item.Value);
             },
             item =>
             {
@@ -350,7 +351,7 @@ public class ResourceCreationTests
             item =>
             {
                 Assert.Equal("PASSWORD_mysql2", item.Key);
-                Assert.Equal(mysqlResource2.PasswordParameter.Value, item.Value);
+                Assert.Equal(await ((IValueProvider)mysqlResource2.PasswordParameter).GetValueAsync(CancellationToken.None), item.Value);
             },
             item =>
             {
