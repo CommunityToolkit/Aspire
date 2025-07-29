@@ -12,7 +12,7 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>9</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).3.1</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).4.0</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>9.0.4</DotNetExtensionsVersion>
@@ -37,8 +37,8 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>6</ToolkitMinorVersion>
-    <ToolkitPatchVersion>1</ToolkitPatchVersion>
+    <ToolkitMinorVersion>7</ToolkitMinorVersion>
+    <ToolkitPatchVersion>0</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
