@@ -2,4 +2,4 @@
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
-internal record DaprComponentSecretAnnotation(string Key, string Value) : IResourceAnnotation;
+internal record DaprComponentSecretAnnotation(string Key, ParameterResource Value) : IResourceAnnotation;

@@ -42,7 +42,7 @@ public static class DaprMetadataResourceBuilderExtensions
     {
         if (parameterResource.Secret)
         {
-            return builder.WithAnnotation(new DaprComponentSecretAnnotation(parameterResource.Name, parameterResource.Value))
+            return builder.WithAnnotation(new DaprComponentSecretAnnotation(parameterResource.Name, parameterResource))
                           .WithAnnotation(new DaprComponentConfigurationAnnotation(schema =>
                           {
                               var existing = schema.Spec.Metadata.Find(m => m.Name == name);
@@ -62,6 +62,6 @@ public static class DaprMetadataResourceBuilderExtensions
                           }));
         }
 
-        return builder.WithMetadata(name, parameterResource.Value);
+        return builder.WithMetadata(name, parameterResource);
     }
 }

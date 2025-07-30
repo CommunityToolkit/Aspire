@@ -81,7 +81,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 {
                     foreach (var secretAnnotation in secretAnnotations)
                     {
-                        secrets[secretAnnotation.Key] = secretAnnotation.Value;
+                        secrets[secretAnnotation.Key] = (await ((IValueProvider)secretAnnotation).GetValueAsync(cancellationToken))!;
                     }
                     // We need to append the secret store path to the resources path
                     onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath);
