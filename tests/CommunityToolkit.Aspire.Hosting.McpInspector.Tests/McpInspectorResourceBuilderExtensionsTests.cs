@@ -60,7 +60,9 @@ public class McpInspectorResourceBuilderExtensionsTests
 
     [Theory]
     [InlineData(McpTransportType.StreamableHttp)]
+#pragma warning disable CS0618
     [InlineData(McpTransportType.Sse)]
+#pragma warning restore CS0618
     public void WithMcpServerSpecificTransportTypeAddsServerToResource(McpTransportType transportType)
     {
         // Arrange
