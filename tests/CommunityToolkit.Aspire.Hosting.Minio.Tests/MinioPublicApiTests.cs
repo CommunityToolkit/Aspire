@@ -106,6 +106,6 @@ public class MinioPublicApiTests
             .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 2000));
 
         var connectionString = await postgres.Resource.GetConnectionStringAsync();
-        Assert.Equal($"Endpoint=http://localhost:2000;AccessKey=user1;SecretKey={postgres.Resource.PasswordParameter.Value}", connectionString);
+        Assert.Equal($"Endpoint=http://localhost:2000;AccessKey=user1;SecretKey={await postgres.Resource.PasswordParameter.GetValueAsync(default)}", connectionString);
     }
 }
