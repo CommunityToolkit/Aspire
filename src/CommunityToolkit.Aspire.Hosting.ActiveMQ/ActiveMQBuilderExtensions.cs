@@ -175,9 +175,9 @@ public static class ActiveMQBuilderExtensions
         string basicAuthentication = string.Empty;
         builder.ApplicationBuilder.Eventing.Subscribe<BeforeResourceStartedEvent>(builder.Resource, async (_, ct) =>
         {
-            Uri baseUri = new Uri(endpoint.Url, UriKind.Absolute);
+            Uri baseUri = new (endpoint.Url, UriKind.Absolute);
             string userName = (await builder.Resource.UserNameReference.GetValueAsync(ct))!;
-            string password = (await ((IValueProvider)builder.Resource.PasswordParameter).GetValueAsync(ct))!;
+            string password = (await builder.Resource.PasswordParameter.GetValueAsync(ct))!;
             basicAuthentication = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
             uri = new UriBuilder(baseUri)
             {

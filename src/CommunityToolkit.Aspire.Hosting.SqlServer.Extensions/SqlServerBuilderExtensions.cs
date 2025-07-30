@@ -135,7 +135,7 @@ public static class SqlServerBuilderExtensions
         }
     }
 
-    private static void ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static async Task ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
     {
         var sqlServerInstances = applicationBuilder.Resources.OfType<SqlServerServerResource>();
 
@@ -143,13 +143,13 @@ public static class SqlServerBuilderExtensions
 
         var new_servers = sqlServerInstances.ToDictionary(
              sqlServerServerResource => sqlServerServerResource.Name,
-             sqlServerServerResource =>
+             async sqlServerServerResource =>
              {
                  return new AdminerLoginServer
                  {
                      Server = sqlServerServerResource.Name,
                      UserName = "sa",
-                     Password = sqlServerServerResource.PasswordParameter.Value,
+                     Password = await sqlServerServerResource.PasswordParameter.GetValueAsync(default),
                      Driver = "mssql"
                  };
              });
@@ -166,7 +166,7 @@ public static class SqlServerBuilderExtensions
             {
                 if (!servers.ContainsKey(server.Key))
                 {
-                    servers!.Add(server.Key, server.Value);
+                    servers!.Add(server.Key, await server.Value);
                 }
             }
             string servers_json = JsonSerializer.Serialize(servers);

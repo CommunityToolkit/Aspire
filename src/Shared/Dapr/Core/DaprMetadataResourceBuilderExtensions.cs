@@ -74,7 +74,7 @@ public static class DaprMetadataResourceBuilderExtensions
             schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValue
             {
                 Name = name,
-                Value = (await ((IValueProvider)parameterResource).GetValueAsync(default))!
+                Value = (await parameterResource.GetValueAsync(default))!
             });
         }));
     }

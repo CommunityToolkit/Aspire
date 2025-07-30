@@ -135,7 +135,7 @@ public static class MySqlBuilderExtensions
         }
     }
 
-    internal static void ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    internal static async Task ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
     {
         var mysqlInstances = applicationBuilder.Resources.OfType<MySqlServerResource>();
 
@@ -143,13 +143,13 @@ public static class MySqlBuilderExtensions
 
         var new_servers = mysqlInstances.ToDictionary(
              mysqlServer => mysqlServer.Name,
-             mysqlServer =>
+             async mysqlServer =>
              {
                  return new AdminerLoginServer
                  {
                      Server = mysqlServer.Name,
                      UserName = "root",
-                     Password = mysqlServer.PasswordParameter.Value,
+                     Password = await mysqlServer.PasswordParameter.GetValueAsync(default),
                      Driver = "server" // driver for MySQL is called 'server'
                  };
              });
@@ -166,7 +166,7 @@ public static class MySqlBuilderExtensions
             {
                 if (!servers.ContainsKey(server.Key))
                 {
-                    servers!.Add(server.Key, server.Value);
+                    servers!.Add(server.Key, await server.Value);
                 }
             }
             string servers_json = JsonSerializer.Serialize(servers);

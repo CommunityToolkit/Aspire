@@ -5,6 +5,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 
 namespace CommunityToolkit.Aspire.Hosting.Adminer.Tests;
+
 public class AddAdminerTests
 {
     [Fact]
@@ -189,8 +190,11 @@ public class AddAdminerTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource1.Name,
-                    Password = postgresResource1.PasswordParameter.Value,
-                    UserName = postgresResource1.UserNameParameter?.Value ?? "postgres"
+                    Password = await postgresResource1.PasswordParameter.GetValueAsync(default),
+                    UserName = postgresResource1.UserNameParameter switch {
+                        null => "postgres",
+                        _ => await postgresResource1.UserNameParameter.GetValueAsync(default)
+                    }
                 }
             },
             {
@@ -199,8 +203,11 @@ public class AddAdminerTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource2.Name,
-                    Password = postgresResource2.PasswordParameter.Value,
-                    UserName = postgresResource2.UserNameParameter?.Value ?? "postgres"
+                    Password = await postgresResource2.PasswordParameter.GetValueAsync(default),
+                    UserName = postgresResource2.UserNameParameter switch {
+                        null => "postgres",
+                        _ => await postgresResource2.UserNameParameter.GetValueAsync(default)
+                    }
                 }
             },
             {
@@ -209,7 +216,7 @@ public class AddAdminerTests
                 {
                     Driver = "mssql",
                     Server = sqlserverResource1.Name,
-                    Password = sqlserverResource1.PasswordParameter.Value,
+                    Password = await sqlserverResource1.PasswordParameter.GetValueAsync(default),
                     UserName = "sa"
                 }
             },
@@ -219,7 +226,7 @@ public class AddAdminerTests
                 {
                     Driver = "mssql",
                     Server = sqlserverResource2.Name,
-                    Password = sqlserverResource2.PasswordParameter.Value,
+                    Password = await sqlserverResource2.PasswordParameter.GetValueAsync(default),
                     UserName = "sa"
                 }
             },
@@ -229,7 +236,7 @@ public class AddAdminerTests
                 {
                     Driver = "server",
                     Server = mysqlResource1.Name,
-                    Password = mysqlResource1.PasswordParameter.Value,
+                    Password = await mysqlResource1.PasswordParameter.GetValueAsync(default),
                     UserName = "root"
                 }
             },
@@ -239,7 +246,7 @@ public class AddAdminerTests
                 {
                     Driver = "server",
                     Server = mysqlResource2.Name,
-                    Password = mysqlResource2.PasswordParameter.Value,
+                    Password = await mysqlResource2.PasswordParameter.GetValueAsync(default),
                     UserName = "root"
                 }
             }
