@@ -34,7 +34,7 @@ public static class NgrokExtensions
         ArgumentNullException.ThrowIfNull(builder);
         if (configurationFolder is not null)
             ArgumentException.ThrowIfNullOrWhiteSpace(configurationFolder);
-        
+
         if (endpointPort is not null)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(endpointPort.Value, 1, nameof(endpointPort));
@@ -49,28 +49,27 @@ public static class NgrokExtensions
         configurationFolder ??= Path.Combine(builder.AppHostDirectory, ".ngrok");
         if (!Directory.Exists(configurationFolder))
             Directory.CreateDirectory(configurationFolder);
-        
-        var resource = new NgrokResource(name);
-        var resourceBuilder = builder.AddResource(resource)
+
+        var resourceBuilder = builder.AddResource(new NgrokResource(name))
             .WithImage(NgrokContainerValues.Image, NgrokContainerValues.Tag)
             .WithImageRegistry(NgrokContainerValues.Registry)
             .WithBindMount(configurationFolder, "/var/tmp/ngrok")
             .WithHttpEndpoint(targetPort: 4040, port: endpointPort, name: endpointName);
-        builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>(async (e, ct) =>
+        resourceBuilder.OnResourceEndpointsAllocated(async (resource, e, ct) =>
         {
             var endpointTuples = resource.Annotations
                 .OfType<NgrokEndpointAnnotation>()
                 .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointRefernce: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
                 .ToList();
             await CreateNgrokConfigurationFileAsync(configurationFolder, name, endpointTuples, configurationVersion ?? 3);
-            
+
             resourceBuilder.WithArgs(
-                "start", endpointTuples.Count > 0 ? "--all" : "--none", 
+                "start", endpointTuples.Count > 0 ? "--all" : "--none",
                 "--config", $"/var/tmp/ngrok/{name}.yml");
         });
         return resourceBuilder;
     }
-    
+
     /// <summary>
     /// Adds a ngrok auth token to a ngrok resource.
     /// </summary>
@@ -86,7 +85,7 @@ public static class NgrokExtensions
 
         return builder.WithEnvironment(NgrokContainerValues.AuthTokenEnvName, ngrokAuthToken);
     }
-    
+
     /// <summary>
     /// Adds a ngrok auth token to a ngrok resource.
     /// </summary>
@@ -102,13 +101,13 @@ public static class NgrokExtensions
 
         return builder.WithEnvironment(NgrokContainerValues.AuthTokenEnvName, ngrokAuthToken);
     }
-    
+
     /// <summary>
     /// Configures a resource with endpoints as a ngrok tunnel endpoint.
     /// </summary>
     /// <typeparam name="TResource">The resource type.</typeparam>
     public static IResourceBuilder<NgrokResource> WithTunnelEndpoint<TResource>(
-        this IResourceBuilder<NgrokResource> builder, 
+        this IResourceBuilder<NgrokResource> builder,
         IResourceBuilder<TResource> resource,
         string endpointName,
         string? ngrokUrl = null,
@@ -136,7 +135,7 @@ public static class NgrokExtensions
 
         return builder;
     }
-    
+
     private static async Task CreateNgrokConfigurationFileAsync(
         string configurationFolder,
         string name,
@@ -165,7 +164,7 @@ public static class NgrokExtensions
                 break;
             case 3:
                 ngrokConfig.AppendLine("agent:");
-                ngrokConfig.AppendLine( "  log: stdout");
+                ngrokConfig.AppendLine("  log: stdout");
                 if (endpointTuples.Count > 0)
                 {
                     ngrokConfig.AppendLine();
@@ -190,7 +189,7 @@ public static class NgrokExtensions
     private static string GetUpstreamUrl(EndpointReference endpoint)
     {
         var isLocal = endpoint.Host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase);
-        var host = (IsWindows || IsOsx) && isLocal? "host.docker.internal" : endpoint.Host;
+        var host = (IsWindows || IsOsx) && isLocal ? "host.docker.internal" : endpoint.Host;
         return $"{endpoint.Scheme}://{host}:{endpoint.Port}";
     }
 }

@@ -154,10 +154,10 @@ public static class ActiveMQBuilderExtensions
         const int statusCode = 200;
         const string endpointName = "web";
         const string scheme = "http";
-        EndpointReference endpoint = builder.Resource.GetEndpoint(endpointName);
 
-        builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((_, _) =>
+        builder.OnResourceEndpointsAllocated((resource, @event, ct) =>
         {
+            var endpoint = resource.GetEndpoint(endpointName);
             if (!endpoint.Exists)
             {
                 throw new DistributedApplicationException($"The endpoint '{endpointName}' does not exist on the resource '{builder.Resource.Name}'.");
@@ -173,11 +173,12 @@ public static class ActiveMQBuilderExtensions
 
         Uri? uri = null;
         string basicAuthentication = string.Empty;
-        builder.ApplicationBuilder.Eventing.Subscribe<BeforeResourceStartedEvent>(builder.Resource, async (_, ct) =>
+        builder.OnBeforeResourceStarted(async (resource, _, ct) =>
         {
+            var endpoint = resource.GetEndpoint(endpointName);
             Uri baseUri = new (endpoint.Url, UriKind.Absolute);
-            string userName = (await builder.Resource.UserNameReference.GetValueAsync(ct))!;
-            string password = (await builder.Resource.PasswordParameter.GetValueAsync(ct))!;
+            string userName = (await resource.UserNameReference.GetValueAsync(ct))!;
+            string password = (await resource.PasswordParameter.GetValueAsync(ct))!;
             basicAuthentication = "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
             uri = new UriBuilder(baseUri)
             {

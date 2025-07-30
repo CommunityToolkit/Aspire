@@ -564,7 +564,7 @@ public class AddDbGateTests
         var dbgate = builder.AddDbGate("dbgate");
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
+        dbgate.OnResourceEndpointsAllocated((resource, @event, ct) =>
         {
             tcs.SetResult();
             return Task.CompletedTask;

@@ -301,7 +301,7 @@ public class AddAdminerTests
         var adminer = builder.AddAdminer("adminer");
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
+        adminer.OnResourceEndpointsAllocated((resource, @event, ct) =>
         {
             tcs.SetResult();
             return Task.CompletedTask;
