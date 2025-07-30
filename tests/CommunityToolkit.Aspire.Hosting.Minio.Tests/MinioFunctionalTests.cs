@@ -19,7 +19,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var passwordParameter = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(distributedApplicationBuilder,
             $"rootPassword");
-        distributedApplicationBuilder.Configuration["Parameters:rootPassword"] = passwordParameter.Value;
+        distributedApplicationBuilder.Configuration["Parameters:rootPassword"] = await passwordParameter.GetValueAsync(default);
         var rootPasswordParameter = distributedApplicationBuilder.AddParameter(passwordParameter.Name);
         
         var minio = distributedApplicationBuilder
@@ -39,9 +39,9 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
         
         var webApplicationBuilder = Host.CreateApplicationBuilder();
         
-        webApplicationBuilder.Services.AddMinio(configureClient => configureClient
+        webApplicationBuilder.Services.AddMinio(async configureClient => configureClient
             .WithEndpoint("localhost", minioEndpoint.Port)
-            .WithCredentials(rootUser, passwordParameter.Value)
+            .WithCredentials(rootUser, await passwordParameter.GetValueAsync(default))
             .WithSSL(false)
             .Build());
         
@@ -70,7 +70,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
 
             var passwordParameter = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder1,
                 $"rootPassword");
-            builder1.Configuration["Parameters:rootPassword"] = passwordParameter.Value;
+            builder1.Configuration["Parameters:rootPassword"] = await passwordParameter.GetValueAsync(default);
             var rootPasswordParameter = builder1.AddParameter(passwordParameter.Name);
             
             var minio1 = builder1.AddMinioContainer("minio",
@@ -106,9 +106,9 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
                 {
                     var webApplicationBuilder = Host.CreateApplicationBuilder();
         
-                    webApplicationBuilder.Services.AddMinio(configureClient => configureClient
+                    webApplicationBuilder.Services.AddMinio(async configureClient => configureClient
                         .WithEndpoint("localhost", minio1Endpoint.Port)
-                        .WithCredentials(rootUser, passwordParameter.Value)
+                        .WithCredentials(rootUser, await passwordParameter.GetValueAsync(default))
                         .WithSSL(false)
                         .Build());
         
@@ -127,7 +127,7 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
             }
             
             using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
-            builder2.Configuration["Parameters:rootPassword"] = passwordParameter.Value;
+            builder2.Configuration["Parameters:rootPassword"] = await passwordParameter.GetValueAsync(default);
             var rootPasswordParameter2 = builder2.AddParameter(passwordParameter.Name);
             
             
@@ -159,9 +159,9 @@ public class MinioFunctionalTests(ITestOutputHelper testOutputHelper)
                 {
                     var webApplicationBuilder = Host.CreateApplicationBuilder();
         
-                    webApplicationBuilder.Services.AddMinio(configureClient => configureClient
+                    webApplicationBuilder.Services.AddMinio(async configureClient => configureClient
                         .WithEndpoint("localhost", minio2Endpoint.Port)
-                        .WithCredentials(rootUser, passwordParameter.Value)
+                        .WithCredentials(rootUser, await passwordParameter.GetValueAsync(default))
                         .WithSSL(false)
                         .Build());
         

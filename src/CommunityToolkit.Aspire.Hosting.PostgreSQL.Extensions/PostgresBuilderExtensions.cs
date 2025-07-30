@@ -44,7 +44,7 @@ public static class PostgresBuilderExtensions
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));            
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
 
         configureContainer?.Invoke(dbGateBuilder);
 
@@ -105,9 +105,9 @@ public static class PostgresBuilderExtensions
 
         foreach (var postgresServer in postgresInstances)
         {
-            var userParameter = postgresServer.UserNameParameter is null 
-             ?  ReferenceExpression.Create($"postgres")
-             :  ReferenceExpression.Create($"{postgresServer.UserNameParameter}");
+            var userParameter = postgresServer.UserNameParameter is null
+             ? ReferenceExpression.Create($"postgres")
+             : ReferenceExpression.Create($"{postgresServer.UserNameParameter}");
 
             // DbGate assumes Postgres is being accessed over a default Aspire container network and hardcodes the resource address
             // This will need to be refactored once updated service discovery APIs are available
@@ -141,7 +141,7 @@ public static class PostgresBuilderExtensions
     }
 
 
-    internal static void ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    internal static async Task ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
     {
         var postgresInstances = applicationBuilder.Resources.OfType<PostgresServerResource>();
 
@@ -149,36 +149,37 @@ public static class PostgresBuilderExtensions
 
         var new_servers = postgresInstances.ToDictionary(
              postgresServer => postgresServer.Name,
-             postgresServer =>
+             async postgresServer =>
              {
-                 var user = postgresServer.UserNameParameter?.Value ?? "postgres";
+                 var user = postgresServer.UserNameParameter switch
+                 {
+                     null => "postgres",
+                     _ => await postgresServer.UserNameParameter.GetValueAsync(context.CancellationToken)
+                 };
                  return new AdminerLoginServer
                  {
                      Server = postgresServer.Name,
                      UserName = user,
-                     Password = postgresServer.PasswordParameter.Value,
+                     Password = await postgresServer.PasswordParameter.GetValueAsync(context.CancellationToken),
                      Driver = "pgsql"
                  };
              });
 
         if (string.IsNullOrEmpty(ADMINER_SERVERS))
         {
-            string servers_json = JsonSerializer.Serialize(new_servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+            ADMINER_SERVERS = "{}"; // Initialize with an empty JSON object if not set
         }
-        else
+
+        var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
+        foreach (var server in new_servers)
         {
-            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
-            foreach (var server in new_servers)
+            if (!servers.ContainsKey(server.Key))
             {
-                if (!servers.ContainsKey(server.Key))
-                {
-                    servers!.Add(server.Key, server.Value);
-                }
+                servers.Add(server.Key, await server.Value);
             }
-            string servers_json = JsonSerializer.Serialize(servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
         }
+        string servers_json = JsonSerializer.Serialize(servers);
+        context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
 
     }
 }

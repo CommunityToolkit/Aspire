@@ -135,7 +135,7 @@ public static class SqlServerBuilderExtensions
         }
     }
 
-    private static void ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static async Task ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
     {
         var sqlServerInstances = applicationBuilder.Resources.OfType<SqlServerServerResource>();
 
@@ -143,36 +143,31 @@ public static class SqlServerBuilderExtensions
 
         var new_servers = sqlServerInstances.ToDictionary(
              sqlServerServerResource => sqlServerServerResource.Name,
-             sqlServerServerResource =>
+             async sqlServerServerResource =>
              {
                  return new AdminerLoginServer
                  {
                      Server = sqlServerServerResource.Name,
                      UserName = "sa",
-                     Password = sqlServerServerResource.PasswordParameter.Value,
+                     Password = await sqlServerServerResource.PasswordParameter.GetValueAsync(context.CancellationToken),
                      Driver = "mssql"
                  };
              });
 
         if (string.IsNullOrEmpty(ADMINER_SERVERS))
         {
-            string servers_json = JsonSerializer.Serialize(new_servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+            ADMINER_SERVERS = "{}"; // Initialize with an empty JSON object if not set
         }
-        else
+
+        var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
+        foreach (var server in new_servers)
         {
-            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
-            foreach (var server in new_servers)
+            if (!servers.ContainsKey(server.Key))
             {
-                if (!servers.ContainsKey(server.Key))
-                {
-                    servers!.Add(server.Key, server.Value);
-                }
+                servers!.Add(server.Key, await server.Value);
             }
-            string servers_json = JsonSerializer.Serialize(servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
         }
-
+        string servers_json = JsonSerializer.Serialize(servers);
+        context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
     }
-
 }

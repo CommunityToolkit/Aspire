@@ -168,7 +168,7 @@ public class AddDbGateTests
         }
         else
         {
-            Assert.Equal(Path.GetFullPath("/data/dbgate", appBuilder.AppHostDirectory), mountAnnotation.Source);
+            Assert.Equal("/data/dbgate", mountAnnotation.Source);
             Assert.Equal(ContainerMountType.BindMount, mountAnnotation.Type);
             Assert.False(mountAnnotation.IsReadOnly);
         }
@@ -331,7 +331,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_postgres2", item.Key);
-                var expectedPassword = await ((IValueProvider)postgresResource2.PasswordParameter).GetValueAsync(default);
+                var expectedPassword = await postgresResource2.PasswordParameter.GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -402,7 +402,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver1", item.Key);
-                var expectedPassword = await ((IValueProvider)sqlserverResource1.PasswordParameter).GetValueAsync(default);
+                var expectedPassword = await sqlserverResource1.PasswordParameter.GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -433,7 +433,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver2", item.Key);
-                var expectedPassword = await ((IValueProvider)sqlserverResource2.PasswordParameter).GetValueAsync(default);
+                var expectedPassword = await sqlserverResource2.PasswordParameter.GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -464,7 +464,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_mysql1", item.Key);
-                var expectedPassword = await ((IValueProvider)mysqlResource1.PasswordParameter).GetValueAsync(default);
+                var expectedPassword = await mysqlResource1.PasswordParameter.GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -495,7 +495,7 @@ public class AddDbGateTests
             async item =>
             {
                 Assert.Equal("PASSWORD_mysql2", item.Key);
-                var expectedPassword = await ((IValueProvider)mysqlResource2.PasswordParameter).GetValueAsync(default);
+                var expectedPassword = await mysqlResource2.PasswordParameter.GetValueAsync(default);
                 Assert.Equal(expectedPassword, item.Value);
             },
             item =>
@@ -564,7 +564,7 @@ public class AddDbGateTests
         var dbgate = builder.AddDbGate("dbgate");
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        builder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
+        dbgate.OnResourceEndpointsAllocated((resource, @event, ct) =>
         {
             tcs.SetResult();
             return Task.CompletedTask;

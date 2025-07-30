@@ -29,7 +29,7 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
-    public void AddActiveMqApiBuilderContainerDetailsSetOnResource()
+    public async Task AddActiveMqApiBuilderContainerDetailsSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
@@ -44,8 +44,8 @@ public class ContainerResourceCreationTests
 
         Assert.NotNull(resource);
         Assert.Equal("amq", resource.Name);
-        Assert.Equal("admin", resource.UserNameParameter!.Value);
-        Assert.Equal("admin", resource.PasswordParameter.Value);
+        Assert.Equal("admin", await resource.UserNameParameter!.GetValueAsync(default));
+        Assert.Equal("admin", await resource.PasswordParameter.GetValueAsync(default));
         Assert.Equal("ACTIVEMQ_CONNECTION_PASSWORD", resource.ActiveMqSettings.EnvironmentVariablePassword);
         Assert.Equal("ACTIVEMQ_CONNECTION_USER", resource.ActiveMqSettings.EnvironmentVariableUsername);
 
@@ -59,7 +59,7 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
-    public void AddActiveMqArtemisApiBuilderContainerDetailsSetOnResource()
+    public async Task AddActiveMqArtemisApiBuilderContainerDetailsSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
@@ -74,8 +74,8 @@ public class ContainerResourceCreationTests
 
         Assert.NotNull(resource);
         Assert.Equal("amq", resource.Name);
-        Assert.Equal("admin", resource.UserNameParameter!.Value);
-        Assert.Equal("admin", resource.PasswordParameter.Value);
+        Assert.Equal("admin", await resource.UserNameParameter!.GetValueAsync(default));
+        Assert.Equal("admin", await resource.PasswordParameter.GetValueAsync(default));
         Assert.Equal("ARTEMIS_PASSWORD", resource.ActiveMqSettings.EnvironmentVariablePassword);
         Assert.Equal("ARTEMIS_USER", resource.ActiveMqSettings.EnvironmentVariableUsername);
 

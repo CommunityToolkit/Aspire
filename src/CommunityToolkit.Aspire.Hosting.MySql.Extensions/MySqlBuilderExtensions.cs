@@ -135,7 +135,7 @@ public static class MySqlBuilderExtensions
         }
     }
 
-    internal static void ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    internal static async Task ConfigureAdminerContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
     {
         var mysqlInstances = applicationBuilder.Resources.OfType<MySqlServerResource>();
 
@@ -143,35 +143,31 @@ public static class MySqlBuilderExtensions
 
         var new_servers = mysqlInstances.ToDictionary(
              mysqlServer => mysqlServer.Name,
-             mysqlServer =>
+             async mysqlServer =>
              {
                  return new AdminerLoginServer
                  {
                      Server = mysqlServer.Name,
                      UserName = "root",
-                     Password = mysqlServer.PasswordParameter.Value,
+                     Password = await mysqlServer.PasswordParameter.GetValueAsync(context.CancellationToken),
                      Driver = "server" // driver for MySQL is called 'server'
                  };
              });
 
         if (string.IsNullOrEmpty(ADMINER_SERVERS))
         {
-            string servers_json = JsonSerializer.Serialize(new_servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
-        }
-        else
-        {
-            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
-            foreach (var server in new_servers)
-            {
-                if (!servers.ContainsKey(server.Key))
-                {
-                    servers!.Add(server.Key, server.Value);
-                }
-            }
-            string servers_json = JsonSerializer.Serialize(servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+            ADMINER_SERVERS = "{}"; // Initialize with an empty JSON object if not set
         }
 
+        var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
+        foreach (var server in new_servers)
+        {
+            if (!servers.ContainsKey(server.Key))
+            {
+                servers!.Add(server.Key, await server.Value);
+            }
+        }
+        string servers_json = JsonSerializer.Serialize(servers);
+        context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
     }
 }

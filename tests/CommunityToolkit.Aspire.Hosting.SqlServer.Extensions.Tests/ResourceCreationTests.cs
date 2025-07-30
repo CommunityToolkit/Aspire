@@ -44,10 +44,10 @@ public class ResourceCreationTests
                 Assert.Equal("USER_sqlserver1", item.Key);
                 Assert.Equal("sa", item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver1", item.Key);
-                Assert.Equal(sqlserverResource.PasswordParameter.Value, item.Value);
+                Assert.Equal(await sqlserverResource.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
@@ -162,10 +162,10 @@ public class ResourceCreationTests
                 Assert.Equal("USER_sqlserver1", item.Key);
                 Assert.Equal("sa", item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver1", item.Key);
-                Assert.Equal(sqlserverResource1.PasswordParameter.Value, item.Value);
+                Assert.Equal(await sqlserverResource1.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
@@ -192,10 +192,10 @@ public class ResourceCreationTests
                 Assert.Equal("USER_sqlserver2", item.Key);
                 Assert.Equal("sa", item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver2", item.Key);
-                Assert.Equal(sqlserverResource2.PasswordParameter.Value, item.Value);
+                Assert.Equal(await sqlserverResource2.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
@@ -246,7 +246,7 @@ public class ResourceCreationTests
                 {
                     Driver = "mssql",
                     Server = sqlserverResource.Name,
-                    Password = sqlserverResource.PasswordParameter.Value,
+                    Password = await sqlserverResource.PasswordParameter.GetValueAsync(default),
                     UserName = "sa"
                 }
             },
@@ -347,7 +347,7 @@ public class ResourceCreationTests
                 {
                     Driver = "mssql",
                     Server = sqlserverResource1.Name,
-                    Password = sqlserverResource1.PasswordParameter.Value,
+                    Password = await sqlserverResource1.PasswordParameter.GetValueAsync(default),
                     UserName = "sa"
                 }
             },
@@ -357,7 +357,7 @@ public class ResourceCreationTests
                 {
                     Driver = "mssql",
                     Server = sqlserverResource2.Name,
-                    Password = sqlserverResource2.PasswordParameter.Value,
+                    Password = await sqlserverResource2.PasswordParameter.GetValueAsync(default),
                     UserName = "sa"
                 }
             }

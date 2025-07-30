@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Meilisearch.Tests;
+
 public class AddMeilisearchTests
 {
     [Fact]
@@ -51,7 +52,7 @@ public class AddMeilisearchTests
         var appBuilder = DistributedApplication.CreateBuilder();
         var masterKey = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(appBuilder, $"masterKey");
 
-        appBuilder.Configuration["Parameters:masterkey"] = masterKey.Value;
+        appBuilder.Configuration["Parameters:masterkey"] = await masterKey.GetValueAsync(default);
         var masterKeyParameter = appBuilder.AddParameter(masterKey.Name);
         var meilisearch = appBuilder.AddMeilisearch("meilisearch", masterKeyParameter);
 
@@ -101,7 +102,7 @@ public class AddMeilisearchTests
         var connectionStringResource = Assert.Single(appModel.Resources.OfType<MeilisearchResource>()) as IResourceWithConnectionString;
         var connectionString = await connectionStringResource.GetConnectionStringAsync();
 
-        Assert.Equal($"Endpoint=http://localhost:27020;MasterKey={meilisearch.Resource.MasterKeyParameter.Value}", connectionString);
+        Assert.Equal($"Endpoint=http://localhost:27020;MasterKey={await meilisearch.Resource.MasterKeyParameter.GetValueAsync(default)}", connectionString);
         Assert.Equal("Endpoint=http://{meilisearch.bindings.http.host}:{meilisearch.bindings.http.port};MasterKey={meilisearch-masterKey.value}", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 }

@@ -69,7 +69,7 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
 
             var meilisearch1 = builder1.AddMeilisearch("meilisearch");
 
-            var masterKey = meilisearch1.Resource.MasterKeyParameter.Value;
+            var masterKey = await meilisearch1.Resource.MasterKeyParameter.GetValueAsync(default);
 
             if (useVolume)
             {
