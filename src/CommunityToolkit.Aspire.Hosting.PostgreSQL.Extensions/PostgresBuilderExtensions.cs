@@ -160,33 +160,26 @@ public static class PostgresBuilderExtensions
                  {
                      Server = postgresServer.Name,
                      UserName = user,
-                     Password = postgresServer.PasswordParameter switch
-                     {
-                         null => string.Empty,
-                         _ => await postgresServer.PasswordParameter.GetValueAsync(context.CancellationToken)
-                     },
+                     Password = await postgresServer.PasswordParameter.GetValueAsync(context.CancellationToken),
                      Driver = "pgsql"
                  };
              });
 
         if (string.IsNullOrEmpty(ADMINER_SERVERS))
         {
-            string servers_json = JsonSerializer.Serialize(new_servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+            ADMINER_SERVERS = "{}"; // Initialize with an empty JSON object if not set
         }
-        else
+
+        var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
+        foreach (var server in new_servers)
         {
-            var servers = JsonSerializer.Deserialize<Dictionary<string, AdminerLoginServer>>(ADMINER_SERVERS) ?? throw new InvalidOperationException("The servers should not be null. This should never happen.");
-            foreach (var server in new_servers)
+            if (!servers.ContainsKey(server.Key))
             {
-                if (!servers.ContainsKey(server.Key))
-                {
-                    servers!.Add(server.Key, await server.Value);
-                }
+                servers.Add(server.Key, await server.Value);
             }
-            string servers_json = JsonSerializer.Serialize(servers);
-            context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
         }
+        string servers_json = JsonSerializer.Serialize(servers);
+        context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
 
     }
 }
