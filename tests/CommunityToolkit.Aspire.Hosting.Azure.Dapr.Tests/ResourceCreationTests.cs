@@ -8,61 +8,61 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr.AzureExtensions.Tests;
 
 public class ResourceCreationTests
 {
-  [Fact]
-  public void AddAzureDaprResource_AddsToAppBuilder()
-  {
-    var builder = DistributedApplication.CreateBuilder();
+    [Fact]
+    public void AddAzureDaprResource_AddsToAppBuilder()
+    {
+        var builder = DistributedApplication.CreateBuilder();
 
-    var daprStateBuilder = builder.AddDaprStateStore("statestore")
-                                  .AddAzureDaprResource("AzureDaprResource", _ =>
-                                  {
-                                    // no-op
-                                  });
+        var daprStateBuilder = builder.AddDaprStateStore("statestore")
+                                      .AddAzureDaprResource("AzureDaprResource", _ =>
+                                      {
+                                          // no-op
+                                      });
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
-  }
+    }
 
-  [Fact]
-  public void CreateDaprComponent_ReturnsPopulatedComponent()
-  {
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
+    [Fact]
+    public void CreateDaprComponent_ReturnsPopulatedComponent()
+    {
+        var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    Assert.NotNull(daprResource);
-    Assert.Equal("daprComponent", daprResource.BicepIdentifier);
-    Assert.Equal("state.redis", daprResource.ComponentType.Value);
-    Assert.Equal("v1", daprResource.Version.Value);
-  }
+        Assert.NotNull(daprResource);
+        Assert.Equal("daprComponent", daprResource.BicepIdentifier);
+        Assert.Equal("state.redis", daprResource.ComponentType.Value);
+        Assert.Equal("v1", daprResource.Version.Value);
+    }
 
-  [Fact]
-  public void GetInfrastructureConfigurationAction_ComponentNameCanBeOverwritten()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create();
+    [Fact]
+    public void GetInfrastructureConfigurationAction_ComponentNameCanBeOverwritten()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
 
-    var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
+        var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
+        var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    daprResource.Name = "myDaprComponent";
+        daprResource.Name = "myDaprComponent";
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+        var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
 
-    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+        var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
 
-    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+        azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
-    string bicepTemplate = resource.GetBicepTemplateString();
+        string bicepTemplate = resource.GetBicepTemplateString();
 
-    string expectedBicep = $$"""
+        string expectedBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -70,11 +70,11 @@ public class ResourceCreationTests
 
             var resourceToken = uniqueString(resourceGroup().id)
 
-            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' existing = {
               name: 'cae-${resourceToken}'
             }
 
-            resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
+            resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2025-01-01' = {
               name: 'myDaprComponent'
               properties: {
                 componentType: 'state.redis'
@@ -84,32 +84,32 @@ public class ResourceCreationTests
             }
             """;
 
-    Assert.Equal(expectedBicep, bicepTemplate);
-  }
+        Assert.Equal(expectedBicep.ReplaceLineEndings(), bicepTemplate.ReplaceLineEndings());
+    }
 
-  [Fact]
-  public void GetInfrastructureConfigurationAction_AddsContainerAppEnv_AndDaprComponent_AndParametersAsync()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create();
+    [Fact]
+    public void GetInfrastructureConfigurationAction_AddsContainerAppEnv_AndDaprComponent_AndParametersAsync()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
 
-    var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
+        var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
+        var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
+        var azureDaprResourceBuilder = builder.AddDaprStateStore("daprState");
 
-    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
+        var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource, [redisHost]);
 
-    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+        azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
-    string bicepTemplate = resource.GetBicepTemplateString();
+        string bicepTemplate = resource.GetBicepTemplateString();
 
-    string expectedBicep = $$"""
+        string expectedBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -117,11 +117,11 @@ public class ResourceCreationTests
 
             var resourceToken = uniqueString(resourceGroup().id)
 
-            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' existing = {
               name: 'cae-${resourceToken}'
             }
 
-            resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
+            resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2025-01-01' = {
               name: 'componentName'
               properties: {
                 componentType: 'state.redis'
@@ -131,41 +131,41 @@ public class ResourceCreationTests
             }
             """;
 
-    Assert.Equal(expectedBicep, bicepTemplate);
-  }
+        Assert.Equal(expectedBicep.ReplaceLineEndings(), bicepTemplate.ReplaceLineEndings());
+    }
 
-  [Fact]
-  public void GetInfrastructureConfigurationAction_HandlesNullParameters()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create();
+    [Fact]
+    public void GetInfrastructureConfigurationAction_HandlesNullParameters()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
 
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
+        var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore");
+        var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore");
 
-    var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource);
+        var configureInfrastructure = azureDaprResourceBuilder.GetInfrastructureConfigurationAction(daprResource);
 
-    azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
+        azureDaprResourceBuilder.AddAzureDaprResource("AzureDaprResource", configureInfrastructure);
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
-    string bicepTemplate = resource.GetBicepTemplateString();
+        string bicepTemplate = resource.GetBicepTemplateString();
 
-    string expectedBicep = $$"""
+        string expectedBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
             var resourceToken = uniqueString(resourceGroup().id)
 
-            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' existing = {
               name: 'cae-${resourceToken}'
             }
 
-            resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
+            resource daprComponent 'Microsoft.App/managedEnvironments/daprComponents@2025-01-01' = {
               name: 'componentName'
               properties: {
                 componentType: 'state.redis'
@@ -175,32 +175,32 @@ public class ResourceCreationTests
             }
             """;
 
-    Assert.Equal(expectedBicep, bicepTemplate);
-  }
+        Assert.Equal(expectedBicep.ReplaceLineEndings(), bicepTemplate.ReplaceLineEndings());
+    }
 
-  [Fact]
-  public void ConfigureKeyVaultSecretsComponent_AddsKeyVaultSecretsComponent()
-  {
-    using var builder = TestDistributedApplicationBuilder.Create();
+    [Fact]
+    public void ConfigureKeyVaultSecretsComponent_AddsKeyVaultSecretsComponent()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
 
-    var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
-    var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
+        var redisHost = new ProvisioningParameter("daprConnectionString", typeof(string));
+        var daprResource = AzureDaprHostingExtensions.CreateDaprComponent("daprComponent", "componentName", "state.redis", "v1");
 
-    var keyVaultName = new ProvisioningParameter(AzureBicepResource.KnownParameters.KeyVaultName, typeof(string));
+        var keyVaultName = new ProvisioningParameter("keyVaultName", typeof(string));
 
 
-    var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore")
-                                          .ConfigureKeyVaultSecretsComponent(keyVaultName);
+        var azureDaprResourceBuilder = builder.AddDaprStateStore("statestore")
+                                              .ConfigureKeyVaultSecretsComponent(keyVaultName);
 
-    using var app = builder.Build();
+        using var app = builder.Build();
 
-    var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<AzureDaprComponentResource>());
 
-    string bicepTemplate = resource.GetBicepTemplateString();
+        string bicepTemplate = resource.GetBicepTemplateString();
 
-    string expectedBicep = $$"""
+        string expectedBicep = $$"""
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
@@ -210,11 +210,11 @@ public class ResourceCreationTests
 
             var resourceToken = uniqueString(resourceGroup().id)
 
-            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' existing = {
               name: 'cae-${resourceToken}'
             }
 
-            resource secretStore 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
+            resource secretStore 'Microsoft.App/managedEnvironments/daprComponents@2025-01-01' = {
               name: 'statestore-secretstore'
               properties: {
                 componentType: 'secretstores.azure.keyvault'
@@ -236,8 +236,8 @@ public class ResourceCreationTests
             output secretStoreComponent string = 'statestore-secretstore'
             """;
 
-    Assert.Equal(expectedBicep, bicepTemplate);
-  }
+        Assert.Equal(expectedBicep.ReplaceLineEndings(), bicepTemplate.ReplaceLineEndings());
+    }
 
 
 }
