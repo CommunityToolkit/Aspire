@@ -236,6 +236,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Minio.Client.Tests/CommunityToolkit.Aspire.Minio.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.OllamaSharp.Tests/CommunityToolkit.Aspire.OllamaSharp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
