@@ -149,7 +149,7 @@ public static class SqlServerBuilderExtensions
                  {
                      Server = sqlServerServerResource.Name,
                      UserName = "sa",
-                     Password = await sqlServerServerResource.PasswordParameter.GetValueAsync(default),
+                     Password = await sqlServerServerResource.PasswordParameter.GetValueAsync(context.CancellationToken),
                      Driver = "mssql"
                  };
              });

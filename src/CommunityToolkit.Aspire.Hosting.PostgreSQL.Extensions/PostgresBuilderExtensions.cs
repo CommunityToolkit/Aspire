@@ -154,7 +154,7 @@ public static class PostgresBuilderExtensions
                  var user = postgresServer.UserNameParameter switch
                  {
                      null => "postgres",
-                     _ => await postgresServer.UserNameParameter.GetValueAsync(default)
+                     _ => await postgresServer.UserNameParameter.GetValueAsync(context.CancellationToken)
                  };
                  return new AdminerLoginServer
                  {
@@ -163,7 +163,7 @@ public static class PostgresBuilderExtensions
                      Password = postgresServer.PasswordParameter switch
                      {
                          null => string.Empty,
-                         _ => await postgresServer.PasswordParameter.GetValueAsync(default)
+                         _ => await postgresServer.PasswordParameter.GetValueAsync(context.CancellationToken)
                      },
                      Driver = "pgsql"
                  };

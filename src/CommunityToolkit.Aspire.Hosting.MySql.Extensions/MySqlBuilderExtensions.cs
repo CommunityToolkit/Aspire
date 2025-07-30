@@ -149,7 +149,7 @@ public static class MySqlBuilderExtensions
                  {
                      Server = mysqlServer.Name,
                      UserName = "root",
-                     Password = await mysqlServer.PasswordParameter.GetValueAsync(default),
+                     Password = await mysqlServer.PasswordParameter.GetValueAsync(context.CancellationToken),
                      Driver = "server" // driver for MySQL is called 'server'
                  };
              });
