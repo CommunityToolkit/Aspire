@@ -29,56 +29,56 @@ public class ResourceCreationTests
         string redisBicep = redisCache.GetBicepTemplateString();
 
         string expectedRedisBicep = $$"""
-            @description('The location for the resource(s) to be deployed.')
-            param location string = resourceGroup().location
+@description('The location for the resource(s) to be deployed.')
+param location string = resourceGroup().location
 
-            param keyVaultName string
+param redisstate_kv_outputs_name string
 
-            resource redisState 'Microsoft.Cache/redis@2024-03-01' = {
-              name: take('redisState-${uniqueString(resourceGroup().id)}', 63)
-              location: location
-              properties: {
-                sku: {
-                  name: 'Basic'
-                  family: 'C'
-                  capacity: 1
-                }
-                enableNonSslPort: false
-                minimumTlsVersion: '1.2'
-              }
-              tags: {
-                'aspire-resource-name': 'redisState'
-              }
-            }
+resource redisState 'Microsoft.Cache/redis@2024-11-01' = {
+  name: take('redisState-${uniqueString(resourceGroup().id)}', 63)
+  location: location
+  properties: {
+    sku: {
+      name: 'Basic'
+      family: 'C'
+      capacity: 1
+    }
+    enableNonSslPort: false
+    minimumTlsVersion: '1.2'
+  }
+  tags: {
+    'aspire-resource-name': 'redisState'
+  }
+}
 
-            resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-              name: keyVaultName
-            }
+resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
+  name: redisstate_kv_outputs_name
+}
 
-            resource connectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-              name: 'connectionstrings--redisState'
-              properties: {
-                value: '${redisState.properties.hostName},ssl=true,password=${redisState.listKeys().primaryKey}'
-              }
-              parent: keyVault
-            }
+resource connectionString 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  name: 'connectionstrings--redisState'
+  properties: {
+    value: '${redisState.properties.hostName},ssl=true,password=${redisState.listKeys().primaryKey}'
+  }
+  parent: keyVault
+}
 
-            resource redisPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-              name: 'redis-password'
-              properties: {
-                value: redisState.listKeys().primaryKey
-              }
-              parent: keyVault
-            }
+resource redisPassword 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = {
+  name: 'redis-password'
+  properties: {
+    value: redisState.listKeys().primaryKey
+  }
+  parent: keyVault
+}
 
-            output name string = redisState.name
+output name string = redisState.name
 
-            output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
+output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
 
-            output redisKeyVaultName string = keyVaultName
-            """;
+output redisKeyVaultName string = redisstate_kv_outputs_name
+""";
 
-        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+        Assert.Equal(expectedRedisBicep.ReplaceLineEndings(), redisBicep.ReplaceLineEndings());
 
         var componentResources = appModel.Resources.OfType<AzureDaprComponentResource>();
         var daprResource = Assert.Single(componentResources, _ => _.Name == "redisDaprComponent");
@@ -86,48 +86,48 @@ public class ResourceCreationTests
         string daprBicep = daprResource.GetBicepTemplateString();
 
         string expectedDaprBicep = $$"""
-            @description('The location for the resource(s) to be deployed.')
-            param location string = resourceGroup().location
+@description('The location for the resource(s) to be deployed.')
+param location string = resourceGroup().location
 
-            param redisHost string
+param redisHost string
 
-            param secretStoreComponent string
+param secretStoreComponent string
 
-            var resourceToken = uniqueString(resourceGroup().id)
+var resourceToken = uniqueString(resourceGroup().id)
 
-            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
-              name: 'cae-${resourceToken}'
-            }
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' existing = {
+  name: 'cae-${resourceToken}'
+}
 
-            resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
-              name: 'statestore'
-              properties: {
-                componentType: 'state.redis'
-                metadata: [
-                  {
-                    name: 'redisHost'
-                    value: redisHost
-                  }
-                  {
-                    name: 'enableTLS'
-                    value: 'true'
-                  }
-                  {
-                    name: 'actorStateStore'
-                    value: 'true'
-                  }
-                  {
-                    name: 'redisPassword'
-                    secretRef: 'redis-password'
-                  }
-                ]
-                secretStoreComponent: secretStoreComponent
-                version: 'v1'
-              }
-              parent: containerAppEnvironment
-            }
-            """;
-        Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
+resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2025-01-01' = {
+  name: 'statestore'
+  properties: {
+    componentType: 'state.redis'
+    metadata: [
+      {
+        name: 'redisHost'
+        value: redisHost
+      }
+      {
+        name: 'enableTLS'
+        value: 'true'
+      }
+      {
+        name: 'actorStateStore'
+        value: 'true'
+      }
+      {
+        name: 'redisPassword'
+        secretRef: 'redis-password'
+      }
+    ]
+    secretStoreComponent: secretStoreComponent
+    version: 'v1'
+  }
+  parent: containerAppEnvironment
+}
+""";
+        Assert.Equal(expectedDaprBicep.ReplaceLineEndings(), daprBicep.ReplaceLineEndings());
 
     }
 
@@ -154,7 +154,7 @@ public class ResourceCreationTests
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
-            resource redisState 'Microsoft.Cache/redis@2024-03-01' = {
+            resource redisState 'Microsoft.Cache/redis@2024-11-01' = {
               name: take('redisState-${uniqueString(resourceGroup().id)}', 63)
               location: location
               properties: {
@@ -182,7 +182,7 @@ public class ResourceCreationTests
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
             """;
 
-        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+        Assert.Equal(expectedRedisBicep.ReplaceLineEndings(), redisBicep.ReplaceLineEndings());
 
 
         var componentResources = appModel.Resources.OfType<AzureDaprComponentResource>();
@@ -200,11 +200,11 @@ public class ResourceCreationTests
 
             var resourceToken = uniqueString(resourceGroup().id)
 
-            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+            resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2025-01-01' existing = {
               name: 'cae-${resourceToken}'
             }
 
-            resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2024-03-01' = {
+            resource redisDaprComponent 'Microsoft.App/managedEnvironments/daprComponents@2025-01-01' = {
               name: 'statestore'
               properties: {
                 componentType: 'state.redis'
@@ -237,7 +237,7 @@ public class ResourceCreationTests
             """;
 
 
-        Assert.Equal(NormalizeLineEndings(expectedDaprBicep), NormalizeLineEndings(daprBicep));
+        Assert.Equal(expectedDaprBicep.ReplaceLineEndings(), daprBicep.ReplaceLineEndings());
 
     }
 
@@ -270,7 +270,7 @@ public class ResourceCreationTests
             @description('The location for the resource(s) to be deployed.')
             param location string = resourceGroup().location
 
-            resource redisState 'Microsoft.Cache/redis@2024-03-01' = {
+            resource redisState 'Microsoft.Cache/redis@2024-11-01' = {
               name: take('redisState-${uniqueString(resourceGroup().id)}', 63)
               location: location
               properties: {
@@ -299,7 +299,7 @@ public class ResourceCreationTests
             """;
 
 
-        Assert.Equal(NormalizeLineEndings(expectedRedisBicep), NormalizeLineEndings(redisBicep));
+        Assert.Equal(expectedRedisBicep.ReplaceLineEndings(), redisBicep.ReplaceLineEndings());
     }
 
     [Fact]
@@ -316,9 +316,4 @@ public class ResourceCreationTests
 
         Assert.Contains("Unsupported Dapr component type: pubsub", ex.Message);
     }
-    public static string NormalizeLineEndings(string input)
-    {
-        return input.Replace("\r\n", "\n");
-    }
-
 }

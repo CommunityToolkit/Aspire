@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr.Tests;
+
 public class AzureDaprPublishingHelperTests
 {
     [Fact]
@@ -22,9 +23,11 @@ public class AzureDaprPublishingHelperTests
                 .WithReference(daprState)
                 .WithDaprSidecar();
 
+        builder.AddAzureContainerAppEnvironment("name-env");
+
         using var app = builder.Build();
 
-       await ExecuteBeforeStartHooksAsync(app, default);
+        await ExecuteBeforeStartHooksAsync(app, default);
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
