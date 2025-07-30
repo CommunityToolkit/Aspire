@@ -168,7 +168,7 @@ public class AddDbGateTests
         }
         else
         {
-            Assert.Equal(Path.GetFullPath("/data/dbgate", appBuilder.AppHostDirectory), mountAnnotation.Source);
+            Assert.Equal("/data/dbgate", mountAnnotation.Source);
             Assert.Equal(ContainerMountType.BindMount, mountAnnotation.Type);
             Assert.False(mountAnnotation.IsReadOnly);
         }
