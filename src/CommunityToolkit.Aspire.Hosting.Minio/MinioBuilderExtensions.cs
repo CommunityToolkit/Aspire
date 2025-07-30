@@ -46,8 +46,8 @@ public static class MinioBuilderExtensions
             .WithImageRegistry(MinioContainerImageTags.Registry)
             .WithHttpEndpoint(targetPort: 9000, port: port, name: MinioContainerResource.PrimaryEndpointName)
             .WithHttpEndpoint(targetPort: consoleTargetPort, name: MinioContainerResource.ConsoleEndpointName)
-            .WithEnvironment(RootUserEnvVarName, resource.RootUser.Value)
-            .WithEnvironment(RootPasswordEnvVarName, resource.PasswordParameter.Value)
+            .WithEnvironment(RootUserEnvVarName, $"{resource.RootUser}")
+            .WithEnvironment(RootPasswordEnvVarName, $"{resource.PasswordParameter}")
             .WithArgs("server", "/data", "--console-address", $":{consoleTargetPort}");
 
         var endpoint = builderWithResource.Resource.GetEndpoint(MinioContainerResource.PrimaryEndpointName);

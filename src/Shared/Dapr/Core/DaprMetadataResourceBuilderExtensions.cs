@@ -28,6 +28,7 @@ public static class DaprMetadataResourceBuilderExtensions
                 Name = name,
                 Value = value
             });
+            return Task.CompletedTask;
         }));
 
 
@@ -42,7 +43,7 @@ public static class DaprMetadataResourceBuilderExtensions
     {
         if (parameterResource.Secret)
         {
-            return builder.WithAnnotation(new DaprComponentSecretAnnotation(parameterResource.Name, parameterResource.Value))
+            return builder.WithAnnotation(new DaprComponentSecretAnnotation(parameterResource.Name, parameterResource))
                           .WithAnnotation(new DaprComponentConfigurationAnnotation(schema =>
                           {
                               var existing = schema.Spec.Metadata.Find(m => m.Name == name);
@@ -59,9 +60,22 @@ public static class DaprMetadataResourceBuilderExtensions
                                       Key = parameterResource.Name
                                   }
                               });
+                              return Task.CompletedTask;
                           }));
         }
 
-        return builder.WithMetadata(name, parameterResource.Value);
+        return builder.WithAnnotation(new DaprComponentConfigurationAnnotation(async schema =>
+        {
+            var existing = schema.Spec.Metadata.Find(m => m.Name == name);
+            if (existing is not null)
+            {
+                schema.Spec.Metadata.Remove(existing);
+            }
+            schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValue
+            {
+                Name = name,
+                Value = (await ((IValueProvider)parameterResource).GetValueAsync(default))!
+            });
+        }));
     }
 }

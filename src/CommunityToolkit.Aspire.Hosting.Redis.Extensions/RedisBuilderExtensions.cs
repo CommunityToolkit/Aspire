@@ -65,7 +65,8 @@ public static class RedisBuilderExtensions
 
             // DbGate assumes Redis is being accessed over a default Aspire container network and hardcodes the resource address
             var redisUrl = redisResource.PasswordParameter is not null ?
-                $"redis://:{redisResource.PasswordParameter.Value}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
+                ReferenceExpression.Create($"redis://:{redisResource.PasswordParameter}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}") : 
+                ReferenceExpression.Create($"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}");
 
             context.EnvironmentVariables.Add($"LABEL_redis{counter}", redisResource.Name);
             context.EnvironmentVariables.Add($"URL_redis{counter}", redisUrl);
