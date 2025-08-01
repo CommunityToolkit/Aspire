@@ -13,5 +13,6 @@ public enum McpTransportType
     /// <summary>
     /// The MCP server uses Server Sent Events (SSE) as the transport type.
     /// </summary>
+    [Obsolete("SSE Transport is deprecated in the MCP spec, use StreamableHttp instead. This will be removed in the next release.")]
     Sse
 }
