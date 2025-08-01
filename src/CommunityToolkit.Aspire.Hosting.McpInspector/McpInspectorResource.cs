@@ -37,7 +37,7 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// <summary>
     /// Gets the version of the MCP Inspector.
     /// </summary>
-    public const string InspectorVersion = "0.15.0";
+    public const string InspectorVersion = "0.16.2";
 
     private readonly List<McpServerMetadata> _mcpServers = [];
 
