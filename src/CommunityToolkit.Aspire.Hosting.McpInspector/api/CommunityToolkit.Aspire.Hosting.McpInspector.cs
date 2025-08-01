@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class McpInspectorResourceBuilderExtensions
     {
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, int clientPort = 6274, int serverPort = 6277) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = "0.16.2") { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithMcpServer<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, ApplicationModel.IResourceBuilder<TResource> mcpServer, bool isDefault = true, McpTransportType transportType = McpTransportType.StreamableHttp)
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }
@@ -28,7 +28,7 @@ namespace Aspire.Hosting.ApplicationModel
     public partial class McpInspectorResource : ExecutableResource
     {
         public const string ClientEndpointName = "client";
-        public const string InspectorVersion = "0.15.0";
+        public const string InspectorVersion = "0.16.2";
         public const string ServerProxyEndpointName = "server-proxy";
         public McpInspectorResource(string name) : base(default!, default!, default!) { }
 
