@@ -14,10 +14,11 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="name">The name of the MCP Inspector container resource.</param>
     /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>
     /// <param name="serverPort">The port for the server proxy application. Defaults to 6277.</param>
-    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int clientPort = 6274, int serverPort = 6277)
+    /// <param name="inspectorVersion">The version of the Inspector app to use</param>
+    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = McpInspectorResource.InspectorVersion)
     {
         var resource = builder.AddResource(new McpInspectorResource(name))
-            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{McpInspectorResource.InspectorVersion}"])
+            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{inspectorVersion}"])
             .ExcludeFromManifest()
             .WithHttpEndpoint(isProxied: false, port: clientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: serverPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
