@@ -53,7 +53,9 @@ public static class McpInspectorResourceBuilderExtensions
                 transport = s.TransportType switch
                 {
                     McpTransportType.StreamableHttp => "streamable-http",
+#pragma warning disable CS0618
                     McpTransportType.Sse => "sse",
+#pragma warning restore CS0618
                     _ => throw new NotSupportedException($"The transport type {s.TransportType} is not supported.")
                 },
                 endpoint = s.Endpoint.Url
