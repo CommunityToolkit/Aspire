@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
@@ -15,16 +16,17 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>
     /// <param name="serverPort">The port for the server proxy application. Defaults to 6277.</param>
     /// <param name="inspectorVersion">The version of the Inspector app to use</param>
-    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = McpInspectorResource.InspectorVersion)
+    /// <param name="proxyToken">The parameter used to provide the proxy authentication token for the MCP Inspector resource. If <see langword="null"/> a random token will be generated.</param>
+    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = McpInspectorResource.InspectorVersion, IResourceBuilder<ParameterResource>? proxyToken = null)
     {
+        var proxyTokenParameter = proxyToken?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-proxyToken");
+
         var resource = builder.AddResource(new McpInspectorResource(name))
             .WithArgs(["-y", $"@modelcontextprotocol/inspector@{inspectorVersion}"])
             .ExcludeFromManifest()
             .WithHttpEndpoint(isProxied: false, port: clientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: serverPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
-            .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true")
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
-            .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName)
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
                 annotation.DisplayText = "Client";
@@ -34,7 +36,45 @@ public static class McpInspectorResourceBuilderExtensions
             {
                 annotation.DisplayText = "Server Proxy";
                 annotation.DisplayOrder = 1;
+                annotation.DisplayLocation = UrlDisplayLocation.DetailsOnly;
+            })
+            .WithUrls(async context =>
+            {
+                var token = await proxyTokenParameter.GetValueAsync(CancellationToken.None);
+                
+                foreach (var url in context.Urls)
+                {
+                    if (url.Endpoint is not null)
+                    {
+                        var uriBuilder = new UriBuilder(url.Url);
+                        uriBuilder.Query = $"MCP_PROXY_AUTH_TOKEN={Uri.EscapeDataString(token!)}";
+                        url.Url = uriBuilder.ToString();
+                    }
+                }
             });
+
+        resource.Resource.ProxyTokenParameter = proxyTokenParameter;
+
+        // Add authenticated health check for server proxy /config endpoint
+        var healthCheckKey = $"{name}_proxy_config_check";
+        builder.Services.AddHealthChecks().AddUrlGroup(options =>
+        {
+            var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
+            var uri = serverProxyEndpoint.Url;
+            if (uri is null)
+            {
+                throw new DistributedApplicationException("The MCP Inspector 'server-proxy' endpoint URL is not set. Ensure that the resource has been allocated before the health check is executed.");
+            }
+
+            var healthCheckUri = new Uri(new Uri(uri), "/config");
+            options.AddUri(healthCheckUri, async setup =>
+            {
+                var token = await proxyTokenParameter.GetValueAsync(CancellationToken.None);
+                setup.AddCustomHeader("X-MCP-Proxy-Auth", $"Bearer {token}");
+            });
+        }, healthCheckKey);
+
+        resource.WithHealthCheck(healthCheckKey);
 
         builder.Eventing.Subscribe<BeforeResourceStartedEvent>(resource.Resource, async (@event, ct) =>
         {
@@ -80,6 +120,7 @@ public static class McpInspectorResourceBuilderExtensions
                 ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = serverProxyEndpoint.Url;
                 ctx.EnvironmentVariables["CLIENT_PORT"] = clientEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'client' endpoint must have a target port defined.");
                 ctx.EnvironmentVariables["SERVER_PORT"] = serverProxyEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'server-proxy' endpoint must have a target port defined.");
+                ctx.EnvironmentVariables["MCP_PROXY_AUTH_TOKEN"] = proxyTokenParameter;
             })
             .WithArgs(ctx =>
             {
@@ -89,7 +130,6 @@ public static class McpInspectorResourceBuilderExtensions
                 {
                     throw new InvalidOperationException("No default MCP server has been configured for the MCP Inspector resource, yet servers have been provided.");
                 }
-
 
                 if (defaultMcpServer is null && inspectorResource.McpServers.Count == 0)
                 {

@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.McpInspector.Tests;
 
@@ -115,5 +116,70 @@ public class McpInspectorResourceBuilderExtensionsTests
         Assert.Equal(2, inspectorResource.McpServers.Count);
         Assert.NotNull(inspectorResource.DefaultMcpServer);
         Assert.Equal("mcpServer1", inspectorResource.DefaultMcpServer.Name);
+    }
+
+    [Fact]
+    public void AddMcpInspectorGeneratesProxyTokenParameter()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector");
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        Assert.NotNull(inspectorResource.ProxyTokenParameter);
+        Assert.Equal("inspector-proxyToken", inspectorResource.ProxyTokenParameter.Name);
+    }
+
+    [Fact]
+    public void AddMcpInspectorWithCustomProxyTokenUsesProvidedToken()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var customToken = appBuilder.AddParameter("custom-token", secret: true);
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", proxyToken: customToken);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        Assert.NotNull(inspectorResource.ProxyTokenParameter);
+        Assert.Equal("custom-token", inspectorResource.ProxyTokenParameter.Name);
+        Assert.Same(customToken.Resource, inspectorResource.ProxyTokenParameter);
+    }
+
+    [Fact]
+    public void AddMcpInspectorSetsCorrectEnvironmentVariables()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", clientPort: 1234, serverPort: 5678);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        // Verify endpoints are configured correctly
+        var clientEndpoint = inspectorResource.Annotations.OfType<EndpointAnnotation>()
+            .Single(e => e.Name == McpInspectorResource.ClientEndpointName);
+        var serverEndpoint = inspectorResource.Annotations.OfType<EndpointAnnotation>()
+            .Single(e => e.Name == McpInspectorResource.ServerProxyEndpointName);
+
+        Assert.Equal(1234, clientEndpoint.Port);
+        Assert.Equal(5678, serverEndpoint.Port);
     }
 }
