@@ -53,6 +53,11 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// </summary>
     public McpServerMetadata? DefaultMcpServer => _defaultMcpServer;
 
+    /// <summary>
+    /// Gets or sets the parameter that contains the MCP proxy authentication token.
+    /// </summary>
+    public ParameterResource ProxyTokenParameter { get; set; } = default!;
+
     internal void AddMcpServer(IResourceWithEndpoints mcpServer, bool isDefault, McpTransportType transportType)
     {
         if (_mcpServers.Any(s => s.Name == mcpServer.Name))
