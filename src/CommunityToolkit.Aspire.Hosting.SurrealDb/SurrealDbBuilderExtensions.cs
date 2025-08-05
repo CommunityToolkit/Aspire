@@ -19,6 +19,7 @@ public static class SurrealDbBuilderExtensions
     private const int SurrealDbPort = 8000;
     private const string UserEnvVarName = "SURREAL_USER";
     private const string PasswordEnvVarName = "SURREAL_PASS";
+    private const string ImportFileEnvVarName = "SURREAL_IMPORT_FILE";
 
     /// <summary>
     /// Adds a SurrealDB resource to the application model. A container is used for local development.
@@ -265,6 +266,37 @@ public static class SurrealDbBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(source);
 
         return builder.WithBindMount(source, "/data");
+    }
+    
+    /// <summary>
+    /// Copies init files into a SurrealDB container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="source">The source file on the host to copy into the container.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <exception cref="DistributedApplicationException">SurrealDB only support importing a single script file.</exception>
+    public static IResourceBuilder<SurrealDbServerResource> WithInitFiles(this IResourceBuilder<SurrealDbServerResource> builder, string source)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(source);
+
+        const string initPath = "/docker-entrypoint-initdb.d";
+
+        var importFullPath = Path.GetFullPath(source, builder.ApplicationBuilder.AppHostDirectory);
+        if (Directory.Exists(importFullPath) || !File.Exists(importFullPath))
+        {
+            throw new DistributedApplicationException($"Unable to determine the file name for '{source}'.");
+        }
+        
+        string fileName = Path.GetFileName(importFullPath);
+        string initFilePath = $"{initPath}/{fileName}";
+        
+        return builder
+            .WithContainerFiles(initPath, importFullPath)
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables[ImportFileEnvVarName] = initFilePath;
+            });
     }
 
     /// <summary>

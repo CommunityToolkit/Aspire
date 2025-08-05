@@ -5,9 +5,14 @@ using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Bogus;
+using CommunityToolkit.Aspire.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Polly;
 using SurrealDb.Net;
+using SurrealDb.Net.Exceptions;
+using System.Data;
 using Xunit.Abstractions;
 using SurrealRecord = SurrealDb.Net.Models.Record;
 
@@ -33,7 +38,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task VerifySurrealDbResource()
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         var ct = cts.Token;
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
@@ -70,7 +75,8 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        var ct = cts.Token;
 
         string? volumeName = null;
         string? bindMountPath = null;
@@ -110,30 +116,30 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
             using (var app = builder1.Build())
             {
-                await app.StartAsync(cts.Token);
+                await app.StartAsync(ct);
 
-                await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer1.Resource.Name, cts.Token);
-                await app.ResourceNotifications.WaitForResourceHealthyAsync(db1.Resource.Name, cts.Token);
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer1.Resource.Name, ct);
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(db1.Resource.Name, ct);
 
                 try
                 {
                     var hb = Host.CreateApplicationBuilder();
 
-                    hb.Configuration[$"ConnectionStrings:{db1.Resource.Name}"] = await db1.Resource.ConnectionStringExpression.GetValueAsync(cts.Token);
+                    hb.Configuration[$"ConnectionStrings:{db1.Resource.Name}"] = await db1.Resource.ConnectionStringExpression.GetValueAsync(ct);
 
                     hb.AddSurrealClient(db1.Resource.Name);
 
                     using var host = hb.Build();
-                    await host.StartAsync(cts.Token);
+                    await host.StartAsync(ct);
 
                     await using var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
-                    await CreateTestData(surrealDbClient, cts.Token);
-                    await AssertTestData(surrealDbClient, cts.Token);
+                    await CreateTestData(surrealDbClient, ct);
+                    await AssertTestData(surrealDbClient, ct);
                 }
                 finally
                 {
                     // Stops the container, or the Volume would still be in use
-                    await app.StopAsync(cts.Token);
+                    await app.StopAsync(ct);
                 }
             }
 
@@ -159,28 +165,28 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
             using (var app = builder2.Build())
             {
-                await app.StartAsync(cts.Token);
+                await app.StartAsync(ct);
 
-                await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer2.Resource.Name, cts.Token);
-                await app.ResourceNotifications.WaitForResourceHealthyAsync(db2.Resource.Name, cts.Token);
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(surrealServer2.Resource.Name, ct);
+                await app.ResourceNotifications.WaitForResourceHealthyAsync(db2.Resource.Name, ct);
 
                 try
                 {
                     var hb = Host.CreateApplicationBuilder();
 
-                    hb.Configuration[$"ConnectionStrings:{db2.Resource.Name}"] = await db2.Resource.ConnectionStringExpression.GetValueAsync(cts.Token);
+                    hb.Configuration[$"ConnectionStrings:{db2.Resource.Name}"] = await db2.Resource.ConnectionStringExpression.GetValueAsync(ct);
 
                     hb.AddSurrealClient(db2.Resource.Name);
 
                     using var host = hb.Build();
-                    await host.StartAsync(cts.Token);
+                    await host.StartAsync(ct);
                     await using var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
-                    await AssertTestData(surrealDbClient, cts.Token);
+                    await AssertTestData(surrealDbClient, ct);
                 }
                 finally
                 {
                     // Stops the container, or the Volume would still be in use
-                    await app.StopAsync(cts.Token);
+                    await app.StopAsync(ct);
                 }
             }
 
@@ -209,14 +215,11 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task VerifyWaitForOnSurrealDbBlocksDependentResources()
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
-        builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () =>
-        {
-            return healthCheckTcs.Task;
-        });
+        builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () => healthCheckTcs.Task);
 
         var resource = builder.AddSurrealServer("resource")
             .WithHealthCheck("blocking_check");
@@ -244,6 +247,93 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await app.StopAsync();
     }
+    
+    [Fact]
+    public async Task VerifyWithInitFiles()
+    {
+        // Creates a script that should be executed when the container is initialized.
+    
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        var pipeline = new ResiliencePipelineBuilder()
+            .AddRetry(new() { MaxRetryAttempts = 10, BackoffType = DelayBackoffType.Linear, Delay = TimeSpan.FromSeconds(2), ShouldHandle = new PredicateBuilder().Handle<SurrealDbException>() })
+            .Build();
+    
+        var initDirPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+    
+        Directory.CreateDirectory(initDirPath);
+        
+        var initFilePath = Path.Combine(initDirPath, "init.surql");
+    
+        var surrealNsName = "ns1";
+        var surrealDbName = "db1";
+        
+        try
+        {
+            await File.WriteAllTextAsync(
+                initFilePath, 
+        $"""
+                USE NS {surrealNsName};
+                USE DB {surrealDbName};
+                
+                CREATE car SET Brand = "BatMobile";
+                """, 
+                cts.Token
+            );
+    
+            using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+    
+            var surrealServer = builder
+                .AddSurrealServer("surreal")
+                .WithInitFiles(initFilePath);
+    
+            var ns = surrealServer.AddNamespace(surrealNsName);
+            var db = ns.AddDatabase(surrealDbName);
+    
+            using var app = builder.Build();
+    
+            await app.StartAsync(cts.Token);
+                
+            var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+            
+            await rns.WaitForResourceAsync(db.Resource.Name, KnownResourceStates.Running, cts.Token);
+    
+            var hb = Host.CreateApplicationBuilder();
+    
+            hb.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"ConnectionStrings:{db.Resource.Name}"] = await db.Resource.ConnectionStringExpression.GetValueAsync(cts.Token)
+            });
+    
+            hb.AddSurrealClient(db.Resource.Name);
+    
+            using var host = hb.Build();
+    
+            await host.StartAsync(cts.Token);
+
+            // Wait until the database is available
+            await rns.WaitForResourceHealthyAsync(db.Resource.Name, cts.Token);
+    
+            await pipeline.ExecuteAsync(async token =>
+            {
+                var client = host.Services.GetRequiredService<SurrealDbClient>();
+
+                var cars = (await client.Select<Car>(Car.Table, token)).ToList();
+                var car = Assert.Single(cars);
+                Assert.Equal("BatMobile", car.Brand);
+            }, cts.Token);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(initDirPath);
+            }
+            catch
+            {
+                // Don't fail test if we can't clean the temporary folder
+            }
+        }
+    }
 
     private static async Task CreateTestData(SurrealDbClient surrealDbClient, CancellationToken ct)
     {
@@ -252,10 +342,10 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
     private static async Task AssertTestData(SurrealDbClient surrealDbClient, CancellationToken ct)
     {
-        var records = await surrealDbClient.Select<Todo>(Todo.Table);
+        var records = await surrealDbClient.Select<Todo>(Todo.Table, ct);
         Assert.Equal(_generatedTodoCount, records.Count());
 
-        var firstRecord = await surrealDbClient.Select<Todo>((Todo.Table, "1"));
+        var firstRecord = await surrealDbClient.Select<Todo>((Todo.Table, "1"), ct);
         Assert.NotNull(firstRecord);
         Assert.Equivalent(firstRecord, _todoList[0]);
     }
@@ -277,5 +367,12 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             RuleFor(o => o.DueBy, f => f.Date.SoonDateOnly());
             RuleFor(o => o.IsComplete, f => f.Random.Bool());
         }
+    }
+
+    private sealed class Car : SurrealRecord
+    {
+        internal const string Table = "car";
+
+        public string Brand { get; set; } = string.Empty;
     }
 }
