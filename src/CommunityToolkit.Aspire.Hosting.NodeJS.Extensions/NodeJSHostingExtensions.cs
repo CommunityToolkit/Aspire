@@ -290,6 +290,10 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
+            // Make the workspace resource wait for the installer to complete
+            // This ensures all apps that wait for the workspace will wait for package installation
+            resource.WaitFor(installerBuilder);
+
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -315,6 +319,9 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
+            // Make the workspace resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
+
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -339,6 +346,9 @@ public static class NodeJSHostingExtensions
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
+
+            // Make the workspace resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
 
             configureInstaller?.Invoke(installerBuilder);
         }
@@ -366,6 +376,9 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
+            // Make the workspace resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
+
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -391,6 +404,9 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
+            // Make the workspace resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
+
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -415,6 +431,9 @@ public static class NodeJSHostingExtensions
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
+
+            // Make the workspace resource wait for the installer to complete
+            resource.WaitFor(installerBuilder);
 
             configureInstaller?.Invoke(installerBuilder);
         }

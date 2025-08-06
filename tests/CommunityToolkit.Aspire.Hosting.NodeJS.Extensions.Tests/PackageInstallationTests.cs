@@ -318,6 +318,48 @@ public class PackageInstallationTests
     }
 
     [Fact]
+    public void NxWorkspaceWaitsForPackageInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+            .WithNpmPackageInstaller();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
+        var installerResource = Assert.Single(appModel.Resources.OfType<NpmInstallerResource>());
+
+        // Verify nx workspace waits for installer
+        Assert.True(nxResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Equal(installerResource, waitAnnotation.Resource);
+    }
+
+    [Fact]
+    public void TurborepoWorkspaceWaitsForPackageInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+            .WithYarnPackageInstaller();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var turborepoResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
+        var installerResource = Assert.Single(appModel.Resources.OfType<YarnInstallerResource>());
+
+        // Verify turborepo workspace waits for installer
+        Assert.True(turborepoResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Equal(installerResource, waitAnnotation.Resource);
+    }
+
+    [Fact]
     public void MonorepoPackageInstallersExcludedFromPublishMode()
     {
         var builder = DistributedApplication.CreateBuilder(["Publishing:Publisher=manifest", "Publishing:OutputPath=./publish"]);
