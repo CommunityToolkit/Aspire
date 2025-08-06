@@ -169,4 +169,176 @@ public class PackageInstallationTests
             arg => Assert.Equal("--frozen-lockfile", arg)
         );
     }
+    
+    [Fact]
+    public async Task AddNxApp_CreatesNxResourceAndAppsWithSharedInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+            .WithNpmPackageInstaller();
+
+        var app1 = nx.AddApp("app1");
+        var app2 = nx.AddApp("app2", appName: "app-2");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify NxResource exists
+        var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
+        Assert.Equal("nx", nxResource.Name);
+
+        // Verify NxAppResources exist
+        var nxAppResources = appModel.Resources.OfType<NxAppResource>().ToList();
+        Assert.Equal(2, nxAppResources.Count);
+
+        var app1Resource = nxAppResources.Single(r => r.Name == "app1");
+        var app2Resource = nxAppResources.Single(r => r.Name == "app2");
+
+        Assert.Equal("app1", app1Resource.AppName);
+        Assert.Equal("app-2", app2Resource.AppName);
+        Assert.Equal("nx", app1Resource.Command);
+        Assert.Equal("nx", app2Resource.Command);
+
+        // Verify arguments
+        var app1Args = await app1Resource.GetArgumentValuesAsync();
+        Assert.Collection(app1Args,
+            arg => Assert.Equal("serve", arg),
+            arg => Assert.Equal("app1", arg));
+
+        var app2Args = await app2Resource.GetArgumentValuesAsync();
+        Assert.Collection(app2Args,
+            arg => Assert.Equal("serve", arg),
+            arg => Assert.Equal("app-2", arg));
+
+        // Verify only one installer was created
+        var installerResources = appModel.Resources.OfType<NpmInstallerResource>().ToList();
+        var installerResource = Assert.Single(installerResources);
+        Assert.Equal("nx-npm-install", installerResource.Name);
+
+        // Verify installer arguments
+        var installerArgs = await installerResource.GetArgumentValuesAsync();
+        Assert.Single(installerArgs);
+        Assert.Equal("install", installerArgs[0]);
+    }
+
+    [Fact]
+    public async Task AddTurborepoApp_CreatesResourcesWithSharedInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+            .WithYarnPackageInstaller();
+
+        var app1 = turbo.AddApp("app1");
+        var app2 = turbo.AddApp("app2", filter: "custom-filter");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify TurborepoResource exists
+        var turborepoResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
+        Assert.Equal("turbo", turborepoResource.Name);
+
+        // Verify TurborepoAppResources exist
+        var turborepoAppResources = appModel.Resources.OfType<TurborepoAppResource>().ToList();
+        Assert.Equal(2, turborepoAppResources.Count);
+
+        var app1Resource = turborepoAppResources.Single(r => r.Name == "app1");
+        var app2Resource = turborepoAppResources.Single(r => r.Name == "app2");
+
+        Assert.Equal("app1", app1Resource.Filter);
+        Assert.Equal("custom-filter", app2Resource.Filter);
+        Assert.Equal("turbo", app1Resource.Command);
+        Assert.Equal("turbo", app2Resource.Command);
+
+        // Verify arguments
+        var app1Args = await app1Resource.GetArgumentValuesAsync();
+        Assert.Collection(app1Args,
+            arg => Assert.Equal("run", arg),
+            arg => Assert.Equal("dev", arg),
+            arg => Assert.Equal("--filter", arg),
+            arg => Assert.Equal("app1", arg));
+
+        var app2Args = await app2Resource.GetArgumentValuesAsync();
+        Assert.Collection(app2Args,
+            arg => Assert.Equal("run", arg),
+            arg => Assert.Equal("dev", arg),
+            arg => Assert.Equal("--filter", arg),
+            arg => Assert.Equal("custom-filter", arg));
+
+        // Verify only one installer was created
+        var installerResources = appModel.Resources.OfType<YarnInstallerResource>().ToList();
+        var installerResource = Assert.Single(installerResources);
+        Assert.Equal("turbo-yarn-install", installerResource.Name);
+    }
+
+    [Fact]
+    public void NxAppsWaitForNxResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nx = builder.AddNxApp("nx", workingDirectory: "../frontend");
+        var app1 = nx.AddApp("app1");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
+        var app1Resource = Assert.Single(appModel.Resources.OfType<NxAppResource>());
+
+        // Verify app1 waits for nx resource
+        Assert.True(app1Resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Equal(nxResource, waitAnnotation.Resource);
+    }
+
+    [Fact]
+    public void TurborepoAppsWaitForTurborepoResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend");
+        var app1 = turbo.AddApp("app1");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var turborepoResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
+        var app1Resource = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
+
+        // Verify app1 waits for turborepo resource
+        Assert.True(app1Resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        var waitAnnotation = Assert.Single(waitAnnotations);
+        Assert.Equal(turborepoResource, waitAnnotation.Resource);
+    }
+
+    [Fact]
+    public void MonorepoPackageInstallersExcludedFromPublishMode()
+    {
+        var builder = DistributedApplication.CreateBuilder(["Publishing:Publisher=manifest", "Publishing:OutputPath=./publish"]);
+
+        var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+            .WithNpmPackageInstaller();
+        var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+            .WithPnpmPackageInstaller();
+
+        nx.AddApp("app1");
+        turbo.AddApp("app2");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify no installer resources were created in publish mode
+        var npmInstallerResources = appModel.Resources.OfType<NpmInstallerResource>().ToList();
+        var pnpmInstallerResources = appModel.Resources.OfType<PnpmInstallerResource>().ToList();
+        
+        Assert.Empty(npmInstallerResources);
+        Assert.Empty(pnpmInstallerResources);
+    }
 }
