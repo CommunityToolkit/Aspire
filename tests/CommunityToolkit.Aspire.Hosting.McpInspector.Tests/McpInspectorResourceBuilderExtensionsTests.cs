@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.McpInspector.Tests;
 
@@ -29,6 +30,11 @@ public class McpInspectorResourceBuilderExtensionsTests
 
         var annotations = inspector.Resource.Annotations;
         Assert.Contains(ManifestPublishingCallbackAnnotation.Ignore, annotations);
+
+        // Assert that MCP_AUTO_OPEN_ENABLED is set to false
+        var envAnnotations = inspectorResource.Annotations.OfType<EnvironmentVariableAnnotation>();
+        var autoOpenEnvVar = Assert.Single(envAnnotations, e => e.Name == "MCP_AUTO_OPEN_ENABLED");
+        Assert.Equal("false", autoOpenEnvVar.Value);
     }
 
     [Fact]

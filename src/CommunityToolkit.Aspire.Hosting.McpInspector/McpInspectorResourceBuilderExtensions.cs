@@ -25,6 +25,7 @@ public static class McpInspectorResourceBuilderExtensions
             .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true")
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
             .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName)
+            .WithEnvironment("MCP_AUTO_OPEN_ENABLED", "false")
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
                 annotation.DisplayText = "Client";
