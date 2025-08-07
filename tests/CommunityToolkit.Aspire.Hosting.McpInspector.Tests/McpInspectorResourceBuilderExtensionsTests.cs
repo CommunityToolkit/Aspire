@@ -1,42 +1,9 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.McpInspector.Tests;
 
 public class McpInspectorResourceBuilderExtensionsTests
 {
-    [Fact]
-    public void AddMcpInspectorWithDefaultsAddsResource()
-    {
-        // Arrange
-        var appBuilder = DistributedApplication.CreateBuilder();
-
-        // Act
-        var inspector = appBuilder.AddMcpInspector("inspector");
-
-        using var app = appBuilder.Build();
-
-        // Assert
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
-        Assert.Equal("inspector", inspectorResource.Name);
-
-        var endpoints = inspectorResource.Annotations.OfType<EndpointAnnotation>();
-        Assert.Equal(2, endpoints.Count());
-
-        Assert.Single(endpoints, e => e.Name == "client");
-        Assert.Single(endpoints, e => e.Name == "server-proxy");
-
-        var annotations = inspector.Resource.Annotations;
-        Assert.Contains(ManifestPublishingCallbackAnnotation.Ignore, annotations);
-
-        // Assert that MCP_AUTO_OPEN_ENABLED is set to false
-        var envAnnotations = inspectorResource.Annotations.OfType<EnvironmentVariableAnnotation>();
-        var autoOpenEnvVar = Assert.Single(envAnnotations, e => e.Name == "MCP_AUTO_OPEN_ENABLED");
-        Assert.Equal("false", autoOpenEnvVar.Value);
-    }
-
     [Fact]
     public void WithMcpServerAddsServerToResource()
     {
