@@ -23,7 +23,8 @@ public class EnvironmentVariableHook(ILogger<EnvironmentVariableHook> logger) : 
         }
 
         var grpcEndpoint = collectorResource!.GetEndpoint(collectorResource!.GRPCEndpoint.EndpointName);
-        var httpEndpoint = collectorResource!.GetEndpoint(collectorResource!.HTTPEndpoint.EndpointName);
+        var grpcEndpoint = collectorResource.GetEndpoint(collectorResource.GRPCEndpoint.EndpointName);
+        var httpEndpoint = collectorResource.GetEndpoint(collectorResource.HTTPEndpoint.EndpointName);
 
         if (!resources.Any())
         {
