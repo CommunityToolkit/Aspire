@@ -93,13 +93,12 @@ runs:
         dotnet tool update -g linux-dev-certs
         dotnet linux-dev-certs install
 
-    - name: Setup Node projects
+    - name: Setup Node globals
       shell: bash
-      if: ${{ contains(inputs.name, 'StaticWebApps') }}
+      if: ${{ contains(inputs.name, 'Node') }}
       run: |
-        npm install -g @azure/static-web-apps-cli
-        cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
-        npm ci
+        npm install -g turbo
+        npm install -g nx
 
     - name: Login to docker
       uses: docker/login-action@v3
