@@ -3,6 +3,9 @@ using CommunityToolkit.Aspire.Hosting.Dapr;
 
 namespace Aspire.Hosting;
 
+/// <summary>
+/// Provides extension methods for <see cref="IDistributedApplicationBuilder"/> to add Dapr support.
+/// </summary>
 public static partial class IDistributedApplicationBuilderExtensions
 {
     /// <summary>
