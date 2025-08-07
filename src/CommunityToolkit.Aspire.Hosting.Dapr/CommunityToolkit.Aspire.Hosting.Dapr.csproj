@@ -5,13 +5,6 @@
     <Description>Dapr support for .NET Aspire.</Description>
   </PropertyGroup>
 
-<ItemGroup>
-  <Compile Include="$(SharedDir)\Dapr\Core\*.cs">
-    <Link>%(Filename)%(Extension)</Link>
-  </Compile>
-</ItemGroup>
-
-
   <ItemGroup>
     <Compile Include="$(SharedDir)\Utf8JsonWriterExtensions.cs" Link="Utils\Utf8JsonWriterExtensions.cs" />
   </ItemGroup>
