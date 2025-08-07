@@ -234,8 +234,9 @@ public static class NodeJSHostingExtensions
     /// <param name="builder">The Nx workspace resource builder.</param>
     /// <param name="name">The name of the app resource.</param>
     /// <param name="appName">The Nx app name to run. If not specified, uses the <paramref name="name"/>.</param>
+    /// <param name="configure">A function to configure the app resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NxAppResource> AddApp(this IResourceBuilder<NxResource> builder, [ResourceName] string name, string? appName = null)
+    public static IResourceBuilder<NxAppResource> AddApp(this IResourceBuilder<NxResource> builder, [ResourceName] string name, string? appName = null, Func<IResourceBuilder<NxAppResource>, IResourceBuilder<NxAppResource>>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -243,10 +244,14 @@ public static class NodeJSHostingExtensions
         appName ??= name;
         var resource = new NxAppResource(name, builder.Resource.WorkingDirectory, appName);
 
-        return builder.ApplicationBuilder.AddResource(resource)
+        var rb = builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
             .WithArgs("serve", appName)
-            .WaitFor(builder);
+            .WithParentRelationship(builder.Resource);
+
+        configure?.Invoke(rb);
+
+        return rb;
     }
 
     /// <summary>
@@ -255,8 +260,9 @@ public static class NodeJSHostingExtensions
     /// <param name="builder">The Turborepo workspace resource builder.</param>
     /// <param name="name">The name of the app resource.</param>
     /// <param name="filter">The Turborepo filter to use. If not specified, uses the <paramref name="name"/>.</param>
+    /// <param name="configure">A function to configure the app resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<TurborepoAppResource> AddApp(this IResourceBuilder<TurborepoResource> builder, [ResourceName] string name, string? filter = null)
+    public static IResourceBuilder<TurborepoAppResource> AddApp(this IResourceBuilder<TurborepoResource> builder, [ResourceName] string name, string? filter = null, Func<IResourceBuilder<TurborepoAppResource>, IResourceBuilder<TurborepoAppResource>>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -264,10 +270,14 @@ public static class NodeJSHostingExtensions
         filter ??= name;
         var resource = new TurborepoAppResource(name, builder.Resource.WorkingDirectory, filter);
 
-        return builder.ApplicationBuilder.AddResource(resource)
+        var rb = builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
             .WithArgs("run", "dev", "--filter", filter)
-            .WaitFor(builder);
+            .WithParentRelationship(builder.Resource);
+
+        configure?.Invoke(rb);
+
+        return rb;
     }
 
     /// <summary>
