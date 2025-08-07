@@ -26,13 +26,14 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs([useCI ? "ci" : "install"])
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -55,13 +56,14 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -84,13 +86,14 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -114,10 +117,11 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs([useCI ? "ci" : "install"])
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -140,10 +144,11 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -166,10 +171,11 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -193,10 +199,11 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs([useCI ? "ci" : "install"])
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -219,10 +226,11 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;
@@ -245,10 +253,11 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest()
-                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+                .ExcludeFromManifest();
 
             configureInstaller?.Invoke(installerBuilder);
+
+            resource.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
         }
 
         return resource;

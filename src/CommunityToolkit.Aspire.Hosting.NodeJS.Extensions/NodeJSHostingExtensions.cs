@@ -189,7 +189,7 @@ public static partial class NodeJSHostingExtensions
 
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
         {
-            rb.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
+            rb.WaitForCompletion(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
         }
 
         configure?.Invoke(rb);
