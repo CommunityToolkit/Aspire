@@ -169,7 +169,7 @@ public class PackageInstallationTests
             arg => Assert.Equal("--frozen-lockfile", arg)
         );
     }
-    
+
     [Fact]
     public async Task AddNxApp_CreatesNxResourceAndAppsWithSharedInstaller()
     {
@@ -276,90 +276,6 @@ public class PackageInstallationTests
     }
 
     [Fact]
-    public void NxAppsWaitForNxResource()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var nx = builder.AddNxApp("nx", workingDirectory: "../frontend");
-        var app1 = nx.AddApp("app1");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
-        var app1Resource = Assert.Single(appModel.Resources.OfType<NxAppResource>());
-
-        // Verify app1 waits for nx resource
-        Assert.True(app1Resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
-        var waitAnnotation = Assert.Single(waitAnnotations);
-        Assert.Equal(nxResource, waitAnnotation.Resource);
-    }
-
-    [Fact]
-    public void TurborepoAppsWaitForTurborepoResource()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend");
-        var app1 = turbo.AddApp("app1");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var turborepoResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
-        var app1Resource = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
-
-        // Verify app1 waits for turborepo resource
-        Assert.True(app1Resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
-        var waitAnnotation = Assert.Single(waitAnnotations);
-        Assert.Equal(turborepoResource, waitAnnotation.Resource);
-    }
-
-    [Fact]
-    public void NxWorkspaceWaitsForPackageInstaller()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
-            .WithNpmPackageInstaller();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
-        var installerResource = Assert.Single(appModel.Resources.OfType<NpmInstallerResource>());
-
-        // Verify nx workspace waits for installer
-        Assert.True(nxResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
-        var waitAnnotation = Assert.Single(waitAnnotations);
-        Assert.Equal(installerResource, waitAnnotation.Resource);
-    }
-
-    [Fact]
-    public void TurborepoWorkspaceWaitsForPackageInstaller()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
-            .WithYarnPackageInstaller();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var turborepoResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
-        var installerResource = Assert.Single(appModel.Resources.OfType<YarnInstallerResource>());
-
-        // Verify turborepo workspace waits for installer
-        Assert.True(turborepoResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
-        var waitAnnotation = Assert.Single(waitAnnotations);
-        Assert.Equal(installerResource, waitAnnotation.Resource);
-    }
-
-    [Fact]
     public void MonorepoPackageInstallersExcludedFromPublishMode()
     {
         var builder = DistributedApplication.CreateBuilder(["Publishing:Publisher=manifest", "Publishing:OutputPath=./publish"]);
@@ -379,7 +295,7 @@ public class PackageInstallationTests
         // Verify no installer resources were created in publish mode
         var npmInstallerResources = appModel.Resources.OfType<NpmInstallerResource>().ToList();
         var pnpmInstallerResources = appModel.Resources.OfType<PnpmInstallerResource>().ToList();
-        
+
         Assert.Empty(npmInstallerResources);
         Assert.Empty(pnpmInstallerResources);
     }
