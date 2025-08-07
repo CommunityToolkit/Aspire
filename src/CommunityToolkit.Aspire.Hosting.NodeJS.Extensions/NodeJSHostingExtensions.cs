@@ -204,7 +204,7 @@ public static class NodeJSHostingExtensions
 
         string wd = workingDirectory ?? Path.Combine("..", name);
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, wd));
-        
+
         var resource = new NxResource(name, workingDirectory);
         return builder.AddResource(resource);
     }
@@ -223,7 +223,7 @@ public static class NodeJSHostingExtensions
 
         string wd = workingDirectory ?? Path.Combine("..", name);
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, wd));
-        
+
         var resource = new TurborepoResource(name, workingDirectory);
         return builder.AddResource(resource);
     }
@@ -242,7 +242,7 @@ public static class NodeJSHostingExtensions
 
         appName ??= name;
         var resource = new NxAppResource(name, builder.Resource.WorkingDirectory, appName);
-        
+
         return builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
             .WithArgs("serve", appName)
@@ -263,7 +263,7 @@ public static class NodeJSHostingExtensions
 
         filter ??= name;
         var resource = new TurborepoAppResource(name, builder.Resource.WorkingDirectory, filter);
-        
+
         return builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
             .WithArgs("run", "dev", "--filter", filter)
@@ -290,10 +290,6 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
-            // Make the workspace resource wait for the installer to complete
-            // This ensures all apps that wait for the workspace will wait for package installation
-            resource.WaitFor(installerBuilder);
-
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -319,9 +315,6 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
-            // Make the workspace resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
-
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -346,9 +339,6 @@ public static class NodeJSHostingExtensions
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
-
-            // Make the workspace resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
 
             configureInstaller?.Invoke(installerBuilder);
         }
@@ -376,9 +366,6 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
-            // Make the workspace resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
-
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -404,9 +391,6 @@ public static class NodeJSHostingExtensions
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
 
-            // Make the workspace resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
-
             configureInstaller?.Invoke(installerBuilder);
         }
 
@@ -431,9 +415,6 @@ public static class NodeJSHostingExtensions
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
-
-            // Make the workspace resource wait for the installer to complete
-            resource.WaitFor(installerBuilder);
 
             configureInstaller?.Invoke(installerBuilder);
         }
