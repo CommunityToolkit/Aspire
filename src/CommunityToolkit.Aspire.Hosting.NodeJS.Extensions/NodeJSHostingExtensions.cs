@@ -38,17 +38,63 @@ public static partial class NodeJSHostingExtensions
             ? resource.WithHttpsEndpoint(env: "PORT")
             : resource.WithHttpEndpoint(env: "PORT");
 
-        return resource.WithArgs(ctx =>
-        {
-            if (packageManager == "npm")
-            {
-                ctx.Args.Add("--");
-            }
+        return resource
+            .WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager))
+            .WithMappedEndpointPort();
+    }
 
-            var targetEndpoint = resource.Resource.GetEndpoint(useHttps ? "https" : "http");
-            ctx.Args.Add("--port");
-            ctx.Args.Add(targetEndpoint.Property(EndpointProperty.TargetPort));
-        });
+    /// <summary>
+    /// Adds a Node.js app to the distributed application builder using yarn as the package manager.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="scriptName">The npm script to execute. Defaults to "start".</param>
+    /// <param name="args">The arguments to pass to the command.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<NodeAppResource> AddYarnApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string scriptName = "start", string[]? args = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(workingDirectory);
+        ArgumentNullException.ThrowIfNull(scriptName);
+        string[] allArgs = args is { Length: > 0 }
+            ? ["run", scriptName, "--", .. args]
+            : ["run", scriptName];
+
+        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
+        var resource = new NodeAppResource(name, "yarn", workingDirectory);
+
+        return builder.AddResource(resource)
+                      .WithNodeDefaults()
+                      .WithArgs(allArgs);
+    }
+
+    /// <summary>
+    /// Adds a Node.js app to the distributed application builder using pnpm as the package manager.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="scriptName">The npm script to execute. Defaults to "start".</param>
+    /// <param name="args">The arguments to pass to the command.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<NodeAppResource> AddPnpmApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string scriptName = "start", string[]? args = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(workingDirectory);
+        ArgumentNullException.ThrowIfNull(scriptName);
+
+        string[] allArgs = args is { Length: > 0 }
+            ? ["run", scriptName, "--", .. args]
+            : ["run", scriptName];
+
+        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
+        var resource = new NodeAppResource(name, "pnpm", workingDirectory);
+        return builder.AddResource(resource)
+                      .WithNodeDefaults()
+                      .WithArgs(allArgs);
     }
 
     /// <summary>
@@ -110,6 +156,11 @@ public static partial class NodeJSHostingExtensions
             .WithArgs("serve", appName)
             .WithParentRelationship(builder.Resource);
 
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
+        {
+            rb.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
+        }
+
         configure?.Invoke(rb);
 
         return rb;
@@ -136,23 +187,48 @@ public static partial class NodeJSHostingExtensions
             .WithArgs("run", "dev", "--filter", filter)
             .WithParentRelationship(builder.Resource);
 
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
+        {
+            rb.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
+        }
+
         configure?.Invoke(rb);
 
         return rb;
     }
 
+    /// <summary>
+    /// Maps the endpoint port for the <see cref="NodeAppResource"/> to the appropriate command line argument.
+    /// </summary>
+    /// <param name="builder">The Node.js app resource.</param>
+    /// <param name="endpointName">The name of the endpoint to map. If not specified, it will use the first HTTP or HTTPS endpoint found.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<TResource> WithMappedEndpointPort<TResource>(this IResourceBuilder<TResource> builder, string? endpointName = null) where TResource : NodeAppResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithArgs(ctx =>
+        {
+            var resource = builder.Resource;
+
+            // monorepo tools will need `--`, as does npm
+            if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation) || packageManagerAnnotation.PackageManager == "npm")
+            {
+                ctx.Args.Add("--");
+            }
+
+            // Find the target endpoint by name, or default to http/https if no name specified
+            var targetEndpoint = endpointName is not null
+                ? resource.GetEndpoint(endpointName)
+                : resource.GetEndpoints().FirstOrDefault(e => e.EndpointName == "https") ?? resource.GetEndpoint("http");
+
+            ctx.Args.Add("--port");
+            ctx.Args.Add(targetEndpoint.Property(EndpointProperty.TargetPort));
+        });
+    }
+
     // Copied from https://github.com/dotnet/aspire/blob/50ca9fa670af5c70782dc75d2961956b06f1a403/src/Aspire.Hosting.NodeJs/NodeExtensions.cs#L70-L72
-    private static IResourceBuilder<NodeAppResource> WithNodeDefaults(this IResourceBuilder<NodeAppResource> builder) =>
-        builder.WithOtlpExporter()
-            .WithEnvironment("NODE_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production");
-
-    // Apply node defaults to NxAppResource as well
-    private static IResourceBuilder<NxAppResource> WithNodeDefaults(this IResourceBuilder<NxAppResource> builder) =>
-        builder.WithOtlpExporter()
-            .WithEnvironment("NODE_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production");
-
-    // Apply node defaults to TurborepoAppResource as well
-    private static IResourceBuilder<TurborepoAppResource> WithNodeDefaults(this IResourceBuilder<TurborepoAppResource> builder) =>
+    private static IResourceBuilder<TResource> WithNodeDefaults<TResource>(this IResourceBuilder<TResource> builder) where TResource : NodeAppResource =>
         builder.WithOtlpExporter()
             .WithEnvironment("NODE_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production");
 }

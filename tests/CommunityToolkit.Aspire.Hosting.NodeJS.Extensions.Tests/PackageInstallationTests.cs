@@ -299,4 +299,100 @@ public class PackageInstallationTests
         Assert.Empty(npmInstallerResources);
         Assert.Empty(pnpmInstallerResources);
     }
+
+    [Fact]
+    public void InstallerResourceAddedAsAnnotation_Turborepo()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+            .WithYarnPackageInstaller();
+
+        turbo.AddApp("app1");
+        turbo.AddApp("app2");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify installer resource was added as annotation
+        var installerResources = appModel.Resources.OfType<YarnInstallerResource>().ToList();
+        Assert.Single(installerResources);
+        Assert.Equal("turbo-yarn-install", installerResources[0].Name);
+    }
+
+    [Fact]
+    public void InstallerResourceAddedAsAnnotation_Nx()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+            .WithNpmPackageInstaller();
+
+        nx.AddApp("app1");
+        nx.AddApp("app2");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify installer resource was added as annotation
+        var installerResources = appModel.Resources.OfType<NpmInstallerResource>().ToList();
+        Assert.Single(installerResources);
+        Assert.Equal("nx-npm-install", installerResources[0].Name);
+    }
+
+    [Fact]
+    public void InstallerResourceAddedAsAnnotation_Pnpm()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var pnpm = builder.AddPnpmApp("pnpm", "../frontend")
+            .WithPnpmPackageInstallation();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify installer resource was added as annotation
+        var installerResources = appModel.Resources.OfType<PnpmInstallerResource>().ToList();
+        Assert.Single(installerResources);
+        Assert.Equal("pnpm-pnpm-install", installerResources[0].Name);
+    }
+
+    [Fact]
+    public void InstallerResourceAddedAsAnnotation_Yarn()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var yarn = builder.AddYarnApp("yarn", "../frontend")
+            .WithYarnPackageInstallation();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify installer resource was added as annotation
+        var installerResources = appModel.Resources.OfType<YarnInstallerResource>().ToList();
+        Assert.Single(installerResources);
+        Assert.Equal("yarn-yarn-install", installerResources[0].Name);
+    }
+
+    [Fact]
+    public void InstallerResourceAddedAsAnnotation_Npm()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddViteApp("app", "../frontend")
+            .WithNpmPackageInstallation();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Verify installer resource was added as annotation
+        var installerResources = appModel.Resources.OfType<NpmInstallerResource>().ToList();
+        Assert.Single(installerResources);
+        Assert.Equal("app-npm-install", installerResources[0].Name);
+    }
 }

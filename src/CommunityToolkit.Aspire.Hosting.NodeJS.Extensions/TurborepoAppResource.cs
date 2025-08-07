@@ -9,7 +9,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="workingDirectory">The working directory of the application.</param>
 /// <param name="filter">The Turborepo filter to use (used in 'turbo run dev --filter={filter}').</param>
 public class TurborepoAppResource(string name, string workingDirectory, string filter)
-    : ExecutableResource(name, "turbo", workingDirectory)
+    : NodeAppResource(name, "turbo", workingDirectory)
 {
     /// <summary>
     /// Gets the Turborepo filter.

@@ -9,60 +9,6 @@ namespace Aspire.Hosting;
 public static partial class NodeJSHostingExtensions
 {
     /// <summary>
-    /// Adds a Node.js app to the distributed application builder using yarn as the package manager.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="scriptName">The npm script to execute. Defaults to "start".</param>
-    /// <param name="args">The arguments to pass to the command.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> AddYarnApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string scriptName = "start", string[]? args = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(workingDirectory);
-        ArgumentNullException.ThrowIfNull(scriptName);
-        string[] allArgs = args is { Length: > 0 }
-            ? ["run", scriptName, "--", .. args]
-            : ["run", scriptName];
-
-        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
-        var resource = new NodeAppResource(name, "yarn", workingDirectory);
-
-        return builder.AddResource(resource)
-                      .WithNodeDefaults()
-                      .WithArgs(allArgs);
-    }
-
-    /// <summary>
-    /// Adds a Node.js app to the distributed application builder using pnpm as the package manager.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="scriptName">The npm script to execute. Defaults to "start".</param>
-    /// <param name="args">The arguments to pass to the command.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> AddPnpmApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string scriptName = "start", string[]? args = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(workingDirectory);
-        ArgumentNullException.ThrowIfNull(scriptName);
-
-        string[] allArgs = args is { Length: > 0 }
-            ? ["run", scriptName, "--", .. args]
-            : ["run", scriptName];
-
-        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
-        var resource = new NodeAppResource(name, "pnpm", workingDirectory);
-        return builder.AddResource(resource)
-                      .WithNodeDefaults()
-                      .WithArgs(allArgs);
-    }
-
-    /// <summary>
     /// Ensures the Node.js packages are installed before the application starts using npm as the package manager.
     /// </summary>
     /// <param name="resource">The Node.js app resource.</param>
@@ -80,7 +26,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs([useCI ? "ci" : "install"])
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
@@ -108,7 +55,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
@@ -136,7 +84,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
@@ -165,7 +114,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs([useCI ? "ci" : "install"])
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             configureInstaller?.Invoke(installerBuilder);
         }
@@ -190,7 +140,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             configureInstaller?.Invoke(installerBuilder);
         }
@@ -215,7 +166,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             configureInstaller?.Invoke(installerBuilder);
         }
@@ -241,7 +193,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs([useCI ? "ci" : "install"])
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             configureInstaller?.Invoke(installerBuilder);
         }
@@ -266,7 +219,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             configureInstaller?.Invoke(installerBuilder);
         }
@@ -291,7 +245,8 @@ public static partial class NodeJSHostingExtensions
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithArgs("install")
                 .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
+                .ExcludeFromManifest()
+                .WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
 
             configureInstaller?.Invoke(installerBuilder);
         }
