@@ -22,8 +22,8 @@ var nx = builder.AddNxApp("nx-workspace", workingDirectory: "../frontend")
 //     .WithHttpHealthCheck();
 
 // Example of Turborepo monorepo support - uncomment if you have a Turborepo workspace
-// var turbo = builder.AddTurborepoApp("turbo-workspace", workingDirectory: "../frontend")
-//     .WithYarnPackageInstaller();
+var turbo = builder.AddTurborepoApp("turbo-workspace", workingDirectory: "../frontend")
+    .WithNpmPackageInstaller();
 // 
 // var turboApp1 = turbo.AddApp("turbo-app1")
 //     .WithHttpHealthCheck();
