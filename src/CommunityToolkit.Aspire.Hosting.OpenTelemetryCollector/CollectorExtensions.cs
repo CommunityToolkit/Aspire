@@ -24,7 +24,7 @@ public static class CollectorExtensions
     /// <returns></returns>
     public static IResourceBuilder<CollectorResource> AddOpenTelemetryCollector(this IDistributedApplicationBuilder builder,
         string name,
-        Action<OpenTelemetryCollectorSettings> configureSettings = null!)
+        Action<OpenTelemetryCollectorSettings>? configureSettings = null)
     {
         var url = builder.Configuration[DashboardOtlpUrlVariableName] ??
             builder.Configuration[DashboardOtlpUrlVariableNameLegacy] ??
