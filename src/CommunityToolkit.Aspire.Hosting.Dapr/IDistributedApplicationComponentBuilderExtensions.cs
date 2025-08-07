@@ -3,7 +3,6 @@
 
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Dapr;
-using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
@@ -61,104 +60,11 @@ public static class IDistributedApplicationResourceBuilderExtensions
                                                            Properties = [],
                                                            ResourceType = "DaprSidecar",
                                                            IsHidden = true,
-                                                           State = KnownResourceStates.NotStarted
                                                        });
 
         configureSidecar(sidecarBuilder);
 
-        SetupSidecarLifecycle(builder, sidecarBuilder);
-
         return builder.WithAnnotation(new DaprSidecarAnnotation(sidecarBuilder.Resource));
-    }
-
-    private static void SetupSidecarLifecycle<T>(IResourceBuilder<T> parentBuilder, IResourceBuilder<IDaprSidecarResource> sidecarBuilder) where T : IResource
-    {
-        var dependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var valueProviderResources = new List<IResourceBuilder<IResource>>();
-        
-        // Find component references from the parent resource
-        if (parentBuilder.Resource.TryGetAnnotationsOfType<DaprComponentReferenceAnnotation>(out var componentRefs))
-        {
-            foreach (var componentRef in componentRefs)
-            {
-                // Check for value provider annotations on the component
-                if (componentRef.Component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations))
-                {
-                    foreach (var annotation in valueProviderAnnotations)
-                    {
-                        // Extract resource references from value providers
-                        if (annotation.ValueProvider is IResourceWithoutLifetime)
-                        {
-                            // Skip waiting for resources without a lifetime
-                            continue;
-                        }
-
-                        if (annotation.ValueProvider is IResource resource)
-                        {
-                            if (dependencies.Add(resource.Name))
-                            {
-                                // Create resource builder for waiting
-                                var resourceBuilder = parentBuilder.ApplicationBuilder.CreateResourceBuilder(resource);
-                                valueProviderResources.Add(resourceBuilder);
-                                // Add wait dependency using WaitFor (waits for resource to be available/running)
-                                sidecarBuilder.WaitFor(resourceBuilder);
-                            }
-                        }
-                        else if (annotation.ValueProvider is IValueWithReferences valueWithReferences)
-                        {
-                            foreach (var innerRef in valueWithReferences.References.OfType<IResource>())
-                            {
-                                if (dependencies.Add(innerRef.Name))
-                                {
-                                    // Create resource builder for waiting
-                                    var resourceBuilder = parentBuilder.ApplicationBuilder.CreateResourceBuilder(innerRef);
-                                    valueProviderResources.Add(resourceBuilder);
-                                    // Add wait dependency using WaitFor (waits for resource to be available/running)
-                                    sidecarBuilder.WaitFor(resourceBuilder);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Hook into the sidecar initialization for state management and event publishing
-        sidecarBuilder.OnInitializeResource(async (sidecar, evt, ct) =>
-        {
-            try
-            {
-                // Update state to starting
-                await evt.Notifications.PublishUpdateAsync(sidecar, s => s with
-                {
-                    State = KnownResourceStates.Starting
-                }).ConfigureAwait(false);
-
-                // Publish before started event
-                await evt.Eventing.PublishAsync(new BeforeResourceStartedEvent(sidecar, evt.Services), ct).ConfigureAwait(false);
-
-                // Update state to running
-                await evt.Notifications.PublishUpdateAsync(sidecar, s => s with
-                {
-                    State = KnownResourceStates.Running
-                }).ConfigureAwait(false);
-
-                // Publish sidecar available event
-                await evt.Eventing.PublishAsync(new DaprSidecarAvailableEvent(sidecar, evt.Services), ct).ConfigureAwait(false);
-                
-                evt.Logger.LogInformation("Dapr sidecar '{SidecarName}' started successfully", sidecar.Name);
-            }
-            catch (Exception ex)
-            {
-                evt.Logger.LogError(ex, "Failed to initialize Dapr sidecar '{SidecarName}'", sidecar.Name);
-
-                // Update state to failed
-                await evt.Notifications.PublishUpdateAsync(sidecar, s => s with
-                {
-                    State = KnownResourceStates.FailedToStart
-                }).ConfigureAwait(false);
-            }
-        });
     }
 
     /// <summary>
