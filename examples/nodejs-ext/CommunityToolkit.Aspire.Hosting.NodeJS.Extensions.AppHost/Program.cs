@@ -13,8 +13,8 @@ builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
     .WithHttpHealthCheck();
 
 // Example of Nx monorepo support - uncomment if you have an Nx workspace
-// var nx = builder.AddNxApp("nx-workspace", workingDirectory: "../frontend")
-//     .WithNpmPackageInstaller();
+var nx = builder.AddNxApp("nx-workspace", workingDirectory: "../frontend")
+    .WithNpmPackageInstaller();
 // 
 // var app1 = nx.AddApp("app1")
 //     .WithHttpHealthCheck();
