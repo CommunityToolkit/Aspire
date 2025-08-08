@@ -20,6 +20,8 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string? name = null) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithInitFiles(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string source) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<T> WithSurrealist<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.SurrealistContainerResource>>? configureContainer = null, string? containerName = null)
             where T : ApplicationModel.SurrealDbServerResource { throw null; }
     }
