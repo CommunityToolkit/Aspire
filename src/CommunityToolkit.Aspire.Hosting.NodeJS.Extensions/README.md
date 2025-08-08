@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.NodeJS.Extensions library
 
-This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.NodeJs) for .NET Aspire, including support for alternative package managers (yarn and pnpm), as well as developer workflow improvements.
+This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.NodeJs) for .NET Aspire, including support for alternative package managers (yarn and pnpm), frontend monorepos (Nx, Turborepo), as well as developer workflow improvements.
 
 ## Getting Started
 
@@ -23,6 +23,28 @@ builder.AddYarnApp("yarn-demo")
 builder.AddPnpmApp("pnpm-demo")
     .WithExternalHttpEndpoints();
 ```
+
+### Frontend Monorepo Support
+
+For Nx and Turborepo monorepos, use the dedicated monorepo methods to avoid package installation race conditions:
+
+```csharp
+// Nx workspace
+var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+    .WithNpmPackageInstaller();
+
+var app1 = nx.AddApp("app1");
+var app2 = nx.AddApp("app2", appName: "my-app-2");
+
+// Turborepo workspace  
+var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+    .WithYarnPackageInstaller();
+
+var turboApp1 = turbo.AddApp("app1");
+var turboApp2 = turbo.AddApp("app2", filter: "custom-filter");
+```
+
+See [MONOREPO.md](./MONOREPO.md) for detailed documentation on monorepo support.
 
 ### Package installation with custom flags
 
