@@ -49,7 +49,6 @@ public static class McpInspectorResourceBuilderExtensions
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
-            .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName)
             .WithEnvironment("MCP_AUTO_OPEN_ENABLED", "false")
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
