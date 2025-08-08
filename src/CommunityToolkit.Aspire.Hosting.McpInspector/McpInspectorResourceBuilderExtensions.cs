@@ -59,7 +59,51 @@ public static class McpInspectorResourceBuilderExtensions
                 annotation.DisplayText = "Server Proxy";
                 annotation.DisplayOrder = 1;
                 annotation.DisplayLocation = UrlDisplayLocation.DetailsOnly;
+            }).OnBeforeResourceStarted(async (inspectorResource, @event, ct) =>
+            {
+                if (inspectorResource.DefaultMcpServer is null && inspectorResource.McpServers.Count > 0)
+                {
+                    throw new InvalidOperationException("No default MCP server has been configured for the MCP Inspector resource, yet servers have been provided.");
+                }
+
+                var servers = inspectorResource.McpServers.ToDictionary(s => s.Name, s => new
+                {
+                    transport = s.TransportType switch
+                    {
+                        McpTransportType.StreamableHttp => "streamable-http",
+#pragma warning disable CS0618
+                        McpTransportType.Sse => "sse",
+#pragma warning restore CS0618
+                        _ => throw new NotSupportedException($"The transport type {s.TransportType} is not supported.")
+                    },
+                    endpoint = s.Endpoint.Url
+                });
+
+                var config = new { mcpServers = servers };
+
+                await File.WriteAllTextAsync(inspectorResource.ConfigPath, System.Text.Json.JsonSerializer.Serialize(config), ct);
             })
+            .WithEnvironment(ctx =>
+            {
+                if (ctx.Resource is not McpInspectorResource resource)
+                {
+                    return;
+                }
+
+                var clientEndpoint = resource.GetEndpoint(McpInspectorResource.ClientEndpointName);
+                var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
+
+                if (clientEndpoint is null || serverProxyEndpoint is null)
+                {
+                    throw new InvalidOperationException("The MCP Inspector resource must have both 'client' and 'server-proxy' endpoints defined.");
+                }
+
+                ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = serverProxyEndpoint.Url;
+                ctx.EnvironmentVariables["CLIENT_PORT"] = clientEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'client' endpoint must have a target port defined.");
+                ctx.EnvironmentVariables["SERVER_PORT"] = serverProxyEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'server-proxy' endpoint must have a target port defined.");
+                ctx.EnvironmentVariables["MCP_PROXY_AUTH_TOKEN"] = proxyTokenParameter;
+            })
+            .WithDefaultArgs()
             .WithUrls(async context =>
             {
                 var token = await proxyTokenParameter.GetValueAsync(CancellationToken.None);
@@ -96,73 +140,7 @@ public static class McpInspectorResourceBuilderExtensions
             });
         }, healthCheckKey);
 
-        resource.WithHealthCheck(healthCheckKey);
-
-        builder.Eventing.Subscribe<BeforeResourceStartedEvent>(resource.Resource, async (@event, ct) =>
-        {
-            if (@event.Resource is not McpInspectorResource inspectorResource)
-            {
-                return;
-            }
-
-            if (inspectorResource.DefaultMcpServer is null && inspectorResource.McpServers.Count > 0)
-            {
-                throw new InvalidOperationException("No default MCP server has been configured for the MCP Inspector resource, yet servers have been provided.");
-            }
-
-            var servers = inspectorResource.McpServers.ToDictionary(s => s.Name, s => new
-            {
-                transport = s.TransportType switch
-                {
-                    McpTransportType.StreamableHttp => "streamable-http",
-#pragma warning disable CS0618
-                    McpTransportType.Sse => "sse",
-#pragma warning restore CS0618
-                    _ => throw new NotSupportedException($"The transport type {s.TransportType} is not supported.")
-                },
-                endpoint = s.Endpoint.Url
-            });
-
-            var config = new { mcpServers = servers };
-
-            await File.WriteAllTextAsync(inspectorResource.ConfigPath, System.Text.Json.JsonSerializer.Serialize(config), ct);
-        });
-
-        return resource
-            .WithEnvironment(ctx =>
-            {
-                var clientEndpoint = resource.GetEndpoint(McpInspectorResource.ClientEndpointName);
-                var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
-
-                if (clientEndpoint is null || serverProxyEndpoint is null)
-                {
-                    throw new InvalidOperationException("The MCP Inspector resource must have both 'client' and 'server-proxy' endpoints defined.");
-                }
-
-                ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = serverProxyEndpoint.Url;
-                ctx.EnvironmentVariables["CLIENT_PORT"] = clientEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'client' endpoint must have a target port defined.");
-                ctx.EnvironmentVariables["SERVER_PORT"] = serverProxyEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'server-proxy' endpoint must have a target port defined.");
-                ctx.EnvironmentVariables["MCP_PROXY_AUTH_TOKEN"] = proxyTokenParameter;
-            })
-            .WithArgs(ctx =>
-            {
-                McpInspectorResource inspectorResource = resource.Resource;
-                McpServerMetadata? defaultMcpServer = inspectorResource.DefaultMcpServer;
-                if ((defaultMcpServer is null && inspectorResource.McpServers.Count > 0) || (defaultMcpServer is not null && inspectorResource.McpServers.Count == 0))
-                {
-                    throw new InvalidOperationException("No default MCP server has been configured for the MCP Inspector resource, yet servers have been provided.");
-                }
-
-                if (defaultMcpServer is null && inspectorResource.McpServers.Count == 0)
-                {
-                    return;
-                }
-
-                ctx.Args.Add("--config");
-                ctx.Args.Add(inspectorResource.ConfigPath);
-                ctx.Args.Add("--server");
-                ctx.Args.Add(defaultMcpServer?.Name ?? throw new InvalidOperationException("The MCP Inspector resource must have a default MCP server defined."));
-            });
+        return resource.WithHealthCheck(healthCheckKey);
     }
 
     /// <summary>
@@ -219,5 +197,30 @@ public static class McpInspectorResourceBuilderExtensions
 
         builder.Resource.AddMcpServer(mcpServer.Resource, isDefault, transportType);
         return builder;
+    }
+
+    private static IResourceBuilder<McpInspectorResource> WithDefaultArgs(this IResourceBuilder<McpInspectorResource> builder)
+    {
+        return builder
+            .WithArgs(ctx =>
+            {
+                McpInspectorResource inspectorResource = builder.Resource;
+                McpServerMetadata? defaultMcpServer = inspectorResource.DefaultMcpServer;
+                if ((defaultMcpServer is null && inspectorResource.McpServers.Count > 0) || (defaultMcpServer is not null && inspectorResource.McpServers.Count == 0))
+                {
+                    throw new InvalidOperationException("No default MCP server has been configured for the MCP Inspector resource, yet servers have been provided.");
+                }
+
+
+                if (defaultMcpServer is null && inspectorResource.McpServers.Count == 0)
+                {
+                    return;
+                }
+
+                ctx.Args.Add("--config");
+                ctx.Args.Add(inspectorResource.ConfigPath);
+                ctx.Args.Add("--server");
+                ctx.Args.Add(defaultMcpServer?.Name ?? throw new InvalidOperationException("The MCP Inspector resource must have a default MCP server defined."));
+            });
     }
 }
