@@ -49,6 +49,8 @@ public static class McpInspectorResourceBuilderExtensions
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
+            .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName)
+            .WithEnvironment("MCP_AUTO_OPEN_ENABLED", "false")
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
                 annotation.DisplayText = "Client";
@@ -59,7 +61,8 @@ public static class McpInspectorResourceBuilderExtensions
                 annotation.DisplayText = "Server Proxy";
                 annotation.DisplayOrder = 1;
                 annotation.DisplayLocation = UrlDisplayLocation.DetailsOnly;
-            }).OnBeforeResourceStarted(async (inspectorResource, @event, ct) =>
+            })
+            .OnBeforeResourceStarted(async (inspectorResource, @event, ct) =>
             {
                 if (inspectorResource.DefaultMcpServer is null && inspectorResource.McpServers.Count > 0)
                 {
@@ -112,8 +115,10 @@ public static class McpInspectorResourceBuilderExtensions
                 {
                     if (url.Endpoint is not null)
                     {
-                        var uriBuilder = new UriBuilder(url.Url);
-                        uriBuilder.Query = $"MCP_PROXY_AUTH_TOKEN={Uri.EscapeDataString(token!)}";
+                        var uriBuilder = new UriBuilder(url.Url)
+                        {
+                            Query = $"MCP_PROXY_AUTH_TOKEN={Uri.EscapeDataString(token!)}"
+                        };
                         url.Url = uriBuilder.ToString();
                     }
                 }
@@ -126,12 +131,7 @@ public static class McpInspectorResourceBuilderExtensions
         builder.Services.AddHealthChecks().AddUrlGroup(options =>
         {
             var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
-            var uri = serverProxyEndpoint.Url;
-            if (uri is null)
-            {
-                throw new DistributedApplicationException("The MCP Inspector 'server-proxy' endpoint URL is not set. Ensure that the resource has been allocated before the health check is executed.");
-            }
-
+            var uri = serverProxyEndpoint.Url ?? throw new DistributedApplicationException("The MCP Inspector 'server-proxy' endpoint URL is not set. Ensure that the resource has been allocated before the health check is executed.");
             var healthCheckUri = new Uri(new Uri(uri), "/config");
             options.AddUri(healthCheckUri, async setup =>
             {
