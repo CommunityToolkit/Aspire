@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
@@ -15,16 +16,39 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>
     /// <param name="serverPort">The port for the server proxy application. Defaults to 6277.</param>
     /// <param name="inspectorVersion">The version of the Inspector app to use</param>
+    [Obsolete("Use the overload with McpInspectorOptions instead. This overload will be removed in the next version.")]
     public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = McpInspectorResource.InspectorVersion)
     {
-        return builder.AddResource(new McpInspectorResource(name))
-            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{inspectorVersion}"])
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return AddMcpInspector(builder, name, options =>
+        {
+            options.ClientPort = clientPort;
+            options.ServerPort = serverPort;
+            options.InspectorVersion = inspectorVersion;
+        });
+    }
+
+    /// <summary>
+    /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/> using an options object.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
+    /// <param name="name">The name of the MCP Inspector container resource.</param>
+    /// <param name="options">The <see cref="McpInspectorOptions"/> to configure the MCP Inspector resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, McpInspectorOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
+        var proxyTokenParameter = options.ProxyToken?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-proxyToken");
+
+        var resource = builder.AddResource(new McpInspectorResource(name))
+            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
             .ExcludeFromManifest()
-            .WithHttpEndpoint(isProxied: false, port: clientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
-            .WithHttpEndpoint(isProxied: false, port: serverPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
-            .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true")
+            .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
+            .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
-            .WithHttpHealthCheck("/config", endpointName: McpInspectorResource.ServerProxyEndpointName)
             .WithEnvironment("MCP_AUTO_OPEN_ENABLED", "false")
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
@@ -35,6 +59,7 @@ public static class McpInspectorResourceBuilderExtensions
             {
                 annotation.DisplayText = "Server Proxy";
                 annotation.DisplayOrder = 1;
+                annotation.DisplayLocation = UrlDisplayLocation.DetailsOnly;
             })
             .OnBeforeResourceStarted(async (inspectorResource, @event, ct) =>
             {
@@ -78,8 +103,76 @@ public static class McpInspectorResourceBuilderExtensions
                 ctx.EnvironmentVariables["MCP_PROXY_FULL_ADDRESS"] = serverProxyEndpoint.Url;
                 ctx.EnvironmentVariables["CLIENT_PORT"] = clientEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'client' endpoint must have a target port defined.");
                 ctx.EnvironmentVariables["SERVER_PORT"] = serverProxyEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'server-proxy' endpoint must have a target port defined.");
+                ctx.EnvironmentVariables["MCP_PROXY_AUTH_TOKEN"] = proxyTokenParameter;
             })
-            .WithDefaultArgs();
+            .WithDefaultArgs()
+            .WithUrls(async context =>
+            {
+                var token = await proxyTokenParameter.GetValueAsync(CancellationToken.None);
+
+                foreach (var url in context.Urls)
+                {
+                    if (url.Endpoint is not null)
+                    {
+                        var uriBuilder = new UriBuilder(url.Url)
+                        {
+                            Query = $"MCP_PROXY_AUTH_TOKEN={Uri.EscapeDataString(token!)}"
+                        };
+                        url.Url = uriBuilder.ToString();
+                    }
+                }
+            });
+
+        resource.Resource.ProxyTokenParameter = proxyTokenParameter;
+
+        // Add authenticated health check for server proxy /config endpoint
+        var healthCheckKey = $"{name}_proxy_config_check";
+        builder.Services.AddHealthChecks().AddUrlGroup(options =>
+        {
+            var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
+            var uri = serverProxyEndpoint.Url ?? throw new DistributedApplicationException("The MCP Inspector 'server-proxy' endpoint URL is not set. Ensure that the resource has been allocated before the health check is executed.");
+            var healthCheckUri = new Uri(new Uri(uri), "/config");
+            options.AddUri(healthCheckUri, async setup =>
+            {
+                var token = await proxyTokenParameter.GetValueAsync(CancellationToken.None);
+                setup.AddCustomHeader("X-MCP-Proxy-Auth", $"Bearer {token}");
+            });
+        }, healthCheckKey);
+
+        return resource.WithHealthCheck(healthCheckKey);
+    }
+
+    /// <summary>
+    /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/> using a configuration delegate.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
+    /// <param name="name">The name of the MCP Inspector container resource.</param>
+    /// <param name="configureOptions">A delegate to configure the <see cref="McpInspectorOptions"/>.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, Action<McpInspectorOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new McpInspectorOptions();
+        configureOptions(options);
+
+        return builder.AddMcpInspector(name, options);
+    }
+
+    /// <summary>
+    /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/> using a configuration delegate.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
+    /// <param name="name">The name of the MCP Inspector container resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        var options = new McpInspectorOptions();
+
+        return builder.AddMcpInspector(name, options);
     }
 
     /// <summary>
