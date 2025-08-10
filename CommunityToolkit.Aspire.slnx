@@ -2,7 +2,9 @@
   <Folder Name="/examples/" />
   <Folder Name="/examples/activemq/">
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj" />
-    <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
+    <Proj    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Solr.Tests/CommunityToolkit.Aspire.Hosting.Solr.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj" />t Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults/CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/adminer/">
@@ -143,6 +145,9 @@
   <Folder Name="/examples/sqlserver-ext/">
     <Project Path="examples/sqlserver-ext/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/solr/">
+    <Project Path="examples/solr/CommunityToolkit.Aspire.Hosting.Solr.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/surrealdb/">
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService.csproj" />
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
@@ -181,6 +186,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Sqlite/CommunityToolkit.Aspire.Hosting.Sqlite.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Solr/CommunityToolkit.Aspire.Hosting.Solr.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />

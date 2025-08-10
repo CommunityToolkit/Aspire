@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <Description>A .NET Aspire hosting integration for Apache Solr.</Description>
+    <PackageTags>aspire solr search hosting</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+</Project>
