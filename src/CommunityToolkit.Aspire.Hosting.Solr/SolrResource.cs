@@ -10,7 +10,7 @@ public class SolrResource(string name) : ContainerResource(name), IResourceWithC
 {
     internal const string PrimaryEndpointName = "http";
 
-    private readonly List<SolrCoreResource> _cores = new();
+    private readonly List<SolrCoreResource> _cores = [];
 
     /// <summary>
     /// Gets the list of Solr cores associated with this resource.
