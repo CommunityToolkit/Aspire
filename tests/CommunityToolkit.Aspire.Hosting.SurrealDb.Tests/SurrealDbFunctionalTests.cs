@@ -334,6 +334,55 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             }
         }
     }
+    
+    [Fact]
+    public async Task AddDatabaseCreatesDatabaseWithCustomScript()
+    {
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
+        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+        
+        var surrealNsName = "ns1";
+        var surrealDbName = "db1";
+
+        var surreal = builder.AddSurrealServer("surreal", strictMode: true);
+
+        var db = surreal
+            .AddNamespace(surrealNsName)
+            .AddDatabase(surrealDbName)
+            .WithCreationScript(
+                $"""
+                DEFINE DATABASE IF NOT EXISTS {surrealDbName};
+                USE DATABASE {surrealDbName};
+                
+                DEFINE TABLE todo;
+                DEFINE FIELD Title ON todo TYPE string;
+                DEFINE FIELD DueBy ON todo TYPE datetime;
+                DEFINE FIELD IsComplete ON todo TYPE bool;
+                """
+            );
+
+        using var app = builder.Build();
+
+        await app.StartAsync(cts.Token);
+
+        var hb = Host.CreateApplicationBuilder();
+
+        hb.Configuration[$"ConnectionStrings:{db.Resource.Name}"] = await db.Resource.ConnectionStringExpression.GetValueAsync(default);
+
+        hb.AddSurrealClient(db.Resource.Name);
+
+        using var host = hb.Build();
+
+        await host.StartAsync();
+
+        await app.ResourceNotifications.WaitForResourceHealthyAsync(db.Resource.Name, cts.Token);
+
+        await using var client = host.Services.GetRequiredService<SurrealDbClient>();
+
+        await CreateTestData(client, cts.Token);
+        await AssertTestData(client, cts.Token);
+    }
 
     private static async Task CreateTestData(SurrealDbClient surrealDbClient, CancellationToken ct)
     {
