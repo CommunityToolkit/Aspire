@@ -6,14 +6,24 @@ namespace Aspire.Hosting;
 public class OpenTelemetryCollectorSettings
 {
     /// <summary>
-    /// The version of the collector, defaults to latest
+    /// The Tag to use for the collector
     /// </summary>
-    public string CollectorVersion { get; set; } = "latest";
+    public string CollectorTag { get; set; } = "latest";
+
+    /// <summary>
+    /// The registry for the image
+    /// </summary>
+    public string Registry { get; set; } = "ghcr.io";
+
+    /// <summary>
+    /// The collector image path
+    /// </summary>
+    public string Image { get; set; } = "open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib";
 
     /// <summary>
     /// The image of the collector, defaults to ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib
     /// </summary>
-    public string CollectorImage { get; set; } = "ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib";
+    public string CollectorImage { get => $"{Registry}/{Image}"; }
 
     /// <summary>
     /// Force the default OTLP receivers in the collector to use HTTP even if Aspire is set to HTTPS

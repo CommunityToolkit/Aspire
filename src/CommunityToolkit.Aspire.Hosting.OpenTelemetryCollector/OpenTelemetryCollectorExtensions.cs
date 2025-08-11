@@ -39,7 +39,7 @@ public static class OpenTelemetryCollectorExtensions
 
         var resource = new OpenTelemetryCollectorResource(name);
         var resourceBuilder = builder.AddResource(resource)
-            .WithImage(settings.CollectorImage, settings.CollectorVersion)
+            .WithImage(settings.CollectorImage, settings.CollectorTag)
             .WithEnvironment("ASPIRE_ENDPOINT", dashboardOtlpEndpoint)
             .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName]);
 
