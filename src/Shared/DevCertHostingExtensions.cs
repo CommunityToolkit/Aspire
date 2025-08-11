@@ -24,9 +24,9 @@ internal static class DevCertHostingExtensions
     {
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode && builder.ApplicationBuilder.Environment.IsDevelopment())
         {
-            builder.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (e, ct) =>
+            builder.OnBeforeResourceStarted(async (resource, readyEvent, cancellationToken) =>
             {
-                var logger = e.Services.GetRequiredService<ResourceLoggerService>().GetLogger(builder.Resource);
+                var logger = readyEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(builder.Resource);
 
                 // Export the ASP.NET Core HTTPS development certificate & private key to files and configure the resource to use them via
                 // the specified environment variables.
