@@ -16,9 +16,15 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> AddSurrealServer(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? userName = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, int? port = null, string path = "memory", bool strictMode = false) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbDatabaseResource> WithCreationScript(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbDatabaseResource> builder, string script) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbNamespaceResource> WithCreationScript(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbNamespaceResource> builder, string script) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string source) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string? name = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithInitFiles(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string source) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<T> WithSurrealist<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.SurrealistContainerResource>>? configureContainer = null, string? containerName = null)
             where T : ApplicationModel.SurrealDbServerResource { throw null; }
