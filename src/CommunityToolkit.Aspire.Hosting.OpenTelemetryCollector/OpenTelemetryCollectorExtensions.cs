@@ -8,7 +8,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Extension methods to add the collector resource
 /// </summary>
-public static class CollectorExtensions
+public static class OpenTelemetryCollectorExtensions
 {
     private const string DashboardOtlpUrlVariableNameLegacy = "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL";
     private const string DashboardOtlpUrlVariableName = "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL";
@@ -22,7 +22,7 @@ public static class CollectorExtensions
     /// <param name="name"></param>
     /// <param name="configureSettings"></param>
     /// <returns></returns>
-    public static IResourceBuilder<CollectorResource> AddOpenTelemetryCollector(this IDistributedApplicationBuilder builder,
+    public static IResourceBuilder<OpenTelemetryCollectorResource> AddOpenTelemetryCollector(this IDistributedApplicationBuilder builder,
         string name,
         Action<OpenTelemetryCollectorSettings>? configureSettings = null)
     {
@@ -37,16 +37,16 @@ public static class CollectorExtensions
 
         var dashboardOtlpEndpoint = ReplaceLocalhostWithContainerHost(url, builder.Configuration);
 
-        var resource = new CollectorResource(name);
+        var resource = new OpenTelemetryCollectorResource(name);
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(settings.CollectorImage, settings.CollectorVersion)
             .WithEnvironment("ASPIRE_ENDPOINT", dashboardOtlpEndpoint)
             .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName]);
 
         if (settings.EnableGrpcEndpoint)
-            resourceBuilder.WithEndpoint(targetPort: 4317, name: CollectorResource.GRPCEndpointName, scheme: isHttpsEnabled ? "https" : "http");
+            resourceBuilder.WithEndpoint(targetPort: 4317, name: OpenTelemetryCollectorResource.GrpcEndpointName, scheme: isHttpsEnabled ? "https" : "http");
         if (settings.EnableHttpEndpoint)
-            resourceBuilder.WithEndpoint(targetPort: 4318, name: CollectorResource.HTTPEndpointName, scheme: isHttpsEnabled ? "https" : "http");
+            resourceBuilder.WithEndpoint(targetPort: 4318, name: OpenTelemetryCollectorResource.HttpEndpointName, scheme: isHttpsEnabled ? "https" : "http");
 
 
         if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
@@ -75,7 +75,7 @@ public static class CollectorExtensions
     /// </summary>
     /// <param name="builder"></param>
     /// <returns></returns>
-    public static IResourceBuilder<CollectorResource> WithAppForwarding(this IResourceBuilder<CollectorResource> builder)
+    public static IResourceBuilder<OpenTelemetryCollectorResource> WithAppForwarding(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
         builder.ApplicationBuilder.Services.TryAddLifecycleHook<EnvironmentVariableHook>();
         return builder;
@@ -96,7 +96,7 @@ public static class CollectorExtensions
     /// <param name="builder"></param>
     /// <param name="configPath"></param>
     /// <returns></returns>
-    public static IResourceBuilder<CollectorResource> WithConfig(this IResourceBuilder<CollectorResource> builder, string configPath)
+    public static IResourceBuilder<OpenTelemetryCollectorResource> WithConfig(this IResourceBuilder<OpenTelemetryCollectorResource> builder, string configPath)
     {
         var configFileInfo = new FileInfo(configPath);
         return builder.WithBindMount(configPath, $"/config/{configFileInfo.Name}")
