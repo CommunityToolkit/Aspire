@@ -22,7 +22,9 @@ internal sealed class SurrealDbHealthCheck : IHealthCheck
         try
         {
             bool isHealthy = await _surrealdbClient.Health(cancellationToken).ConfigureAwait(false);
-
+            var response = await _surrealdbClient.RawQuery("RETURN 1", cancellationToken: cancellationToken).ConfigureAwait(false);
+            response.EnsureAllOks();
+            
             return isHealthy
                 ? HealthCheckResult.Healthy()
                 : new HealthCheckResult(context.Registration.FailureStatus);

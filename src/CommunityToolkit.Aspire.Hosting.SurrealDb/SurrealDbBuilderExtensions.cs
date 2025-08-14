@@ -81,7 +81,7 @@ public static class SurrealDbBuilderExtensions
             : SurrealDbContainerImageTags.Tag;
         
         var surrealServer = new SurrealDbServerResource(name, userName?.Resource, passwordParameter);
-        
+
         return builder.AddResource(surrealServer)
                       .WithEndpoint(port: port, targetPort: SurrealDbPort, name: SurrealDbServerResource.PrimaryEndpointName)
                       .WithImage(SurrealDbContainerImageTags.Image, imageTag)
@@ -106,33 +106,44 @@ public static class SurrealDbBuilderExtensions
                               throw new DistributedApplicationException($"ResourceReadyEvent was published for the '{surrealServer.Name}' resource but the connection string was null.");
                           }
                           
-                          var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
-                          await using var surrealClient = new SurrealDbClient(options);
-                          
-                          foreach (var nsResourceName in surrealServer.Namespaces.Keys)
-                          {
-                              if (builder.Resources.FirstOrDefault(n =>
-                                      string.Equals(n.Name, nsResourceName, StringComparison.OrdinalIgnoreCase)) is
-                                  SurrealDbNamespaceResource surrealDbNamespace)
-                              {
-                                  await CreateNamespaceAsync(surrealClient, surrealDbNamespace, @event.Services, ct)
-                                      .ConfigureAwait(false);
-                              
-                                  await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
-                          
-                                  foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
-                                  {
-                                      if (builder.Resources.FirstOrDefault(n =>
-                                              string.Equals(n.Name, dbResourceName, StringComparison.OrdinalIgnoreCase)) is
-                                          SurrealDbDatabaseResource surrealDbDatabase)
-                                      {
-                                          await CreateDatabaseAsync(surrealClient, surrealDbDatabase, @event.Services, ct)
-                                              .ConfigureAwait(false);
-                                      }
-                                  }
-                              }
-                          }
+                          await EnsuresNsDbCreated(builder, connectionString, surrealServer, @event.Services, ct);
                       });
+    }
+
+    private static async Task EnsuresNsDbCreated(
+        IDistributedApplicationBuilder builder, 
+        string connectionString,
+        SurrealDbServerResource surrealServer,
+        IServiceProvider services,
+        CancellationToken ct
+    )
+    {
+        var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
+        await using var surrealClient = new SurrealDbClient(options);
+                          
+        foreach (var nsResourceName in surrealServer.Namespaces.Keys)
+        {
+            if (builder.Resources.FirstOrDefault(n =>
+                    string.Equals(n.Name, nsResourceName, StringComparison.OrdinalIgnoreCase)) is
+                SurrealDbNamespaceResource surrealDbNamespace)
+            {
+                await CreateNamespaceAsync(surrealClient, surrealDbNamespace, services, ct)
+                    .ConfigureAwait(false);
+                              
+                await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
+                          
+                foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
+                {
+                    if (builder.Resources.FirstOrDefault(n =>
+                            string.Equals(n.Name, dbResourceName, StringComparison.OrdinalIgnoreCase)) is
+                        SurrealDbDatabaseResource surrealDbDatabase)
+                    {
+                        await CreateDatabaseAsync(surrealClient, surrealDbDatabase, services, ct)
+                            .ConfigureAwait(false);
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -234,24 +245,10 @@ public static class SurrealDbBuilderExtensions
 
         SurrealDbClient? surrealDbClient = null;
 
-        builder.ApplicationBuilder.Eventing.Subscribe<ConnectionStringAvailableEvent>(surrealServerDatabase, async (@event, ct) =>
-        {
-            var connectionString = await surrealServerDatabase.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
-            if (connectionString is null)
-            {
-                throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerDatabase}' resource but the connection string was null.");
-            }
-
-            var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
-            surrealDbClient = new SurrealDbClient(options);
-        });
-
         string namespaceName = builder.Resource.Name;
         string serverName = builder.Resource.Parent.Name;
 
         string healthCheckKey = $"{serverName}_{namespaceName}_{name}_check";
-        // TODO : Bug to be fixed
-        //builder.ApplicationBuilder.Services.AddHealthChecks().AddSurreal(_ => surrealDbClient!, healthCheckKey);
         builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
                 name: healthCheckKey,
                 _ => new SurrealDbHealthCheck(surrealDbClient!),
@@ -261,7 +258,17 @@ public static class SurrealDbBuilderExtensions
         );
         
         return builder.ApplicationBuilder.AddResource(surrealServerDatabase)
-            .WithHealthCheck(healthCheckKey);
+            .WithHealthCheck(healthCheckKey)
+            .OnConnectionStringAvailable(async (_, _, ct) => {
+                var connectionString = await surrealServerDatabase.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
+                if (connectionString is null)
+                {
+                    throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerDatabase}' resource but the connection string was null.");
+                }
+
+                var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
+                surrealDbClient = new SurrealDbClient(options); 
+            });
     }
     
     /// <summary>
