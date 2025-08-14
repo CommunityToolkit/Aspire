@@ -33,7 +33,11 @@ public static class SolrBuilderExtensions
 
         builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(resource, async (_, ct) =>
         {
-            connectionString = await resource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
+
+
+        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(resource, async (_, ct) =>
+        {
+            var connectionString = await resource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
 
             if (connectionString is null)
             {
