@@ -5,6 +5,7 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.SurrealDb;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using SurrealDb.Net;
 using System.Text;
 using System.Text.Json;
@@ -80,6 +81,7 @@ public static class SurrealDbBuilderExtensions
             : SurrealDbContainerImageTags.Tag;
         
         var surrealServer = new SurrealDbServerResource(name, userName?.Resource, passwordParameter);
+        
         return builder.AddResource(surrealServer)
                       .WithEndpoint(port: port, targetPort: SurrealDbPort, name: SurrealDbServerResource.PrimaryEndpointName)
                       .WithImage(SurrealDbContainerImageTags.Image, imageTag)
@@ -90,7 +92,47 @@ public static class SurrealDbBuilderExtensions
                           context.EnvironmentVariables[PasswordEnvVarName] = surrealServer.PasswordParameter;
                       })
                       .WithEntrypoint("/surreal")
-                      .WithArgs([.. args]);
+                      .WithArgs([.. args])
+                      .OnResourceReady(async (_, @event, ct) =>
+                      {
+                          if (!strictMode)
+                          {
+                              return;
+                          }
+                          
+                          var connectionString = await surrealServer.GetConnectionStringAsync(ct).ConfigureAwait(false);
+                          if (connectionString is null)
+                          {
+                              throw new DistributedApplicationException($"ResourceReadyEvent was published for the '{surrealServer.Name}' resource but the connection string was null.");
+                          }
+                          
+                          var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
+                          await using var surrealClient = new SurrealDbClient(options);
+                          
+                          foreach (var nsResourceName in surrealServer.Namespaces.Keys)
+                          {
+                              if (builder.Resources.FirstOrDefault(n =>
+                                      string.Equals(n.Name, nsResourceName, StringComparison.OrdinalIgnoreCase)) is
+                                  SurrealDbNamespaceResource surrealDbNamespace)
+                              {
+                                  await CreateNamespaceAsync(surrealClient, surrealDbNamespace, @event.Services, ct)
+                                      .ConfigureAwait(false);
+                              
+                                  await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
+                          
+                                  foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
+                                  {
+                                      if (builder.Resources.FirstOrDefault(n =>
+                                              string.Equals(n.Name, dbResourceName, StringComparison.OrdinalIgnoreCase)) is
+                                          SurrealDbDatabaseResource surrealDbDatabase)
+                                      {
+                                          await CreateDatabaseAsync(surrealClient, surrealDbDatabase, @event.Services, ct)
+                                              .ConfigureAwait(false);
+                                      }
+                                  }
+                              }
+                          }
+                      });
     }
 
     /// <summary>
@@ -131,6 +173,25 @@ public static class SurrealDbBuilderExtensions
         builder.Resource.AddNamespace(name, namespaceName);
         var surrealServerNamespace = new SurrealDbNamespaceResource(name, namespaceName, builder.Resource);
         return builder.ApplicationBuilder.AddResource(surrealServerNamespace);
+    }
+    
+    /// <summary>
+    /// Defines the SQL script used to create the namespace.
+    /// </summary>
+    /// <param name="builder">The builder for the <see cref="SurrealDbNamespaceResource"/>.</param>
+    /// <param name="script">The SQL script used to create the namespace.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <value>Default script is <code>DEFINE NAMESPACE IF NOT EXISTS `QUOTED_NAMESPACE_NAME`;</code></value>
+    /// </remarks>
+    public static IResourceBuilder<SurrealDbNamespaceResource> WithCreationScript(this IResourceBuilder<SurrealDbNamespaceResource> builder, string script)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(script);
+
+        builder.WithAnnotation(new SurrealDbCreateNamespaceScriptAnnotation(script));
+
+        return builder;
     }
 
     /// <summary>
@@ -201,6 +262,25 @@ public static class SurrealDbBuilderExtensions
         
         return builder.ApplicationBuilder.AddResource(surrealServerDatabase)
             .WithHealthCheck(healthCheckKey);
+    }
+    
+    /// <summary>
+    /// Defines the SQL script used to create the database.
+    /// </summary>
+    /// <param name="builder">The builder for the <see cref="SurrealDbDatabaseResource"/>.</param>
+    /// <param name="script">The SQL script used to create the database.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <value>Default script is <code>DEFINE DATABASE IF NOT EXISTS `QUOTED_DATABASE_NAME`;</code></value>
+    /// </remarks>
+    public static IResourceBuilder<SurrealDbDatabaseResource> WithCreationScript(this IResourceBuilder<SurrealDbDatabaseResource> builder, string script)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(script);
+
+        builder.WithAnnotation(new SurrealDbCreateDatabaseScriptAnnotation(script));
+
+        return builder;
     }
 
     /// <summary>
@@ -446,5 +526,63 @@ public static class SurrealDbBuilderExtensions
         await writer.FlushAsync(cancellationToken);
         
         return Encoding.UTF8.GetString(stream.ToArray());
+    }
+    
+    private static async Task CreateNamespaceAsync(
+        SurrealDbClient surrealClient, 
+        SurrealDbNamespaceResource namespaceResource, 
+        IServiceProvider serviceProvider, 
+        CancellationToken cancellationToken
+    )
+    {
+        var scriptAnnotation = namespaceResource.Annotations.OfType<SurrealDbCreateNamespaceScriptAnnotation>().LastOrDefault();
+
+        var logger = serviceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(namespaceResource.Parent);
+        logger.LogDebug("Creating namespace '{NamespaceName}'", namespaceResource.NamespaceName);
+
+        try
+        {
+            var response = await surrealClient.RawQuery(
+                scriptAnnotation?.Script ?? $"DEFINE NAMESPACE IF NOT EXISTS `{namespaceResource.NamespaceName}`;", 
+                cancellationToken: cancellationToken
+            ).ConfigureAwait(false);
+
+            response.EnsureAllOks();
+
+            logger.LogDebug("Namespace '{NamespaceName}' created successfully", namespaceResource.NamespaceName);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to create namespace '{NamespaceName}'", namespaceResource.NamespaceName);
+        }
+    }
+    
+    private static async Task CreateDatabaseAsync(
+        SurrealDbClient surrealClient, 
+        SurrealDbDatabaseResource databaseResource, 
+        IServiceProvider serviceProvider, 
+        CancellationToken cancellationToken
+    )
+    {
+        var scriptAnnotation = databaseResource.Annotations.OfType<SurrealDbCreateDatabaseScriptAnnotation>().LastOrDefault();
+
+        var logger = serviceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(databaseResource.Parent.Parent);
+        logger.LogDebug("Creating database '{DatabaseName}'", databaseResource.DatabaseName);
+
+        try
+        {
+            var response = await surrealClient.RawQuery(
+                scriptAnnotation?.Script ?? $"DEFINE DATABASE IF NOT EXISTS `{databaseResource.DatabaseName}`;", 
+                cancellationToken: cancellationToken
+            ).ConfigureAwait(false);
+
+            response.EnsureAllOks();
+
+            logger.LogDebug("Database '{DatabaseName}' created successfully", databaseResource.DatabaseName);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to create database '{DatabaseName}'", databaseResource.DatabaseName);
+        }
     }
 }
