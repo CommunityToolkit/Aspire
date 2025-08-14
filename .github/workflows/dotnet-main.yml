@@ -58,13 +58,13 @@ jobs:
           dotnet-version: ${{ env.DEFAULT_DOTNET_VERSION }}
 
       - name: Download Package List
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: nuget-packages
           path: ${{ github.workspace }}/packages
 
       - name: Download NuGet package list
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: nuget-list
           path: ${{ github.workspace }}
@@ -104,7 +104,7 @@ jobs:
       name: nuget-beta
     steps:
       - name: Download package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: signed-nuget-packages
 
@@ -118,7 +118,7 @@ jobs:
       name: azure-artifacts
     steps:
       - name: Download package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: signed-nuget-packages
 
