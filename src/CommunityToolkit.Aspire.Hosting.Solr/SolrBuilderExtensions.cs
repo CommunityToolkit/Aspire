@@ -29,12 +29,6 @@ public static class SolrBuilderExtensions
 
         var resource = new SolrResource(name, coreName);
 
-        string? connectionString = null;
-
-        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(resource, async (_, ct) =>
-        {
-
-
         builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(resource, async (_, ct) =>
         {
             var connectionString = await resource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
