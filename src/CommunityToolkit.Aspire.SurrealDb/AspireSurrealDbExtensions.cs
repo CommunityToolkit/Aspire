@@ -6,6 +6,7 @@ using CommunityToolkit.Aspire.SurrealDb;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using SurrealDb.Net;
 
 namespace Microsoft.Extensions.Hosting;
@@ -16,7 +17,7 @@ namespace Microsoft.Extensions.Hosting;
 public static class AspireSurrealDbExtensions
 {
     private const string DefaultConfigSectionName = "Aspire:Surreal:Client";
-    
+
     /// <summary>
     /// Registers <see cref="SurrealDbClient" /> in the services provided by the <paramref name="builder"/>.
     /// </summary>
@@ -99,7 +100,8 @@ public static class AspireSurrealDbExtensions
                 healthCheckName,
                 sp => new SurrealDbHealthCheck(serviceKey is null ?
                     sp.GetRequiredService<SurrealDbClient>() :
-                    sp.GetRequiredKeyedService<SurrealDbClient>(serviceKey)),
+                    sp.GetRequiredKeyedService<SurrealDbClient>(serviceKey),
+                    sp.GetRequiredService<ILogger<SurrealDbHealthCheck>>()),
                 failureStatus: null,
                 tags: null,
                 timeout: settings.HealthCheckTimeout > 0 ? TimeSpan.FromMilliseconds(settings.HealthCheckTimeout.Value) : null
