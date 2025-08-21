@@ -38,7 +38,7 @@ internal sealed class SurrealDbHealthCheck : IHealthCheck
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "SurrealDB health check raised an exception. Health check had previously reported: {Outcome}.", isHealthy ? "Healthy" : "Unhealthy");
+            _logger.LogError(ex, "SurrealDB health check raised an exception. Health check had previously reported: {Outcome}. CancellationToken status: {CancellationTokenStatus}", isHealthy ? "Healthy" : "Unhealthy", cancellationToken.IsCancellationRequested ? "Canceled" : "Active");
             return new HealthCheckResult(context.Registration.FailureStatus, exception: ex);
         }
     }
