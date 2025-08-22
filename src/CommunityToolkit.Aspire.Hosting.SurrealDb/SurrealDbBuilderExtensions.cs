@@ -130,7 +130,19 @@ public static class SurrealDbBuilderExtensions
                 await CreateNamespaceAsync(surrealClient, surrealDbNamespace, services, ct)
                     .ConfigureAwait(false);
 
-                await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
+                // 💡 Wait until the Namespace is really created?!
+                while (!ct.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
+                        break;
+                    }
+                    catch
+                    {
+                        await Task.Delay(200, ct).ConfigureAwait(false);
+                    }
+                }
 
                 foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
                 {
