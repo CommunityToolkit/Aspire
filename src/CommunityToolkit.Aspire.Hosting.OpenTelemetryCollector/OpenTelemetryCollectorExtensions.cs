@@ -51,21 +51,21 @@ public static class OpenTelemetryCollectorExtensions
 
         if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
         {
-            DevCertHostingExtensions.RunWithHttpsDevCertificate(resourceBuilder, "HTTPS_CERT_FILE", "HTTPS_CERT_KEY_FILE", (certFilePath, certKeyPath) =>
+            resourceBuilder.RunWithHttpsDevCertificate();
+            var certFilePath = Path.Combine(DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR, DevCertHostingExtensions.CERT_FILE_NAME);
+            var certKeyPath = Path.Combine(DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR, DevCertHostingExtensions.CERT_KEY_FILE_NAME);
+            if (settings.EnableHttpEndpoint)
             {
-                if (settings.EnableHttpEndpoint)
-                {
-                    resourceBuilder.WithArgs(
-                        $@"--config=yaml:receivers::otlp::protocols::http::tls::cert_file: ""{certFilePath}""",
-                        $@"--config=yaml:receivers::otlp::protocols::http::tls::key_file: ""{certKeyPath}""");
-                }
-                if (settings.EnableGrpcEndpoint)
-                {
-                    resourceBuilder.WithArgs(
-                        $@"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: ""{certFilePath}""",
-                        $@"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""{certKeyPath}""");
-                }
-            });
+                resourceBuilder.WithArgs(
+                    $@"--config=yaml:receivers::otlp::protocols::http::tls::cert_file: ""{certFilePath}""",
+                    $@"--config=yaml:receivers::otlp::protocols::http::tls::key_file: ""{certKeyPath}""");
+            }
+            if (settings.EnableGrpcEndpoint)
+            {
+                resourceBuilder.WithArgs(
+                    $@"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: ""{certFilePath}""",
+                    $@"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""{certKeyPath}""");
+            }
         }
         return resourceBuilder;
     }

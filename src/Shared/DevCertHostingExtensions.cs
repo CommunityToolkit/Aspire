@@ -1,199 +1,141 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+﻿using Aspire.Hosting.ApplicationModel;
 
-namespace Aspire;
+namespace Aspire.Hosting;
 
-internal static class DevCertHostingExtensions
+/// <summary>
+/// Extensions for adding Dev Certs to aspire resources.
+/// </summary>
+public static class DevCertHostingExtensions
 {
+    /// <summary>
+    /// The destination directory for the certificate files in a container.
+    /// </summary>
+    public const string DEV_CERT_BIND_MOUNT_DEST_DIR = "/dev-certs";
+
+    /// <summary>
+    /// The file name of the certificate file.
+    /// </summary>
+    public const string CERT_FILE_NAME = "dev-cert.pem";
+
+    /// <summary>
+    /// The file name of the certificate key file.
+    /// </summary>
+    public const string CERT_KEY_FILE_NAME = "dev-cert.key";
+
     /// <summary>
     /// Injects the ASP.NET Core HTTPS developer certificate into the resource via the specified environment variables when
     /// <paramref name="builder"/>.<see cref="IResourceBuilder{T}.ApplicationBuilder">ApplicationBuilder</see>.<see cref="IDistributedApplicationBuilder.ExecutionContext">ExecutionContext</see>.<see cref="DistributedApplicationExecutionContext.IsRunMode">IsRunMode</see><c> == true</c>.<br/>
-    /// If the resource is a <see cref="ContainerResource"/>, the certificate files will be bind mounted into the container.
+    /// If the resource is a <see cref="ContainerResource"/>, the certificate files will be provided via WithContainerFiles.
     /// </summary>
     /// <remarks>
     /// This method <strong>does not</strong> configure an HTTPS endpoint on the resource.
     /// Use <see cref="ResourceBuilderExtensions.WithHttpsEndpoint{TResource}"/> to configure an HTTPS endpoint.
     /// </remarks>
     public static IResourceBuilder<TResource> RunWithHttpsDevCertificate<TResource>(
-        this IResourceBuilder<TResource> builder, string certFileEnv, string certKeyFileEnv, Action<string, string>? onSuccessfulExport = null)
-        where TResource : IResourceWithEnvironment
+        this IResourceBuilder<TResource> builder, string certFileEnv = "", string certKeyFileEnv = "")
+        where TResource : IResourceWithEnvironment, IResourceWithWaitSupport
     {
-        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode && builder.ApplicationBuilder.Environment.IsDevelopment())
+        if (!builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
-            builder.OnBeforeResourceStarted(async (resource, readyEvent, cancellationToken) =>
-            {
-                var logger = readyEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(builder.Resource);
+            return builder;
+        }
 
-                // Export the ASP.NET Core HTTPS development certificate & private key to files and configure the resource to use them via
-                // the specified environment variables.
-                var (exported, certPath, certKeyPath) = await TryExportDevCertificateAsync(builder.ApplicationBuilder, logger);
+        if (builder.Resource is not ContainerResource &&
+            (!string.IsNullOrEmpty(certFileEnv) || !string.IsNullOrEmpty(certKeyFileEnv)))
+        {
+            throw new InvalidOperationException("RunWithHttpsDevCertificate needs environment variables only for Resources that aren't Containers.");
+        }
+        
+        // Create temp directory for certificate export
+        var tempDir = Directory.CreateTempSubdirectory("aspire-dev-certs");
+        var certExportPath = Path.Combine(tempDir.FullName, "dev-cert.pem");
+        var certKeyExportPath = Path.Combine(tempDir.FullName, "dev-cert.key");
 
-                if (!exported)
+        // Create a unique resource name for the certificate export
+        var exportResourceName = $"dev-cert-export";
+
+        // Check if we already have a certificate export resource
+        var existingResource = builder.ApplicationBuilder.Resources.FirstOrDefault(r => r.Name == exportResourceName);
+        IResourceBuilder<ExecutableResource> exportExecutable;
+
+        if (existingResource == null)
+        {
+            // Create the executable resource to export the certificate
+            exportExecutable = builder.ApplicationBuilder
+                .AddExecutable(exportResourceName, "dotnet", tempDir.FullName)
+                .WithEnvironment("DOTNET_CLI_UI_LANGUAGE", "en") // Ensure consistent output language
+                .WithArgs(context =>
                 {
-                    // The export failed for some reason, don't configure the resource to use the certificate.
-                    return;
-                }
+                    context.Args.Add("dev-certs");
+                    context.Args.Add("https");
+                    context.Args.Add("--export-path");
+                    context.Args.Add(certExportPath);
+                    context.Args.Add("--format");
+                    context.Args.Add("Pem");
+                    context.Args.Add("--no-password");
+                });
+        }
+        else
+        {
+            exportExecutable = builder.ApplicationBuilder.CreateResourceBuilder((ExecutableResource)existingResource);
+        }
 
-                var certKeyFileDest = "";
-                var certFileDest = "";
+        builder.WaitForCompletion(exportExecutable);
 
-                if (builder.Resource is ContainerResource containerResource)
+        // Configure the current resource with the certificate paths
+        if (builder.Resource is ContainerResource containerResource)
+        {
+            // Use WithContainerFiles to provide the certificate files to the container
+
+
+            var certFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{CERT_FILE_NAME}";
+            var certKeyFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{CERT_KEY_FILE_NAME}";
+
+            builder.ApplicationBuilder.CreateResourceBuilder(containerResource)
+                .WithContainerFiles(DEV_CERT_BIND_MOUNT_DEST_DIR, (context, cancellationToken) =>
                 {
-                    // Bind-mount the certificate files into the container.
-                    const string DEV_CERT_BIND_MOUNT_DEST_DIR = "/dev-certs";
+                    var files = new List<ContainerFile>();
 
-                    var certFileName = Path.GetFileName(certPath);
-                    var certKeyFileName = Path.GetFileName(certKeyPath);
-
-                    var bindSource = Path.GetDirectoryName(certPath) ?? throw new UnreachableException();
-
-                    certFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{certFileName}";
-                    certKeyFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{certKeyFileName}";
-
-                    containerResource.TryGetContainerMounts(out var mounts);
-                    if (mounts is null || !mounts.Any(m => m.Source == bindSource))
+                    // Check if certificate files exist before adding them
+                    if (File.Exists(certExportPath))
                     {
-                        builder.ApplicationBuilder.CreateResourceBuilder(containerResource)
-                            .WithBindMount(bindSource, DEV_CERT_BIND_MOUNT_DEST_DIR, isReadOnly: false)
-                            .WithEnvironment(certFileEnv, certFileDest)
-                            .WithEnvironment(certKeyFileEnv, certKeyFileDest);
+                        files.Add(new ContainerFile
+                        {
+                            Name = CERT_FILE_NAME,
+                            SourcePath = certExportPath
+                        });
                     }
-                }
-                else
-                {
-                    builder
-                        .WithEnvironment(certFileEnv, certPath)
-                        .WithEnvironment(certKeyFileEnv, certKeyPath);
-                }
 
-                if (onSuccessfulExport is not null)
-                {
-                    onSuccessfulExport(certFileDest, certKeyFileDest);
-                }
-            });
+                    if (File.Exists(certKeyExportPath))
+                    {
+                        files.Add(new ContainerFile
+                        {
+                            Name = CERT_KEY_FILE_NAME,
+                            SourcePath = certKeyExportPath
+                        });
+                    }
+
+                    return Task.FromResult(files.AsEnumerable<ContainerFileSystemItem>());
+                });
+
+            if (!string.IsNullOrEmpty(certFileEnv))
+            {
+                builder.WithEnvironment(certFileEnv, certFileDest);
+            }
+            if (!string.IsNullOrEmpty(certKeyFileEnv))
+            {
+                builder.WithEnvironment(certKeyFileEnv, certKeyFileDest);
+            }
+        }
+        else
+        {
+
+            // For non-container resources, set the file paths directly
+            builder
+                .WithEnvironment(certFileEnv, certExportPath)
+                .WithEnvironment(certKeyFileEnv, certKeyExportPath);
         }
 
         return builder;
-    }
-
-    private static async Task<(bool, string CertFilePath, string CertKeyFilPath)> TryExportDevCertificateAsync(IDistributedApplicationBuilder builder, ILogger logger)
-    {
-        // Exports the ASP.NET Core HTTPS development certificate & private key to PEM files using 'dotnet dev-certs https' to a temporary
-        // directory and returns the path.
-        // TODO: Check if we're running on a platform that already has the cert and key exported to a file (e.g. macOS) and just use those instead.
-        var appHostSha256 = builder.Configuration["AppHost:Sha256"];
-        if (appHostSha256 is null)
-        {
-            throw new InvalidOperationException("Configuration value 'AppHost:Sha256' is missing. Cannot export development certificate.");
-        }
-        var appNameHash = appHostSha256[..10];
-        var tempDir = Path.Combine(Path.GetTempPath(), $"aspire.{appNameHash}");
-        var certExportPath = Path.Combine(tempDir, "dev-cert.pem");
-        var certKeyExportPath = Path.Combine(tempDir, "dev-cert.key");
-
-        if (File.Exists(certExportPath) && File.Exists(certKeyExportPath))
-        {
-            // Certificate already exported, return the path.
-            logger.LogDebug("Using previously exported dev cert files '{CertPath}' and '{CertKeyPath}'", certExportPath, certKeyExportPath);
-            return (true, certExportPath, certKeyExportPath);
-        }
-
-        if (File.Exists(certExportPath))
-        {
-            logger.LogTrace("Deleting previously exported dev cert file '{CertPath}'", certExportPath);
-            File.Delete(certExportPath);
-        }
-
-        if (File.Exists(certKeyExportPath))
-        {
-            logger.LogTrace("Deleting previously exported dev cert key file '{CertKeyPath}'", certKeyExportPath);
-            File.Delete(certKeyExportPath);
-        }
-
-        if (!Directory.Exists(tempDir))
-        {
-            logger.LogTrace("Creating directory to export dev cert to '{ExportDir}'", tempDir);
-            Directory.CreateDirectory(tempDir);
-        }
-
-        string[] args = ["dev-certs", "https", "--export-path", $"\"{certExportPath}\"", "--format", "Pem", "--no-password"];
-        var argsString = string.Join(' ', args);
-
-        logger.LogTrace("Running command to export dev cert: {ExportCmd}", $"dotnet {argsString}");
-        var exportStartInfo = new ProcessStartInfo
-        {
-            FileName = "dotnet",
-            Arguments = argsString,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden,
-        };
-
-        var exportProcess = new Process { StartInfo = exportStartInfo };
-
-        Task? stdOutTask = null;
-        Task? stdErrTask = null;
-
-        try
-        {
-            try
-            {
-                if (exportProcess.Start())
-                {
-                    stdOutTask = ConsumeOutput(exportProcess.StandardOutput, msg => logger.LogInformation("> {StandardOutput}", msg));
-                    stdErrTask = ConsumeOutput(exportProcess.StandardError, msg => logger.LogError("! {ErrorOutput}", msg));
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to start HTTPS dev certificate export process");
-                return default;
-            }
-
-            var timeout = TimeSpan.FromSeconds(5);
-            var exited = exportProcess.WaitForExit(timeout);
-
-            if (exited && File.Exists(certExportPath) && File.Exists(certKeyExportPath))
-            {
-                logger.LogDebug("Dev cert exported to '{CertPath}' and '{CertKeyPath}'", certExportPath, certKeyExportPath);
-                return (true, certExportPath, certKeyExportPath);
-            }
-
-            if (exportProcess.HasExited && exportProcess.ExitCode != 0)
-            {
-                logger.LogError("HTTPS dev certificate export failed with exit code {ExitCode}", exportProcess.ExitCode);
-            }
-            else if (!exportProcess.HasExited)
-            {
-                exportProcess.Kill(true);
-                logger.LogError("HTTPS dev certificate export timed out after {TimeoutSeconds} seconds", timeout.TotalSeconds);
-            }
-            else
-            {
-                logger.LogError("HTTPS dev certificate export failed for an unknown reason");
-            }
-            return default;
-        }
-        finally
-        {
-            await Task.WhenAll(stdOutTask ?? Task.CompletedTask, stdErrTask ?? Task.CompletedTask);
-        }
-
-        static async Task ConsumeOutput(TextReader reader, Action<string> callback)
-        {
-            char[] buffer = new char[256];
-            int charsRead;
-
-            while ((charsRead = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
-            {
-                callback(new string(buffer, 0, charsRead));
-            }
-        }
     }
 }
