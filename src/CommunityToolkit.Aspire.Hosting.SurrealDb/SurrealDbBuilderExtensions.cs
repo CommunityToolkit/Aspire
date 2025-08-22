@@ -243,7 +243,7 @@ public static class SurrealDbBuilderExtensions
         builder.Resource.AddDatabase(name, databaseName);
         var surrealServerDatabase = new SurrealDbDatabaseResource(name, databaseName, builder.Resource);
 
-        SurrealDbClient? surrealDbClient = null;
+        SurrealDbOptions? surrealDbOptions = null;
 
         string namespaceName = builder.Resource.Name;
         string serverName = builder.Resource.Parent.Name;
@@ -251,7 +251,7 @@ public static class SurrealDbBuilderExtensions
         string healthCheckKey = $"{serverName}_{namespaceName}_{name}_check";
         builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
                 name: healthCheckKey,
-                sp => new SurrealDbHealthCheck(surrealDbClient!, sp.GetRequiredService<ILogger<SurrealDbHealthCheck>>()),
+                sp => new SurrealDbHealthCheck(surrealDbOptions!, sp.GetRequiredService<ILogger<SurrealDbHealthCheck>>()),
                 failureStatus: null,
                 tags: null
             )
@@ -267,8 +267,7 @@ public static class SurrealDbBuilderExtensions
                     throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerDatabase}' resource but the connection string was null.");
                 }
 
-                var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
-                surrealDbClient = new SurrealDbClient(options);
+                surrealDbOptions = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
             });
     }
 

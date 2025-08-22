@@ -98,9 +98,8 @@ public static class AspireSurrealDbExtensions
 
             builder.TryAddHealthCheck(new HealthCheckRegistration(
                 healthCheckName,
-                sp => new SurrealDbHealthCheck(serviceKey is null ?
-                    sp.GetRequiredService<SurrealDbClient>() :
-                    sp.GetRequiredKeyedService<SurrealDbClient>(serviceKey),
+                sp => new SurrealDbHealthCheck(
+                    settings.Options,
                     sp.GetRequiredService<ILogger<SurrealDbHealthCheck>>()),
                 failureStatus: null,
                 tags: null,
