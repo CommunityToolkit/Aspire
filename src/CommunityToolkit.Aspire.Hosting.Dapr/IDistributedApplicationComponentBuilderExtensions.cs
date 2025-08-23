@@ -84,7 +84,17 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <typeparam name="TDestination">The type of the resource.</typeparam>
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="component">The Dapr component to use with the sidecar.</param>
+    [Obsolete("Add reference to the sidecar resource instead of the project resource")]
     public static IResourceBuilder<TDestination> WithReference<TDestination>(this IResourceBuilder<TDestination> builder, IResourceBuilder<IDaprComponentResource> component) where TDestination : IResource
+    {
+        return builder.WithAnnotation(new DaprComponentReferenceAnnotation(component.Resource));
+    }
+    /// <summary>
+    /// Associates a Dapr component with the Dapr sidecar started for the resource.
+    /// </summary>
+    /// <param name="builder">The resource builder instance.</param>
+    /// <param name="component">The Dapr component to use with the sidecar.</param>
+    public static IResourceBuilder<IDaprSidecarResource> WithReference(this IResourceBuilder<IDaprSidecarResource> builder, IResourceBuilder<IDaprComponentResource> component)
     {
         return builder.WithAnnotation(new DaprComponentReferenceAnnotation(component.Resource));
     }

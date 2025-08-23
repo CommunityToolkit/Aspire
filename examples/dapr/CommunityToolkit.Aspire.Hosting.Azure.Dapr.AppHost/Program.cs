@@ -1,5 +1,8 @@
+using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
+builder.AddAzureContainerAppEnvironment("cae").WithDashboard();
 
 var redis = builder.AddAzureRedis("redisState").WithAccessKeyAuthentication().RunAsContainer();
 
@@ -13,20 +16,18 @@ var pubSub = builder.AddDaprPubSub("pubsub")
 
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
-       .WithReference(stateStore)
-       .WithReference(pubSub)
-       .WithDaprSidecar()
-       .WaitFor(redis);
+       .WithDaprSidecar(sidecar =>
+       {
+           sidecar.WithReference(stateStore).WithReference(pubSub);
+       }).WaitFor(redis);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
-       .WithReference(pubSub)
-       .WithDaprSidecar()
+       .WithDaprSidecar(sidecar => sidecar.WithReference(pubSub))
        .WaitFor(redis);
 
 // console app with no appPort (sender only)
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceC>("servicec")
-       .WithReference(stateStore)
-       .WithDaprSidecar()
+       .WithDaprSidecar(sidecar => sidecar.WithReference(stateStore))
        .WaitFor(redis);
 
 builder.Build().Run();
