@@ -16,5 +16,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Dapr.Tests" />
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Azure.Dapr.Tests" />
   </ItemGroup>
 </Project>

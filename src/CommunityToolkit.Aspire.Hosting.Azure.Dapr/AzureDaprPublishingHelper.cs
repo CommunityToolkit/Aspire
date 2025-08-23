@@ -6,7 +6,7 @@ using CommunityToolkit.Aspire.Hosting.Dapr;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 
-internal class AzureDaprPublishingHelper : IDaprPublishingHelper
+internal class AzureDaprPublishingHelper 
 {
     public ValueTask ExecuteProviderSpecificRequirements(
         DistributedApplicationModel appModel,

@@ -24,7 +24,14 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <returns>The distributed application builder instance.</returns>
     public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null)
     {
-        return builder.AddDaprInternal<DefaultDaprPublishingHelper>(configure);
+        if (configure is not null)
+        {
+            builder.Services.Configure(configure);
+        }
+
+        builder.Services.TryAddLifecycleHook<DaprDistributedApplicationLifecycleHook>();
+
+        return builder;
     }
 
     /// <summary>
@@ -71,27 +78,6 @@ public static partial class IDistributedApplicationBuilderExtensions
     public static IResourceBuilder<IDaprComponentResource> AddDaprStateStore(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentOptions? options = null)
     {
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.StateStore, options);
-    }
-
-    ///<summary>
-    /// Adds Dapr support to Aspire, including the ability to add Dapr sidecar to application resource.
-    /// </summary>
-    /// <typeparam name="TPublishingHelper">The type of the Dapr publishing helper.</typeparam>
-    /// <param name="builder">The distributed application builder instance.</param>
-    /// <param name="configure">Callback to configure dapr options.</param>
-    /// <returns>The distributed application builder instance.</returns>
-    public static IDistributedApplicationBuilder AddDaprInternal<TPublishingHelper>(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null) where TPublishingHelper : class, IDaprPublishingHelper
-    {
-        builder.Services.AddSingleton<IDaprPublishingHelper, TPublishingHelper>();
-
-        if (configure is not null)
-        {
-            builder.Services.Configure(configure);
-        }
-
-        builder.Services.TryAddLifecycleHook<DaprDistributedApplicationLifecycleHook>();
-
-        return builder;
     }
 
     private static void WriteDaprComponentResourceToManifest(ManifestPublishingContext context, DaprComponentResource resource)
