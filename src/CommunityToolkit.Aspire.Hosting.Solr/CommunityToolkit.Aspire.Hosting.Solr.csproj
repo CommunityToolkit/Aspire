@@ -2,7 +2,6 @@
   <PropertyGroup>
     <Description>A .NET Aspire hosting integration for Apache Solr.</Description>
     <PackageTags>solr search hosting</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
