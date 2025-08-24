@@ -26,16 +26,6 @@ public static class SolrBuilderExtensions
 
         var resource = new SolrResource(name, coreName);
 
-        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(resource, async (_, ct) =>
-        {
-            var connectionString = await resource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
-
-            if (connectionString is null)
-            {
-                throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{resource.Name}' resource but the connection string was null.");
-            }
-        });
-
         var solrBuilder = builder.AddResource(resource)
                      .WithImage(SolrContainerImageTags.Image, SolrContainerImageTags.Tag)
                      .WithImageRegistry(SolrContainerImageTags.Registry)
