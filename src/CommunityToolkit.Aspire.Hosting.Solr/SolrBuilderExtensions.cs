@@ -22,10 +22,7 @@ public static class SolrBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        if (string.IsNullOrEmpty(coreName))
-        {
-            coreName = "solr";
-        }
+        coreName ??= "solr";
 
         var resource = new SolrResource(name, coreName);
 
