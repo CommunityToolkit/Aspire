@@ -3,7 +3,6 @@ using Aspire.Hosting.Azure;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning;
-using Azure.Provisioning.KeyVault;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 namespace Aspire.Hosting;
@@ -13,30 +12,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class AzureDaprHostingExtensions
 {
-
-
-    /// <summary>
-    /// Adds an Azure Dapr resource to the resource builder.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="name">The name of the Dapr resource.</param>
-    /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
-    /// <returns>The updated resource builder.</returns>
-    public static IResourceBuilder<AzureDaprComponentResource> AddAzureDaprResource(
-        this IResourceBuilder<AzureDaprComponentResource> builder,
-        [ResourceName] string name,
-        Action<AzureResourceInfrastructure> configureInfrastructure)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
-        ArgumentNullException.ThrowIfNull(configureInfrastructure, nameof(configureInfrastructure));
-
-        var azureDaprComponentResource = new AzureDaprComponentResource(name, configureInfrastructure);
-
-        return builder.ApplicationBuilder
-                                    .AddResource(azureDaprComponentResource)
-                                    .WithManifestPublishingCallback(azureDaprComponentResource.WriteToManifest);
-    }
 
     /// <summary>
     /// Adds an Azure Dapr resource to the resource builder.
@@ -64,49 +39,6 @@ public static class AzureDaprHostingExtensions
     }
 
     /// <summary>
-    /// Configures the infrastructure for a Dapr component in a container app managed environment.
-    /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="daprComponent">The Dapr component to configure.</param>
-    /// <param name="parameters">The parameters to provide to the component</param>
-    /// <param name="requireScopes">Whether scopes need to be assigned to the component</param>
-    /// <returns>An action to configure the Azure resource infrastructure.</returns>
-    public static Action<AzureResourceInfrastructure> GetInfrastructureConfigurationAction(
-        this IResourceBuilder<IDaprComponentResource> builder,
-        ContainerAppManagedEnvironmentDaprComponent daprComponent,
-        IEnumerable<ProvisioningParameter>? parameters = null, bool? requireScopes = false) =>
-        (AzureResourceInfrastructure infrastructure) =>
-        {
-            ArgumentNullException.ThrowIfNull(daprComponent, nameof(daprComponent));
-            ArgumentNullException.ThrowIfNull(infrastructure, nameof(infrastructure));
-
-            ProvisioningVariable resourceToken = new("resourceToken", typeof(string))
-            {
-                Value = BicepFunction.GetUniqueString(BicepFunction.GetResourceGroup().Id)
-            };
-
-            infrastructure.Add(resourceToken);
-
-            var containerAppEnvironment = ContainerAppManagedEnvironment.FromExisting("containerAppEnvironment");
-            containerAppEnvironment.Name = BicepFunction.Interpolate($"cae-{resourceToken}");
-
-            infrastructure.Add(containerAppEnvironment);
-            daprComponent.Parent = containerAppEnvironment;
-
-
-            if (requireScopes == true)
-            {
-                builder.AddScopes(daprComponent);
-            }
-            infrastructure.Add(daprComponent);
-
-            foreach (var parameter in parameters ?? [])
-            {
-                infrastructure.Add(parameter);
-            }
-        };
-
-    /// <summary>
     /// Adds scopes to the specified Dapr component in a container app managed environment.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
@@ -114,9 +46,9 @@ public static class AzureDaprHostingExtensions
     public static void AddScopes(this IResourceBuilder<IDaprComponentResource> builder, ContainerAppManagedEnvironmentDaprComponent daprComponent)
     {
         daprComponent.Scopes = [];
+
         foreach (var resource in builder.ApplicationBuilder.Resources)
         {
-
             if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation) ||
             !resource.TryGetAnnotationsOfType<DaprComponentReferenceAnnotation>(out var daprComponentReferenceAnnotations))
             {
@@ -135,12 +67,9 @@ public static class AzureDaprHostingExtensions
                     var appId = sidecarOptions?.AppId ?? resource.Name;
                     daprComponent.Scopes.Add(appId);
                 }
-
             }
         }
     }
-
-
 
     /// <summary>
     /// Creates a new Dapr component for a container app managed environment.

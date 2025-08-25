@@ -306,6 +306,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         context.Writer.WriteEndObject();
                     }));
 
+            if (_options.PublishingConfigurationAction is Action<IResource, DaprSidecarOptions?> configurePublishAction)
+            {
+                configurePublishAction(resource, sidecarOptions);
+            }
+
+
             sideCars.Add(daprCli);
         }
 
