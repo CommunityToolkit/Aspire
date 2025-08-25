@@ -202,7 +202,26 @@ public static class SurrealDbBuilderExtensions
 
         builder.Resource.AddNamespace(name, namespaceName);
         var surrealServerNamespace = new SurrealDbNamespaceResource(name, namespaceName, builder.Resource);
-        return builder.ApplicationBuilder.AddResource(surrealServerNamespace);
+
+        SurrealDbOptions? surrealDbOptions = null;
+
+        string serverName = builder.Resource.Name;
+
+        string healthCheckKey = $"{serverName}_{namespaceName}_{name}_check";
+        builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
+                name: healthCheckKey,
+                sp => new SurrealDbNamespaceHealthCheck(surrealDbOptions!, namespaceName, sp.GetRequiredService<ILogger<SurrealDbNamespaceHealthCheck>>()),
+                failureStatus: null,
+                tags: null
+            )
+        );
+
+        return builder.ApplicationBuilder.AddResource(surrealServerNamespace).WithHealthCheck(healthCheckKey)
+            .OnConnectionStringAvailable(async (_, _, ct) =>
+            {
+                var connectionString = await surrealServerNamespace.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false) ?? throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerNamespace}' resource but the connection string was null.");
+                surrealDbOptions = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
+            });
     }
 
     /// <summary>
