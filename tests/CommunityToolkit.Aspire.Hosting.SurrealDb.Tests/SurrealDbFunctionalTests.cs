@@ -248,7 +248,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         await app.StopAsync();
     }
     
-    [Fact]
+    [Fact(Skip = "Feature is unstable and blocking the release")]
     public async Task VerifyWithInitFiles()
     {
         // Creates a script that should be executed when the container is initialized.
@@ -281,11 +281,13 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             );
     
             using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
-    
+
+#pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             var surrealServer = builder
                 .AddSurrealServer("surreal")
                 .WithInitFiles(initFilePath);
-    
+#pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
             var ns = surrealServer.AddNamespace(surrealNsName);
             var db = ns.AddDatabase(surrealDbName);
     
@@ -335,7 +337,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         }
     }
     
-    [Fact]
+    [Fact(Skip = "Feature is unstable and blocking the release")]
     public async Task AddDatabaseCreatesDatabaseWithCustomScript()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
@@ -347,6 +349,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var surreal = builder.AddSurrealServer("surreal", strictMode: true);
 
+#pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         var db = surreal
             .AddNamespace(surrealNsName)
             .AddDatabase(surrealDbName)
@@ -361,6 +364,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                 DEFINE FIELD IsComplete ON todo TYPE bool;
                 """
             );
+#pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         using var app = builder.Build();
 

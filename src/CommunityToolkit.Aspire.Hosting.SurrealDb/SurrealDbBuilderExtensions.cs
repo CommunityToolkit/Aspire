@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using SurrealDb.Net;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 
@@ -233,6 +234,7 @@ public static class SurrealDbBuilderExtensions
     /// <remarks>
     /// <value>Default script is <code>DEFINE NAMESPACE IF NOT EXISTS `QUOTED_NAMESPACE_NAME`;</code></value>
     /// </remarks>
+    [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbNamespaceResource> WithCreationScript(this IResourceBuilder<SurrealDbNamespaceResource> builder, string script)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -318,6 +320,7 @@ public static class SurrealDbBuilderExtensions
     /// <remarks>
     /// <value>Default script is <code>DEFINE DATABASE IF NOT EXISTS `QUOTED_DATABASE_NAME`;</code></value>
     /// </remarks>
+    [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbDatabaseResource> WithCreationScript(this IResourceBuilder<SurrealDbDatabaseResource> builder, string script)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -400,6 +403,7 @@ public static class SurrealDbBuilderExtensions
     /// <param name="source">The source file on the host to copy into the container.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     /// <exception cref="DistributedApplicationException">SurrealDB only support importing a single script file.</exception>
+    [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbServerResource> WithInitFiles(this IResourceBuilder<SurrealDbServerResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
