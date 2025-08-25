@@ -131,17 +131,24 @@ public static class SurrealDbBuilderExtensions
                     .ConfigureAwait(false);
 
                 // 💡 Wait until the Namespace is really created?!
+                bool nsCreationValidated = false;
                 while (!ct.IsCancellationRequested)
                 {
                     try
                     {
                         await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
+                        nsCreationValidated = true;
                         break;
                     }
                     catch
                     {
                         await Task.Delay(200, ct).ConfigureAwait(false);
                     }
+                }
+
+                if (!nsCreationValidated)
+                {
+                    throw new DistributedApplicationException($"Namespace '{surrealDbNamespace.Name}' was not created successfully.");
                 }
 
                 foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
