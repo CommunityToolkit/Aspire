@@ -10,6 +10,10 @@ In these cases, refer to the `<remarks>` docs section of the API for more inform
 
 Once a release of .NET Aspire with that API is available, the API in the .NET Aspire Community Toolkit will be marked as obsolete and will be removed in a future release.
 
+## CTASPIRE002
+
+This API is marked as experimental as it does not have a stable implementation, meaning the underlying API is not stable or the test coverage is not consistent in passing. No guarantees are made regarding its functionality or stability.
+
 ## CTASPIRE003
 
 The API is marked for deprecation and will be removed in a future release.

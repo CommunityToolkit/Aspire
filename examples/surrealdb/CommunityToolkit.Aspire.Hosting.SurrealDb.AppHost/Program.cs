@@ -11,6 +11,7 @@ var db = builder.AddSurrealServer("surreal", strictMode: strictMode)
 
 if (strictMode)
 {
+#pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     db.WithCreationScript(
         $"""
         DEFINE DATABASE IF NOT EXISTS {nameof(db)};
@@ -28,6 +29,7 @@ if (strictMode)
         DEFINE FIELD summary ON weatherForecast TYPE string;
         """
     );
+#pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 }
 
 builder.AddProject<CommunityToolkit_Aspire_Hosting_SurrealDb_ApiService>("apiservice")
