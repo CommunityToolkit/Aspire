@@ -1,17 +1,18 @@
-using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddAzureContainerAppEnvironment("cae").WithDashboard();
+builder.AddAzureContainerAppEnvironment("cae").WithDaprComponents();
 
 var redis = builder.AddAzureRedis("redisState").WithAccessKeyAuthentication().RunAsContainer();
 
-// local development still uses dapr redis state container
+// State store using Redis
 var stateStore = builder.AddDaprStateStore("statestore")
                         .WithReference(redis);
 
+// PubSub also using Redis - for Azure deployment this will use the same Redis instance
+// For local development, it uses the .WithMetadata for local Redis configuration
 var pubSub = builder.AddDaprPubSub("pubsub")
-                    .WithMetadata("redisHost", "localhost:6379")
+                    .WithReference(redis)  // This enables Azure Redis pubsub deployment
+                    .WithMetadata("redisHost", "localhost:6379")  // This is for local development
                     .WaitFor(redis);
 
 

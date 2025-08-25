@@ -1,12 +1,11 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Azure;
 using Aspire.Hosting.Azure.AppContainers;
 using Azure.Provisioning.AppContainers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
+using CommunityToolkit.Aspire.Hosting.Dapr;
 
-namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Provides extension methods for configuring Azure Container App Environment resources.
@@ -18,21 +17,49 @@ public static class AzureContainerAppEnvironmentResourceBuilderExtensions
     /// </summary>
     /// <param name="builder"></param>
     /// <returns></returns>
-    public static IResourceBuilder<AzureContainerAppEnvironmentResource> WithDapr(
+    public static IResourceBuilder<AzureContainerAppEnvironmentResource> WithDaprComponents(
         this IResourceBuilder<AzureContainerAppEnvironmentResource> builder)
     {
-        //TODO: Implement Dapr configuration for Azure Container App Environment
-        return builder.ConfigureInfrastructure(infr =>
-        {
-            if (infr.GetProvisionableResources().OfType<ContainerAppManagedEnvironment>().FirstOrDefault() is ContainerAppManagedEnvironment managedEnvironment)
-            {
-                ContainerAppManagedEnvironmentDaprComponent containerAppManagedEnvironmentDaprComponent = new("cae_123_dapr")
-                {
-                    Parent = managedEnvironment,
-                };
-                containerAppManagedEnvironmentDaprComponent.Scopes = ["service-a", "service-b", "service-c"];
+        builder.ApplicationBuilder.AddDapr(c =>
+       {
+           c.PublishingConfigurationAction = (IResource resource, DaprSidecarOptions? daprSidecarOptions) =>
+           {
+               var configureAction = (AzureResourceInfrastructure infrastructure, ContainerApp containerApp) =>
+               {
+                   containerApp.Configuration.Dapr = new ContainerAppDaprConfiguration
+                   {
+                       AppId = daprSidecarOptions?.AppId ?? resource.Name,
+                       AppPort = daprSidecarOptions?.AppPort ?? 8080,
+                       IsApiLoggingEnabled = daprSidecarOptions?.EnableApiLogging ?? false,
+                       LogLevel = daprSidecarOptions?.LogLevel?.ToLower() switch
+                       {
+                           "debug" => ContainerAppDaprLogLevel.Debug,
+                           "warn" => ContainerAppDaprLogLevel.Warn,
+                           "error" => ContainerAppDaprLogLevel.Error,
+                           _ => ContainerAppDaprLogLevel.Info
+                       },
+                       AppProtocol = daprSidecarOptions?.AppProtocol?.ToLower() switch
+                       {
+                           "grpc" => ContainerAppProtocol.Grpc,
+                           _ => ContainerAppProtocol.Http,
+                       },
+                       IsEnabled = true
+                   };
+               };
 
-                infr.Add(containerAppManagedEnvironmentDaprComponent);
+               resource.Annotations.Add(new AzureContainerAppCustomizationAnnotation(configureAction));
+           };
+       });
+
+        return builder.ConfigureInfrastructure(infrastructure =>
+        {
+            var daprComponentResources = builder.ApplicationBuilder.Resources.OfType<IDaprComponentResource>();
+
+            foreach (var daprComponentResource in daprComponentResources)
+            {
+                daprComponentResource.TryGetLastAnnotation<AzureDaprComponentPublishingAnnotation>(out var publishingAnnotation);
+
+                publishingAnnotation?.PublishingAction(infrastructure);
             }
         });
     }
