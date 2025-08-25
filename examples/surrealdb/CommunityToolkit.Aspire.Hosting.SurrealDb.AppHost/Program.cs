@@ -2,7 +2,7 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-bool strictMode = false;
+bool strictMode = true;
 
 var db = builder.AddSurrealServer("surreal", strictMode: strictMode)
     .WithSurrealist()
