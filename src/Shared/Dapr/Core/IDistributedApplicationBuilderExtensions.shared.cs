@@ -33,7 +33,6 @@ public static partial class IDistributedApplicationBuilderExtensions
             {
                 Properties = [],
                 ResourceType = "DaprComponent",
-                State = KnownResourceStates.NotStarted,
                 IsHidden = true,
             })
             .WithAnnotation(new ManifestPublishingCallbackAnnotation(context => WriteDaprComponentResourceToManifest(context, resource)));
