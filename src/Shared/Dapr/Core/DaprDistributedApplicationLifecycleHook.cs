@@ -75,6 +75,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var secrets = new Dictionary<string, string>();
             var endpointEnvironmentVars = new Dictionary<string, IValueProvider>();
+            var hasValueProviders = false;
 
             foreach (var componentReferenceAnnotation in componentReferenceAnnotations)
             {
@@ -84,8 +85,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     foreach (var endpointAnnotation in endpointAnnotations)
                     {
                         endpointEnvironmentVars[endpointAnnotation.EnvironmentVariableName] = endpointAnnotation.ValueProvider;
-                        // We also need to ensure the secret store is added
-                        secrets[endpointAnnotation.EnvironmentVariableName] = "placeholder"; // Will be replaced with actual value later
+                        hasValueProviders = true;
                     }
                 }
                 
@@ -98,8 +98,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     }
                 }
                 
-                // If we have any secrets or endpoint references, ensure the secret store path is added
-                if ((secrets.Count > 0 || endpointEnvironmentVars.Count > 0) && onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath))
+                // If we have any secrets or value providers, ensure the secret store path is added
+                if ((secrets.Count > 0 || hasValueProviders) && onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath))
                 {
                     string onDemandResourcesPathDirectory = Path.GetDirectoryName(secretStorePath)!;
                     if (onDemandResourcesPathDirectory is not null)
@@ -141,11 +141,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     // Add regular secrets
                     foreach (var secret in secrets)
                     {
-                        // Skip placeholder values for endpoint references
-                        if (!endpointEnvironmentVars.ContainsKey(secret.Key))
-                        {
-                            context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
-                        }
+                        context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
                     }
                     
                     // Add value provider references (these can now be resolved since endpoints are allocated)
