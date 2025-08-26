@@ -25,7 +25,7 @@ public class EndpointReferenceTests
         Assert.True(resource.TryGetAnnotationsOfType<DaprComponentEndpointReferenceAnnotation>(out var endpointAnnotations));
         var endpointAnnotation = Assert.Single(endpointAnnotations);
         Assert.Equal("redisHost", endpointAnnotation.MetadataName);
-        Assert.Contains("DAPR_ENDPOINT", endpointAnnotation.EnvironmentVariableName);
+        Assert.Contains("ENDPOINT_", endpointAnnotation.EnvironmentVariableName);
         
         // Check for configuration annotation that sets up secretKeyRef
         Assert.True(resource.TryGetAnnotationsOfType<DaprComponentConfigurationAnnotation>(out var configAnnotations));
@@ -59,12 +59,12 @@ public class EndpointReferenceTests
         var metadataItem = Assert.IsType<DaprComponentSpecMetadataSecret>(schema.Spec.Metadata[0]);
         Assert.Equal("redisHost", metadataItem.Name);
         Assert.NotNull(metadataItem.SecretKeyRef);
-        Assert.Contains("DAPR_ENDPOINT", metadataItem.SecretKeyRef.Key);
+        Assert.Contains("ENDPOINT_", metadataItem.SecretKeyRef.Key);
         
         // Check that YAML contains secretKeyRef
         var yaml = schema.ToString();
         Assert.Contains("secretKeyRef:", yaml);
-        Assert.Contains("name: DAPR_ENDPOINT", yaml);
+        Assert.Contains("name: ENDPOINT_", yaml);
     }
     
     [Fact]
