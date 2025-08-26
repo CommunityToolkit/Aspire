@@ -3,7 +3,8 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("redis").WithRedisInsight();
 
 
-var stateStore = builder.AddDaprStateStore("statestore");
+var stateStore = builder.AddDaprStateStore("statestore")
+    .WaitFor(redis);
 
 var redisHost= redis.Resource.PrimaryEndpoint.Property(EndpointProperty.Host);
 var redisTargetPort = redis.Resource.PrimaryEndpoint.Property(EndpointProperty.TargetPort);
