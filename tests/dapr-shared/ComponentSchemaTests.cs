@@ -109,4 +109,51 @@ public class ComponentSchemaTests
         Assert.Equal("password", secret.SecretKeyRef.Name);
         Assert.Equal("password", secret.SecretKeyRef.Key);
     }
+
+    [Fact]
+    public async Task ComponentSchemaResolvesAsyncValuesCorrectly()
+    {
+        // Create a test value provider
+        var testValueProvider = new TestValueProvider("resolved-value");
+        
+        // Create a component schema with async value provider
+        DaprComponentSchema componentSchema = new("testComponent", "state.redis");
+        componentSchema.Spec.Metadata.Add(new DaprComponentSpecMetadataValueProvider
+        {
+            Name = "redisHost",
+            ValueProvider = testValueProvider
+        });
+        
+        // Before resolution, Value should be null
+        var metadataItem = componentSchema.Spec.Metadata.First() as DaprComponentSpecMetadataValueProvider;
+        Assert.NotNull(metadataItem);
+        Assert.Null(metadataItem.Value);
+        
+        // Resolve all async values
+        await componentSchema.ResolveAllValuesAsync();
+        
+        // After resolution, Value should be populated
+        Assert.Equal("resolved-value", metadataItem.Value);
+        
+        // The serialized YAML should contain the resolved value
+        string yaml = componentSchema.ToString();
+        Assert.Contains("name: redisHost", yaml);
+        Assert.Contains("value: resolved-value", yaml);
+    }
+    
+    // Test helper class that implements IValueProvider
+    private class TestValueProvider : global::Aspire.Hosting.ApplicationModel.IValueProvider
+    {
+        private readonly string _value;
+        
+        public TestValueProvider(string value)
+        {
+            _value = value;
+        }
+        
+        public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken = default)
+        {
+            return ValueTask.FromResult<string?>(_value);
+        }
+    }
 }
