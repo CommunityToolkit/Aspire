@@ -74,16 +74,16 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             var waitAnnotationsToCopyToDaprCli = new List<WaitAnnotation>();
 
             var secrets = new Dictionary<string, string>();
-            var endpointEnvironmentVars = new Dictionary<string, EndpointReference>();
+            var endpointEnvironmentVars = new Dictionary<string, IValueProvider>();
 
             foreach (var componentReferenceAnnotation in componentReferenceAnnotations)
             {
-                // Check if there are any endpoint references that need to be added as environment variables
-                if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentEndpointReferenceAnnotation>(out var endpointAnnotations))
+                // Check if there are any value provider references that need to be added as environment variables
+                if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var endpointAnnotations))
                 {
                     foreach (var endpointAnnotation in endpointAnnotations)
                     {
-                        endpointEnvironmentVars[endpointAnnotation.EnvironmentVariableName] = endpointAnnotation.Endpoint;
+                        endpointEnvironmentVars[endpointAnnotation.EnvironmentVariableName] = endpointAnnotation.ValueProvider;
                         // We also need to ensure the secret store is added
                         secrets[endpointAnnotation.EnvironmentVariableName] = "placeholder"; // Will be replaced with actual value later
                     }
@@ -148,10 +148,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         }
                     }
                     
-                    // Add endpoint references (these can now be resolved since endpoints are allocated)
-                    foreach (var (envVarName, endpoint) in endpointEnvironmentVars)
+                    // Add value provider references (these can now be resolved since endpoints are allocated)
+                    foreach (var (envVarName, valueProvider) in endpointEnvironmentVars)
                     {
-                        var value = await ((IValueProvider)endpoint).GetValueAsync(context.CancellationToken);
+                        var value = await valueProvider.GetValueAsync(context.CancellationToken);
                         context.EnvironmentVariables.TryAdd(envVarName, value ?? string.Empty);
                     }
                 }));
@@ -467,10 +467,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 .Where(component => component.Options?.LocalPath is null)
                 .ToList();
 
-        // If any of the components have secrets or endpoint references, we will add an on-demand secret store component.
+        // If any of the components have secrets or value provider references, we will add an on-demand secret store component.
         bool needsSecretStore = onDemandComponents.Any(component => 
             (component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations) && secretAnnotations.Any()) ||
-            (component.TryGetAnnotationsOfType<DaprComponentEndpointReferenceAnnotation>(out var endpointAnnotations) && endpointAnnotations.Any()));
+            (component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations) && valueProviderAnnotations.Any()));
         
         if (needsSecretStore)
         {
