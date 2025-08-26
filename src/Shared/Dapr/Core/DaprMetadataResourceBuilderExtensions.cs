@@ -33,6 +33,33 @@ public static class DaprMetadataResourceBuilderExtensions
 
 
     /// <summary>
+    /// Adds an endpoint reference as metadata to the Dapr component
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="name"></param>
+    /// <param name="endpointReference"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, EndpointReference endpointReference)
+    {
+        return builder.WithAnnotation(new DaprComponentConfigurationAnnotation(schema =>
+        {
+            var existing = schema.Spec.Metadata.Find(m => m.Name == name);
+            if (existing is not null)
+            {
+                schema.Spec.Metadata.Remove(existing);
+            }
+            
+            // Get the URL from the endpoint reference
+            schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValue
+            {
+                Name = name,
+                Value = endpointReference.Url
+            });
+            return Task.CompletedTask;
+        }));
+    }
+
+    /// <summary>
     /// Adds a parameter resource as metadata to the Dapr component
     /// </summary>
     /// <param name="builder"></param>
