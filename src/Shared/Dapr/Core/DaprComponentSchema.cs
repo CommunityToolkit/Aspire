@@ -1,4 +1,5 @@
-﻿using YamlDotNet.Serialization;
+﻿using Aspire.Hosting.ApplicationModel;
+using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr;
@@ -29,6 +30,20 @@ internal class DaprComponentSchema
         };
     }
     public override string ToString() => serializer.Serialize(this);
+    
+    /// <summary>
+    /// Resolves all async values in the component schema
+    /// </summary>
+    public async Task ResolveAllValuesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var metadata in Spec.Metadata)
+        {
+            if (metadata is DaprComponentSpecMetadataValueProvider valueProvider)
+            {
+                await valueProvider.ResolveValueAsync(cancellationToken);
+            }
+        }
+    }
 
     public static DaprComponentSchema FromYaml(string yamlContent) =>
         deserializer.Deserialize<DaprComponentSchema>(yamlContent);
@@ -102,6 +117,29 @@ public sealed class DaprComponentSpecMetadataValue : DaprComponentSpecMetadata
     /// </summary>
     [YamlMember(Order = 2)]
     public required string Value { get; set; }
+}
+
+internal sealed class DaprComponentSpecMetadataValueProvider : DaprComponentSpecMetadata
+{
+    /// <summary>
+    /// The value provider for deferred evaluation
+    /// </summary>
+    [YamlIgnore]
+    public required IValueProvider ValueProvider { get; init; }
+    
+    /// <summary>
+    /// The resolved value (populated after resolution)
+    /// </summary>
+    [YamlMember(Order = 2)]
+    public string? Value { get; set; }
+    
+    /// <summary>
+    /// Resolves the value from the provider
+    /// </summary>
+    public async Task ResolveValueAsync(CancellationToken cancellationToken = default)
+    {
+        Value = await ValueProvider.GetValueAsync(cancellationToken) ?? string.Empty;
+    }
 }
 
 /// <summary>

@@ -492,7 +492,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     {
         // We should try to read content from a known location (such as aspire root directory)
         logger.LogInformation("Unvalidated configuration {specType} for component '{ComponentName}'.", component.Type, component.Name);
-        return await contentWriter(await GetDaprComponent(component, component.Type)).ConfigureAwait(false);
+        return await contentWriter(await GetDaprComponent(component, component.Type, cancellationToken)).ConfigureAwait(false);
     }
     private async Task<string> GetBuildingBlockComponentAsync(DaprComponentResource component, Func<string, Task<string>> contentWriter, string defaultProvider, CancellationToken cancellationToken)
     {
@@ -545,19 +545,21 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         string defaultContent = await File.ReadAllTextAsync(defaultContentPath, cancellationToken).ConfigureAwait(false);
         string yaml = defaultContent.Replace($"name: {component.Type}", $"name: {component.Name}");
         DaprComponentSchema content = DaprComponentSchema.FromYaml(yaml);
-        await ConfigureDaprComponent(component, content);
+        await ConfigureDaprComponent(component, content, cancellationToken);
+        await content.ResolveAllValuesAsync(cancellationToken);
         return content.ToString();
     }
 
 
-    private static async Task<string> GetDaprComponent(DaprComponentResource component, string type)
+    private static async Task<string> GetDaprComponent(DaprComponentResource component, string type, CancellationToken cancellationToken = default)
     {
         var content = new DaprComponentSchema(component.Name, type);
-        await ConfigureDaprComponent(component, content);
+        await ConfigureDaprComponent(component, content, cancellationToken);
+        await content.ResolveAllValuesAsync(cancellationToken);
         return content.ToString();
     }
 
-    private static async Task ConfigureDaprComponent(DaprComponentResource component, DaprComponentSchema content)
+    private static async Task ConfigureDaprComponent(DaprComponentResource component, DaprComponentSchema content, CancellationToken cancellationToken = default)
     {
         if (component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secrets) && secrets.Any())
         {
@@ -567,7 +569,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         {
             foreach (var annotation in annotations)
             {
-                await annotation.Configure(content);
+                await annotation.Configure(content, cancellationToken);
             }
         }
     }
