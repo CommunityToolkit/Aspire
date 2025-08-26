@@ -36,6 +36,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     {
         string appHostDirectory = GetAppHostDirectory();
 
+        // Set up WaitAnnotations for Dapr components based on their value provider dependencies
+        SetupComponentLifecycle(appModel);
+
         // Handle components with LocalPath - they are already ready since they exist on disk
         var localPathComponents = appModel.Resources
             .OfType<DaprComponentResource>()
@@ -454,6 +457,53 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             foreach (var path in possibleDaprPaths)
             {
                 yield return path;
+            }
+        }
+    }
+
+    private void SetupComponentLifecycle(DistributedApplicationModel appModel)
+    {
+        // Add WaitAnnotations to components based on their value provider references
+        // This ensures components wait for their dependencies before becoming ready
+        foreach (var component in appModel.Resources.OfType<IDaprComponentResource>())
+        {
+            if (!component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations))
+            {
+                continue;
+            }
+
+            var dependencies = new HashSet<IResource>();
+
+            foreach (var annotation in valueProviderAnnotations)
+            {
+                // Extract resource references from value providers - following the same pattern as SetupSidecarLifecycle
+                if (annotation.ValueProvider is IResourceWithoutLifetime)
+                {
+                    // Skip waiting for resources without a lifetime
+                    continue;
+                }
+
+                if (annotation.ValueProvider is IResource resource)
+                {
+                    dependencies.Add(resource);
+                }
+                else if (annotation.ValueProvider is IValueWithReferences valueWithReferences)
+                {
+                    foreach (var innerRef in valueWithReferences.References.OfType<IResource>())
+                    {
+                        if (innerRef is not IResourceWithoutLifetime)
+                        {
+                            dependencies.Add(innerRef);
+                        }
+                    }
+                }
+            }
+
+            // Add WaitAnnotations for each unique dependency
+            foreach (var dependency in dependencies)
+            {
+                // Add wait annotation to ensure component waits for its dependencies
+                component.Annotations.Add(new WaitAnnotation(dependency, WaitType.WaitForCompletion));
             }
         }
     }
