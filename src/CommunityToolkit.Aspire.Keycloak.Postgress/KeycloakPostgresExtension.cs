@@ -10,29 +10,28 @@ namespace CommunityToolkit.Aspire.Keycloak.Postgress;
 public static class KeycloakPostgresExtension
 {
     /// <summary>
-    /// Configures Keycloak to use a Postgres database as its underlying storage
-    /// by adding the necessary environment variables to the resource builder.
+    /// Configures Keycloak to use a Postgres database by setting up the necessary
+    /// environment variables and configurations through the provided resource builders.
     /// </summary>
-    /// <param name="builder">
-    /// The resource builder for the Keycloak resource being configured.
-    /// </param>
-    /// <param name="database">
-    /// The resource builder representing the Postgres database resource to be used.
-    /// </param>
+    /// <param name="builder">The resource builder for configuring the Keycloak resource.</param>
+    /// <param name="database">The resource builder for the Postgres database resource.</param>
     /// <param name="transaction">
-    /// A boolean flag indicating whether XA transaction support should be enabled.
-    /// Defaults to true.
+    /// A boolean indicating whether transactions are enabled. Default value is <c>true</c>.
     /// </param>
+    /// <param name="cancellationToken">
+    /// A cancellation token used to propagate the notification that the operation should be canceled.
+    /// </param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous configuration operation.</returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when the <paramref name="builder"/> or <paramref name="database"/> is null.
+    /// Thrown if <paramref name="builder"/> or <paramref name="database"/> is null.
     /// </exception>
     /// <exception cref="ArgumentException">
-    /// Thrown when the parent resource of the Postgres database is not a valid
-    /// Postgres server or when username/password parameters are not defined for the
-    /// Postgres server.
+    /// Thrown if the Postgres database resource does not have a parent,
+    /// or if the parent does not have necessary username or password parameters.
     /// </exception>
-    public static void AddPostgres(this IResourceBuilder<KeycloakResource> builder,
-        IResourceBuilder<PostgresDatabaseResource> database, bool transaction = true)
+    public static async Task AddPostgrctes(this IResourceBuilder<KeycloakResource> builder,
+        IResourceBuilder<PostgresDatabaseResource> database, bool transaction = true,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(database);
@@ -48,9 +47,14 @@ public static class KeycloakPostgresExtension
                 nameof(database.Resource.Parent.PasswordParameter));
 
         builder.WithEnvironment("KC_DB", "postgres")
-            .WithEnvironment("KC_DB_URL", database.Resource.ConnectionStringExpression)
-            .WithEnvironment("KC_DB_USERNAME", database.Resource.Parent.UserNameParameter.ValueExpression)
-            .WithEnvironment("KC_DB_PASSWORD", database.Resource.Parent.PasswordParameter.ValueExpression)
-            .WithEnvironment("KC_TRANSACTION_XA_ENABLED", transaction.ToString().ToLowerInvariant());
+            .WithEnvironment("KC_DB", "postgres")
+            .WithEnvironment("KC_DB_URL_HOST", database.Resource.Parent.PrimaryEndpoint.Host)
+            .WithEnvironment("KC_DB_URL_PORT", database.Resource.Parent.PrimaryEndpoint.Port.ToString())
+            .WithEnvironment("KC_DB_DATABASE", database.Resource.Name)
+            .WithEnvironment("KC_DB_USERNAME",
+                await database.Resource.Parent.UserNameParameter.GetValueAsync(cancellationToken))
+            .WithEnvironment("KC_DB_PASSWORD",
+                await database.Resource.Parent.PasswordParameter.GetValueAsync(cancellationToken))
+            .WithEnvironment("KC_TRANSACTION_XA_ENABLED", true.ToString().ToLowerInvariant());
     }
 }
