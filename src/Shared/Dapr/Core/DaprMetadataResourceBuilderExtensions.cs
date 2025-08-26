@@ -42,7 +42,8 @@ public static class DaprMetadataResourceBuilderExtensions
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, EndpointReference endpoint)
     {
         // Create a unique environment variable name for this endpoint
-        var envVarName = $"DAPR_ENDPOINT_{builder.Resource.Name}_{name}".ToUpperInvariant().Replace("-", "_");
+        // Note: We avoid using DAPR_ prefix as it's restricted by Dapr's local.env secret store
+        var envVarName = $"ENDPOINT_{builder.Resource.Name}_{name}".ToUpperInvariant().Replace("-", "_");
         
         // Add an annotation to track this endpoint reference
         builder.WithAnnotation(new DaprComponentEndpointReferenceAnnotation(name, envVarName, endpoint));
