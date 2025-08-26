@@ -448,33 +448,31 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         // This ensures components wait for their dependencies before becoming ready
         foreach (var component in appModel.Resources.OfType<IDaprComponentResource>())
         {
-            if (!component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations))
-            {
-                continue;
-            }
-
             var dependencies = new HashSet<IResource>();
 
-            foreach (var annotation in valueProviderAnnotations)
+            if (component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations))
             {
-                // Extract resource references from value providers - following the same pattern as SetupSidecarLifecycle
-                if (annotation.ValueProvider is IResourceWithoutLifetime)
+                foreach (var annotation in valueProviderAnnotations)
                 {
-                    // Skip waiting for resources without a lifetime
-                    continue;
-                }
-
-                if (annotation.ValueProvider is IResource resource)
-                {
-                    dependencies.Add(resource);
-                }
-                else if (annotation.ValueProvider is IValueWithReferences valueWithReferences)
-                {
-                    foreach (var innerRef in valueWithReferences.References.OfType<IResource>())
+                    // Extract resource references from value providers - following the same pattern as SetupSidecarLifecycle
+                    if (annotation.ValueProvider is IResourceWithoutLifetime)
                     {
-                        if (innerRef is not IResourceWithoutLifetime)
+                        // Skip waiting for resources without a lifetime
+                        continue;
+                    }
+
+                    if (annotation.ValueProvider is IResource resource)
+                    {
+                        dependencies.Add(resource);
+                    }
+                    else if (annotation.ValueProvider is IValueWithReferences valueWithReferences)
+                    {
+                        foreach (var innerRef in valueWithReferences.References.OfType<IResource>())
                         {
-                            dependencies.Add(innerRef);
+                            if (innerRef is not IResourceWithoutLifetime)
+                            {
+                                dependencies.Add(innerRef);
+                            }
                         }
                     }
                 }
@@ -485,6 +483,50 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             {
                 // Add wait annotation to ensure component waits for its dependencies
                 component.Annotations.Add(new WaitAnnotation(dependency, WaitType.WaitForCompletion));
+            }
+        }
+
+        // Now redirect any resources that are waiting for Dapr components to wait for the component's dependencies instead
+        foreach (var resource in appModel.Resources)
+        {
+            if (resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations))
+            {
+                var waitAnnotationsToRemove = new List<WaitAnnotation>();
+                var waitAnnotationsToAdd = new List<WaitAnnotation>();
+
+                foreach (var waitAnnotation in waitAnnotations)
+                {
+                    // Check if the resource being waited on is a Dapr component
+                    if (waitAnnotation.Resource is IDaprComponentResource daprComponent)
+                    {
+                        // Remove the wait on the component itself
+                        waitAnnotationsToRemove.Add(waitAnnotation);
+
+                        // Add waits for the component's underlying dependencies
+                        if (daprComponent.TryGetAnnotationsOfType<WaitAnnotation>(out var componentWaitAnnotations))
+                        {
+                            foreach (var componentWait in componentWaitAnnotations)
+                            {
+                                // Only add if not already waiting for this resource
+                                if (!waitAnnotations.Any(w => w.Resource == componentWait.Resource && w.WaitType == componentWait.WaitType))
+                                {
+                                    waitAnnotationsToAdd.Add(new WaitAnnotation(componentWait.Resource, componentWait.WaitType));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Apply the changes
+                foreach (var waitToRemove in waitAnnotationsToRemove)
+                {
+                    resource.Annotations.Remove(waitToRemove);
+                }
+
+                foreach (var waitToAdd in waitAnnotationsToAdd)
+                {
+                    resource.Annotations.Add(waitToAdd);
+                }
             }
         }
     }
