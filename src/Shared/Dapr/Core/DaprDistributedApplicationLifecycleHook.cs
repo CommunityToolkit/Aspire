@@ -138,13 +138,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             {
                 daprSidecar.Annotations.Add(new EnvironmentCallbackAnnotation(async context =>
                 {
-                    // Add regular secrets
                     foreach (var secret in secrets)
                     {
                         context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
                     }
                     
-                    // Add value provider references (these can now be resolved since endpoints are allocated)
+                    // Add value provider references
                     foreach (var (envVarName, valueProvider) in endpointEnvironmentVars)
                     {
                         var value = await valueProvider.GetValueAsync(context.CancellationToken);
