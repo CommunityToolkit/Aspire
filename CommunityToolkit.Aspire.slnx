@@ -145,8 +145,8 @@
   </Folder>
   <Folder Name="/examples/surrealdb/">
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService.csproj" />
-    <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost.csproj" />
+    <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/CommunityToolkit.Aspire.EventStore/CommunityToolkit.Aspire.EventStore.csproj" />
@@ -191,6 +191,7 @@
     <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
+    <Project Path="src\CommunityToolkit.Aspire.Keycloak.Postgress\CommunityToolkit.Aspire.Keycloak.Postgress.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
