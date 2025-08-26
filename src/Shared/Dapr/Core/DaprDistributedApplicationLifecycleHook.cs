@@ -3,9 +3,11 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,7 +24,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     IConfiguration configuration,
     IHostEnvironment environment,
     ILogger<DaprDistributedApplicationLifecycleHook> logger,
-    IOptions<DaprOptions> options) : IDistributedApplicationLifecycleHook, IDisposable
+    IOptions<DaprOptions> options,
+    IDistributedApplicationEventing eventing,
+    IServiceProvider serviceProvider) : IDistributedApplicationLifecycleHook, IDisposable
 {
     private readonly DaprOptions _options = options.Value;
 
@@ -31,6 +35,24 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     public async Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
     {
         string appHostDirectory = GetAppHostDirectory();
+
+        // Handle components with LocalPath - they are already ready since they exist on disk
+        var localPathComponents = appModel.Resources
+            .OfType<DaprComponentResource>()
+            .Where(c => c.Options?.LocalPath != null);
+
+        var notificationService = serviceProvider.GetRequiredService<ResourceNotificationService>();
+        foreach (var component in localPathComponents)
+        {
+            // Update state to Running for components with local path
+            await notificationService.PublishUpdateAsync(component, state => state with
+            {
+                State = KnownResourceStates.Running
+            }).ConfigureAwait(false);
+
+            // Publish ResourceReadyEvent for the component
+            await eventing.PublishAsync(new ResourceReadyEvent(component, serviceProvider), cancellationToken).ConfigureAwait(false);
+        }
 
         var onDemandResourcesPaths = await StartOnDemandDaprComponentsAsync(appModel, cancellationToken).ConfigureAwait(false);
 
@@ -455,6 +477,9 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
     private async Task<IReadOnlyDictionary<string, string>> StartOnDemandDaprComponentsAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken)
     {
+        // Get ResourceNotificationService for state updates
+        var notificationService = serviceProvider.GetRequiredService<ResourceNotificationService>();
+        
         var onDemandComponents =
             appModel
                 .Resources
@@ -497,6 +522,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         return componentPath;
                     };
 
+                // Update component state to Starting
+                await notificationService.PublishUpdateAsync(component, state => state with
+                {
+                    State = KnownResourceStates.Starting
+                }).ConfigureAwait(false);
+
                 string componentPath = await (component.Type switch
                 {
                     DaprConstants.BuildingBlocks.PubSub => GetBuildingBlockComponentAsync(component, contentWriter, "pubsub.in-memory", cancellationToken), // NOTE: In memory component can only be used within a single Dapr application.
@@ -506,6 +537,15 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 }).ConfigureAwait(false);
 
                 onDemandResourcesPaths.Add(component.Name, componentPath);
+
+                // Update component state to Running
+                await notificationService.PublishUpdateAsync(component, state => state with
+                {
+                    State = KnownResourceStates.Running
+                }).ConfigureAwait(false);
+
+                // Publish ResourceReadyEvent for the component
+                await eventing.PublishAsync(new ResourceReadyEvent(component, serviceProvider), cancellationToken).ConfigureAwait(false);
             }
         }
 
