@@ -41,6 +41,12 @@ public static class DaprMetadataResourceBuilderExtensions
     /// <returns></returns>
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, EndpointReference endpoint)
     {
+        // Create a unique environment variable name for this endpoint
+        var envVarName = $"DAPR_ENDPOINT_{builder.Resource.Name}_{name}".ToUpperInvariant().Replace("-", "_");
+        
+        // Add an annotation to track this endpoint reference
+        builder.WithAnnotation(new DaprComponentEndpointReferenceAnnotation(name, envVarName, endpoint));
+        
         return builder.WithAnnotation(new DaprComponentConfigurationAnnotation((schema, cancellationToken) =>
         {
             var existing = schema.Spec.Metadata.Find(m => m.Name == name);
@@ -49,11 +55,16 @@ public static class DaprMetadataResourceBuilderExtensions
                 schema.Spec.Metadata.Remove(existing);
             }
 
-            // Get the URL from the endpoint reference
-            schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValueProvider
+            // Use a secretKeyRef to reference the environment variable
+            // This will be resolved from the environment at runtime
+            schema.Spec.Metadata.Add(new DaprComponentSpecMetadataSecret
             {
                 Name = name,
-                ValueProvider = endpoint
+                SecretKeyRef = new DaprSecretKeyRef
+                {
+                    Name = envVarName,
+                    Key = envVarName
+                }
             });
             return Task.CompletedTask;
         }));

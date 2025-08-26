@@ -74,9 +74,21 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             var waitAnnotationsToCopyToDaprCli = new List<WaitAnnotation>();
 
             var secrets = new Dictionary<string, string>();
+            var endpointEnvironmentVars = new Dictionary<string, EndpointReference>();
 
             foreach (var componentReferenceAnnotation in componentReferenceAnnotations)
             {
+                // Check if there are any endpoint references that need to be added as environment variables
+                if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentEndpointReferenceAnnotation>(out var endpointAnnotations))
+                {
+                    foreach (var endpointAnnotation in endpointAnnotations)
+                    {
+                        endpointEnvironmentVars[endpointAnnotation.EnvironmentVariableName] = endpointAnnotation.Endpoint;
+                        // We also need to ensure the secret store is added
+                        secrets[endpointAnnotation.EnvironmentVariableName] = "placeholder"; // Will be replaced with actual value later
+                    }
+                }
+                
                 // Check if there are any secrets that need to be added to the secret store
                 if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations))
                 {
@@ -84,10 +96,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     {
                         secrets[secretAnnotation.Key] = (await secretAnnotation.Value.GetValueAsync(cancellationToken))!;
                     }
-                    // We need to append the secret store path to the resources path
-                    onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath);
+                }
+                
+                // If we have any secrets or endpoint references, ensure the secret store path is added
+                if ((secrets.Count > 0 || endpointEnvironmentVars.Count > 0) && onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath))
+                {
                     string onDemandResourcesPathDirectory = Path.GetDirectoryName(secretStorePath)!;
-
                     if (onDemandResourcesPathDirectory is not null)
                     {
                         aggregateResourcesPaths.Add(onDemandResourcesPathDirectory);
@@ -120,15 +134,26 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 }
             }
 
-            if (secrets.Count > 0)
+            if (secrets.Count > 0 || endpointEnvironmentVars.Count > 0)
             {
-                daprSidecar.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+                daprSidecar.Annotations.Add(new EnvironmentCallbackAnnotation(async context =>
                 {
+                    // Add regular secrets
                     foreach (var secret in secrets)
                     {
-                        context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
+                        // Skip placeholder values for endpoint references
+                        if (!endpointEnvironmentVars.ContainsKey(secret.Key))
+                        {
+                            context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
+                        }
                     }
-
+                    
+                    // Add endpoint references (these can now be resolved since endpoints are allocated)
+                    foreach (var (envVarName, endpoint) in endpointEnvironmentVars)
+                    {
+                        var value = await ((IValueProvider)endpoint).GetValueAsync(context.CancellationToken);
+                        context.EnvironmentVariables.TryAdd(envVarName, value ?? string.Empty);
+                    }
                 }));
             }
             // It is possible that we have duplicate wate annotations so we just dedupe them here.
@@ -442,8 +467,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 .Where(component => component.Options?.LocalPath is null)
                 .ToList();
 
-        // If any of the components have secrets, we will add an on-demand secret store component.
-        if (onDemandComponents.Any(component => component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var annotations) && annotations.Any()))
+        // If any of the components have secrets or endpoint references, we will add an on-demand secret store component.
+        bool needsSecretStore = onDemandComponents.Any(component => 
+            (component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations) && secretAnnotations.Any()) ||
+            (component.TryGetAnnotationsOfType<DaprComponentEndpointReferenceAnnotation>(out var endpointAnnotations) && endpointAnnotations.Any()));
+        
+        if (needsSecretStore)
         {
             onDemandComponents.Add(new DaprComponentResource("secretstore", DaprConstants.BuildingBlocks.SecretStore));
         }
