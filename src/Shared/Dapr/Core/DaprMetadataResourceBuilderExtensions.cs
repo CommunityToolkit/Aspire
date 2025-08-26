@@ -33,12 +33,29 @@ public static class DaprMetadataResourceBuilderExtensions
 
 
     /// <summary>
-    /// Adds a value provider as metadata to the Dapr component
+    /// Adds a value provider as metadata to the Dapr component that will be resolved at runtime.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <param name="valueProvider">The value provider (e.g., EndpointReference) whose value will be resolved at runtime</param>
-    /// <returns></returns>
+    /// <param name="builder">The resource builder for the Dapr component being configured.</param>
+    /// <param name="name">The name of the metadata property to add to the Dapr component configuration.</param>
+    /// <param name="valueProvider">The value provider (e.g., EndpointReference, ConnectionStringReference) whose value will be resolved at runtime.
+    /// The provider's value is stored as an environment variable and referenced through Dapr's secret key reference mechanism.</param>
+    /// <returns>The resource builder instance.</returns>
+    /// <remarks>
+    /// This method enables dynamic configuration of Dapr components by:
+    /// <list type="bullet">
+    /// <item>Creating a unique environment variable name based on the component and metadata names</item>
+    /// <item>Storing the value provider reference for runtime resolution</item>
+    /// <item>Configuring the metadata to use a secretKeyRef pointing to the environment variable</item>
+    /// </list>
+    /// The environment variable name format is: {COMPONENT_NAME}_{METADATA_NAME} (uppercased, hyphens replaced with underscores).
+    /// This approach allows for secure injection of dynamic values like endpoint URLs or connection strings that are only known at runtime.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var cache = builder.AddDaprComponent("cache", "state.redis")
+    ///     .WithMetadata("redisHost", redis.GetEndpoint("tcp"));
+    /// </code>
+    /// </example>
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, IValueProvider valueProvider)
     {
         // Create a unique environment variable name for this value provider
