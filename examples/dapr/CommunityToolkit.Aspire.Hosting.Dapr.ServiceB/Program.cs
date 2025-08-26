@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Dapr.Client;
+using Test;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddDaprClient();
+builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
 
@@ -50,4 +52,45 @@ internal sealed record WeatherForecastMessage(string Message);
 internal sealed record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
+
+namespace Test
+{
+    public sealed class Worker(ILogger<Worker> logger, DaprClient dapr) : BackgroundService
+    {
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            await dapr.WaitForSidecarAsync(stoppingToken);
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                var eventData = new WeatherEventData
+                {
+                    EventId = Guid.NewGuid().ToString(),
+                    Timestamp = DateTime.UtcNow,
+                    Temperature = Random.Shared.Next(-20, 55),
+                    Description = "Periodic weather update from Worker"
+                };
+
+                await dapr.PublishEventAsync(
+                    "pubsub", 
+                    "weather-periodic", 
+                    eventData, 
+                    cancellationToken: stoppingToken);
+
+                logger.LogInformation("Published weather event: {EventId} at {Timestamp}", 
+                    eventData.EventId, eventData.Timestamp);
+
+                await Task.Delay(5000, stoppingToken);
+            }
+        }
+    }
+
+    public sealed record WeatherEventData
+    {
+        public required string EventId { get; init; }
+        public required DateTime Timestamp { get; init; }
+        public required int Temperature { get; init; }
+        public required string Description { get; init; }
+    }
 }
