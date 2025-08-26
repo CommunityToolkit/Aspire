@@ -21,11 +21,11 @@ public class EndpointReferenceTests
         // Assert
         var resource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
         
-        // Check for endpoint reference annotation
-        Assert.True(resource.TryGetAnnotationsOfType<DaprComponentEndpointReferenceAnnotation>(out var endpointAnnotations));
+        // Check for value provider annotation
+        Assert.True(resource.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var endpointAnnotations));
         var endpointAnnotation = Assert.Single(endpointAnnotations);
         Assert.Equal("redisHost", endpointAnnotation.MetadataName);
-        Assert.Contains("ENDPOINT_", endpointAnnotation.EnvironmentVariableName);
+        Assert.Contains("PUBSUB_", endpointAnnotation.EnvironmentVariableName);
         
         // Check for configuration annotation that sets up secretKeyRef
         Assert.True(resource.TryGetAnnotationsOfType<DaprComponentConfigurationAnnotation>(out var configAnnotations));
@@ -59,12 +59,12 @@ public class EndpointReferenceTests
         var metadataItem = Assert.IsType<DaprComponentSpecMetadataSecret>(schema.Spec.Metadata[0]);
         Assert.Equal("redisHost", metadataItem.Name);
         Assert.NotNull(metadataItem.SecretKeyRef);
-        Assert.Contains("ENDPOINT_", metadataItem.SecretKeyRef.Key);
+        Assert.Contains("PUBSUB_", metadataItem.SecretKeyRef.Key);
         
         // Check that YAML contains secretKeyRef
         var yaml = schema.ToString();
         Assert.Contains("secretKeyRef:", yaml);
-        Assert.Contains("name: ENDPOINT_", yaml);
+        Assert.Contains("name: PUBSUB_", yaml);
     }
     
     [Fact]
@@ -82,10 +82,47 @@ public class EndpointReferenceTests
         var resource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
         
         // Check that endpoint reference annotation exists
-        Assert.True(resource.TryGetAnnotationsOfType<DaprComponentEndpointReferenceAnnotation>(out var annotations));
+        Assert.True(resource.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var annotations));
         Assert.Single(annotations);
         
         // This should trigger secret store creation in the lifecycle hook
         // The actual secret store creation happens in StartOnDemandDaprComponentsAsync
+    }
+    
+    [Fact]
+    public void WithMetadataAcceptsAnyValueProvider()
+    {
+        // Arrange
+        var builder = DistributedApplication.CreateBuilder();
+        var customValueProvider = new TestValueProvider("custom-value");
+        var pubsub = builder.AddDaprPubSub("pubsub");
+
+        // Act - This should compile and work because WithMetadata now accepts IValueProvider
+        pubsub.WithMetadata("customValue", customValueProvider);
+
+        // Assert
+        var resource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
+
+        // Check for value provider annotation
+        Assert.True(resource.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var annotations));
+        var annotation = Assert.Single(annotations);
+        Assert.Equal("customValue", annotation.MetadataName);
+        Assert.Same(customValueProvider, annotation.ValueProvider);
+    }
+    
+    // Test helper class that implements IValueProvider
+    private class TestValueProvider : global::Aspire.Hosting.ApplicationModel.IValueProvider
+    {
+        private readonly string _value;
+
+        public TestValueProvider(string value)
+        {
+            _value = value;
+        }
+
+        public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken = default)
+        {
+            return ValueTask.FromResult<string?>(_value);
+        }
     }
 }

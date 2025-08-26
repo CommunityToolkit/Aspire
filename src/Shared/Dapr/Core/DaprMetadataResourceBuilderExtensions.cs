@@ -33,20 +33,20 @@ public static class DaprMetadataResourceBuilderExtensions
 
 
     /// <summary>
-    /// Adds an endpoint reference as metadata to the Dapr component
+    /// Adds a value provider as metadata to the Dapr component
     /// </summary>
     /// <param name="builder"></param>
     /// <param name="name"></param>
-    /// <param name="endpoint"></param>
+    /// <param name="valueProvider">The value provider (e.g., EndpointReference) whose value will be resolved at runtime</param>
     /// <returns></returns>
-    public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, EndpointReference endpoint)
+    public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, IValueProvider valueProvider)
     {
-        // Create a unique environment variable name for this endpoint
+        // Create a unique environment variable name for this value provider
         // Note: We avoid using DAPR_ prefix as it's restricted by Dapr's local.env secret store
-        var envVarName = $"ENDPOINT_{builder.Resource.Name}_{name}".ToUpperInvariant().Replace("-", "_");
+        var envVarName = $"{builder.Resource.Name}_{name}".ToUpperInvariant().Replace("-", "_");
         
-        // Add an annotation to track this endpoint reference
-        builder.WithAnnotation(new DaprComponentEndpointReferenceAnnotation(name, envVarName, endpoint));
+        // Add an annotation to track this value provider reference
+        builder.WithAnnotation(new DaprComponentValueProviderAnnotation(name, envVarName, valueProvider));
         
         return builder.WithAnnotation(new DaprComponentConfigurationAnnotation((schema, cancellationToken) =>
         {
