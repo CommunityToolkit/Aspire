@@ -6,7 +6,9 @@ var redis = builder.AddRedis("redis").WithRedisInsight();
 var stateStore = builder.AddDaprStateStore("statestore");
 
 var pubSub = builder.AddDaprPubSub("pubsub")
-                    .WithMetadata("redisHost", redis.Resource.PrimaryEndpoint.Property(EndpointProperty.HostAndPort))
+                    .WithMetadata("redisHost",
+                        ReferenceExpression.Create($"{redis.Resource.PrimaryEndpoint.Property(EndpointProperty.Host)}:{redis.Resource.PrimaryEndpoint.Property(EndpointProperty.TargetPort)}")
+                    )
                     .WaitFor(redis);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
