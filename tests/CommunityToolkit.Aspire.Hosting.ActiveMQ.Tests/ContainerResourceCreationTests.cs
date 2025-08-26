@@ -50,7 +50,7 @@ public class ContainerResourceCreationTests
         Assert.Equal("ACTIVEMQ_CONNECTION_USER", resource.ActiveMqSettings.EnvironmentVariableUsername);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal("6.1.4", imageAnnotations.Tag);
+        Assert.Equal("6.1.7", imageAnnotations.Tag);
         Assert.Equal("apache/activemq-classic", imageAnnotations.Image);
         Assert.Equal("docker.io", imageAnnotations.Registry);
 
@@ -80,7 +80,7 @@ public class ContainerResourceCreationTests
         Assert.Equal("ARTEMIS_USER", resource.ActiveMqSettings.EnvironmentVariableUsername);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal("2.39.0", imageAnnotations.Tag);
+        Assert.Equal("2.42.0", imageAnnotations.Tag);
         Assert.Equal("apache/activemq-artemis", imageAnnotations.Image);
         Assert.Equal("docker.io", imageAnnotations.Registry);
 

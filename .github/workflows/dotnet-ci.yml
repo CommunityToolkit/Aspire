@@ -31,7 +31,7 @@ jobs:
       DAPR_VERSION: "1.15.0"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Runtimes, Caching, and Tools
         uses: ./.github/actions/setup-runtimes-caching
         with:
@@ -64,7 +64,7 @@ jobs:
       name: azure-artifacts
     steps:
       - name: Download package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: nuget-packages
 

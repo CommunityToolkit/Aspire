@@ -8,9 +8,27 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
+    public partial class McpInspectorOptions
+    {
+        public int ClientPort { get { throw null; } set { } }
+
+        public string InspectorVersion { get { throw null; } set { } }
+
+        public ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? ProxyToken { get { throw null; } set { } }
+
+        public int ServerPort { get { throw null; } set { } }
+    }
+
     public static partial class McpInspectorResourceBuilderExtensions
     {
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, McpInspectorOptions options) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, System.Action<McpInspectorOptions> configureOptions) { throw null; }
+
+        [System.Obsolete("Use the overload with McpInspectorOptions instead. This overload will be removed in the next version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = "0.16.2") { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithMcpServer<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, ApplicationModel.IResourceBuilder<TResource> mcpServer, bool isDefault = true, McpTransportType transportType = McpTransportType.StreamableHttp)
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }
@@ -37,6 +55,8 @@ namespace Aspire.Hosting.ApplicationModel
         public McpServerMetadata? DefaultMcpServer { get { throw null; } }
 
         public System.Collections.Generic.IReadOnlyList<McpServerMetadata> McpServers { get { throw null; } }
+
+        public ParameterResource ProxyTokenParameter { get { throw null; } set { } }
 
         public EndpointReference ServerProxyEndpoint { get { throw null; } }
     }
