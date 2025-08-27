@@ -21,15 +21,6 @@ nx.AddApp("blog-monorepo")
     .WithMappedEndpointPort()
     .WithHttpHealthCheck();
 
-var nxWithNpm = builder.AddNxApp("nx-demo-with-npx", workingDirectory: "../nx-demo")
-    .WithNpmPackageInstaller()
-    .RunWithPackageManager();
-
-nxWithNpm.AddApp("blog-monorepo-with-npx", appName: "blog-monorepo")
-    .WithHttpEndpoint()
-    .WithMappedEndpointPort()
-    .WithHttpHealthCheck();
-
 // Example of Turborepo monorepo support - uncomment if you have a Turborepo workspace
 var turbo = builder.AddTurborepoApp("turborepo-demo")
     .WithNpmPackageInstaller();
