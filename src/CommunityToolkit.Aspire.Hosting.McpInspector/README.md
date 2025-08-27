@@ -23,7 +23,47 @@ var inspector = builder.AddMcpInspector("inspector")
     .WithMcpServer(mcpServer);
 ```
 
-You can specify the transport type (`StreamableHttp` or `Sse`) and set which server is the default for the inspector.
+You can specify the transport type (`StreamableHttp`) and set which server is the default for the inspector.
+
+#### Using options for complex configurations
+
+For more complex configurations with multiple parameters, you can use the options-based approach:
+
+```csharp
+var customToken = builder.AddParameter("custom-proxy-token", secret: true);
+
+var options = new McpInspectorOptions
+{
+    ClientPort = 6275,
+    ServerPort = 6278,
+    InspectorVersion = "0.16.2",
+    ProxyToken = customToken
+};
+
+var inspector = builder.AddMcpInspector("inspector", options)
+    .WithMcpServer(mcpServer);
+```
+
+Alternatively, you can use a configuration delegate for a more fluent approach:
+
+```csharp
+var inspector = builder.AddMcpInspector("inspector", options =>
+{
+    options.ClientPort = 6275;
+    options.ServerPort = 6278;
+    options.InspectorVersion = "0.16.2";
+})
+    .WithMcpServer(mcpServer);
+```
+
+#### Configuration options
+
+The `McpInspectorOptions` class provides the following configuration properties:
+
+-   `ClientPort`: Port for the client application (default: 6274
+-   `ServerPort`: Port for the server proxy application (default: 6277)
+-   `InspectorVersion`: Version of the Inspector app to use (default: latest supported version)
+-   `ProxyToken`: Custom authentication token parameter (default: auto-generated)
 
 ## Additional Information
 
@@ -31,4 +71,4 @@ See the [official documentation](https://learn.microsoft.com/dotnet/aspire/commu
 
 ## Feedback & contributing
 
-https://github.com/CommunityToolkit/Aspire
+[https://github.com/CommunityToolkit/Aspire](https://github.com/CommunityToolkit/Aspire)
