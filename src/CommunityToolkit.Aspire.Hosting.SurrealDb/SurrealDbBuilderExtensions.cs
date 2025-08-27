@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using SurrealDb.Net;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 
@@ -131,17 +132,24 @@ public static class SurrealDbBuilderExtensions
                     .ConfigureAwait(false);
 
                 // 💡 Wait until the Namespace is really created?!
+                bool nsCreationValidated = false;
                 while (!ct.IsCancellationRequested)
                 {
                     try
                     {
                         await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
+                        nsCreationValidated = true;
                         break;
                     }
                     catch
                     {
                         await Task.Delay(200, ct).ConfigureAwait(false);
                     }
+                }
+
+                if (!nsCreationValidated)
+                {
+                    throw new DistributedApplicationException($"Namespace '{surrealDbNamespace.Name}' was not created successfully.");
                 }
 
                 foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
@@ -195,7 +203,26 @@ public static class SurrealDbBuilderExtensions
 
         builder.Resource.AddNamespace(name, namespaceName);
         var surrealServerNamespace = new SurrealDbNamespaceResource(name, namespaceName, builder.Resource);
-        return builder.ApplicationBuilder.AddResource(surrealServerNamespace);
+
+        SurrealDbOptions? surrealDbOptions = null;
+
+        string serverName = builder.Resource.Name;
+
+        string healthCheckKey = $"{serverName}_{namespaceName}_{name}_check";
+        builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
+                name: healthCheckKey,
+                sp => new SurrealDbNamespaceHealthCheck(surrealDbOptions!, namespaceName, sp.GetRequiredService<ILogger<SurrealDbNamespaceHealthCheck>>()),
+                failureStatus: null,
+                tags: null
+            )
+        );
+
+        return builder.ApplicationBuilder.AddResource(surrealServerNamespace).WithHealthCheck(healthCheckKey)
+            .OnConnectionStringAvailable(async (_, _, ct) =>
+            {
+                var connectionString = await surrealServerNamespace.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false) ?? throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{surrealServerNamespace}' resource but the connection string was null.");
+                surrealDbOptions = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
+            });
     }
 
     /// <summary>
@@ -207,6 +234,7 @@ public static class SurrealDbBuilderExtensions
     /// <remarks>
     /// <value>Default script is <code>DEFINE NAMESPACE IF NOT EXISTS `QUOTED_NAMESPACE_NAME`;</code></value>
     /// </remarks>
+    [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbNamespaceResource> WithCreationScript(this IResourceBuilder<SurrealDbNamespaceResource> builder, string script)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -292,6 +320,7 @@ public static class SurrealDbBuilderExtensions
     /// <remarks>
     /// <value>Default script is <code>DEFINE DATABASE IF NOT EXISTS `QUOTED_DATABASE_NAME`;</code></value>
     /// </remarks>
+    [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbDatabaseResource> WithCreationScript(this IResourceBuilder<SurrealDbDatabaseResource> builder, string script)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -374,6 +403,7 @@ public static class SurrealDbBuilderExtensions
     /// <param name="source">The source file on the host to copy into the container.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
     /// <exception cref="DistributedApplicationException">SurrealDB only support importing a single script file.</exception>
+    [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbServerResource> WithInitFiles(this IResourceBuilder<SurrealDbServerResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
