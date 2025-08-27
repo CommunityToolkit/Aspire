@@ -27,7 +27,7 @@ public static class KeycloakPostgresExtension
     /// <param name="port">
     /// The port number on which the Postgres database is running. Default is 5432.
     /// </param>
-    public static void AddPostgrctes(this IResourceBuilder<KeycloakResource> builder,
+    public static void WithPostgres(this IResourceBuilder<KeycloakResource> builder,
         IResourceBuilder<PostgresDatabaseResource> database, bool transaction = true, int port = 5432)
     {
         ArgumentNullException.ThrowIfNull(builder);
