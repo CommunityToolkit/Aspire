@@ -10,6 +10,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [InlineData("pnpm-demo")]
     [InlineData("turbo-web")]
     [InlineData("turbo-docs")]
+    [InlineData("blog-monorepo")]
     public async Task ResourceStartsAndRespondsOk(string appName)
     {
         var httpClient = fixture.CreateHttpClient(appName);
