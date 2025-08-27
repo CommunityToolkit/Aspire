@@ -191,7 +191,7 @@
     <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
-    <Project Path="src\CommunityToolkit.Aspire.Keycloak.Postgress\CommunityToolkit.Aspire.Keycloak.Postgress.csproj" Type="Classic C#" />
+    <Project Path="src\CommunityToolkit.Aspire.Keycloak.Extensions.Postgres\CommunityToolkit.Aspire.Keycloak.Extensions.Postgres.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
@@ -242,6 +242,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <Project Path="tests\CommunityToolkit.Aspire.Keycloak.Extensions.Postgres.Tests\CommunityToolkit.Aspire.Keycloak.Extensions.Postgres.Tests.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/Dapr/">
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />
