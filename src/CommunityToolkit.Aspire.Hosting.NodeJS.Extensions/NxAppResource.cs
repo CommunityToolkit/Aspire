@@ -8,8 +8,9 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The name of the resource.</param>
 /// <param name="workingDirectory">The working directory of the application.</param>
 /// <param name="appName">The Nx app name to run (used in 'nx serve {appName}').</param>
-public class NxAppResource(string name, string workingDirectory, string appName)
-    : NodeAppResource(name, "nx", workingDirectory)
+/// <param name="command">The command to run (default is 'nx').</param>
+public class NxAppResource(string name, string workingDirectory, string appName, string command = "nx")
+    : NodeAppResource(name, command, workingDirectory)
 {
     /// <summary>
     /// Gets the Nx application name.
