@@ -12,4 +12,26 @@ builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
     .WithPnpmPackageInstallation()
     .WithHttpHealthCheck();
 
+// Example of Nx monorepo support - uncomment if you have an Nx workspace
+var nx = builder.AddNxApp("nx-demo")
+    .WithNpmPackageInstaller();
+
+nx.AddApp("blog-monorepo")
+    .WithHttpEndpoint()
+    .WithMappedEndpointPort()
+    .WithHttpHealthCheck();
+
+// Example of Turborepo monorepo support - uncomment if you have a Turborepo workspace
+var turbo = builder.AddTurborepoApp("turborepo-demo")
+    .WithNpmPackageInstaller();
+
+turbo.AddApp("turbo-web", filter: "web")
+    .WithHttpEndpoint()
+    .WithMappedEndpointPort()
+    .WithHttpHealthCheck();
+turbo.AddApp("turbo-docs", filter: "docs")
+    .WithHttpEndpoint()
+    .WithMappedEndpointPort()
+    .WithHttpHealthCheck();
+
 builder.Build().Run();
