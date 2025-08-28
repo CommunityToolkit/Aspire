@@ -52,6 +52,32 @@ Both Nx and Turborepo support all three package managers:
 - `.WithYarnPackageInstaller()` - uses yarn
 - `.WithPnpmPackageInstaller()` - uses pnpm
 
+### Configuring Package Manager for App Execution
+
+Use `RunWithPackageManager()` to configure which package manager command is used when running individual apps:
+
+```csharp
+// Auto-infer from package installer annotation
+var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+    .WithYarnPackageInstaller()
+    .RunWithPackageManager(); // Will use 'yarn' command
+
+// Explicitly specify package manager (independent of installer)
+var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+    .WithNpmPackageInstaller()
+    .RunWithPackageManager("pnpm"); // Uses 'pnpm' despite npm installer
+
+// Without RunWithPackageManager - uses default commands
+var nxDefault = builder.AddNxApp("nx-default", workingDirectory: "../frontend");
+nxDefault.AddApp("app1"); // Runs: nx serve app1 (no package manager prefix)
+```
+
+**Command Generation Examples:**
+- `RunWithPackageManager("npm")` → `npx nx serve app1` or `npx turbo run dev --filter app1`
+- `RunWithPackageManager("yarn")` → `yarn nx serve app1` or `yarn turbo run dev --filter app1`  
+- `RunWithPackageManager("pnpm")` → `pnpm nx serve app1` or `pnpm turbo run dev --filter app1`
+- No `RunWithPackageManager()` → `nx serve app1` or `turbo run dev --filter app1`
+
 ## How It Works
 
 1. **Shared Installer**: The top-level resource (`NxResource` or `TurborepoResource`) manages a single package installation
@@ -89,11 +115,29 @@ You can migrate to:
 ```csharp
 // New monorepo approach
 var nx = builder.AddNxApp("nx", workingDirectory: "./Frontend")
-    .WithYarnPackageInstaller();
+    .WithYarnPackageInstaller()
+    .RunWithPackageManager(); // Configure package manager for app execution
 
 var app1 = nx.AddApp("app-1", appName: "app1");
-var app2 = nx.AddApp("app-2", appName: "app2");
+var app2 = nx.AddApp("app-2", appName: "app2");  
 var app3 = nx.AddApp("app-3", appName: "app3");
 ```
 
 This provides cleaner syntax and automatic dependency management.
+
+## Key Configuration Options
+
+### Package Installation vs App Execution
+
+It's important to understand the difference between package installation and app execution:
+
+- **Package Installer** (`.WithNpmPackageInstaller()`, etc.) - Controls how packages are installed in the workspace
+- **Package Manager for Apps** (`.RunWithPackageManager()`) - Controls which command is used to run individual apps
+
+```csharp
+var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+    .WithNpmPackageInstaller()        // Install packages with: npm install  
+    .RunWithPackageManager("yarn");   // Run apps with: yarn nx serve app1
+
+// This is valid - you can install with npm but run apps with yarn
+```
