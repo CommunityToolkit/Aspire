@@ -43,8 +43,10 @@ public static class KeycloakPostgresExtension
             .WithEnvironment("KC_DB_URL", jdbcUrl);
     }
 
+    /// <summary>
     /// Configures a Keycloak resource to use a Postgres database in a development environment by setting appropriate
     /// environment variables and custom connection details.
+    /// </summary>
     /// <param name="builder">
     /// The resource builder for the Keycloak resource.
     /// </param>
