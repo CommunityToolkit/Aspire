@@ -79,7 +79,9 @@ public static class KeycloakPostgresExtension
     }
 
 
+    /// <summary>
     /// Configures a Keycloak resource to use a Postgres database by setting appropriate environment variables, including credentials.
+    /// </summary>
     /// <param name="builder">
     /// The resource builder for the Keycloak resource.
     /// </param>
