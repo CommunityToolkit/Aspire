@@ -31,17 +31,26 @@ You can pass additional flags to package managers during installation:
 ```csharp
 // npm with legacy peer deps support
 builder.AddNpmApp("npm-app", "./path/to/app")
-    .WithNpmPackageInstallation(useCI: false, args: ["--legacy-peer-deps"])
+    .WithNpmPackageInstallation(useCI: false, configureInstaller =>
+    {
+        configureInstaller.WithArgs("--legacy-peer-deps");
+    })
     .WithExternalHttpEndpoints();
 
 // yarn with frozen lockfile
 builder.AddYarnApp("yarn-app", "./path/to/app")  
-    .WithYarnPackageInstallation(args: ["--frozen-lockfile", "--verbose"])
+    .WithYarnPackageInstallation(configureInstaller =>
+    {
+        configureInstaller.WithArgs("--frozen-lockfile", "--verbose");
+    })
     .WithExternalHttpEndpoints();
 
 // pnpm with frozen lockfile
 builder.AddPnpmApp("pnpm-app", "./path/to/app")
-    .WithPnpmPackageInstallation(args: ["--frozen-lockfile"])
+    .WithPnpmPackageInstallation(configureInstaller =>
+    {
+        configureInstaller.WithArgs("--frozen-lockfile");
+    })
     .WithExternalHttpEndpoints();
 ```
 
