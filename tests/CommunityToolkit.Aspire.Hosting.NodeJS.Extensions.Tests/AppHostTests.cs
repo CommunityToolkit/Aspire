@@ -9,7 +9,6 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [InlineData("yarn-demo")]
     [InlineData("pnpm-demo")]
     [InlineData("turbo-web")]
-    [InlineData("turbo-web-with-npx")]
     [InlineData("turbo-docs")]
     [InlineData("blog-monorepo")]
     public async Task ResourceStartsAndRespondsOk(string appName)

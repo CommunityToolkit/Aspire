@@ -34,14 +34,4 @@ turbo.AddApp("turbo-docs", filter: "docs")
     .WithMappedEndpointPort()
     .WithHttpHealthCheck();
 
-var turboWithNpx = builder.AddTurborepoApp("turborepo-demo-with-npx", workingDirectory: "../turborepo-demo")
-    .WithNpmPackageInstaller()
-    .RunWithPackageManager();
-
-turboWithNpx.AddApp("turbo-web-with-npx", filter: "web")
-    .WithHttpEndpoint()
-    .WithMappedEndpointPort()
-    .WithHttpHealthCheck();
-
-
 builder.Build().Run();
