@@ -6,4 +6,5 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="Name">The name of the server resource.</param>
 /// <param name="Endpoint">The endpoint reference for the server resource.</param>
 /// <param name="TransportType">The transport type used by the server resource.</param>
-public record McpServerMetadata(string Name, EndpointReference Endpoint, McpTransportType TransportType);
+/// <param name="Path">The path used for MCP communication.</param>
+public record McpServerMetadata(string Name, EndpointReference Endpoint, McpTransportType TransportType, string Path);
