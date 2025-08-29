@@ -7,4 +7,8 @@
       <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Keycloak.Extensions\CommunityToolkit.Aspire.Keycloak.Extensions.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Moq" />
+    </ItemGroup>
+
 </Project>

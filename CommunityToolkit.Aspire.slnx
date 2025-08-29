@@ -242,7 +242,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
-    <Project Path="tests\CommunityToolkit.Aspire.Keycloak.Extensions.Postgres.Tests\CommunityToolkit.Aspire.Keycloak.Extensions.Postgres.Tests.csproj" Type="Classic C#" />
+    <Project Path="tests\CommunityToolkit.Aspire.Keycloak.Extensions.Tests\CommunityToolkit.Aspire.Keycloak.Extensions.Tests.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/Dapr/">
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />
