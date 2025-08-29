@@ -18,7 +18,6 @@ using static CommunityToolkit.Aspire.Hosting.Dapr.CommandLineArgs;
 namespace CommunityToolkit.Aspire.Hosting.Dapr;
 
 internal sealed class DaprDistributedApplicationLifecycleHook(
-    IDaprPublishingHelper publishingHelper,
     IConfiguration configuration,
     IHostEnvironment environment,
     ILogger<DaprDistributedApplicationLifecycleHook> logger,
@@ -307,8 +306,11 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         context.Writer.WriteEndObject();
                     }));
 
+            if (_options.PublishingConfigurationAction is Action<IResource, DaprSidecarOptions?> configurePublishAction)
+            {
+                configurePublishAction(resource, sidecarOptions);
+            }
 
-            await publishingHelper.ExecuteProviderSpecificRequirements(appModel, resource, sidecarOptions, cancellationToken);
 
             sideCars.Add(daprCli);
         }

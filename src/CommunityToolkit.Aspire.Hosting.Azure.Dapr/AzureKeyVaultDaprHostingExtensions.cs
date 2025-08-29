@@ -4,12 +4,13 @@ using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning.KeyVault;
+using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for configuring Dapr components with Azure Redis.
+/// Provides extension methods for configuring Dapr components with Azure Key Vault.
 /// </summary>
 public static class AzureKeyVaultDaprHostingExtensions
 {
@@ -17,41 +18,49 @@ public static class AzureKeyVaultDaprHostingExtensions
     private const string secretStore = nameof(secretStore);
 
     /// <summary>
-    /// Configures the Redis state component for the Dapr component resource.
+    /// Configures the Key Vault secret store component for the Dapr component resource.
     /// </summary>
     /// <param name="builder">The Dapr component resource builder.</param>
-    /// <param name="kvNameParam"></param>
-    /// <returns>The new Dapr component resource builder.</returns>
-    public static IResourceBuilder<AzureDaprComponentResource> ConfigureKeyVaultSecretsComponent(
-        this IResourceBuilder<IDaprComponentResource> builder, ProvisioningParameter kvNameParam)
+    /// <param name="kvNameParam">The Key Vault name parameter.</param>
+    /// <returns>The original Dapr component resource builder (not a new Azure Dapr resource).</returns>
+    public static IResourceBuilder<IDaprComponentResource> ConfigureKeyVaultSecretsComponent(this IResourceBuilder<IDaprComponentResource> builder, ProvisioningParameter kvNameParam)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
         var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
 
-        var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
-            secretStore,
-            BicepFunction.Interpolate($"{builder.Resource.Name}-secretstore"),
-            "secretstores.azure.keyvault",
-            "v1");
-            
-        daprComponent.Scopes = [];
-
-        var configureInfrastructure = builder.GetInfrastructureConfigurationAction(daprComponent, [principalIdParameter]);
-
-        return builder.AddAzureDaprResource(secretStore, configureInfrastructure).ConfigureInfrastructure(infrastructure =>
+        var configureInfrastructure = (AzureResourceInfrastructure infrastructure) =>
         {
-            daprComponent.Metadata = [
-                new ContainerAppDaprMetadata { Name = "vaultName", Value = kvNameParam },
-                new ContainerAppDaprMetadata { Name = "azureClientId", Value = principalIdParameter }
-            ];
-
-            infrastructure.Add(kvNameParam);
-
-            infrastructure.Add(new ProvisioningOutput(secretStoreComponentKey, typeof(string))
+            if (infrastructure.GetProvisionableResources().OfType<ContainerAppManagedEnvironment>().FirstOrDefault() is ContainerAppManagedEnvironment managedEnvironment)
             {
-                Value = daprComponent.Name
-            });
-        });
+                var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
+                    secretStore,
+                    BicepFunction.Interpolate($"{builder.Resource.Name}-secretstore"),
+                    "secretstores.azure.keyvault",
+                    "v1");
+
+                daprComponent.Parent = managedEnvironment;
+                daprComponent.Scopes = [];
+                daprComponent.Metadata = [
+                    new ContainerAppDaprMetadata { Name = "vaultName", Value = kvNameParam },
+                    new ContainerAppDaprMetadata { Name = "azureClientId", Value = principalIdParameter }
+                ];
+
+                infrastructure.Add(daprComponent);
+                infrastructure.Add(kvNameParam);
+                infrastructure.Add(principalIdParameter);
+
+                infrastructure.Add(new ProvisioningOutput(secretStoreComponentKey, typeof(string))
+                {
+                    Value = daprComponent.Name
+                });
+            }
+        };
+
+        // Add the publishing annotation to the original Dapr component resource
+        // This ensures the Key Vault secret store gets created when publishing
+        builder.WithAnnotation(new AzureDaprComponentPublishingAnnotation(configureInfrastructure));
+
+        return builder;
     }
 }
