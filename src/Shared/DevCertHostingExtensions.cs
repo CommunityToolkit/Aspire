@@ -85,12 +85,19 @@ public static class DevCertHostingExtensions
         // Configure the current resource with the certificate paths
         if (builder.Resource is ContainerResource containerResource)
         {
-            // Use WithContainerFiles to provide the certificate files to the container
 
 
             var certFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{CERT_FILE_NAME}";
             var certKeyFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{CERT_KEY_FILE_NAME}";
 
+            if (!containerResource.TryGetContainerMounts(out var mounts) &&
+                mounts is not null &&
+                mounts.Any(cm => cm.Target == DEV_CERT_BIND_MOUNT_DEST_DIR))
+            {
+                return builder;
+            }
+
+            // Use WithContainerFiles to provide the certificate files to the container
             builder.ApplicationBuilder.CreateResourceBuilder(containerResource)
                 .WithContainerFiles(DEV_CERT_BIND_MOUNT_DEST_DIR, (context, cancellationToken) =>
                 {
@@ -129,11 +136,16 @@ public static class DevCertHostingExtensions
         }
         else
         {
-
             // For non-container resources, set the file paths directly
-            builder
-                .WithEnvironment(certFileEnv, certExportPath)
-                .WithEnvironment(certKeyFileEnv, certKeyExportPath);
+            if (!string.IsNullOrEmpty(certFileEnv))
+            {
+                builder.WithEnvironment(certFileEnv, certExportPath);
+            }
+
+            if (!string.IsNullOrEmpty(certKeyFileEnv))
+            {
+                builder.WithEnvironment(certKeyFileEnv, certKeyExportPath);
+            }
         }
 
         return builder;
