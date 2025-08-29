@@ -105,6 +105,11 @@
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults.csproj" />
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.Web/CommunityToolkit.Aspire.Hosting.Ollama.Web.csproj" />
   </Folder>
+  <Folder Name="/examples/opentelemetry-collector/">
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api.csproj" />
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost.csproj" />
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.ServiceDefaults/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/papercut/">
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost/CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost.csproj" />
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi.csproj" />
