@@ -1,5 +1,6 @@
 ﻿using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using YamlDotNet.Core.Tokens;
 
 namespace CommunityToolkit.Aspire.Keycloak.Extensions;
 
@@ -8,35 +9,12 @@ namespace CommunityToolkit.Aspire.Keycloak.Extensions;
 /// </summary>
 public static class KeycloakPostgresExtension
 {
-    /// <summary>
-    /// Configures a Keycloak resource to use a PostgreSQL database.
-    /// Sets up the necessary environment variables for Keycloak to connect to the specified PostgreSQL database.
-    /// </summary>
-    /// <param name="builder">
-    /// The resource builder for the Keycloak resource to be configured.
-    /// </param>
-    /// <param name="database">
-    /// The resource builder for the PostgreSQL database resource that the Keycloak resource will connect to.
-    /// </param>
-    /// <param name="username">
-    /// (Optional) The resource builder for the database username parameter.
-    /// </param>
-    /// <param name="password">
-    /// (Optional) The resource builder for the database password parameter.
-    /// </param>
-    /// <param name="xaEnabled">
-    /// Indicates whether XA transactions are enabled for the database connection.
-    /// </param>
-    public static IResourceBuilder<KeycloakResource> WithPostgres(
+    private static IResourceBuilder<KeycloakResource> WithPostgresData(
         this IResourceBuilder<KeycloakResource> builder,
-        IResourceBuilder<PostgresDatabaseResource> database, IResourceBuilder<ParameterResource> username,
-        IResourceBuilder<ParameterResource> password,
-        bool xaEnabled = false)
+        IResourceBuilder<PostgresDatabaseResource> database, bool xaEnabled = false)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(database);
-
-        EndpointReference ep = database.Resource.Parent.GetEndpoint("tcp");
+        PostgresServerResource pgServer = database.Resource.Parent;
+        EndpointReference ep = pgServer.GetEndpoint("tcp");
 
         string dbName = database.Resource.Name;
 
@@ -46,10 +24,6 @@ public static class KeycloakPostgresExtension
 
         builder.WithEnvironment("KC_DB", "postgres")
             .WithEnvironment("KC_DB_URL", jdbcUrl);
-
-        builder.WithEnvironment("KC_DB_USERNAME", username.Resource);
-        builder.WithEnvironment("KC_DB_PASSWORD", password.Resource);
-
         if (xaEnabled)
             builder.WithEnvironment("KC_TRANSACTION_XA_ENABLED", "true");
 
@@ -58,52 +32,71 @@ public static class KeycloakPostgresExtension
 
 
     /// <summary>
-    /// Configures a <see cref="KeycloakResource"/> to use a PostgreSQL database
-    /// by automatically creating the required parameters and database resources
-    /// within the distributed application builder.
+    /// Configures a Keycloak resource to use a PostgreSQL database by setting the necessary
+    /// environment variables and dependencies.
     /// </summary>
     /// <param name="builder">
-    /// The resource builder for the Keycloak instance to be configured.
+    /// The <see cref="IResourceBuilder{KeycloakResource}"/> instance for configuring the Keycloak resource.
     /// </param>
-    /// <param name="appBuilder">
-    /// The distributed application builder used to register parameters and
-    /// the PostgreSQL database resource.
+    /// <param name="database">
+    /// The <see cref="IResourceBuilder{PostgresDatabaseResource}"/> instance representing the PostgreSQL database resource.
+    /// </param>
+    /// <param name="username">
+    /// The <see cref="IResourceBuilder{ParameterResource}"/> instance representing the database username parameter resource.
+    /// </param>
+    /// <param name="password">
+    /// The <see cref="IResourceBuilder{ParameterResource}"/> instance representing the database password parameter resource.
     /// </param>
     /// <param name="xaEnabled">
-    /// Indicates whether XA transactions should be enabled for the database
-    /// connection. Default is <c>false</c>.
-    /// </param>
-    /// <param name="usernameParameter">
-    /// The name of the Keycloak database username parameter. Default is
-    /// <c>"keycloak-username"</c>.
-    /// </param>
-    /// <param name="databaseName">
-    /// The name of the PostgreSQL database to be created for Keycloak.
-    /// Default is <c>"keycloak-db"</c>.
-    /// </param>
-    /// <param name="postgrsName">
-    /// The logical name of the PostgreSQL server resource. Default is
-    /// <c>"keycloak-postgres"</c>.
+    /// A boolean indicating if XA transactions should be enabled. Defaults to <c>false</c>.
     /// </param>
     /// <returns>
-    /// The updated <see cref="IResourceBuilder{KeycloakResource}"/> configured
-    /// with the PostgreSQL integration.
+    /// A configured <see cref="IResourceBuilder{KeycloakResource}"/> instance.
     /// </returns>
-
     public static IResourceBuilder<KeycloakResource> WithPostgres(this IResourceBuilder<KeycloakResource> builder,
-        IDistributedApplicationBuilder appBuilder, bool xaEnabled = false,
-        string usernameParameter = "keycloak-username", string databaseName = "keycloak-db",
-        string postgrsName = "keycloak-postgres")
+        IResourceBuilder<PostgresDatabaseResource> database, IResourceBuilder<ParameterResource> username,
+        IResourceBuilder<ParameterResource> password,
+        bool xaEnabled = false)
     {
-        var username = appBuilder.AddParameter(usernameParameter, "keycloak-db-user");
-        var pwd = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(appBuilder, "pg-pass");
-        var password = appBuilder.CreateResourceBuilder(pwd);
-        var keycloakPostgres = appBuilder.AddPostgres(postgrsName, username, password);
-        var db = keycloakPostgres.AddDatabase(databaseName);
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(database);
 
-        builder.WithPostgres(db, username, password, xaEnabled)
-            .WithReference(db)
-            .WaitFor(keycloakPostgres);
-        return builder;
+        return WithPostgresData(builder, database, xaEnabled)
+            .WithEnvironment("KC_DB_USERNAME", username.Resource)
+            .WithEnvironment("KC_DB_PASSWORD", password.Resource);
+    }
+
+
+    /// <summary>
+    /// Configures a Keycloak resource to use a PostgreSQL database by setting the necessary
+    /// environment variables and dependencies, with default credentials if not provided in the associated database parameters.
+    /// </summary>
+    /// <param name="builder">
+    /// The <see cref="IResourceBuilder{KeycloakResource}"/> instance for configuring the Keycloak resource.
+    /// </param>
+    /// <param name="database">
+    /// The <see cref="IResourceBuilder{PostgresDatabaseResource}"/> instance representing the PostgreSQL database resource.
+    /// </param>
+    /// <param name="xaEnabled">
+    /// A boolean indicating if XA transactions should be enabled. Defaults to <c>false</c>.
+    /// </param>
+    /// <returns>
+    /// A configured <see cref="IResourceBuilder{KeycloakResource}"/> instance.
+    /// </returns>
+    public static IResourceBuilder<KeycloakResource> WithPostgres(this IResourceBuilder<KeycloakResource> builder,
+        IResourceBuilder<PostgresDatabaseResource> database, bool xaEnabled = false)
+    {
+        var usernameParameter = database.Resource.Parent.UserNameParameter is null
+            ? ReferenceExpression.Create($"postgres")
+            : ReferenceExpression.Create($"{database.Resource.Parent.UserNameParameter}");
+        var passwordParameter = database.Resource.Parent.PasswordParameter is null
+            ? ReferenceExpression.Create($"changeme")
+            : ReferenceExpression.Create($"{database.Resource.Parent.PasswordParameter}");
+
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(database);
+        return WithPostgresData(builder, database, xaEnabled)
+            .WithEnvironment("KC_DB_USERNAME", usernameParameter)
+            .WithEnvironment("KC_DB_PASSWORD", passwordParameter);
     }
 }
