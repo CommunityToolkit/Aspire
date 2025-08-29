@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>f0af42ab-ea83-435c-9273-89269ca78d75</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

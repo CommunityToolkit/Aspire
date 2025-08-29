@@ -1,0 +1,6 @@
+@CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api_HostAddress = http://localhost:5121
+
+GET {{CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

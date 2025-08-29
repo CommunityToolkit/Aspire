@@ -1,0 +1,43 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+  transform/add-collector-enabled:
+    error_mode: ignore
+    log_statements:
+      - set(resource.attributes["collector.enabled"], "true")
+    trace_statements:
+      - set(resource.attributes["collector.enabled"], "true")
+    metric_statements:
+      - set(resource.attributes["collector.enabled"], "true")
+
+exporters:
+  debug:
+    verbosity: detailed
+  otlp/aspire:
+    endpoint: ${env:ASPIRE_ENDPOINT}
+    headers:
+      x-otlp-api-key: ${env:ASPIRE_API_KEY}
+    tls:
+      insecure_skip_verify: true
+  
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, transform/add-collector-enabled]
+      exporters: [otlp/aspire]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, transform/add-collector-enabled]
+      exporters: [otlp/aspire]
+    logs:
+      receivers: [otlp]
+      processors: [batch, transform/add-collector-enabled]
+      exporters: [debug,otlp/aspire]
