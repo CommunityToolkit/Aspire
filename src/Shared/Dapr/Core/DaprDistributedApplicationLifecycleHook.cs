@@ -3,9 +3,11 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -31,6 +33,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     public async Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
     {
         string appHostDirectory = GetAppHostDirectory();
+
+        // Set up WaitAnnotations for Dapr components based on their value provider dependencies
+        SetupComponentLifecycle(appModel);
+
 
         var onDemandResourcesPaths = await StartOnDemandDaprComponentsAsync(appModel, cancellationToken).ConfigureAwait(false);
 
@@ -74,9 +80,21 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             var waitAnnotationsToCopyToDaprCli = new List<WaitAnnotation>();
 
             var secrets = new Dictionary<string, string>();
+            var endpointEnvironmentVars = new Dictionary<string, IValueProvider>();
+            var hasValueProviders = false;
 
             foreach (var componentReferenceAnnotation in componentReferenceAnnotations)
             {
+                // Check if there are any value provider references that need to be added as environment variables
+                if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var endpointAnnotations))
+                {
+                    foreach (var endpointAnnotation in endpointAnnotations)
+                    {
+                        endpointEnvironmentVars[endpointAnnotation.EnvironmentVariableName] = endpointAnnotation.ValueProvider;
+                        hasValueProviders = true;
+                    }
+                }
+                
                 // Check if there are any secrets that need to be added to the secret store
                 if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations))
                 {
@@ -84,10 +102,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     {
                         secrets[secretAnnotation.Key] = (await secretAnnotation.Value.GetValueAsync(cancellationToken))!;
                     }
-                    // We need to append the secret store path to the resources path
-                    onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath);
+                }
+                
+                // If we have any secrets or value providers, ensure the secret store path is added
+                if ((secrets.Count > 0 || hasValueProviders) && onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath))
+                {
                     string onDemandResourcesPathDirectory = Path.GetDirectoryName(secretStorePath)!;
-
                     if (onDemandResourcesPathDirectory is not null)
                     {
                         aggregateResourcesPaths.Add(onDemandResourcesPathDirectory);
@@ -120,15 +140,21 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 }
             }
 
-            if (secrets.Count > 0)
+            if (secrets.Count > 0 || endpointEnvironmentVars.Count > 0)
             {
-                daprSidecar.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+                daprSidecar.Annotations.Add(new EnvironmentCallbackAnnotation(async context =>
                 {
                     foreach (var secret in secrets)
                     {
                         context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
                     }
-
+                    
+                    // Add value provider references
+                    foreach (var (envVarName, valueProvider) in endpointEnvironmentVars)
+                    {
+                        var value = await valueProvider.GetValueAsync(context.CancellationToken);
+                        context.EnvironmentVariables.TryAdd(envVarName, value ?? string.Empty);
+                    }
                 }));
             }
             // It is possible that we have duplicate wate annotations so we just dedupe them here.
@@ -416,6 +442,95 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         }
     }
 
+    private void SetupComponentLifecycle(DistributedApplicationModel appModel)
+    {
+        // Add WaitAnnotations to components based on their value provider references
+        // This ensures components wait for their dependencies before becoming ready
+        foreach (var component in appModel.Resources.OfType<IDaprComponentResource>())
+        {
+            var dependencies = new HashSet<IResource>();
+
+            if (component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations))
+            {
+                foreach (var annotation in valueProviderAnnotations)
+                {
+                    // Extract resource references from value providers - following the same pattern as SetupSidecarLifecycle
+                    if (annotation.ValueProvider is IResourceWithoutLifetime)
+                    {
+                        // Skip waiting for resources without a lifetime
+                        continue;
+                    }
+
+                    if (annotation.ValueProvider is IResource resource)
+                    {
+                        dependencies.Add(resource);
+                    }
+                    else if (annotation.ValueProvider is IValueWithReferences valueWithReferences)
+                    {
+                        foreach (var innerRef in valueWithReferences.References.OfType<IResource>())
+                        {
+                            if (innerRef is not IResourceWithoutLifetime)
+                            {
+                                dependencies.Add(innerRef);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Add WaitAnnotations for each unique dependency
+            foreach (var dependency in dependencies)
+            {
+                // Add wait annotation to ensure component waits for its dependencies
+                component.Annotations.Add(new WaitAnnotation(dependency, WaitType.WaitForCompletion));
+            }
+        }
+
+        // Now redirect any resources that are waiting for Dapr components to wait for the component's dependencies instead
+        foreach (var resource in appModel.Resources)
+        {
+            if (resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations))
+            {
+                var waitAnnotationsToRemove = new List<WaitAnnotation>();
+                var waitAnnotationsToAdd = new List<WaitAnnotation>();
+
+                foreach (var waitAnnotation in waitAnnotations)
+                {
+                    // Check if the resource being waited on is a Dapr component
+                    if (waitAnnotation.Resource is IDaprComponentResource daprComponent)
+                    {
+                        // Remove the wait on the component itself
+                        waitAnnotationsToRemove.Add(waitAnnotation);
+
+                        // Add waits for the component's underlying dependencies
+                        if (daprComponent.TryGetAnnotationsOfType<WaitAnnotation>(out var componentWaitAnnotations))
+                        {
+                            foreach (var componentWait in componentWaitAnnotations)
+                            {
+                                // Only add if not already waiting for this resource
+                                if (!waitAnnotations.Any(w => w.Resource == componentWait.Resource && w.WaitType == componentWait.WaitType))
+                                {
+                                    waitAnnotationsToAdd.Add(new WaitAnnotation(componentWait.Resource, componentWait.WaitType));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Apply the changes
+                foreach (var waitToRemove in waitAnnotationsToRemove)
+                {
+                    resource.Annotations.Remove(waitToRemove);
+                }
+
+                foreach (var waitToAdd in waitAnnotationsToAdd)
+                {
+                    resource.Annotations.Add(waitToAdd);
+                }
+            }
+        }
+    }
+
     public void Dispose()
     {
         if (_onDemandResourcesRootPath is not null)
@@ -442,8 +557,12 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 .Where(component => component.Options?.LocalPath is null)
                 .ToList();
 
-        // If any of the components have secrets, we will add an on-demand secret store component.
-        if (onDemandComponents.Any(component => component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var annotations) && annotations.Any()))
+        // If any of the components have secrets or value provider references, we will add an on-demand secret store component.
+        bool needsSecretStore = onDemandComponents.Any(component => 
+            (component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations) && secretAnnotations.Any()) ||
+            (component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations) && valueProviderAnnotations.Any()));
+        
+        if (needsSecretStore)
         {
             onDemandComponents.Add(new DaprComponentResource("secretstore", DaprConstants.BuildingBlocks.SecretStore));
         }
@@ -492,7 +611,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     {
         // We should try to read content from a known location (such as aspire root directory)
         logger.LogInformation("Unvalidated configuration {specType} for component '{ComponentName}'.", component.Type, component.Name);
-        return await contentWriter(await GetDaprComponent(component, component.Type)).ConfigureAwait(false);
+        return await contentWriter(await GetDaprComponent(component, component.Type, cancellationToken)).ConfigureAwait(false);
     }
     private async Task<string> GetBuildingBlockComponentAsync(DaprComponentResource component, Func<string, Task<string>> contentWriter, string defaultProvider, CancellationToken cancellationToken)
     {
@@ -545,19 +664,21 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         string defaultContent = await File.ReadAllTextAsync(defaultContentPath, cancellationToken).ConfigureAwait(false);
         string yaml = defaultContent.Replace($"name: {component.Type}", $"name: {component.Name}");
         DaprComponentSchema content = DaprComponentSchema.FromYaml(yaml);
-        await ConfigureDaprComponent(component, content);
+        await ConfigureDaprComponent(component, content, cancellationToken);
+        await content.ResolveAllValuesAsync(cancellationToken);
         return content.ToString();
     }
 
 
-    private static async Task<string> GetDaprComponent(DaprComponentResource component, string type)
+    private static async Task<string> GetDaprComponent(DaprComponentResource component, string type, CancellationToken cancellationToken = default)
     {
         var content = new DaprComponentSchema(component.Name, type);
-        await ConfigureDaprComponent(component, content);
+        await ConfigureDaprComponent(component, content, cancellationToken);
+        await content.ResolveAllValuesAsync(cancellationToken);
         return content.ToString();
     }
 
-    private static async Task ConfigureDaprComponent(DaprComponentResource component, DaprComponentSchema content)
+    private static async Task ConfigureDaprComponent(DaprComponentResource component, DaprComponentSchema content, CancellationToken cancellationToken = default)
     {
         if (component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secrets) && secrets.Any())
         {
@@ -567,7 +688,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         {
             foreach (var annotation in annotations)
             {
-                await annotation.Configure(content);
+                await annotation.Configure(content, cancellationToken);
             }
         }
     }

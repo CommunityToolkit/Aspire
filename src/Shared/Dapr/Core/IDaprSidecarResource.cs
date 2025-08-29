@@ -8,6 +8,6 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr;
 /// <summary>
 /// Represents a Dapr sidecar resource.
 /// </summary>
-public interface IDaprSidecarResource : IResource
+public interface IDaprSidecarResource : IResource, IResourceWithWaitSupport
 {
 }
