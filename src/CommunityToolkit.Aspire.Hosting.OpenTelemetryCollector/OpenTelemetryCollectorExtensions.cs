@@ -1,5 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Lifecycle;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -77,7 +76,9 @@ public static class OpenTelemetryCollectorExtensions
     /// <returns></returns>
     public static IResourceBuilder<OpenTelemetryCollectorResource> WithAppForwarding(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
-        builder.ApplicationBuilder.Services.TryAddLifecycleHook<EnvironmentVariableHook>();
+        builder.AddEnvironmentVariablesEventHook()
+               .WithFirstStartup();
+
         return builder;
     }
 
