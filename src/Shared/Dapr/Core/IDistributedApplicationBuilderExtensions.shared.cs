@@ -7,6 +7,7 @@ using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Publishing;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
@@ -27,15 +28,58 @@ public static partial class IDistributedApplicationBuilderExtensions
     public static IResourceBuilder<IDaprComponentResource> AddDaprComponent(this IDistributedApplicationBuilder builder, [ResourceName] string name, string type, DaprComponentOptions? options = null)
     {
         var resource = new DaprComponentResource(name, type) { Options = options };
-        return builder
+        var resourceBuilder = builder
             .AddResource(resource)
             .WithInitialState(new()
             {
                 Properties = [],
                 ResourceType = "DaprComponent",
                 IsHidden = true,
+                State = KnownResourceStates.NotStarted
             })
             .WithAnnotation(new ManifestPublishingCallbackAnnotation(context => WriteDaprComponentResourceToManifest(context, resource)));
+        
+        // Set up component lifecycle to manage state transitions
+        SetupComponentLifecycle(resourceBuilder);
+        
+        return resourceBuilder;
+    }
+    
+    private static void SetupComponentLifecycle(IResourceBuilder<IDaprComponentResource> componentBuilder)
+    {
+        // Hook into the component initialization for state management
+        componentBuilder.OnInitializeResource(async (component, evt, ct) =>
+        {
+            try
+            {
+                // Update state to starting
+                await evt.Notifications.PublishUpdateAsync(component, s => s with
+                {
+                    State = KnownResourceStates.Starting
+                }).ConfigureAwait(false);
+
+                // Publish before started event
+                await evt.Eventing.PublishAsync(new BeforeResourceStartedEvent(component, evt.Services), ct).ConfigureAwait(false);
+
+                // Update state to running
+                await evt.Notifications.PublishUpdateAsync(component, s => s with
+                {
+                    State = KnownResourceStates.Running
+                }).ConfigureAwait(false);
+                
+                evt.Logger.LogInformation("Dapr component '{ComponentName}' started successfully", component.Name);
+            }
+            catch (Exception ex)
+            {
+                evt.Logger.LogError(ex, "Failed to initialize Dapr component '{ComponentName}'", component.Name);
+
+                // Update state to failed
+                await evt.Notifications.PublishUpdateAsync(component, s => s with
+                {
+                    State = KnownResourceStates.FailedToStart
+                }).ConfigureAwait(false);
+            }
+        });
     }
 
     /// <summary>
