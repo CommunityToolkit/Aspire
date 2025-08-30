@@ -77,8 +77,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var componentReferenceAnnotations = resource.Annotations.OfType<DaprComponentReferenceAnnotation>();
 
-            var waitAnnotationsToCopyToDaprCli = new List<WaitAnnotation>();
-
             var secrets = new Dictionary<string, string>();
             var endpointEnvironmentVars = new Dictionary<string, IValueProvider>();
             var hasValueProviders = false;
@@ -112,12 +110,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     {
                         aggregateResourcesPaths.Add(onDemandResourcesPathDirectory);
                     }
-                }
-
-                // Whilst we are passing over each component annotations collect the list of annotations to copy to the Dapr CLI.
-                if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<WaitAnnotation>(out var componentWaitAnnotations))
-                {
-                    waitAnnotationsToCopyToDaprCli.AddRange(componentWaitAnnotations);
                 }
 
                 if (componentReferenceAnnotation.Component.Options?.LocalPath is not null)
@@ -157,8 +149,6 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     }
                 }));
             }
-            // It is possible that we have duplicate wate annotations so we just dedupe them here.
-            var distinctWaitAnnotationsToCopyToDaprCli = waitAnnotationsToCopyToDaprCli.DistinctBy(w => (w.Resource, w.WaitType));
 
             var daprAppPortArg = (int? port) => ModelNamedArg("--app-port", port);
             var daprGrpcPortArg = (object port) => ModelNamedObjectArg("--dapr-grpc-port", port);
@@ -209,8 +199,11 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             var daprCliResourceName = $"{daprSidecar.Name}-cli";
             var daprCli = new ExecutableResource(daprCliResourceName, fileName, appHostDirectory);
 
-            // Add all the unique wait annotations to the CLI.
-            daprCli.Annotations.AddRange(distinctWaitAnnotationsToCopyToDaprCli);
+            // Make the Dapr CLI wait for the component resources it references
+            foreach (var componentRef in componentReferenceAnnotations)
+            {
+                daprCli.Annotations.Add(new WaitAnnotation(componentRef.Component, WaitType.WaitForCompletion));
+            }
 
             resource.Annotations.Add(
                 new EnvironmentCallbackAnnotation(
@@ -442,10 +435,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
         }
     }
 
-    private void SetupComponentLifecycle(DistributedApplicationModel appModel)
+    private static void SetupComponentLifecycle(DistributedApplicationModel appModel)
     {
-        // Add WaitAnnotations to components based on their value provider references
-        // This ensures components wait for their dependencies before becoming ready
+        // Setup proper lifecycle for Dapr components with their dependencies
+        // Components will manage their own state and wait for their dependencies
         foreach (var component in appModel.Resources.OfType<IDaprComponentResource>())
         {
             var dependencies = new HashSet<IResource>();
@@ -479,54 +472,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             }
 
             // Add WaitAnnotations for each unique dependency
+            // This ensures the component waits for its dependencies before becoming ready
             foreach (var dependency in dependencies)
             {
-                // Add wait annotation to ensure component waits for its dependencies
                 component.Annotations.Add(new WaitAnnotation(dependency, WaitType.WaitForCompletion));
-            }
-        }
-
-        // Now redirect any resources that are waiting for Dapr components to wait for the component's dependencies instead
-        foreach (var resource in appModel.Resources)
-        {
-            if (resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations))
-            {
-                var waitAnnotationsToRemove = new List<WaitAnnotation>();
-                var waitAnnotationsToAdd = new List<WaitAnnotation>();
-
-                foreach (var waitAnnotation in waitAnnotations)
-                {
-                    // Check if the resource being waited on is a Dapr component
-                    if (waitAnnotation.Resource is IDaprComponentResource daprComponent)
-                    {
-                        // Remove the wait on the component itself
-                        waitAnnotationsToRemove.Add(waitAnnotation);
-
-                        // Add waits for the component's underlying dependencies
-                        if (daprComponent.TryGetAnnotationsOfType<WaitAnnotation>(out var componentWaitAnnotations))
-                        {
-                            foreach (var componentWait in componentWaitAnnotations)
-                            {
-                                // Only add if not already waiting for this resource
-                                if (!waitAnnotations.Any(w => w.Resource == componentWait.Resource && w.WaitType == componentWait.WaitType))
-                                {
-                                    waitAnnotationsToAdd.Add(new WaitAnnotation(componentWait.Resource, componentWait.WaitType));
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Apply the changes
-                foreach (var waitToRemove in waitAnnotationsToRemove)
-                {
-                    resource.Annotations.Remove(waitToRemove);
-                }
-
-                foreach (var waitToAdd in waitAnnotationsToAdd)
-                {
-                    resource.Annotations.Add(waitToAdd);
-                }
             }
         }
     }
