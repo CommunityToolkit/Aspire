@@ -202,7 +202,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             // Make the Dapr CLI wait for the component resources it references
             foreach (var componentRef in componentReferenceAnnotations)
             {
-                daprCli.Annotations.Add(new WaitAnnotation(componentRef.Component, WaitType.WaitForCompletion));
+                daprCli.Annotations.Add(new WaitAnnotation(componentRef.Component, WaitType.WaitUntilHealthy));
             }
 
             resource.Annotations.Add(
@@ -475,7 +475,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
             // This ensures the component waits for its dependencies before becoming ready
             foreach (var dependency in dependencies)
             {
-                component.Annotations.Add(new WaitAnnotation(dependency, WaitType.WaitForCompletion));
+                component.Annotations.Add(new WaitAnnotation(dependency, WaitType.WaitUntilHealthy));
             }
         }
     }
