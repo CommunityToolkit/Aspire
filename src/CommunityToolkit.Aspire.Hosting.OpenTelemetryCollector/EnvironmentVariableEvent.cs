@@ -7,14 +7,14 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Hooks to add the OTLP environment variables to the various resources
 /// </summary>
-public static class EnvironmentVariableEventExtention
+internal static class EnvironmentVariableEventExtention
 {
     /// <summary>
     /// 
     /// </summary>
     /// <param name="builder"></param>
     /// <returns></returns>
-    public static IResourceBuilder<OpenTelemetryCollectorResource> WithFirstStartup(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
+    internal static IResourceBuilder<OpenTelemetryCollectorResource> WithFirstStartup(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
         builder.OnBeforeResourceStarted((resource, beforeStartedEvent, cancellationToken) =>
         {
@@ -41,7 +41,7 @@ public static class EnvironmentVariableEventExtention
     /// Sets up the OnResourceEndpointsAllocated event to add/update the OTLP environment variables for the collector to the various resources
     /// </summary>
     /// <param name="builder"></param>
-    public static IResourceBuilder<OpenTelemetryCollectorResource> AddEnvironmentVariablesEventHook(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
+    internal static IResourceBuilder<OpenTelemetryCollectorResource> AddEnvironmentVariablesEventHook(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
         builder.OnResourceEndpointsAllocated((resource, allocatedEvent, cancellationToken) =>
         {
