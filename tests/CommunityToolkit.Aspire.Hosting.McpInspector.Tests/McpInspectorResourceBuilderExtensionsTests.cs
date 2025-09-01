@@ -316,14 +316,14 @@ public class McpInspectorResourceBuilderExtensionsTests
         // Assert
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-    var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
-    var serverResource = appModel.Resources.Single(r => r.Name == "mcpServer");
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        var serverResource = appModel.Resources.Single(r => r.Name == "mcpServer");
 
-    // The inspector and/or server should have a resource relationship annotation linking them.
-    var serverHasRelationship = serverResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var serverRelationships);
-    var inspectorHasRelationship = inspectorResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var inspectorRelationships);
+        // The inspector and/or server should have a resource relationship annotation linking them.
+        var serverHasRelationship = serverResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var serverRelationships);
+        var inspectorHasRelationship = inspectorResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var inspectorRelationships);
 
-    Assert.True(serverHasRelationship || inspectorHasRelationship, "Expected a ResourceRelationshipAnnotation on either the server or inspector resource.");
+        Assert.True(serverHasRelationship || inspectorHasRelationship, "Expected a ResourceRelationshipAnnotation on either the server or inspector resource.");
     }
 
     [Fact]
