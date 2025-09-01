@@ -27,6 +27,9 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <RunSettingsFilePath>$(MSBuildThisFileDirectory).runsettings</RunSettingsFilePath>
+    <!-- Disable XML documentation requirements for tests -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <WarningsNotAsErrors>CS1591;CS1573;CS1712</WarningsNotAsErrors>
   </PropertyGroup>
 
 </Project>
