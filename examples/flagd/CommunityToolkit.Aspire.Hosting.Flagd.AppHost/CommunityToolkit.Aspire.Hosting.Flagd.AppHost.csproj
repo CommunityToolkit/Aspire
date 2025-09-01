@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

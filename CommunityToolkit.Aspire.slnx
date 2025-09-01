@@ -1,7 +1,4 @@
 <Solution>
-  <Folder Name="/examples/">
-    <Project Path="examples/CommunityToolkit.Aspire.Hosting.Flagd.AppHost/CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
-  </Folder>
   <Folder Name="/examples/activemq/">
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj" />
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
@@ -36,6 +33,9 @@
     <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.ApiService/CommunityToolkit.Aspire.Hosting.EventStore.ApiService.csproj" />
     <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.AppHost/CommunityToolkit.Aspire.Hosting.EventStore.AppHost.csproj" />
     <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/flagd/">
+    <Project Path="examples/flagd/CommunityToolkit.Aspire.Hosting.Flagd.AppHost/CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/goff/">
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService.csproj" />
