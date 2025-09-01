@@ -6,8 +6,8 @@ A .NET Aspire hosting integration for [flagd](https://flagd.dev), a feature flag
 
 ### Prerequisites
 
-- .NET 8.0 or later
-- Docker (for running the flagd container)
+-   .NET 8.0 or later
+-   Docker (for running the flagd container)
 
 ### Installation
 
@@ -19,55 +19,40 @@ Install the package by adding a PackageReference to your `AppHost` project:
 
 ### Usage
 
-In your `AppHost` project, call the `AddFlagd` method to add flagd to your application:
+In your `AppHost` project, call the `AddFlagd` method to add flagd to your application with a flag configuration file:
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var flagd = builder.AddFlagd("flagd");
+var flagd = builder.AddFlagd("flagd", "flags.json");
 
 builder.Build().Run();
 ```
 
+The `fileSource` parameter specifies the path to your flag configuration file on the host machine, which will be mounted into the flagd container.
+
 ### Configuration
-
-You can configure flagd with various options:
-
-#### Using a flag configuration file
-
-```csharp
-var flagd = builder.AddFlagd("flagd")
-    .WithFlagConfigurationFile("./flags.json");
-```
-
-#### Using HTTP sync
-
-```csharp
-var flagd = builder.AddFlagd("flagd")
-    .WithHttpSync("http://example.com/flags.json", interval: 10);
-```
-
-#### Adding multiple flag sources
-
-```csharp
-var flagd = builder.AddFlagd("flagd")
-    .WithFlagSource("file:///etc/flagd/flags1.json")
-    .WithFlagSource("http://example.com/flags2.json");
-```
 
 #### Configuring logging
 
+You can configure the logging level for flagd:
+
 ```csharp
-var flagd = builder.AddFlagd("flagd")
+var flagd = builder.AddFlagd("flagd", "flags.json")
     .WithLogging("debug");
 ```
 
-#### Adding persistent storage
+Available logging levels are: `debug`, `info`, `warn`, `error`.
+
+#### Customizing the port
+
+You can specify a custom port for the flagd HTTP/gRPC endpoints:
 
 ```csharp
-var flagd = builder.AddFlagd("flagd")
-    .WithDataVolume();
+var flagd = builder.AddFlagd("flagd", "flags.json", port: 9090);
 ```
+
+If no port is specified, the default port 8013 will be used.
 
 ### Flag Configuration Format
 
@@ -75,39 +60,48 @@ flagd uses JSON files for flag definitions. Here's a simple example:
 
 ```json
 {
-  "$schema": "https://flagd.dev/schema/v0/flags.json",
-  "flags": {
-    "welcome-banner": {
-      "state": "ENABLED",
-      "variants": {
-        "on": true,
-        "off": false
-      },
-      "defaultVariant": "off"
-    },
-    "background-color": {
-      "state": "ENABLED",
-      "variants": {
-        "red": "#FF0000",
-        "blue": "#0000FF",
-        "green": "#00FF00"
-      },
-      "defaultVariant": "red",
-      "targeting": {
-        "if": [
-          {
-            "===": [
-              {
-                "var": "user.company"
-              },
-              "acme"
-            ]
-          },
-          "blue"
-        ]
-      }
+    "$schema": "https://flagd.dev/schema/v0/flags.json",
+    "flags": {
+        "welcome-banner": {
+            "state": "ENABLED",
+            "variants": {
+                "on": true,
+                "off": false
+            },
+            "defaultVariant": "off"
+        },
+        "background-color": {
+            "state": "ENABLED",
+            "variants": {
+                "red": "#FF0000",
+                "blue": "#0000FF",
+                "yellow": "#FFFF00"
+            },
+            "defaultVariant": "red",
+            "targeting": {
+                "if": [
+                    {
+                        "===": [
+                            {
+                                "var": "company"
+                            },
+                            "aspire"
+                        ]
+                    },
+                    "blue"
+                ]
+            }
+        },
+        "api-version": {
+            "state": "ENABLED",
+            "variants": {
+                "v1": "1.0",
+                "v2": "2.0",
+                "v3": "3.0"
+            },
+            "defaultVariant": "v1"
+        }
     }
-  }
 }
 ```
 
