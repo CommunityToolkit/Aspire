@@ -20,7 +20,7 @@ public static class FlagdBuilderExtensions
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         string fileSource,
-        int? port = null)
+        int port = 8013)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
