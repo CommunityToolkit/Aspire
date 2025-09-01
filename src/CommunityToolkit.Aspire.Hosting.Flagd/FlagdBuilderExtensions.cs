@@ -14,7 +14,7 @@ public static class FlagdBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="fileSource">The path to the flag configuration file on the host.</param>
-    /// <param name="port">The host port for flagd HTTP/gRPC endpoints. If not provided, a random port will be assigned.</param>
+    /// <param name="port">The host port for flagd HTTP endpoint. If not provided, a random port will be assigned.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
     public static IResourceBuilder<FlagdResource> AddFlagd(
         this IDistributedApplicationBuilder builder,
@@ -24,6 +24,9 @@ public static class FlagdBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+        ArgumentException.ThrowIfNullOrEmpty(fileSource, nameof(fileSource));
+        ArgumentOutOfRangeException.ThrowIfLessThan(port, 1, nameof(port));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(port, 65535, nameof(port));
 
         var resource = new FlagdResource(name);
 
