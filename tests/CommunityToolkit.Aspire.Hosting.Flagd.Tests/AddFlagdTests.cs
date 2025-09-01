@@ -54,11 +54,15 @@ public class AddFlagdTests
             .First(e => e.Name == FlagdResource.HttpEndpointName);
         var grpcEndpoint = resource.Annotations.OfType<EndpointAnnotation>()
             .First(e => e.Name == FlagdResource.GrpcEndpointName);
+        var healthEndpoint = resource.Annotations.OfType<EndpointAnnotation>()
+            .First(e => e.Name == FlagdResource.HealthEndpointName);
 
         Assert.Equal(8013, httpEndpoint.TargetPort);
         Assert.Equal(8013, grpcEndpoint.TargetPort);
+        Assert.Equal(8014, healthEndpoint.TargetPort);
         Assert.Equal("http", httpEndpoint.UriScheme);
         Assert.Equal("grpc", grpcEndpoint.UriScheme);
+        Assert.Equal("http", healthEndpoint.UriScheme);
     }
 
     [Fact]
@@ -77,6 +81,25 @@ public class AddFlagdTests
         Assert.Equal("ghcr.io", containerAnnotation.Registry);
         Assert.Equal("open-feature/flagd", containerAnnotation.Image);
         Assert.Equal("v0.11.6", containerAnnotation.Tag);
+    }
+
+    [Fact]
+    public void AddFlagdConfiguresHealthCheck()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddFlagd("flagd");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<FlagdResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations));
+
+        var annotation = Assert.Single(annotations);
+        Assert.Contains("health", annotation.Key);
+        Assert.Contains("/healthz", annotation.Key);
+        Assert.Contains(resource.Name, annotation.Key);
     }
 
     [Fact]
