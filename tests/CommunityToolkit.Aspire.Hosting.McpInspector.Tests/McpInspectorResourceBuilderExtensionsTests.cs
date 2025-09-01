@@ -319,11 +319,44 @@ public class McpInspectorResourceBuilderExtensionsTests
         var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
         var serverResource = appModel.Resources.Single(r => r.Name == "mcpServer");
 
-        // The inspector and/or server should have a resource relationship annotation linking them.
-        var serverHasRelationship = serverResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var serverRelationships);
-        var inspectorHasRelationship = inspectorResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var inspectorRelationships);
+        // The server should have an "Inspected By" relationship pointing at the inspector
+        Assert.True(serverResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var serverRelationships));
+        var serverRelationship = Assert.Single(serverRelationships);
+        Assert.Same(inspectorResource, serverRelationship.Resource);
+        Assert.Equal("Inspected By", serverRelationship.Type);
 
-        Assert.True(serverHasRelationship || inspectorHasRelationship, "Expected a ResourceRelationshipAnnotation on either the server or inspector resource.");
+        // The inspector should have relationships back to the server: "Inspecting" and (since isDefault=true) "Default Inspected Server"
+        Assert.True(inspectorResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var inspectorRelationships));
+        Assert.Contains(inspectorRelationships, r => r.Resource == serverResource && r.Type == "Inspecting");
+        Assert.Contains(inspectorRelationships, r => r.Resource == serverResource && r.Type == "Default Inspected Server");
+    }
+
+    [Fact]
+    public void WithMcpServer_NonDefaultDoesNotAddDefaultInspectedServerRelationship()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Create mock MCP server resources
+        var mockServer1 = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer1");
+        var mockServer2 = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer2");
+
+        // Act: first is default, second is not
+        var inspector = appBuilder.AddMcpInspector("inspector")
+            .WithMcpServer(mockServer1, isDefault: true)
+            .WithMcpServer(mockServer2, isDefault: false);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        var serverResource2 = appModel.Resources.Single(r => r.Name == "mcpServer2");
+
+        // Inspector should have relationships but should NOT have "Default Inspected Server" for serverResource2
+        Assert.True(inspectorResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var inspectorRelationships));
+        Assert.DoesNotContain(inspectorRelationships, r => r.Resource == serverResource2 && r.Type == "Default Inspected Server");
     }
 
     [Fact]

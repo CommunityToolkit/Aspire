@@ -198,7 +198,13 @@ public static class McpInspectorResourceBuilderExtensions
 
         builder.Resource.AddMcpServer(mcpServer.Resource, isDefault, transportType, path);
 
-        mcpServer.WithRelationship(builder.Resource, "InspectedBy");
+        mcpServer.WithRelationship(builder.Resource, "Inspected By");
+        builder.WithRelationship(mcpServer.Resource, "Inspecting");
+
+        if (isDefault)
+        {
+            builder.WithRelationship(mcpServer.Resource, "Default Inspected Server");
+        }
 
         return builder;
     }
