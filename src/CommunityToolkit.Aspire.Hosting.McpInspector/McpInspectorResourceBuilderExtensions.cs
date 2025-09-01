@@ -197,6 +197,9 @@ public static class McpInspectorResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.Resource.AddMcpServer(mcpServer.Resource, isDefault, transportType, path);
+
+        mcpServer.WithRelationship(builder.Resource, "InspectedBy");
+
         return builder;
     }
 
@@ -239,11 +242,12 @@ public static class McpInspectorResourceBuilderExtensions
         if (Uri.IsWellFormedUriString(segments[0], UriKind.Absolute))
             return new Uri(segments[0], UriKind.Absolute);
 
-        var escaped = segments
+        var escapedSegments = segments
             .Where(s => !string.IsNullOrEmpty(s))
-            .Select(s => Uri.EscapeDataString(s.Trim('/')));
+            .SelectMany(s => s.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries))
+            .Select(Uri.EscapeDataString);
 
-        var relative = string.Join("/", escaped);
+        var relative = string.Join("/", escapedSegments);
 
         return new Uri(baseUri, relative);
     }

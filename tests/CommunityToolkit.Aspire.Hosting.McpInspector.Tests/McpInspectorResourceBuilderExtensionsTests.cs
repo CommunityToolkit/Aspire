@@ -297,4 +297,81 @@ public class McpInspectorResourceBuilderExtensionsTests
         Assert.Equal(3333, clientEndpoint.Port);
         Assert.Equal(4444, serverEndpoint.Port);
     }
+
+    [Fact]
+    public void WithMcpServerCreatesResourceRelationshipAnnotations()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Create a mock MCP server resource
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector")
+            .WithMcpServer(mockServer, isDefault: true);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        var serverResource = appModel.Resources.Single(r => r.Name == "mcpServer");
+
+        // The inspector and/or server should have a resource relationship annotation linking them.
+        var serverHasRelationship = serverResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var serverRelationships);
+        var inspectorHasRelationship = inspectorResource.TryGetAnnotationsOfType<ResourceRelationshipAnnotation>(out var inspectorRelationships);
+
+        Assert.True(serverHasRelationship || inspectorHasRelationship, "Expected a ResourceRelationshipAnnotation on either the server or inspector resource.");
+    }
+
+    [Fact]
+    public void WithMcpServerPreservesCustomPathSegments()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Create a mock MCP server resource
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector")
+            .WithMcpServer(mockServer, isDefault: true, path: "/route/mcp");
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        Assert.Single(inspectorResource.McpServers);
+        var serverMeta = inspectorResource.McpServers.Single();
+
+        // Path should be preserved exactly as provided (not url-encoded)
+        Assert.Equal("/route/mcp", serverMeta.Path);
+    }
+
+    [Fact]
+    public void CombineHandlesMultipleSegmentsAndDoesNotEncodeSlashes()
+    {
+        // Arrange
+        var baseUrl = "http://localhost:1234";
+        var segments = new[] { "/route/mcp", "nested/path" };
+
+        // Use reflection to call internal Combine
+        var type = typeof(McpInspectorResourceBuilderExtensions);
+        var method = type.GetMethod("Combine", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(method);
+
+        // Act
+        var result = method!.Invoke(null, new object[] { baseUrl, segments }) as Uri;
+
+        // Assert
+        Assert.NotNull(result);
+        // Ensure that slashes from segments are preserved and not percent-encoded
+        var expected = new Uri("http://localhost:1234/route/mcp/nested/path");
+        Assert.Equal(expected, result);
+    }
 }
