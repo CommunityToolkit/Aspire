@@ -56,7 +56,7 @@ public class AddFlagdTests
 
         Assert.Equal("ghcr.io", containerAnnotation.Registry);
         Assert.Equal("open-feature/flagd", containerAnnotation.Image);
-        Assert.Equal("v0.11.6", containerAnnotation.Tag);
+        Assert.Equal("v0.12.9", containerAnnotation.Tag);
     }
 
     [Fact]
@@ -121,5 +121,16 @@ public class AddFlagdTests
         IDistributedApplicationBuilder builder = null!;
 
         Assert.Throws<ArgumentNullException>(() => builder.AddFlagd(FlagdName, FlagdSource));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(65536)]
+    public void AddFlagdThrowsWhenPortIsInvalid(int port)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => builder.AddFlagd(FlagdName, FlagdSource, port));
     }
 }
