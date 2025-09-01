@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\examples\CommunityToolkit.Aspire.Hosting.Flagd.AppHost\CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
+    <ProjectReference Include="..\..\examples\flagd\CommunityToolkit.Aspire.Hosting.Flagd.AppHost\CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Flagd\CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
