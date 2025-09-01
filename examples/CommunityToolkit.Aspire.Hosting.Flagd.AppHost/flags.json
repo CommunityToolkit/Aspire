@@ -1,0 +1,45 @@
+{
+  "$schema": "https://flagd.dev/schema/v0/flags.json",
+  "flags": {
+    "welcome-banner": {
+      "state": "ENABLED",
+      "variants": {
+        "on": true,
+        "off": false
+      },
+      "defaultVariant": "off"
+    },
+    "background-color": {
+      "state": "ENABLED",
+      "variants": {
+        "red": "#FF0000",
+        "blue": "#0000FF",
+        "green": "#00FF00",
+        "yellow": "#FFFF00"
+      },
+      "defaultVariant": "red",
+      "targeting": {
+        "if": [
+          {
+            "===": [
+              {
+                "var": "company"
+              },
+              "aspire"
+            ]
+          },
+          "blue"
+        ]
+      }
+    },
+    "api-version": {
+      "state": "ENABLED",
+      "variants": {
+        "v1": "1.0",
+        "v2": "2.0",
+        "v3": "3.0"
+      },
+      "defaultVariant": "v1"
+    }
+  }
+}
