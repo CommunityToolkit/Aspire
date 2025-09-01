@@ -1,4 +1,5 @@
 <Solution>
+  <Folder Name="/examples/" />
   <Folder Name="/examples/activemq/">
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj" />
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
