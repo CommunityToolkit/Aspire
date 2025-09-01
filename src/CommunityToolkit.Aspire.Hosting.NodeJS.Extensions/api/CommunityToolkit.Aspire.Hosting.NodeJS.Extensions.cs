@@ -8,19 +8,60 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
+    public sealed partial class JavaScriptPackageInstallerAnnotation : ApplicationModel.IResourceAnnotation
+    {
+        public JavaScriptPackageInstallerAnnotation(ApplicationModel.ExecutableResource installerResource) { }
+
+        public ApplicationModel.ExecutableResource Resource { get { throw null; } }
+    }
+
+    public sealed partial class JavaScriptPackageManagerAnnotation : ApplicationModel.IResourceAnnotation
+    {
+        public JavaScriptPackageManagerAnnotation(string packageManager) { }
+
+        public string PackageManager { get { throw null; } }
+    }
+
     public static partial class NodeJSHostingExtensions
     {
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NxAppResource> AddApp(this ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> builder, string name, string? appName = null, System.Func<ApplicationModel.IResourceBuilder<ApplicationModel.NxAppResource>, ApplicationModel.IResourceBuilder<ApplicationModel.NxAppResource>>? configure = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoAppResource> AddApp(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> builder, string name, string? filter = null, System.Func<ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoAppResource>, ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoAppResource>>? configure = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> AddNxApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddPnpmApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string scriptName = "start", string[]? args = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> AddTurborepoApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string packageManager = "npm", bool useHttps = false) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<NodeAppResource> AddYarnApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string scriptName = "start", string[]? args = null) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> RunWithPackageManager(this ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> builder, string? packageManager = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> RunWithPackageManager(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> builder, string? packageManager = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<TResource> WithMappedEndpointPort<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder, string? endpointName = null)
+            where TResource : NodeAppResource { throw null; }
+
         public static ApplicationModel.IResourceBuilder<NodeAppResource> WithNpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, bool useCI = false, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.NpmInstallerResource>>? configureInstaller = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> WithNpmPackageInstaller(this ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> resource, bool useCI = false, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.NpmInstallerResource>>? configureInstaller = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> WithNpmPackageInstaller(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> resource, bool useCI = false, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.NpmInstallerResource>>? configureInstaller = null) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<NodeAppResource> WithPnpmPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.PnpmInstallerResource>>? configureInstaller = null) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> WithPnpmPackageInstaller(this ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.PnpmInstallerResource>>? configureInstaller = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> WithPnpmPackageInstaller(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.PnpmInstallerResource>>? configureInstaller = null) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<NodeAppResource> WithYarnPackageInstallation(this ApplicationModel.IResourceBuilder<NodeAppResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.YarnInstallerResource>>? configureInstaller = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> WithYarnPackageInstaller(this ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.YarnInstallerResource>>? configureInstaller = null) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> WithYarnPackageInstaller(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.YarnInstallerResource>>? configureInstaller = null) { throw null; }
     }
 }
 
@@ -31,9 +72,37 @@ namespace Aspire.Hosting.ApplicationModel
         public NpmInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
     }
 
+    public partial class NxAppResource : NodeAppResource
+    {
+        public NxAppResource(string name, string workingDirectory, string appName, string command = "nx") : base(default!, default!, default!) { }
+
+        public string AppName { get { throw null; } }
+    }
+
+    public partial class NxResource : Resource
+    {
+        public NxResource(string name, string workingDirectory) : base(default!) { }
+
+        public string WorkingDirectory { get { throw null; } }
+    }
+
     public partial class PnpmInstallerResource : ExecutableResource
     {
         public PnpmInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    public partial class TurborepoAppResource : NodeAppResource
+    {
+        public TurborepoAppResource(string name, string workingDirectory, string filter, string command = "turbo") : base(default!, default!, default!) { }
+
+        public string Filter { get { throw null; } }
+    }
+
+    public partial class TurborepoResource : Resource
+    {
+        public TurborepoResource(string name, string workingDirectory) : base(default!) { }
+
+        public string WorkingDirectory { get { throw null; } }
     }
 
     public partial class YarnInstallerResource : ExecutableResource

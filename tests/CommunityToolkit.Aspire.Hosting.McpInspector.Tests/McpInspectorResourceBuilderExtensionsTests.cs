@@ -64,6 +64,33 @@ public class McpInspectorResourceBuilderExtensionsTests
     }
 
     [Fact]
+    public void WithMcpServerCustomPathAddsServerWithCustomPath()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Create a mock MCP server resource
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector")
+            .WithMcpServer(mockServer, isDefault: true, path: "/custom/mcp/path");
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        Assert.Equal("inspector", inspectorResource.Name);
+
+        Assert.Single(inspectorResource.McpServers);
+        Assert.NotNull(inspectorResource.DefaultMcpServer);
+        Assert.Equal("mcpServer", inspectorResource.DefaultMcpServer.Name);
+        Assert.Equal("/custom/mcp/path", inspectorResource.DefaultMcpServer.Path);
+    }
+
+    [Fact]
     public void WithMultipleMcpServersAddsAllServersToResource()
     {
         // Arrange

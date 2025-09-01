@@ -37,7 +37,7 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// <summary>
     /// Gets the version of the MCP Inspector.
     /// </summary>
-    public const string InspectorVersion = "0.16.2";
+    public const string InspectorVersion = "0.16.5";
 
     private readonly List<McpServerMetadata> _mcpServers = [];
 
@@ -58,7 +58,7 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// </summary>
     public ParameterResource ProxyTokenParameter { get; set; } = default!;
 
-    internal void AddMcpServer(IResourceWithEndpoints mcpServer, bool isDefault, McpTransportType transportType)
+    internal void AddMcpServer(IResourceWithEndpoints mcpServer, bool isDefault, McpTransportType transportType, string path)
     {
         if (_mcpServers.Any(s => s.Name == mcpServer.Name))
         {
@@ -68,7 +68,8 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
         McpServerMetadata item = new(
             mcpServer.Name,
             mcpServer.GetEndpoint("http") ?? throw new InvalidOperationException($"The MCP server {mcpServer.Name} must have a 'http' endpoint defined."),
-            transportType);
+            transportType,
+            path);
 
         _mcpServers.Add(item);
 
