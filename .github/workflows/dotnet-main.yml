@@ -164,6 +164,7 @@ jobs:
       # Change this label name to whatever you use to skip publishing.
       SKIP_PUBLISH_LABEL: skip-nuget-publish
     steps:
+      - name: Check for Skip Publish Label
         id: check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
