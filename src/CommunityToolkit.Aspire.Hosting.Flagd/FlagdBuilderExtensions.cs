@@ -33,7 +33,7 @@ public static class FlagdBuilderExtensions
         return builder.AddResource(resource)
             .WithImage(FlagdContainerImageTags.Image, FlagdContainerImageTags.Tag)
             .WithImageRegistry(FlagdContainerImageTags.Registry)
-            .WithHttpEndpoint(port: port, targetPort: 8013, name: FlagdResource.HttpEndpointName)
+            .WithHttpEndpoint(port: 8013, targetPort: port, name: FlagdResource.HttpEndpointName)
             .WithBindMount(fileSource, "/flags")
             .WithArgs("start", "--uri", "file:./flags/flagd.json");
     }
