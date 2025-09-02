@@ -178,7 +178,7 @@ jobs:
           fi
 
           # List label names for the PR and check for an exact match
-          has_label=$(gh api "/repos/${{ github.repository }}/pulls/$number" --jq '.labels[].name' 2>/dev/null | grep -x -- "$LABEL" || true)
+          has_label=$(gh api "/repos/${{ github.repository }}/issues/$number/labels" --jq '.[].name' 2>/dev/null | grep -x -- "$LABEL" || true)
           if [ -n "$has_label" ]; then
             echo "skip=true" >> $GITHUB_OUTPUT
           else
