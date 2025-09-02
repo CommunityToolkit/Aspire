@@ -13,7 +13,7 @@ public static class FlagdBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
-    /// <param name="fileSource">The path to the flag configuration file on the host.</param>
+    /// <param name="fileSource">The path to the flag configuration file on the host. The flags configuration should be stored in a file named flagd.json</param>
     /// <param name="port">The host port for flagd HTTP endpoint. If not provided, a random port will be assigned.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
     public static IResourceBuilder<FlagdResource> AddFlagd(
