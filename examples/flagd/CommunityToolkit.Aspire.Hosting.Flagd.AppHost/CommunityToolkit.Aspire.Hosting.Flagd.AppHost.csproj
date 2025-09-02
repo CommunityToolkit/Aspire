@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="OpenFeature.Contrib.Providers.Flagd" />
   </ItemGroup>
 
   <ItemGroup>
