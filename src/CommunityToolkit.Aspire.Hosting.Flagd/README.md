@@ -24,7 +24,7 @@ In your `AppHost` project, call the `AddFlagd` method to add flagd to your appli
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var flagd = builder.AddFlagd("flagd", "flags.json");
+var flagd = builder.AddFlagd("flagd", "./flags");
 
 builder.Build().Run();
 ```
@@ -38,7 +38,7 @@ The `fileSource` parameter specifies the path to your flag configuration file on
 You can configure the logging level for flagd:
 
 ```csharp
-var flagd = builder.AddFlagd("flagd", "flags.json")
+var flagd = builder.AddFlagd("flagd", "./flags").
     .WithLogging("debug");
 ```
 
@@ -49,14 +49,18 @@ Available logging levels are: `debug`, `info`, `warn`, `error`.
 You can specify a custom port for the flagd HTTP/gRPC endpoints:
 
 ```csharp
-var flagd = builder.AddFlagd("flagd", "flags.json", port: 9090);
+var flagd = builder.AddFlagd("flagd", "./flags", port: 9090);
 ```
 
 If no port is specified, the default port 8013 will be used.
 
 ### Flag Configuration Format
 
-flagd uses JSON files for flag definitions. Here's a simple example:
+flagd uses JSON files for flag definitions. Please refer to the official documentation for more information. You can create
+a folder named `flags` in your project root and place your `flagd.json` file inside it. It is mandatory for the flag configuration
+file to be called `flagd.json`.
+
+Here's a simple example:
 
 ```json
 {
