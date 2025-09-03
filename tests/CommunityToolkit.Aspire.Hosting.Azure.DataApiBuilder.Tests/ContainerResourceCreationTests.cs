@@ -185,4 +185,198 @@ public class ContainerResourceCreationTests
         // some (not all) files exist in test project root
         Assert.Throws<FileNotFoundException>(() => builder.AddDataAPIBuilder("dab", "./dab-config.json", "./dab-config-2.json", Guid.NewGuid().ToString()));
     }
+
+    [Fact]
+    public void RunAsExecutable_InDevelopmentMode_CreatesExecutableResource()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var containerBuilder = builder.AddDataAPIBuilder("dab", "./dab-config.json");
+        var executableBuilder = containerBuilder.RunAsExecutable();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
+        Assert.Equal("dab", resource.Name);
+        Assert.Equal("dab", resource.Command);
+        Assert.Equal("./", resource.WorkingDirectory);
+    }
+
+    [Fact]
+    public async Task RunAsExecutable_DefaultConfig_HasCorrectArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var containerBuilder = builder.AddDataAPIBuilder("dab");
+        var executableBuilder = containerBuilder.RunAsExecutable();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
+        var args = await resource.GetArgumentValuesAsync();
+
+        Assert.Collection(args,
+            arg => Assert.Equal("start", arg),
+            arg => Assert.Equal("--config", arg),
+            arg => Assert.Equal("dab-config.json", arg));
+    }
+
+    [Fact]
+    public async Task RunAsExecutable_SingleConfigFile_HasCorrectArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var containerBuilder = builder.AddDataAPIBuilder("dab", "./dab-config.json");
+        var executableBuilder = containerBuilder.RunAsExecutable();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
+        var args = await resource.GetArgumentValuesAsync();
+
+        Assert.Collection(args,
+            arg => Assert.Equal("start", arg),
+            arg => Assert.Equal("--config", arg),
+            arg => Assert.Equal("dab-config.json", arg));
+    }
+
+    [Fact]
+    public async Task RunAsExecutable_MultipleConfigFiles_HasCorrectArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var containerBuilder = builder.AddDataAPIBuilder("dab", "./dab-config.json", "./dab-config-2.json");
+        var executableBuilder = containerBuilder.RunAsExecutable();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
+        var args = await resource.GetArgumentValuesAsync();
+
+        Assert.Collection(args,
+            arg => Assert.Equal("start", arg),
+            arg => Assert.Equal("--config", arg),
+            arg => Assert.Equal("dab-config.json", arg),
+            arg => Assert.Equal("dab-config-2.json", arg));
+    }
+
+    [Fact]
+    public void RunAsExecutable_WithHttpPort_HasCorrectEndpoints()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var containerBuilder = builder.AddDataAPIBuilder("dab", httpPort: 1234, configFilePaths: "./dab-config.json");
+        var executableBuilder = containerBuilder.RunAsExecutable();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
+        
+        Assert.True(resource.TryGetAnnotationsOfType<EndpointAnnotation>(out var endpointAnnotations));
+        Assert.Equal(2, endpointAnnotations.Count());
+
+        var httpEndpoint = endpointAnnotations.FirstOrDefault(e => e.Name == DataApiBuilderExecutableResource.HttpEndpointName);
+        Assert.NotNull(httpEndpoint);
+        Assert.Equal(1234, httpEndpoint.Port);
+        Assert.Equal(DataApiBuilderExecutableResource.HttpEndpointPort, httpEndpoint.TargetPort);
+
+        var httpsEndpoint = endpointAnnotations.FirstOrDefault(e => e.Name == DataApiBuilderExecutableResource.HttpsEndpointName);
+        Assert.NotNull(httpsEndpoint);
+        Assert.Equal(DataApiBuilderExecutableResource.HttpsEndpointPort, httpsEndpoint.TargetPort);
+    }
+
+    [Fact]
+    public void RunAsExecutable_HasCorrectEnvironmentVariables()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var containerBuilder = builder.AddDataAPIBuilder("dab", "./dab-config.json");
+        var executableBuilder = containerBuilder.RunAsExecutable();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var environmentAnnotations));
+        
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+        
+        foreach (var annotation in environmentAnnotations)
+        {
+            annotation.Callback(context);
+        }
+
+        Assert.Contains("ASPNETCORE_URLS", context.EnvironmentVariables.Keys);
+        Assert.Equal("http://localhost:5000;https://localhost:5001", context.EnvironmentVariables["ASPNETCORE_URLS"]);
+    }
+
+    [Fact]
+    public void RunAsExecutable_WithCustomConfiguration_InvokesConfigureCallback()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        bool configureCallbackInvoked = false;
+
+        var containerBuilder = builder.AddDataAPIBuilder("dab", "./dab-config.json");
+        var executableBuilder = containerBuilder.RunAsExecutable(rb =>
+        {
+            configureCallbackInvoked = true;
+            rb.WithEnvironment("TEST_VAR", "test_value");
+        });
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
+
+        Assert.True(configureCallbackInvoked);
+
+        Assert.True(resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var environmentAnnotations));
+        
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+        
+        foreach (var annotation in environmentAnnotations)
+        {
+            annotation.Callback(context);
+        }
+
+        Assert.Contains("TEST_VAR", context.EnvironmentVariables.Keys);
+        Assert.Equal("test_value", context.EnvironmentVariables["TEST_VAR"]);
+    }
+
+    [Fact]
+    public void RunAsExecutable_InvalidConfigFile_ThrowsFileNotFoundException()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var nonExistentFileName = Guid.NewGuid().ToString();
+        Assert.Throws<FileNotFoundException>(() =>
+        {
+            var containerBuilder = builder.AddDataAPIBuilder("dab", nonExistentFileName);
+            containerBuilder.RunAsExecutable();
+        });
+    }
+
+    [Fact]
+    public void RunAsExecutable_WithoutConfigFilePaths_ThrowsInvalidOperationException()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        
+        // Create a container resource manually without setting ConfigFilePaths
+        var resource = new DataApiBuilderContainerResource("dab");
+        var containerBuilder = builder.AddResource(resource);
+
+        Assert.Throws<InvalidOperationException>(() => containerBuilder.RunAsExecutable());
+    }
 }
