@@ -81,7 +81,7 @@ public static class DataApiBuilderHostingExtension
     /// Configure the resource builder to run the Data API Builder as an executable in Development mode.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{DataApiBuilderContainerResource}"/> to run as executable.</param>
-    /// <param name="configure">The <see cref="IResourceBuilder{DataApiBuilderExecutableResource}"/> to run as executable.</param>
+    /// <param name="configure">A callback that allows configuring the <see cref="IResourceBuilder{DataApiBuilderExecutableResource}"/> to run as executable.</param>
     /// <remarks>
     /// If publish mode is selected, this will be ignored.
     /// DAB cli is required to use this option.
