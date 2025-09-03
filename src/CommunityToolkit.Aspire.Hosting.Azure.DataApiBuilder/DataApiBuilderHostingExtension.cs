@@ -1,7 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder;
-using YamlDotNet.Serialization;
-
 namespace Aspire.Hosting;
 
 /// <summary>
