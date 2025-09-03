@@ -1,5 +1,7 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder;
+using CommunityToolkit.Aspire.Utils;
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -100,7 +102,7 @@ public static class DataApiBuilderHostingExtension
         builder.ApplicationBuilder.Resources.Remove(builder.Resource);
 
         // Configure the resource builder to run the Data API Builder as an executable
-        var resource = new DataApiBuilderExecutableResource(builder.Resource.Name, builder.ApplicationBuilder.AppHostDirectory);
+        var resource = new DataApiBuilderExecutableResource(builder.Resource.Name, builder.ApplicationBuilder.AppHostDirectory.NormalizePathForCurrentPlatform());
 
         // We build the list of arguments to pass to the dab command
         // The final command should be similar to dab start --config file1.json file2.json

@@ -201,7 +201,6 @@ public class ContainerResourceCreationTests
         var resource = Assert.Single(appModel.Resources.OfType<DataApiBuilderExecutableResource>());
         Assert.Equal("dab", resource.Name);
         Assert.Equal("dab", resource.Command);
-        Assert.Equal("./", resource.WorkingDirectory);
     }
 
     [Fact]

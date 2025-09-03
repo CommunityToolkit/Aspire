@@ -14,7 +14,6 @@ sqlServer
 
 // Add Data API Builder using dab-config.json 
 var dab = builder.AddDataAPIBuilder("dab")
-    .RunAsExecutable()
     .WaitFor(sqlServer)
     .WithReference(sqlDatabase);
 
