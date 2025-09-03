@@ -20,7 +20,7 @@ public class DataApiBuilderContainerResource(string name, string? entrypoint = n
     internal const int HttpEndpointPort = 5000;
     internal const int HttpsEndpointPort = 5001;
 
-    internal int? HttpPort;
+    internal int? HttpPort { get; set; }
 
     internal string[]? ConfigFilePaths { get; set; }
 }
