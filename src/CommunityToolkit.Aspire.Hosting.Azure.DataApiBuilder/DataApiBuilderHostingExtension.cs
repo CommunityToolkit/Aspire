@@ -102,7 +102,7 @@ public static class DataApiBuilderHostingExtension
         builder.ApplicationBuilder.Resources.Remove(builder.Resource);
 
         // Configure the resource builder to run the Data API Builder as an executable
-        var resource = new DataApiBuilderExecutableResource(builder.Resource.Name);
+        var resource = new DataApiBuilderExecutableResource(builder.Resource.Name, builder.ApplicationBuilder.AppHostDirectory);
 
         // We build the list of arguments to pass to the dab command
         // The final command should be similar to dab start --config file1.json file2.json

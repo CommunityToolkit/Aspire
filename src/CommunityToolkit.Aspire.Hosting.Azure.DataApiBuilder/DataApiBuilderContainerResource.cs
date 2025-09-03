@@ -29,8 +29,9 @@ public class DataApiBuilderContainerResource(string name, string? entrypoint = n
 /// A resource that represents Data Api Builder.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
-public class DataApiBuilderExecutableResource(string name)
-    : ExecutableResource(name, "dab", "./"), IDataApiBuilderResource
+/// <param name="workingDirectory">The working directory to use for the command.</param>
+public class DataApiBuilderExecutableResource(string name, string workingDirectory)
+    : ExecutableResource(name, "dab", workingDirectory), IDataApiBuilderResource
 {
     internal const string HttpEndpointName = "http";
     internal const string HttpsEndpointName = "https";
