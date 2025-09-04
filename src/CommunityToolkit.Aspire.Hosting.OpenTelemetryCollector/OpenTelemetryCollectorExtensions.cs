@@ -153,8 +153,8 @@ public static class OpenTelemetryCollectorExtensions
                 return Task.CompletedTask;
             }
 
-            var grpcEndpoint = collectorResource.GetEndpoint(collectorResource!.GrpcEndpoint.EndpointName);
-            var httpEndpoint = collectorResource.GetEndpoint(collectorResource!.HttpEndpoint.EndpointName);
+            var grpcEndpoint = collectorResource.GetEndpoint(collectorResource.GrpcEndpoint.EndpointName);
+            var httpEndpoint = collectorResource.GetEndpoint(collectorResource.HttpEndpoint.EndpointName);
 
             if (!resources.Any())
             {
