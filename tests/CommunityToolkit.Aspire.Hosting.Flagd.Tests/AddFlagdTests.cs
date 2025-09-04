@@ -63,8 +63,7 @@ public class AddFlagdTests
     public void WithLoggingAddsEnvironmentVariable()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddFlagd(FlagdName, FlagdSource)
-            .WithLogging("debug");
+        builder.AddFlagd(FlagdName, FlagdSource).WithLogging();
 
         using var app = builder.Build();
 
