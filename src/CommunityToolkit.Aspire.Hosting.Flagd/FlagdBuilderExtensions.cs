@@ -8,6 +8,8 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class FlagdBuilderExtensions
 {
+    private const int FlagdPort = 8013;
+
     /// <summary>
     /// Adds a flagd container to the application model.
     /// </summary>
@@ -31,7 +33,7 @@ public static class FlagdBuilderExtensions
         return builder.AddResource(resource)
             .WithImage(FlagdContainerImageTags.Image, FlagdContainerImageTags.Tag)
             .WithImageRegistry(FlagdContainerImageTags.Registry)
-            .WithHttpEndpoint(port: port, targetPort: 8013, name: FlagdResource.HttpEndpointName)
+            .WithHttpEndpoint(port: port, targetPort: FlagdPort, name: FlagdResource.HttpEndpointName)
             .WithBindMount(fileSource, "/flags")
             .WithArgs("start", "--uri", "file:./flags/flagd.json");
     }
