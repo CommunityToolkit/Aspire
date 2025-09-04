@@ -113,18 +113,12 @@ public static class OpenTelemetryCollectorExtensions
     /// <returns></returns>
     private static IResourceBuilder<OpenTelemetryCollectorResource> WithFirstStartup(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
-        builder.OnBeforeResourceStarted((resource, beforeStartedEvent, cancellationToken) =>
+        builder.OnBeforeResourceStarted((collectorResource, beforeStartedEvent, cancellationToken) =>
         {
-            var logger = beforeStartedEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource);
+            var logger = beforeStartedEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(collectorResource);
             var appModel = beforeStartedEvent.Services.GetRequiredService<DistributedApplicationModel>();
             var resources = appModel.GetProjectResources();
-            var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().FirstOrDefault();
 
-            if (collectorResource is null)
-            {
-                logger.LogWarning("No collector resource found");
-                return Task.CompletedTask;
-            }
             foreach (var resourceItem in resources.Where(r => r.HasAnnotationOfType<OtlpExporterAnnotation>()))
             {
                 resourceItem.Annotations.Add(new WaitAnnotation(collectorResource, WaitType.WaitUntilHealthy));
@@ -140,18 +134,11 @@ public static class OpenTelemetryCollectorExtensions
     /// <param name="builder"></param>
     private static IResourceBuilder<OpenTelemetryCollectorResource> AddEnvironmentVariablesEventHook(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
-        builder.OnResourceEndpointsAllocated((resource, allocatedEvent, cancellationToken) =>
+        builder.OnResourceEndpointsAllocated((collectorResource, allocatedEvent, cancellationToken) =>
         {
-            var logger = allocatedEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource);
+            var logger = allocatedEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(collectorResource);
             var appModel = allocatedEvent.Services.GetRequiredService<DistributedApplicationModel>();
             var resources = appModel.GetProjectResources();
-            var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().FirstOrDefault();
-
-            if (collectorResource is null)
-            {
-                logger.LogWarning("No collector resource found");
-                return Task.CompletedTask;
-            }
 
             var grpcEndpoint = collectorResource.GetEndpoint(collectorResource.GrpcEndpoint.EndpointName);
             var httpEndpoint = collectorResource.GetEndpoint(collectorResource.HttpEndpoint.EndpointName);
