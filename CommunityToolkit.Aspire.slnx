@@ -131,6 +131,9 @@
     <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.AppHost/CommunityToolkit.Aspire.Hosting.Rust.AppHost.csproj" />
     <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/solr/">
+    <Project Path="examples/solr/CommunityToolkit.Aspire.Hosting.Solr.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/sql-database-projects/">
     <Project Path="examples/sql-database-projects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj" />
     <Project Path="examples/sql-database-projects/SdkProject/SdkProject.csproj" />
@@ -179,6 +182,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Solr/CommunityToolkit.Aspire.Hosting.Solr.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Sqlite/CommunityToolkit.Aspire.Hosting.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" />
@@ -228,6 +232,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Solr.Tests/CommunityToolkit.Aspire.Hosting.Solr.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj" />
