@@ -3,8 +3,7 @@ using OpenFeature.Contrib.Providers.Flagd;
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add flagd with local flag configuration file
-var flagd = builder.AddFlagd("flagd", "./flags", 8013)
-    .WithLogging("debug");
+var flagd = builder.AddFlagd("flagd", "./flags", 8013).WithLogging();
 
 builder.Eventing.Subscribe<AfterResourcesCreatedEvent>(static async (@event, cancellationToken) =>
     {
