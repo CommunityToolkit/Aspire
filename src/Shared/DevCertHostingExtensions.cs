@@ -45,7 +45,7 @@ public static class DevCertHostingExtensions
         {
             throw new InvalidOperationException("RunWithHttpsDevCertificate needs environment variables only for Resources that aren't Containers.");
         }
-        
+
         // Create temp directory for certificate export
         var tempDir = Directory.CreateTempSubdirectory("aspire-dev-certs");
         var certExportPath = Path.Combine(tempDir.FullName, "dev-cert.pem");
@@ -58,7 +58,7 @@ public static class DevCertHostingExtensions
         var existingResource = builder.ApplicationBuilder.Resources.FirstOrDefault(r => r.Name == exportResourceName);
         IResourceBuilder<ExecutableResource> exportExecutable;
 
-        if (existingResource == null)
+        if (existingResource is null)
         {
             // Create the executable resource to export the certificate
             exportExecutable = builder.ApplicationBuilder
@@ -85,8 +85,6 @@ public static class DevCertHostingExtensions
         // Configure the current resource with the certificate paths
         if (builder.Resource is ContainerResource containerResource)
         {
-
-
             var certFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{CERT_FILE_NAME}";
             var certKeyFileDest = $"{DEV_CERT_BIND_MOUNT_DEST_DIR}/{CERT_KEY_FILE_NAME}";
 
