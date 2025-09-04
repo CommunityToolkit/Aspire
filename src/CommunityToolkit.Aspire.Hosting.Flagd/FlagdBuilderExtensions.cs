@@ -39,18 +39,15 @@ public static class FlagdBuilderExtensions
     }
 
     /// <summary>
-    /// Configures logging level for flagd.
+    /// Configures logging level for flagd. If a flag or targeting rule isn't proceeding the way you'd expect this can be enabled to get more verbose logging.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="level">The logging level (debug, info, warn, error).</param>
     /// <returns>The <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
     public static IResourceBuilder<FlagdResource> WithLogging(
-        this IResourceBuilder<FlagdResource> builder,
-        string level = "info")
+        this IResourceBuilder<FlagdResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(level, nameof(level));
 
-        return builder.WithEnvironment("FLAGD_LOG_LEVEL", level.ToUpperInvariant());
+        return builder.WithEnvironment("FLAGD_DEBUG", "true");
     }
 }
