@@ -122,15 +122,4 @@ public class AddFlagdTests
 
         Assert.Throws<ArgumentNullException>(() => builder.AddFlagd(FlagdName, FlagdSource));
     }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(65536)]
-    public void AddFlagdThrowsWhenPortIsInvalid(int port)
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentOutOfRangeException>(() => builder.AddFlagd(FlagdName, FlagdSource, port));
-    }
 }

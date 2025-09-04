@@ -20,20 +20,18 @@ public static class FlagdBuilderExtensions
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         string fileSource,
-        int port = 8013)
+        int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
         ArgumentException.ThrowIfNullOrEmpty(fileSource, nameof(fileSource));
-        ArgumentOutOfRangeException.ThrowIfLessThan(port, 1, nameof(port));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(port, 65535, nameof(port));
 
         var resource = new FlagdResource(name);
 
         return builder.AddResource(resource)
             .WithImage(FlagdContainerImageTags.Image, FlagdContainerImageTags.Tag)
             .WithImageRegistry(FlagdContainerImageTags.Registry)
-            .WithHttpEndpoint(port: 8013, targetPort: port, name: FlagdResource.HttpEndpointName)
+            .WithHttpEndpoint(port: port, targetPort: 8013, name: FlagdResource.HttpEndpointName)
             .WithBindMount(fileSource, "/flags")
             .WithArgs("start", "--uri", "file:./flags/flagd.json");
     }
