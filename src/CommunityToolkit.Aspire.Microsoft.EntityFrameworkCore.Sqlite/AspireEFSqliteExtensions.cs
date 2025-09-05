@@ -78,6 +78,7 @@ namespace Microsoft.AspNetCore.Builder;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Trace;
 using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
@@ -114,13 +115,12 @@ public static class AspireEFSqliteWebExtensions
         builder.Services.AddDbContext<TDbContext>(options =>
             options.UseSqlite(connectionString));
 
-        // TODO: Add OpenTelemetry support once we can verify package references work
-        // if (enableOpenTelemetry)
-        // {
-        //     builder.Services.AddOpenTelemetry()
-        //         .WithTracing(tracing => tracing
-        //             .AddEntityFrameworkCoreInstrumentation());
-        // }
+        if (enableOpenTelemetry)
+        {
+            builder.Services.AddOpenTelemetry()
+                .WithTracing(tracing => tracing
+                    .AddEntityFrameworkCoreInstrumentation());
+        }
 
         return builder;
     }
