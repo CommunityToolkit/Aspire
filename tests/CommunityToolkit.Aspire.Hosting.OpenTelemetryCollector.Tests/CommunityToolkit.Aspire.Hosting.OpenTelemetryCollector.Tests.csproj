@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
+  </ItemGroup>
+
+</Project>
