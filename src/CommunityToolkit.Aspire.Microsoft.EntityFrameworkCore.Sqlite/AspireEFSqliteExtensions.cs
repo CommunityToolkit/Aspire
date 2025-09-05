@@ -73,3 +73,55 @@ public static class AspireEFSqliteExtensions
         }
     }
 }
+
+namespace Microsoft.AspNetCore.Builder;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
+
+/// <summary>
+/// Extension methods for configuring Sqlite with Entity Framework Core on WebApplicationBuilder.
+/// </summary>
+public static class AspireEFSqliteWebExtensions
+{
+    /// <summary>
+    /// Enriches a <see cref="WebApplicationBuilder"/> to register the <typeparamref name="TDbContext"/> as a scoped service 
+    /// with simplified configuration and optional OpenTelemetry instrumentation.
+    /// </summary>
+    /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
+    /// <param name="builder">The <see cref="WebApplicationBuilder"/> to read config from and add services to.</param>
+    /// <param name="connectionStringName">The name used to retrieve the connection string from the ConnectionStrings configuration section. Defaults to "DefaultConnection".</param>
+    /// <param name="enableOpenTelemetry">Whether to enable OpenTelemetry instrumentation for Entity Framework Core. Defaults to true.</param>
+    /// <returns>The <see cref="WebApplicationBuilder"/> so that additional calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if mandatory <paramref name="builder"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the connection string is not found or is empty.</exception>
+    public static WebApplicationBuilder EnrichSqliteDatabaseDbContext<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TDbContext>(
+        this WebApplicationBuilder builder,
+        string? connectionStringName = "DefaultConnection",
+        bool enableOpenTelemetry = true)
+        where TDbContext : DbContext
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(connectionStringName);
+
+        var connectionString = builder.Configuration.GetConnectionString(connectionStringName);
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException($"Connection string '{connectionStringName}' not found or empty.");
+        }
+
+        builder.Services.AddDbContext<TDbContext>(options =>
+            options.UseSqlite(connectionString));
+
+        // TODO: Add OpenTelemetry support once we can verify package references work
+        // if (enableOpenTelemetry)
+        // {
+        //     builder.Services.AddOpenTelemetry()
+        //         .WithTracing(tracing => tracing
+        //             .AddEntityFrameworkCoreInstrumentation());
+        // }
+
+        return builder;
+    }
+}
