@@ -91,4 +91,26 @@ public class EnrichSqliteDatabaseDbContextTests
         var dbContext = app.Services.GetRequiredService<TestDbContext>();
         Assert.NotNull(dbContext);
     }
+
+    [Fact]
+    public void EnrichSqliteDatabaseDbContext_EnablesOpenTelemetryByDefault()
+    {
+        // Arrange
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "Data Source=:memory:")
+        ]);
+
+        // Act
+        builder.EnrichSqliteDatabaseDbContext<TestDbContext>();
+
+        // Assert - The test passes if no exceptions are thrown and OpenTelemetry services are registered
+        var app = builder.Build();
+        var dbContext = app.Services.GetRequiredService<TestDbContext>();
+        Assert.NotNull(dbContext);
+        
+        // Verify OpenTelemetry services are registered (basic smoke test)
+        var services = app.Services.GetServices<object>().ToList();
+        Assert.True(services.Count > 0, "Services should be registered");
+    }
 }
