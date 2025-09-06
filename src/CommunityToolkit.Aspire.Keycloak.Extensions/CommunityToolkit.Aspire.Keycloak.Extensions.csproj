@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting" />
+      <PackageReference Include="Aspire.Hosting.Keycloak" />
+      <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    </ItemGroup>
+
+</Project>
