@@ -113,3 +113,8 @@
 
 /src/CommunityToolkit.Aspire.Minio.Client/ @Harold-Morgan
 /tests/CommunityToolkit.Aspire.Minio.Client.Tests/ @Harold-Morgan
+
+# CommunityToolkit.Aspire.Hosting.PowerShell
+/src/CommunityToolkit.Aspire.Hosting.PowerShell/ @oising
+/tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/ @oising
+/examples/powershell/ @oising
