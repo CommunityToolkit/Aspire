@@ -9,6 +9,6 @@ internal static class K6ContainerImageTags
     public const string Registry = "docker.io";
     /// <summary>grafana/k6</summary>
     public const string Image = "grafana/k6";
-    /// <summary>0.57.0</summary>
-    public const string Tag = "0.57.0";
+    /// <summary>1.2.3</summary>
+    public const string Tag = "1.2.3";
 }

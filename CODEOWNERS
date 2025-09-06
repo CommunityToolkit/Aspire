@@ -125,3 +125,9 @@
 /tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/ @Odonno
 /src/CommunityToolkit.Aspire.SurrealDb/ @Odonno
 /tests/CommunityToolkit.Aspire.SurrealDb.Tests/ @Odonno
+
+# CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector
+
+/examples/opentelemetry-collector/ @martinjt
+/src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/ @martinjt
+/tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/ @martinjt

@@ -105,6 +105,11 @@
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults.csproj" />
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.Web/CommunityToolkit.Aspire.Hosting.Ollama.Web.csproj" />
   </Folder>
+  <Folder Name="/examples/opentelemetry-collector/">
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api.csproj" />
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost.csproj" />
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.ServiceDefaults/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/papercut/">
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost/CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost.csproj" />
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi.csproj" />
@@ -130,6 +135,9 @@
   <Folder Name="/examples/rust/">
     <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.AppHost/CommunityToolkit.Aspire.Hosting.Rust.AppHost.csproj" />
     <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/solr/">
+    <Project Path="examples/solr/CommunityToolkit.Aspire.Hosting.Solr.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/sql-database-projects/">
     <Project Path="examples/sql-database-projects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj" />
@@ -172,6 +180,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PowerShell/CommunityToolkit.Aspire.Hosting.PowerShell.csproj" />
@@ -179,6 +188,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Solr/CommunityToolkit.Aspire.Hosting.Solr.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Sqlite/CommunityToolkit.Aspire.Hosting.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" />
@@ -222,6 +232,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj" />
@@ -229,6 +240,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Solr.Tests/CommunityToolkit.Aspire.Hosting.Solr.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj" />

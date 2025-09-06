@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
 
@@ -59,5 +60,30 @@ public class WithDaprSidecarTests
         var annotation = Assert.Single(resource.Annotations.OfType<DaprSidecarOptionsAnnotation>());
 
         Assert.Equal("appId", annotation.Options.AppId);
+    }
+
+    [Fact]
+    public void DaprSidecarSupportsWaitFor()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("service-a")
+            .WithDaprSidecar();
+
+        var sidecarResource = Assert.Single(builder.Resources.OfType<IDaprSidecarResource>());
+
+        // Verify that IDaprSidecarResource implements IResourceWithWaitSupport
+        Assert.IsAssignableFrom<IResourceWithWaitSupport>(sidecarResource);
+
+        // Create a resource builder and use it with WaitFor
+        var sidecarResourceBuilder = builder.CreateResourceBuilder(sidecarResource);
+
+        var serviceB = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("service-b")
+            .WaitFor(sidecarResourceBuilder);
+
+        // Verify the wait annotation was added
+        Assert.NotNull(serviceB);
+        var waitAnnotation = Assert.Single(serviceB.Resource.Annotations.OfType<WaitAnnotation>());
+        Assert.Equal(sidecarResource.Name, waitAnnotation.Resource.Name);
     }
 }
