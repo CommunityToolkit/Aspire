@@ -3,13 +3,18 @@ using Moq;
 
 namespace CommunityToolkit.Aspire.Keycloak.Extensions.Tests;
 
-public partial class KeycloakExtensionTests
+public class KeycloakExtensionTests
 {
     private readonly IDistributedApplicationBuilder _app;
 
     public KeycloakExtensionTests()
     {
         _app = DistributedApplication.CreateBuilder();
+    }
+
+    private static async Task<IDictionary<string, string>> GetEnv(IResourceBuilder<KeycloakResource> kc)
+    {
+        return await kc.Resource.GetEnvironmentVariableValuesAsync();
     }
 
     [Fact]
@@ -40,5 +45,83 @@ public partial class KeycloakExtensionTests
                 new Mock<IResourceBuilder<PostgresDatabaseResource>>().Object,
                 new Mock<IResourceBuilder<ParameterResource>>().Object,
                 new Mock<IResourceBuilder<ParameterResource>>().Object));
+    }
+
+    [Fact]
+    public async Task WithPostgres_Defaults_SetBasicVars()
+    {
+        var pg = _app.AddPostgres("pg");
+        var db = pg.AddDatabase("keycloakdb");
+        var kc = _app.AddKeycloak("kc")
+            .WithPostgres(db);
+
+        var env = await GetEnv(kc);
+
+        Assert.Equal("postgres", env["KC_DB"]);
+        Assert.True(env.ContainsKey("KC_DB_URL"));
+        var url = env["KC_DB_URL"];
+        Assert.StartsWith("jdbc:postgresql://", url);
+        Assert.EndsWith("/keycloakdb", url);
+    }
+
+    [Fact]
+    public async Task WithPostgres_ExplicitParameters_AreUsed()
+    {
+        var app = DistributedApplication.CreateBuilder();
+
+        var pg = app.AddPostgres("pg");
+        var db = pg.AddDatabase("keycloakdb");
+        var user = app.AddParameter("kc-user");
+        var pass = app.AddParameter("kc-pass");
+
+        var kc = app.AddKeycloak("kc")
+            .WithPostgres(db, user, pass);
+
+        var env = await GetEnv(kc);
+
+        Assert.False(ReferenceEquals(user.Resource, env["KC_DB_USERNAME"])); // значение может быть ReferenceExpression
+        Assert.False(ReferenceEquals(pass.Resource, env["KC_DB_PASSWORD"])); // см. примечание ниже
+        Assert.True(env.ContainsKey("KC_DB_USERNAME"));
+        Assert.True(env.ContainsKey("KC_DB_PASSWORD"));
+    }
+
+    [Fact]
+    public async Task WithPostgres_Uses_ServerParameters_When_Present()
+    {
+        var app = DistributedApplication.CreateBuilder();
+
+        var pg = app.AddPostgres("pg");
+        var username = app.AddParameter("pg-user");
+        var pass = app.AddParameter("pg-pass");
+
+        pg.WithUserName(username)
+            .WithPassword(pass);
+
+        var db = pg.AddDatabase("keycloakdb");
+
+        var kc = app.AddKeycloak("kc")
+            .WithPostgres(db);
+
+        var env = await GetEnv(kc);
+        // Тут ожидаем, что вместо "postgres" подставлены значения параметров сервера
+        Assert.NotEqual("postgres", env["KC_DB_USERNAME"].ToString());
+        Assert.NotEqual("postgres", env["KC_DB_PASSWORD"].ToString());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task WithPostgres_XA_Flag_Set_When_Enabled(bool xaEnabled)
+    {
+        var app = DistributedApplication.CreateBuilder();
+
+        var pg = app.AddPostgres("pg");
+        var db = pg.AddDatabase("keycloakdb");
+
+        var kc = app.AddKeycloak("kc")
+            .WithPostgres(db, xaEnabled);
+
+        var env = await GetEnv(kc);
+        Assert.Equal(xaEnabled.ToString().ToLower(), env["KC_TRANSACTION_XA_ENABLED"]);
     }
 }

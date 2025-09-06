@@ -22,9 +22,8 @@ public static class KeycloakPostgresExtension
             $"{ep.Property(EndpointProperty.Port)}/{dbName}");
 
         builder.WithEnvironment("KC_DB", "postgres")
-            .WithEnvironment("KC_DB_URL", jdbcUrl);
-        if (xaEnabled)
-            builder.WithEnvironment("KC_TRANSACTION_XA_ENABLED", "true");
+            .WithEnvironment("KC_DB_URL", jdbcUrl)
+            .WithEnvironment("KC_TRANSACTION_XA_ENABLED", xaEnabled.ToString().ToLower());
 
         return builder;
     }
@@ -87,14 +86,14 @@ public static class KeycloakPostgresExtension
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(database);
-        
+
         var usernameParameter = database.Resource.Parent.UserNameParameter is null
             ? ReferenceExpression.Create($"postgres")
             : ReferenceExpression.Create($"{database.Resource.Parent.UserNameParameter}");
         var passwordParameter = database.Resource.Parent.PasswordParameter is null
             ? ReferenceExpression.Create($"postgres")
             : ReferenceExpression.Create($"{database.Resource.Parent.PasswordParameter}");
-        
+
         return WithPostgresData(builder, database, xaEnabled)
             .WithEnvironment("KC_DB_USERNAME", usernameParameter)
             .WithEnvironment("KC_DB_PASSWORD", passwordParameter);
