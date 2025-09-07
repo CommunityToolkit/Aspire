@@ -215,7 +215,7 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [mongodb-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/
 [mongodb-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions?label=nuget%20(preview)
 [mongodb-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/absoluteLatest
-[postgres-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-postgres-extensions
+[postgres-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-postgresql-extensions
 [postgres-ext-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions
 [postgres-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/
 [postgres-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions?label=nuget%20(preview)
