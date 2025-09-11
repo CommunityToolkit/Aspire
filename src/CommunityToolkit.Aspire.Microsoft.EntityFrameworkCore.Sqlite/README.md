@@ -43,10 +43,11 @@ builder.EnrichSqliteDatabaseDbContext<BloggingContext>(enableOpenTelemetry: fals
 ```
 
 The `EnrichSqliteDatabaseDbContext` method provides:
-- **Simplified API**: Works directly with `WebApplicationBuilder`
-- **Default connection string**: Uses "DefaultConnection" by default
-- **OpenTelemetry integration**: Automatically adds EF Core instrumentation for distributed tracing
-- **Parameter validation**: Proper error handling for missing connection strings
+
+-   **Simplified API**: Works directly with `WebApplicationBuilder`
+-   **Default connection string**: Uses "DefaultConnection" by default
+-   **OpenTelemetry integration**: Automatically adds EF Core instrumentation for distributed tracing
+-   **Parameter validation**: Proper error handling for missing connection strings
 
 Then, in your service, inject `TDbContext` and use it to interact with the database:
 
@@ -65,3 +66,4 @@ public class MyService(BloggingContext context)
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
+

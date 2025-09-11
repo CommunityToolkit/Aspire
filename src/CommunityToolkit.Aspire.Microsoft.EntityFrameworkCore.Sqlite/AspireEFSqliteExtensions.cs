@@ -1,8 +1,8 @@
 ﻿using Aspire;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Trace;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Extensions.Hosting;
@@ -58,10 +58,7 @@ public static class AspireEFSqliteExtensions
 
         builder.Services.AddDbContextPool<TContext>(ConfigureDbContext);
 
-        if (!settings.DisableHealthChecks)
-        {
-            builder.TryAddHealthCheck(name: typeof(TContext).Name, static hcBuilder => hcBuilder.AddDbContextCheck<TContext>());
-        }
+        ConfigureInstrumentation<TContext>(builder, settings);
 
         void ConfigureDbContext(DbContextOptionsBuilder dbContextOptionsBuilder)
         {
@@ -72,56 +69,72 @@ public static class AspireEFSqliteExtensions
             configureDbContextOptions?.Invoke(dbContextOptionsBuilder);
         }
     }
-}
 
-namespace Microsoft.AspNetCore.Builder;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using OpenTelemetry.Trace;
-using System.Diagnostics.CodeAnalysis;
-
-/// <summary>
-/// Extension methods for configuring Sqlite with Entity Framework Core on WebApplicationBuilder.
-/// </summary>
-public static class AspireEFSqliteWebExtensions
-{
     /// <summary>
-    /// Enriches a <see cref="WebApplicationBuilder"/> to register the <typeparamref name="TDbContext"/> as a scoped service 
+    /// Enriches a <see cref="IHostApplicationBuilder"/> to register the <typeparamref name="TDbContext"/> as a scoped service 
     /// with simplified configuration and optional OpenTelemetry instrumentation.
     /// </summary>
     /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
-    /// <param name="builder">The <see cref="WebApplicationBuilder"/> to read config from and add services to.</param>
-    /// <param name="connectionStringName">The name used to retrieve the connection string from the ConnectionStrings configuration section. Defaults to "DefaultConnection".</param>
-    /// <param name="enableOpenTelemetry">Whether to enable OpenTelemetry instrumentation for Entity Framework Core. Defaults to true.</param>
-    /// <returns>The <see cref="WebApplicationBuilder"/> so that additional calls can be chained.</returns>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder"/> to read config from and add services to.</param>
+    /// <param name="configureSettings">An optional delegate that can be used for customizing options. It's invoked after the settings are read from the configuration.</param>
     /// <exception cref="ArgumentNullException">Thrown if mandatory <paramref name="builder"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when the connection string is not found or is empty.</exception>
-    public static WebApplicationBuilder EnrichSqliteDatabaseDbContext<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TDbContext>(
-        this WebApplicationBuilder builder,
-        string? connectionStringName = "DefaultConnection",
-        bool enableOpenTelemetry = true)
+    public static void EnrichSqliteDatabaseDbContext<[DynamicallyAccessedMembers(RequiredByEF)] TDbContext>(
+        this IHostApplicationBuilder builder,
+        Action<SqliteEntityFrameworkCoreSettings>? configureSettings = null)
         where TDbContext : DbContext
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(connectionStringName);
 
-        var connectionString = builder.Configuration.GetConnectionString(connectionStringName);
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            throw new InvalidOperationException($"Connection string '{connectionStringName}' not found or empty.");
-        }
+        var settings = builder.GetDbContextSettings<TDbContext, SqliteEntityFrameworkCoreSettings>(
+            DefaultConfigSectionName,
+            null,
+            (settings, section) => section.Bind(settings)
+        );
+
+        configureSettings?.Invoke(settings);
 
         builder.Services.AddDbContext<TDbContext>(options =>
-            options.UseSqlite(connectionString));
+            options.UseSqlite(settings.ConnectionString));
+        ConfigureInstrumentation<TDbContext>(builder, settings);
+    }
 
-        if (enableOpenTelemetry)
+    private static void ConfigureInstrumentation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TDbContext>(IHostApplicationBuilder builder, SqliteEntityFrameworkCoreSettings settings) where TDbContext : DbContext
+    {
+        if (!settings.DisableTracing)
         {
             builder.Services.AddOpenTelemetry()
                 .WithTracing(tracing => tracing
                     .AddEntityFrameworkCoreInstrumentation());
         }
 
-        return builder;
+        if (!settings.DisableHealthChecks)
+        {
+            builder.TryAddHealthCheck(
+                name: typeof(TDbContext).Name,
+                static hcBuilder => hcBuilder.AddDbContextCheck<TDbContext>());
+        }
+    }
+
+    internal static TSettings GetDbContextSettings<TContext, TSettings>(this IHostApplicationBuilder builder, string defaultConfigSectionName, string? connectionName, Action<TSettings, IConfiguration> bindSettings)
+        where TSettings : new()
+    {
+        TSettings settings = new();
+        var configurationSection = builder.Configuration.GetSection(defaultConfigSectionName);
+        bindSettings(settings, configurationSection);
+        // If the connectionName is not provided, we've been called in the context
+        // of an Enrich invocation and don't need to bind the connectionName specific settings.
+        // Instead, we'll just bind to the TContext-specific settings.
+        if (connectionName is not null)
+        {
+            var connectionSpecificConfigurationSection = configurationSection.GetSection(connectionName);
+            bindSettings(settings, connectionSpecificConfigurationSection);
+        }
+        var typeSpecificConfigurationSection = configurationSection.GetSection(typeof(TContext).Name);
+        if (typeSpecificConfigurationSection.Exists()) // https://github.com/dotnet/runtime/issues/91380
+        {
+            bindSettings(settings, typeSpecificConfigurationSection);
+        }
+
+        return settings;
     }
 }
