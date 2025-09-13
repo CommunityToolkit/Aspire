@@ -28,6 +28,8 @@ namespace Aspire.Hosting
 
     public static partial class DaprMetadataResourceBuilderExtensions
     {
+        public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.IValueProvider valueProvider) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.ParameterResource parameterResource) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, string value) { throw null; }
@@ -126,6 +128,15 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
     {
     }
 
+    public partial class DaprSidecarAvailableEvent : global::Aspire.Hosting.Eventing.IDistributedApplicationResourceEvent, global::Aspire.Hosting.Eventing.IDistributedApplicationEvent
+    {
+        public DaprSidecarAvailableEvent(IDaprSidecarResource resource, System.IServiceProvider services) { }
+
+        public global::Aspire.Hosting.ApplicationModel.IResource Resource { get { throw null; } }
+
+        public System.IServiceProvider Services { get { throw null; } }
+    }
+
     public sealed partial record DaprSidecarOptions()
     {
         public string? AppChannelAddress { get { throw null; } init { } }
@@ -206,7 +217,7 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
         string Type { get; }
     }
 
-    public partial interface IDaprSidecarResource : global::Aspire.Hosting.ApplicationModel.IResource
+    public partial interface IDaprSidecarResource : global::Aspire.Hosting.ApplicationModel.IResource, global::Aspire.Hosting.ApplicationModel.IResourceWithWaitSupport
     {
     }
 }
