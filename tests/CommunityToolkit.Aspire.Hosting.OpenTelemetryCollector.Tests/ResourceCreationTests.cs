@@ -173,7 +173,9 @@ public class ResourceCreationTests
 
         Assert.Contains("ASPIRE_ENDPOINT", context.EnvironmentVariables.Keys);
         Assert.Contains("ASPIRE_API_KEY", context.EnvironmentVariables.Keys);
-        Assert.Equal("http://host.docker.internal:18889", context.EnvironmentVariables["ASPIRE_ENDPOINT"]);
+
+        var url = Assert.IsType<HostUrl>(context.EnvironmentVariables["ASPIRE_ENDPOINT"]);
+        Assert.Equal("http://localhost:18889", url.Url);
         Assert.NotNull(context.EnvironmentVariables["ASPIRE_API_KEY"]);
     }
 

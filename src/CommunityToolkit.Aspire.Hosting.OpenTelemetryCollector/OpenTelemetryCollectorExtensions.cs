@@ -36,12 +36,10 @@ public static class OpenTelemetryCollectorExtensions
 
         var isHttpsEnabled = !settings.ForceNonSecureReceiver && url.StartsWith("https", StringComparison.OrdinalIgnoreCase);
 
-        var dashboardOtlpEndpoint = ReplaceLocalhostWithContainerHost(url, builder.Configuration);
-
         var resource = new OpenTelemetryCollectorResource(name);
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(settings.CollectorImage, settings.CollectorTag)
-            .WithEnvironment("ASPIRE_ENDPOINT", dashboardOtlpEndpoint)
+            .WithEnvironment("ASPIRE_ENDPOINT", new HostUrl(url))
             .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName]);
 
         if (settings.EnableGrpcEndpoint)
@@ -85,15 +83,6 @@ public static class OpenTelemetryCollectorExtensions
                .WithFirstStartup();
 
         return builder;
-    }
-
-    private static string ReplaceLocalhostWithContainerHost(string value, IConfiguration configuration)
-    {
-        var hostName = configuration["AppHost:ContainerHostname"] ?? "host.docker.internal";
-
-        return value.Replace("localhost", hostName, StringComparison.OrdinalIgnoreCase)
-                    .Replace("127.0.0.1", hostName)
-                    .Replace("[::1]", hostName);
     }
 
     /// <summary>
