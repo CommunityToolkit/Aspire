@@ -392,7 +392,7 @@ public class ResourceCreationTests
     [Fact]
     public void RunWithHttpsDevCertificateAddsExecutableResourceInRunMode()
     {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
+        var builder = TestDistributedApplicationBuilder.Create("--environment", "Development");
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
@@ -431,7 +431,7 @@ public class ResourceCreationTests
     [Fact]
     public void RunWithHttpsDevCertificateAddsContainerFilesAndWaitAnnotation()
     {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
+        var builder = TestDistributedApplicationBuilder.Create("--environment", "Development");
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
@@ -462,7 +462,7 @@ public class ResourceCreationTests
     public void RunWithHttpsDevCertificateNotTriggeredInNonRunMode()
     {
         // Use regular builder (not TestDistributedApplicationBuilder.Create) which defaults to non-Run mode
-        var builder = DistributedApplication.CreateBuilder();
+        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
@@ -522,7 +522,7 @@ public class ResourceCreationTests
     [Fact]
     public void DevCertificateResourcesAddedWhenHttpsEnabledInDevelopment()
     {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
+        var builder = TestDistributedApplicationBuilder.Create("--environment", "Development");
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
@@ -558,7 +558,7 @@ public class ResourceCreationTests
     [Fact]
     public void DevCertificateContainerFilesOnlyAddedForEnabledEndpointsInRunMode()
     {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
+        var builder = TestDistributedApplicationBuilder.Create("--environment", "Development");
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
@@ -598,7 +598,7 @@ public class ResourceCreationTests
     [Fact]
     public void DevCertificateExecutableResourceHasCorrectConfiguration()
     {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
+        var builder = TestDistributedApplicationBuilder.Create("--environment", "Development");
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
