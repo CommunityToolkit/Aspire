@@ -79,8 +79,21 @@ public static class OpenTelemetryCollectorExtensions
     /// <returns></returns>
     public static IResourceBuilder<OpenTelemetryCollectorResource> WithAppForwarding(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
-        builder.AddEnvironmentVariablesEventHook()
-               .WithFirstStartup();
+        builder.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
+        {
+            var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(builder.Resource);
+            var otelSenders = evt.Model.Resources
+                .OfType<IResourceWithEnvironment>()
+                .Where(x => x.HasAnnotationOfType<OtlpExporterAnnotation>());
+
+            foreach (var otelSender in otelSenders)
+            {
+                var otelSenderBuilder = builder.ApplicationBuilder.CreateResourceBuilder(otelSender);
+                otelSenderBuilder.WithOpenTelemetryCollectorRouting(builder);
+            }
+
+            return Task.CompletedTask;
+        });
 
         return builder;
     }
@@ -98,73 +111,4 @@ public static class OpenTelemetryCollectorExtensions
             .WithArgs($"--config=/config/{configFileInfo.Name}");
     }
 
-    /// <summary>
-    /// Sets up the OnBeforeResourceStarted event to add a wait annotation to all resources that have the OtlpExporterAnnotation
-    /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
-    private static IResourceBuilder<OpenTelemetryCollectorResource> WithFirstStartup(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
-    {
-        builder.OnBeforeResourceStarted((collectorResource, beforeStartedEvent, cancellationToken) =>
-        {
-            var logger = beforeStartedEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(collectorResource);
-            var appModel = beforeStartedEvent.Services.GetRequiredService<DistributedApplicationModel>();
-            var resources = appModel.GetProjectResources();
-
-            foreach (var resourceItem in resources.Where(r => r.HasAnnotationOfType<OtlpExporterAnnotation>()))
-            {
-                resourceItem.Annotations.Add(new WaitAnnotation(collectorResource, WaitType.WaitUntilHealthy));
-            }
-            return Task.CompletedTask;
-        });
-        return builder;
-    }
-
-    /// <summary>
-    /// Sets up the OnResourceEndpointsAllocated event to add/update the OTLP environment variables for the collector to the various resources
-    /// </summary>
-    /// <param name="builder"></param>
-    private static IResourceBuilder<OpenTelemetryCollectorResource> AddEnvironmentVariablesEventHook(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
-    {
-        builder.OnResourceEndpointsAllocated((collectorResource, allocatedEvent, cancellationToken) =>
-        {
-            var logger = allocatedEvent.Services.GetRequiredService<ResourceLoggerService>().GetLogger(collectorResource);
-            var appModel = allocatedEvent.Services.GetRequiredService<DistributedApplicationModel>();
-            var resources = appModel.GetProjectResources();
-
-            var grpcEndpoint = collectorResource.GetEndpoint(collectorResource.GrpcEndpoint.EndpointName);
-            var httpEndpoint = collectorResource.GetEndpoint(collectorResource.HttpEndpoint.EndpointName);
-
-            if (!resources.Any())
-            {
-                logger.LogInformation("No resources to add Environment Variables to");
-            }
-
-            foreach (var resourceItem in resources.Where(r => r.HasAnnotationOfType<OtlpExporterAnnotation>()))
-            {
-                logger.LogDebug("Forwarding Telemetry for {name} to the collector", resourceItem.Name);
-                if (resourceItem is null) continue;
-
-                resourceItem.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
-                {
-                    var protocol = context.EnvironmentVariables.GetValueOrDefault("OTEL_EXPORTER_OTLP_PROTOCOL", "");
-                    var endpoint = protocol.ToString() == "http/protobuf" ? httpEndpoint : grpcEndpoint;
-
-                    if (endpoint is null)
-                    {
-                        logger.LogWarning("No {protocol} endpoint on the collector for {resourceName} to use",
-                            protocol, resourceItem.Name);
-                        return;
-                    }
-
-                    context.EnvironmentVariables.Remove("OTEL_EXPORTER_OTLP_ENDPOINT");
-                    context.EnvironmentVariables.Add("OTEL_EXPORTER_OTLP_ENDPOINT", endpoint.Url);
-                }));
-            }
-
-            return Task.CompletedTask;
-        });
-
-        return builder;
-    }
 }
