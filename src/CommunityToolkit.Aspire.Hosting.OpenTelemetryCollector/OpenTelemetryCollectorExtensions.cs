@@ -53,8 +53,11 @@ public static class OpenTelemetryCollectorExtensions
         if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
         {
             resourceBuilder.RunWithHttpsDevCertificate();
-            var certFilePath = Path.Combine(DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR, DevCertHostingExtensions.CERT_FILE_NAME);
-            var certKeyPath = Path.Combine(DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR, DevCertHostingExtensions.CERT_KEY_FILE_NAME);
+
+            // Not using `Path.Combine` as we MUST use unix style paths in the container
+            var certFilePath = $"{DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/{DevCertHostingExtensions.CERT_FILE_NAME}";
+            var certKeyPath = $"{DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/{DevCertHostingExtensions.CERT_KEY_FILE_NAME}";
+
             if (settings.EnableHttpEndpoint)
             {
                 resourceBuilder.WithArgs(
