@@ -22,4 +22,10 @@ public sealed class SqliteEntityFrameworkCoreSettings
     /// Gets or sets the default timeout for the database operations.
     /// </summary>
     public int DefaultTimeout { get; set; }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether tracing is disabled or not.
+    /// </summary>
+    public bool DisableTracing { get; set; }
+
 }
