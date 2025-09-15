@@ -5,7 +5,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Extensions for adding Dev Certs to aspire resources.
 /// </summary>
-public static class DevCertHostingExtensions
+internal static class DevCertHostingExtensions
 {
     /// <summary>
     /// The destination directory for the certificate files in a container.
