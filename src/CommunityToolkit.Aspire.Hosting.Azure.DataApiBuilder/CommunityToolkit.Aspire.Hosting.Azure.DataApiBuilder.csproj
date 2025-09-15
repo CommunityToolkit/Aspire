@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Compile Include="$(SharedDir)\PathNormalizer.cs" Link="Utils\PathNormalizer.cs" />
+    <Compile Include="$(SharedDir)\DevCertHostingExtensions.cs" Link="Utils\DevCertHostingExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,7 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder;
 using CommunityToolkit.Aspire.Utils;
+using Microsoft.Extensions.Hosting;
 
 namespace Aspire.Hosting;
 
@@ -76,9 +77,35 @@ public static class DataApiBuilderHostingExtension
             rb.WithBindMount(configFilePath, $"/App/{configFileName}", true);
         }
 
+        if (builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
+        {
+            rb.RunWithHttpsDevCertificate();
+
+            var entrypoint = $"""
+            #!/bin/sh
+            set -e
+
+            # If runtime-certs mounted, import them
+            if [ -d {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR} ]; then
+            echo "Found {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}, installing certs..."
+            cp {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/*.crt /usr/local/share/ca-certificates/ 2>/dev/null || true
+            update-ca-certificates || true
+            fi
+
+            exec dotnet Azure.DataApiBuilder.Service.dll
+            """;
+
+            var tempFile = Path.GetTempFileName();
+            File.WriteAllText(tempFile, entrypoint.ReplaceLineEndings("\n"));
+
+            rb.WithEntrypoint("/bin/sh")
+                .WithArgs("/App/devcert-entrypoint.sh")
+                .WithBindMount(tempFile, "/App/devcert-entrypoint.sh", true);
+        }
+
         return rb;
     }
-    
+
     /// <summary>
     /// Configure the resource builder to run the Data API Builder as an executable in Development mode.
     /// </summary>
