@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire component to add an OpenTelemetry Collector into the OTLP pipeline</Description>
+    <AdditionalPackageTags>opentelemetry observability</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\DevCertHostingExtensions.cs" Link="Utils\DevCertHostingExtensions.cs" />
+  </ItemGroup>
+
+</Project>
