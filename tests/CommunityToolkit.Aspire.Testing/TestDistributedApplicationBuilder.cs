@@ -1,27 +1,14 @@
-// Copied from aspire
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using Aspire.Components.Common.Tests;
-using Aspire.Hosting.Dashboard;
-using Aspire.Hosting.Eventing;
-using Aspire.Hosting.Testing;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace Aspire.Hosting.Utils;
 
 /// <summary>
-/// DistributedApplication.CreateBuilder() creates a builder that includes configuration to read from appsettings.json.
-/// The builder has a FileSystemWatcher, which can't be cleaned up unless a DistributedApplication is built and disposed.
-/// This class wraps the builder and provides a way to automatically dispose it to prevent test failures from excessive
-/// FileSystemWatcher instances from many tests.
+/// Thin wrapper around <see cref="DistributedApplicationTestingBuilder"/> to implement
+/// common conventions for Community Toolkit tests
 /// </summary>
 public static class TestDistributedApplicationBuilder
 {
