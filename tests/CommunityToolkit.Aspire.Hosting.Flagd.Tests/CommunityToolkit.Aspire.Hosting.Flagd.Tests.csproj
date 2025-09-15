@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="OpenFeature.Contrib.Providers.Flagd" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\examples\flagd\CommunityToolkit.Aspire.Hosting.Flagd.AppHost\CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Flagd\CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
