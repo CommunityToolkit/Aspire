@@ -23,7 +23,8 @@ public static class KeycloakPostgresExtension
 
         builder.WithEnvironment("KC_DB", "postgres")
             .WithEnvironment("KC_DB_URL", jdbcUrl)
-            .WithEnvironment("KC_TRANSACTION_XA_ENABLED", xaEnabled.ToString().ToLower());
+            .WithEnvironment("KC_TRANSACTION_XA_ENABLED", xaEnabled.ToString().ToLower())
+            .WaitFor(database);
 
         return builder;
     }

@@ -79,8 +79,8 @@ public class KeycloakExtensionTests
 
         var env = await GetEnv(kc);
 
-        Assert.False(ReferenceEquals(user.Resource, env["KC_DB_USERNAME"])); // значение может быть ReferenceExpression
-        Assert.False(ReferenceEquals(pass.Resource, env["KC_DB_PASSWORD"])); // см. примечание ниже
+        Assert.False(ReferenceEquals(user.Resource, env["KC_DB_USERNAME"])); 
+        Assert.False(ReferenceEquals(pass.Resource, env["KC_DB_PASSWORD"]));
         Assert.True(env.ContainsKey("KC_DB_USERNAME"));
         Assert.True(env.ContainsKey("KC_DB_PASSWORD"));
     }

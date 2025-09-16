@@ -5,6 +5,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Keycloak.Extensions\CommunityToolkit.Aspire.Keycloak.Extensions.csproj" />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
     </ItemGroup>
 
     <ItemGroup>
