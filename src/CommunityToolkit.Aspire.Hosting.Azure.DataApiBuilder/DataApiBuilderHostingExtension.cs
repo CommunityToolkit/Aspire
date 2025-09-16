@@ -87,9 +87,15 @@ public static class DataApiBuilderHostingExtension
 
             # If runtime-certs mounted, import them
             if [ -d {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR} ]; then
-            echo "Found {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}, installing certs..."
-            cp {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/*.crt /usr/local/share/ca-certificates/ 2>/dev/null || true
-            update-ca-certificates || true
+                echo "Found {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}, installing certs..."
+                cp {DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/*.crt /usr/local/share/ca-certificates/ 2>/dev/null || true
+                if command -v update-ca-certificates >/dev/null 2>&1; then
+                    update-ca-certificates || true
+                elif command -v update-ca-trust >/dev/null 2>&1; then
+                    update-ca-trust extract || true
+                else
+                    echo "No update-ca-certificates/update-ca-trust in image; certs copied but trust not updated"
+                fi
             fi
 
             exec dotnet Azure.DataApiBuilder.Service.dll
