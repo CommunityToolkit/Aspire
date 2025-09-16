@@ -4,7 +4,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddAuthentication()
-    .AddKeycloakJwtBearer("keycloak-prod", "master");
+    .AddKeycloakJwtBearer("keycloak-prod", "master", jwt =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            //for development only
+            jwt.RequireHttpsMetadata = false;
+        }
+    });
 
 var app = builder.Build();
 

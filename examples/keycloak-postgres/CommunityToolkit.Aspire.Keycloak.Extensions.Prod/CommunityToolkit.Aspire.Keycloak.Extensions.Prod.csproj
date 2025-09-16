@@ -4,14 +4,15 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <TargetFrameworks />
     </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Keycloak.Authentication" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Aspire.Keycloak.Authentication"/>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults.csproj"/>
   </ItemGroup>
 </Project>
