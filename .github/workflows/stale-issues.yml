@@ -23,7 +23,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         name: Standard issue and PR stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
           stale-issue-label: "stale"
           stale-pr-label: "stale"
 
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         name: Question and Resolved issue stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
           stale-issue-message: "We have noticed this issue has been resolved for 5 days. If there is no action on this issue in the next 2 days, we will automatically close it. You can use `/stale-extend` to extend the window."
           stale-issue-label: "stale"
 
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         name: Awaiting response issue and PR stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
