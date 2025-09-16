@@ -55,6 +55,12 @@
     <Project Path="examples/k6/CommunityToolkit.Aspire.Hosting.k6.AppHost/CommunityToolkit.Aspire.Hosting.k6.AppHost.csproj" />
     <Project Path="examples/k6/CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults/CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/keycloak-postgres/">
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults.csproj" Type="Classic C#" />
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.csproj" Type="Classic C#" />
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.Dev\CommunityToolkit.Aspire.Keycloak.Extensions.Dev.csproj" Type="Classic C#" />
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.Prod\CommunityToolkit.Aspire.Keycloak.Extensions.Prod.csproj" Type="Classic C#" />
+  </Folder>
   <Folder Name="/examples/lavinmq/">
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost.csproj" />
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit.csproj" />
