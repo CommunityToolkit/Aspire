@@ -103,7 +103,6 @@ public class KeycloakExtensionTests
             .WithPostgres(db);
 
         var env = await GetEnv(kc);
-        // Тут ожидаем, что вместо "postgres" подставлены значения параметров сервера
         Assert.NotEqual("postgres", env["KC_DB_USERNAME"].ToString());
         Assert.NotEqual("postgres", env["KC_DB_PASSWORD"].ToString());
     }
