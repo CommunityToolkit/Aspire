@@ -7,10 +7,4 @@
   </ItemGroup>
 
 
-<ItemGroup>
-  <Compile Include="..\dapr-shared\*.cs">
-    <Link>%(Filename)%(Extension)</Link>
-  </Compile>
-</ItemGroup>
-
 </Project>

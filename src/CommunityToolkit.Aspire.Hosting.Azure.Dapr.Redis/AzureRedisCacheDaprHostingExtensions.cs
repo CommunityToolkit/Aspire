@@ -29,7 +29,20 @@ public static class AzureRedisCacheDaprHostingExtensions
     public static IResourceBuilder<IDaprComponentResource> WithReference(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> source)
     {
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            if (builder.ApplicationBuilder.Resources.OfType<RedisResource>().FirstOrDefault(r => r.Name == source.Resource.Name) is RedisResource resource)
+            {
+                var redisHost = resource.PrimaryEndpoint.Property(EndpointProperty.Host);
+                var redisPort = resource.PrimaryEndpoint.Property(EndpointProperty.Port);
+
+                builder.WithMetadata("redisHost", ReferenceExpression.Create($"{redisHost}:{redisPort}"));
+                if (resource.PasswordParameter is ParameterResource passwordResource)
+                {
+                    builder.WithMetadata("redisPassword", passwordResource);
+                }
+            }
             return builder;
+        }
 
         return builder.Resource.Type switch
         {
@@ -77,11 +90,12 @@ public static class AzureRedisCacheDaprHostingExtensions
 
     private static void ConfigureForManagedIdentityAuthentication(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> redisBuilder, string componentType)
     {
-        var redisHostParam = new ProvisioningParameter(redisHostKey, typeof(string));
         var principalIdParam = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
 
         var configureInfrastructure = (AzureResourceInfrastructure infrastructure) =>
         {
+            var redisHostParam = redisBuilder.GetOutput(daprConnectionStringKey).AsProvisioningParameter(infrastructure, redisHostKey);
+
             if (infrastructure.GetProvisionableResources().OfType<ContainerAppManagedEnvironment>().FirstOrDefault() is ContainerAppManagedEnvironment managedEnvironment)
             {
                 var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
@@ -91,13 +105,13 @@ public static class AzureRedisCacheDaprHostingExtensions
                     "v1");
 
                 daprComponent.Parent = managedEnvironment;
-                
+
                 var metadata = new List<ContainerAppDaprMetadata>
                 {
                     new() { Name = redisHostKey, Value = redisHostParam },
                     new() { Name = "enableTLS", Value = "true" },
                     new() { Name = "useEntraID", Value = "true" },
-                    new() { Name = "azureClientId", Value = principalIdParam }
+                    new() { Name = "azureClientId", Value = managedEnvironment.Identity.PrincipalId }
                 };
 
                 // Add state-specific metadata
@@ -112,8 +126,8 @@ public static class AzureRedisCacheDaprHostingExtensions
                 builder.AddScopes(daprComponent);
 
                 infrastructure.Add(daprComponent);
-                infrastructure.Add(redisHostParam);
-                infrastructure.Add(principalIdParam);
+
+                infrastructure.TryAdd(redisHostParam);
             }
         };
 
@@ -123,7 +137,9 @@ public static class AzureRedisCacheDaprHostingExtensions
         redisBuilder.ConfigureInfrastructure(infrastructure =>
         {
             var redisResource = infrastructure.GetProvisionableResources().OfType<AzureRedisResource>().SingleOrDefault();
-            if (redisResource is not null)
+            var outputExists = infrastructure.GetProvisionableResources().OfType<ProvisioningOutput>().Any(o => o.BicepIdentifier == daprConnectionStringKey);
+
+            if (redisResource is not null && !outputExists)
             {
                 infrastructure.Add(new ProvisioningOutput(daprConnectionStringKey, typeof(string))
                 {
@@ -133,9 +149,9 @@ public static class AzureRedisCacheDaprHostingExtensions
         });
     }
 
+
     private static void ConfigureForAccessKeyAuthentication(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> redisBuilder, string componentType)
     {
-        var redisHostParam = new ProvisioningParameter(redisHostKey, typeof(string));
         var kvNameParam = new ProvisioningParameter(redisKeyVaultNameKey, typeof(string));
         var secretStoreComponent = new ProvisioningParameter(secretStoreComponentKey, typeof(string));
 
@@ -144,6 +160,8 @@ public static class AzureRedisCacheDaprHostingExtensions
 
         var configureInfrastructure = (AzureResourceInfrastructure infrastructure) =>
         {
+            var redisHostParam = redisBuilder.GetOutput(daprConnectionStringKey).AsProvisioningParameter(infrastructure, redisHostKey);
+
             if (infrastructure.GetProvisionableResources().OfType<ContainerAppManagedEnvironment>().FirstOrDefault() is ContainerAppManagedEnvironment managedEnvironment)
             {
                 var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
@@ -174,8 +192,10 @@ public static class AzureRedisCacheDaprHostingExtensions
                 builder.AddScopes(daprComponent);
 
                 infrastructure.Add(daprComponent);
-                infrastructure.Add(redisHostParam);
-                infrastructure.Add(secretStoreComponent);
+
+                infrastructure.TryAdd(redisHostParam);
+                infrastructure.TryAdd(secretStoreComponent);
+
             }
         };
 
@@ -217,5 +237,14 @@ public static class AzureRedisCacheDaprHostingExtensions
                 });
             }
         });
+    }
+
+
+    private static void TryAdd(this AzureResourceInfrastructure infrastructure, ProvisioningParameter provisioningParameter)
+    {
+        if (!infrastructure.GetProvisionableResources().OfType<ProvisioningParameter>().Any(p => p.BicepIdentifier == provisioningParameter.BicepIdentifier))
+        {
+            infrastructure.Add(provisioningParameter);
+        }
     }
 }
