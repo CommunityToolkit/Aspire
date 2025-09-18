@@ -1,8 +1,0 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
-
-name: communitytoolkit-aspire-hosting-azure-dapr-apphost
-services:  
-  app:
-    language: dotnet
-    project: ./CommunityToolkit.Aspire.Hosting.Azure.Dapr.AppHost.csproj
-    host: containerapp
