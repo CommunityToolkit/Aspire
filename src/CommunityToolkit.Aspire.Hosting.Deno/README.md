@@ -28,7 +28,7 @@ builder.AddDenoApp("oak-demo", "main.ts", permissionFlags: ["-E", "--allow-net"]
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/deno
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-deno
 
 ## Feedback & contributing
 
