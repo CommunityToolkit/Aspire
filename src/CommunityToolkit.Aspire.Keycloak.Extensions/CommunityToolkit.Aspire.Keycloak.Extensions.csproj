@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <Description>Keycloak extension for adding postgres support.</Description>
+    <AdditionalPackageTags>keycloak extension postgres hosting</AdditionalPackageTags>
+  </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting" />
+      <PackageReference Include="Aspire.Hosting.Keycloak" />
+      <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    </ItemGroup>
+
+</Project>
