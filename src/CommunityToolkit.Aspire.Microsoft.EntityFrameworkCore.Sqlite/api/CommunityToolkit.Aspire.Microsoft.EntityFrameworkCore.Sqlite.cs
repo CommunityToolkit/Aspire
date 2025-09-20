@@ -12,6 +12,9 @@ namespace Microsoft.Extensions.Hosting
     {
         public static void AddSqliteDbContext<TContext>(this IHostApplicationBuilder builder, string name, System.Action<SqliteEntityFrameworkCoreSettings>? configureSettings = null, System.Action<EntityFrameworkCore.DbContextOptionsBuilder>? configureDbContextOptions = null)
             where TContext : EntityFrameworkCore.DbContext { }
+
+        public static void EnrichSqliteDatabaseDbContext<TDbContext>(this IHostApplicationBuilder builder, System.Action<SqliteEntityFrameworkCoreSettings>? configureSettings = null)
+            where TDbContext : EntityFrameworkCore.DbContext { }
     }
 
     public sealed partial class SqliteEntityFrameworkCoreSettings
@@ -21,5 +24,7 @@ namespace Microsoft.Extensions.Hosting
         public int DefaultTimeout { get { throw null; } set { } }
 
         public bool DisableHealthChecks { get { throw null; } set { } }
+
+        public bool DisableTracing { get { throw null; } set { } }
     }
 }
