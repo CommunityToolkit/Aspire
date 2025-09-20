@@ -7,7 +7,7 @@ namespace CommunityToolkit.Aspire.Testing;
 
 public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
 {
-    public ResourceNotificationService ResourceNotificationService => App.Services.GetRequiredService<ResourceNotificationService>();
+    public ResourceNotificationService ResourceNotificationService => App.ResourceNotifications;
 
     public DistributedApplication App { get; private set; } = null!;
 
