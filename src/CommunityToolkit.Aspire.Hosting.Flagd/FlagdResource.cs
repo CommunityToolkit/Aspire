@@ -10,13 +10,21 @@ namespace Aspire.Hosting.ApplicationModel;
 public class FlagdResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string HttpEndpointName = "http";
+    internal const string HealthCheckEndpointName = "health";
 
     private EndpointReference? _primaryEndpointReference;
+
+    private EndpointReference? _healthCheckEndpointReference;
 
     /// <summary>
     /// Gets the primary HTTP endpoint for the flagd server.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpointReference ??= new(this, HttpEndpointName);
+
+    /// <summary>
+    /// Gets the health check HTTP endpoint for the flagd server.
+    /// </summary>
+    public EndpointReference HealthCheckEndpoint => _healthCheckEndpointReference ??= new(this, HealthCheckEndpointName);
 
     /// <summary>
     /// Gets the connection string expression for the flagd server.
