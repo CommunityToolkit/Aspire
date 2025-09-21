@@ -62,7 +62,39 @@ public static class IDistributedApplicationResourceBuilderExtensions
                                                            IsHidden = true,
                                                        });
 
+
+        var serviceId = builder.Resource.Name;
+
         configureSidecar(sidecarBuilder);
+
+        if(sidecarBuilder.Resource.TryGetAnnotationsOfType<DaprSidecarOptionsAnnotation>(out var optionsAnnotations) &&
+           optionsAnnotations.LastOrDefault() is { } optionsAnnotation)
+        {
+            // If no AppId was specified, use the resource name.
+            if (string.IsNullOrEmpty(optionsAnnotation.Options.AppId))
+            {
+                sidecarBuilder.WithOptions(new DaprSidecarOptions
+                {
+                    AppId = serviceId,
+                    Config = optionsAnnotation.Options.Config,
+                    EnableApiLogging = optionsAnnotation.Options.EnableApiLogging,
+                    LogLevel = optionsAnnotation.Options.LogLevel,
+                    EnableProfiling = optionsAnnotation.Options.EnableProfiling,
+                    MetricsPort = optionsAnnotation.Options.MetricsPort,
+                    DaprHttpPort = optionsAnnotation.Options.DaprHttpPort,
+                    DaprGrpcPort = optionsAnnotation.Options.DaprGrpcPort,
+                });
+            }
+        }
+        else
+        {
+            // No options were specified, so set a default AppId.
+            sidecarBuilder.WithOptions(new DaprSidecarOptions
+            {
+                AppId = serviceId,
+            });
+        }
+
 
         return builder.WithAnnotation(new DaprSidecarAnnotation(sidecarBuilder.Resource));
     }

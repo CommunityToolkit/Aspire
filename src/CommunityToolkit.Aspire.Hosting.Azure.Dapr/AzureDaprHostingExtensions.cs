@@ -50,7 +50,7 @@ public static class AzureDaprHostingExtensions
         foreach (var resource in builder.ApplicationBuilder.Resources)
         {
             if (!resource.TryGetLastAnnotation<DaprSidecarAnnotation>(out var daprAnnotation) ||
-            !resource.TryGetAnnotationsOfType<DaprComponentReferenceAnnotation>(out var daprComponentReferenceAnnotations))
+               !daprAnnotation.Sidecar.TryGetAnnotationsOfType<DaprComponentReferenceAnnotation>(out var daprComponentReferenceAnnotations))
             {
                 continue;
             }
