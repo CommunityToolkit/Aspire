@@ -1,6 +1,8 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <AspirePreviewVersion>9.4.1-preview.1.25408.4</AspirePreviewVersion>
+    <MoqVersion>4.20.72</MoqVersion>
   </PropertyGroup>
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
@@ -10,7 +12,6 @@
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="9.4.1-preview.1.25408.4" />
     <PackageVersion Include="Aspire.Hosting.NodeJS" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Python" Version="$(AspireVersion)" />
@@ -19,7 +20,9 @@
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="9.4.1-preview.1.25408.4" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspirePreviewVersion)" />
+    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspirePreviewVersion)" />
+    <PackageVersion Include="Moq" Version="$(MoqVersion)" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
