@@ -16,7 +16,7 @@ public static class DaprMetadataResourceBuilderExtensions
     /// <param name="value"></param>
     /// <returns></returns>
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, string value) =>
-        builder.WithAnnotation(new DaprComponentConfigurationAnnotation((schema, cancellationToken) =>
+        builder.WithAnnotation(new DaprComponentConfigurationAnnotation((schema, ct) =>
         {
             var existing = schema.Spec.Metadata.Find(m => m.Name == name);
             if (existing is not null)
@@ -30,7 +30,6 @@ public static class DaprMetadataResourceBuilderExtensions
             });
             return Task.CompletedTask;
         }));
-
 
     /// <summary>
     /// Adds a value provider as metadata to the Dapr component that will be resolved at runtime.
@@ -61,10 +60,10 @@ public static class DaprMetadataResourceBuilderExtensions
         // Create a unique environment variable name for this value provider
         // Note: We avoid using DAPR_ prefix as it's restricted by Dapr's local.env secret store
         var envVarName = $"{builder.Resource.Name}_{name}".ToUpperInvariant().Replace("-", "_");
-        
+
         // Add an annotation to track this value provider reference
         builder.WithAnnotation(new DaprComponentValueProviderAnnotation(name, envVarName, valueProvider));
-        
+
         return builder.WithAnnotation(new DaprComponentConfigurationAnnotation((schema, cancellationToken) =>
         {
             var existing = schema.Spec.Metadata.Find(m => m.Name == name);
@@ -88,6 +87,7 @@ public static class DaprMetadataResourceBuilderExtensions
         }));
     }
 
+
     /// <summary>
     /// Adds a parameter resource as metadata to the Dapr component
     /// </summary>
@@ -100,7 +100,7 @@ public static class DaprMetadataResourceBuilderExtensions
         if (parameterResource.Secret)
         {
             return builder.WithAnnotation(new DaprComponentSecretAnnotation(parameterResource.Name, parameterResource))
-                          .WithAnnotation(new DaprComponentConfigurationAnnotation((schema, cancellationToken) =>
+                          .WithAnnotation(new DaprComponentConfigurationAnnotation((schema, ct) =>
                           {
                               var existing = schema.Spec.Metadata.Find(m => m.Name == name);
                               if (existing is not null)
@@ -120,7 +120,7 @@ public static class DaprMetadataResourceBuilderExtensions
                           }));
         }
 
-        return builder.WithAnnotation(new DaprComponentConfigurationAnnotation(async (schema, cancellationToken) =>
+        return builder.WithAnnotation(new DaprComponentConfigurationAnnotation(async (schema, ct) =>
         {
             var existing = schema.Spec.Metadata.Find(m => m.Name == name);
             if (existing is not null)
@@ -130,7 +130,7 @@ public static class DaprMetadataResourceBuilderExtensions
             schema.Spec.Metadata.Add(new DaprComponentSpecMetadataValue
             {
                 Name = name,
-                Value = (await parameterResource.GetValueAsync(cancellationToken))!
+                Value = (await ((IValueProvider)parameterResource).GetValueAsync(ct))!
             });
         }));
     }

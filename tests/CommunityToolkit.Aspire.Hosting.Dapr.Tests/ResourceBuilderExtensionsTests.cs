@@ -117,6 +117,35 @@ public class ResourceBuilderExtensionsTests
         Assert.Same(customValueProvider, annotation.ValueProvider);
     }
 
+    [Fact]
+    public void WithReferenceOnSidecarCorrectlyAttachesDaprComponents()
+    {
+        // Arrange
+        var builder = DistributedApplication.CreateBuilder();
+        var stateStore = builder.AddDaprStateStore("statestore");
+        var pubsub = builder.AddDaprPubSub("pubsub");
+        
+        // Act - Reference Dapr components through the sidecar (preferred approach)
+        var project = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WithDaprSidecar(sidecar => 
+            {
+                sidecar.WithReference(stateStore);
+                sidecar.WithReference(pubsub);
+            });
+        
+        // Assert
+        var sidecarResource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        var referenceAnnotations = sidecarResource.Annotations.OfType<DaprComponentReferenceAnnotation>().ToList();
+        
+        // Verify both components are referenced by the sidecar
+        Assert.Equal(2, referenceAnnotations.Count);
+        Assert.Contains(referenceAnnotations, a => a.Component.Name == "statestore");
+        Assert.Contains(referenceAnnotations, a => a.Component.Name == "pubsub");
+        
+        // Verify the project itself doesn't have direct references to Dapr components
+        Assert.DoesNotContain(project.Resource.Annotations, a => a is DaprComponentReferenceAnnotation);
+    }
+
     // Test helper class that implements IValueProvider
     private class TestValueProvider : global::Aspire.Hosting.ApplicationModel.IValueProvider
     {
