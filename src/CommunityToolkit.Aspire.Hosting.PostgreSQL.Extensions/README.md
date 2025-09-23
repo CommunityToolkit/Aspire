@@ -26,7 +26,7 @@ var postgres = builder.AddPostgres("postgres")
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-postgres-extensions
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-postgresql-extensions
 
 ## Feedback & contributing
 
