@@ -330,37 +330,6 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public void DevCertificateLogicIsNotTriggeredInNonDevelopmentEnvironment()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
-
-        builder.AddOpenTelemetryCollector("collector", settings =>
-        {
-            settings.ForceNonSecureReceiver = false; // Allow HTTPS
-        })
-            .WithAppForwarding();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().SingleOrDefault();
-        Assert.NotNull(collectorResource);
-
-        // In non-development environment (default test environment), dev cert args should not be added
-        var args = collectorResource.Annotations.OfType<CommandLineArgsCallbackAnnotation>().ToList();
-        var context = new CommandLineArgsCallbackContext([]);
-        foreach (var arg in args)
-        {
-            arg.Callback(context);
-        }
-
-        // Should not contain TLS certificate configuration args since we're not in Development environment with RunMode
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::http::tls::cert_file"));
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::grpc::tls::cert_file"));
-    }
-
-    [Fact]
     public void DevCertificateLogicIsNotTriggeredWhenForceNonSecureReceiverEnabled()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -464,7 +433,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     public void RunWithHttpsDevCertificateNotTriggeredInNonRunMode()
     {
         // Use regular builder (not TestDistributedApplicationBuilder.Create) which defaults to non-Run mode
-        var builder = DistributedApplication.CreateBuilder();
+        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
@@ -522,7 +491,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public void DevCertificateResourcesAddedWhenHttpsEnabledInDevelopment()
+    public void DevCertificateResourcesAddedWhenHttpsEnabled()
     {
         var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
