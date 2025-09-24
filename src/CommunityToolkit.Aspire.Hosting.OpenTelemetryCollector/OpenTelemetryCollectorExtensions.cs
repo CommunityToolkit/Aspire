@@ -40,7 +40,8 @@ public static class OpenTelemetryCollectorExtensions
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(settings.CollectorImage, settings.CollectorTag)
             .WithEnvironment("ASPIRE_ENDPOINT", new HostUrl(url))
-            .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName]);
+            .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName])
+            .WithIconName("DesktopPulse");
 
         if (settings.EnableGrpcEndpoint)
             resourceBuilder.WithEndpoint(targetPort: 4317, name: OpenTelemetryCollectorResource.GrpcEndpointName, scheme: isHttpsEnabled ? "https" : "http");
@@ -48,7 +49,7 @@ public static class OpenTelemetryCollectorExtensions
             resourceBuilder.WithEndpoint(targetPort: 4318, name: OpenTelemetryCollectorResource.HttpEndpointName, scheme: isHttpsEnabled ? "https" : "http");
 
 
-        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
+        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode)
         {
             resourceBuilder.RunWithHttpsDevCertificate();
 
