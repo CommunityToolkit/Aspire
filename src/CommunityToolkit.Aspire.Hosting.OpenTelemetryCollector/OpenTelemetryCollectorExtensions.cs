@@ -48,7 +48,7 @@ public static class OpenTelemetryCollectorExtensions
             resourceBuilder.WithEndpoint(targetPort: 4318, name: OpenTelemetryCollectorResource.HttpEndpointName, scheme: isHttpsEnabled ? "https" : "http");
 
 
-        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
+        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode)
         {
             resourceBuilder.RunWithHttpsDevCertificate();
 
