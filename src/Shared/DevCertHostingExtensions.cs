@@ -64,6 +64,7 @@ internal static class DevCertHostingExtensions
             exportExecutable = builder.ApplicationBuilder
                 .AddExecutable(exportResourceName, "dotnet", tempDir.FullName)
                 .WithEnvironment("DOTNET_CLI_UI_LANGUAGE", "en") // Ensure consistent output language
+                .WithIconName("Certificate")
                 .WithArgs(context =>
                 {
                     context.Args.Add("dev-certs");
