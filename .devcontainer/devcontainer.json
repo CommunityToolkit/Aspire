@@ -43,11 +43,5 @@
   "postCreateCommand": "./.devcontainer/post-create.sh > ~/post-create.log",
   "hostRequirements": {
     "memory": "8gb"
-  },
-  "portsAttributes": {
-    "4280": {
-      "label": "SWA Emulator",
-      "onAutoForward": "notify"
-    }
   }
 }
