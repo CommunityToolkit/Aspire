@@ -10,6 +10,8 @@ namespace Aspire.Hosting
 {
     public static partial class DaprMetadataResourceBuilderExtensions
     {
+        public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.IValueProvider valueProvider) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.ParameterResource parameterResource) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, string value) { throw null; }
@@ -39,6 +41,9 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> WithOptions(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> builder, CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions options) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> WithReference(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> builder, ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> component) { throw null; }
+
+        [System.Obsolete("Add reference to the sidecar resource instead of the project resource")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> component)
             where TDestination : ApplicationModel.IResource { throw null; }
     }
@@ -87,6 +92,8 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
         public string? DaprPath { get { throw null; } set { } }
 
         public bool? EnableTelemetry { get { throw null; } set { } }
+
+        public System.Action<global::Aspire.Hosting.ApplicationModel.IResource, DaprSidecarOptions?>? PublishingConfigurationAction { get { throw null; } set { } }
     }
 
     public sealed partial class DaprSecretKeyRef
@@ -98,6 +105,15 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
 
     public sealed partial record DaprSidecarAnnotation(IDaprSidecarResource Sidecar) : global::Aspire.Hosting.ApplicationModel.IResourceAnnotation
     {
+    }
+
+    public partial class DaprSidecarAvailableEvent : global::Aspire.Hosting.Eventing.IDistributedApplicationResourceEvent, global::Aspire.Hosting.Eventing.IDistributedApplicationEvent
+    {
+        public DaprSidecarAvailableEvent(IDaprSidecarResource resource, System.IServiceProvider services) { }
+
+        public global::Aspire.Hosting.ApplicationModel.IResource Resource { get { throw null; } }
+
+        public System.IServiceProvider Services { get { throw null; } }
     }
 
     public sealed partial record DaprSidecarOptions()
@@ -180,7 +196,7 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
         string Type { get; }
     }
 
-    public partial interface IDaprSidecarResource : global::Aspire.Hosting.ApplicationModel.IResource
+    public partial interface IDaprSidecarResource : global::Aspire.Hosting.ApplicationModel.IResource, global::Aspire.Hosting.ApplicationModel.IResourceWithWaitSupport
     {
     }
 }
