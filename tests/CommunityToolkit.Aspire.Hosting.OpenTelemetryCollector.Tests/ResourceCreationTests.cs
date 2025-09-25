@@ -30,7 +30,11 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     public async Task CanCreateTheCollectorResourceWithCustomConfig()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOpenTelemetryCollector("collector")
+        builder.AddOpenTelemetryCollector("collector", settings =>
+        {
+
+            settings.DisableHealthcheck = true;
+        })
             .WithConfig("./config.yaml")
             .WithAppForwarding();
 
@@ -137,6 +141,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         {
             settings.EnableHttpEndpoint = false;
             settings.EnableGrpcEndpoint = false;
+            settings.DisableHealthcheck = true;
         })
             .WithAppForwarding();
 
@@ -157,7 +162,10 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
             .WithTestAndResourceLogging(testOutputHelper);
         builder.Configuration["APPHOST:ContainerHostname"] = "what.ever";
 
-        var collector = builder.AddOpenTelemetryCollector("collector")
+        var collector = builder.AddOpenTelemetryCollector("collector", settings =>
+        {
+            settings.DisableHealthcheck = true;
+        })
             .WithAppForwarding();
 
         using var app = builder.Build();
@@ -259,6 +267,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         {
             settings.EnableGrpcEndpoint = true;
             settings.EnableHttpEndpoint = false;
+            settings.DisableHealthcheck = true;
         })
             .WithAppForwarding();
 
@@ -285,6 +294,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         {
             settings.EnableGrpcEndpoint = false;
             settings.EnableHttpEndpoint = true;
+            settings.DisableHealthcheck = true;
         })
             .WithAppForwarding();
 
