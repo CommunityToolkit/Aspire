@@ -43,4 +43,9 @@ public class OpenTelemetryCollectorSettings
     /// Note: this will also setup SSL if Aspire is configured for HTTPS
     /// </summary>
     public bool EnableHttpEndpoint { get; set; } = true;
+
+    /// <summary>
+    /// Disable the healthcheck on the collector container
+    /// </summary>
+    public bool DisableHealthcheck { get; set; } = false;
 }

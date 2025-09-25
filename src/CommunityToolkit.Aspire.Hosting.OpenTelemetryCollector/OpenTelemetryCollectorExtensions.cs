@@ -70,6 +70,18 @@ public static class OpenTelemetryCollectorExtensions
                     $@"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""{certKeyPath}""");
             }
         }
+
+        if (!settings.DisableHealthcheck)
+        {
+            const int healthPort = 13233;
+            resourceBuilder.WithEndpoint(targetPort: healthPort, name: "health", scheme: "http")
+                .WithHttpHealthCheck("/health", endpointName: "health")
+                .WithArgs(
+                    "--feature-gates=confmap.enableMergeAppendOption",
+                    $"--config=yaml:extensions::health_check/aspire::endpoint: 0.0.0.0:{healthPort}",
+                    "--config=yaml:service::extensions: [ health_check/aspire ]"
+                    );
+        }
         return resourceBuilder;
     }
 
