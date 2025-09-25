@@ -30,7 +30,11 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     public async Task CanCreateTheCollectorResourceWithCustomConfig()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOpenTelemetryCollector("collector")
+        builder.AddOpenTelemetryCollector("collector", settings =>
+        {
+
+            settings.DisableHealthcheck = true;
+        })
             .WithConfig("./config.yaml")
             .WithAppForwarding();
 
@@ -137,6 +141,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         {
             settings.EnableHttpEndpoint = false;
             settings.EnableGrpcEndpoint = false;
+            settings.DisableHealthcheck = true;
         })
             .WithAppForwarding();
 
@@ -157,7 +162,10 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
             .WithTestAndResourceLogging(testOutputHelper);
         builder.Configuration["APPHOST:ContainerHostname"] = "what.ever";
 
-        var collector = builder.AddOpenTelemetryCollector("collector")
+        var collector = builder.AddOpenTelemetryCollector("collector", settings =>
+        {
+            settings.DisableHealthcheck = true;
+        })
             .WithAppForwarding();
 
         using var app = builder.Build();
@@ -259,6 +267,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         {
             settings.EnableGrpcEndpoint = true;
             settings.EnableHttpEndpoint = false;
+            settings.DisableHealthcheck = true;
         })
             .WithAppForwarding();
 
@@ -285,6 +294,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         {
             settings.EnableGrpcEndpoint = false;
             settings.EnableHttpEndpoint = true;
+            settings.DisableHealthcheck = true;
         })
             .WithAppForwarding();
 
@@ -617,5 +627,49 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         Assert.Contains("--format", argsContext.Args);
         Assert.Contains("Pem", argsContext.Args);
         Assert.Contains("--no-password", argsContext.Args);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CanDisableHealthcheckOnCollectorResource(bool disableHealthcheck)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddOpenTelemetryCollector("collector", settings =>
+        {
+            settings.DisableHealthcheck = disableHealthcheck;
+        })
+        .WithAppForwarding();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().SingleOrDefault();
+        Assert.NotNull(collectorResource);
+
+        var hasHealthCheck = collectorResource.Annotations.OfType<HealthCheckAnnotation>().Any();
+        if (disableHealthcheck)
+        {
+            Assert.False(hasHealthCheck);
+        }
+        else
+        {
+            Assert.True(hasHealthCheck);
+            var argsAnnotations = collectorResource.Annotations.OfType<CommandLineArgsCallbackAnnotation>().ToList();
+            Assert.NotEmpty(argsAnnotations);
+
+            var argsContext = new CommandLineArgsCallbackContext([]);
+            foreach (var arg in argsAnnotations)
+            {
+                arg.Callback(argsContext);
+            }
+
+            Assert.Contains("--feature-gates=confmap.enableMergeAppendOption", argsContext.Args);
+            Assert.Contains("--config=yaml:extensions::health_check/aspire::endpoint: 0.0.0.0:13233", argsContext.Args);
+            Assert.Contains("--config=yaml:service::extensions: [ health_check/aspire ]", argsContext.Args);
+        }
+
     }
 }
