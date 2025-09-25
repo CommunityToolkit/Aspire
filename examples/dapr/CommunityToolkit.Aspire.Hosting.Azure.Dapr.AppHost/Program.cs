@@ -1,32 +1,33 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+builder.AddAzureContainerAppEnvironment("cae").WithDaprComponents();
 
-var redis = builder.AddAzureRedis("redisState").WithAccessKeyAuthentication().RunAsContainer();
+var redis = builder.AddAzureRedis("redisState")
+                   .RunAsContainer();
 
-// local development still uses dapr redis state container
+// State store using Redis
 var stateStore = builder.AddDaprStateStore("statestore")
-                        .WithReference(redis);
+                        .WithReference(redis)
+                        .WithMetadata("actorStateStore", "true");
 
+// PubSub also using Redis - for Azure deployment this will use the same Redis instance
 var pubSub = builder.AddDaprPubSub("pubsub")
-                    .WithMetadata("redisHost", "localhost:6379")
+                    .WithReference(redis)
                     .WaitFor(redis);
 
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
-       .WithReference(stateStore)
-       .WithReference(pubSub)
-       .WithDaprSidecar()
+       .PublishAsAzureContainerApp((i,c)=> { })
+       .WithDaprSidecar(sidecar => sidecar.WithReference(stateStore).WithReference(pubSub))
        .WaitFor(redis);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
-       .WithReference(pubSub)
-       .WithDaprSidecar()
+       .WithDaprSidecar(sidecar => sidecar.WithReference(pubSub))
        .WaitFor(redis);
 
 // console app with no appPort (sender only)
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceC>("servicec")
-       .WithReference(stateStore)
-       .WithDaprSidecar()
+       .WithDaprSidecar(sidecar => sidecar.WithReference(stateStore))
        .WaitFor(redis);
 
 builder.Build().Run();

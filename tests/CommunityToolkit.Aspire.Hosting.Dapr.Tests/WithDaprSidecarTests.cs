@@ -86,4 +86,29 @@ public class WithDaprSidecarTests
         var waitAnnotation = Assert.Single(serviceB.Resource.Annotations.OfType<WaitAnnotation>());
         Assert.Equal(sidecarResource.Name, waitAnnotation.Resource.Name);
     }
+
+    [Fact]
+    public void DaprSidecarCanReferenceComponents()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        
+        var stateStore = builder.AddDaprStateStore("statestore");
+        var pubSub = builder.AddDaprPubSub("pubsub");
+        
+        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WithDaprSidecar(sidecar => 
+            {
+                sidecar.WithReference(stateStore).WithReference(pubSub);
+            });
+        
+        var sidecarResource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        
+        // Verify that component references are correctly added to the sidecar
+        var referenceAnnotations = sidecarResource.Annotations.OfType<DaprComponentReferenceAnnotation>().ToList();
+        Assert.Equal(2, referenceAnnotations.Count);
+        
+        // Verify specific component references
+        Assert.Contains(referenceAnnotations, a => a.Component.Name == "statestore");
+        Assert.Contains(referenceAnnotations, a => a.Component.Name == "pubsub");
+    }
 }

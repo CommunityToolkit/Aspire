@@ -219,6 +219,83 @@ public class OllamaSharpIChatClientTests
         Assert.Equal(chatClient1 as IOllamaApiClient, embeddingGenerator as IOllamaApiClient);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CanConfigureOpenTelemetrySensitiveData(bool useKeyed)
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        if (useKeyed)
+        {
+            builder.AddKeyedOllamaApiClient("Ollama").AddKeyedChatClient(otel => otel.EnableSensitiveData = true);
+        }
+        else
+        {
+            builder.AddOllamaApiClient("Ollama").AddChatClient(otel => otel.EnableSensitiveData = true);
+        }
+
+        using var host = builder.Build();
+        var client = useKeyed ?
+            host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
+            host.Services.GetRequiredService<IChatClient>();
+
+        // Navigate through the client chain to find the OpenTelemetryChatClient
+        var otelClient = Assert.IsType<OpenTelemetryChatClient>(client);
+        Assert.True(otelClient.EnableSensitiveData);
+    }
+
+    [Fact]
+    public void CanConfigureOpenTelemetrySensitiveDataWithCustomServiceKey()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        builder.AddKeyedOllamaApiClient("OllamaKey", "Ollama")
+            .AddKeyedChatClient("ChatKey", otel => otel.EnableSensitiveData = true);
+
+        using var host = builder.Build();
+        var client = host.Services.GetRequiredKeyedService<IChatClient>("ChatKey");
+
+        var otelClient = Assert.IsType<OpenTelemetryChatClient>(client);
+        Assert.True(otelClient.EnableSensitiveData);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void OpenTelemetryConfigurationIsOptional(bool useKeyed)
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        // Test that we can still call the methods without configuration
+        if (useKeyed)
+        {
+            builder.AddKeyedOllamaApiClient("Ollama").AddKeyedChatClient(configureOpenTelemetry: null);
+        }
+        else
+        {
+            builder.AddOllamaApiClient("Ollama").AddChatClient(configureOpenTelemetry: null);
+        }
+
+        using var host = builder.Build();
+        var client = useKeyed ?
+            host.Services.GetRequiredKeyedService<IChatClient>("Ollama") :
+            host.Services.GetRequiredService<IChatClient>();
+
+        var otelClient = Assert.IsType<OpenTelemetryChatClient>(client);
+        // EnableSensitiveData should be false by default
+        Assert.False(otelClient.EnableSensitiveData);
+    }
+
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_InnerClient")]
     private static extern IChatClient GetInnerClient(DelegatingChatClient client);
 }

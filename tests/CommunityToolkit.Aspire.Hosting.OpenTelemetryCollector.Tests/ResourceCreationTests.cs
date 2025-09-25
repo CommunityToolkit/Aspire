@@ -1,17 +1,16 @@
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
+using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests;
 
-public class ResourceCreationTests
+public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
 {
     [Fact]
     public void CanCreateTheCollectorResource()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddOpenTelemetryCollector("collector")
             .WithConfig("./config.yaml")
@@ -151,31 +150,33 @@ public class ResourceCreationTests
     }
 
     [Fact]
-    public void ContainerHasAspireEnvironmentVariables()
+    [RequiresDocker]
+    public async Task ContainerHasAspireEnvironmentVariables()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create()
+            .WithTestAndResourceLogging(testOutputHelper);
+        builder.Configuration["APPHOST:ContainerHostname"] = "what.ever";
 
-        builder.AddOpenTelemetryCollector("collector")
+        var collector = builder.AddOpenTelemetryCollector("collector")
             .WithAppForwarding();
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().SingleOrDefault();
-        Assert.NotNull(collectorResource);
 
-        var envs = collectorResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.NotEmpty(envs);
+        var resourceNotificationService = app.Services.GetRequiredService<ResourceNotificationService>();
 
-        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
-        foreach (var env in envs)
-        {
-            env.Callback(context);
-        }
+        await app.StartAsync();
+        await resourceNotificationService.WaitForResourceHealthyAsync(collector.Resource.Name);
 
-        Assert.Contains("ASPIRE_ENDPOINT", context.EnvironmentVariables.Keys);
-        Assert.Contains("ASPIRE_API_KEY", context.EnvironmentVariables.Keys);
-        Assert.Equal("http://host.docker.internal:18889", context.EnvironmentVariables["ASPIRE_ENDPOINT"]);
-        Assert.NotNull(context.EnvironmentVariables["ASPIRE_API_KEY"]);
+        Assert.True(resourceNotificationService.TryGetCurrentState(collector.Resource.Name, out var resourceEvent));
+
+        var envVars = resourceEvent.Snapshot.EnvironmentVariables.ToDictionary(k => k.Name, v => v.Value);
+
+        var endpoint = Assert.Contains("ASPIRE_ENDPOINT", envVars);
+        var apiKey = Assert.Contains("ASPIRE_API_KEY", envVars);
+
+        Assert.Equal($"http://what.ever:18889", endpoint);
+        Assert.NotNull(apiKey);
     }
 
     [Fact]
@@ -329,37 +330,6 @@ public class ResourceCreationTests
     }
 
     [Fact]
-    public void DevCertificateLogicIsNotTriggeredInNonDevelopmentEnvironment()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
-
-        builder.AddOpenTelemetryCollector("collector", settings =>
-        {
-            settings.ForceNonSecureReceiver = false; // Allow HTTPS
-        })
-            .WithAppForwarding();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().SingleOrDefault();
-        Assert.NotNull(collectorResource);
-
-        // In non-development environment (default test environment), dev cert args should not be added
-        var args = collectorResource.Annotations.OfType<CommandLineArgsCallbackAnnotation>().ToList();
-        var context = new CommandLineArgsCallbackContext([]);
-        foreach (var arg in args)
-        {
-            arg.Callback(context);
-        }
-
-        // Should not contain TLS certificate configuration args since we're not in Development environment with RunMode
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::http::tls::cert_file"));
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::grpc::tls::cert_file"));
-    }
-
-    [Fact]
     public void DevCertificateLogicIsNotTriggeredWhenForceNonSecureReceiverEnabled()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -463,7 +433,7 @@ public class ResourceCreationTests
     public void RunWithHttpsDevCertificateNotTriggeredInNonRunMode()
     {
         // Use regular builder (not TestDistributedApplicationBuilder.Create) which defaults to non-Run mode
-        var builder = DistributedApplication.CreateBuilder();
+        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
 
         builder.AddOpenTelemetryCollector("collector", settings =>
@@ -521,7 +491,7 @@ public class ResourceCreationTests
     }
 
     [Fact]
-    public void DevCertificateResourcesAddedWhenHttpsEnabledInDevelopment()
+    public void DevCertificateResourcesAddedWhenHttpsEnabled()
     {
         var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
         builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
