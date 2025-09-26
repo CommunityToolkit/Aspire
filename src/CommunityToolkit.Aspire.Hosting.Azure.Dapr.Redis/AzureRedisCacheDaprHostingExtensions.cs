@@ -101,7 +101,6 @@ public static class AzureRedisCacheDaprHostingExtensions
             is ContainerAppManagedEnvironment managedEnvironment &&
             provisionable.OfType<UserAssignedIdentity>().FirstOrDefault() is UserAssignedIdentity identity)
             {
-
                 var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
                     builder.Resource.Name,
                     BicepFunction.Interpolate($"{builder.Resource.Name}"),
