@@ -4,6 +4,7 @@ using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning.KeyVault;
+using Azure.Provisioning.Roles;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
@@ -96,7 +97,10 @@ public static class AzureRedisCacheDaprHostingExtensions
         {
             var redisHostParam = redisBuilder.GetOutput(daprConnectionStringKey).AsProvisioningParameter(infrastructure, redisHostKey);
 
-            if (infrastructure.GetProvisionableResources().OfType<ContainerAppManagedEnvironment>().FirstOrDefault() is ContainerAppManagedEnvironment managedEnvironment)
+            var provisionable = infrastructure.GetProvisionableResources();
+            if (provisionable.OfType<ContainerAppManagedEnvironment>().FirstOrDefault()
+            is ContainerAppManagedEnvironment managedEnvironment &&
+            provisionable.OfType<UserAssignedIdentity>().FirstOrDefault() is UserAssignedIdentity identity)
             {
                 var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
                     builder.Resource.Name,
@@ -111,7 +115,7 @@ public static class AzureRedisCacheDaprHostingExtensions
                     new() { Name = redisHostKey, Value = redisHostParam },
                     new() { Name = "enableTLS", Value = "true" },
                     new() { Name = "useEntraID", Value = "true" },
-                    new() { Name = "azureClientId", Value = managedEnvironment.Identity.PrincipalId }
+                    new() { Name = "azureClientId", Value = identity.PrincipalId }
                 };
 
                 // Add state-specific metadata
