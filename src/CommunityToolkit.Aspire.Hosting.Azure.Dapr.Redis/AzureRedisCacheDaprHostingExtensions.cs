@@ -97,10 +97,10 @@ public static class AzureRedisCacheDaprHostingExtensions
         {
             var redisHostParam = redisBuilder.GetOutput(daprConnectionStringKey).AsProvisioningParameter(infrastructure, redisHostKey);
 
-            var provisionable = infrastructure.GetProvisionableResources();
-            if (provisionable.OfType<ContainerAppManagedEnvironment>().FirstOrDefault()
+            var provisionableResources = infrastructure.GetProvisionableResources();
+            if (provisionableResources.OfType<ContainerAppManagedEnvironment>().FirstOrDefault()
             is ContainerAppManagedEnvironment managedEnvironment &&
-            provisionable.OfType<UserAssignedIdentity>().FirstOrDefault() is UserAssignedIdentity identity)
+            provisionableResources.OfType<UserAssignedIdentity>().FirstOrDefault() is UserAssignedIdentity identity)
             {
                 var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
                     builder.Resource.Name,
