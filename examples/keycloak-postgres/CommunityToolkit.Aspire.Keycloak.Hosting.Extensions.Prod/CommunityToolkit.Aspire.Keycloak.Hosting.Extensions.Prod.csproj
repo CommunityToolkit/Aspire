@@ -13,6 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults.csproj"/>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.ServiceDefaults\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>

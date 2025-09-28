@@ -56,10 +56,10 @@
     <Project Path="examples/k6/CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults/CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/keycloak-postgres/">
-    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.ServiceDefaults.csproj" Type="Classic C#" />
-    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost\CommunityToolkit.Aspire.Keycloak.Extensions.AppHost.csproj" Type="Classic C#" />
-    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.Dev\CommunityToolkit.Aspire.Keycloak.Extensions.Dev.csproj" Type="Classic C#" />
-    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Extensions.Prod\CommunityToolkit.Aspire.Keycloak.Extensions.Prod.csproj" Type="Classic C#" />
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.AppHost\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.AppHost.csproj" Type="Classic C#" />
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Dev\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Dev.csproj" Type="Classic C#" />
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Prod\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Prod.csproj" Type="Classic C#" />
+    <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.ServiceDefaults\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.ServiceDefaults.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/examples/lavinmq/">
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost.csproj" />
@@ -207,7 +207,7 @@
     <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
-    <Project Path="src\CommunityToolkit.Aspire.Keycloak.Extensions\CommunityToolkit.Aspire.Keycloak.Extensions.csproj" Type="Classic C#" />
+    <Project Path="src\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
@@ -260,7 +260,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
-    <Project Path="tests\CommunityToolkit.Aspire.Keycloak.Extensions.Tests\CommunityToolkit.Aspire.Keycloak.Extensions.Tests.csproj" Type="Classic C#" />
+    <Project Path="tests\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Tests\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Tests.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/Dapr/">
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />
