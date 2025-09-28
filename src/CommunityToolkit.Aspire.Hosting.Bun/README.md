@@ -24,7 +24,7 @@ builder.AddBunApp("bun-server", "main.ts")
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/bun
+https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-bun
 
 ## Feedback & contributing
 

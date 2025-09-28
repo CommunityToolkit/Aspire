@@ -5,13 +5,6 @@ namespace CommunityToolkit.Aspire.Keycloak.Extensions.Tests;
 
 public class KeycloakExtensionTests
 {
-    private readonly IDistributedApplicationBuilder _app;
-
-    public KeycloakExtensionTests()
-    {
-        _app = DistributedApplication.CreateBuilder();
-    }
-
     private static async Task<IDictionary<string, string>> GetEnv(IResourceBuilder<KeycloakResource> kc)
     {
         return await kc.Resource.GetEnvironmentVariableValuesAsync();
@@ -32,8 +25,9 @@ public class KeycloakExtensionTests
     [Fact]
     public void WithPostgresDev_Should_Throw_If_Database_Is_Null()
     {
+        var app = DistributedApplication.CreateBuilder();
         Assert.Throws<ArgumentNullException>(() =>
-            _app.AddKeycloak("testkeycloak")
+            app.AddKeycloak("testkeycloak")
                 .WithPostgres(null!));
     }
 
@@ -50,9 +44,10 @@ public class KeycloakExtensionTests
     [Fact]
     public async Task WithPostgres_Defaults_SetBasicVars()
     {
-        var pg = _app.AddPostgres("pg");
+        var app = DistributedApplication.CreateBuilder();
+        var pg = app.AddPostgres("pg");
         var db = pg.AddDatabase("keycloakdb");
-        var kc = _app.AddKeycloak("kc")
+        var kc = app.AddKeycloak("kc")
             .WithPostgres(db);
 
         var env = await GetEnv(kc);
@@ -79,7 +74,7 @@ public class KeycloakExtensionTests
 
         var env = await GetEnv(kc);
 
-        Assert.False(ReferenceEquals(user.Resource, env["KC_DB_USERNAME"])); 
+        Assert.False(ReferenceEquals(user.Resource, env["KC_DB_USERNAME"]));
         Assert.False(ReferenceEquals(pass.Resource, env["KC_DB_PASSWORD"]));
         Assert.True(env.ContainsKey("KC_DB_USERNAME"));
         Assert.True(env.ContainsKey("KC_DB_PASSWORD"));

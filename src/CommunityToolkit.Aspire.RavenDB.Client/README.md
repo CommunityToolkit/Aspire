@@ -134,7 +134,7 @@ builder.AddRavenDBClient("ravendb");
 
 - https://ravendb.net/docs
 - https://github.com/ravendb/ravendb
-- https://learn.microsoft.com/dotnet/aspire/community-toolkit/ravendb <!-- TODO: Update the link once it is created -->
+- https://learn.microsoft.com/dotnet/aspire/community-toolkit/ravendb
 
 ## Feedback & Contributing
 
