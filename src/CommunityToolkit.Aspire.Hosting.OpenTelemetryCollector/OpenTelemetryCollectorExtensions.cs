@@ -40,7 +40,8 @@ public static class OpenTelemetryCollectorExtensions
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(settings.CollectorImage, settings.CollectorTag)
             .WithEnvironment("ASPIRE_ENDPOINT", new HostUrl(url))
-            .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName]);
+            .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName])
+            .WithIconName("DesktopPulse");
 
         if (settings.EnableGrpcEndpoint)
             resourceBuilder.WithEndpoint(targetPort: 4317, name: OpenTelemetryCollectorResource.GrpcEndpointName, scheme: isHttpsEnabled ? "https" : "http");
@@ -48,7 +49,7 @@ public static class OpenTelemetryCollectorExtensions
             resourceBuilder.WithEndpoint(targetPort: 4318, name: OpenTelemetryCollectorResource.HttpEndpointName, scheme: isHttpsEnabled ? "https" : "http");
 
 
-        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
+        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode)
         {
             resourceBuilder.RunWithHttpsDevCertificate();
 
@@ -68,6 +69,18 @@ public static class OpenTelemetryCollectorExtensions
                     $@"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: ""{certFilePath}""",
                     $@"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""{certKeyPath}""");
             }
+        }
+
+        if (!settings.DisableHealthcheck)
+        {
+            const int healthPort = 13233;
+            resourceBuilder.WithEndpoint(targetPort: healthPort, name: "health", scheme: "http")
+                .WithHttpHealthCheck("/health", endpointName: "health")
+                .WithArgs(
+                    "--feature-gates=confmap.enableMergeAppendOption",
+                    $"--config=yaml:extensions::health_check/aspire::endpoint: 0.0.0.0:{healthPort}",
+                    "--config=yaml:service::extensions: [ health_check/aspire ]"
+                    );
         }
         return resourceBuilder;
     }

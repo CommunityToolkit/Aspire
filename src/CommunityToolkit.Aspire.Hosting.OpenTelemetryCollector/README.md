@@ -8,7 +8,7 @@ This .NET Aspire Integration can be used to include [OpenTelemetry Collector](ht
 
 ### Example 1: Add OpenTelemetry Collector without automatic redirection
 
-In this approach, only the projects and resource that you forward the collector to
+In this approach, only the projects and resource that you forward the collector to will have their telemetry forwarded to the collector.
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
