@@ -10,6 +10,7 @@ public static class FlagdBuilderExtensions
 {
     private const int FlagdPort = 8013;
     private const int HealthCheckPort = 8014;
+    private const int OfrepEndpoint = 8016;
 
     /// <summary>
     /// Adds a flagd container to the application model.
@@ -18,12 +19,15 @@ public static class FlagdBuilderExtensions
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="fileSource">The path to the flag configuration file on the host. The flags configuration should be stored in a file named flagd.json</param>
     /// <param name="port">The host port for flagd HTTP endpoint. If not provided, a random port will be assigned.</param>
+    /// <param name="ofrepPort">The host port for flagd OFREP endpoint. If not provided, a random port will be assigned.</param>
+    /// 
     /// <returns>A reference to the <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
     public static IResourceBuilder<FlagdResource> AddFlagd(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         string fileSource,
-        int? port = null)
+        int? port = null,
+        int? ofrepPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
@@ -37,6 +41,7 @@ public static class FlagdBuilderExtensions
             .WithHttpEndpoint(port: port, targetPort: FlagdPort, name: FlagdResource.HttpEndpointName)
             .WithHttpEndpoint(null, HealthCheckPort, FlagdResource.HealthCheckEndpointName)
             .WithHttpHealthCheck("/healthz", endpointName: FlagdResource.HealthCheckEndpointName)
+            .WithHttpEndpoint(ofrepPort, OfrepEndpoint, FlagdResource.OfrepEndpointName)
             .WithBindMount(fileSource, "/flags")
             .WithArgs("start", "--uri", "file:./flags/flagd.json");
     }

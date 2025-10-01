@@ -11,10 +11,13 @@ public class FlagdResource(string name) : ContainerResource(name), IResourceWith
 {
     internal const string HttpEndpointName = "http";
     internal const string HealthCheckEndpointName = "health";
+    internal const string OfrepEndpointName = "ofrep";
 
     private EndpointReference? _primaryEndpointReference;
 
     private EndpointReference? _healthCheckEndpointReference;
+
+    private EndpointReference? _ofrepEndpointReference;
 
     /// <summary>
     /// Gets the primary HTTP endpoint for the flagd server.
@@ -25,6 +28,11 @@ public class FlagdResource(string name) : ContainerResource(name), IResourceWith
     /// Gets the health check HTTP endpoint for the flagd server.
     /// </summary>
     public EndpointReference HealthCheckEndpoint => _healthCheckEndpointReference ??= new(this, HealthCheckEndpointName);
+
+    /// <summary>
+    /// Gets the connection string for the flagd server.
+    /// </summary>
+    public EndpointReference OfrepEndpoint => _ofrepEndpointReference ??= new(this, OfrepEndpointName);
 
     /// <summary>
     /// Gets the connection string expression for the flagd server.
