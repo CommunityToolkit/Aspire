@@ -92,7 +92,6 @@ public static class AzureContainerAppEnvironmentResourceBuilderExtensions
                 daprComponentResource.TryGetLastAnnotation<AzureDaprComponentPublishingAnnotation>(out var publishingAnnotation);
                 publishingAnnotation?.PublishingAction(infrastructure, daprIdentity);
 
-
             }
         });
     }
