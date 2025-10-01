@@ -19,7 +19,7 @@ public static class FlagdBuilderExtensions
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="port">The host port for flagd HTTP endpoint. If not provided, a random port will be assigned.</param>
     /// <param name="ofrepPort">The host port for flagd OFREP endpoint. If not provided, a random port will be assigned.</param>
-    /// 
+    /// <remarks>The flagd container requires a sync source to be configured.</remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
     public static IResourceBuilder<FlagdResource> AddFlagd(
         this IDistributedApplicationBuilder builder,
