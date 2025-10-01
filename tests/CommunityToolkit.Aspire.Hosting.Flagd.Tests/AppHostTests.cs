@@ -11,7 +11,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task ResourceStartsAndRespondsCorrectly()
     {
         var resourceName = "flagd";
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
 
         var connectionString = await fixture.GetConnectionString(resourceName);
         Assert.NotNull(connectionString);
