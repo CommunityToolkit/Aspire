@@ -39,16 +39,16 @@ public static class AzureDaprHostingExtensions
     }
 
     /// <summary>
-    /// 
+    /// Adds role assignments to the specified Azure resource, allowing the target resource to assume the specified built-in roles.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TTarget"></typeparam>
-    /// <typeparam name="TBuiltInRole"></typeparam>
-    /// <param name="builder"></param>
-    /// <param name="target"></param>
-    /// <param name="getName"></param>
-    /// <param name="roles"></param>
-    /// <returns></returns>
+    /// <typeparam name="T">The type of the resource being configured.</typeparam>
+    /// <typeparam name="TTarget">The type of the target Azure resource to which roles are assigned.</typeparam>
+    /// <typeparam name="TBuiltInRole">The type representing built-in roles.</typeparam>
+    /// <param name="builder">The resource builder for the resource being configured.</param>
+    /// <param name="target">The resource builder for the target Azure resource to receive role assignments.</param>
+    /// <param name="getName">A function that returns the name of a role given a built-in role value.</param>
+    /// <param name="roles">An array of built-in roles to assign to the target resource.</param>
+    /// <returns>The updated resource builder with role assignments applied.</returns>
     public static IResourceBuilder<T> WithRoleAssignments<T, TTarget, TBuiltInRole>(this IResourceBuilder<T> builder, IResourceBuilder<TTarget> target, Func<TBuiltInRole, string> getName, TBuiltInRole[] roles)
         where T : IResource
         where TTarget : AzureProvisioningResource
