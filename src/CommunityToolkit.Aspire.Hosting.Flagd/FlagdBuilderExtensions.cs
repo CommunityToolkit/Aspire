@@ -17,7 +17,6 @@ public static class FlagdBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
-    /// <param name="fileSource">The path to the flag configuration file on the host. The flags configuration should be stored in a file named flagd.json</param>
     /// <param name="port">The host port for flagd HTTP endpoint. If not provided, a random port will be assigned.</param>
     /// <param name="ofrepPort">The host port for flagd OFREP endpoint. If not provided, a random port will be assigned.</param>
     /// 
@@ -25,13 +24,11 @@ public static class FlagdBuilderExtensions
     public static IResourceBuilder<FlagdResource> AddFlagd(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        string fileSource,
         int? port = null,
         int? ofrepPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
-        ArgumentException.ThrowIfNullOrEmpty(fileSource, nameof(fileSource));
 
         var resource = new FlagdResource(name);
 
@@ -42,8 +39,7 @@ public static class FlagdBuilderExtensions
             .WithHttpEndpoint(null, HealthCheckPort, FlagdResource.HealthCheckEndpointName)
             .WithHttpHealthCheck("/healthz", endpointName: FlagdResource.HealthCheckEndpointName)
             .WithHttpEndpoint(ofrepPort, OfrepEndpoint, FlagdResource.OfrepEndpointName)
-            .WithBindMount(fileSource, "/flags")
-            .WithArgs("start", "--uri", "file:./flags/flagd.json");
+            .WithArgs("start");
     }
 
     /// <summary>
@@ -57,5 +53,25 @@ public static class FlagdBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
         return builder.WithEnvironment("FLAGD_DEBUG", "true");
+    }
+
+    /// <summary>
+    /// Configures flagd to use a bind mount as the source of flags.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="fileSource">The path to the flag configuration file on the host.</param>
+    /// <param name="filename">The name of the flag configuration file. Defaults to "flagd.json".</param>
+    /// <returns>The <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
+    public static IResourceBuilder<FlagdResource> WithBindFileSync(
+        this IResourceBuilder<FlagdResource> builder,
+        string fileSource,
+        string filename = "flagd.json")
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrEmpty(fileSource, nameof(fileSource));
+
+        return builder
+            .WithBindMount(fileSource, "/flags/")
+            .WithArgs("--uri", $"file:./flags/{filename}");
     }
 }
