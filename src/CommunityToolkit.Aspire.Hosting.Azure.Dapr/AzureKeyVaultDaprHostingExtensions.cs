@@ -3,7 +3,7 @@ using Aspire.Hosting.Azure;
 using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
-using Azure.Provisioning.KeyVault;
+using Azure.Provisioning.Roles;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
@@ -17,6 +17,8 @@ public static class AzureKeyVaultDaprHostingExtensions
     private const string secretStoreComponentKey = "secretStoreComponent";
     private const string secretStore = nameof(secretStore);
 
+
+
     /// <summary>
     /// Configures the Key Vault secret store component for the Dapr component resource.
     /// </summary>
@@ -27,9 +29,9 @@ public static class AzureKeyVaultDaprHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        var principalIdParameter = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
+        //TODO: We may need to actually add the key vault resource here as well - I'm not sure if aspire automatically adds it anymore or not
 
-        var configureInfrastructure = (AzureResourceInfrastructure infrastructure) =>
+        var configureInfrastructure = (AzureResourceInfrastructure infrastructure, UserAssignedIdentity daprIdentity) =>
         {
             if (infrastructure.GetProvisionableResources().OfType<ContainerAppManagedEnvironment>().FirstOrDefault() is ContainerAppManagedEnvironment managedEnvironment)
             {
@@ -43,12 +45,11 @@ public static class AzureKeyVaultDaprHostingExtensions
                 daprComponent.Scopes = [];
                 daprComponent.Metadata = [
                     new ContainerAppDaprMetadata { Name = "vaultName", Value = kvNameParam },
-                    new ContainerAppDaprMetadata { Name = "azureClientId", Value = principalIdParameter }
+                    new ContainerAppDaprMetadata { Name = "azureClientId", Value = daprIdentity.PrincipalId }
                 ];
 
                 infrastructure.Add(daprComponent);
                 infrastructure.Add(kvNameParam);
-                infrastructure.Add(principalIdParameter);
 
                 infrastructure.Add(new ProvisioningOutput(secretStoreComponentKey, typeof(string))
                 {

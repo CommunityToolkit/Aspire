@@ -39,6 +39,27 @@ public static class AzureDaprHostingExtensions
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TTarget"></typeparam>
+    /// <typeparam name="TBuiltInRole"></typeparam>
+    /// <param name="builder"></param>
+    /// <param name="target"></param>
+    /// <param name="getName"></param>
+    /// <param name="roles"></param>
+    /// <returns></returns>
+    public static IResourceBuilder<T> WithRoleAssignments<T, TTarget, TBuiltInRole>(this IResourceBuilder<T> builder, IResourceBuilder<TTarget> target, Func<TBuiltInRole, string> getName, TBuiltInRole[] roles)
+        where T : IResource
+        where TTarget : AzureProvisioningResource
+        where TBuiltInRole : notnull
+    {
+        builder.WithAnnotation(new RoleAssignmentAnnotation(target.Resource, CreateRoleDefinitions(roles, getName)));
+        return builder;
+    }
+
+
+    /// <summary>
     /// Adds scopes to the specified Dapr component in a container app managed environment.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
@@ -95,5 +116,11 @@ public static class AzureDaprHostingExtensions
             ComponentType = componentType,
             Version = version
         };
+    }
+
+    private static HashSet<RoleDefinition> CreateRoleDefinitions<TBuiltInRole>(IReadOnlyList<TBuiltInRole> roles, Func<TBuiltInRole, string> getName)
+        where TBuiltInRole : notnull
+    {
+        return [.. roles.Select(r => new RoleDefinition(r.ToString()!, getName(r)))];
     }
 }

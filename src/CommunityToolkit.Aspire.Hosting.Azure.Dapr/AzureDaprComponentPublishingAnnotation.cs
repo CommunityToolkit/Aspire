@@ -1,5 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
+using Azure.Provisioning.Roles;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 /// <summary>
@@ -10,4 +11,4 @@ namespace CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 /// allowing customization of the resource infrastructure.</remarks>
 /// <param name="PublishingAction">The action to be executed on the <see cref="AzureResourceInfrastructure"/> during the publishing process. This
 /// action allows for customization of the infrastructure configuration.</param>
-public record AzureDaprComponentPublishingAnnotation(Action<AzureResourceInfrastructure> PublishingAction) : IResourceAnnotation;
+public record AzureDaprComponentPublishingAnnotation(Action<AzureResourceInfrastructure, UserAssignedIdentity> PublishingAction) : IResourceAnnotation;

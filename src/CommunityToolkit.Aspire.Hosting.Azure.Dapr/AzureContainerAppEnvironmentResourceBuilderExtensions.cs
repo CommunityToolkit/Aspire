@@ -1,7 +1,11 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
 using Aspire.Hosting.Azure.AppContainers;
+using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
+using Azure.Provisioning.Authorization;
+using Azure.Provisioning.Expressions;
+using Azure.Provisioning.Roles;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
@@ -12,11 +16,14 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class AzureContainerAppEnvironmentResourceBuilderExtensions
 {
+    private const string DaprManagedIdentityKey = "daprManagedIdentity";
+
     /// <summary>
     /// Configures the Azure Container App Environment resource to use Dapr.
+    /// This method creates a dedicated managed identity for Dapr components and configures all Dapr components to use it.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
+    /// <param name="builder">The Azure Container App Environment resource builder.</param>
+    /// <returns>The configured Azure Container App Environment resource builder.</returns>
     public static IResourceBuilder<AzureContainerAppEnvironmentResource> WithDaprComponents(
         this IResourceBuilder<AzureContainerAppEnvironmentResource> builder)
     {
@@ -53,13 +60,39 @@ public static class AzureContainerAppEnvironmentResourceBuilderExtensions
 
         return builder.ConfigureInfrastructure(infrastructure =>
         {
+            // Create the Dapr managed identity once
+            var daprIdentity = new UserAssignedIdentity(DaprManagedIdentityKey);
+
+            infrastructure.Add(daprIdentity);
+
             var daprComponentResources = builder.ApplicationBuilder.Resources.OfType<IDaprComponentResource>();
 
             foreach (var daprComponentResource in daprComponentResources)
             {
-                daprComponentResource.TryGetLastAnnotation<AzureDaprComponentPublishingAnnotation>(out var publishingAnnotation);
+                if (daprComponentResource.TryGetLastAnnotation<RoleAssignmentAnnotation>(out var roleAssignmentAnnotation))
+                {
+                    var target = roleAssignmentAnnotation.Target.AddAsExistingResource(infrastructure);
 
-                publishingAnnotation?.PublishingAction(infrastructure);
+                    foreach (var roleDefinition in roleAssignmentAnnotation.Roles)
+                    {
+                        var id = new MemberExpression(new IdentifierExpression(roleAssignmentAnnotation.Target.GetBicepIdentifier()), "id");
+                        var roleAssignment = new RoleAssignment($"{daprComponentResource.Name}{roleDefinition.Name}")
+                        {
+                            Name = BicepFunction.CreateGuid(id, daprIdentity.Id, BicepFunction.GetSubscriptionResourceId("Microsoft.Authorization/roleDefinitions", roleDefinition.Id)),
+                            RoleDefinitionId = BicepFunction.GetSubscriptionResourceId("Microsoft.Authorization/roleDefinitions", roleDefinition.Id),
+                            PrincipalId = daprIdentity.PrincipalId,
+                            PrincipalType = RoleManagementPrincipalType.ServicePrincipal,
+                            Scope =  new IdentifierExpression(target.BicepIdentifier)
+                        };
+
+                        infrastructure.Add(roleAssignment);
+                    }
+                }
+
+                daprComponentResource.TryGetLastAnnotation<AzureDaprComponentPublishingAnnotation>(out var publishingAnnotation);
+                publishingAnnotation?.PublishingAction(infrastructure, daprIdentity);
+
+
             }
         });
     }

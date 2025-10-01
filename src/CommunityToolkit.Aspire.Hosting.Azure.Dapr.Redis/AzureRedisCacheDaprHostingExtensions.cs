@@ -5,9 +5,11 @@ using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning.KeyVault;
 using Azure.Provisioning.Roles;
+using Azure.ResourceManager.Authorization;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
+using RedisBuiltInRole = Azure.Provisioning.Redis.RedisBuiltInRole;
 
 namespace Aspire.Hosting;
 
@@ -91,16 +93,12 @@ public static class AzureRedisCacheDaprHostingExtensions
 
     private static void ConfigureForManagedIdentityAuthentication(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> redisBuilder, string componentType)
     {
-        var principalIdParam = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
-
-        var configureInfrastructure = (AzureResourceInfrastructure infrastructure) =>
+        var configureInfrastructure = (AzureResourceInfrastructure infrastructure, UserAssignedIdentity daprIdentity) =>
         {
             var redisHostParam = redisBuilder.GetOutput(daprConnectionStringKey).AsProvisioningParameter(infrastructure, redisHostKey);
 
             var provisionableResources = infrastructure.GetProvisionableResources();
-            if (provisionableResources.OfType<ContainerAppManagedEnvironment>().FirstOrDefault()
-            is ContainerAppManagedEnvironment managedEnvironment &&
-            provisionableResources.OfType<UserAssignedIdentity>().FirstOrDefault() is UserAssignedIdentity identity)
+            if (provisionableResources.OfType<ContainerAppManagedEnvironment>().FirstOrDefault() is ContainerAppManagedEnvironment managedEnvironment)
             {
                 var daprComponent = AzureDaprHostingExtensions.CreateDaprComponent(
                     builder.Resource.Name,
@@ -115,7 +113,7 @@ public static class AzureRedisCacheDaprHostingExtensions
                     new() { Name = redisHostKey, Value = redisHostParam },
                     new() { Name = "enableTLS", Value = "true" },
                     new() { Name = "useEntraID", Value = "true" },
-                    new() { Name = "azureClientId", Value = identity.PrincipalId }
+                    new() { Name = "azureClientId", Value = daprIdentity.PrincipalId }
                 };
 
                 // Add state-specific metadata
@@ -132,9 +130,11 @@ public static class AzureRedisCacheDaprHostingExtensions
                 infrastructure.Add(daprComponent);
 
                 infrastructure.TryAdd(redisHostParam);
+
             }
         };
 
+        builder.WithRoleAssignments(redisBuilder, RedisBuiltInRole.GetBuiltInRoleName, [RedisBuiltInRole.RedisCacheContributor]);
         builder.WithAnnotation(new AzureDaprComponentPublishingAnnotation(configureInfrastructure));
 
         // Configure the Redis resource to output the connection string
@@ -162,7 +162,7 @@ public static class AzureRedisCacheDaprHostingExtensions
         // Configure Key Vault secret store component - this adds the annotation to the same resource
         builder.ConfigureKeyVaultSecretsComponent(kvNameParam);
 
-        var configureInfrastructure = (AzureResourceInfrastructure infrastructure) =>
+        var configureInfrastructure = (AzureResourceInfrastructure infrastructure, UserAssignedIdentity daprIdentity) =>
         {
             var redisHostParam = redisBuilder.GetOutput(daprConnectionStringKey).AsProvisioningParameter(infrastructure, redisHostKey);
 
@@ -183,6 +183,7 @@ public static class AzureRedisCacheDaprHostingExtensions
                     new() { Name = "redisPassword", SecretRef = "redis-password" }
                 };
 
+                // TODO: Make this configurable - perhaps AddDaprStateStore().AsActorStateStore() or similar
                 // Add state-specific metadata
                 if (componentType == "state.redis")
                 {
