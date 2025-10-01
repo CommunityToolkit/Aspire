@@ -7,17 +7,22 @@ var stateStore = builder.AddDaprStateStore("statestore")
     .WaitFor(redis);
 
 var redisHost= redis.Resource.PrimaryEndpoint.Property(EndpointProperty.Host);
-var redisTargetPort = redis.Resource.PrimaryEndpoint.Property(EndpointProperty.TargetPort);
+var redisPort = redis.Resource.PrimaryEndpoint.Property(EndpointProperty.Port);
 
 var pubSub = builder
   .AddDaprPubSub("pubsub")
   .WithMetadata(
     "redisHost",
     ReferenceExpression.Create(
-      $"{redisHost}:{redisTargetPort}"
+      $"{redisHost}:{redisPort}"
     )
   )
   .WaitFor(redis);
+
+if (redis.Resource.PasswordParameter is not null)
+{
+    pubSub.WithMetadata("redisPassword", redis.Resource.PasswordParameter);
+}
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
        .WithDaprSidecar(sidecar =>

@@ -74,7 +74,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var aggregateResourcesPaths = sidecarOptions?.ResourcesPaths.Select(path => NormalizePath(path)).ToHashSet() ?? [];
 
-            var componentReferenceAnnotations = resource.Annotations.OfType<DaprComponentReferenceAnnotation>();
+            var componentReferenceAnnotations = daprSidecar.Annotations.OfType<DaprComponentReferenceAnnotation>();
 
             var secrets = new Dictionary<string, string>();
             var endpointEnvironmentVars = new Dictionary<string, IValueProvider>();
