@@ -7,7 +7,7 @@
         "on": true,
         "off": false
       },
-      "defaultVariant": "off"
+      "defaultVariant": "on"
     },
     "background-color": {
       "state": "ENABLED",
