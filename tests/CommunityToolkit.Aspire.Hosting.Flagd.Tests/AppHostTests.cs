@@ -30,17 +30,17 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         Assert.Equal("1.0", apiVersion.Value);
     }
 
-    [Fact(Skip = "This test is failing because the Ofrep endpoint is not mapped correctly")]
+    [Fact]
     public async Task ResourceStartsAndRespondsCorrectlyForOfrepEvaluation()
     {
         var resourceName = "flagd";
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
 
-        var connectionString = await fixture.GetConnectionString(resourceName);
+        var connectionString = fixture.GetEndpoint(resourceName, "ofrep");
         Assert.NotNull(connectionString);
 
         // Configure the provider
-        var config = new OfrepOptions(connectionString);
+        var config = new OfrepOptions(connectionString.ToString());
 
         await OpenFeature.Api.Instance.SetProviderAsync(new OfrepProvider(config));
 
