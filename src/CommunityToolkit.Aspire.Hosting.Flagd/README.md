@@ -24,12 +24,17 @@ In your `AppHost` project, call the `AddFlagd` method to add flagd to your appli
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var flagd = builder.AddFlagd("flagd", "./flags");
+var flagd = builder
+    .AddFlagd("flagd")
+    .WithBindFileSync("./flags/")
+    .WithLogging();
 
 builder.Build().Run();
 ```
 
 The `fileSource` parameter specifies the path to your flag configuration file on the host machine, which will be mounted into the flagd container.
+
+Important: The `flagd` requires a Sync to be configured. You can use the `WithBindFileSync` method to configure a file sync. The `./flags/` path is the default path where the flag configuration file is expected to be found. You can change this path to match your configuration.
 
 ### Configuration
 
@@ -114,3 +119,4 @@ Here's a simple example:
 For more information about flagd, visit the [official documentation](https://flagd.dev).
 
 To use flagd in your application, you'll need to install an OpenFeature provider for .NET. See the [OpenFeature .NET documentation](https://openfeature.dev/docs/reference/technologies/client/dotnet/) for details.
+
