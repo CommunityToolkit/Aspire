@@ -43,7 +43,8 @@ Important: The `flagd` requires a Sync to be configured. You can use the `WithBi
 You can configure the logging level for flagd:
 
 ```csharp
-var flagd = builder.AddFlagd("flagd", "./flags").
+var flagd = builder.AddFlagd("flagd")
+    .WithBindFileSync("./flags")
     .WithLogging("debug");
 ```
 
