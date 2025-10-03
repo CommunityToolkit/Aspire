@@ -40,25 +40,34 @@ Important: The `flagd` requires a Sync to be configured. You can use the `WithBi
 
 #### Configuring logging
 
-You can configure the logging level for flagd:
+You can enable the logging for flagd:
 
 ```csharp
-var flagd = builder.AddFlagd("flagd")
+var flagd = builder
+    .AddFlagd("flagd")
     .WithBindFileSync("./flags")
-    .WithLogging("debug");
+    .WithLogging();
 ```
 
-Available logging levels are: `debug`, `info`, `warn`, `error`.
+#### Customizing the port (flagd endpoint)
 
-#### Customizing the port
-
-You can specify a custom port for the flagd HTTP/gRPC endpoints:
+You can specify a custom port for the flagd HTTP endpoints:
 
 ```csharp
-var flagd = builder.AddFlagd("flagd", "./flags", port: 9090);
+var flagd = builder.AddFlagd("flagd", port: 9090);
 ```
 
 If no port is specified, the default port 8013 will be used.
+
+#### Customizing the port (OFREP endpoint)
+
+You can specify a custom port for the OFREP HTTP endpoints:
+
+```csharp
+var flagd = builder.AddFlagd("flagd", ofrepPort: 9090);
+```
+
+If no port is specified, the default port 8016 will be used.
 
 ### Flag Configuration Format
 
