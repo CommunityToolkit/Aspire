@@ -4,12 +4,12 @@ using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning.KeyVault;
+using Azure.Provisioning.Redis;
 using Azure.Provisioning.Roles;
-using Azure.ResourceManager.Authorization;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
-using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
-using RedisBuiltInRole = Azure.Provisioning.Redis.RedisBuiltInRole;
+using CdkRedisResource = Azure.Provisioning.Redis.RedisResource;
+using RedisResource = Aspire.Hosting.ApplicationModel.RedisResource;
 
 namespace Aspire.Hosting;
 
@@ -122,6 +122,25 @@ public static class AzureRedisCacheDaprHostingExtensions
                     metadata.Add(new ContainerAppDaprMetadata { Name = "actorStateStore", Value = "true" });
                 }
 
+                if (redisBuilder.Resource.AddAsExistingResource(infrastructure) is CdkRedisResource redis)
+                {
+                    var policyName = BicepFunction.CreateGuid(redis.Id, daprIdentity.PrincipalId, "Data Contributor");
+                    if (!infrastructure.GetProvisionableResources().OfType<RedisCacheAccessPolicyAssignment>().Any(r => r.Name == policyName))
+                    {
+                        var redisBicepIdentifier = redisBuilder.Resource.GetBicepIdentifier();
+
+                        infrastructure.Add(new RedisCacheAccessPolicyAssignment($"{redisBicepIdentifier}_contributor")
+                        {
+                            Name = policyName,
+                            Parent = redis,
+                            AccessPolicyName = "Data Contributor",
+                            ObjectId = daprIdentity.PrincipalId,
+                            ObjectIdAlias = daprIdentity.Name
+                        });
+                    }
+
+                }
+
                 daprComponent.Metadata = [.. metadata];
 
                 // Add scopes if any exist
@@ -134,13 +153,14 @@ public static class AzureRedisCacheDaprHostingExtensions
             }
         };
 
-        builder.WithRoleAssignments(redisBuilder, RedisBuiltInRole.GetBuiltInRoleName, [RedisBuiltInRole.RedisCacheContributor]);
+
+        //builder.WithRoleAssignments(redisBuilder, RedisBuiltInRole.GetBuiltInRoleName, [RedisBuiltInRole.RedisCacheContributor]);
         builder.WithAnnotation(new AzureDaprComponentPublishingAnnotation(configureInfrastructure));
 
         // Configure the Redis resource to output the connection string
         redisBuilder.ConfigureInfrastructure(infrastructure =>
         {
-            var redisResource = infrastructure.GetProvisionableResources().OfType<AzureRedisResource>().SingleOrDefault();
+            var redisResource = infrastructure.GetProvisionableResources().OfType<CdkRedisResource>().SingleOrDefault();
             var outputExists = infrastructure.GetProvisionableResources().OfType<ProvisioningOutput>().Any(o => o.BicepIdentifier == daprConnectionStringKey);
 
             if (redisResource is not null && !outputExists)
