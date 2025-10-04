@@ -124,14 +124,14 @@ public static class AzureRedisCacheDaprHostingExtensions
 
                 if (redisBuilder.Resource.AddAsExistingResource(infrastructure) is CdkRedisResource redis)
                 {
-                    var policyName = BicepFunction.CreateGuid(redis.Id, daprIdentity.PrincipalId, "Data Contributor");
-                    if (!infrastructure.GetProvisionableResources().OfType<RedisCacheAccessPolicyAssignment>().Any(r => r.Name == policyName))
+                    var redisBicepIdentifier = redisBuilder.Resource.GetBicepIdentifier();
+                    var policyBicepIdentifier = $"{redisBicepIdentifier}_contributor";
+                    if (!infrastructure.GetProvisionableResources().OfType<RedisCacheAccessPolicyAssignment>().Any(r => r.BicepIdentifier == policyBicepIdentifier))
                     {
-                        var redisBicepIdentifier = redisBuilder.Resource.GetBicepIdentifier();
 
                         infrastructure.Add(new RedisCacheAccessPolicyAssignment($"{redisBicepIdentifier}_contributor")
                         {
-                            Name = policyName,
+                            Name = BicepFunction.CreateGuid(redis.Id, daprIdentity.PrincipalId, "Data Contributor"),
                             Parent = redis,
                             AccessPolicyName = "Data Contributor",
                             ObjectId = daprIdentity.PrincipalId,
