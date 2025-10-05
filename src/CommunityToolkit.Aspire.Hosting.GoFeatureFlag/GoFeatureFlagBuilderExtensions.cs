@@ -128,6 +128,10 @@ public static class GoFeatureFlagBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="logLevel">The log level to set.</param>
     /// <returns>The <see cref="IResourceBuilder{GoFeatureFlagResource}"/>.</returns>
+    /// <remarks>
+    /// The only supported <see cref="LogLevel"/> by GO Feature Flag are <see cref="LogLevel.Error"/>,
+    /// <see cref="LogLevel.Warning"/>, <see cref="LogLevel.Information"/> and <see cref="LogLevel.Debug"/>.
+    /// </remarks>
     public static IResourceBuilder<GoFeatureFlagResource> WithLogLevel(
         this IResourceBuilder<GoFeatureFlagResource> builder,
         LogLevel logLevel
