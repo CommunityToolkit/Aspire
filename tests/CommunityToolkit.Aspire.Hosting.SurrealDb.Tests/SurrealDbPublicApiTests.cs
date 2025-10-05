@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
 
@@ -121,7 +122,6 @@ public class SurrealDbPublicApiTests
         Assert.Equal(nameof(source), exception.ParamName);
     }
     
-    
     [Fact(Skip = "Feature is unstable and blocking the release")]
     public void WithInitFilesShouldThrowWhenBuilderIsNull()
     {
@@ -153,6 +153,19 @@ public class SurrealDbPublicApiTests
             ? Assert.Throws<ArgumentNullException>(action)
             : Assert.Throws<ArgumentException>(action);
         Assert.Equal(nameof(source), exception.ParamName);
+    }
+    
+    [Fact]
+    public void WithLogLevelShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<SurrealDbServerResource> builder = null!;
+
+#pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var action = () => builder.WithLogLevel(LogLevel.Trace);
+#pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
     }
 
     [Fact]
