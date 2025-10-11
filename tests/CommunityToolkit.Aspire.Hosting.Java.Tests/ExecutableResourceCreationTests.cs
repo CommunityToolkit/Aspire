@@ -77,6 +77,7 @@ public class ExecutableResourceCreationTests
         {
             ApplicationName = "test.jar",
             Args = ["--test"],
+            JvmArgs = ["-Dtest"],
             OtelAgentPath = "otel-agent",
             Port = 8080
         };
@@ -101,9 +102,8 @@ public class ExecutableResourceCreationTests
         Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
         CommandLineArgsCallbackContext context = new([]);
         await argsAnnotations.Callback(context);
-        Assert.All(options.Args, arg => Assert.Contains(arg, context.Args));
-        Assert.Contains("-jar", context.Args);
-        Assert.Contains(options.ApplicationName, context.Args);
+
+        Assert.Equal([..options.JvmArgs, "-jar", options.ApplicationName, ..options.Args], context.Args);
     }
 
     [Fact]
