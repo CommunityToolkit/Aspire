@@ -24,4 +24,9 @@ public class JavaAppExecutableResourceOptions
     /// Gets or sets the arguments to pass to the Java application.
     /// </summary>
     public string[]? Args { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets the arguments to pass to the Java Virtual Machine.
+    /// </summary>
+    public string[]? JvmArgs { get; set; } = null;
 }

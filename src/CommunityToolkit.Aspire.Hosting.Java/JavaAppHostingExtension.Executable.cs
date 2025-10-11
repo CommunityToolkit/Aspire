@@ -35,6 +35,9 @@ public static partial class JavaAppHostingExtension
             : ["-jar", options.ApplicationName];
 #pragma warning restore CS8601 // Possible null reference assignment.
 
+        if (options.JvmArgs is { Length: > 0 })
+            allArgs = [.. options.JvmArgs, .. allArgs];
+
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
         var resource = new JavaAppExecutableResource(name, "java", workingDirectory);
 
