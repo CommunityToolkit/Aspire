@@ -32,6 +32,30 @@ var executableapp = builder.AddSpringApp("executableapp",
                                ApplicationName = "target/app.jar",
                                OtelAgentPath = "../../../agents"
                            });
+
+// Define a Java executable app with JVM arguments
+var appWithJvmArgs = builder.AddJavaApp("app", "./app",
+                           new JavaAppExecutableResourceOptions()
+                           {
+                               ApplicationName = "app.jar",
+                               JvmArgs = ["-Xmx512m", "-Xms256m", "-Dconfig.path=/etc/config"],
+                               Args = ["--spring.profiles.active=prod"]
+                           });
+```
+
+### Configuration Options
+
+The `JavaAppExecutableResourceOptions` class provides several configuration options:
+
+- `ApplicationName`: The name of the JAR file to execute (default: "target/app.jar")
+- `Port`: The port number for the application (default: 8080)
+- `OtelAgentPath`: Path to the OpenTelemetry Java Agent
+- `JvmArgs`: Array of JVM arguments to pass to the Java Virtual Machine (e.g., `-Xmx512m`, `-Dconfig.path=/etc/config`)
+- `Args`: Array of application arguments to pass to the Java application
+
+JVM arguments are passed before the `-jar` flag, while application arguments are passed after the JAR file name:
+```
+java [JvmArgs...] -jar app.jar [Args...]
 ```
 
 ## Additional Information
