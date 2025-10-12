@@ -283,4 +283,133 @@ public class ExecutableResourceCreationTests
         });
         Assert.Equal(expectedCommandState, updateState);
     }
+
+    [Fact]
+    public async Task AddJavaAppWithJvmArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var options = new JavaAppExecutableResourceOptions
+        {
+            ApplicationName = "test.jar",
+            JvmArgs = ["-Xmx512m", "-Darg=value"],
+            Port = 8080
+        };
+
+        builder.AddJavaApp("java", Environment.CurrentDirectory, options);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<JavaAppExecutableResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+        Assert.Equal("java", resource.Name);
+
+        Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
+        CommandLineArgsCallbackContext context = new([]);
+        await argsAnnotations.Callback(context);
+        
+        // JVM args should come before -jar
+        Assert.Contains("-Xmx512m", context.Args);
+        Assert.Contains("-Darg=value", context.Args);
+        Assert.Contains("-jar", context.Args);
+        Assert.Contains(options.ApplicationName, context.Args);
+        
+        // Verify order: JVM args before -jar
+        var xmxIndex = Array.IndexOf(context.Args, "-Xmx512m");
+        var dargIndex = Array.IndexOf(context.Args, "-Darg=value");
+        var jarIndex = Array.IndexOf(context.Args, "-jar");
+        
+        Assert.True(xmxIndex < jarIndex, "JVM arg -Xmx512m should come before -jar");
+        Assert.True(dargIndex < jarIndex, "JVM arg -Darg=value should come before -jar");
+    }
+
+    [Fact]
+    public async Task AddJavaAppWithJvmArgsAndApplicationArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var options = new JavaAppExecutableResourceOptions
+        {
+            ApplicationName = "test.jar",
+            JvmArgs = ["-Xmx512m", "-Darg=value"],
+            Args = ["--app-arg1", "--app-arg2"],
+            Port = 8080
+        };
+
+        builder.AddJavaApp("java", Environment.CurrentDirectory, options);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<JavaAppExecutableResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
+        CommandLineArgsCallbackContext context = new([]);
+        await argsAnnotations.Callback(context);
+        
+        // All arguments should be present
+        Assert.Contains("-Xmx512m", context.Args);
+        Assert.Contains("-Darg=value", context.Args);
+        Assert.Contains("-jar", context.Args);
+        Assert.Contains(options.ApplicationName, context.Args);
+        Assert.Contains("--app-arg1", context.Args);
+        Assert.Contains("--app-arg2", context.Args);
+        
+        // Verify order: JVM args before -jar, application args after jar file
+        var xmxIndex = Array.IndexOf(context.Args, "-Xmx512m");
+        var dargIndex = Array.IndexOf(context.Args, "-Darg=value");
+        var jarIndex = Array.IndexOf(context.Args, "-jar");
+        var jarFileIndex = Array.IndexOf(context.Args, options.ApplicationName);
+        var appArg1Index = Array.IndexOf(context.Args, "--app-arg1");
+        var appArg2Index = Array.IndexOf(context.Args, "--app-arg2");
+        
+        Assert.True(xmxIndex < jarIndex, "JVM arg -Xmx512m should come before -jar");
+        Assert.True(dargIndex < jarIndex, "JVM arg -Darg=value should come before -jar");
+        Assert.True(jarIndex < jarFileIndex, "-jar should come before jar file name");
+        Assert.True(jarFileIndex < appArg1Index, "Application args should come after jar file");
+        Assert.True(jarFileIndex < appArg2Index, "Application args should come after jar file");
+    }
+
+    [Fact]
+    public async Task AddJavaAppWithOnlyApplicationArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        var options = new JavaAppExecutableResourceOptions
+        {
+            ApplicationName = "test.jar",
+            Args = ["--app-arg"],
+            Port = 8080
+        };
+
+        builder.AddJavaApp("java", Environment.CurrentDirectory, options);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<JavaAppExecutableResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
+        CommandLineArgsCallbackContext context = new([]);
+        await argsAnnotations.Callback(context);
+        
+        // Should have -jar, jar file, and app args
+        Assert.Contains("-jar", context.Args);
+        Assert.Contains(options.ApplicationName, context.Args);
+        Assert.Contains("--app-arg", context.Args);
+        
+        // Verify order
+        var jarIndex = Array.IndexOf(context.Args, "-jar");
+        var jarFileIndex = Array.IndexOf(context.Args, options.ApplicationName);
+        var appArgIndex = Array.IndexOf(context.Args, "--app-arg");
+        
+        Assert.True(jarIndex < jarFileIndex, "-jar should come before jar file name");
+        Assert.True(jarFileIndex < appArgIndex, "Application args should come after jar file");
+    }
 }

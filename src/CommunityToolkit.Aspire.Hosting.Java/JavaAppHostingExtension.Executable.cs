@@ -30,9 +30,13 @@ public static partial class JavaAppHostingExtension
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory, nameof(workingDirectory));
 
 #pragma warning disable CS8601 // Possible null reference assignment.
-        string[] allArgs = options.Args is { Length: > 0 }
-            ? ["-jar", options.ApplicationName, .. options.Args]
-            : ["-jar", options.ApplicationName];
+        string[] allArgs = (options.JvmArgs, options.Args) switch
+        {
+            ({ Length: > 0 } jvmArgs, { Length: > 0 } args) => [.. jvmArgs, "-jar", options.ApplicationName, .. args],
+            ({ Length: > 0 } jvmArgs, _) => [.. jvmArgs, "-jar", options.ApplicationName],
+            (_, { Length: > 0 } args) => ["-jar", options.ApplicationName, .. args],
+            _ => ["-jar", options.ApplicationName]
+        };
 #pragma warning restore CS8601 // Possible null reference assignment.
 
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
