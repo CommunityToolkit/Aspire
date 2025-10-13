@@ -68,8 +68,7 @@ public static partial class OllamaResourceBuilderExtensions
         return builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
-          .WithHttpHealthCheck("/")
-          .ExcludeFromManifest();
+          .WithHttpHealthCheck("/");
     }
 
     /// <summary>
@@ -103,9 +102,21 @@ public static partial class OllamaResourceBuilderExtensions
         return vendor switch
         {
             OllamaGpuVendor.Nvidia => builder.WithContainerRuntimeArgs("--gpus", "all"),
-            OllamaGpuVendor.AMD => builder.WithContainerRuntimeArgs("--device", "/dev/kfd"),
+            OllamaGpuVendor.AMD => builder.WithAMDGPUSupport(),
             _ => throw new ArgumentException("Invalid GPU vendor", nameof(vendor))
         };
+    }
+
+    private static IResourceBuilder<OllamaResource> WithAMDGPUSupport(this IResourceBuilder<OllamaResource> builder)
+    {
+        if (builder.Resource.TryGetLastAnnotation<ContainerImageAnnotation>(out var containerAnnotation))
+        {
+            if (containerAnnotation.Tag?.EndsWith("rocm") == false)
+            {
+                containerAnnotation.Tag += "-rocm";
+            }
+        }
+        return builder.WithContainerRuntimeArgs("--device", "/dev/kfd", "--device", "/dev/dri");
     }
 
     private static OllamaResource AddServerResourceCommand(

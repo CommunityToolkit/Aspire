@@ -32,6 +32,11 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithConfigureDacDeployOptions<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, System.Action<Microsoft.SqlServer.Dac.DacDeployOptions> configureDeploymentOptions)
             where TPackage : IPackageMetadata { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithDacDeployOptions(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder, string optionsPath) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithDacDeployOptions<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, string optionsPath)
+            where TPackage : IPackageMetadata { throw null; }
+
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithDacpac(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder, string dacpacPath) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithDacpac<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, string dacpacPath)
@@ -52,6 +57,10 @@ namespace Aspire.Hosting
 namespace Aspire.Hosting.ApplicationModel
 {
     public partial record ConfigureDacDeployOptionsAnnotation(System.Action<Microsoft.SqlServer.Dac.DacDeployOptions> ConfigureDeploymentOptions) : IResourceAnnotation
+    {
+    }
+
+    public partial record DacDeployOptionsAnnotation(string OptionsPath) : IResourceAnnotation
     {
     }
 

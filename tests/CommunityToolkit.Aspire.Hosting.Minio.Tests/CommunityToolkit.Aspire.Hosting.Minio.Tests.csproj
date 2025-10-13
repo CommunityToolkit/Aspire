@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\minio\CommunityToolkit.Aspire.Hosting.Minio.AppHost\CommunityToolkit.Aspire.Hosting.Minio.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Minio\CommunityToolkit.Aspire.Hosting.Minio.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Minio.Client\CommunityToolkit.Aspire.Minio.Client.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

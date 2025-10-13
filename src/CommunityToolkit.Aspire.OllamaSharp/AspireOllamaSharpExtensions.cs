@@ -2,7 +2,6 @@ using CommunityToolkit.Aspire.OllamaSharp;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using OllamaSharp;
 using System.Data.Common;
 
@@ -41,6 +40,37 @@ public static class AspireOllamaSharpExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         return AddOllamaClientInternal(builder, $"{DefaultConfigSectionName}:{connectionName}", connectionName, serviceKey: connectionName, configureSettings: configureSettings);
+    }
+
+    /// <summary>
+    /// Adds <see cref="IOllamaApiClient"/> services to the container using the specified <paramref name="serviceKey"/>. 
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
+    /// <param name="serviceKey">A unique key that identifies this instance of the Ollama client service.</param>
+    /// <param name="connectionName">A name used to retrieve the connection string from the ConnectionStrings configuration section.</param>
+    /// <param name="configureSettings">An optional delegate that can be used for customizing options. It's invoked after the settings are read from the configuration.</param>
+    /// <exception cref="UriFormatException">Thrown when no Ollama endpoint is provided.</exception>
+    public static AspireOllamaApiClientBuilder AddKeyedOllamaApiClient(this IHostApplicationBuilder builder, object serviceKey, string connectionName, Action<OllamaSharpSettings>? configureSettings = null)
+    {
+        ArgumentNullException.ThrowIfNull(serviceKey, nameof(serviceKey));
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionName, nameof(connectionName));
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        return AddOllamaClientInternal(builder, $"{DefaultConfigSectionName}:{connectionName}", connectionName, serviceKey: serviceKey, configureSettings: configureSettings);
+    }
+
+    /// <summary>
+    /// Adds <see cref="IOllamaApiClient"/> services to the container using the specified <paramref name="serviceKey"/>. 
+    /// </summary>
+    /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
+    /// <param name="serviceKey">A unique key that identifies this instance of the Ollama client service.</param>
+    /// <param name="settings">The settings required to configure the <see cref="IOllamaApiClient"/>.</param>
+    /// <exception cref="UriFormatException">Thrown when no Ollama endpoint is provided.</exception>
+    public static AspireOllamaApiClientBuilder AddKeyedOllamaApiClient(this IHostApplicationBuilder builder, object serviceKey, OllamaSharpSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(serviceKey, nameof(serviceKey));
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(settings, nameof(settings));
+        return AddOllamaClientInternal(builder, DefaultConfigSectionName, serviceKey.ToString() ?? "default", serviceKey: serviceKey, configureSettings: null, settings: settings);
     }
 
     /// <summary>
@@ -105,11 +135,15 @@ public static class AspireOllamaSharpExtensions
         IHostApplicationBuilder builder,
         string configurationSectionName,
         string connectionName,
-        string? serviceKey = null,
-        Action<OllamaSharpSettings>? configureSettings = null)
+        object? serviceKey = null,
+        Action<OllamaSharpSettings>? configureSettings = null,
+        OllamaSharpSettings? settings = null)
     {
-        OllamaSharpSettings settings = new();
-        builder.Configuration.GetSection(configurationSectionName).Bind(settings);
+        settings ??= new();
+        if (string.IsNullOrEmpty(settings.Endpoint?.ToString()))
+        {
+            builder.Configuration.GetSection(configurationSectionName).Bind(settings);
+        }
 
         if (builder.Configuration.GetConnectionString(connectionName) is string connectionString)
         {

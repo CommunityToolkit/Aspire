@@ -7,7 +7,7 @@ internal static class ActiveMQClassicContainerImageSettings
 {
     public const string Registry = "docker.io";
     public const string Image = "apache/activemq-classic";
-    public const string Tag = "6.1.4";
+    public const string Tag = "6.1.7";
     public const string EnvironmentVariableUsername = "ACTIVEMQ_CONNECTION_USER";
     public const string EnvironmentVariablePassword = "ACTIVEMQ_CONNECTION_PASSWORD";
     public const string JolokiaPath =

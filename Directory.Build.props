@@ -12,13 +12,13 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>9</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).3.0</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).5.0</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>9.0.4</DotNetExtensionsVersion>
-    <OpenTelemetryVersion>1.11.1</OpenTelemetryVersion>
-    <TestContainersVersion>4.4.0</TestContainersVersion>
-    <MEAIVersion>9.5.0</MEAIVersion>
+    <DotNetExtensionsVersion>9.0.9</DotNetExtensionsVersion>
+    <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
+    <TestContainersVersion>4.7.0</TestContainersVersion>
+    <MEAIVersion>9.9.0</MEAIVersion>
     <IsPackable>false</IsPackable>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
@@ -37,7 +37,7 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>5</ToolkitMinorVersion>
+    <ToolkitMinorVersion>8</ToolkitMinorVersion>
     <ToolkitPatchVersion>0</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 

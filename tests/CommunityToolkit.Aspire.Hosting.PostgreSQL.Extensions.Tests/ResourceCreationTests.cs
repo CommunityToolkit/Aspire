@@ -44,10 +44,10 @@ public class ResourceCreationTests
                 Assert.Equal("USER_postgres1", item.Key);
                 Assert.Equal("postgres", item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PASSWORD_postgres1", item.Key);
-                Assert.Equal(postgresResource.PasswordParameter.Value, item.Value);
+                Assert.Equal(await postgresResource.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
@@ -162,10 +162,10 @@ public class ResourceCreationTests
                 Assert.Equal("USER_postgres1", item.Key);
                 Assert.Equal("postgres", item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PASSWORD_postgres1", item.Key);
-                Assert.Equal(postgresResource1.PasswordParameter.Value, item.Value);
+                Assert.Equal(await postgresResource1.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
@@ -192,10 +192,10 @@ public class ResourceCreationTests
                 Assert.Equal("USER_postgres2", item.Key);
                 Assert.Equal("postgres", item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PASSWORD_postgres2", item.Key);
-                Assert.Equal(postgresResource2.PasswordParameter.Value, item.Value);
+                Assert.Equal(await postgresResource2.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
@@ -312,8 +312,8 @@ public class ResourceCreationTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource.Name,
-                    Password = postgresResource.PasswordParameter.Value,
-                    UserName = postgresResource.UserNameParameter?.Value ?? "postgres"
+                    Password = await postgresResource.PasswordParameter.GetValueAsync(default),
+                    UserName = postgresResource.UserNameParameter is null ? "postgres" : await postgresResource.UserNameParameter.GetValueAsync(default)
                 }
             },
         };
@@ -413,8 +413,8 @@ public class ResourceCreationTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource1.Name,
-                    Password = postgresResource1.PasswordParameter.Value,
-                    UserName = postgresResource1.UserNameParameter?.Value ?? "postgres"
+                    Password = await postgresResource1.PasswordParameter.GetValueAsync(default),
+                    UserName = postgresResource1.UserNameParameter is null ? "postgres" : await postgresResource1.UserNameParameter.GetValueAsync(default)
                 }
             },
             {
@@ -423,8 +423,8 @@ public class ResourceCreationTests
                 {
                     Driver = "pgsql",
                     Server = postgresResource2.Name,
-                    Password = postgresResource2.PasswordParameter.Value,
-                    UserName = postgresResource2.UserNameParameter?.Value ?? "postgres"
+                    Password = await postgresResource2.PasswordParameter.GetValueAsync(default),
+                    UserName = postgresResource2.UserNameParameter is null ? "postgres" : await postgresResource2.UserNameParameter.GetValueAsync(default)
                 }
             }
         };

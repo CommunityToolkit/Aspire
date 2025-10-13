@@ -1,0 +1,265 @@
+<Solution>
+  <Folder Name="/examples/" />
+  <Folder Name="/examples/activemq/">
+    <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost/CommunityToolkit.Aspire.Hosting.ActiveMQ.AppHost.csproj" />
+    <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
+    <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults/CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/adminer/">
+    <Project Path="examples/adminer/CommunityToolkit.Aspire.Hosting.Adminer.AppHost/CommunityToolkit.Aspire.Hosting.Adminer.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/bun/">
+    <Project Path="examples/bun/CommunityToolkit.Aspire.Hosting.Bun.AppHost/CommunityToolkit.Aspire.Hosting.Bun.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/dapr/">
+    <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.AppHost/CommunityToolkit.Aspire.Hosting.Azure.Dapr.AppHost.csproj" />
+    <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Dapr.AppHost/CommunityToolkit.Aspire.Hosting.Dapr.AppHost.csproj" />
+    <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Dapr.ServiceA/CommunityToolkit.Aspire.Hosting.Dapr.ServiceA.csproj" />
+    <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Dapr.ServiceB/CommunityToolkit.Aspire.Hosting.Dapr.ServiceB.csproj" />
+    <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Dapr.ServiceC/CommunityToolkit.Aspire.Hosting.Dapr.ServiceC.csproj" />
+    <Project Path="examples/dapr/CommunityToolkit.Aspire.Hosting.Dapr.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Dapr.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/data-api-builder/">
+    <Project Path="examples/data-api-builder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.AppHost/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.AppHost.csproj" />
+    <Project Path="examples/data-api-builder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.csproj" />
+    <Project Path="examples/data-api-builder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/dbgate/">
+    <Project Path="examples/dbgate/CommunityToolkit.Aspire.Hosting.DbGate.AppHost/CommunityToolkit.Aspire.Hosting.DbGate.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/deno/">
+    <Project Path="examples/deno/CommunityToolkit.Aspire.Hosting.Deno.AppHost/CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/eventstore/">
+    <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.ApiService/CommunityToolkit.Aspire.Hosting.EventStore.ApiService.csproj" />
+    <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.AppHost/CommunityToolkit.Aspire.Hosting.EventStore.AppHost.csproj" />
+    <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/goff/">
+    <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService.csproj" />
+    <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost.csproj" />
+    <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/golang/">
+    <Project Path="examples/golang/CommunityToolkit.Aspire.Hosting.Golang.AppHost/CommunityToolkit.Aspire.Hosting.Golang.AppHost.csproj" />
+    <Project Path="examples/golang/CommunityToolkit.Aspire.Hosting.Golang.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Golang.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/java/">
+    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.ApiApp/CommunityToolkit.Aspire.Hosting.Java.ApiApp.csproj" />
+    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.AppHost/CommunityToolkit.Aspire.Hosting.Java.AppHost.csproj" />
+    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Java.ServiceDefaults.csproj" />
+    <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.WebApp/CommunityToolkit.Aspire.Hosting.Java.WebApp.csproj" />
+  </Folder>
+  <Folder Name="/examples/k6/">
+    <Project Path="examples/k6/CommunityToolkit.Aspire.Hosting.k6.ApiService/CommunityToolkit.Aspire.Hosting.k6.ApiService.csproj" />
+    <Project Path="examples/k6/CommunityToolkit.Aspire.Hosting.k6.AppHost/CommunityToolkit.Aspire.Hosting.k6.AppHost.csproj" />
+    <Project Path="examples/k6/CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults/CommunityToolkit.Aspire.Hosting.k6.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/lavinmq/">
+    <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost.csproj" />
+    <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit.csproj" />
+    <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.ServiceDefaults/CommunityToolkit.Aspire.Hosting.LavinMQ.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/mailpit/">
+    <Project Path="examples/mailpit/CommunityToolkit.Aspire.Hosting.MailPit.AppHost/CommunityToolkit.Aspire.Hosting.MailPit.AppHost.csproj" />
+    <Project Path="examples/mailpit/CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi/CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi.csproj" />
+    <Project Path="examples/mailpit/CommunityToolkit.Aspire.Hosting.MailPit.ServiceDefaults/CommunityToolkit.Aspire.Hosting.MailPit.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/masstransit-rabbitmq/">
+    <Project Path="examples/masstransit-rabbitmq/CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost/CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.AppHost.csproj" />
+    <Project Path="examples/masstransit-rabbitmq/CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults/CommunityToolkit.Aspire.Hosting.MassTransit.RabbitMQ.ServiceDefaults.csproj" />
+    <Project Path="examples/masstransit-rabbitmq/CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService/CommunityToolkit.Aspire.MassTransit.RabbitMQ.ApiService.csproj" />
+    <Project Path="examples/masstransit-rabbitmq/CommunityToolkit.Aspire.MassTransit.RabbitMQ.MessageTypes/CommunityToolkit.Aspire.MassTransit.RabbitMQ.MessageTypes.csproj" />
+    <Project Path="examples/masstransit-rabbitmq/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Publisher.csproj" />
+  </Folder>
+  <Folder Name="/examples/mcp-inspector/">
+    <Project Path="examples/mcp-inspector/CommunityToolkit.Aspire.Hosting.McpInspector.AppHost/CommunityToolkit.Aspire.Hosting.McpInspector.AppHost.csproj" />
+    <Project Path="examples/mcp-inspector/CommunityToolkit.Aspire.Hosting.McpInspector.McpServer/CommunityToolkit.Aspire.Hosting.McpInspector.McpServer.csproj" />
+  </Folder>
+  <Folder Name="/examples/meilisearch/">
+    <Project Path="examples/meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService/CommunityToolkit.Aspire.Hosting.Meilisearch.ApiService.csproj" />
+    <Project Path="examples/meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost/CommunityToolkit.Aspire.Hosting.Meilisearch.AppHost.csproj" />
+    <Project Path="examples/meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Meilisearch.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/minio/">
+    <Project Path="examples/minio/CommunityToolkit.Aspire.Hosting.Minio.ApiService/CommunityToolkit.Aspire.Hosting.Minio.ApiService.csproj" />
+    <Project Path="examples/minio/CommunityToolkit.Aspire.Hosting.Minio.AppHost/CommunityToolkit.Aspire.Hosting.Minio.AppHost.csproj" />
+    <Project Path="examples/minio/CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Minio.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/mongodb-ext/">
+    <Project Path="examples/mongodb-ext/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/mysql-ext/">
+    <Project Path="examples/mysql-ext/CommunityToolkit.Aspire.Hosting.MySql.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.MySql.Extensions.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/ngrok/">
+    <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.ApiService/CommunityToolkit.Aspire.Hosting.Ngrok.ApiService.csproj" />
+    <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost.csproj" />
+    <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.ServiceDefauls/CommunityToolkit.Aspire.Hosting.Ngrok.ServiceDefauls.csproj" />
+  </Folder>
+  <Folder Name="/examples/nodejs-ext/">
+    <Project Path="examples/nodejs-ext/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/ollama/">
+    <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.AppHost/CommunityToolkit.Aspire.Hosting.Ollama.AppHost.csproj" />
+    <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults.csproj" />
+    <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.Web/CommunityToolkit.Aspire.Hosting.Ollama.Web.csproj" />
+  </Folder>
+  <Folder Name="/examples/opentelemetry-collector/">
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api.csproj" />
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost.csproj" />
+    <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.ServiceDefaults/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/papercut/">
+    <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost/CommunityToolkit.Aspire.Hosting.PapercutSmtp.AppHost.csproj" />
+    <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi.csproj" />
+    <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/postgres-ext/">
+    <Project Path="examples/postgres-ext/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/powershell/">
+    <Project Path="examples/powershell/CommunityToolkit.Aspire.PowerShell.AppHost/CommunityToolkit.Aspire.PowerShell.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/python/">
+    <Project Path="examples/python/CommunityToolkit.Aspire.Hosting.Python.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.Python.Extensions.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/ravendb/">
+    <Project Path="examples/ravendb/CommunityToolkit.Aspire.Hosting.RavenDB.ApiService/CommunityToolkit.Aspire.Hosting.RavenDB.ApiService.csproj" />
+    <Project Path="examples/ravendb/CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults/CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults.csproj" />
+    <Project Path="examples/ravendb/RavenDB.AppHost/CommunityToolkit.Aspire.Hosting.RavenDB.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/redis-ext/">
+    <Project Path="examples/redis-ext/CommunityToolkit.Aspire.Hosting.Redis.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.Redis.Extensions.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/rust/">
+    <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.AppHost/CommunityToolkit.Aspire.Hosting.Rust.AppHost.csproj" />
+    <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/solr/">
+    <Project Path="examples/solr/CommunityToolkit.Aspire.Hosting.Solr.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/sql-database-projects/">
+    <Project Path="examples/sql-database-projects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.csproj" />
+    <Project Path="examples/sql-database-projects/SdkProject/SdkProject.csproj" />
+  </Folder>
+  <Folder Name="/examples/sqlite/">
+    <Project Path="examples/sqlite/CommunityToolkit.Aspire.Sqlite.Api/CommunityToolkit.Aspire.Sqlite.Api.csproj" />
+    <Project Path="examples/sqlite/CommunityToolkit.Aspire.Sqlite.AppHost/CommunityToolkit.Aspire.Sqlite.AppHost.csproj" />
+    <Project Path="examples/sqlite/CommunityToolkit.Aspire.Sqlite.ServiceDefaults/CommunityToolkit.Aspire.Sqlite.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/sqlserver-ext/">
+    <Project Path="examples/sqlserver-ext/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/examples/surrealdb/">
+    <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService.csproj" />
+    <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
+    <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/CommunityToolkit.Aspire.EventStore/CommunityToolkit.Aspire.EventStore.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.EventStore/CommunityToolkit.Aspire.Hosting.EventStore.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Golang/CommunityToolkit.Aspire.Hosting.Golang.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Java/CommunityToolkit.Aspire.Hosting.Java.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.k6/CommunityToolkit.Aspire.Hosting.k6.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.MailPit/CommunityToolkit.Aspire.Hosting.MailPit.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.McpInspector/CommunityToolkit.Aspire.Hosting.McpInspector.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Minio/CommunityToolkit.Aspire.Hosting.Minio.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.PowerShell/CommunityToolkit.Aspire.Hosting.PowerShell.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Python.Extensions/CommunityToolkit.Aspire.Hosting.Python.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Solr/CommunityToolkit.Aspire.Hosting.Solr.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Sqlite/CommunityToolkit.Aspire.Hosting.Sqlite.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Meilisearch/CommunityToolkit.Aspire.Meilisearch.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Microsoft.Data.Sqlite/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Minio.Client/CommunityToolkit.Aspire.Minio.Client.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
+  </Folder>
+  <Folder Name="/src/Dapr/">
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CommunityToolkit.Aspire.EventStore.Tests/CommunityToolkit.Aspire.EventStore.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Golang.Tests/CommunityToolkit.Aspire.Hosting.Golang.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Java.Tests/CommunityToolkit.Aspire.Hosting.Java.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.k6.Tests/CommunityToolkit.Aspire.Hosting.k6.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Minio.Tests/CommunityToolkit.Aspire.Hosting.Minio.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Solr.Tests/CommunityToolkit.Aspire.Hosting.Solr.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Minio.Client.Tests/CommunityToolkit.Aspire.Minio.Client.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.OllamaSharp.Tests/CommunityToolkit.Aspire.OllamaSharp.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+  </Folder>
+  <Folder Name="/tests/Dapr/">
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Dapr.Tests/CommunityToolkit.Aspire.Hosting.Dapr.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/tests-app-hosts/">
+    <Project Path="tests-app-hosts/Ollama.AppHost/Ollama.AppHost.csproj" />
+  </Folder>
+</Solution>

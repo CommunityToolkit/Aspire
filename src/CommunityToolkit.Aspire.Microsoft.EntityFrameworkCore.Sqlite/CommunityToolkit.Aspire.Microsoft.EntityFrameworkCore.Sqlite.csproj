@@ -3,6 +3,7 @@
   <PropertyGroup>
     <AdditionalPackageTags>client sqlite data EntityFrameworkCore entity-framework-core ef orm</AdditionalPackageTags>
     <Description>An Aspire client integration for the Microsoft.EntityFrameworkCore.Sqlite package.</Description>
+    <IsPreview>true</IsPreview>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +12,8 @@
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
   </ItemGroup>
 
   <ItemGroup>

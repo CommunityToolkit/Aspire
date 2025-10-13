@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.NodeJS.Extensions library
 
-This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.NodeJs) for .NET Aspire, including support for alternative package managers (yarn and pnpm), as well as developer workflow improvements.
+This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.NodeJs) for .NET Aspire, including support for alternative package managers (yarn and pnpm), frontend monorepos (Nx, Turborepo), as well as developer workflow improvements.
 
 ## Getting Started
 
@@ -21,6 +21,80 @@ builder.AddYarnApp("yarn-demo")
     .WithExternalHttpEndpoints();
 
 builder.AddPnpmApp("pnpm-demo")
+    .WithExternalHttpEndpoints();
+```
+
+### Frontend Monorepo Support
+
+For Nx and Turborepo monorepos, use the dedicated monorepo methods to avoid package installation race conditions:
+
+```csharp
+// Nx workspace
+var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+    .WithNpmPackageInstaller()
+    .RunWithPackageManager(); // Automatically uses npm from installer
+
+var app1 = nx.AddApp("app1");
+var app2 = nx.AddApp("app2", appName: "my-app-2");
+
+// Turborepo workspace  
+var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+    .WithYarnPackageInstaller()
+    .RunWithPackageManager("yarn"); // Explicitly specify yarn
+
+var turboApp1 = turbo.AddApp("app1");
+var turboApp2 = turbo.AddApp("app2", filter: "custom-filter");
+```
+
+See [MONOREPO.md](./MONOREPO.md) for detailed documentation on monorepo support.
+
+### Configuring Package Manager for Monorepos
+
+The `RunWithPackageManager()` method configures which package manager command is used when running individual apps in Nx or Turborepo workspaces:
+
+```csharp
+// Auto-infer from package installer
+var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
+    .WithYarnPackageInstaller()
+    .RunWithPackageManager(); // Uses 'yarn' command
+
+// Explicitly specify package manager
+var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
+    .WithNpmPackageInstaller()
+    .RunWithPackageManager("pnpm"); // Uses 'pnpm' command despite npm installer
+
+// Generated commands:
+// Nx with yarn: yarn nx serve app1
+// Turborepo with pnpm: pnpm turbo run dev --filter app1
+```
+
+### Package installation with custom flags
+
+You can pass additional flags to package managers during installation:
+
+```csharp
+// npm with legacy peer deps support
+builder.AddNpmApp("npm-app", "./path/to/app")
+    .WithNpmPackageInstallation(useCI: false, configureInstaller =>
+    {
+        configureInstaller.WithArgs("--legacy-peer-deps");
+    })
+    .WithExternalHttpEndpoints();
+
+// yarn with frozen lockfile
+builder.AddYarnApp("yarn-app", "./path/to/app")  
+    .WithYarnPackageInstallation(configureInstaller =>
+    {
+        configureInstaller.WithArgs("--frozen-lockfile", "--verbose");
+    })
+    .WithExternalHttpEndpoints();
+
+// pnpm with frozen lockfile
+builder.AddPnpmApp("pnpm-app", "./path/to/app")
+    .WithPnpmPackageInstallation(configureInstaller =>
+    {
+        configureInstaller.WithArgs("--frozen-lockfile");
+    })
     .WithExternalHttpEndpoints();
 ```
 

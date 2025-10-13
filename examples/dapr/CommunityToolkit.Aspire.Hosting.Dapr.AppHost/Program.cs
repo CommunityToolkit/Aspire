@@ -3,27 +3,40 @@ var builder = DistributedApplication.CreateBuilder(args);
 var redis = builder.AddRedis("redis").WithRedisInsight();
 
 
-var stateStore = builder.AddDaprStateStore("statestore");
+var stateStore = builder.AddDaprStateStore("statestore")
+    .WaitFor(redis);
 
-var pubSub = builder.AddDaprPubSub("pubsub")
-                    .WithMetadata("redisHost", "localhost:6379")
-                    .WaitFor(redis);
+var redisHost= redis.Resource.PrimaryEndpoint.Property(EndpointProperty.Host);
+var redisPort = redis.Resource.PrimaryEndpoint.Property(EndpointProperty.Port);
+
+var pubSub = builder
+  .AddDaprPubSub("pubsub")
+  .WithMetadata(
+    "redisHost",
+    ReferenceExpression.Create(
+      $"{redisHost}:{redisPort}"
+    )
+  )
+  .WaitFor(redis);
+
+if (redis.Resource.PasswordParameter is not null)
+{
+    pubSub.WithMetadata("redisPassword", redis.Resource.PasswordParameter);
+}
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("servicea")
-       .WithReference(stateStore)
-       .WithReference(pubSub)
-       .WithDaprSidecar()
-       .WaitFor(redis);
+       .WithDaprSidecar(sidecar =>
+       {
+           sidecar.WithReference(stateStore).WithReference(pubSub);
+       }).WaitFor(redis);
 
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceB>("serviceb")
-       .WithReference(pubSub)
-       .WithDaprSidecar()
+       .WithDaprSidecar(sidecar => sidecar.WithReference(pubSub))
        .WaitFor(redis);
 
 // console app with no appPort (sender only)
 builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceC>("servicec")
-       .WithReference(stateStore)
-       .WithDaprSidecar()
+       .WithDaprSidecar(sidecar => sidecar.WithReference(stateStore))
        .WaitFor(redis);
 
 builder.Build().Run();

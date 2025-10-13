@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting surrealdb</AdditionalPackageTags>
+    <Description>SurrealDB support for .NET Aspire.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.SurrealDb\SurrealDbHealthCheck.cs" Link="SurrealDbHealthCheck.cs"></Compile>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.SurrealDb\SurrealDbNamespaceHealthCheck.cs" Link="SurrealDbNamespaceHealthCheck.cs"></Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="AspNetCore.HealthChecks.SurrealDb" />
+    <PackageReference Include="SurrealDb.Net" />
+  </ItemGroup>
+
+</Project>

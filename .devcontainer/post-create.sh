@@ -8,13 +8,9 @@ echo Install .NET dev certs
 dotnet tool update -g linux-dev-certs
 dotnet linux-dev-certs install
 
-echo Install the SWA CLI
-npm install -g @azure/static-web-apps-cli
-
-echo Install SWA demo packages
-cd examples/swa/CommunityToolkit.Aspire.StaticWebApps.WebApp
-npm ci
-cd ../../../
+echo Install JS monorepo tools
+npm install -g turbo
+npm install -g nx
 
 echo Install Aspire 9 templates
 dotnet new install Aspire.ProjectTemplates

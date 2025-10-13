@@ -12,6 +12,8 @@ namespace CommunityToolkit.Aspire.OllamaSharp
     {
         public bool DisableHealthChecks { get { throw null; } set { } }
 
+        public bool DisableTracing { get { throw null; } set { } }
+
         public System.Uri? Endpoint { get { throw null; } set { } }
 
         public int? HealthCheckTimeout { get { throw null; } set { } }
@@ -26,18 +28,26 @@ namespace Microsoft.Extensions.Hosting
 {
     public partial class AspireOllamaApiClientBuilder
     {
-        public AspireOllamaApiClientBuilder(IHostApplicationBuilder hostBuilder, string serviceKey, bool disableTracing) { }
+        public AspireOllamaApiClientBuilder(IHostApplicationBuilder hostBuilder, object serviceKey, bool disableTracing) { }
 
         public bool DisableTracing { get { throw null; } }
 
         public IHostApplicationBuilder HostBuilder { get { throw null; } }
 
-        public string ServiceKey { get { throw null; } }
+        public object ServiceKey { get { throw null; } }
     }
 
     public static partial class AspireOllamaChatClientExtensions
     {
+        public static AI.ChatClientBuilder AddChatClient(this AspireOllamaApiClientBuilder builder, System.Action<AI.OpenTelemetryChatClient>? configureOpenTelemetry) { throw null; }
+
         public static AI.ChatClientBuilder AddChatClient(this AspireOllamaApiClientBuilder builder) { throw null; }
+
+        public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder, System.Action<AI.OpenTelemetryChatClient>? configureOpenTelemetry) { throw null; }
+
+        public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder, object serviceKey, System.Action<AI.OpenTelemetryChatClient>? configureOpenTelemetry) { throw null; }
+
+        public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder, object serviceKey) { throw null; }
 
         public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder) { throw null; }
     }
@@ -46,11 +56,17 @@ namespace Microsoft.Extensions.Hosting
     {
         public static AI.EmbeddingGeneratorBuilder<string, AI.Embedding<float>> AddEmbeddingGenerator(this AspireOllamaApiClientBuilder builder) { throw null; }
 
+        public static AI.EmbeddingGeneratorBuilder<string, AI.Embedding<float>> AddKeyedEmbeddingGenerator(this AspireOllamaApiClientBuilder builder, object serviceKey) { throw null; }
+
         public static AI.EmbeddingGeneratorBuilder<string, AI.Embedding<float>> AddKeyedEmbeddingGenerator(this AspireOllamaApiClientBuilder builder) { throw null; }
     }
 
     public static partial class AspireOllamaSharpExtensions
     {
+        public static AspireOllamaApiClientBuilder AddKeyedOllamaApiClient(this IHostApplicationBuilder builder, object serviceKey, CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings settings) { throw null; }
+
+        public static AspireOllamaApiClientBuilder AddKeyedOllamaApiClient(this IHostApplicationBuilder builder, object serviceKey, string connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings>? configureSettings = null) { throw null; }
+
         public static AspireOllamaApiClientBuilder AddKeyedOllamaApiClient(this IHostApplicationBuilder builder, string connectionName, System.Action<CommunityToolkit.Aspire.OllamaSharp.OllamaSharpSettings>? configureSettings = null) { throw null; }
 
         [System.Obsolete("This approach to registering IChatClient is deprecated, use AddKeyedOllamaApiClient().AddChatClient() instead.")]
