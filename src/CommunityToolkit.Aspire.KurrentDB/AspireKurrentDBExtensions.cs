@@ -1,8 +1,8 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire;
-using CommunityToolkit.Aspire.EventStore;
+using CommunityToolkit.Aspire.KurrentDB;
 using EventStore.Client;
 using EventStore.Client.Extensions.OpenTelemetry;
 using HealthChecks.EventStore.gRPC;
@@ -13,27 +13,26 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace Microsoft.Extensions.Hosting;
 
 /// <summary>
-/// Provides extension methods for registering EventStore-related services in an <see cref="IHostApplicationBuilder"/>.
+/// Provides extension methods for registering KurrentDB-related services in an <see cref="IHostApplicationBuilder"/>.
 /// </summary>
-[Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.KurrentDB and AspireKurrentDBExtensions instead. This integration will be removed in a future release.")]
-public static class AspireEventStoreExtensions
+public static class AspireKurrentDBExtensions
 {
-    private const string DefaultConfigSectionName = "Aspire:EventStore:Client";
+    private const string DefaultConfigSectionName = "Aspire:KurrentDB:Client";
 
     /// <summary>
     /// Registers <see cref="EventStoreClient" /> as a singleton in the services provided by the <paramref name="builder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">The connection name to use to find a connection string.</param>
-    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="EventStoreSettings"/>. It's invoked after the settings are read from the configuration.</param>
-    public static void AddEventStoreClient(
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="KurrentDBSettings"/>. It's invoked after the settings are read from the configuration.</param>
+    public static void AddKurrentDBClient(
         this IHostApplicationBuilder builder,
         string connectionName,
-        Action<EventStoreSettings>? configureSettings = null)
+        Action<KurrentDBSettings>? configureSettings = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNullOrEmpty(connectionName);
-        AddEventStoreClient(builder, DefaultConfigSectionName, configureSettings, connectionName, serviceKey: null);
+        AddKurrentDBClient(builder, DefaultConfigSectionName, configureSettings, connectionName, serviceKey: null);
     }
 
     /// <summary>
@@ -41,27 +40,27 @@ public static class AspireEventStoreExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>
-    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="EventStoreSettings"/>. It's invoked after the settings are read from the configuration.</param>
-    public static void AddKeyedEventStoreClient(
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="KurrentDBSettings"/>. It's invoked after the settings are read from the configuration.</param>
+    public static void AddKeyedKurrentDBClient(
         this IHostApplicationBuilder builder,
         string name,
-        Action<EventStoreSettings>? configureSettings = null)
+        Action<KurrentDBSettings>? configureSettings = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNullOrEmpty(name);
-        AddEventStoreClient(builder, $"{DefaultConfigSectionName}:{name}", configureSettings, connectionName: name, serviceKey: name);
+        AddKurrentDBClient(builder, $"{DefaultConfigSectionName}:{name}", configureSettings, connectionName: name, serviceKey: name);
     }
 
-    private static void AddEventStoreClient(
+    private static void AddKurrentDBClient(
         this IHostApplicationBuilder builder,
         string configurationSectionName,
-        Action<EventStoreSettings>? configureSettings,
+        Action<KurrentDBSettings>? configureSettings,
         string connectionName,
         string? serviceKey)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var settings = new EventStoreSettings();
+        var settings = new KurrentDBSettings();
         builder.Configuration.GetSection(configurationSectionName).Bind(settings);
 
         if (builder.Configuration.GetConnectionString(connectionName) is string connectionString)
@@ -73,11 +72,11 @@ public static class AspireEventStoreExtensions
 
         if (serviceKey is null)
         {
-            builder.Services.AddSingleton(ConfigureEventStoreClient);
+            builder.Services.AddSingleton(ConfigureKurrentDBClient);
         }
         else
         {
-            builder.Services.AddKeyedSingleton(serviceKey, (sp, key) => ConfigureEventStoreClient(sp));
+            builder.Services.AddKeyedSingleton(serviceKey, (sp, key) => ConfigureKurrentDBClient(sp));
         }
 
         if (!settings.DisableTracing)
@@ -88,7 +87,7 @@ public static class AspireEventStoreExtensions
 
         if (!settings.DisableHealthChecks)
         {
-            var healthCheckName = serviceKey is null ? "EventStore.Client" : $"EventStore.Client_{connectionName}";
+            var healthCheckName = serviceKey is null ? "KurrentDB.Client" : $"KurrentDB.Client_{connectionName}";
 
             builder.TryAddHealthCheck(new HealthCheckRegistration(
                 healthCheckName,
@@ -98,7 +97,7 @@ public static class AspireEventStoreExtensions
                 timeout: settings.HealthCheckTimeout));
         }
 
-        EventStoreClient ConfigureEventStoreClient(IServiceProvider serviceProvider)
+        EventStoreClient ConfigureKurrentDBClient(IServiceProvider serviceProvider)
         {
             if (settings.ConnectionString is not null)
             {
@@ -108,7 +107,7 @@ public static class AspireEventStoreExtensions
             else
             {
                 throw new InvalidOperationException(
-                        $"An EventStore could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or either " +
+                        $"A KurrentDB client could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or either " +
                         $"{nameof(settings.ConnectionString)} must be provided " +
                         $"in the '{configurationSectionName}' configuration section.");
             }
