@@ -19,7 +19,7 @@ In the _Program.cs_ file of your AppHost project, add a Neon project and databas
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Add Neon project resource with branching support
+// Add Neon project resource
 var neon = builder.AddNeonProject("neon");
 
 // Add a Neon database
@@ -53,6 +53,12 @@ var password = builder.AddParameter("neon-password", secret: true);
 
 var neon = builder.AddNeonProject("neon", userName, password);
 ```
+
+## About Neon Features
+
+This integration provides a PostgreSQL-compatible container for local development. For production scenarios using Neon's cloud service, you can use the Neon connection string directly with the standard [Aspire PostgreSQL](https://learn.microsoft.com/dotnet/aspire/database/postgresql-component) or [Aspire Npgsql](https://learn.microsoft.com/dotnet/aspire/database/postgresql-entity-framework-component) integrations.
+
+Neon's unique features like [database branching](https://neon.tech/docs/introduction/branching) are available when using Neon's cloud service and can be managed through their API or CLI alongside this integration.
 
 ## Additional Information
 

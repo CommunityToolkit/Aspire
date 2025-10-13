@@ -2,7 +2,7 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Add Neon project resource with branching support
+// Add Neon project resource
 var neon = builder.AddNeonProject("neon");
 
 // Add a Neon database

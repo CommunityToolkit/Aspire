@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Neon library
 
-This integration provides client support for [Neon](https://neon.tech/), a serverless PostgreSQL-compatible database, in .NET Aspire applications.
+This integration provides client support for [Neon](https://neon.tech/), a serverless PostgreSQL-compatible database, in .NET Aspire applications. It leverages the Npgsql library for PostgreSQL connectivity.
 
 ## Getting Started
 
@@ -62,6 +62,18 @@ The Neon client integration supports the following configuration options:
         "DisableMetrics": false
       }
     }
+  }
+}
+```
+
+## Using with Neon Cloud Service
+
+For production scenarios using Neon's cloud service, provide your Neon connection string in the configuration:
+
+```json
+{
+  "ConnectionStrings": {
+    "neondb": "postgresql://user:password@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require"
   }
 }
 ```
