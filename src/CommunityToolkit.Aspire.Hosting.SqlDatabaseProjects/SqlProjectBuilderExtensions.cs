@@ -242,7 +242,6 @@ public static class SqlProjectBuilderExtensions
     {
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeployer, DacpacDeployer>();
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeploySkipper, DacpacDeploySkipper>();
-        builder.ApplicationBuilder.Services.TryAddSingleton<ResourceNotificationService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
 
         builder.WithParentRelationship(target.Resource);
