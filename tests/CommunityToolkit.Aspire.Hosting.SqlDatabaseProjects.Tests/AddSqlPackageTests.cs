@@ -146,7 +146,7 @@ public class AddSqlPackageTests
         var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
         appBuilder.AddSqlPackage<TestPackage>("chinook")
             .WithReference(targetDatabase)
-            .WithSkipWhenDeloyed();
+            .WithSkipWhenDeployed();
 
         // Act
         using var app = appBuilder.Build();

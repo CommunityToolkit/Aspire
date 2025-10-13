@@ -127,7 +127,7 @@ public static class SqlProjectBuilderExtensions
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlPackageResource<TPackage>> WithSkipWhenDeloyed<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder)
+    public static IResourceBuilder<SqlPackageResource<TPackage>> WithSkipWhenDeployed<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder)
         where TPackage : IPackageMetadata => InternalWithSkipWhenDeployed(builder);
 
 
