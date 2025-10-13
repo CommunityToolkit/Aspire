@@ -115,7 +115,7 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
-    /// Specifies that .dacpac deployment should be skipped if metadata in the target database indicates that the .dacpac has already been deployed in it's current state.
+    /// Specifies that .dacpac deployment should be skipped if metadata in the target database indicates that the .dacpac has already been deployed in its current state.
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
@@ -123,7 +123,7 @@ public static class SqlProjectBuilderExtensions
         => InternalWithSkipWhenDeployed(builder);
 
     /// <summary>
-    /// Specifies that .dacpac deployment should be skipped if metadata in the target database indicates that the .dacpac has already been deployed in it's current state.
+    /// Specifies that .dacpac deployment should be skipped if metadata in the target database indicates that the .dacpac has already been deployed in its current state.
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
