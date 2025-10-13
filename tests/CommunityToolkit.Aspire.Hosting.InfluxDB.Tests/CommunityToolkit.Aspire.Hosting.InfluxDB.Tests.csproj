@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Testcontainers" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.InfluxDB\CommunityToolkit.Aspire.InfluxDB.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.InfluxDB\InfluxDBContainerImageTags.cs" />
+  </ItemGroup>
+</Project>
