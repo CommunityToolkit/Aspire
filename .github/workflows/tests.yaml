@@ -33,6 +33,7 @@ jobs:
             Hosting.Golang.Tests,
             Hosting.Java.Tests,
             Hosting.k6.Tests,
+            Hosting.KurrentDB.Tests,
             Hosting.LavinMQ.Tests,
             Hosting.MailPit.Tests,
             Hosting.McpInspector.Tests,
@@ -60,6 +61,7 @@ jobs:
             # Client integration tests
             EventStore.Tests,
             GoFeatureFlag.Tests,
+            KurrentDB.Tests,
             MassTransit.RabbitMQ.Tests,
             Meilisearch.Tests,
             Microsoft.Data.Sqlite.Tests,
