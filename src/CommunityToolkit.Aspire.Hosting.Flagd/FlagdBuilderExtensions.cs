@@ -1,5 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Flagd;
+using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
@@ -53,6 +54,26 @@ public static class FlagdBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
         return builder.WithEnvironment("FLAGD_DEBUG", "true");
+    }
+
+    /// <summary>
+    /// Configures logging level for flagd. If a flag or targeting rule isn't proceeding the way you'd expect this can be enabled to get more verbose logging.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="logLevel">The log level to use. Currently only debug is supported.</param>
+    /// <returns>The <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the log level is not valid.</exception>
+    /// <remarks>Currently only debug is supported.</remarks>
+    public static IResourceBuilder<FlagdResource> WithLoglevel(
+        this IResourceBuilder<FlagdResource> builder,
+        LogLevel logLevel)
+    {
+        if (logLevel == LogLevel.Debug)
+        {
+            return builder.WithEnvironment("FLAGD_DEBUG", "true");
+        }
+
+        throw new InvalidOperationException("Only debug log level is supported");
     }
 
     /// <summary>
