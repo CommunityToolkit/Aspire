@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Neon library
 
-This integration provides client support for [Neon](https://neon.tech/), a serverless PostgreSQL-compatible database, in .NET Aspire applications. It leverages the Npgsql library for PostgreSQL connectivity.
+This integration provides PostgreSQL client support for .NET Aspire applications, compatible with both local PostgreSQL containers and Neon's serverless PostgreSQL service. It leverages the Npgsql library for connectivity.
 
 ## Getting Started
 
