@@ -8,7 +8,6 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
-    [System.Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.Hosting.KurrentDB and KurrentDBBuilderExtensions instead. This integration will be removed in a future release.")]
     public static partial class EventStoreBuilderExtensions
     {
         public static ApplicationModel.IResourceBuilder<ApplicationModel.EventStoreResource> AddEventStore(this IDistributedApplicationBuilder builder, string name, int? port = null) { throw null; }
@@ -21,7 +20,6 @@ namespace Aspire.Hosting
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    [System.Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.Hosting.KurrentDB and KurrentDBResource instead. This integration will be removed in a future release.")]
     public partial class EventStoreResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
     {
         public EventStoreResource(string name) : base(default!, default) { }
