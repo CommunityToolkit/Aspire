@@ -152,6 +152,45 @@ public class AddFlagdTests
     }
 
     [Fact]
+    public void WithLoglevelDebugAddsEnvironmentVariable()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddFlagd(FlagdName).WithLoglevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<FlagdResource>());
+
+        var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToArray();
+        Assert.NotEmpty(envAnnotations);
+    }
+
+    [Theory]
+    [InlineData(Microsoft.Extensions.Logging.LogLevel.Trace)]
+    [InlineData(Microsoft.Extensions.Logging.LogLevel.Information)]
+    [InlineData(Microsoft.Extensions.Logging.LogLevel.Warning)]
+    [InlineData(Microsoft.Extensions.Logging.LogLevel.Error)]
+    [InlineData(Microsoft.Extensions.Logging.LogLevel.Critical)]
+    [InlineData(Microsoft.Extensions.Logging.LogLevel.None)]
+    public void WithLoglevelThrowsForUnsupportedLogLevels(Microsoft.Extensions.Logging.LogLevel logLevel)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var flagd = builder.AddFlagd(FlagdName);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => flagd.WithLoglevel(logLevel));
+        Assert.Equal("Only debug log level is supported", exception.Message);
+    }
+
+    [Fact]
+    public void WithLoglevelThrowsWhenBuilderIsNull()
+    {
+        IResourceBuilder<FlagdResource> builder = null!;
+
+        Assert.Throws<ArgumentNullException>(() => builder.WithLoglevel(Microsoft.Extensions.Logging.LogLevel.Debug));
+    }
+
+    [Fact]
     public void WithBindFileSyncAddsBindMountAndArgs()
     {
         var builder = DistributedApplication.CreateBuilder();
