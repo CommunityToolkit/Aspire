@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/aspire-8.0.json",
+  "resources": {
+    "neon": {
+      "type": "container.v0"
+    },
+    "neondb": {
+      "type": "value.v0",
+      "connectionString": "{neon.connectionString};Database=neondb"
+    },
+    "apiservice": {
+      "type": "project.v0",
+      "path": "../CommunityToolkit.Aspire.Hosting.Neon.ApiService/CommunityToolkit.Aspire.Hosting.Neon.ApiService.csproj",
+      "env": {
+        "ConnectionStrings__neondb": "{neondb.connectionString}"
+      },
+      "bindings": {
+        "http": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http"
+        },
+        "https": {
+          "scheme": "https",
+          "protocol": "tcp",
+          "transport": "http"
+        }
+      }
+    }
+  }
+}
