@@ -137,25 +137,10 @@ public class AddFlagdTests
     }
 
     [Fact]
-    public void WithLoggingAddsEnvironmentVariable()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.AddFlagd(FlagdName).WithLogging();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<FlagdResource>());
-
-        var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToArray();
-        Assert.NotEmpty(envAnnotations);
-    }
-
-    [Fact]
     public void WithLoglevelDebugAddsEnvironmentVariable()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddFlagd(FlagdName).WithLoglevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+        builder.AddFlagd(FlagdName).WithLogLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
 
         using var app = builder.Build();
 
@@ -178,7 +163,7 @@ public class AddFlagdTests
         var builder = DistributedApplication.CreateBuilder();
         var flagd = builder.AddFlagd(FlagdName);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => flagd.WithLoglevel(logLevel));
+        var exception = Assert.Throws<InvalidOperationException>(() => flagd.WithLogLevel(logLevel));
         Assert.Equal("Only debug log level is supported", exception.Message);
     }
 
@@ -187,7 +172,7 @@ public class AddFlagdTests
     {
         IResourceBuilder<FlagdResource> builder = null!;
 
-        Assert.Throws<ArgumentNullException>(() => builder.WithLoglevel(Microsoft.Extensions.Logging.LogLevel.Debug));
+        Assert.Throws<ArgumentNullException>(() => builder.WithLogLevel(Microsoft.Extensions.Logging.LogLevel.Debug));
     }
 
     [Fact]
@@ -279,14 +264,6 @@ public class AddFlagdTests
         IDistributedApplicationBuilder builder = null!;
 
         Assert.Throws<ArgumentNullException>(() => builder.AddFlagd(FlagdName));
-    }
-
-    [Fact]
-    public void WithLoggingThrowsWhenBuilderIsNull()
-    {
-        IResourceBuilder<FlagdResource> builder = null!;
-
-        Assert.Throws<ArgumentNullException>(() => builder.WithLogging());
     }
 
     [Fact]

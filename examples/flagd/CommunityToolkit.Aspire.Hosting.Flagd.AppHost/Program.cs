@@ -6,6 +6,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 var flagd = builder
     .AddFlagd("flagd")
     .WithBindFileSync("./flags/")
-    .WithLogging();
+    .WithLogLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
 
 builder.Build().Run();
