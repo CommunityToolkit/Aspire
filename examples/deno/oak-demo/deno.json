@@ -3,6 +3,7 @@
     "dev": "deno run --allow-env --allow-net --watch main.ts"
   },
   "imports": {
+    "@oak/oak": "jsr:@oak/oak@^17.1.6",
     "@std/assert": "jsr:@std/assert@1"
   }
 }
