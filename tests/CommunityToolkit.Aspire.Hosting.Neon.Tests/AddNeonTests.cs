@@ -110,7 +110,7 @@ public class AddNeonTests
         var expectedUserName = await neon.Resource.UserNameParameter.GetValueAsync(default);
         var expectedPassword = await neon.Resource.PasswordParameter.GetValueAsync(default);
 
-        Assert.Equal($"Host=localhost;Port=5432;Username={expectedUserName};Password={expectedPassword};SSL Mode=Require", connectionString);
+        Assert.Equal($"Host=localhost;Port=5432;Username={expectedUserName};Password={expectedPassword}", connectionString);
     }
 
     [Fact]
@@ -155,6 +155,5 @@ public class AddNeonTests
         Assert.Contains($"Username={expectedUserName}", connectionString);
         Assert.Contains($"Password={expectedPassword}", connectionString);
         Assert.Contains("Database=mydb", connectionString);
-        Assert.Contains("SSL Mode=Require", connectionString);
     }
 }

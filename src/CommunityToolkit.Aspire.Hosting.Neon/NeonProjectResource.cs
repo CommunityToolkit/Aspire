@@ -40,5 +40,5 @@ public class NeonProjectResource : ContainerResource, IResourceWithConnectionStr
     /// Gets the connection string expression for the Neon project.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
-        ReferenceExpression.Create($"Host={PrimaryEndpoint.Property(EndpointProperty.Host)};Port={PrimaryEndpoint.Property(EndpointProperty.Port)};Username={UserNameParameter};Password={PasswordParameter};SSL Mode=Require");
+        ReferenceExpression.Create($"Host={PrimaryEndpoint.Property(EndpointProperty.Host)};Port={PrimaryEndpoint.Property(EndpointProperty.Port)};Username={UserNameParameter};Password={PasswordParameter}");
 }

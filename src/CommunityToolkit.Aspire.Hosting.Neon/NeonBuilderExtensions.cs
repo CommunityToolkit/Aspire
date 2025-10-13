@@ -9,6 +9,7 @@ namespace Aspire.Hosting;
 public static class NeonBuilderExtensions
 {
     private const int NeonPort = 5432;
+    private const string DefaultUserName = "postgres";
 
     /// <summary>
     /// Adds a Neon project resource to the application model.
@@ -46,7 +47,14 @@ public static class NeonBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
-        var userNameParameter = userName?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-username", special: false);
+        var userNameParameter = userName?.Resource;
+        if (userNameParameter == null)
+        {
+            var userNameBuilder = builder.AddParameter($"{name}-username", secret: false);
+            builder.Configuration[$"Parameters:{name}-username"] = DefaultUserName;
+            userNameParameter = userNameBuilder.Resource;
+        }
+        
         var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
 
         var neonProject = new NeonProjectResource(name, userNameParameter, passwordParameter);
