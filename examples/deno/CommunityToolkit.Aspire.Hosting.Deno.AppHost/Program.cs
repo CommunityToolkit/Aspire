@@ -8,9 +8,9 @@ builder.AddDenoTask("vite-demo", taskName: "dev")
     .WithEndpoint()
     .WithHttpHealthCheck("/");
 
-builder.AddDenoApp("oak-demo", "main.ts", permissionFlags: ["-E", "--allow-net"])
+builder.AddDenoApp("oak-demo", "main.ts", permissionFlags: ["--allow-env", "--allow-net"])
     .WithHttpEndpoint(env: "PORT")
     .WithEndpoint()
-    .WithHttpHealthCheck("/");
+    .WithHttpHealthCheck("/health");
 
 builder.Build().Run();
