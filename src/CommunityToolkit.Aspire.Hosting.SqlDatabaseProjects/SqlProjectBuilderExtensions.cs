@@ -115,6 +115,29 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
+    /// Specifies that .dacpac deployment should be skipped if metadata in the target database indicates that the .dacpac has already been deployed in it's current state.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlProjectResource> WithSkipWhenDeployed(this IResourceBuilder<SqlProjectResource> builder) 
+        => InternalWithSkipWhenDeployed(builder);
+
+    /// <summary>
+    /// Specifies that .dacpac deployment should be skipped if metadata in the target database indicates that the .dacpac has already been deployed in it's current state.
+    /// </summary>
+    /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    public static IResourceBuilder<SqlPackageResource<TPackage>> WithSkipWhenDeloyed<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder)
+        where TPackage : IPackageMetadata => InternalWithSkipWhenDeployed(builder);
+
+
+    internal static IResourceBuilder<TResource> InternalWithSkipWhenDeployed<TResource>(this IResourceBuilder<TResource> builder)
+        where TResource : IResourceWithDacpac
+    {
+        return builder.WithAnnotation(new DacpacSkipWhenDeployedAnnotation());
+    }
+
+    /// <summary>
     /// Adds a delegate annotation for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
@@ -218,6 +241,8 @@ public static class SqlProjectBuilderExtensions
         where TResource : IResourceWithDacpac
     {
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeployer, DacpacDeployer>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeploySkipper, DacpacDeploySkipper>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<ResourceNotificationService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
 
         builder.WithParentRelationship(target.Resource);

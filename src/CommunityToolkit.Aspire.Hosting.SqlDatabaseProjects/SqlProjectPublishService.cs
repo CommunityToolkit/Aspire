@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
-internal class SqlProjectPublishService(IDacpacDeployer deployer, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
+internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacDeploySkipper deploySkipper, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
 {
     public async Task PublishSqlProject(IResourceWithDacpac resource, IResourceWithConnectionString target, string? targetDatabaseName, CancellationToken cancellationToken)
     {
@@ -42,10 +42,30 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IHostEnvironme
                 return;
             }
 
+            string? checksum = null;
+
+            if (resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>())
+            {
+                var result = await deploySkipper.CheckIfDeployedAsync(dacpacPath, connectionString, logger, cancellationToken);
+                if (string.IsNullOrEmpty(result))
+                {
+                    await resourceNotificationService.PublishUpdateAsync(resource,
+                        state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success) });
+                    return;
+                }
+
+                checksum = result;
+            }
+
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with { State = new ResourceStateSnapshot("Publishing", KnownResourceStateStyles.Info) });
 
             deployer.Deploy(dacpacPath, options, connectionString, targetDatabaseName, logger, cancellationToken);
+
+            if (resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>() && !string.IsNullOrEmpty(checksum))
+            {
+                await deploySkipper.SetChecksumAsync(dacpacPath, connectionString, checksum!, logger, cancellationToken);
+            }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success) });
