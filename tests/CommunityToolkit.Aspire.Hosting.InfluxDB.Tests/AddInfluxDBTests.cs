@@ -78,11 +78,11 @@ public class AddInfluxDBTests
     public async Task AddInfluxDBContainerAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        var password = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(appBuilder, $"password");
-        var token = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(appBuilder, $"token");
+        var password = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(appBuilder, $"influxdb-password");
+        var token = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(appBuilder, $"influxdb-token");
 
-        appBuilder.Configuration["Parameters:password"] = await password.GetValueAsync(default);
-        appBuilder.Configuration["Parameters:token"] = await token.GetValueAsync(default);
+        appBuilder.Configuration["Parameters:influxdb-password"] = await password.GetValueAsync(default);
+        appBuilder.Configuration["Parameters:influxdb-token"] = await token.GetValueAsync(default);
         var passwordParameter = appBuilder.AddParameter(password.Name);
         var tokenParameter = appBuilder.AddParameter(token.Name);
         var influxdb = appBuilder.AddInfluxDB("influxdb", userName: null, passwordParameter, tokenParameter);
