@@ -241,7 +241,7 @@ public static class SqlProjectBuilderExtensions
         where TResource : IResourceWithDacpac
     {
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeployer, DacpacDeployer>();
-        builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacDeploySkipper, DacpacDeploySkipper>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacChecksumService, DacpacChecksumService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
 
         builder.WithParentRelationship(target.Resource);

@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 /// <summary>
 /// Abstracts the check of the .dacpac file already having been deployed to the target SQL Server database.
 /// </summary>
-internal interface IDacpacDeploySkipper
+internal interface IDacpacChecksumService
 {
     /// <summary>
     /// Checks if the <paramref name="dacpacPath">.dacpac</paramref> file has already been deployed to the specified <paramref name="targetConnectionString">SQL Server.</paramref>

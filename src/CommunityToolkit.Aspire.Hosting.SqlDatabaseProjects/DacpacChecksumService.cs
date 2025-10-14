@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
-internal class DacpacDeploySkipper : IDacpacDeploySkipper
+internal class DacpacChecksumService : IDacpacChecksumService
 {
     public async Task<string?> CheckIfDeployedAsync(string dacpacPath, string targetConnectionString, ILogger deploymentSkipLogger, CancellationToken cancellationToken)
     {

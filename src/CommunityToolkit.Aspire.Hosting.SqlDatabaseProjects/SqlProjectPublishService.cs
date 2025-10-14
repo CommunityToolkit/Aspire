@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
-internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacDeploySkipper deploySkipper, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
+internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksumService deploySkipper, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
 {
     public async Task PublishSqlProject(IResourceWithDacpac resource, IResourceWithConnectionString target, string? targetDatabaseName, CancellationToken cancellationToken)
     {

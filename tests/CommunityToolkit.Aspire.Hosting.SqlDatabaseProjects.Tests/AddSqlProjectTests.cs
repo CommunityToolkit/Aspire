@@ -158,7 +158,7 @@ public class AddSqlProjectTests
         // Assert
         Assert.Single(app.Services.GetServices<SqlProjectPublishService>());
         Assert.Single(app.Services.GetServices<IDacpacDeployer>());
-        Assert.Single(app.Services.GetServices<IDacpacDeploySkipper>());
+        Assert.Single(app.Services.GetServices<IDacpacChecksumService>());
     }
 
     [Fact]
