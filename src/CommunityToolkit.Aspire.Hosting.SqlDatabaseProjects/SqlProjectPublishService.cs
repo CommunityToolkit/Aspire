@@ -64,7 +64,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
             if (resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>() && !string.IsNullOrEmpty(checksum))
             {
-                await deploySkipper.SetChecksumAsync(dacpacPath, connectionString, checksum!, logger, cancellationToken);
+                await deploySkipper.SetChecksumAsync(dacpacPath, connectionString, checksum, logger, cancellationToken);
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,

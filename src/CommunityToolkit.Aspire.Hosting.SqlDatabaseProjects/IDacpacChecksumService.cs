@@ -18,7 +18,7 @@ internal interface IDacpacChecksumService
     Task<string?> CheckIfDeployedAsync(string dacpacPath, string targetConnectionString, ILogger deploymentSkipLogger, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Sets the checksum extended property on the target database to indicate that the <paramref name="dacpacPath"> .dacpac</paramref> file has been deployed.         
+    /// Sets the checksum extended property on the target database to indicate that the <paramref name="dacpacPath"> .dacpac</paramref> file has been deployed.
     /// </summary>
     /// <param name="dacpacPath">Path to the .dacpac file to deploy.</param>
     /// <param name="targetConnectionString">Connection string to the SQL Server.</param>
