@@ -46,6 +46,8 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
             if (resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>())
             {
+                options.DropExtendedPropertiesNotInSource = false;
+
                 var result = await deploySkipper.CheckIfDeployedAsync(dacpacPath, connectionString, logger, cancellationToken);
                 if (string.IsNullOrEmpty(result))
                 {
