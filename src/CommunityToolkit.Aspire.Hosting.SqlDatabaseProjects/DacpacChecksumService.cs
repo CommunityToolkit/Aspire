@@ -11,29 +11,24 @@ internal class DacpacChecksumService : IDacpacChecksumService
     {
         var targetDatabaseName = GetDatabaseName(targetConnectionString);
 
-        var dacpacId = GetStringChecksum(dacpacPath);
+        var dacpacPathChecksum = GetStringChecksum(dacpacPath);
 
         var dacpacChecksum = await GetChecksumAsync(dacpacPath);
         
-        using (var testConnection = new SqlConnection(targetConnectionString))
+        using (var connection = new SqlConnection(targetConnectionString))
         {
             try
             {
                 // Try to connect to the target database to see it exists and fail fast if it does not.
-                await testConnection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
+                await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
             }
             catch (Exception ex) when (ex is InvalidOperationException || ex is SqlException)
             {
-                deploymentSkipLogger.LogInformation("Target database {TargetDatabase} is not available.", targetDatabaseName);
+                deploymentSkipLogger.LogWarning(ex, "Target database {TargetDatabase} is not available.", targetDatabaseName);
                 return dacpacChecksum;
             }
-        }
-        
-        using (var connection = new SqlConnection(targetConnectionString))
-        {
-            await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
-
-            var deployed = await CheckExtendedPropertyAsync(connection, dacpacId, dacpacChecksum, cancellationToken);
+ 
+            var deployed = await CheckExtendedPropertyAsync(connection, dacpacPathChecksum, dacpacChecksum, cancellationToken);
 
             if (deployed)
             {
@@ -51,13 +46,13 @@ internal class DacpacChecksumService : IDacpacChecksumService
     {
         var targetDatabaseName = GetDatabaseName(targetConnectionString);
 
-        var dacpacId = GetStringChecksum(dacpacPath);
+        var dacpacPathChecksum = GetStringChecksum(dacpacPath);
         
         using (var connection = new SqlConnection(targetConnectionString))
         {
             await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
                     
-            await UpdateExtendedPropertyAsync(connection, dacpacId, dacpacChecksum, cancellationToken);
+            await UpdateExtendedPropertyAsync(connection, dacpacPathChecksum, dacpacChecksum, cancellationToken);
 
             deploymentSkipLogger.LogInformation("The .dacpac with checksum {DacpacChecksum} has been registered in database {TargetDatabaseName}.", dacpacChecksum, targetDatabaseName);
         }
@@ -85,7 +80,7 @@ internal class DacpacChecksumService : IDacpacChecksumService
         return BitConverter.ToString(checksum).Replace("-", string.Empty);
     }
 
-    private static async Task<bool> CheckExtendedPropertyAsync(SqlConnection connection, string dacpacId, string dacpacChecksum, CancellationToken cancellationToken)
+    private static async Task<bool> CheckExtendedPropertyAsync(SqlConnection connection, string dacpacPathChecksum, string dacpacChecksum, CancellationToken cancellationToken)
     {
         var command = new SqlCommand(
             @$"SELECT CAST(1 AS BIT) FROM fn_listextendedproperty(NULL, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
@@ -93,14 +88,14 @@ internal class DacpacChecksumService : IDacpacChecksumService
             AND [name] = @dacpacId;",
             connection);
 
-        command.Parameters.AddRange(GetParameters(dacpacChecksum, dacpacId));
+        command.Parameters.AddRange(GetParameters(dacpacChecksum, dacpacPathChecksum));
 
         var result = await command.ExecuteScalarAsync(cancellationToken);
 
         return result == null ? false : (bool)result;
     }
 
-    private static async Task UpdateExtendedPropertyAsync(SqlConnection connection, string dacpacId, string dacpacChecksum, CancellationToken cancellationToken)
+    private static async Task UpdateExtendedPropertyAsync(SqlConnection connection, string dacpacPathChecksum, string dacpacChecksum, CancellationToken cancellationToken)
     {
         var command = new SqlCommand($@"
             IF EXISTS
@@ -117,12 +112,12 @@ internal class DacpacChecksumService : IDacpacChecksumService
             END;",
             connection);
 
-        command.Parameters.AddRange(GetParameters(dacpacChecksum, dacpacId));
+        command.Parameters.AddRange(GetParameters(dacpacChecksum, dacpacPathChecksum));
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static SqlParameter[] GetParameters(string dacpacChecksum, string dacpacId)
+    private static SqlParameter[] GetParameters(string dacpacChecksum, string dacpacPathChecksum)
     {
         return
         [
@@ -132,7 +127,7 @@ internal class DacpacChecksumService : IDacpacChecksumService
             },
             new SqlParameter("@dacpacId", SqlDbType.NVarChar, 128)
             {
-                Value = dacpacId
+                Value = dacpacPathChecksum
             },
         ];
     }
