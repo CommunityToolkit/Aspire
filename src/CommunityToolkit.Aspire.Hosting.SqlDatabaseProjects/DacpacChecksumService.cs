@@ -66,9 +66,24 @@ internal class DacpacChecksumService : IDacpacChecksumService
 
     private static async Task<string> GetChecksumAsync(string file)
     {
-        using var stream = File.OpenRead(file);
+        var output = Path.Join(Path.GetTempPath(), Path.GetRandomFileName());
+
+        System.IO.Compression.ZipFile.ExtractToDirectory(file, output);
+
+        using var stream = File.OpenRead(Path.Join(output, "model.xml"));
         using var sha = SHA256.Create();
         var checksum = await sha.ComputeHashAsync(stream);
+
+        // Clean up the extracted files
+        try
+        {
+            Directory.Delete(output, true);
+        }
+        catch
+        {
+            // Ignore any errors during cleanup
+        }
+
         return BitConverter.ToString(checksum).Replace("-", string.Empty);
     }
 
