@@ -70,9 +70,26 @@ internal class DacpacChecksumService : IDacpacChecksumService
 
         System.IO.Compression.ZipFile.ExtractToDirectory(file, output);
 
-        using var stream = File.OpenRead(Path.Join(output, "model.xml"));
+        var bytes = await File.ReadAllBytesAsync(Path.Join(output, "model.xml"));
+
+        var predeployPath = Path.Join(output, "predeploy.sql");
+        
+        if (File.Exists(predeployPath))
+        {
+            var predeployBytes = await File.ReadAllBytesAsync(predeployPath);
+            bytes = bytes.Concat(predeployBytes).ToArray();
+        }
+
+        var postdeployPath = Path.Join(output, "postdeploy.sql");
+
+        if (File.Exists(postdeployPath))
+        {
+            var postdeployBytes = await File.ReadAllBytesAsync(postdeployPath);
+            bytes = bytes.Concat(postdeployBytes).ToArray();
+        }
+
         using var sha = SHA256.Create();
-        var checksum = await sha.ComputeHashAsync(stream);
+        var checksum = sha.ComputeHash(bytes);
 
         // Clean up the extracted files
         try
