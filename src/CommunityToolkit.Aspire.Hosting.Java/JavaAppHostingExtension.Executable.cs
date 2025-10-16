@@ -217,7 +217,10 @@ public static partial class JavaAppHostingExtension
     private static IResourceBuilder<JavaAppExecutableResource> WithJavaDefaults(
         this IResourceBuilder<JavaAppExecutableResource> builder,
         JavaAppExecutableResourceOptions options) =>
+#pragma warning disable ASPIREEXTENSION001 // Type is for evaluation purposes only and is subject to change or removal in future updates
         builder.WithOtlpExporter()
                .WithEnvironment("JAVA_TOOL_OPTIONS", $"-javaagent:{options.OtelAgentPath?.TrimEnd('/')}/opentelemetry-javaagent.jar")
-               .WithEnvironment("SERVER_PORT", options.Port.ToString(CultureInfo.InvariantCulture));
+               .WithEnvironment("SERVER_PORT", options.Port.ToString(CultureInfo.InvariantCulture))
+               .WithVSCodeDebugSupport(builder.Resource.WorkingDirectory, "java", "vscjava.vscode-java-pack");
+#pragma warning restore ASPIREEXTENSION001 // Type is for evaluation purposes only and is subject to change or removal in future updates
 }
