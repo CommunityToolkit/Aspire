@@ -92,6 +92,11 @@
   <Folder Name="/examples/mysql-ext/">
     <Project Path="examples/mysql-ext/CommunityToolkit.Aspire.Hosting.MySql.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.MySql.Extensions.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/neon/">
+    <Project Path="examples/neon/CommunityToolkit.Aspire.Hosting.Neon.ApiService/CommunityToolkit.Aspire.Hosting.Neon.ApiService.csproj" />
+    <Project Path="examples/neon/CommunityToolkit.Aspire.Hosting.Neon.AppHost/CommunityToolkit.Aspire.Hosting.Neon.AppHost.csproj" />
+    <Project Path="examples/neon/CommunityToolkit.Aspire.Hosting.Neon.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Neon.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/ngrok/">
     <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.ApiService/CommunityToolkit.Aspire.Hosting.Ngrok.ApiService.csproj" />
     <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost.csproj" />
