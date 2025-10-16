@@ -35,6 +35,9 @@
     <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.AppHost/CommunityToolkit.Aspire.Hosting.EventStore.AppHost.csproj" />
     <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/flagd/">
+    <Project Path="examples/flagd/CommunityToolkit.Aspire.Hosting.Flagd.AppHost/CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/goff/">
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService.csproj" />
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost.csproj" />
@@ -166,6 +169,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.EventStore/CommunityToolkit.Aspire.Hosting.EventStore.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Golang/CommunityToolkit.Aspire.Hosting.Golang.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Java/CommunityToolkit.Aspire.Hosting.Java.csproj" />
@@ -217,6 +221,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Golang.Tests/CommunityToolkit.Aspire.Hosting.Golang.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Java.Tests/CommunityToolkit.Aspire.Hosting.Java.Tests.csproj" />
