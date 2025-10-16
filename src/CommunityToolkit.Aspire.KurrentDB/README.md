@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.KurrentDB
 
-Registers an [EventStoreClient](https://github.com/EventStore/EventStore-Client-Dotnet) in the DI container for connecting to KurrentDB.
+Registers an [KurrentDBClient](https://github.com/kurrent-io/KurrentDB-Client-Dotnet) in the DI container for connecting to KurrentDB.
 
 ## Getting started
 
@@ -18,7 +18,7 @@ dotnet add package CommunityToolkit.Aspire.KurrentDB
 
 ## Usage example
 
-In the _Program.cs_ file of your project, call the `AddKurrentDBClient` extension method to register an `EventStoreClient` for use via the dependency injection container. The method takes a connection name parameter.
+In the _Program.cs_ file of your project, call the `AddKurrentDBClient` extension method to register an `KurrentDBClient` for use via the dependency injection container. The method takes a connection name parameter.
 
 ```csharp
 builder.AddKurrentDBClient("kurrentdb");
@@ -94,10 +94,10 @@ The `WithReference` method configures a connection in the `MyService` project na
 builder.AddKurrentDBClient("kurrentdb");
 ```
 
-Then, in your service, inject `EventStoreClient` and use it to interact with the KurrentDB API:
+Then, in your service, inject `KurrentDBClient` and use it to interact with the KurrentDB API:
 
 ```csharp
-public class MyService(EventStoreClient eventStoreClient)
+public class MyService(KurrentDBClient eventStoreClient)
 {
     // ...
 }
@@ -105,7 +105,7 @@ public class MyService(EventStoreClient eventStoreClient)
 
 ## Additional documentation
 
--   https://github.com/EventStore/EventStore-Client-Dotnet
+-   https://github.com/kurrent-io/KurrentDB-Client-Dotnet
 -   https://www.kurrent.io
 -   https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-kurrentdb
 
