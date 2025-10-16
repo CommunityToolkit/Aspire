@@ -116,4 +116,46 @@ public class AddSqlPackageTests
         var options = ((IResourceWithDacpac)sqlProjectResource).GetDacpacDeployOptions();
         Assert.False(options.BlockOnPossibleDataLoss);
     }
+
+    [Fact]
+    public void AddSqlPackage_WithExplicitStart()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
+        appBuilder.AddSqlPackage<TestPackage>("chinook")
+            .WithReference(targetDatabase)
+            .WithExplicitStart();
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlPackageResource<TestPackage>>());
+        Assert.Equal("chinook", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.HasAnnotationOfType<ExplicitStartupAnnotation>());
+    }
+
+    [Fact]
+    public void AddSqlPackage_WithSkipWhenDeployed()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
+        appBuilder.AddSqlPackage<TestPackage>("chinook")
+            .WithReference(targetDatabase)
+            .WithSkipWhenDeployed();
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlPackageResource<TestPackage>>());
+        Assert.Equal("chinook", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>());
+    }
 }
