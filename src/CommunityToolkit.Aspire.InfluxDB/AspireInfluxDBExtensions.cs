@@ -3,6 +3,7 @@
 
 using Aspire;
 using CommunityToolkit.Aspire.InfluxDB;
+using HealthChecks.InfluxDB;
 using InfluxDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,11 +30,7 @@ public static class AspireInfluxDBExtensions
         this IHostApplicationBuilder builder,
         string connectionName,
         Action<InfluxDBClientSettings>? configureSettings = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNullOrEmpty(connectionName);
-        AddInfluxDBClient(builder, DefaultConfigSectionName, configureSettings, connectionName, serviceKey: null);
-    }
+            => AddInfluxDBClient(builder, DefaultConfigSectionName, configureSettings, connectionName, serviceKey: null);
 
     /// <summary>
     /// Registers <see cref="InfluxDBClient" /> as a keyed singleton for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
@@ -47,11 +44,7 @@ public static class AspireInfluxDBExtensions
         this IHostApplicationBuilder builder,
         string name,
         Action<InfluxDBClientSettings>? configureSettings = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNullOrEmpty(name);
-        AddInfluxDBClient(builder, $"{DefaultConfigSectionName}:{name}", configureSettings, connectionName: name, serviceKey: name);
-    }
+            => AddInfluxDBClient(builder, $"{DefaultConfigSectionName}:{name}", configureSettings, connectionName: name, serviceKey: name);
 
     private static void AddInfluxDBClient(
         this IHostApplicationBuilder builder,

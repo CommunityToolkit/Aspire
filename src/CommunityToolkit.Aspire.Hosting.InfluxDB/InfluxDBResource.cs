@@ -3,28 +3,18 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents an InfluxDB container.
 /// </summary>
-public class InfluxDBResource : ContainerResource, IResourceWithConnectionString
+/// <param name="name">The name of the resource.</param>
+/// <param name="userName">A parameter that contains the InfluxDB username.</param>
+/// <param name="password">A parameter that contains the InfluxDB password.</param>
+/// <param name="token">A parameter that contains the InfluxDB admin token.</param>
+public class InfluxDBResource(
+    string name,
+    ParameterResource? userName,
+    ParameterResource password,
+    ParameterResource token) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
     private const string DefaultUserName = "admin";
-
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="userName">A parameter that contains the InfluxDB username.</param>
-    /// <param name="password">A parameter that contains the InfluxDB password.</param>
-    /// <param name="token">A parameter that contains the InfluxDB admin token.</param>
-    public InfluxDBResource(
-        string name,
-        ParameterResource? userName,
-        ParameterResource password,
-        ParameterResource token) : base(name)
-    {
-        ArgumentNullException.ThrowIfNull(password);
-        ArgumentNullException.ThrowIfNull(token);
-
-        UserNameParameter = userName;
-        PasswordParameter = password;
-        TokenParameter = token;
-    }
 
     private EndpointReference? _primaryEndpoint;
 
@@ -36,17 +26,17 @@ public class InfluxDBResource : ContainerResource, IResourceWithConnectionString
     /// <summary>
     /// Gets the parameter that contains the InfluxDB username.
     /// </summary>
-    public ParameterResource? UserNameParameter { get; }
+    public ParameterResource? UserNameParameter { get; } = userName;
 
     /// <summary>
     /// Gets the parameter that contains the InfluxDB password.
     /// </summary>
-    public ParameterResource PasswordParameter { get; }
+    public ParameterResource PasswordParameter { get; } = password;
 
     /// <summary>
     /// Gets the parameter that contains the InfluxDB admin token.
     /// </summary>
-    public ParameterResource TokenParameter { get; }
+    public ParameterResource TokenParameter { get; } = token;
 
     internal ReferenceExpression UserNameReference =>
         UserNameParameter is not null ?

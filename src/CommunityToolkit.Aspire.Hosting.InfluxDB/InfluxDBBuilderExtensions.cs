@@ -1,11 +1,10 @@
 using System.Data.Common;
 using CommunityToolkit.Aspire.Hosting.InfluxDB;
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Utils;
 using InfluxDB.Client;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using CommunityToolkit.Aspire.InfluxDB;
 using Microsoft.Extensions.DependencyInjection;
+using HealthChecks.InfluxDB;
 
 namespace Aspire.Hosting;
 

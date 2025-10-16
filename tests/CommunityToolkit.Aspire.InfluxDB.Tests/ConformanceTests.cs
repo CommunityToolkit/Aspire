@@ -113,6 +113,6 @@ public class ConformanceTests : ConformanceTests<InfluxDBClient, InfluxDBClientS
     {
         using var source = new CancellationTokenSource(100);
 
-        service.HealthAsync(source.Token).Wait();
+        service.PingAsync().Wait();
     }
 }

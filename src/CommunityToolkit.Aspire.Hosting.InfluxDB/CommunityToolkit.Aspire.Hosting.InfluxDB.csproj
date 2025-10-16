@@ -6,11 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.InfluxDB\InfluxDBHealthCheck.cs" Link="InfluxDBHealthCheck.cs"></Compile>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="AspNetCore.HealthChecks.InfluxDB" />
     <PackageReference Include="InfluxDB.Client" />
   </ItemGroup>
 
