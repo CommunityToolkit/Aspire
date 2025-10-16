@@ -177,6 +177,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Minio/CommunityToolkit.Aspire.Hosting.Minio.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Neon/CommunityToolkit.Aspire.Hosting.Neon.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
@@ -198,6 +199,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Microsoft.Data.Sqlite/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Minio.Client/CommunityToolkit.Aspire.Minio.Client.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Neon/CommunityToolkit.Aspire.Neon.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
@@ -228,6 +230,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Minio.Tests/CommunityToolkit.Aspire.Hosting.Minio.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Neon.Tests/CommunityToolkit.Aspire.Hosting.Neon.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
