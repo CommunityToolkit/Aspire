@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.Neon\NeonContainerImageTags.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\neon\CommunityToolkit.Aspire.Hosting.Neon.AppHost\CommunityToolkit.Aspire.Hosting.Neon.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Neon\CommunityToolkit.Aspire.Hosting.Neon.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Neon\CommunityToolkit.Aspire.Neon.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+  
+</Project>
