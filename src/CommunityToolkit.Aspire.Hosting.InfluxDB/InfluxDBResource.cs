@@ -6,6 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 public class InfluxDBResource : ContainerResource, IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
+    private const string DefaultUserName = "admin";
 
     /// <param name="name">The name of the resource.</param>
     /// <param name="userName">A parameter that contains the InfluxDB username.</param>
@@ -46,6 +47,11 @@ public class InfluxDBResource : ContainerResource, IResourceWithConnectionString
     /// Gets the parameter that contains the InfluxDB admin token.
     /// </summary>
     public ParameterResource TokenParameter { get; }
+
+    internal ReferenceExpression UserNameReference =>
+        UserNameParameter is not null ?
+            ReferenceExpression.Create($"{UserNameParameter}") :
+            ReferenceExpression.Create($"{DefaultUserName}");
 
     /// <summary>
     /// Gets the connection string expression for the InfluxDB.

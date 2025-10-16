@@ -84,7 +84,7 @@ public static class InfluxDBBuilderExtensions
              .WithEnvironment(context =>
              {
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_MODE"] = "setup";
-                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_USERNAME"] = influxdb.UserNameParameter ?? "admin";
+                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_USERNAME"] = influxdb.UserNameReference;
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_PASSWORD"] = influxdb.PasswordParameter;
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ORG"] = "default";
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_BUCKET"] = "default";
