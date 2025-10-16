@@ -1,4 +1,4 @@
-﻿using Aspire.Components.Common.Tests;
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using EventStore.Client;
@@ -8,20 +8,20 @@ using System.Text;
 using System.Text.Json;
 using Xunit.Abstractions;
 
-namespace CommunityToolkit.Aspire.Hosting.EventStore.Tests;
+namespace CommunityToolkit.Aspire.Hosting.KurrentDB.Tests;
 
 [RequiresDocker]
-public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
+public class KurrentDBFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     public const string TestStreamNamePrefix = "account-";
     public const string TestAccountName = "John Doe";
 
     [Fact]
-    public async Task VerifyEventStoreResource()
+    public async Task VerifyKurrentDBResource()
     {
         using var builder = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
 
-        var eventstore = builder.AddEventStore("eventstore");
+        var kurrentdb = builder.AddKurrentDB("kurrentdb");
 
         using var app = builder.Build();
 
@@ -29,13 +29,13 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
         var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-        await rns.WaitForResourceHealthyAsync(eventstore.Resource.Name, default);
+        await rns.WaitForResourceHealthyAsync(kurrentdb.Resource.Name, default);
 
         var hostBuilder = Host.CreateApplicationBuilder();
 
-        hostBuilder.Configuration[$"ConnectionStrings:{eventstore.Resource.Name}"] = await eventstore.Resource.ConnectionStringExpression.GetValueAsync(default);
+        hostBuilder.Configuration[$"ConnectionStrings:{kurrentdb.Resource.Name}"] = await kurrentdb.Resource.ConnectionStringExpression.GetValueAsync(default);
 
-        hostBuilder.AddEventStoreClient(eventstore.Resource.Name);
+        hostBuilder.AddKurrentDBClient(kurrentdb.Resource.Name);
 
         using var host = hostBuilder.Build();
 
@@ -59,16 +59,16 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
         try
         {
             using var builder1 = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
-            var eventstore1 = builder1.AddEventStore("eventstore");
+            var kurrentdb1 = builder1.AddKurrentDB("kurrentdb");
 
             if (useVolume)
             {
                 // Use a deterministic volume name to prevent them from exhausting the machines if deletion fails
-                volumeName = VolumeNameGenerator.Generate(eventstore1, nameof(WithDataShouldPersistStateBetweenUsages));
+                volumeName = VolumeNameGenerator.Generate(kurrentdb1, nameof(WithDataShouldPersistStateBetweenUsages));
 
                 // if the volume already exists (because of a crashing previous run), delete it
                 DockerUtils.AttemptDeleteDockerVolume(volumeName, throwOnFailure: true);
-                eventstore1.WithDataVolume(volumeName);
+                kurrentdb1.WithDataVolume(volumeName);
             }
             else
             {
@@ -85,7 +85,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
                     File.SetUnixFileMode(bindMountPath, OwnershipPermissions);
                 }
 
-                eventstore1.WithDataBindMount(bindMountPath);
+                kurrentdb1.WithDataBindMount(bindMountPath);
             }
 
             using (var app = builder1.Build())
@@ -94,15 +94,15 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
+                await rns.WaitForResourceHealthyAsync(kurrentdb1.Resource.Name, default);
 
                 try
                 {
                     var hostBuilder = Host.CreateApplicationBuilder();
 
-                    hostBuilder.Configuration[$"ConnectionStrings:{eventstore1.Resource.Name}"] = await eventstore1.Resource.ConnectionStringExpression.GetValueAsync(default);
+                    hostBuilder.Configuration[$"ConnectionStrings:{kurrentdb1.Resource.Name}"] = await kurrentdb1.Resource.ConnectionStringExpression.GetValueAsync(default);
 
-                    hostBuilder.AddEventStoreClient(eventstore1.Resource.Name);
+                    hostBuilder.AddKurrentDBClient(kurrentdb1.Resource.Name);
 
                     using (var host = hostBuilder.Build())
                     {
@@ -121,15 +121,15 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             }
 
             using var builder2 = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
-            var eventstore2 = builder2.AddEventStore("eventstore");
+            var kurrentdb2 = builder2.AddKurrentDB("kurrentdb");
 
             if (useVolume)
             {
-                eventstore2.WithDataVolume(volumeName);
+                kurrentdb2.WithDataVolume(volumeName);
             }
             else
             {
-                eventstore2.WithDataBindMount(bindMountPath!);
+                kurrentdb2.WithDataBindMount(bindMountPath!);
             }
 
             using (var app = builder2.Build())
@@ -138,15 +138,15 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-                await rns.WaitForResourceHealthyAsync(eventstore1.Resource.Name, default);
+                await rns.WaitForResourceHealthyAsync(kurrentdb1.Resource.Name, default);
 
                 try
                 {
                     var hostBuilder = Host.CreateApplicationBuilder();
 
-                    hostBuilder.Configuration[$"ConnectionStrings:{eventstore2.Resource.Name}"] = await eventstore2.Resource.ConnectionStringExpression.GetValueAsync(default);
+                    hostBuilder.Configuration[$"ConnectionStrings:{kurrentdb2.Resource.Name}"] = await kurrentdb2.Resource.ConnectionStringExpression.GetValueAsync(default);
 
-                    hostBuilder.AddEventStoreClient(eventstore2.Resource.Name);
+                    hostBuilder.AddKurrentDBClient(kurrentdb2.Resource.Name);
 
                     using (var host = hostBuilder.Build())
                     {
@@ -186,7 +186,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public async Task VerifyWaitForEventStoreBlocksDependentResources()
+    public async Task VerifyWaitForKurrentDBBlocksDependentResources()
     {
         var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         using var builder = TestDistributedApplicationBuilder.Create().WithTestAndResourceLogging(testOutputHelper);
@@ -197,7 +197,7 @@ public class EventStoreFunctionalTests(ITestOutputHelper testOutputHelper)
             return healthCheckTcs.Task;
         });
 
-        var resource = builder.AddEventStore("resource")
+        var resource = builder.AddKurrentDB("resource")
                               .WithHealthCheck("blocking_check");
 
         var dependentResource = builder.AddContainer("nginx", "mcr.microsoft.com/cbl-mariner/base/nginx", "1.22")

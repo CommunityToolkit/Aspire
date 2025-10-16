@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting kurrentdb</AdditionalPackageTags>
+    <Description>KurrentDB support for .NET Aspire.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.EventStore.gRPC" />
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.KurrentDB.Tests"></InternalsVisibleTo>
+  </ItemGroup>
+
+</Project>

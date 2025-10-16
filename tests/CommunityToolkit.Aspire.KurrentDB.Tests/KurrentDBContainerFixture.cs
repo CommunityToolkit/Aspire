@@ -1,14 +1,14 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Components.Common.Tests;
-using CommunityToolkit.Aspire.Hosting.EventStore;
+using CommunityToolkit.Aspire.Hosting.KurrentDB;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
-namespace CommunityToolkit.Aspire.EventStore.Tests;
+namespace CommunityToolkit.Aspire.KurrentDB.Tests;
 
-public sealed class EventStoreContainerFixture : IAsyncLifetime
+public sealed class KurrentDBContainerFixture : IAsyncLifetime
 {
     public IContainer? Container { get; private set; }
 
@@ -27,7 +27,7 @@ public sealed class EventStoreContainerFixture : IAsyncLifetime
         if (RequiresDockerAttribute.IsSupported)
         {
             Container = new ContainerBuilder()
-              .WithImage($"{EventStoreContainerImageTags.Registry}/{EventStoreContainerImageTags.Image}:{EventStoreContainerImageTags.Tag}")
+              .WithImage($"{KurrentDBContainerImageTags.Registry}/{KurrentDBContainerImageTags.Image}:{KurrentDBContainerImageTags.Tag}")
               .WithPortBinding(2113, true)
               .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(2113)))
               .WithEnvironment("EVENTSTORE_CLUSTER_SIZE", "1")
