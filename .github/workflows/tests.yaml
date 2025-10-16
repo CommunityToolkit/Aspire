@@ -39,6 +39,7 @@ jobs:
             Hosting.Meilisearch.Tests,
             Hosting.MongoDB.Extensions.Tests,
             Hosting.MySql.Extensions.Tests,
+            Hosting.Neon.Tests,
             Hosting.Ngrok.Tests,
             Hosting.NodeJS.Extensions.Tests,
             Hosting.Ollama.Tests,
