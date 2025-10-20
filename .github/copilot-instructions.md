@@ -56,7 +56,7 @@ public static class SomeProgramExtensions
 -   Integrations must add `Aspire.Hosting` as a dependency; see `Directory.Build.props` for shared MSBuild config.
 -   Use the [create-integration guide](../docs/create-integration.md) for new integrations.
 -   For Azure/Dapr integrations, see `src/Shared/DaprAzureExtensions/README.md` for shared resource patterns.
-
+-   Don't update files under */api/*.cs (e.g. src/CommunityToolkit.Aspire.Hosting.Ollama/api/CommunityToolkit.Aspire.Hosting.Ollama.cs) as they are generated.
 ### External Dependencies & Integration
 
 -   Many integrations wrap external services (e.g., Dapr, MinIO, k6, Node.js, Python, Rust, Java, etc.).
