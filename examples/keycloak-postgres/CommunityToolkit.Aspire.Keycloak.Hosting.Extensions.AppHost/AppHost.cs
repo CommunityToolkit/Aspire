@@ -1,6 +1,4 @@
 using Aspire.Hosting;
-using CommunityToolkit.Aspire.Keycloak.Extensions;
-
 
 var builder = DistributedApplication.CreateBuilder(args);
 

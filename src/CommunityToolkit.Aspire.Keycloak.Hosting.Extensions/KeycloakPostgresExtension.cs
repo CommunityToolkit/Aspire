@@ -27,9 +27,16 @@ public static class KeycloakPostgresExtension
         return builder;
     }
 
+
     /// <summary>
-    /// Configure Keycloak to use PostgreSQL with explicit username/password parameters.
+    /// Configures a Keycloak resource to use PostgreSQL, explicitly setting credentials and other related values.
     /// </summary>
+    /// <param name="builder">The builder for the Keycloak resource.</param>
+    /// <param name="database">The builder for the PostgreSQL database resource to use for Keycloak.</param>
+    /// <param name="username">The builder for the parameter resource representing the username for PostgreSQL authentication.</param>
+    /// <param name="password">The builder for the parameter resource representing the password for PostgreSQL authentication.</param>
+    /// <param name="xaEnabled">Indicates whether XA transactions are enabled for PostgreSQL. Defaults to false.</param>
+    /// <returns>The updated Keycloak resource builder configured with PostgreSQL integration and explicit credentials.</returns>
     public static IResourceBuilder<KeycloakResource> WithPostgres(this IResourceBuilder<KeycloakResource> builder,
         IResourceBuilder<PostgresDatabaseResource> database, IResourceBuilder<ParameterResource> username,
         IResourceBuilder<ParameterResource> password, bool xaEnabled = false)
@@ -42,9 +49,14 @@ public static class KeycloakPostgresExtension
             .WithEnvironment("KC_DB_PASSWORD", password.Resource);
     }
 
+
     /// <summary>
-    /// Configure Keycloak to use PostgreSQL, falling back to default credentials if server parameters are not provided.
+    /// Configures a Keycloak resource to use a PostgreSQL database, setting credentials and enabling optional XA transactions.
     /// </summary>
+    /// <param name="builder">The builder for the Keycloak resource to configure with PostgreSQL.</param>
+    /// <param name="database">The builder for the PostgreSQL database resource to integrate with Keycloak.</param>
+    /// <param name="xaEnabled">Specifies whether XA transactions are enabled for the PostgreSQL database. Defaults to false.</param>
+    /// <returns>The updated Keycloak resource builder configured with PostgreSQL integration.</returns>
     public static IResourceBuilder<KeycloakResource> WithPostgres(
         this IResourceBuilder<KeycloakResource> builder,
         IResourceBuilder<PostgresDatabaseResource> database,
