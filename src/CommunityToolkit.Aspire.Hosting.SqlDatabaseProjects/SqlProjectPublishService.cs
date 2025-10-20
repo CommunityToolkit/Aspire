@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
-internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksumService deploySkipper, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
+internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksumService dacpacChecksumService, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
 {
     public async Task PublishSqlProject(IResourceWithDacpac resource, IResourceWithConnectionString target, string? targetDatabaseName, CancellationToken cancellationToken)
     {
@@ -48,7 +48,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             {
                 options.DropExtendedPropertiesNotInSource = false;
 
-                var result = await deploySkipper.CheckIfDeployedAsync(dacpacPath, connectionString, logger, cancellationToken);
+                var result = await dacpacChecksumService.CheckIfDeployedAsync(dacpacPath, connectionString, logger, cancellationToken);
                 if (string.IsNullOrEmpty(result))
                 {
                     await resourceNotificationService.PublishUpdateAsync(resource,
@@ -66,7 +66,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
             if (!string.IsNullOrEmpty(checksum) && resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>())
             {
-                await deploySkipper.SetChecksumAsync(dacpacPath, connectionString, checksum, logger, cancellationToken);
+                await dacpacChecksumService.SetChecksumAsync(dacpacPath, connectionString, checksum, logger, cancellationToken);
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
