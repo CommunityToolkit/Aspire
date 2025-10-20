@@ -7,55 +7,53 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
 internal class DacpacChecksumService : IDacpacChecksumService
 {
-    public async Task<string?> CheckIfDeployedAsync(string dacpacPath, string targetConnectionString, ILogger deploymentSkipLogger, CancellationToken cancellationToken)
+    public async Task<string?> CheckIfDeployedAsync(string dacpacPath, string targetConnectionString, ILogger logger, CancellationToken cancellationToken)
     {
         var targetDatabaseName = GetDatabaseName(targetConnectionString);
 
         var dacpacPathChecksum = GetStringChecksum(dacpacPath);
 
         var dacpacChecksum = await GetChecksumAsync(dacpacPath);
-        
-        using (var connection = new SqlConnection(targetConnectionString))
+
+        using var connection = new SqlConnection(targetConnectionString);
+
+        try
         {
-            try
-            {
-                // Try to connect to the target database to see it exists and fail fast if it does not.
-                await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
-            }
-            catch (Exception ex) when (ex is InvalidOperationException || ex is SqlException)
-            {
-                deploymentSkipLogger.LogWarning(ex, "Target database {TargetDatabase} is not available.", targetDatabaseName);
-                return dacpacChecksum;
-            }
- 
-            var deployed = await CheckExtendedPropertyAsync(connection, dacpacPathChecksum, dacpacChecksum, cancellationToken);
-
-            if (deployed)
-            {
-                deploymentSkipLogger.LogInformation("The .dacpac with checksum {DacpacChecksum} has already been deployed to database {TargetDatabaseName}.", dacpacChecksum, targetDatabaseName);
-                return null;
-            }
-
-            deploymentSkipLogger.LogInformation("The .dacpac with checksum {DacpacChecksum} has not been deployed to database {TargetDatabaseName}.", dacpacChecksum, targetDatabaseName);
-
+            // Try to connect to the target database to see it exists and fail fast if it does not.
+            await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException || ex is SqlException)
+        {
+            logger.LogWarning(ex, "Target database {TargetDatabase} is not available.", targetDatabaseName);
             return dacpacChecksum;
         }
+ 
+        var deployed = await CheckExtendedPropertyAsync(connection, dacpacPathChecksum, dacpacChecksum, cancellationToken);
+
+        if (deployed)
+        {
+            logger.LogInformation("The .dacpac with checksum {DacpacChecksum} has already been deployed to database {TargetDatabaseName}.", dacpacChecksum, targetDatabaseName);
+            return null;
+        }
+
+        logger.LogInformation("The .dacpac with checksum {DacpacChecksum} has not been deployed to database {TargetDatabaseName}.", dacpacChecksum, targetDatabaseName);
+
+        return dacpacChecksum;
     }
 
-    public async Task SetChecksumAsync(string dacpacPath, string targetConnectionString, string dacpacChecksum, ILogger deploymentSkipLogger, CancellationToken cancellationToken)
+    public async Task SetChecksumAsync(string dacpacPath, string targetConnectionString, string dacpacChecksum, ILogger logger, CancellationToken cancellationToken)
     {
         var targetDatabaseName = GetDatabaseName(targetConnectionString);
 
         var dacpacPathChecksum = GetStringChecksum(dacpacPath);
-        
-        using (var connection = new SqlConnection(targetConnectionString))
-        {
-            await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
-                    
-            await UpdateExtendedPropertyAsync(connection, dacpacPathChecksum, dacpacChecksum, cancellationToken);
 
-            deploymentSkipLogger.LogInformation("The .dacpac with checksum {DacpacChecksum} has been registered in database {TargetDatabaseName}.", dacpacChecksum, targetDatabaseName);
-        }
+        using var connection = new SqlConnection(targetConnectionString);
+
+        await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
+                    
+        await UpdateExtendedPropertyAsync(connection, dacpacPathChecksum, dacpacChecksum, cancellationToken);
+
+        logger.LogInformation("The .dacpac with checksum {DacpacChecksum} has been registered in database {TargetDatabaseName}.", dacpacChecksum, targetDatabaseName);
     }
 
     private static string GetDatabaseName(string connectionString)

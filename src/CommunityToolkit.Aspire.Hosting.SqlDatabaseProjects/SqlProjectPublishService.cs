@@ -49,7 +49,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 options.DropExtendedPropertiesNotInSource = false;
 
                 var result = await dacpacChecksumService.CheckIfDeployedAsync(dacpacPath, connectionString, logger, cancellationToken);
-                if (string.IsNullOrEmpty(result))
+                if (result is null)
                 {
                     await resourceNotificationService.PublishUpdateAsync(resource,
                         state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success) });

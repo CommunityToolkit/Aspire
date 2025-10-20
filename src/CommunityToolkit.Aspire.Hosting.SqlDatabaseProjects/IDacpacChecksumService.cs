@@ -8,7 +8,7 @@ namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 internal interface IDacpacChecksumService
 {
     /// <summary>
-    /// Checks if the <paramref name="dacpacPath">.dacpac</paramref> file has already been deployed to the specified <paramref name="targetConnectionString">SQL Server.</paramref>
+    /// Checks if the <paramref name="dacpacPath" /> file has already been deployed to the specified <paramref name="targetConnectionString" />
     /// </summary>
     /// <param name="dacpacPath">Path to the .dacpac file to deploy.</param>
     /// <param name="targetConnectionString">Connection string to the SQL Server.</param>
@@ -18,13 +18,13 @@ internal interface IDacpacChecksumService
     Task<string?> CheckIfDeployedAsync(string dacpacPath, string targetConnectionString, ILogger deploymentSkipLogger, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Sets the checksum extended property on the target database to indicate that the <paramref name="dacpacPath"> .dacpac</paramref> file has been deployed.
+    /// Sets the checksum extended property on the target database to indicate that the <paramref name="dacpacPath" /> file has been deployed.
     /// </summary>
     /// <param name="dacpacPath">Path to the .dacpac file to deploy.</param>
     /// <param name="targetConnectionString">Connection string to the SQL Server.</param>
     /// <param name="dacpacChecksum">Checksum for the .dacpac </param>
     /// <param name="deploymentSkipLogger">An <see cref="ILogger" /> to write the log to.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the deployment operation.</param>
-    /// <returns></returns>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     Task SetChecksumAsync(string dacpacPath, string targetConnectionString, string dacpacChecksum, ILogger deploymentSkipLogger, CancellationToken cancellationToken);
 }
