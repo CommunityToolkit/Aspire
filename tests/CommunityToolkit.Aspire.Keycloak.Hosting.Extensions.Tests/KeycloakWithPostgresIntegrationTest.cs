@@ -2,7 +2,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 
-namespace CommunityToolkit.Aspire.Keycloak.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Tests;
 
 [RequiresDocker]
 public class KeycloakWithPostgresIntegrationTest
