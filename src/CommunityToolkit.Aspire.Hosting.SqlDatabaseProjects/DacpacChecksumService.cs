@@ -19,7 +19,7 @@ internal class DacpacChecksumService : IDacpacChecksumService
 
         try
         {
-            // Try to connect to the target database to see it exists and fail fast if it does not.
+            // Try to connect to the target database to see if it exists and fail fast if it does not.
             await connection.OpenAsync(SqlConnectionOverrides.OpenWithoutRetry, cancellationToken);
         }
         catch (Exception ex) when (ex is InvalidOperationException || ex is SqlException)
