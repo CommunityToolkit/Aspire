@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAspireSharedProject>true</IsAspireSharedProject>
-    <RootNamespace>CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.AppHost.ServiceDefaults</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

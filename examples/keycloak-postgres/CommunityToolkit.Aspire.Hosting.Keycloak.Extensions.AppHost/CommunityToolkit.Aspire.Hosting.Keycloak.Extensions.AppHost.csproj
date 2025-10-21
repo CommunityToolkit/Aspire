@@ -18,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.csproj" IsAspireProjectResource="false" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Dev\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Dev.csproj" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Prod\CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Prod.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Dev\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Dev.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,10 +1,10 @@
-using CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.AppHost.ServiceDefaults;
+using CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddAuthentication()
-    .AddKeycloakJwtBearer("keycloak-prod", "master", jwt =>
+    .AddKeycloakJwtBearer("keycloak-dev", "master", jwt =>
     {
         if (builder.Environment.IsDevelopment())
         {

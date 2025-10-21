@@ -1,8 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AspirePreviewVersion>9.4.1-preview.1.25408.4</AspirePreviewVersion>
-    <MoqVersion>4.20.72</MoqVersion>
+
   </PropertyGroup>
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
@@ -20,9 +19,6 @@
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspirePreviewVersion)" />
-    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspirePreviewVersion)" />
-    <PackageVersion Include="Moq" Version="$(MoqVersion)" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -110,6 +106,9 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.3" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="9.0.0-beta.24568.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
+    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
+    <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->

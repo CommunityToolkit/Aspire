@@ -20,11 +20,11 @@ var keycloakProd = builder.AddKeycloak("keycloak-prod")
     .WithPostgres(dbProd, dbUserName, dbPassword);
 
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Keycloak_Hosting_Extensions_Dev>("project-dev")
+builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Keycloak_Extensions_Dev>("project-dev")
     .WithReference(keycloakDev)
     .WaitFor(keycloakDev);
 
-builder.AddProject<Projects.CommunityToolkit_Aspire_Keycloak_Hosting_Extensions_Prod>("project-prod")
+builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Keycloak_Extensions_Prod>("project-prod")
     .WithReference(keycloakProd)
     .WaitFor(keycloakProd);
 builder.Build().Run();
