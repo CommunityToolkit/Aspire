@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
@@ -179,5 +180,31 @@ public class AddSurrealServerTests
 
         Assert.Equal("{ns1.connectionString};Database=imports", db1.Resource.ConnectionStringExpression.ValueExpression);
         Assert.Equal("{ns2.connectionString};Database=imports", db2.Resource.ConnectionStringExpression.ValueExpression);
+    }
+    
+    [Theory]
+    [InlineData(LogLevel.Trace, "trace")]
+    [InlineData(LogLevel.Debug, "debug")]
+    [InlineData(LogLevel.Information, "info")]
+    [InlineData(LogLevel.Warning, "warn")]
+    [InlineData(LogLevel.Error, "error")]
+    [InlineData(LogLevel.Critical, "full")]
+    [InlineData(LogLevel.None, "none")]
+    public async Task AddSurrealServerContainerWithLogLevel(LogLevel logLevel, string expected)
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+    
+        var surrealServer = appBuilder
+            .AddSurrealServer("surreal")
+            .WithLogLevel(logLevel);
+    
+        using var app = appBuilder.Build();
+    
+        var config = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
+
+        bool hasValue = config.TryGetValue("SURREAL_LOG", out var value);
+        
+        Assert.True(hasValue);
+        Assert.Equal(expected, value);
     }
 }

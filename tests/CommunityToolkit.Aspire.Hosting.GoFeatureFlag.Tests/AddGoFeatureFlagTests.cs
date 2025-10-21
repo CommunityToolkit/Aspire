@@ -3,6 +3,7 @@
 
 using System.Net.Sockets;
 using Aspire.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
 
@@ -88,5 +89,43 @@ public class AddGoFeatureFlagTests
 
         Assert.Equal($"Endpoint=http://localhost:27020", connectionString);
         Assert.Equal("Endpoint=http://{goff.bindings.http.host}:{goff.bindings.http.port}", connectionStringResource.ConnectionStringExpression.ValueExpression);
+    }
+    
+    [Theory]
+    [InlineData(LogLevel.Debug, "DEBUG")]
+    [InlineData(LogLevel.Information, "INFO")]
+    [InlineData(LogLevel.Warning, "WARN")]
+    [InlineData(LogLevel.Error, "ERROR")]
+    public async Task AddSurrealServerContainerWithLogLevel(LogLevel logLevel, string? expected)
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+    
+        var goff = appBuilder
+            .AddGoFeatureFlag("goff")
+            .WithLogLevel(logLevel);
+    
+        using var app = appBuilder.Build();
+    
+        var config = await goff.Resource.GetEnvironmentVariableValuesAsync();
+
+        bool hasValue = config.TryGetValue("LOGLEVEL", out var value);
+
+        Assert.True(hasValue);
+        Assert.Equal(expected, value);
+    }
+    
+    [Theory]
+    [InlineData(LogLevel.Trace)]
+    [InlineData(LogLevel.Critical)]
+    [InlineData(LogLevel.None)]
+    public void AddSurrealServerContainerWithLogLevelThrowsOnUnsupportedLogLevel(LogLevel logLevel)
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+    
+        var func = () => appBuilder
+            .AddGoFeatureFlag("goff")
+            .WithLogLevel(logLevel);
+
+        Assert.Throws<ArgumentOutOfRangeException>(func);
     }
 }

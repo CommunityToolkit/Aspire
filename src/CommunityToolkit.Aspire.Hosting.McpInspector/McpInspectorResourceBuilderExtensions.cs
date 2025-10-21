@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
@@ -138,6 +139,7 @@ public static class McpInspectorResourceBuilderExtensions
                 setup.AddCustomHeader("X-MCP-Proxy-Auth", $"Bearer {token}");
             });
         }, healthCheckKey);
+        builder.Services.SuppressHealthCheckHttpClientLogging(healthCheckKey);
 
         return resource.WithHealthCheck(healthCheckKey);
     }
