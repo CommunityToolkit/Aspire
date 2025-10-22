@@ -1,12 +1,12 @@
-﻿using EventStore.Client;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text;
+using KurrentDB.Client;
 
 namespace CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService;
 
 public static class KurrentDBExtensions
 {
-    public static async Task<Account?> GetAccount(this EventStoreClient eventStore, Guid id, CancellationToken cancellationToken)
+    public static async Task<Account?> GetAccount(this KurrentDBClient eventStore, Guid id, CancellationToken cancellationToken)
     {
         var readResult = eventStore.ReadStreamAsync(
             Direction.Forwards,
@@ -33,7 +33,7 @@ public static class KurrentDBExtensions
         return account;
     }
 
-    public static async Task AppendAcountEvents(this EventStoreClient eventStore, Account account, CancellationToken cancellationToken)
+    public static async Task AppendAccountEvents(this KurrentDBClient eventStore, Account account, CancellationToken cancellationToken)
     {
         var events = account.DequeueUncommittedEvents();
 
@@ -43,7 +43,7 @@ public static class KurrentDBExtensions
         var expectedVersion = account.Version - events.Length;
         await eventStore.AppendToStreamAsync(
             $"account-{account.Id:N}",
-            expectedVersion == 0 ? StreamRevision.None : StreamRevision.FromInt64(expectedVersion),
+            expectedVersion == 0 ? StreamState.NoStream : StreamState.StreamRevision((ulong)expectedVersion),
             eventsToAppend,
             cancellationToken: cancellationToken
         );

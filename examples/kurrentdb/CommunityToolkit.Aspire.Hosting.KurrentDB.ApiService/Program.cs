@@ -1,5 +1,5 @@
 using CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService;
-using EventStore.Client;
+using KurrentDB.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,18 +23,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapPost("/account/create", async (EventStoreClient eventStore, CancellationToken cancellationToken) =>
+app.MapPost("/account/create", async (KurrentDBClient eventStore, CancellationToken cancellationToken) =>
 {
     var account = Account.Create(Guid.NewGuid(), "John Doe");
 
     account.Deposit(100);
 
-    await eventStore.AppendAcountEvents(account, cancellationToken);
+    await eventStore.AppendAccountEvents(account, cancellationToken);
 
     return Results.Created($"/account/{account.Id}", account);
 });
 
-app.MapGet("/account/{id:guid}", async (Guid id, EventStoreClient eventStore, CancellationToken cancellationToken) =>
+app.MapGet("/account/{id:guid}", async (Guid id, KurrentDBClient eventStore, CancellationToken cancellationToken) =>
 {
     var account = await eventStore.GetAccount(id, cancellationToken);
     if (account is null)
@@ -45,7 +45,7 @@ app.MapGet("/account/{id:guid}", async (Guid id, EventStoreClient eventStore, Ca
     return TypedResults.Ok(account);
 });
 
-app.MapPost("/account/{id:guid}/deposit", async (Guid id, DepositRequest request, EventStoreClient eventStore, CancellationToken cancellationToken) =>
+app.MapPost("/account/{id:guid}/deposit", async (Guid id, DepositRequest request, KurrentDBClient eventStore, CancellationToken cancellationToken) =>
 {
     var account = await eventStore.GetAccount(id, cancellationToken);
     if (account is null)
@@ -55,12 +55,12 @@ app.MapPost("/account/{id:guid}/deposit", async (Guid id, DepositRequest request
 
     account.Deposit(request.Amount);
 
-    await eventStore.AppendAcountEvents(account, cancellationToken);
+    await eventStore.AppendAccountEvents(account, cancellationToken);
 
     return Results.Ok();
 });
 
-app.MapPost("/account/{id:guid}/withdraw", async (Guid id, WithdrawRequest request, EventStoreClient eventStore, CancellationToken cancellationToken) =>
+app.MapPost("/account/{id:guid}/withdraw", async (Guid id, WithdrawRequest request, KurrentDBClient eventStore, CancellationToken cancellationToken) =>
 {
     var account = await eventStore.GetAccount(id, cancellationToken);
     if (account is null)
@@ -70,7 +70,7 @@ app.MapPost("/account/{id:guid}/withdraw", async (Guid id, WithdrawRequest reque
 
     account.Withdraw(request.Amount);
 
-    await eventStore.AppendAcountEvents(account, cancellationToken);
+    await eventStore.AppendAccountEvents(account, cancellationToken);
 
     return Results.Ok();
 });

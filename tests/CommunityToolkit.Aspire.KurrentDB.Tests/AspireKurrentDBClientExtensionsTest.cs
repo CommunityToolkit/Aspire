@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Components.Common.Tests;
-using EventStore.Client;
+using KurrentDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -68,9 +68,9 @@ public class AspireKurrentDBClientExtensionsTest(KurrentDBContainerFixture conta
 
         using var host = builder.Build();
 
-        var client1 = host.Services.GetRequiredService<EventStoreClient>();
-        var client2 = host.Services.GetRequiredKeyedService<EventStoreClient>("kurrentdb2");
-        var client3 = host.Services.GetRequiredKeyedService<EventStoreClient>("kurrentdb3");
+        var client1 = host.Services.GetRequiredService<KurrentDBClient>();
+        var client2 = host.Services.GetRequiredKeyedService<KurrentDBClient>("kurrentdb2");
+        var client3 = host.Services.GetRequiredKeyedService<KurrentDBClient>("kurrentdb3");
 
         Assert.NotSame(client1, client2);
         Assert.NotSame(client1, client3);

@@ -21,7 +21,7 @@ public static class AspireKurrentDBExtensions
     private const string DefaultConfigSectionName = "Aspire:KurrentDB:Client";
 
     /// <summary>
-    /// Registers <see cref="EventStoreClient" /> as a singleton in the services provided by the <paramref name="builder"/>.
+    /// Registers <see cref="KurrentDBClient" /> as a singleton in the services provided by the <paramref name="builder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">The connection name to use to find a connection string.</param>
@@ -37,7 +37,7 @@ public static class AspireKurrentDBExtensions
     }
 
     /// <summary>
-    /// Registers <see cref="EventStoreClient" /> as a keyed singleton for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
+    /// Registers <see cref="KurrentDBClient" /> as a keyed singleton for the given <paramref name="name" /> in the services provided by the <paramref name="builder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>
@@ -102,8 +102,8 @@ public static class AspireKurrentDBExtensions
         {
             if (settings.ConnectionString is not null)
             {
-                var eventStoreClientSettings = KurrentDBClientSettings.Create(settings.ConnectionString!);
-                return new KurrentDBClient(eventStoreClientSettings);
+                var clientSettings = KurrentDBClientSettings.Create(settings.ConnectionString!);
+                return new KurrentDBClient(clientSettings);
             }
             else
             {

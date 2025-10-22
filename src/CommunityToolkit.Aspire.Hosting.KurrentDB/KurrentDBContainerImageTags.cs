@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.KurrentDB;
 
 internal static class KurrentDBContainerImageTags
 {
-    public const string Registry = "docker.io";
-    public const string Image = "kurrentdb/kurrentdb";
-    public const string Tag = "24.10";
+    public const string Registry = "docker.kurrent.io";
+    public const string Image = "kurrent-latest/kurrentdb";
+    public const string Tag = "25.1";
 }

@@ -1,10 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using KurrentDB.Client;
+
 namespace CommunityToolkit.Aspire.KurrentDB;
 
 /// <summary>
-/// Provides the client configuration settings for connecting to a KurrentDB server using EventStoreClient.
+/// Provides the client configuration settings for connecting to a KurrentDB server using <see cref="KurrentDBClient"/>.
 /// </summary>
 public sealed class KurrentDBSettings
 {

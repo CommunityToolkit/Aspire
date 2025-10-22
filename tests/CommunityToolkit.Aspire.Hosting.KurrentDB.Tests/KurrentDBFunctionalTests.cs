@@ -1,7 +1,7 @@
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
-using EventStore.Client;
+using KurrentDB.Client;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using System.Text;
@@ -41,10 +41,10 @@ public class KurrentDBFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await host.StartAsync();
 
-        var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
+        var kurrentDBClient = host.Services.GetRequiredService<KurrentDBClient>();
 
-        var id = await CreateTestDataAsync(eventStoreClient);
-        await VerifyTestDataAsync(eventStoreClient, id);
+        var id = await CreateTestDataAsync(kurrentDBClient);
+        await VerifyTestDataAsync(kurrentDBClient, id);
     }
 
     [Theory]
@@ -108,9 +108,9 @@ public class KurrentDBFunctionalTests(ITestOutputHelper testOutputHelper)
                     {
                         await host.StartAsync();
 
-                        var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
-                        id = await CreateTestDataAsync(eventStoreClient);
-                        await VerifyTestDataAsync(eventStoreClient, id.Value);
+                        var kurrentDBClient = host.Services.GetRequiredService<KurrentDBClient>();
+                        id = await CreateTestDataAsync(kurrentDBClient);
+                        await VerifyTestDataAsync(kurrentDBClient, id.Value);
                     }
                 }
                 finally
@@ -151,9 +151,9 @@ public class KurrentDBFunctionalTests(ITestOutputHelper testOutputHelper)
                     using (var host = hostBuilder.Build())
                     {
                         await host.StartAsync();
-                        var eventStoreClient = host.Services.GetRequiredService<EventStoreClient>();
+                        var kurrentDBClient = host.Services.GetRequiredService<KurrentDBClient>();
 
-                        await VerifyTestDataAsync(eventStoreClient, id.Value);
+                        await VerifyTestDataAsync(kurrentDBClient, id.Value);
                     }
                 }
                 finally
@@ -224,7 +224,7 @@ public class KurrentDBFunctionalTests(ITestOutputHelper testOutputHelper)
         await app.StopAsync();
     }
 
-    private static async Task<Guid> CreateTestDataAsync(EventStoreClient eventStoreClient)
+    private static async Task<Guid> CreateTestDataAsync(KurrentDBClient kurrentDBClient)
     {
         var id = Guid.NewGuid();
         var accountCreated = new AccountCreated(id, TestAccountName);
@@ -232,17 +232,17 @@ public class KurrentDBFunctionalTests(ITestOutputHelper testOutputHelper)
         var eventData = new EventData(Uuid.NewUuid(), nameof(AccountCreated), data);
         var streamName = $"{TestStreamNamePrefix}{id}";
 
-        var writeResult = await eventStoreClient.AppendToStreamAsync(streamName, StreamRevision.None, [eventData]);
+        var writeResult = await kurrentDBClient.AppendToStreamAsync(streamName, StreamState.NoStream, [eventData]);
         Assert.NotNull(writeResult);
 
         return id;
     }
 
-    private static async Task VerifyTestDataAsync(EventStoreClient eventStoreClient, Guid id)
+    private static async Task VerifyTestDataAsync(KurrentDBClient kurrentDBClient, Guid id)
     {
         var streamName = $"{TestStreamNamePrefix}{id}";
 
-        var readResult = eventStoreClient.ReadStreamAsync(Direction.Forwards, streamName, StreamPosition.Start);
+        var readResult = kurrentDBClient.ReadStreamAsync(Direction.Forwards, streamName, StreamPosition.Start);
         Assert.NotNull(readResult);
 
         var readState = await readResult.ReadState;

@@ -97,7 +97,7 @@ builder.AddKurrentDBClient("kurrentdb");
 Then, in your service, inject `KurrentDBClient` and use it to interact with the KurrentDB API:
 
 ```csharp
-public class MyService(KurrentDBClient eventStoreClient)
+public class MyService(KurrentDBClient client)
 {
     // ...
 }

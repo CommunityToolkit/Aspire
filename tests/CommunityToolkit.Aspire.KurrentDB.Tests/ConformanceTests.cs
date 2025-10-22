@@ -3,13 +3,13 @@
 
 using Aspire.Components.Common.Tests;
 using Aspire.Components.ConformanceTests;
-using EventStore.Client;
+using KurrentDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.KurrentDB.Tests;
 
-public class ConformanceTests(KurrentDBContainerFixture containerFixture) : ConformanceTests<EventStoreClient, KurrentDBSettings>, IClassFixture<KurrentDBContainerFixture>
+public class ConformanceTests(KurrentDBContainerFixture containerFixture) : ConformanceTests<KurrentDBClient, KurrentDBSettings>, IClassFixture<KurrentDBContainerFixture>
 {
     private readonly KurrentDBContainerFixture _containerFixture = containerFixture;
 
@@ -81,7 +81,7 @@ public class ConformanceTests(KurrentDBContainerFixture containerFixture) : Conf
         throw new NotImplementedException();
     }
 
-    protected override void TriggerActivity(EventStoreClient service)
+    protected override void TriggerActivity(KurrentDBClient service)
     {
         using var source = new CancellationTokenSource(100);
 
