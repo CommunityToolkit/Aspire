@@ -22,6 +22,7 @@
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
     <PackageVersion Include="AspNetCore.HealthChecks.EventStore.gRPC" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.InfluxDB" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Sqlite" Version="9.0.0" />
@@ -81,6 +82,7 @@
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.8" />
     <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.8" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
+    <PackageVersion Include="InfluxDB.Client" Version="4.18.0" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />

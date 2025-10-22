@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting influxdb</AdditionalPackageTags>
+    <Description>InfluxDB support for .NET Aspire.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="AspNetCore.HealthChecks.InfluxDB" />
+    <PackageReference Include="InfluxDB.Client" />
+  </ItemGroup>
+
+</Project>
