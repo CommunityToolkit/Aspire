@@ -1,5 +1,5 @@
 # CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects library
-This package provides [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) integration for SQL Server Database Projects. It allows you to publish SQL Database Projects as part of your .NET Aspire AppHost projects. It currently works with both [MSBuild.Sdk.SqlProj](https://github.com/rr-wfm/MSBuild.Sdk.SqlProj) and [Microsoft.Build.Sql](https://github.com/microsoft/DacFx) (aka .sqlprojx) based projects.
+This package provides [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) integration for SQL Server Database Projects. It allows you to publish SQL Database Projects as part of your .NET Aspire AppHost projects. It currently works with both [MSBuild.Sdk.SqlProj](https://github.com/rr-wfm/MSBuild.Sdk.SqlProj) and [Microsoft.Build.Sql](https://github.com/microsoft/DacFx) based projects.
 
 ## Usage
 To use this package, install it into your .NET Aspire AppHost project:
