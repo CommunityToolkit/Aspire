@@ -1,7 +1,7 @@
 ﻿using Aspire.Hosting;
 using Moq;
 
-namespace CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests;
 
 public class KeycloakExtensionTests
 {
@@ -113,7 +113,7 @@ public class KeycloakExtensionTests
         var db = pg.AddDatabase("keycloakdb");
 
         var kc = app.AddKeycloak("kc")
-            .WithPostgres(db, xaEnabled);
+            .WithPostgres(db, xaEnabled: xaEnabled);
 
         var env = await GetEnv(kc);
         Assert.Equal(xaEnabled.ToString().ToLower(), env["KC_TRANSACTION_XA_ENABLED"]);

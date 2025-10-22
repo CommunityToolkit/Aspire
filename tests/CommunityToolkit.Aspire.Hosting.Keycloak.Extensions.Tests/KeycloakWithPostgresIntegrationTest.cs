@@ -2,7 +2,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 
-namespace CommunityToolkit.Aspire.Keycloak.Hosting.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests;
 
 [RequiresDocker]
 public class KeycloakWithPostgresIntegrationTest
@@ -29,12 +29,12 @@ public class KeycloakWithPostgresIntegrationTest
         await app.ResourceNotifications
             .WaitForResourceHealthyAsync(pg.Resource.Name)
             .WaitAsync(TimeSpan.FromMinutes(3));
-        
+
 
         await app.ResourceNotifications
             .WaitForResourceHealthyAsync(kc.Resource.Name)
             .WaitAsync(TimeSpan.FromMinutes(5));
-        
+
 
         using var http = app.CreateHttpClient(kc.Resource.Name, "management");
         var response = await http.GetAsync("/health/ready");
@@ -66,7 +66,7 @@ public class KeycloakWithPostgresIntegrationTest
         await app.ResourceNotifications
             .WaitForResourceHealthyAsync(pg.Resource.Name)
             .WaitAsync(TimeSpan.FromMinutes(3));
-        
+
 
         await app.ResourceNotifications
             .WaitForResourceHealthyAsync(kc.Resource.Name)
