@@ -29,6 +29,7 @@ jobs:
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,
             Hosting.EventStore.Tests,
+            Hosting.Flagd.Tests,
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
             Hosting.Java.Tests,

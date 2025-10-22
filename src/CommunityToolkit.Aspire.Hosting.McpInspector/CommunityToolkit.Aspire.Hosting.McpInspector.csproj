@@ -9,4 +9,8 @@
     <PackageReference Include="AspNetCore.HealthChecks.Uris" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\LoggingUtils.cs" Link="LoggingUtils.cs" />
+  </ItemGroup>
+
 </Project>

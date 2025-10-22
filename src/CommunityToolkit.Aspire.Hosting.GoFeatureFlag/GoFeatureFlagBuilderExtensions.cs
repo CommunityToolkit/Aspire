@@ -4,6 +4,7 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.GoFeatureFlag;
+using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
@@ -55,11 +56,11 @@ public static class GoFeatureFlagBuilderExtensions
         return builder.AddResource(goFeatureFlagResource)
             .WithImage(GoFeatureFlagContainerImageTags.Image, GoFeatureFlagContainerImageTags.Tag)
             .WithImageRegistry(GoFeatureFlagContainerImageTags.Registry)
-            .WithHttpEndpoint(targetPort: GoFeatureFlagPort, port: port, name: GoFeatureFlagResource.PrimaryEndpointName)
+            .WithHttpEndpoint(targetPort: GoFeatureFlagPort, port: port,
+                name: GoFeatureFlagResource.PrimaryEndpointName)
             .WithHttpHealthCheck("/health")
             .WithEntrypoint("/go-feature-flag")
-            .WithArgs(args)
-            .WithOtlpExporter();
+            .WithArgs(args);
     }
 
     /// <summary>
@@ -119,5 +120,34 @@ public static class GoFeatureFlagBuilderExtensions
         ArgumentNullException.ThrowIfNull(source);
 
         return builder.WithBindMount(source, "/goff");
+    }
+    
+    /// <summary>
+    /// Configures logging level for the GO Feature Flag container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="logLevel">The log level to set.</param>
+    /// <returns>The <see cref="IResourceBuilder{GoFeatureFlagResource}"/>.</returns>
+    /// <remarks>
+    /// The only supported <see cref="LogLevel"/> by GO Feature Flag are <see cref="LogLevel.Error"/>,
+    /// <see cref="LogLevel.Warning"/>, <see cref="LogLevel.Information"/> and <see cref="LogLevel.Debug"/>.
+    /// </remarks>
+    public static IResourceBuilder<GoFeatureFlagResource> WithLogLevel(
+        this IResourceBuilder<GoFeatureFlagResource> builder,
+        LogLevel logLevel
+    )
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        string value = logLevel switch
+        {
+            LogLevel.Error => "ERROR",
+            LogLevel.Warning => "WARN",
+            LogLevel.Information => "INFO",
+            LogLevel.Debug => "DEBUG",
+            _ => throw new ArgumentOutOfRangeException(nameof(logLevel), "This log level is not supported by GO Feature Flag.")
+        };
+
+        return builder.WithEnvironment("LOGLEVEL", value);
     }
 }
