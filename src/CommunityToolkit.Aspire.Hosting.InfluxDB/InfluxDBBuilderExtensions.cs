@@ -24,6 +24,8 @@ public static class InfluxDBBuilderExtensions
     /// <param name="userName">The parameter used to provide the username for the InfluxDB. If <see langword="null"/> a default value will be used.</param>
     /// <param name="password">The parameter used to provide the password for the InfluxDB. If <see langword="null"/> a random password will be generated.</param>
     /// <param name="token">The parameter used to provide the admin token for the InfluxDB. If <see langword="null"/> a random token will be generated.</param>
+    /// <param name="organization">The organization to initialize in InfluxDB. Defaults to <c>default</c>.</param>
+    /// <param name="bucket">The bucket to initialize in InfluxDB. Defaults to <c>default</c>.</param>
     /// <param name="port">The host port to bind the underlying container to.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
@@ -46,10 +48,15 @@ public static class InfluxDBBuilderExtensions
         IResourceBuilder<ParameterResource>? userName = null,
         IResourceBuilder<ParameterResource>? password = null,
         IResourceBuilder<ParameterResource>? token = null,
+        string organization = "org-aspire",
+        string bucket = "bucket-aspire",
         int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(organization);
+        ArgumentException.ThrowIfNullOrWhiteSpace(bucket);
 
         var userNameParameter = userName?.Resource;
         var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password");
@@ -85,8 +92,8 @@ public static class InfluxDBBuilderExtensions
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_MODE"] = "setup";
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_USERNAME"] = influxdb.UserNameReference;
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_PASSWORD"] = influxdb.PasswordParameter;
-                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ORG"] = "default";
-                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_BUCKET"] = "default";
+                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ORG"] = organization;
+                 context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_BUCKET"] = bucket;
                  context.EnvironmentVariables["DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"] = influxdb.TokenParameter;
              })
              .WithHealthCheck(healthCheckKey);

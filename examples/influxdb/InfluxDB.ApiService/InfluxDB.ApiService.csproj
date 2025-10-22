@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.InfluxDB\CommunityToolkit.Aspire.InfluxDB.csproj" />
+    <ProjectReference Include="..\InfluxDB.ServiceDefaults\InfluxDB.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

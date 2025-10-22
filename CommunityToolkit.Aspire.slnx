@@ -40,6 +40,11 @@
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost.csproj" />
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/influxdb/">
+    <Project Path="examples/influxdb/InfluxDB.ApiService/InfluxDB.ApiService.csproj" />
+    <Project Path="examples/influxdb/InfluxDB.AppHost/InfluxDB.AppHost.csproj" />
+    <Project Path="examples/influxdb/InfluxDB.ServiceDefaults/InfluxDB.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/golang/">
     <Project Path="examples/golang/CommunityToolkit.Aspire.Hosting.Golang.AppHost/CommunityToolkit.Aspire.Hosting.Golang.AppHost.csproj" />
     <Project Path="examples/golang/CommunityToolkit.Aspire.Hosting.Golang.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Golang.ServiceDefaults.csproj" />
