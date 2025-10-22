@@ -111,4 +111,31 @@ public class WithDaprSidecarTests
         Assert.Contains(referenceAnnotations, a => a.Component.Name == "statestore");
         Assert.Contains(referenceAnnotations, a => a.Component.Name == "pubsub");
     }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+    [Fact]
+    public void DaprSidecarCanReferenceComponentsUsingDeprecatedAPI()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        
+        var stateStore = builder.AddDaprStateStore("statestore");
+        var pubSub = builder.AddDaprPubSub("pubsub");
+        
+        var projectBuilder = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WithDaprSidecar();
+        
+        // Use the deprecated API that adds component references to the project resource
+        projectBuilder.WithReference(stateStore).WithReference(pubSub);
+        
+        var projectResource = projectBuilder.Resource;
+        
+        // Verify that component references are added to the project resource (deprecated behavior)
+        var projectReferenceAnnotations = projectResource.Annotations.OfType<DaprComponentReferenceAnnotation>().ToList();
+        Assert.Equal(2, projectReferenceAnnotations.Count);
+        
+        // Verify specific component references
+        Assert.Contains(projectReferenceAnnotations, a => a.Component.Name == "statestore");
+        Assert.Contains(projectReferenceAnnotations, a => a.Component.Name == "pubsub");
+    }
+#pragma warning restore CS0618 // Type or member is obsolete
 }
