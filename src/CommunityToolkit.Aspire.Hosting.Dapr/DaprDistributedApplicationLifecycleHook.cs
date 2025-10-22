@@ -4,7 +4,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Eventing;
-using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +22,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     IConfiguration configuration,
     IHostEnvironment environment,
     ILogger<DaprDistributedApplicationLifecycleHook> logger,
-    IOptions<DaprOptions> options) : IDistributedApplicationLifecycleHook, IDisposable
+    IOptions<DaprOptions> options) : IDisposable
 {
     private readonly DaprOptions _options = options.Value;
 

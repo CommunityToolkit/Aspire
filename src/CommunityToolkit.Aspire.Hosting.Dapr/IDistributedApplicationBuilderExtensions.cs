@@ -2,12 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Lifecycle;
+using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Publishing;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Dapr;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Aspire.Hosting;
 
@@ -30,7 +33,16 @@ public static partial class IDistributedApplicationBuilderExtensions
             builder.Services.Configure(configure);
         }
 
-        builder.Services.TryAddLifecycleHook<DaprDistributedApplicationLifecycleHook>();
+        builder.Eventing.Subscribe<BeforeStartEvent>(async (evt, ct) =>
+        {
+            var hook = new DaprDistributedApplicationLifecycleHook(
+                evt.Services.GetRequiredService<IConfiguration>(),
+                evt.Services.GetRequiredService<IHostEnvironment>(),
+                evt.Services.GetRequiredService<ILogger<DaprDistributedApplicationLifecycleHook>>(),
+                evt.Services.GetRequiredService<IOptions<DaprOptions>>());
+
+            await hook.BeforeStartAsync(evt.Model, ct).ConfigureAwait(false);
+        });
 
         return builder;
     }
