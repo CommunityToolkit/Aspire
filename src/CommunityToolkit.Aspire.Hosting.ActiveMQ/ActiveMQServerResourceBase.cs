@@ -30,6 +30,16 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, PrimaryEndpointName);
 
     /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
+
+    /// <summary>
     /// Gets the parameter that contains the ActiveMQ server username.
     /// </summary>
     public ParameterResource? UserNameParameter { get; } = userName;
@@ -49,6 +59,23 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
         UserNameParameter is not null ?
             ReferenceExpression.Create($"{UserNameParameter}") :
             ReferenceExpression.Create($"{DefaultUserName}");
+
+    /// <summary>
+    /// Gets the connection URI expression for the ActiveMQ server.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>{scheme}://{user}:{password}@{host}:{port}</c>.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ConnectionStringExpression;
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Username", UserNameReference);
+        yield return new("Password", ReferenceExpression.Create($"{PasswordParameter}"));
+        yield return new("Uri", UriExpression);
+    }
     
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);

@@ -38,6 +38,16 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     public EndpointReference PrimaryEndpoint { get; }
 
     /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
+
+    /// <summary>
     /// Gets the parameter that contains the SurrealDB username.
     /// </summary>
     public ParameterResource? UserNameParameter { get; }
@@ -73,6 +83,14 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     }
 
     /// <summary>
+    /// Gets the connection URI expression for the SurrealDB instance.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>ws://{host}:{port}/rpc</c>.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"{SchemeUri}://{Host}:{Port}/rpc");
+
+    /// <summary>
     /// Gets the connection string for the SurrealDB instance.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
@@ -97,5 +115,14 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     internal void AddNamespace(string name, string namespaceName)
     {
         _namespaces.TryAdd(name, namespaceName);
+    }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Username", UserNameReference);
+        yield return new("Password", ReferenceExpression.Create($"{PasswordParameter}"));
+        yield return new("Uri", UriExpression);
     }
 }

@@ -20,9 +20,34 @@ public class EventStoreResource(string name) : ContainerResource(name), IResourc
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, HttpEndpointName);
 
     /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
+
+    /// <summary>
     /// Gets the connection string for the EventStore server.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
             $"esdb://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}?tls=false");
+
+    /// <summary>
+    /// Gets the connection URI expression for the EventStore server.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>esdb://{host}:{port}?tls=false</c>.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ConnectionStringExpression;
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Uri", UriExpression);
+    }
 }
