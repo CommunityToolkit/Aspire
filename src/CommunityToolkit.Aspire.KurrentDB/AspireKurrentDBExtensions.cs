@@ -6,6 +6,7 @@ using CommunityToolkit.Aspire.KurrentDB;
 using EventStore.Client;
 using EventStore.Client.Extensions.OpenTelemetry;
 using HealthChecks.EventStore.gRPC;
+using KurrentDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -31,7 +32,7 @@ public static class AspireKurrentDBExtensions
         Action<KurrentDBSettings>? configureSettings = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNullOrEmpty(connectionName);
+        ArgumentException.ThrowIfNullOrEmpty(connectionName);
         AddKurrentDBClient(builder, DefaultConfigSectionName, configureSettings, connectionName, serviceKey: null);
     }
 
@@ -47,7 +48,7 @@ public static class AspireKurrentDBExtensions
         Action<KurrentDBSettings>? configureSettings = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(name);
         AddKurrentDBClient(builder, $"{DefaultConfigSectionName}:{name}", configureSettings, connectionName: name, serviceKey: name);
     }
 
@@ -97,12 +98,12 @@ public static class AspireKurrentDBExtensions
                 timeout: settings.HealthCheckTimeout));
         }
 
-        EventStoreClient ConfigureKurrentDBClient(IServiceProvider serviceProvider)
+        KurrentDBClient ConfigureKurrentDBClient(IServiceProvider serviceProvider)
         {
             if (settings.ConnectionString is not null)
             {
-                var eventStoreClientSettings = EventStoreClientSettings.Create(settings.ConnectionString!);
-                return new EventStoreClient(eventStoreClientSettings);
+                var eventStoreClientSettings = KurrentDBClientSettings.Create(settings.ConnectionString!);
+                return new KurrentDBClient(eventStoreClientSettings);
             }
             else
             {
