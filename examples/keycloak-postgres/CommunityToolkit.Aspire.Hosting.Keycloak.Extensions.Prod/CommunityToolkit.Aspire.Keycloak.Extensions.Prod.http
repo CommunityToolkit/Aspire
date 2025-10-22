@@ -1,6 +1,6 @@
-@CommunityToolkit.Aspire.Keycloak.Extensions.Prod_HostAddress = http://localhost:5286
+@CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod_HostAddress = http://localhost:5286
 
-GET {{CommunityToolkit.Aspire.Keycloak.Extensions.Prod_HostAddress}}/weatherforecast/
+GET {{CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
