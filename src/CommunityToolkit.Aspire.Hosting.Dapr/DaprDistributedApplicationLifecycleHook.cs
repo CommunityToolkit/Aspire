@@ -4,6 +4,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Eventing;
+using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,14 +23,22 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     IConfiguration configuration,
     IHostEnvironment environment,
     ILogger<DaprDistributedApplicationLifecycleHook> logger,
-    IOptions<DaprOptions> options) : IDisposable
+    IOptions<DaprOptions> options,
+    DistributedApplicationExecutionContext executionContext) : IDistributedApplicationEventingSubscriber, IDisposable
 {
     private readonly DaprOptions _options = options.Value;
 
     private string? _onDemandResourcesRootPath;
 
-    public async Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
+    public Task SubscribeAsync(IDistributedApplicationEventing eventing, DistributedApplicationExecutionContext executionContext, CancellationToken cancellationToken)
     {
+        eventing.Subscribe<BeforeStartEvent>(OnBeforeStartAsync);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnBeforeStartAsync(BeforeStartEvent @event, CancellationToken cancellationToken = default)
+    {
+        var appModel = @event.Model;
         string appHostDirectory = GetAppHostDirectory();
 
         // Set up WaitAnnotations for Dapr components based on their value provider dependencies
