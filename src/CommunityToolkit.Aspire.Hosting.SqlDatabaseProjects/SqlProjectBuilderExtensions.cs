@@ -19,8 +19,8 @@ public static class SqlProjectBuilderExtensions
     {
         if (!MSBuildLocator.IsRegistered)
         {
-            MSBuildLocator.RegisterDefaults();
             MSBuildLocator.AllowQueryAllDotnetLocations = true;
+            MSBuildLocator.RegisterDefaults();
         }
     }
 
