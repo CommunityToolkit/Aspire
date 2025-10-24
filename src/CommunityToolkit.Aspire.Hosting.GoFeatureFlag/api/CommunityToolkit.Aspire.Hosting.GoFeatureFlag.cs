@@ -15,6 +15,8 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, string? name = null) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithGoffBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, string source) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithLogLevel(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, Microsoft.Extensions.Logging.LogLevel logLevel) { throw null; }
     }
 }
 
