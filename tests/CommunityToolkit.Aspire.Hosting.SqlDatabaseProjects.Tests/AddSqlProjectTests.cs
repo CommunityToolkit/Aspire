@@ -158,6 +158,7 @@ public class AddSqlProjectTests
         // Assert
         Assert.Single(app.Services.GetServices<SqlProjectPublishService>());
         Assert.Single(app.Services.GetServices<IDacpacDeployer>());
+        Assert.Single(app.Services.GetServices<IDacpacChecksumService>());
     }
 
     [Fact]
@@ -179,5 +180,26 @@ public class AddSqlProjectTests
         Assert.Equal("MySqlProject", sqlProjectResource.Name);
 
         Assert.True(sqlProjectResource.HasAnnotationOfType<ExplicitStartupAnnotation>());
+    }
+
+    [Fact]
+    public void AddSqlProject_WithSkipWhenDeployed()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var targetDatabase = appBuilder.AddSqlServer("sql").AddDatabase("test");
+        appBuilder.AddSqlProject<TestProject>("MySqlProject")
+            .WithReference(targetDatabase)
+            .WithSkipWhenDeployed();
+
+        // Act
+        using var app = appBuilder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        // Assert
+        var sqlProjectResource = Assert.Single(appModel.Resources.OfType<SqlProjectResource>());
+        Assert.Equal("MySqlProject", sqlProjectResource.Name);
+
+        Assert.True(sqlProjectResource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>());
     }
 }

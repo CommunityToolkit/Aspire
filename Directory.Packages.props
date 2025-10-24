@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
   </PropertyGroup>
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
@@ -75,9 +76,9 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.20" />
-    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.1.61" />
-    <PackageVersion Include="Microsoft.Build" Version="17.11.31" />
-    <PackageVersion Include="Microsoft.Build.Locator" Version="1.9.1" />
+    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
+    <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
+    <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.2" />
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.8" />
     <PackageVersion Include="EventStore.Client.Grpc.Streams" Version="23.3.8" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
@@ -105,6 +106,9 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.3" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="9.0.0-beta.24568.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
+    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
+    <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->

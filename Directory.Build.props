@@ -14,6 +14,7 @@
     <AspireMajorVersion>13</AspireMajorVersion>
     <AspireVersion>$(AspireMajorVersion).0.0-preview.1.25522.6</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
+    <AspirePreviewSuffix>preview.1.25474.7</AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>9.0.10</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
@@ -21,6 +22,7 @@
     <MEAIVersion>9.9.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0-preview.1.25520.3</ServiceDiscoveryVersion>
     <IsPackable>false</IsPackable>
+    <MoqVersion>4.20.72</MoqVersion>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <SharedDir>$(RepoRoot)src\Shared</SharedDir>
