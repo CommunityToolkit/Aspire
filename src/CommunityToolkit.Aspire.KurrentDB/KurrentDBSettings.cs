@@ -1,13 +1,14 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-namespace CommunityToolkit.Aspire.EventStore;
+using KurrentDB.Client;
+
+namespace CommunityToolkit.Aspire.KurrentDB;
 
 /// <summary>
-/// Provides the client configuration settings for connecting to an EventStore server using EventStoreClient.
+/// Provides the client configuration settings for connecting to a KurrentDB server using <see cref="KurrentDBClient"/>.
 /// </summary>
-[Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.KurrentDB and KurrentDBSettings instead. This integration will be removed in a future release.")]
-public sealed class EventStoreSettings
+public sealed class KurrentDBSettings
 {
     /// <summary>
     /// Gets or sets the connection string.
@@ -15,7 +16,7 @@ public sealed class EventStoreSettings
     public string? ConnectionString { get; set; }
 
     /// <summary>
-    /// Gets or sets a boolean value that indicates whether the EventStore health check is disabled or not.
+    /// Gets or sets a boolean value that indicates whether the KurrentDB health check is disabled or not.
     /// </summary>
     /// <value>
     /// The default value is <see langword="false"/>.

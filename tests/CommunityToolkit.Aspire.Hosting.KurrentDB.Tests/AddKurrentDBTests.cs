@@ -4,29 +4,29 @@
 using Aspire.Hosting;
 using System.Net.Sockets;
 
-namespace CommunityToolkit.Aspire.Hosting.EventStore.Tests;
+namespace CommunityToolkit.Aspire.Hosting.KurrentDB.Tests;
 
-public class AddEventStoreTests
+public class AddKurrentDBTests
 {
     [Fact]
-    public async Task AddEventStoreContainerWithDefaultsAddsAnnotationMetadata()
+    public async Task AddKurrentDBContainerWithDefaultsAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        var eventstore = appBuilder.AddEventStore("eventstore");
+        var kurrentdb = appBuilder.AddKurrentDB("kurrentdb");
 
         using var app = appBuilder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var containerResource = Assert.Single(appModel.Resources.OfType<EventStoreResource>());
-        Assert.Equal("eventstore", containerResource.Name);
+        var containerResource = Assert.Single(appModel.Resources.OfType<KurrentDBResource>());
+        Assert.Equal("kurrentdb", containerResource.Name);
 
         var endpoints = containerResource.Annotations.OfType<EndpointAnnotation>();
         Assert.Single(endpoints);
 
         var primaryEndpoint = Assert.Single(endpoints, e => e.Name == "http");
-        Assert.Equal(EventStoreResource.DefaultHttpPort, primaryEndpoint.TargetPort);
+        Assert.Equal(KurrentDBResource.DefaultHttpPort, primaryEndpoint.TargetPort);
         Assert.False(primaryEndpoint.IsExternal);
         Assert.Equal("http", primaryEndpoint.Name);
         Assert.Null(primaryEndpoint.Port);
@@ -35,11 +35,11 @@ public class AddEventStoreTests
         Assert.Equal("http", primaryEndpoint.UriScheme);
 
         var containerAnnotation = Assert.Single(containerResource.Annotations.OfType<ContainerImageAnnotation>());
-        Assert.Equal(EventStoreContainerImageTags.Tag, containerAnnotation.Tag);
-        Assert.Equal(EventStoreContainerImageTags.Image, containerAnnotation.Image);
-        Assert.Equal(EventStoreContainerImageTags.Registry, containerAnnotation.Registry);
+        Assert.Equal(KurrentDBContainerImageTags.Tag, containerAnnotation.Tag);
+        Assert.Equal(KurrentDBContainerImageTags.Image, containerAnnotation.Image);
+        Assert.Equal(KurrentDBContainerImageTags.Registry, containerAnnotation.Registry);
 
-        var config = await eventstore.Resource.GetEnvironmentVariableValuesAsync();
+        var config = await kurrentdb.Resource.GetEnvironmentVariableValuesAsync();
 
         Assert.Collection(config,
             env =>
@@ -60,7 +60,7 @@ public class AddEventStoreTests
             env =>
             {
                 Assert.Equal("EVENTSTORE_NODE_PORT", env.Key);
-                Assert.Equal($"{EventStoreResource.DefaultHttpPort}", env.Value);
+                Assert.Equal($"{KurrentDBResource.DefaultHttpPort}", env.Value);
             },
             ext =>
             {
@@ -70,21 +70,21 @@ public class AddEventStoreTests
     }
 
     [Fact]
-    public async Task EventStoreCreatesConnectionString()
+    public async Task KurrentDBCreatesConnectionString()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        var eventstore = appBuilder
-            .AddEventStore("eventstore")
+        var kurrentdb = appBuilder
+            .AddKurrentDB("kurrentdb")
             .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 22113));
 
         using var app = appBuilder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var connectionStringResource = Assert.Single(appModel.Resources.OfType<EventStoreResource>()) as IResourceWithConnectionString;
+        var connectionStringResource = Assert.Single(appModel.Resources.OfType<KurrentDBResource>()) as IResourceWithConnectionString;
         var connectionString = await connectionStringResource.GetConnectionStringAsync();
 
         Assert.Equal("esdb://localhost:22113?tls=false", connectionString);
-        Assert.Equal("esdb://{eventstore.bindings.http.host}:{eventstore.bindings.http.port}?tls=false", connectionStringResource.ConnectionStringExpression.ValueExpression);
+        Assert.Equal("esdb://{kurrentdb.bindings.http.host}:{kurrentdb.bindings.http.port}?tls=false", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 }

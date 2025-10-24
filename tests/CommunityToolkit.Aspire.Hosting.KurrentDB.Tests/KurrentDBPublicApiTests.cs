@@ -1,31 +1,31 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
 
-namespace CommunityToolkit.Aspire.Hosting.EventStore.Tests;
+namespace CommunityToolkit.Aspire.Hosting.KurrentDB.Tests;
 
-public class EventStorePublicApiTests
+public class KurrentDBPublicApiTests
 {
     [Fact]
-    public void AddEventStoreShouldThrowWhenBuilderIsNull()
+    public void AddKurrentDBShouldThrowWhenBuilderIsNull()
     {
         IDistributedApplicationBuilder builder = null!;
-        const string name = "eventstore";
+        const string name = "kurrentdb";
 
-        var action = () => builder.AddEventStore(name);
+        var action = () => builder.AddKurrentDB(name);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
     }
 
     [Fact]
-    public void AddEventStoreShouldThrowWhenNameIsNull()
+    public void AddKurrentDBShouldThrowWhenNameIsNull()
     {
         var builder = new DistributedApplicationBuilder([]);
         string name = null!;
 
-        var action = () => builder.AddEventStore(name);
+        var action = () => builder.AddKurrentDB(name);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(name), exception.ParamName);
@@ -36,9 +36,9 @@ public class EventStorePublicApiTests
     [InlineData(true)]
     public void WithDataShouldThrowWhenBuilderIsNull(bool useVolume)
     {
-        IResourceBuilder<EventStoreResource> builder = null!;
+        IResourceBuilder<KurrentDBResource> builder = null!;
 
-        Func<IResourceBuilder<EventStoreResource>>? action = null;
+        Func<IResourceBuilder<KurrentDBResource>>? action = null;
 
         if (useVolume)
         {
@@ -59,11 +59,11 @@ public class EventStorePublicApiTests
     public void WithDataBindMountShouldThrowWhenSourceIsNull()
     {
         var builder = new DistributedApplicationBuilder([]);
-        var eventstore = builder.AddEventStore("eventstore");
+        var kurrentdb = builder.AddKurrentDB("kurrentdb");
 
         string source = null!;
 
-        var action = () => eventstore.WithDataBindMount(source);
+        var action = () => kurrentdb.WithDataBindMount(source);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(source), exception.ParamName);
@@ -73,66 +73,66 @@ public class EventStorePublicApiTests
     public void WithDataVolumeShouldAddMountAnnotation()
     {
         var builder = new DistributedApplicationBuilder([]);
-        var eventstore = builder.AddEventStore("eventstore")
+        var kurrentdb = builder.AddKurrentDB("kurrentdb")
                                 .WithDataVolume(name: null);
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = appModel.Resources.OfType<EventStoreResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<KurrentDBResource>().SingleOrDefault();
 
         Assert.NotNull(resource);
-        Assert.Equal("eventstore", resource.Name);
+        Assert.Equal("kurrentdb", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotation));
         Assert.EndsWith("-data", mountAnnotation.Source);
-        Assert.Equal("/var/lib/eventstore", mountAnnotation.Target);
+        Assert.Equal("/var/lib/kurrentdb", mountAnnotation.Target);
     }
 
     [Fact]
     public void WithNamedDataVolumeShouldAddMountAnnotation()
     {
         var builder = new DistributedApplicationBuilder([]);
-        var eventstore = builder.AddEventStore("eventstore")
+        var kurrentdb = builder.AddKurrentDB("kurrentdb")
                                 .WithDataVolume("mydata");
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = appModel.Resources.OfType<EventStoreResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<KurrentDBResource>().SingleOrDefault();
 
         Assert.NotNull(resource);
-        Assert.Equal("eventstore", resource.Name);
+        Assert.Equal("kurrentdb", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotation));
         Assert.Equal("mydata", mountAnnotation.Source);
-        Assert.Equal("/var/lib/eventstore", mountAnnotation.Target);
+        Assert.Equal("/var/lib/kurrentdb", mountAnnotation.Target);
     }
 
     [Fact]
     public void WithDataBindMountShouldAddMountAnnotation()
     {
         var builder = new DistributedApplicationBuilder([]);
-        var eventstore = builder.AddEventStore("eventstore")
+        var kurrentdb = builder.AddKurrentDB("kurrentdb")
                                 .WithDataBindMount("./mydata");
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = appModel.Resources.OfType<EventStoreResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<KurrentDBResource>().SingleOrDefault();
 
         Assert.NotNull(resource);
-        Assert.Equal("eventstore", resource.Name);
+        Assert.Equal("kurrentdb", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotation));
         Assert.EndsWith("mydata", mountAnnotation.Source);
-        Assert.Equal("/var/lib/eventstore", mountAnnotation.Target);
+        Assert.Equal("/var/lib/kurrentdb", mountAnnotation.Target);
     }
 
     [Fact]
-    public void EventStoreResourceCtorShouldThrowWhenNameIsNull()
+    public void KurrentDBResourceCtorShouldThrowWhenNameIsNull()
     {
         var builder = new DistributedApplicationBuilder([]);
         const string name = null!;
 
-        var action = () => new EventStoreResource(name);
+        var action = () => new KurrentDBResource(name);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(name), exception.ParamName);
