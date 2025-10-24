@@ -131,3 +131,10 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
+
+      - name: Upload npm logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
+          path: ./.npm-logs/**

@@ -123,3 +123,11 @@ runs:
       run: |
         dapr init --runtime-version=${{ env.DAPR_VERSION }}
         dapr --version
+
+    - name: Set npm log directory
+      shell: bash
+      if: ${{ contains(inputs.name, 'Node') }}
+      run: |
+        mkdir -p ./.npm-logs
+        npm config set loglevel verbose
+        npm config set prefix './.npm-logs'
