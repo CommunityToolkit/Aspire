@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Neon\CommunityToolkit.Aspire.Neon.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Neon.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Neon.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
