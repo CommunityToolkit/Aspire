@@ -11,6 +11,8 @@
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.NodeJS" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Python" Version="$(AspireVersion)" />
@@ -106,8 +108,6 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="2.9.3" />
     <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="9.0.0-beta.24568.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
-    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
-    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
