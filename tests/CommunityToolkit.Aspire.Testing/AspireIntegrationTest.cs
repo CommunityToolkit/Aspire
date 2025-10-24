@@ -1,7 +1,4 @@
-﻿using Aspire.Components.Common.Tests;
-using Aspire.Hosting;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Testing;
 
@@ -22,7 +19,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
         applicationBuilder.Services.AddLogging(builder =>
             {
                 builder.AddXUnit();
-                if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null or "1")
+                if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null && Environment.GetEnvironmentVariable("RUNNER_DEBUG") == "1")
                     builder.SetMinimumLevel(LogLevel.Trace);
                 else
                     builder.SetMinimumLevel(LogLevel.Information);
