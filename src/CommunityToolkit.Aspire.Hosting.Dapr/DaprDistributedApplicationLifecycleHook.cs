@@ -7,14 +7,12 @@ using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 using static CommunityToolkit.Aspire.Hosting.Dapr.CommandLineArgs;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr;
@@ -23,14 +21,21 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
     IConfiguration configuration,
     IHostEnvironment environment,
     ILogger<DaprDistributedApplicationLifecycleHook> logger,
-    IOptions<DaprOptions> options) : IDistributedApplicationLifecycleHook, IDisposable
+    IOptions<DaprOptions> options) : IDistributedApplicationEventingSubscriber, IDisposable
 {
     private readonly DaprOptions _options = options.Value;
 
     private string? _onDemandResourcesRootPath;
 
-    public async Task BeforeStartAsync(DistributedApplicationModel appModel, CancellationToken cancellationToken = default)
+    public Task SubscribeAsync(IDistributedApplicationEventing eventing, DistributedApplicationExecutionContext executionContext, CancellationToken cancellationToken)
     {
+        eventing.Subscribe<BeforeStartEvent>(OnBeforeStartAsync);
+        return Task.CompletedTask;
+    }
+
+    private async Task OnBeforeStartAsync(BeforeStartEvent @event, CancellationToken cancellationToken = default)
+    {
+        var appModel = @event.Model;
         string appHostDirectory = GetAppHostDirectory();
 
         // Set up WaitAnnotations for Dapr components based on their value provider dependencies
@@ -91,7 +96,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         hasValueProviders = true;
                     }
                 }
-                
+
                 // Check if there are any secrets that need to be added to the secret store
                 if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations))
                 {
@@ -100,7 +105,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         secrets[secretAnnotation.Key] = (await secretAnnotation.Value.GetValueAsync(cancellationToken))!;
                     }
                 }
-                
+
                 // If we have any secrets or value providers, ensure the secret store path is added
                 if ((secrets.Count > 0 || hasValueProviders) && onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath))
                 {
@@ -139,7 +144,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     {
                         context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
                     }
-                    
+
                     // Add value provider references
                     foreach (var (envVarName, valueProvider) in endpointEnvironmentVars)
                     {
@@ -509,10 +514,10 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 .ToList();
 
         // If any of the components have secrets or value provider references, we will add an on-demand secret store component.
-        bool needsSecretStore = onDemandComponents.Any(component => 
+        bool needsSecretStore = onDemandComponents.Any(component =>
             (component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations) && secretAnnotations.Any()) ||
             (component.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations) && valueProviderAnnotations.Any()));
-        
+
         if (needsSecretStore)
         {
             onDemandComponents.Add(new DaprComponentResource("secretstore", DaprConstants.BuildingBlocks.SecretStore));
