@@ -137,4 +137,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
-          path: ./.npm-logs/**
+          path: ${{ runner.os == 'Windows' && 'C:\\npm\\cache\\_logs\\**' || '~/.npm/cache/_logs/**' }}
