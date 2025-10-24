@@ -1,5 +1,3 @@
-using CommunityToolkit.Aspire.Hosting.Deno;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddDenoTask("vite-demo", taskName: "dev")
