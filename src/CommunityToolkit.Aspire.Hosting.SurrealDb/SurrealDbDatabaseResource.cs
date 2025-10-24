@@ -42,4 +42,9 @@ public class SurrealDbDatabaseResource : Resource, IResourceWithParent<SurrealDb
         DatabaseName = databaseName;
         Parent = parent;
     }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() =>
+        Parent.CombineProperties([
+            new("Database", ReferenceExpression.Create($"{DatabaseName}"))
+        ]);
 }
