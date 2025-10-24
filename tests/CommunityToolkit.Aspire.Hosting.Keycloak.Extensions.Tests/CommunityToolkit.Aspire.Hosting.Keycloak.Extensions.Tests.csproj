@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <Using Include="Xunit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Moq" />
+    </ItemGroup>
+</Project>

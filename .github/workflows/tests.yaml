@@ -33,6 +33,7 @@ jobs:
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
             Hosting.Java.Tests,
+            Hosting.Keycloak.Extensions.Tests,
             Hosting.k6.Tests,
             Hosting.LavinMQ.Tests,
             Hosting.MailPit.Tests,
