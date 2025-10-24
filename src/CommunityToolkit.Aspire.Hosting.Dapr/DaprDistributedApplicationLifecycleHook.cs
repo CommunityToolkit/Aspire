@@ -74,7 +74,11 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var aggregateResourcesPaths = sidecarOptions?.ResourcesPaths.Select(path => NormalizePath(path)).ToHashSet() ?? [];
 
-            var componentReferenceAnnotations = daprSidecar.Annotations.OfType<DaprComponentReferenceAnnotation>();
+            // Get component references from both the sidecar (new API) and the project resource (old, deprecated API)
+            // This ensures backward compatibility with code that still uses the deprecated WithReference on the project
+            var componentReferenceAnnotations = daprSidecar.Annotations.OfType<DaprComponentReferenceAnnotation>()
+                .Concat(resource.Annotations.OfType<DaprComponentReferenceAnnotation>())
+                .DistinctBy(annotation => annotation.Component.Name);
 
             var secrets = new Dictionary<string, string>();
             var endpointEnvironmentVars = new Dictionary<string, IValueProvider>();

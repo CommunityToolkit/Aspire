@@ -23,9 +23,11 @@ var stateStore = builder.AddDaprStateStore("statestore");
 var pubSub = builder.AddDaprPubSub("pubsub");
 
 builder.AddProject<Projects.MyApp>("myapp")
-       .WithDaprSidecar()
-       .WithReference(stateStore)
-       .WithReference(pubSub);
+       .WithDaprSidecar(sidecar =>
+       {
+           sidecar.WithReference(stateStore)
+                  .WithReference(pubSub);
+       });
 
 builder.Build().Run();
 ```
