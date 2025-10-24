@@ -130,4 +130,4 @@ runs:
       run: |
         mkdir -p ./.npm-logs
         npm config set loglevel verbose
-        npm config set prefix './.npm-logs'
+        npm config set logs-dir './.npm-logs'
