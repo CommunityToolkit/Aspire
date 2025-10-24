@@ -14,12 +14,14 @@
     <AspireMajorVersion>9</AspireMajorVersion>
     <AspireVersion>$(AspireMajorVersion).5.0</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
+    <AspirePreviewSuffix>preview.1.25474.7</AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>9.0.9</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
     <TestContainersVersion>4.7.0</TestContainersVersion>
     <MEAIVersion>9.9.0</MEAIVersion>
     <IsPackable>false</IsPackable>
+    <MoqVersion>4.20.72</MoqVersion>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <SharedDir>$(RepoRoot)src\Shared</SharedDir>
