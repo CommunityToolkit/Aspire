@@ -6,6 +6,6 @@ internal static class MinioContainerImageTags
     public const string Registry = "docker.io";
     /// <summary>minio/minio</summary>
     public const string Image = "minio/minio";
-    /// <summary>RELEASE.2025-04-22T22-12-26Z</summary>
-    public const string Tag = "RELEASE.2025-04-22T22-12-26Z";
+    /// <summary>RELEASE.2025-09-07T16-13-09Z</summary>
+    public const string Tag = "RELEASE.2025-09-07T16-13-09Z";
 }
