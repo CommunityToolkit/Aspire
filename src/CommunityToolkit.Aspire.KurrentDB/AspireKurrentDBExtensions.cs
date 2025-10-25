@@ -3,10 +3,9 @@
 
 using Aspire;
 using CommunityToolkit.Aspire.KurrentDB;
-using EventStore.Client;
-using EventStore.Client.Extensions.OpenTelemetry;
 using HealthChecks.EventStore.gRPC;
 using KurrentDB.Client;
+using KurrentDB.Client.Extensions.OpenTelemetry;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -83,7 +82,7 @@ public static class AspireKurrentDBExtensions
         if (!settings.DisableTracing)
         {
             builder.Services.AddOpenTelemetry()
-                .WithTracing(traceBuilder => traceBuilder.AddEventStoreClientInstrumentation());
+                .WithTracing(traceBuilder => traceBuilder.AddKurrentDBClientInstrumentation());
         }
 
         if (!settings.DisableHealthChecks)
