@@ -1,14 +1,13 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// A resource that represents an EventStore container.
+/// A resource that represents a KurrentDB container.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
-[Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.Hosting.KurrentDB and KurrentDBResource instead. This integration will be removed in a future release.")]
-public class EventStoreResource(string name) : ContainerResource(name), IResourceWithConnectionString
+public class KurrentDBResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string HttpEndpointName = "http";
     internal const int DefaultHttpPort = 2113;
@@ -16,12 +15,12 @@ public class EventStoreResource(string name) : ContainerResource(name), IResourc
     private EndpointReference? _primaryEndpoint;
 
     /// <summary>
-    /// Gets the primary endpoint for the EventStore server.
+    /// Gets the primary endpoint for the KurrentDB server.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, HttpEndpointName);
 
     /// <summary>
-    /// Gets the connection string for the EventStore server.
+    /// Gets the connection string for the KurrentDB server.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
