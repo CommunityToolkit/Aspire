@@ -29,12 +29,12 @@ public sealed class MinioContainerResource(string name, ParameterResource rootUs
     /// Gets the primary endpoint for the MinIO. This endpoint is used for all API calls over HTTP.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
-    
+
     /// <summary>
     /// Gets the connection string expression for the Minio
     /// </summary>
     public ReferenceExpression ConnectionStringExpression => GetConnectionString();
-    
+
     /// <summary>
     /// Gets the connection string for the MinIO server.
     /// </summary>
@@ -49,7 +49,7 @@ public sealed class MinioContainerResource(string name, ParameterResource rootUs
 
         return ConnectionStringExpression.GetValueAsync(cancellationToken);
     }
-    
+
     /// <summary>
     /// Gets the connection string for the MinIO server.
     /// </summary>
@@ -61,7 +61,7 @@ public sealed class MinioContainerResource(string name, ParameterResource rootUs
             $"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
 
         builder.Append($";AccessKey={RootUser}");
-        builder.Append($";SecretKey={PasswordParameter}");
+        builder.Append($";SecretKey={PasswordParameter:uri}");
 
         return builder.Build();
     }

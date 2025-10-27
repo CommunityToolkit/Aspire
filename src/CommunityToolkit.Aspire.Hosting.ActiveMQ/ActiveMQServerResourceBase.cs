@@ -22,7 +22,7 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
     /// <inheritdoc />
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"{scheme}://{UserNameReference}:{PasswordParameter}@{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+            $"{scheme}://{UserNameReference}:{PasswordParameter:uri}@{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
 
     /// <summary>
     /// Gets the primary endpoint for the ActiveMQ server.
@@ -73,10 +73,10 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
         yield return new("Host", ReferenceExpression.Create($"{Host}"));
         yield return new("Port", ReferenceExpression.Create($"{Port}"));
         yield return new("Username", UserNameReference);
-        yield return new("Password", ReferenceExpression.Create($"{PasswordParameter}"));
+        yield return new("Password", ReferenceExpression.Create($"{PasswordParameter:uri}"));
         yield return new("Uri", UriExpression);
     }
-    
+
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);
 }
