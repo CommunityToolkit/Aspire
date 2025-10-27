@@ -15,6 +15,7 @@ namespace Microsoft.Extensions.Hosting;
 /// <summary>
 /// Provides extension methods for registering EventStore-related services in an <see cref="IHostApplicationBuilder"/>.
 /// </summary>
+[Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.KurrentDB and AspireKurrentDBExtensions instead. This integration will be removed in a future release.")]
 public static class AspireEventStoreExtensions
 {
     private const string DefaultConfigSectionName = "Aspire:EventStore:Client";

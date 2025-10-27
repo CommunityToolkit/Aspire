@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.KurrentDB\CommunityToolkit.Aspire.KurrentDB.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.KurrentDB\CommunityToolkit.Aspire.Hosting.KurrentDB.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

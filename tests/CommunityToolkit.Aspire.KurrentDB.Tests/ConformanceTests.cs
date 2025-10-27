@@ -3,15 +3,15 @@
 
 using Aspire.Components.Common.Tests;
 using Aspire.Components.ConformanceTests;
-using EventStore.Client;
+using KurrentDB.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace CommunityToolkit.Aspire.EventStore.Tests;
+namespace CommunityToolkit.Aspire.KurrentDB.Tests;
 
-public class ConformanceTests(EventStoreContainerFixture containerFixture) : ConformanceTests<EventStoreClient, EventStoreSettings>, IClassFixture<EventStoreContainerFixture>
+public class ConformanceTests(KurrentDBContainerFixture containerFixture) : ConformanceTests<KurrentDBClient, KurrentDBSettings>, IClassFixture<KurrentDBContainerFixture>
 {
-    private readonly EventStoreContainerFixture _containerFixture = containerFixture;
+    private readonly KurrentDBContainerFixture _containerFixture = containerFixture;
 
     protected override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
 
@@ -31,27 +31,27 @@ public class ConformanceTests(EventStoreContainerFixture containerFixture) : Con
 
         configuration.AddInMemoryCollection(
             [
-                new KeyValuePair<string, string?>($"Aspire:EventStore:Client:ConnectionString", $"{connectionString}"),
+                new KeyValuePair<string, string?>($"Aspire:KurrentDB:Client:ConnectionString", $"{connectionString}"),
                 new KeyValuePair<string, string?>($"ConnectionStrings:{key}", $"{connectionString}")
             ]);
     }
 
-    protected override void RegisterComponent(HostApplicationBuilder builder, Action<EventStoreSettings>? configure = null, string? key = null)
+    protected override void RegisterComponent(HostApplicationBuilder builder, Action<KurrentDBSettings>? configure = null, string? key = null)
     {
         if (key is null)
         {
-            builder.AddEventStoreClient("eventstore", configureSettings: configure);
+            builder.AddKurrentDBClient("kurrentdb", configureSettings: configure);
         }
         else
         {
-            builder.AddKeyedEventStoreClient(key, configureSettings: configure);
+            builder.AddKeyedKurrentDBClient(key, configureSettings: configure);
         }
     }
 
     protected override string ValidJsonConfig => """
                                                  {
                                                    "Aspire": {
-                                                     "EventStore": {
+                                                     "KurrentDB": {
                                                        "Client": {
                                                          "ConnectionString": "esdb://localhost:22113?tls=false",
                                                          "DisableHealthChecks": "false"
@@ -63,25 +63,25 @@ public class ConformanceTests(EventStoreContainerFixture containerFixture) : Con
 
     protected override (string json, string error)[] InvalidJsonToErrorMessage => new[]
         {
-            ("""{"Aspire": { "EventStore":{ "Client": { "ConnectionString": 3 }}}}""", "Value is \"integer\" but should be \"string\"")
+            ("""{"Aspire": { "KurrentDB":{ "Client": { "ConnectionString": 3 }}}}""", "Value is \"integer\" but should be \"string\"")
         };
 
-    protected override void SetHealthCheck(EventStoreSettings options, bool enabled)
+    protected override void SetHealthCheck(KurrentDBSettings options, bool enabled)
     {
         options.DisableHealthChecks = !enabled;
     }
 
-    protected override void SetMetrics(EventStoreSettings options, bool enabled)
+    protected override void SetMetrics(KurrentDBSettings options, bool enabled)
     {
         throw new NotImplementedException();
     }
 
-    protected override void SetTracing(EventStoreSettings options, bool enabled)
+    protected override void SetTracing(KurrentDBSettings options, bool enabled)
     {
         throw new NotImplementedException();
     }
 
-    protected override void TriggerActivity(EventStoreClient service)
+    protected override void TriggerActivity(KurrentDBClient service)
     {
         using var source = new CancellationTokenSource(100);
 
