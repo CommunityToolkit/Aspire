@@ -7,6 +7,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// A resource that represents an EventStore container.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
+[Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.Hosting.KurrentDB and KurrentDBResource instead. This integration will be removed in a future release.")]
 public class EventStoreResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string HttpEndpointName = "http";

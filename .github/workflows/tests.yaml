@@ -10,6 +10,7 @@ jobs:
       DAPR_VERSION: "1.15.0"
       TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.csproj
       CI: true
+      NPM_CONFIG_PACKAGE_LOCK: false
     runs-on: "${{ matrix.os }}"
     timeout-minutes: 60
     name: ${{ matrix.name }}-${{ matrix.os }}
@@ -28,13 +29,13 @@ jobs:
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,
-            Hosting.EventStore.Tests,
             Hosting.Flagd.Tests,
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
             Hosting.Java.Tests,
             Hosting.Keycloak.Extensions.Tests,
             Hosting.k6.Tests,
+            Hosting.KurrentDB.Tests,
             Hosting.LavinMQ.Tests,
             Hosting.MailPit.Tests,
             Hosting.McpInspector.Tests,
@@ -60,8 +61,8 @@ jobs:
             Hosting.SurrealDb.Tests,
 
             # Client integration tests
-            EventStore.Tests,
             GoFeatureFlag.Tests,
+            KurrentDB.Tests,
             MassTransit.RabbitMQ.Tests,
             Meilisearch.Tests,
             Microsoft.Data.Sqlite.Tests,
@@ -131,3 +132,10 @@ jobs:
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
+
+      - name: Upload npm logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
+          path: ${{ runner.os == 'Windows' && 'C:\\npm\\cache\\_logs\\**' || '~/.npm/cache/_logs/**' }}
