@@ -24,6 +24,11 @@ public class RavenDBDatabaseResource(string name, string databaseName, RavenDBSe
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create($"{Parent};Database={DatabaseName}");
 
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() =>
+        Parent.CombineProperties([
+            new("Database", ReferenceExpression.Create($"{DatabaseName}"))
+        ]);
+
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);
 }
