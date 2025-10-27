@@ -94,7 +94,7 @@ jobs:
           --verbosity Information
 
       - name: Upload Signed Packages as Artifacts (for release)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: signed-nuget-packages
           if-no-files-found: error
