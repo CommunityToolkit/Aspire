@@ -1,29 +1,28 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddViteApp("vite-demo")
-    .WithNpmPackageInstallation()
-    .WithHttpHealthCheck();
-
-builder.AddViteApp("yarn-demo", packageManager: "yarn")
+// Yarn and pnpm support examples
+builder.AddYarnApp("yarn-demo", "../yarn-demo")
     .WithYarnPackageInstallation()
+    .WithHttpEndpoint()
     .WithHttpHealthCheck();
 
-builder.AddViteApp("pnpm-demo", packageManager: "pnpm")
+builder.AddPnpmApp("pnpm-demo", "../pnpm-demo")
     .WithPnpmPackageInstallation()
+    .WithHttpEndpoint()
     .WithHttpHealthCheck();
 
-// Example of Nx monorepo support - uncomment if you have an Nx workspace
+// Example of Nx monorepo support with yarn - uncomment if you have an Nx workspace
 var nx = builder.AddNxApp("nx-demo")
-    .WithNpmPackageInstaller();
+    .WithYarnPackageInstaller();
 
 nx.AddApp("blog-monorepo")
     .WithHttpEndpoint()
     .WithMappedEndpointPort()
     .WithHttpHealthCheck();
 
-// Example of Turborepo monorepo support - uncomment if you have a Turborepo workspace
+// Example of Turborepo monorepo support with pnpm - uncomment if you have a Turborepo workspace
 var turbo = builder.AddTurborepoApp("turborepo-demo")
-    .WithNpmPackageInstaller();
+    .WithPnpmPackageInstaller();
 
 turbo.AddApp("turbo-web", filter: "web")
     .WithHttpEndpoint()

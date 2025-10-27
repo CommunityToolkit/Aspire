@@ -106,9 +106,9 @@ public class MonorepoResourceCreationTests
     public async Task Nx_RunWithPackageManager_InfersFromInstallerWhenNotProvided()
     {
         var builder = DistributedApplication.CreateBuilder();
-        // Attach an npm installer annotation to the Nx resource, then call RunWithPackageManager with no arg
+        // Attach a yarn installer annotation to the Nx resource, then call RunWithPackageManager with no arg
         var nxBuilder = builder.AddNxApp("nx-with-installer")
-            .WithNpmPackageInstaller()
+            .WithYarnPackageInstaller()
             .RunWithPackageManager(); // no package manager passed, should infer from installer
 
         // Add an app to the Nx workspace to verify app-level command/args
@@ -119,14 +119,14 @@ public class MonorepoResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
 
-        // The Nx resource should have a JavaScriptPackageManagerAnnotation matching npm
+        // The Nx resource should have a JavaScriptPackageManagerAnnotation matching yarn
         Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pm));
-        Assert.Equal("npm", pm.PackageManager);
+        Assert.Equal("yarn", pm.PackageManager);
 
         // Verify the created NxAppResource command and args
         var nxAppResource = Assert.Single(appModel.Resources.OfType<NxAppResource>());
-        // For npm package manager, AddApp uses 'npx' as the command
-        Assert.Equal("npx", nxAppResource.Command);
+        // For yarn package manager, AddApp uses 'yarn' as the command
+        Assert.Equal("yarn", nxAppResource.Command);
         var nxAppArgs = await nxAppResource.GetArgumentValuesAsync();
         Assert.Collection(nxAppArgs,
                 arg => Assert.Equal("nx", arg),
@@ -149,8 +149,8 @@ public class MonorepoResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var turbo = builder.AddTurborepoApp("turbo-default")
-            .WithNpmPackageInstaller()
-            .RunWithPackageManager(); // should default to npm
+            .WithPnpmPackageInstaller()
+            .RunWithPackageManager(); // should default to pnpm
 
         // Add an app to the Turborepo workspace to verify app-level command/args
         var app1 = turbo.AddApp("app1");
@@ -161,12 +161,12 @@ public class MonorepoResourceCreationTests
         var turboResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
 
         Assert.True(turboResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pm));
-        Assert.Equal("npm", pm.PackageManager);
+        Assert.Equal("pnpm", pm.PackageManager);
 
         // Verify Turborepo app command and args
         var turboApp = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
-        // For npm package manager, AddApp uses 'npx' as the command
-        Assert.Equal("npx", turboApp.Command);
+        // For pnpm package manager, AddApp uses 'pnpm' as the command
+        Assert.Equal("pnpm", turboApp.Command);
         var turboArgs = await turboApp.GetArgumentValuesAsync();
         Assert.Collection(turboArgs,
                 arg => Assert.Equal("turbo", arg),
