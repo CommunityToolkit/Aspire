@@ -291,7 +291,7 @@ public static partial class NodeJSHostingExtensions
         {
             var resource = builder.Resource;
 
-            // monorepo tools will need `--`, as does npm
+            // monorepo tools and npm (from Aspire.Hosting.NodeJS) need `--`, but yarn and pnpm don't
             if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation) || packageManagerAnnotation.PackageManager == "npm")
             {
                 ctx.Args.Add("--");
