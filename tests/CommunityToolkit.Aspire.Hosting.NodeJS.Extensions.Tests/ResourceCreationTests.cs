@@ -42,17 +42,6 @@ public class ResourceCreationTests
         Assert.Equal("pnpm", resource.Command);
     }
 
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = appModel.Resources.OfType<NodeAppResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
-
-        Assert.Equal("pnpm", resource.Command);
-    }
-
     [Fact]
     public async Task WithYarnPackageInstallationCreatesInstallerResource()
     {
