@@ -1,19 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Yarn and pnpm support examples
-builder.AddYarnApp("yarn-demo", "../yarn-demo")
-    .WithYarnPackageInstallation()
-    .WithHttpEndpoint(env: "PORT")
-    .WithHttpHealthCheck();
-
-builder.AddPnpmApp("pnpm-demo", "../pnpm-demo")
-    .WithPnpmPackageInstallation()
-    .WithHttpEndpoint(env: "PORT")
-    .WithHttpHealthCheck();
-
 // Example of Nx monorepo support with yarn - uncomment if you have an Nx workspace
-var nx = builder.AddNxApp("nx-demo")
-    .WithYarnPackageInstaller();
+var nx = builder.AddNxApp("nx-demo");
 
 nx.AddApp("blog-monorepo")
     .WithHttpEndpoint(env: "PORT")
@@ -21,8 +9,7 @@ nx.AddApp("blog-monorepo")
     .WithHttpHealthCheck();
 
 // Example of Turborepo monorepo support with pnpm - uncomment if you have a Turborepo workspace
-var turbo = builder.AddTurborepoApp("turborepo-demo")
-    .WithPnpmPackageInstaller();
+var turbo = builder.AddTurborepoApp("turborepo-demo");
 
 turbo.AddApp("turbo-web", filter: "web")
     .WithHttpEndpoint(env: "PORT")
