@@ -109,7 +109,7 @@ public class MonorepoResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
         // Attach a yarn installer annotation to the Nx resource, then call RunWithPackageManager with no arg
         var nxBuilder = builder.AddNxApp("nx-with-installer")
-            .WithYarnPackageInstaller()
+            .WithYarn() // default install=true
             .RunWithPackageManager(); // no package manager passed, should infer from installer
 
         // Add an app to the Nx workspace to verify app-level command/args
@@ -150,7 +150,7 @@ public class MonorepoResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var turbo = builder.AddTurborepoApp("turbo-default")
-            .WithPnpmPackageInstaller()
+            .WithPnpm() // default install=true
             .RunWithPackageManager(); // should default to pnpm
 
         // Add an app to the Turborepo workspace to verify app-level command/args
@@ -182,8 +182,8 @@ public class MonorepoResourceCreationTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var nxPnpm = builder.AddNxApp("nx-pnpm").WithPnpmPackageInstaller().RunWithPackageManager();
-        var nxYarn = builder.AddNxApp("nx-yarn").WithYarnPackageInstaller().RunWithPackageManager();
+        var nxPnpm = builder.AddNxApp("nx-pnpm").WithPnpm().RunWithPackageManager();
+        var nxYarn = builder.AddNxApp("nx-yarn").WithYarn().RunWithPackageManager();
 
         // add apps to both (use unique app names)
         nxPnpm.AddApp("app1-pnpm");
@@ -223,8 +223,8 @@ public class MonorepoResourceCreationTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var turboPnpm = builder.AddTurborepoApp("turbo-pnpm").WithPnpmPackageInstaller().RunWithPackageManager();
-        var turboYarn = builder.AddTurborepoApp("turbo-yarn").WithYarnPackageInstaller().RunWithPackageManager();
+        var turboPnpm = builder.AddTurborepoApp("turbo-pnpm").WithPnpm().RunWithPackageManager();
+        var turboYarn = builder.AddTurborepoApp("turbo-yarn").WithYarn().RunWithPackageManager();
 
         turboPnpm.AddApp("app1-pnpm");
         turboYarn.AddApp("app1-yarn");
