@@ -18,7 +18,7 @@ public sealed class KurrentDBContainerFixture : IAsyncLifetime
         {
             throw new InvalidOperationException("The test container was not initialized.");
         }
-        var endpoint = new UriBuilder("esdb", Container.Hostname, Container.GetMappedPublicPort(2113)).ToString();
+        var endpoint = new UriBuilder("kurrentdb", Container.Hostname, Container.GetMappedPublicPort(2113)).ToString();
         return $"{endpoint}?tls=false";
     }
 
@@ -30,9 +30,9 @@ public sealed class KurrentDBContainerFixture : IAsyncLifetime
               .WithImage($"{KurrentDBContainerImageTags.Registry}/{KurrentDBContainerImageTags.Image}:{KurrentDBContainerImageTags.Tag}")
               .WithPortBinding(2113, true)
               .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(2113)))
-              .WithEnvironment("EVENTSTORE_CLUSTER_SIZE", "1")
-              .WithEnvironment("EVENTSTORE_NODE_PORT", "2113")
-              .WithEnvironment("EVENTSTORE_INSECURE", "true")
+              .WithEnvironment("KURRENTDB_CLUSTER_SIZE", "1")
+              .WithEnvironment("KURRENTDB_NODE_PORT", "2113")
+              .WithEnvironment("KURRENTDB_INSECURE", "true")
               .Build();
 
             await Container.StartAsync();

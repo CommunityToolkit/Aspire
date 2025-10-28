@@ -4,7 +4,6 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.KurrentDB;
-using HealthChecks.EventStore.gRPC;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -60,7 +59,7 @@ public static class KurrentDBBuilderExtensions
         builder.Services.AddHealthChecks()
             .Add(new HealthCheckRegistration(
                 healthCheckKey,
-                sp => new EventStoreHealthCheck(connectionString!),
+                sp => new KurrentDBHealthCheck(connectionString!),
                 failureStatus: default,
                 tags: default,
                 timeout: default));
@@ -135,10 +134,10 @@ public static class KurrentDBBuilderExtensions
 
     private static void ConfigureKurrentDBContainer(EnvironmentCallbackContext context)
     {
-        context.EnvironmentVariables.Add("EVENTSTORE_CLUSTER_SIZE", "1");
-        context.EnvironmentVariables.Add("EVENTSTORE_RUN_PROJECTIONS", "All");
-        context.EnvironmentVariables.Add("EVENTSTORE_START_STANDARD_PROJECTIONS", "true");
-        context.EnvironmentVariables.Add("EVENTSTORE_NODE_PORT", $"{KurrentDBResource.DefaultHttpPort}");
-        context.EnvironmentVariables.Add("EVENTSTORE_INSECURE", "true");
+        context.EnvironmentVariables.Add("KURRENTDB_CLUSTER_SIZE", "1");
+        context.EnvironmentVariables.Add("KURRENTDB_RUN_PROJECTIONS", "All");
+        context.EnvironmentVariables.Add("KURRENTDB_START_STANDARD_PROJECTIONS", "true");
+        context.EnvironmentVariables.Add("KURRENTDB_NODE_PORT", $"{KurrentDBResource.DefaultHttpPort}");
+        context.EnvironmentVariables.Add("KURRENTDB_INSECURE", "true");
     }
 }
