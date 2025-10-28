@@ -28,7 +28,7 @@ jobs:
           assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.NodeJs;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis;-Aspire.Hosting.PostgreSQL;-Aspire.Hosting.MongoDB"
 
       - name: Upload combined coverage XML
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage
           path: ${{ github.workspace }}/report
@@ -48,7 +48,7 @@ jobs:
           thresholds: "60 80"
 
       - name: Upload combined coverage markdown
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-markdown
           path: ${{ github.workspace }}/code-coverage-results.md
