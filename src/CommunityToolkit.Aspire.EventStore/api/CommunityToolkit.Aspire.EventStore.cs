@@ -8,6 +8,7 @@
 //------------------------------------------------------------------------------
 namespace CommunityToolkit.Aspire.EventStore
 {
+    [System.Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.KurrentDB and KurrentDBSettings instead. This integration will be removed in a future release.")]
     public sealed partial class EventStoreSettings
     {
         public string? ConnectionString { get { throw null; } set { } }
@@ -22,6 +23,7 @@ namespace CommunityToolkit.Aspire.EventStore
 
 namespace Microsoft.Extensions.Hosting
 {
+    [System.Obsolete("EventStore has been rebranded to KurrentDB. Use CommunityToolkit.Aspire.KurrentDB and AspireKurrentDBExtensions instead. This integration will be removed in a future release.")]
     public static partial class AspireEventStoreExtensions
     {
         public static void AddEventStoreClient(this IHostApplicationBuilder builder, string connectionName, System.Action<CommunityToolkit.Aspire.EventStore.EventStoreSettings>? configureSettings = null) { }
