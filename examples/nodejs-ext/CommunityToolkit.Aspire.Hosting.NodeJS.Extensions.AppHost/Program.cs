@@ -28,7 +28,9 @@ var turbo = builder.AddTurborepoApp("turborepo-demo")
 turbo.AddApp("turbo-web", filter: "web")
     .WithHttpEndpoint()
     .WithMappedEndpointPort()
-    .WithHttpHealthCheck();
+    .WithHttpHealthCheck()
+    .WithEnvironment("foo", "bar");
+
 turbo.AddApp("turbo-docs", filter: "docs")
     .WithHttpEndpoint()
     .WithMappedEndpointPort()
