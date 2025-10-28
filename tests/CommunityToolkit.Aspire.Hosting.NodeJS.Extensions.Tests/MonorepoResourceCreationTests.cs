@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.NodeJs;
 
 namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 
