@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.Bun.Tests;
 
@@ -139,5 +140,23 @@ public class AddBunAppTests
         var builder = DistributedApplication.CreateBuilder();
 
         Assert.Throws<ArgumentException>(() => builder.AddBunApp("bun", entryPoint: ""));
+    }
+
+    [Fact]
+    public void BunAppWithPackageInstallationCreatesInstallerResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddBunApp("bun").WithBunPackageInstallation();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var bunResource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
+        var installerResource = Assert.Single(appModel.Resources.OfType<BunInstallerResource>());
+
+        Assert.Equal("bun-bun-install", installerResource.Name);
+        Assert.Equal("bun", installerResource.Command);
     }
 }
