@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.NodeJs;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
 
