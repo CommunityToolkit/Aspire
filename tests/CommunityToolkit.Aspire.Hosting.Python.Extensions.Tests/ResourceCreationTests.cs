@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests;
 #pragma warning disable CS0612
 public class ResourceCreationTests
 {
-    [Fact]
+    [Fact(Skip = "Being removed with https://github.com/CommunityToolkit/Aspire/issues/917")]
     public void DefaultUvicornApp()
     {
         var builder = DistributedApplication.CreateBuilder();
