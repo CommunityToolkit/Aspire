@@ -68,14 +68,9 @@ public static partial class NodeJSHostingExtensions
         appName ??= name;
 
         string command = "nx";
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation))
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var executionAnnotation))
         {
-            command = packageManagerAnnotation.PackageManager switch
-            {
-                "yarn" => "yarn",
-                "pnpm" => "pnpm",
-                _ => "npx"
-            };
+            command = executionAnnotation.PackageManager;
         }
 
         var resource = new NxAppResource(name, builder.Resource.WorkingDirectory, appName, command);
@@ -85,7 +80,7 @@ public static partial class NodeJSHostingExtensions
             .WithIconName("CodeJsRectangle")
             .WithArgs((ctx) =>
             {
-                if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManager))
+                if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var packageManager))
                 {
                     ctx.Args.Add("nx");
                 }
@@ -122,14 +117,9 @@ public static partial class NodeJSHostingExtensions
         filter ??= name;
 
         string command = "turbo";
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation))
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var executionAnnotation))
         {
-            command = packageManagerAnnotation.PackageManager switch
-            {
-                "yarn" => "yarn",
-                "pnpm" => "pnpm",
-                _ => "npx"
-            };
+            command = executionAnnotation.PackageManager;
         }
 
         var resource = new TurborepoAppResource(name, builder.Resource.WorkingDirectory, filter, command);
@@ -139,7 +129,7 @@ public static partial class NodeJSHostingExtensions
             .WithIconName("CodeJsRectangle")
             .WithArgs((ctx) =>
             {
-                if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManager))
+                if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var packageManager))
                 {
                     ctx.Args.Add("turbo");
                 }
@@ -173,26 +163,30 @@ public static partial class NodeJSHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation);
-
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var existingAnnotation))
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var existingExecution))
         {
-            if (installerAnnotation is null || existingAnnotation.PackageManager == installerAnnotation.Resource.Command)
+            if (packageManager is null || existingExecution.PackageManager == packageManager)
             {
-                // already configured with a package manager
+                // already configured with execution annotation
                 return builder;
             }
-            throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is already configured to use the '{existingAnnotation.PackageManager}' package manager.");
+            throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is already configured to run with the '{existingExecution.PackageManager}' package manager.");
         }
 
-        packageManager ??= installerAnnotation?.Resource.Command;
-
+        // If no explicit package manager provided, try to infer from configured annotation
         if (packageManager is null)
         {
-            throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is not configured with a package manager. Please specify a package manager.");
+            if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerConfiguredAnnotation>(out var configured))
+            {
+                packageManager = configured.PackageManager;
+            }
+            else
+            {
+                throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm first, or provide an explicit package manager.");
+            }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager));
+        return builder.WithAnnotation(new JavaScriptPackageManagerExecutionAnnotation(packageManager));
     }
 
     /// <summary>
@@ -206,26 +200,30 @@ public static partial class NodeJSHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation);
-
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var existingAnnotation))
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var existingExecution))
         {
-            if (installerAnnotation is null || existingAnnotation.PackageManager == installerAnnotation.Resource.Command)
+            if (packageManager is null || existingExecution.PackageManager == packageManager)
             {
-                // already configured with a package manager
+                // already configured with execution annotation
                 return builder;
             }
-            throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is already configured to use the '{existingAnnotation.PackageManager}' package manager.");
+            throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is already configured to run with the '{existingExecution.PackageManager}' package manager.");
         }
 
-        packageManager ??= installerAnnotation?.Resource.Command;
-
+        // If no explicit package manager provided, try to infer from configured annotation
         if (packageManager is null)
         {
-            throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is not configured with a package manager. Please specify a package manager.");
+            if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerConfiguredAnnotation>(out var configured))
+            {
+                packageManager = configured.PackageManager;
+            }
+            else
+            {
+                throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm first, or provide an explicit package manager.");
+            }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager));
+        return builder.WithAnnotation(new JavaScriptPackageManagerExecutionAnnotation(packageManager));
     }
 
     /// <summary>
@@ -243,7 +241,7 @@ public static partial class NodeJSHostingExtensions
             var resource = builder.Resource;
 
             // monorepo tools and npm (from Aspire.Hosting.NodeJS) need `--`, but yarn and pnpm don't
-            if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation) || packageManagerAnnotation.PackageManager == "npm")
+            if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var executionAnnotation) || executionAnnotation.PackageManager == "npm")
             {
                 ctx.Args.Add("--");
             }
@@ -355,6 +353,9 @@ public static partial class NodeJSHostingExtensions
         Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller)
         where TResource : Resource
     {
+        // Always add the configured annotation to track which package manager was set up
+        builder.WithAnnotation(new JavaScriptPackageManagerConfiguredAnnotation(packageManager));
+
         // Only install packages if not in publish mode and install is true
         if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode && install)
         {
