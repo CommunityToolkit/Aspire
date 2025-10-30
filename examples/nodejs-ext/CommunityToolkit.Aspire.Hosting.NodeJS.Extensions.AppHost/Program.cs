@@ -1,7 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var nx = builder.AddNxApp("nx-demo")
-    .WithNpm(install: true);
+    .WithNpm(install: true)
+    .RunWithPackageManager();
 
 nx.AddApp("blog-monorepo")
     .WithHttpEndpoint(env: "PORT")
