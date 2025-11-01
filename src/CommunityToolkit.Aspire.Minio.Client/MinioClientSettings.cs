@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Minio;
 using System.Data.Common;
 
@@ -12,6 +13,7 @@ public sealed class MinioClientSettings
     private const string ConnectionStringEndpoint = "Endpoint";
     private const string AccessKey = "AccessKey";
     private const string SecretKey = "SecretKey";
+    private static readonly string[] UseSslKeys = new[] { "UseSsl", "UseSSL", "Ssl" };
     
     /// <summary>
     /// Endpoint URL
@@ -42,36 +44,79 @@ public sealed class MinioClientSettings
     
     internal void ParseConnectionString(string? connectionString)
     {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return;
+        }
+
+        // If the connection string is an absolute URI, use it as endpoint.
+        // NOTE: Do NOT infer UseSsl from the URI scheme.
         if (Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
         {
             Endpoint = uri;
+            return;
         }
-        else
-        {
-            var connectionBuilder = new DbConnectionStringBuilder
-            {
-                ConnectionString = connectionString
-            };
 
-            if (connectionBuilder.TryGetValue(ConnectionStringEndpoint, out var endpoint) 
-                &&
-                Uri.TryCreate(endpoint.ToString(), UriKind.Absolute, out var serviceUri))
+        var connectionBuilder = new DbConnectionStringBuilder
+        {
+            ConnectionString = connectionString
+        };
+
+        if (connectionBuilder.TryGetValue(ConnectionStringEndpoint, out var endpoint) 
+            &&
+            Uri.TryCreate(endpoint.ToString(), UriKind.Absolute, out var serviceUri))
+        {
+            Endpoint = serviceUri;
+            // Intentionally do not set UseSsl here based on the scheme.
+        }
+        
+        // Check for UseSsl (and variants) in the connection string and parse it if present.
+        foreach (var key in UseSslKeys)
+        {
+            if (connectionBuilder.TryGetValue(key, out var useSslObj))
             {
-                Endpoint = serviceUri;
-            }
-            
-            if (connectionBuilder.TryGetValue(AccessKey, out var accessKey)
-                &&
-                connectionBuilder.TryGetValue(SecretKey, out var secretKey)
-                && 
-                !string.IsNullOrEmpty(accessKey.ToString()) && !string.IsNullOrEmpty(secretKey.ToString()))
-            {
-                Credentials = new MinioCredentials
+                if (TryParseBool(useSslObj, out var parsed))
                 {
-                    AccessKey = accessKey.ToString()!, SecretKey = secretKey.ToString()!
-                };
+                    UseSsl = parsed;
+                    break;
+                }
             }
         }
+        
+        if (connectionBuilder.TryGetValue(AccessKey, out var accessKey)
+            &&
+            connectionBuilder.TryGetValue(SecretKey, out var secretKey)
+            && 
+            !string.IsNullOrEmpty(accessKey?.ToString()) && !string.IsNullOrEmpty(secretKey?.ToString()))
+        {
+            Credentials = new MinioCredentials
+            {
+                AccessKey = accessKey.ToString()!, SecretKey = secretKey.ToString()!
+            };
+        }
+    }
+
+    // Ahora estricto: sólo acepta bool o las cadenas "true"/"false" (case-insensitive).
+    private static bool TryParseBool(object? value, out bool result)
+    {
+        result = false;
+        if (value == null) return false;
+
+        if (value is bool b)
+        {
+            result = b;
+            return true;
+        }
+
+        var s = value.ToString()!.Trim();
+
+        if (bool.TryParse(s, out var parsedBool))
+        {
+            result = parsedBool;
+            return true;
+        }
+
+        return false;
     }
 }
 
