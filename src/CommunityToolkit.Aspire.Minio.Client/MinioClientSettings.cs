@@ -96,7 +96,7 @@ public sealed class MinioClientSettings
         }
     }
 
-    // Ahora estricto: sólo acepta bool o las cadenas "true"/"false" (case-insensitive).
+    // Strict boolean parsing: only accepts bool or the strings "true"/"false" (case-insensitive).
     private static bool TryParseBool(object? value, out bool result)
     {
         result = false;
@@ -108,7 +108,10 @@ public sealed class MinioClientSettings
             return true;
         }
 
-        var s = value.ToString()!.Trim();
+        var s = value.ToString();
+        if (s == null) return false;
+
+        s = s.Trim();
 
         if (bool.TryParse(s, out var parsedBool))
         {
