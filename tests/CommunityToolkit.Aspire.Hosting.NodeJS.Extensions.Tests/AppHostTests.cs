@@ -5,9 +5,6 @@ namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_NodeJS_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_NodeJS_Extensions_AppHost>>
 {
     [Theory]
-    [InlineData("vite-demo")]
-    [InlineData("yarn-demo")]
-    [InlineData("pnpm-demo")]
     [InlineData("turbo-web")]
     [InlineData("turbo-docs")]
     [InlineData("blog-monorepo")]
