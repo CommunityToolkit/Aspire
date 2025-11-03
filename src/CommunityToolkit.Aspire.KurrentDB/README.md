@@ -41,7 +41,7 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 ```json
 {
     "ConnectionStrings": {
-        "kurrentdb": "esdb://localhost:22113?tls=false"
+        "kurrentdb": "kurrentdb://localhost:22113?tls=false"
     }
 }
 ```
@@ -55,7 +55,7 @@ The .NET Aspire KurrentDB Client integration supports [Microsoft.Extensions.Conf
   "Aspire": {
     "KurrentDB": {
       "Client": {
-        "ConnectionString": "esdb://localhost:22113?tls=false",
+        "ConnectionString": "kurrentdb://localhost:22113?tls=false",
         "DisableHealthChecks": true
       }
     }

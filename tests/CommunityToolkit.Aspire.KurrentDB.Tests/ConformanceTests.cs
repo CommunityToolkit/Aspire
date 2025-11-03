@@ -27,7 +27,7 @@ public class ConformanceTests(KurrentDBContainerFixture containerFixture) : Conf
     {
         var connectionString = RequiresDockerAttribute.IsSupported
             ? $"{_containerFixture.GetConnectionString()}"
-            : "esdb://localhost:22113?tls=false";
+            : "kurrentdb://localhost:22113?tls=false";
 
         configuration.AddInMemoryCollection(
             [
@@ -53,7 +53,7 @@ public class ConformanceTests(KurrentDBContainerFixture containerFixture) : Conf
                                                    "Aspire": {
                                                      "KurrentDB": {
                                                        "Client": {
-                                                         "ConnectionString": "esdb://localhost:22113?tls=false",
+                                                         "ConnectionString": "kurrentdb://localhost:22113?tls=false",
                                                          "DisableHealthChecks": "false"
                                                        }
                                                      }

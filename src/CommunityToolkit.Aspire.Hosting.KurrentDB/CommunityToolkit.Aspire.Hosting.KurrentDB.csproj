@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.HealthChecks.EventStore.gRPC" />
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="KurrentDB.Client" />
   </ItemGroup>
 
   <ItemGroup>

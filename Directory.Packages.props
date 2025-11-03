@@ -21,7 +21,8 @@
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
-    <PackageVersion Include="KurrentDB.Client" Version="1.0.0" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
+    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -72,14 +73,14 @@
     <PackageVersion Include="OllamaSharp" Version="5.4.6" />
     <PackageVersion Include="OpenFeature.Contrib.GOFeatureFlag" Version="0.2.1" />
     <PackageVersion Include="Minio" Version="6.0.5" />
-    <PackageVersion Include="MassTransit" Version="8.5.2" />
-    <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.2" />
-    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.2" />
+    <PackageVersion Include="MassTransit" Version="8.5.5" />
+    <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.5" />
+    <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
     <PackageVersion Include="MeiliSearch" Version="0.17.1" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.20" />
-    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
+    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.1.61" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.2" />
     <PackageVersion Include="EventStore.Client.Extensions.OpenTelemetry" Version="23.3.8" />
@@ -94,6 +95,7 @@
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.1" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
+    <PackageVersion Include="KurrentDB.Client" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->

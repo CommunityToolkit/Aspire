@@ -26,7 +26,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, System.Action<McpInspectorOptions> configureOptions) { throw null; }
 
         [System.Obsolete("Use the overload with McpInspectorOptions instead. This overload will be removed in the next version.")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = "0.16.5") { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = "0.17.2") { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
@@ -46,7 +46,7 @@ namespace Aspire.Hosting.ApplicationModel
     public partial class McpInspectorResource : ExecutableResource
     {
         public const string ClientEndpointName = "client";
-        public const string InspectorVersion = "0.16.5";
+        public const string InspectorVersion = "0.17.2";
         public const string ServerProxyEndpointName = "server-proxy";
         public McpInspectorResource(string name) : base(default!, default!, default!) { }
 

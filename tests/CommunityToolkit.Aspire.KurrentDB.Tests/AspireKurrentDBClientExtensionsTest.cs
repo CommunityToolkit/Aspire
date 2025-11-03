@@ -14,7 +14,7 @@ public class AspireKurrentDBClientExtensionsTest(KurrentDBContainerFixture conta
     private const string DefaultConnectionName = "kurrentdb";
 
     private string DefaultConnectionString =>
-            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "esdb://localhost:2113?tls=false";
+            RequiresDockerAttribute.IsSupported ? containerFixture.GetConnectionString() : "kurrentdb://localhost:2113?tls=false";
 
     [Theory]
     [InlineData(true)]
@@ -57,9 +57,9 @@ public class AspireKurrentDBClientExtensionsTest(KurrentDBContainerFixture conta
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
         builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:kurrentdb1", "esdb://localhost:22113?tls=false"),
-            new KeyValuePair<string, string?>("ConnectionStrings:kurrentdb2", "esdb://localhost:22114?tls=false"),
-            new KeyValuePair<string, string?>("ConnectionStrings:kurrentdb3", "esdb://localhost:22115?tls=false"),
+            new KeyValuePair<string, string?>("ConnectionStrings:kurrentdb1", "kurrentdb://localhost:22113?tls=false"),
+            new KeyValuePair<string, string?>("ConnectionStrings:kurrentdb2", "kurrentdb://localhost:22114?tls=false"),
+            new KeyValuePair<string, string?>("ConnectionStrings:kurrentdb3", "kurrentdb://localhost:22115?tls=false"),
         ]);
 
         builder.AddKurrentDBClient("kurrentdb1");
