@@ -12,7 +12,7 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).0.0-preview.1.25523.9</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).0.0-preview.1.25531.6</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspirePreviewSuffix>preview.1.25474.7</AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
