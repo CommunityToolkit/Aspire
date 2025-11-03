@@ -129,9 +129,9 @@ public class MonorepoResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
 
-        // The Nx resource should have a JavaScriptPackageManagerExecutionAnnotation matching the inferred package manager
-        Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var pm));
-        Assert.Equal(packageManager, pm.PackageManager);
+        // The Nx resource should have a JavaScriptPackageManagerAnnotation matching the inferred package manager
+        Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pm));
+        Assert.Equal(packageManager, pm.ExecutableName);
 
         // Verify the created NxAppResource command and args
         var nxAppResource = Assert.Single(appModel.Resources.OfType<NxAppResource>());
@@ -179,8 +179,8 @@ public class MonorepoResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var turboResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
 
-        Assert.True(turboResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var pm));
-        Assert.Equal(packageManager, pm.PackageManager);
+        Assert.True(turboResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pm));
+        Assert.Equal(packageManager, pm.ExecutableName);
 
         // Verify Turborepo app command and args
         var turboApp = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
@@ -212,8 +212,8 @@ public class MonorepoResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var nxPnpmResource = appModel.Resources.OfType<NxResource>().Single(r => r.Name == "nx-pnpm");
-        Assert.True(nxPnpmResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var pmPnpm));
-        Assert.Equal("pnpm", pmPnpm.PackageManager);
+        Assert.True(nxPnpmResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pmPnpm));
+        Assert.Equal("pnpm", pmPnpm.ExecutableName);
 
         var nxPnpmApp = appModel.Resources.OfType<NxAppResource>().Single(r => r.Name == "app1-pnpm");
         Assert.Equal("pnpm", nxPnpmApp.Command);
@@ -224,8 +224,8 @@ public class MonorepoResourceCreationTests
             arg => Assert.Equal("app1-pnpm", arg));
 
         var nxYarnResource = appModel.Resources.OfType<NxResource>().Single(r => r.Name == "nx-yarn");
-        Assert.True(nxYarnResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var pmYarn));
-        Assert.Equal("yarn", pmYarn.PackageManager);
+        Assert.True(nxYarnResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pmYarn));
+        Assert.Equal("yarn", pmYarn.ExecutableName);
 
         var nxYarnApp = appModel.Resources.OfType<NxAppResource>().Single(r => r.Name == "app1-yarn");
         Assert.Equal("yarn", nxYarnApp.Command);
@@ -252,8 +252,8 @@ public class MonorepoResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var turboPnpmResource = appModel.Resources.OfType<TurborepoResource>().Single(r => r.Name == "turbo-pnpm");
-        Assert.True(turboPnpmResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var tpmPnpm));
-        Assert.Equal("pnpm", tpmPnpm.PackageManager);
+        Assert.True(turboPnpmResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var tpmPnpm));
+        Assert.Equal("pnpm", tpmPnpm.ExecutableName);
 
         var turboPnpmApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app1-pnpm");
         Assert.Equal("pnpm", turboPnpmApp.Command);
@@ -266,8 +266,8 @@ public class MonorepoResourceCreationTests
             arg => Assert.Equal("app1-pnpm", arg));
 
         var turboYarnResource = appModel.Resources.OfType<TurborepoResource>().Single(r => r.Name == "turbo-yarn");
-        Assert.True(turboYarnResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var tpmYarn));
-        Assert.Equal("yarn", tpmYarn.PackageManager);
+        Assert.True(turboYarnResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var tpmYarn));
+        Assert.Equal("yarn", tpmYarn.ExecutableName);
 
         var turboYarnApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app1-yarn");
         Assert.Equal("yarn", turboYarnApp.Command);
@@ -343,7 +343,7 @@ public class MonorepoResourceCreationTests
         var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
         Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerConfiguredAnnotation>(out var configured));
         Assert.Equal(packageManager, configured.PackageManager);
-        Assert.False(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out _));
+        Assert.False(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out _));
 
         // App should use "nx" directly, not wrapped via package manager
         var nxApp = Assert.Single(appModel.Resources.OfType<NxAppResource>());
@@ -380,7 +380,7 @@ public class MonorepoResourceCreationTests
         var turboResource = Assert.Single(appModel.Resources.OfType<TurborepoResource>());
         Assert.True(turboResource.TryGetLastAnnotation<JavaScriptPackageManagerConfiguredAnnotation>(out var configured));
         Assert.Equal(packageManager, configured.PackageManager);
-        Assert.False(turboResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out _));
+        Assert.False(turboResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out _));
 
         // App should use "turbo" directly, not wrapped via package manager
         var turboApp = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
@@ -413,8 +413,8 @@ public class MonorepoResourceCreationTests
         Assert.Equal("npm", configured.PackageManager);
 
         // But execution annotation should be yarn (explicit override)
-        Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var execution));
-        Assert.Equal("yarn", execution.PackageManager);
+        Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var execution));
+        Assert.Equal("yarn", execution.ExecutableName);
     }
 
     [Fact]
@@ -431,8 +431,8 @@ public class MonorepoResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var nxResource = Assert.Single(appModel.Resources.OfType<NxResource>());
-        Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerExecutionAnnotation>(out var execution));
-        Assert.Equal("yarn", execution.PackageManager);
+        Assert.True(nxResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var execution));
+        Assert.Equal("yarn", execution.ExecutableName);
     }
 
     [Fact]
