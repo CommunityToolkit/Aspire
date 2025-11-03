@@ -527,7 +527,7 @@ public class MonorepoResourceCreationTests
 
         // But no installer annotation or resource
         Assert.False(nxResource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out _));
-        Assert.Empty(appModel.Resources.OfType<NodeInstallerResource>());
+        Assert.Empty(appModel.Resources.OfType<JavaScriptInstallerResource>());
     }
 
     [Fact]

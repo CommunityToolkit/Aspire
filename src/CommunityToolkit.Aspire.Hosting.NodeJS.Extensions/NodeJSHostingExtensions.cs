@@ -263,7 +263,7 @@ public static partial class NodeJSHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NxResource> WithNpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller = null)
+    public static IResourceBuilder<NxResource> WithNpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -278,7 +278,7 @@ public static partial class NodeJSHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NxResource> WithYarn(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller = null)
+    public static IResourceBuilder<NxResource> WithYarn(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -293,7 +293,7 @@ public static partial class NodeJSHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NxResource> WithPnpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller = null)
+    public static IResourceBuilder<NxResource> WithPnpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -308,7 +308,7 @@ public static partial class NodeJSHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<TurborepoResource> WithNpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller = null)
+    public static IResourceBuilder<TurborepoResource> WithNpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -323,7 +323,7 @@ public static partial class NodeJSHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<TurborepoResource> WithYarn(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller = null)
+    public static IResourceBuilder<TurborepoResource> WithYarn(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -338,7 +338,7 @@ public static partial class NodeJSHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<TurborepoResource> WithPnpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller = null)
+    public static IResourceBuilder<TurborepoResource> WithPnpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -350,7 +350,7 @@ public static partial class NodeJSHostingExtensions
         IResourceBuilder<TResource> builder,
         string packageManager,
         bool install,
-        Action<IResourceBuilder<NodeInstallerResource>>? configureInstaller)
+        Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller)
         where TResource : Resource
     {
         // Always add the configured annotation to track which package manager was set up
@@ -368,13 +368,13 @@ public static partial class NodeJSHostingExtensions
             };
 
             // Check if installer already exists
-            if (builder.ApplicationBuilder.TryCreateResourceBuilder<NodeInstallerResource>(installerName, out var existingResource))
+            if (builder.ApplicationBuilder.TryCreateResourceBuilder<JavaScriptInstallerResource>(installerName, out var existingResource))
             {
                 // Installer already exists, don't create a new one
                 return;
             }
 
-            var installer = new NodeInstallerResource(installerName, workingDirectory);
+            var installer = new JavaScriptInstallerResource(installerName, workingDirectory);
 
             var installerBuilder = builder.ApplicationBuilder
                 .AddResource(installer)
