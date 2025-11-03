@@ -86,10 +86,11 @@ public class TurborepoResourceCreationTests
         // Verify Turborepo app command and args
         var turboApp = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
         // For the inferred package manager, AddApp uses the corresponding command
-        Assert.Equal(packageManager, turboApp.Command);
+        Assert.True(turboApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var tapm));
+        Assert.Equal(packageManager, tapm.ExecutableName);
+        Assert.Equal("turbo", tapm.ScriptCommand);
         var turboArgs = await turboApp.GetArgumentValuesAsync();
         Assert.Collection(turboArgs,
-                arg => Assert.Equal("turbo", arg),
                 arg => Assert.Equal("run", arg),
                 arg => Assert.Equal("dev", arg),
                 arg => Assert.Equal("--filter", arg),
@@ -116,10 +117,11 @@ public class TurborepoResourceCreationTests
         Assert.Equal("pnpm", tpmPnpm.ExecutableName);
 
         var turboPnpmApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app1-pnpm");
-        Assert.Equal("pnpm", turboPnpmApp.Command);
+        Assert.True(turboPnpmApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var tapmPnpm));
+        Assert.Equal("pnpm", tapmPnpm.ExecutableName);
+        Assert.Equal("turbo", tapmPnpm.ScriptCommand);
         var tpnpmArgs = await turboPnpmApp.GetArgumentValuesAsync();
         Assert.Collection(tpnpmArgs,
-            arg => Assert.Equal("turbo", arg),
             arg => Assert.Equal("run", arg),
             arg => Assert.Equal("dev", arg),
             arg => Assert.Equal("--filter", arg),
@@ -130,10 +132,11 @@ public class TurborepoResourceCreationTests
         Assert.Equal("yarn", tpmYarn.ExecutableName);
 
         var turboYarnApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app1-yarn");
-        Assert.Equal("yarn", turboYarnApp.Command);
+        Assert.True(turboYarnApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var tapmYarn));
+        Assert.Equal("yarn", tapmYarn.ExecutableName);
+        Assert.Equal("turbo", tapmYarn.ScriptCommand);
         var tyarnArgs = await turboYarnApp.GetArgumentValuesAsync();
         Assert.Collection(tyarnArgs,
-            arg => Assert.Equal("turbo", arg),
             arg => Assert.Equal("run", arg),
             arg => Assert.Equal("dev", arg),
             arg => Assert.Equal("--filter", arg),
@@ -303,7 +306,11 @@ public class TurborepoResourceCreationTests
             Assert.Equal(packageManager, execution.ExecutableName);
             Assert.Equal("turbo", execution.ScriptCommand);
             var args = await turboApp.GetArgumentValuesAsync();
-            Assert.Equal("turbo", args[0]); // first arg should be underlying script command
+            Assert.Collection(args,
+                arg => Assert.Equal("run", arg),
+                arg => Assert.Equal("dev", arg),
+                arg => Assert.Equal("--filter", arg),
+                arg => Assert.Equal(turboApp.Name, arg));
         }
     }
 
