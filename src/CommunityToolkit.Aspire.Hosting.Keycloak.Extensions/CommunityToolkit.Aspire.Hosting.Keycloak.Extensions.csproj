@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Description>.NET Aspire hosting extensions for Keycloak (includes PostgreSQL integration).</Description>
     <AdditionalPackageTags>keycloak postgres hosting extensions</AdditionalPackageTags>
+    <IsPreview>true</IsPreview>
   </PropertyGroup>
 
     <ItemGroup>
