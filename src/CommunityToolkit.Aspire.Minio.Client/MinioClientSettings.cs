@@ -77,17 +77,19 @@ public sealed class MinioClientSettings
                 }
             }
         
-        if (connectionBuilder.TryGetValue(AccessKey, out var accessKey)
-            &&
-            connectionBuilder.TryGetValue(SecretKey, out var secretKey)
-            && 
-            !string.IsNullOrEmpty(accessKey?.ToString()) && !string.IsNullOrEmpty(secretKey?.ToString()))
+        if (connectionBuilder.TryGetValue(AccessKey, out var accessKeyValue) &&
+            connectionBuilder.TryGetValue(SecretKey, out var secretKeyValue) &&
+            accessKeyValue is string accessKey &&
+            secretKeyValue is string secretKey &&
+            !string.IsNullOrEmpty(accessKey) &&
+            !string.IsNullOrEmpty(secretKey))
             {
-            Credentials = new MinioCredentials
-            {
-                AccessKey = accessKey.ToString()!, SecretKey = secretKey.ToString()!
-            };
-        }
+                Credentials = new MinioCredentials
+                {
+                    AccessKey = accessKey,
+                    SecretKey = secretKey
+                };
+            }
     }
 
 }
