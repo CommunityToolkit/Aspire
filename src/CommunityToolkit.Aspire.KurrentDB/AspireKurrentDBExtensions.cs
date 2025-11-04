@@ -3,7 +3,6 @@
 
 using Aspire;
 using CommunityToolkit.Aspire.KurrentDB;
-using HealthChecks.EventStore.gRPC;
 using KurrentDB.Client;
 using KurrentDB.Client.Extensions.OpenTelemetry;
 using Microsoft.Extensions.Configuration;
@@ -91,7 +90,7 @@ public static class AspireKurrentDBExtensions
 
             builder.TryAddHealthCheck(new HealthCheckRegistration(
                 healthCheckName,
-                sp => new EventStoreHealthCheck(settings.ConnectionString!),
+                sp => new KurrentDBHealthCheck(settings.ConnectionString!),
                 failureStatus: default,
                 tags: default,
                 timeout: settings.HealthCheckTimeout));

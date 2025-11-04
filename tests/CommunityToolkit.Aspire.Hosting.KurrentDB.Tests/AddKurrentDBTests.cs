@@ -44,27 +44,27 @@ public class AddKurrentDBTests
         Assert.Collection(config,
             env =>
             {
-                Assert.Equal("EVENTSTORE_CLUSTER_SIZE", env.Key);
+                Assert.Equal("KURRENTDB_CLUSTER_SIZE", env.Key);
                 Assert.Equal("1", env.Value);
             },
             env =>
             {
-                Assert.Equal("EVENTSTORE_RUN_PROJECTIONS", env.Key);
+                Assert.Equal("KURRENTDB_RUN_PROJECTIONS", env.Key);
                 Assert.Equal("All", env.Value);
             },
             env =>
             {
-                Assert.Equal("EVENTSTORE_START_STANDARD_PROJECTIONS", env.Key);
+                Assert.Equal("KURRENTDB_START_STANDARD_PROJECTIONS", env.Key);
                 Assert.Equal("true", env.Value);
             },
             env =>
             {
-                Assert.Equal("EVENTSTORE_NODE_PORT", env.Key);
+                Assert.Equal("KURRENTDB_NODE_PORT", env.Key);
                 Assert.Equal($"{KurrentDBResource.DefaultHttpPort}", env.Value);
             },
             ext =>
             {
-                Assert.Equal("EVENTSTORE_INSECURE", ext.Key);
+                Assert.Equal("KURRENTDB_INSECURE", ext.Key);
                 Assert.Equal("true", ext.Value);
             });
     }
@@ -84,7 +84,7 @@ public class AddKurrentDBTests
         var connectionStringResource = Assert.Single(appModel.Resources.OfType<KurrentDBResource>()) as IResourceWithConnectionString;
         var connectionString = await connectionStringResource.GetConnectionStringAsync();
 
-        Assert.Equal("esdb://localhost:22113?tls=false", connectionString);
-        Assert.Equal("esdb://{kurrentdb.bindings.http.host}:{kurrentdb.bindings.http.port}?tls=false", connectionStringResource.ConnectionStringExpression.ValueExpression);
+        Assert.Equal("kurrentdb://localhost:22113?tls=false", connectionString);
+        Assert.Equal("kurrentdb://{kurrentdb.bindings.http.host}:{kurrentdb.bindings.http.port}?tls=false", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 }

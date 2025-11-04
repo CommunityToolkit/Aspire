@@ -57,13 +57,13 @@ jobs:
           dotnet-version: ${{ env.DEFAULT_DOTNET_VERSION }}
 
       - name: Download Package List
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: nuget-packages
           path: ${{ github.workspace }}/packages
 
       - name: Download NuGet package list
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: nuget-list
           path: ${{ github.workspace }}
@@ -89,7 +89,7 @@ jobs:
           --verbosity Information
 
       - name: Upload Signed Packages as Artifacts (for release)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: signed-nuget-packages
           if-no-files-found: error
@@ -103,7 +103,7 @@ jobs:
       name: release
     steps:
       - name: Download package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: signed-nuget-packages
 
@@ -120,7 +120,7 @@ jobs:
       name: nuget-stable
     steps:
       - name: Download package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: signed-nuget-packages
 

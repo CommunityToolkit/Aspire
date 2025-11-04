@@ -1,6 +1,7 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Python;
 using CommunityToolkit.Aspire.Utils;
+using UvicornAppResource = Aspire.Hosting.ApplicationModel.UvicornAppResource;
 
 namespace Aspire.Hosting;
 

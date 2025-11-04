@@ -29,6 +29,8 @@ namespace Aspire.Hosting
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithInitFiles(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string source) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithLogLevel(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, Microsoft.Extensions.Logging.LogLevel logLevel) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<T> WithSurrealist<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.SurrealistContainerResource>>? configureContainer = null, string? containerName = null)
             where T : ApplicationModel.SurrealDbServerResource { throw null; }
     }
