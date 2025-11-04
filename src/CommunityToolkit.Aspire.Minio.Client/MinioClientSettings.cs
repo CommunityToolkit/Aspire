@@ -69,12 +69,11 @@ public sealed class MinioClientSettings
         }
         
         // Check for UseSsl (and variants) in the connection string and parse it if present.
-            if (connectionBuilder.TryGetValue(UseSslKey, out var useSslObj))
+        if (connectionBuilder.TryGetValue(UseSslKey, out var useSslObj)
+            && useSslObj is string useSslValue 
+            && bool.TryParse(useSslValue, out var parsed))
             {
-                if (bool.TryParse(useSslObj, out var parsed))
-                {
-                    UseSsl = parsed;
-                }
+                UseSsl = parsed;
             }
         
         if (connectionBuilder.TryGetValue(AccessKey, out var accessKeyValue) &&
