@@ -24,5 +24,5 @@ public class KurrentDBResource(string name) : ContainerResource(name), IResource
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"esdb://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}?tls=false");
+            $"kurrentdb://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}?tls=false");
 }
