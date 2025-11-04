@@ -31,9 +31,27 @@ public sealed class MinioContainerResource(string name, ParameterResource rootUs
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 
     /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
+
+    /// <summary>
     /// Gets the connection string expression for the Minio
     /// </summary>
     public ReferenceExpression ConnectionStringExpression => GetConnectionString();
+
+    /// <summary>
+    /// Gets the connection URI expression for the MinIO server.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>http://{host}:{port}</c>.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"http://{Host}:{Port}");
 
     /// <summary>
     /// Gets the connection string for the MinIO server.
@@ -69,5 +87,14 @@ public sealed class MinioContainerResource(string name, ParameterResource rootUs
     internal void SetPassword(ParameterResource password)
     {
         PasswordParameter = password;
+    }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("AccessKey", ReferenceExpression.Create($"{RootUser}"));
+        yield return new("SecretKey", ReferenceExpression.Create($"{PasswordParameter}"));
+        yield return new("Uri", UriExpression);
     }
 }
