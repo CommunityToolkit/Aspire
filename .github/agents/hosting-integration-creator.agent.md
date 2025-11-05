@@ -293,3 +293,55 @@ When a user requests a new hosting integration, create a step-by-step plan for c
 7. **Add Projects to Solution**: Add the new projects (test and example) to the CommunityToolkit.Aspire.slnx solution file.
 
 8. **Review and Refine**: Review the implementation, tests, and documentation. Make any necessary refinements before finalizing the integration.
+
+### Container Image Tag Guidance
+
+For any container-based hosting integration, you MUST use a stable, explicit image reference. Prefer a concrete `major.minor` tag (e.g. `myimage:1.4`) or an immutable `sha256` digest. Do NOT use floating tags such as `latest`, `edge`, or bare major tags (`1`). This ensures reproducible local and CI builds and avoids unexpected upstream changes.
+
+If the upstream project does not publish versioned tags, capture the current digest using `docker pull <image>` followed by `docker image inspect --format '{{.RepoDigests}}' <image>` and pin that digest. Document the chosen strategy in the integration `README.md` under a “Image Versioning” or “Upstream Image” section.
+
+### Add vs With Method Conventions
+
+Extension methods follow a two-phase pattern:
+
+-   `Add[HostingName]()` methods CREATE and register the resource on the `IDistributedApplicationBuilder`. They should return `IResourceBuilder<TResource>` and may perform basic validation and setup.
+-   `With[Capability]()` methods MODIFY or augment an already-added resource via the fluent `IResourceBuilder<TResource>` chain (e.g. `.WithHttpEndpoint()`, `.WithArgs()`, `.WithEnvironment()`, `.WithModel("llama2")`). These should never add the resource again; they only decorate or configure it.
+
+When adding new configuration options, prefer a `WithXyz(...)` method over adding more parameters to the original `Add...()` unless the parameter is fundamental (e.g. mandatory port, mandatory working directory). Keep the `Add...()` signature concise.
+
+### Expanded Testing Guidance
+
+Testing consists of UNIT and INTEGRATION layers:
+
+1. Unit tests (in `tests/CommunityToolkit.Aspire.Hosting.[HostingName].Tests`) should validate:
+
+    - Resource construction (properties, defaults, tags, endpoints, connection string expression shape).
+    - Extension method behavior (e.g. `AddXyz()` returns a builder whose resource has expected defaults).
+    - Fluent `With...()` methods mutate the builder/resource as expected (args appended, endpoints created, environment variables present).
+
+2. Integration tests use the example AppHost via `ProjectReference` and `AspireIntegrationTestFixture<TExampleAppHost>` (from `CommunityToolkit.Aspire.Testing`). To create one:
+
+    ```csharp
+    public class HostingNameIntegrationTests(AspireIntegrationTestFixture<CommunityToolkit.Aspire.Hosting.HostingName.AppHost.AppHostMarker> fixture) : IClassFixture<AspireIntegrationTestFixture<CommunityToolkit.Aspire.Hosting.HostingName.AppHost.AppHostMarker>>
+    {
+      [Fact]
+      public async Task ResourceStartsAndHealthCheckPasses()
+      {
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("resource-name").WaitAsync(TimeSpan.FromSeconds(30));
+
+        var client = fixture.CreateHttpClient("resource-name");
+        var response = await client.GetAsync("/");
+        Assert.True(response.IsSuccessStatusCode);
+      }
+    }
+    ```
+
+Key points:
+
+-   If the resource exposes a connection string via `IResourceWithConnectionString`, assert the generated expression includes expected host/port scheme parts.
+-   Mark tests requiring Docker with `[RequiresDocker]` so that CI filters them appropriately.
+-   After adding the test project, run `./eng/testing/generate-test-list-for-workflow.sh` and update `.github/workflows/tests.yml`.
+
+### Auto-Generated `api` Folder Warning
+
+Do NOT create or manually edit an `api` folder or any files within it for hosting integrations. Files under paths like `src/CommunityToolkit.Aspire.Hosting.[HostingName]/api/` are generated automatically (e.g. by source generators or build tooling). Manual changes will be overwritten and should instead be implemented in normal source files outside `api`. If you need new generated capabilities, extend the generator or add new partial types outside the `api` directory.
