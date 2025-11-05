@@ -35,6 +35,7 @@ public static class UvicornAppHostingExtension
         return builder.AddUvicornApp(name, projectDirectory, appName, ".venv", args);
     }
 
+    [Obsolete]
     private static IResourceBuilder<UvicornAppResource> AddUvicornApp(this IDistributedApplicationBuilder builder,
         string name,
         string projectDirectory,

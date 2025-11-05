@@ -33,6 +33,7 @@ public static class UvAppHostingExtension
         return builder.AddUvApp(name, scriptPath, projectDirectory, ".venv", scriptArgs);
     }
 
+    [Obsolete]
     private static IResourceBuilder<UvAppResource> AddUvApp(this IDistributedApplicationBuilder builder,
         string name,
         string scriptPath,
