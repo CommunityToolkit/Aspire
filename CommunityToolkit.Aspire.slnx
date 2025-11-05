@@ -30,11 +30,6 @@
   <Folder Name="/examples/deno/">
     <Project Path="examples/deno/CommunityToolkit.Aspire.Hosting.Deno.AppHost/CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj" />
   </Folder>
-  <Folder Name="/examples/eventstore/">
-    <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.ApiService/CommunityToolkit.Aspire.Hosting.EventStore.ApiService.csproj" />
-    <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.AppHost/CommunityToolkit.Aspire.Hosting.EventStore.AppHost.csproj" />
-    <Project Path="examples/eventstore/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults/CommunityToolkit.Aspire.Hosting.EventStore.ServiceDefaults.csproj" />
-  </Folder>
   <Folder Name="/examples/kurrentdb/">
     <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService.csproj" />
     <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.csproj" />
@@ -171,7 +166,6 @@
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/CommunityToolkit.Aspire.EventStore/CommunityToolkit.Aspire.EventStore.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
@@ -179,7 +173,6 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.EventStore/CommunityToolkit.Aspire.Hosting.EventStore.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Golang/CommunityToolkit.Aspire.Hosting.Golang.csproj" />
