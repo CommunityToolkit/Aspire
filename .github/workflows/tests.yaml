@@ -49,7 +49,6 @@ jobs:
             Hosting.PapercutSmtp.Tests,
             Hosting.PostgreSQL.Extensions.Tests,
             Hosting.PowerShell.Tests,
-            Hosting.Python.Extensions.Tests,
             Hosting.RavenDB.Tests,
             Hosting.Redis.Extensions.Tests,
             Hosting.Rust.Tests,
