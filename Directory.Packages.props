@@ -77,7 +77,7 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.20" />
-    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.1.61" />
+    <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.2" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
