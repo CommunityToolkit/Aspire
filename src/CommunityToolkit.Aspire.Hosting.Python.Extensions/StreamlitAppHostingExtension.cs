@@ -56,19 +56,28 @@ public static class StreamlitAppHostingExtension
 
         var projectResource = new StreamlitAppResource(name, projectExecutable, projectDirectory);
 
-        var resourceBuilder = builder.AddResource(projectResource).WithArgs(context =>
-        {
-            // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
-            if (!string.IsNullOrEmpty(instrumentationExecutable))
+        var resourceBuilder = builder.AddResource(projectResource)
+            .WithEnvironment(context =>
             {
-                AddOpenTelemetryArguments(context);
+                // Streamlit uses STREAMLIT_SERVER_PORT instead of PORT, so map PORT to STREAMLIT_SERVER_PORT
+                if (context.EnvironmentVariables.TryGetValue("PORT", out var portValue))
+                {
+                    context.EnvironmentVariables["STREAMLIT_SERVER_PORT"] = portValue;
+                }
+            })
+            .WithArgs(context =>
+            {
+                // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
+                if (!string.IsNullOrEmpty(instrumentationExecutable))
+                {
+                    AddOpenTelemetryArguments(context);
 
-                // Add the streamlit executable as the next argument so we can run the project.
-                context.Args.Add("streamlit");
-            }
+                    // Add the streamlit executable as the next argument so we can run the project.
+                    context.Args.Add("streamlit");
+                }
 
-            AddProjectArguments(scriptPath, args, context);
-        });
+                AddProjectArguments(scriptPath, args, context);
+            });
 
         if (!string.IsNullOrEmpty(instrumentationExecutable))
         {
@@ -86,6 +95,10 @@ public static class StreamlitAppHostingExtension
     {
         context.Args.Add("run");
         context.Args.Add(scriptPath);
+
+        // Add --server.headless to run without browser opening
+        context.Args.Add("--server.headless");
+        context.Args.Add("true");
 
         foreach (var arg in scriptArgs)
         {
