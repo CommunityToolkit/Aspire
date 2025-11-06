@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>7e518d7d-87e8-4337-8806-1c99acce5e01</UserSecretsId>
   </PropertyGroup>
@@ -13,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../API/API.csproj" />
     <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
