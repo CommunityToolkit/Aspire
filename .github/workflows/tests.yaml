@@ -57,6 +57,7 @@ jobs:
             Hosting.SqlDatabaseProjects.Tests,
             Hosting.SqlServer.Extensions.Tests,
             Hosting.Sqlite.Tests,
+            Hosting.Stripe.Tests,
             Hosting.Minio.Tests,
             Hosting.SurrealDb.Tests,
 
