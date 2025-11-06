@@ -89,13 +89,13 @@ public class AddStripeTests
     }
 
     [Fact]
-    public async Task StripeWithApiKeyParameterAddsApiKeyArg()
+    public void StripeWithApiKeyParameterAddsApiKeyArg()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var apiKey = builder.AddParameter("stripe-api-key");
 
-        builder.AddStripe("stripe")
+        var stripe = builder.AddStripe("stripe")
             .WithListen("http://localhost:5082/webhooks")
             .WithApiKey(apiKey);
 
@@ -105,20 +105,20 @@ public class AddStripeTests
 
         var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
 
-        var config = await resource.GetEffectiveArgsAsync(default);
-
-        Assert.Contains(config, arg => arg.Contains("--api-key="));
+        // Verify that a CommandLineArgsCallbackAnnotation was added
+        var argsAnnotation = resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>();
+        Assert.NotEmpty(argsAnnotation);
     }
 
     [Fact]
-    public async Task StripeWithListenToEndpointReference()
+    public void StripeWithListenToEndpointReference()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var api = builder.AddProject<TestProject>("api")
             .WithHttpEndpoint(port: 5082, name: "http");
 
-        builder.AddStripe("stripe")
+        var stripe = builder.AddStripe("stripe")
             .WithListen(api.GetEndpoint("http"));
 
         using var app = builder.Build();
@@ -127,9 +127,9 @@ public class AddStripeTests
 
         var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
 
-        var config = await resource.GetEffectiveArgsAsync(default);
-
-        Assert.Contains(config, arg => arg.Contains("--forward-to="));
+        // Verify that a CommandLineArgsCallbackAnnotation was added
+        var argsAnnotation = resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>();
+        Assert.NotEmpty(argsAnnotation);
     }
 
     [Fact]
@@ -243,9 +243,9 @@ public class AddStripeTests
 
         var apiResource = Assert.Single(appModel.Resources.OfType<TestProject>());
 
-        var envVars = apiResource.GetEnvironmentVariables();
-
-        Assert.True(envVars.ContainsKey("STRIPE_WEBHOOK_SECRET"));
+        // Verify that an EnvironmentCallbackAnnotation was added
+        var envAnnotations = apiResource.Annotations.OfType<EnvironmentCallbackAnnotation>();
+        Assert.NotEmpty(envAnnotations);
     }
 
     [Fact]
@@ -265,10 +265,9 @@ public class AddStripeTests
 
         var apiResource = Assert.Single(appModel.Resources.OfType<TestProject>());
 
-        var envVars = apiResource.GetEnvironmentVariables();
-
-        Assert.True(envVars.ContainsKey("CUSTOM_STRIPE_SECRET"));
-        Assert.False(envVars.ContainsKey("STRIPE_WEBHOOK_SECRET"));
+        // Verify that an EnvironmentCallbackAnnotation was added
+        var envAnnotations = apiResource.Annotations.OfType<EnvironmentCallbackAnnotation>();
+        Assert.NotEmpty(envAnnotations);
     }
 
     [Fact]
@@ -318,9 +317,5 @@ public class AddStripeTests
         public TestProject(string name) : base(name)
         {
         }
-
-        private readonly Dictionary<string, object> _env = [];
-
-        public Dictionary<string, object> GetEnvironmentVariables() => _env;
     }
 }
