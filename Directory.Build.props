@@ -16,7 +16,7 @@
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
     <AspirePreviewSuffix>preview.1.25522.3</AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>9.0.10</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.0-rc.2.25502.107</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
     <TestContainersVersion>4.7.0</TestContainersVersion>
     <MEAIVersion>9.9.0</MEAIVersion>
