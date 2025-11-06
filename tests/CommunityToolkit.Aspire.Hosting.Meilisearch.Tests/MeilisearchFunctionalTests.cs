@@ -36,9 +36,9 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        await app.WaitForTextAsync("Server listening", meilisearch.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        await rns.WaitForResourceHealthyAsync(meilisearch.Resource.Name);
 
         var hb = Host.CreateApplicationBuilder();
 
@@ -90,9 +90,8 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
             {
                 await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                await app.WaitForTextAsync("Server listening", meilisearch1.Resource.Name);
-#pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+                await rns.WaitForResourceHealthyAsync(meilisearch1.Resource.Name);
 
                 try
                 {
@@ -135,8 +134,8 @@ public class MeilisearchFunctionalTests(ITestOutputHelper testOutputHelper)
             {
                 await app.StartAsync();
 
-#pragma warning disable CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                await app.WaitForTextAsync("Server listening", meilisearch2.Resource.Name);
+                var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+                await rns.WaitForResourceHealthyAsync(meilisearch2.Resource.Name);
 #pragma warning restore CTASPIRE001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
                 try

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-
-namespace Aspire.Hosting.ApplicationModel;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents an Ollama container.
@@ -36,7 +34,7 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
       );
 
     /// <summary>
-    ///     Adds a model to the list of models to download on initial startup.
+    /// Adds a model to the list of models to download on initial startup.
     /// </summary>
     /// <param name="modelName">The name of the model</param>
     public void AddModel(string modelName)

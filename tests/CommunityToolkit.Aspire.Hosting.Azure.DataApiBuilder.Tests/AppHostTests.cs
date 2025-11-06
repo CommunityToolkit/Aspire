@@ -6,13 +6,12 @@ using System.Net.Http.Json;
 namespace CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests;
 
 [RequiresDocker]
-#pragma warning disable CTASPIRE001
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Azure_DataApiBuilder_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Azure_DataApiBuilder_AppHost>>
 {
     [Fact]
     public async Task ResourceStartsAndRespondsOk()
     {
-        await fixture.App.WaitForTextAsync("Now listening on: http://[::]:5000", "dab").WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("dab").WaitAsync(TimeSpan.FromMinutes(1));
         var httpClient = fixture.CreateHttpClient("dab");
 
         var response = await httpClient.GetAsync("/");
@@ -23,7 +22,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [Fact]
     public async Task CanGetSeries()
     {
-        await fixture.App.WaitForTextAsync("Now listening on: http://[::]:5000", "dab").WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync("dab").WaitAsync(TimeSpan.FromMinutes(1));
 
         var httpClient = fixture.CreateHttpClient("dab");
 

@@ -1,8 +1,9 @@
-using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.McpInspector.Tests;
 
+// Forcing linux only due to: https://github.com/modelcontextprotocol/inspector/issues/893
+[RequiresLinux]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_AppHost>>
 {
     [Fact]

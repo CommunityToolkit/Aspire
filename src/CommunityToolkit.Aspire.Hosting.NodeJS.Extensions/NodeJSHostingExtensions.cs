@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.NodeJs;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
 
@@ -9,94 +10,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static partial class NodeJSHostingExtensions
 {
-    /// <summary>
-    /// Adds a Vite app to the distributed application builder.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the Vite app.</param>
-    /// <param name="workingDirectory">The working directory of the Vite app. If not specified, it will be set to a path that is a sibling of the AppHost directory using the <paramref name="name"/> as the folder.</param>
-    /// <param name="packageManager">The package manager to use. Default is npm.</param>
-    /// <param name="useHttps">When true use HTTPS for the endpoints, otherwise use HTTP.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>This uses the specified package manager (default npm) method internally but sets defaults that would be expected to run a Vite app, such as the command to run the dev server and exposing the HTTP endpoints.</remarks>
-    public static IResourceBuilder<NodeAppResource> AddViteApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? workingDirectory = null, string packageManager = "npm", bool useHttps = false)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(packageManager);
-
-        string wd = workingDirectory ?? Path.Combine("..", name);
-
-        var resource = packageManager switch
-        {
-            "yarn" => builder.AddYarnApp(name, wd, "dev"),
-            "pnpm" => builder.AddPnpmApp(name, wd, "dev"),
-            _ => builder.AddNpmApp(name, wd, "dev")
-        };
-
-        _ = useHttps
-            ? resource.WithHttpsEndpoint(env: "PORT")
-            : resource.WithHttpEndpoint(env: "PORT");
-
-        return resource
-            .WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager))
-            .WithMappedEndpointPort();
-    }
-
-    /// <summary>
-    /// Adds a Node.js app to the distributed application builder using yarn as the package manager.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="scriptName">The npm script to execute. Defaults to "start".</param>
-    /// <param name="args">The arguments to pass to the command.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> AddYarnApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string scriptName = "start", string[]? args = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(workingDirectory);
-        ArgumentNullException.ThrowIfNull(scriptName);
-        string[] allArgs = args is { Length: > 0 }
-            ? ["run", scriptName, "--", .. args]
-            : ["run", scriptName];
-
-        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
-        var resource = new NodeAppResource(name, "yarn", workingDirectory);
-
-        return builder.AddResource(resource)
-                      .WithNodeDefaults()
-                      .WithArgs(allArgs);
-    }
-
-    /// <summary>
-    /// Adds a Node.js app to the distributed application builder using pnpm as the package manager.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="scriptName">The npm script to execute. Defaults to "start".</param>
-    /// <param name="args">The arguments to pass to the command.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<NodeAppResource> AddPnpmApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string scriptName = "start", string[]? args = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(workingDirectory);
-        ArgumentNullException.ThrowIfNull(scriptName);
-
-        string[] allArgs = args is { Length: > 0 }
-            ? ["run", scriptName, "--", .. args]
-            : ["run", scriptName];
-
-        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
-        var resource = new NodeAppResource(name, "pnpm", workingDirectory);
-        return builder.AddResource(resource)
-                      .WithNodeDefaults()
-                      .WithArgs(allArgs);
-    }
-
     /// <summary>
     /// Adds an Nx monorepo workspace to the distributed application builder.
     /// </summary>
@@ -114,6 +27,7 @@ public static partial class NodeJSHostingExtensions
 
         var resource = new NxResource(name, workingDirectory);
         return builder.AddResource(resource)
+            .WithIconName("CodeJsRectangle")
             .WithInitialState(new CustomResourceSnapshot { Properties = [], ResourceType = "NxWorkspace", State = KnownResourceStates.Running });
     }
 
@@ -134,6 +48,7 @@ public static partial class NodeJSHostingExtensions
 
         var resource = new TurborepoResource(name, workingDirectory);
         return builder.AddResource(resource)
+            .WithIconName("CodeJsRectangle")
             .WithInitialState(new CustomResourceSnapshot { Properties = [], ResourceType = "TurborepoWorkspace", State = KnownResourceStates.Running });
     }
 
@@ -152,33 +67,21 @@ public static partial class NodeJSHostingExtensions
 
         appName ??= name;
 
-        string command = "nx";
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation))
-        {
-            command = packageManagerAnnotation.PackageManager switch
-            {
-                "yarn" => "yarn",
-                "pnpm" => "pnpm",
-                _ => "npx"
-            };
-        }
-
-        var resource = new NxAppResource(name, builder.Resource.WorkingDirectory, appName, command);
+        var resource = new NxAppResource(name, builder.Resource.WorkingDirectory, appName);
 
         var rb = builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
-            .WithArgs((ctx) =>
-            {
-                if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManager))
-                {
-                    ctx.Args.Add("nx");
-                }
-
-                ctx.Args.Add("serve");
-                ctx.Args.Add(appName);
-            })
+            .WithIconName("CodeJsRectangle")
+            .WithArgs("serve", appName)
             .WithParentRelationship(builder.Resource);
 
+        // If the workspace is configured to use a package manager, bring that annotation forward
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation))
+        {
+            rb.WithAnnotation(executionAnnotation);
+        }
+
+        // If the workspace has an installer annotation, wait for the installer to complete
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
         {
             rb.WaitForCompletion(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
@@ -204,35 +107,21 @@ public static partial class NodeJSHostingExtensions
 
         filter ??= name;
 
-        string command = "turbo";
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation))
-        {
-            command = packageManagerAnnotation.PackageManager switch
-            {
-                "yarn" => "yarn",
-                "pnpm" => "pnpm",
-                _ => "npx"
-            };
-        }
-
-        var resource = new TurborepoAppResource(name, builder.Resource.WorkingDirectory, filter, command);
+        var resource = new TurborepoAppResource(name, builder.Resource.WorkingDirectory, filter);
 
         var rb = builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
-            .WithArgs((ctx) =>
-            {
-                if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManager))
-                {
-                    ctx.Args.Add("turbo");
-                }
-
-                ctx.Args.Add("run");
-                ctx.Args.Add("dev");
-                ctx.Args.Add("--filter");
-                ctx.Args.Add(filter);
-            })
+            .WithIconName("CodeJsRectangle")
+            .WithArgs("run", "dev", "--filter", filter)
             .WithParentRelationship(builder.Resource);
 
+        // If the workspace is configured to use a package manager, bring that annotation forward
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation))
+        {
+            rb.WithAnnotation(executionAnnotation);
+        }
+
+        // If the workspace has an installer annotation, wait for the installer to complete
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
         {
             rb.WaitForCompletion(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
@@ -254,26 +143,30 @@ public static partial class NodeJSHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation);
-
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var existingAnnotation))
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var existingExecution))
         {
-            if (installerAnnotation is null || existingAnnotation.PackageManager == installerAnnotation.Resource.Command)
+            if (packageManager is null || existingExecution.ExecutableName == packageManager)
             {
-                // already configured with a package manager
+                // already configured with execution annotation
                 return builder;
             }
-            throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is already configured to use the '{existingAnnotation.PackageManager}' package manager.");
+            throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is already configured to run with the '{existingExecution.ExecutableName}' package manager.");
         }
 
-        packageManager ??= installerAnnotation?.Resource.Command;
-
+        // If no explicit package manager provided, try to infer from configured annotation
         if (packageManager is null)
         {
-            throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is not configured with a package manager. Please specify a package manager.");
+            if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerConfiguredAnnotation>(out var configured))
+            {
+                packageManager = configured.PackageManager;
+            }
+            else
+            {
+                throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm first, or provide an explicit package manager.");
+            }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager));
+        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager, runScriptCommand: "nx"));
     }
 
     /// <summary>
@@ -287,26 +180,30 @@ public static partial class NodeJSHostingExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation);
-
-        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var existingAnnotation))
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var existingExecution))
         {
-            if (installerAnnotation is null || existingAnnotation.PackageManager == installerAnnotation.Resource.Command)
+            if (packageManager is null || existingExecution.ExecutableName == packageManager)
             {
-                // already configured with a package manager
+                // already configured with execution annotation
                 return builder;
             }
-            throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is already configured to use the '{existingAnnotation.PackageManager}' package manager.");
+            throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is already configured to run with the '{existingExecution.ExecutableName}' package manager.");
         }
 
-        packageManager ??= installerAnnotation?.Resource.Command;
-
+        // If no explicit package manager provided, try to infer from configured annotation
         if (packageManager is null)
         {
-            throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is not configured with a package manager. Please specify a package manager.");
+            if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerConfiguredAnnotation>(out var configured))
+            {
+                packageManager = configured.PackageManager;
+            }
+            else
+            {
+                throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm first, or provide an explicit package manager.");
+            }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager));
+        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager, runScriptCommand: "turbo"));
     }
 
     /// <summary>
@@ -323,8 +220,8 @@ public static partial class NodeJSHostingExtensions
         {
             var resource = builder.Resource;
 
-            // monorepo tools will need `--`, as does npm
-            if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation) || packageManagerAnnotation.PackageManager == "npm")
+            // monorepo tools and npm (from Aspire.Hosting.NodeJS) need `--`, but yarn and pnpm don't
+            if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation) || executionAnnotation.ExecutableName == "npm")
             {
                 ctx.Args.Add("--");
             }
@@ -339,8 +236,157 @@ public static partial class NodeJSHostingExtensions
         });
     }
 
-    // Copied from https://github.com/dotnet/aspire/blob/50ca9fa670af5c70782dc75d2961956b06f1a403/src/Aspire.Hosting.NodeJs/NodeExtensions.cs#L70-L72
+    /// <summary>
+    /// Configures the Nx workspace to use npm as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Nx workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<NxResource> WithNpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "npm", install, configureInstaller);
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the Nx workspace to use yarn as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Nx workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<NxResource> WithYarn(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "yarn", install, configureInstaller);
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the Nx workspace to use pnpm as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Nx workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<NxResource> WithPnpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "pnpm", install, configureInstaller);
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the Turborepo workspace to use npm as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Turborepo workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<TurborepoResource> WithNpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "npm", install, configureInstaller);
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the Turborepo workspace to use yarn as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Turborepo workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<TurborepoResource> WithYarn(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "yarn", install, configureInstaller);
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the Turborepo workspace to use pnpm as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Turborepo workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<TurborepoResource> WithPnpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "pnpm", install, configureInstaller);
+        return builder;
+    }
+
+    private static void AddMonorepoInstaller<TResource>(
+        IResourceBuilder<TResource> builder,
+        string packageManager,
+        bool install,
+        Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller)
+        where TResource : Resource
+    {
+        // Always add the configured annotation to track which package manager was set up
+        builder.WithAnnotation(new JavaScriptPackageManagerConfiguredAnnotation(packageManager));
+
+        // Only install packages if not in publish mode and install is true
+        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode && install)
+        {
+            var installerName = $"{builder.Resource.Name}-installer";
+            var workingDirectory = builder.Resource switch
+            {
+                NxResource nx => nx.WorkingDirectory,
+                TurborepoResource turbo => turbo.WorkingDirectory,
+                _ => throw new InvalidOperationException($"Unsupported resource type: {builder.Resource.GetType().Name}")
+            };
+
+            // Check if installer already exists
+            if (builder.ApplicationBuilder.TryCreateResourceBuilder<JavaScriptInstallerResource>(installerName, out var existingResource))
+            {
+                // Installer already exists, don't create a new one
+                return;
+            }
+
+            var installer = new JavaScriptInstallerResource(installerName, workingDirectory);
+
+            var installerBuilder = builder.ApplicationBuilder
+                .AddResource(installer)
+                .WithCommand(packageManager)
+                .WithParentRelationship(builder.Resource)
+                .WithIconName("CodeJsRectangle")
+                .ExcludeFromManifest();
+
+            // Set up the installer command based on package manager
+            installerBuilder.WithArgs("install");
+
+            configureInstaller?.Invoke(installerBuilder);
+
+            // Add annotation to track the installer
+            builder.WithAnnotation(new JavaScriptPackageInstallerAnnotation(installer));
+        }
+    }
+
     private static IResourceBuilder<TResource> WithNodeDefaults<TResource>(this IResourceBuilder<TResource> builder) where TResource : NodeAppResource =>
         builder.WithOtlpExporter()
-            .WithEnvironment("NODE_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production");
+            .WithEnvironment("NODE_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production")
+            .WithCertificateTrustConfiguration((ctx) =>
+            {
+                if (ctx.Scope == CertificateTrustScope.Append)
+                {
+                    ctx.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = ctx.CertificateBundlePath;
+                }
+                else
+                {
+                    ctx.Arguments.Add("--use-openssl-ca");
+                }
+
+                return Task.CompletedTask;
+            });
 }
