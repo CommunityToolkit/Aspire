@@ -39,7 +39,7 @@ This will:
 
 ### Forwarding to an Aspire endpoint
 
-You can also forward webhooks to an Aspire endpoint reference:
+You can also construct URLs dynamically using Aspire endpoint references:
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
@@ -48,12 +48,16 @@ var api = builder.AddProject<Projects.API>("api")
     .WithHttpEndpoint(port: 5082, name: "http");
 
 var stripe = builder.AddStripe("stripe")
-    .WithListen(api.GetEndpoint("http"), events: "payment_intent.created,charge.succeeded");
+    .WithListen(
+        ReferenceExpression.Create($"{api.GetEndpoint("http").Property(EndpointProperty.Url)}/payments/stripe-webhook"),
+        events: "payment_intent.created,charge.succeeded");
 
 api.WithReference(stripe);
 
 builder.Build().Run();
 ```
+
+Note: When constructing URLs with paths, you need to use `ReferenceExpression.Create` to combine the endpoint URL with your webhook path.
 
 ### Using a custom environment variable for the webhook secret
 
