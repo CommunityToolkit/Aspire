@@ -115,4 +115,11 @@
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
   </ItemGroup>
+
+  <ItemGroup Label="System.Linq.Async Uplift">
+    <PackageVersion Include="System.Linq.Async" Version="6.0.1">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageVersion>
+    <PackageVersion Include="System.Linq.AsyncEnumerable" Version="$(DotNetExtensionsVersion)" />
+  </ItemGroup>
 </Project>

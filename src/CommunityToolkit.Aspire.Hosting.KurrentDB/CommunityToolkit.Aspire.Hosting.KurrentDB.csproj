@@ -14,4 +14,11 @@
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.KurrentDB.Tests"></InternalsVisibleTo>
   </ItemGroup>
 
+  <ItemGroup Label="System.Linq.Async Uplift">
+    <PackageReference Include="System.Linq.Async">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Linq.AsyncEnumerable" />
+  </ItemGroup>
+
 </Project>
