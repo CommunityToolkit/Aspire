@@ -8,6 +8,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [Theory(Skip = "To be reviewed with https://github.com/CommunityToolkit/Aspire/issues/917")]
     [InlineData("uvicornapp")]
     [InlineData("uvapp")]
+    [InlineData("streamlitapp")]
     public async Task ResourceStartsAndRespondsOk(string appName)
     {
         var httpClient = fixture.CreateHttpClient(appName);
