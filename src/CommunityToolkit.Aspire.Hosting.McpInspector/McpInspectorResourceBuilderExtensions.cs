@@ -45,6 +45,8 @@ public static class McpInspectorResourceBuilderExtensions
         var proxyTokenParameter = options.ProxyToken?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-proxyToken");
 
         var resource = builder.AddResource(new McpInspectorResource(name))
+            .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
+            .WithCommand("npx")
             .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
             .ExcludeFromManifest()
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
