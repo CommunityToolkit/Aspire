@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <!-- Workaround for https://github.com/dotnet/aspire/issues/7779 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' or '$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
