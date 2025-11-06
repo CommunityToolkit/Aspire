@@ -1,5 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Python;
 using CommunityToolkit.Aspire.Utils;
 
 namespace Aspire.Hosting;
@@ -46,17 +45,9 @@ public static class StreamlitAppHostingExtension
 
         projectDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, wd));
 
-        var virtualEnvironment = new VirtualEnvironment(Path.IsPathRooted(virtualEnvironmentPath)
-            ? virtualEnvironmentPath
-            : Path.Join(projectDirectory, virtualEnvironmentPath));
+        var projectResource = new StreamlitAppResource(name, projectDirectory);
 
-        var instrumentationExecutable = virtualEnvironment.GetExecutable("opentelemetry-instrument");
-        var streamlitExecutable = virtualEnvironment.GetExecutable("streamlit") ?? "streamlit";
-        var projectExecutable = instrumentationExecutable ?? streamlitExecutable;
-
-        var projectResource = new StreamlitAppResource(name, projectExecutable, projectDirectory);
-
-        var resourceBuilder = builder.AddResource(projectResource)
+        return builder.AddResource(projectResource)
             .WithEnvironment(context =>
             {
                 // Streamlit uses STREAMLIT_SERVER_PORT instead of PORT, so map PORT to STREAMLIT_SERVER_PORT
@@ -67,28 +58,8 @@ public static class StreamlitAppHostingExtension
             })
             .WithArgs(context =>
             {
-                // If the project is to be automatically instrumented, add the instrumentation executable arguments first.
-                if (!string.IsNullOrEmpty(instrumentationExecutable))
-                {
-                    AddOpenTelemetryArguments(context);
-
-                    // Add the streamlit executable as the next argument so we can run the project.
-                    context.Args.Add("streamlit");
-                }
-
                 AddProjectArguments(scriptPath, args, context);
             });
-
-        if (!string.IsNullOrEmpty(instrumentationExecutable))
-        {
-            resourceBuilder.WithOtlpExporter();
-
-            // Make sure to attach the logging instrumentation setting, so we can capture logs.
-            // Without this you'll need to configure logging yourself. Which is kind of a pain.
-            resourceBuilder.WithEnvironment("OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED", "true");
-        }
-
-        return resourceBuilder;
     }
 
     private static void AddProjectArguments(string scriptPath, string[] scriptArgs, CommandLineArgsCallbackContext context)
@@ -104,17 +75,5 @@ public static class StreamlitAppHostingExtension
         {
             context.Args.Add(arg);
         }
-    }
-
-    private static void AddOpenTelemetryArguments(CommandLineArgsCallbackContext context)
-    {
-        context.Args.Add("--traces_exporter");
-        context.Args.Add("otlp");
-
-        context.Args.Add("--logs_exporter");
-        context.Args.Add("console,otlp");
-
-        context.Args.Add("--metrics_exporter");
-        context.Args.Add("otlp");
     }
 }

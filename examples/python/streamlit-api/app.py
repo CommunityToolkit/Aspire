@@ -3,7 +3,7 @@ import os
 
 st.title("Hello, Aspire!")
 
-st.write("This is a simple Streamlit app running in .NET Aspire.")
+st.write("This is a simple Streamlit app running in Aspire.")
 
 port = os.environ.get("PORT", "8501")
 st.write(f"Running on port: {port}")

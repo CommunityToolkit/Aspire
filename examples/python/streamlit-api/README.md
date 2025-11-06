@@ -1,6 +1,6 @@
 # Streamlit API Example
 
-This is a simple Streamlit application that demonstrates how to run Streamlit apps in .NET Aspire using the Python Extensions.
+This is a simple Streamlit application that demonstrates how to run Streamlit apps in Aspire using the Python Extensions.
 
 ## Prerequisites
 
