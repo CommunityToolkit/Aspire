@@ -4,8 +4,9 @@
   "features": {
     "ghcr.io/azure/azure-dev/azd:latest": {},
     "ghcr.io/devcontainers/features/dotnet:latest": {
-      "version": "8.0",
-      "additionalVersions": "9.0"
+      "version": "10.0",
+      "additionalVersions": "8.0,9.0",
+      "installUsingApt": false
     },
     "ghcr.io/devcontainers/features/github-cli:latest": {},
     "ghcr.io/devcontainers/features/java:1": {
