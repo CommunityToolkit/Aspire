@@ -43,7 +43,9 @@ public static class StreamlitAppHostingExtension
 
         string wd = projectDirectory ?? Path.Combine("..", name);
 
-        projectDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, wd));
+        var normalizedAppHostDirectory = PathNormalizer.NormalizePathForCurrentPlatform(builder.AppHostDirectory);
+        var normalizedWd = PathNormalizer.NormalizePathForCurrentPlatform(wd);
+        projectDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(normalizedAppHostDirectory, normalizedWd));
 
         var projectResource = new StreamlitAppResource(name, projectDirectory);
 
