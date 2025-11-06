@@ -39,7 +39,7 @@ var uvicorn = builder.AddUvApp("uvapp", "../uv-api", "uv-api")
 
 ### Streamlit example usage
 
-Then, in the _Program.cs_ file of `AddStreamlitApp`, define a Streamlit resource, then call `Add`:
+Then, in the _Program.cs_ file of your AppHost project, define a Streamlit resource, then call `Add`:
 
 ```csharp
 var streamlit = builder.AddStreamlitApp("streamlitapp", "../streamlit-api", "app.py")
