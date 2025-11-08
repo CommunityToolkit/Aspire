@@ -29,11 +29,10 @@ public static class UmamiBuilderExtensions
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
-    /// var db = builder.AddSurrealServer("surreal")
-    ///   .AddNamespace("ns")
+    /// var db = builder.AddPostgres("postgres")
     ///   .AddDatabase("db");
-    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
-    ///   .WithReference(db);
+    /// var umami = builder.AddUmami("umami")
+    ///   .WithStorageBackend(db);
     ///  
     /// builder.Build().Run(); 
     /// </code>
