@@ -52,6 +52,7 @@ This repository contains the source code for the .NET Aspire Community Toolkit, 
 | - **Learn More**: [`MinIO.Client`][minio-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Minio.Client][minio-client-shields]][minio-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Client.Minio][minio-client-shields-preview]][minio-client-nuget-preview]                                                                                                  | An Aspire client integration for the [MinIO](https://github.com/minio/minio-dotnet) package.                                                                                |
 | - **Learn More**: [`Hosting.SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields]][surrealdb-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields-preview]][surrealdb-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [SurrealDB](https://surrealdb.com/) container.                                                                                 |
 | - **Learn More**: [`SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields]][surrealdb-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields-preview]][surrealdb-client-nuget-preview]                                                                                       | An Aspire client integration for the [SurrealDB](https://github.com/surrealdb/surrealdb.net/) package.                                                                      |
+| - **Learn More**: [`Hosting.Umami`][umami-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields]][umami-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields-preview]][umami-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [Umami](https://umami.is/) container.                                                                                 |
 
 ## 🙌 Getting Started
 
@@ -273,5 +274,9 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [surrealdb-client-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.SurrealDb
 [surrealdb-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/
 [surrealdb-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.SurrealDb?label=nuget%20(preview)
-[surrealdb-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/absoluteLatest
-
+[surrealdb-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Umami/absoluteLatest
+[umami-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-umami
+[umami-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Umami
+[umami-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Umami/
+[umami-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Umami?label=nuget%20(preview)
+[umami-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Umami/absoluteLatest
