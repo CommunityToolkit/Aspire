@@ -63,6 +63,7 @@ jobs:
             Hosting.SqlServer.Extensions.Tests,
             Hosting.Stripe.Tests,
             Hosting.SurrealDb.Tests,
+            Hosting.Umami.Tests,
 
             # Client integration tests
             GoFeatureFlag.Tests,
