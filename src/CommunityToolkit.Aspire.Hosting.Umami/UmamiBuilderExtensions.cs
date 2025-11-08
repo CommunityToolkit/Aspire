@@ -55,7 +55,7 @@ public static class UmamiBuilderExtensions
         var umami = new UmamiResource(name, secretParameter);
 
         return builder.AddResource(umami)
-            .WithEndpoint(port: port, targetPort: UmamiPort, name: UmamiResource.PrimaryEndpointName)
+            .WithHttpEndpoint(port: port, targetPort: UmamiPort, name: UmamiResource.PrimaryEndpointName)
             .WithImage(UmamiContainerImageTags.Image, UmamiContainerImageTags.Tag)
             .WithImageRegistry(UmamiContainerImageTags.Registry)
             .WithEnvironment(context =>
@@ -79,12 +79,13 @@ public static class UmamiBuilderExtensions
         builder.WaitFor(database);
         builder.WithEnvironment(async (context) =>
         {
-            var connectionString = await database.Resource.ConnectionStringExpression.GetValueAsync(CancellationToken.None).ConfigureAwait(false);
+            var connectionString = await database.Resource.UriExpression.GetValueAsync(CancellationToken.None).ConfigureAwait(false);
             if (connectionString is null)
             {
                 throw new DistributedApplicationException($"Failed to retrieve the connection string of the '{database.Resource.Name}' resource.");
             }
             
+            // TODO : How to use container host?
             context.EnvironmentVariables[DatabaseStorageEnvVarName] = connectionString;
         });
         
