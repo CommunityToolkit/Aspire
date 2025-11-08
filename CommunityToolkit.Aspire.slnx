@@ -72,6 +72,11 @@
     <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod.csproj" />
     <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/kurrentdb/">
+    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService.csproj" />
+    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.csproj" />
+    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/lavinmq/">
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost.csproj" />
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit.csproj" />
@@ -231,6 +236,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Sftp/CommunityToolkit.Aspire.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" />
+    <Project Path="src\CommunityToolkit.Aspire.Hosting.Umami\CommunityToolkit.Aspire.Hosting.Umami.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
