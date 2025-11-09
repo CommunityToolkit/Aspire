@@ -10,11 +10,11 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.NodeJS" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Umami\CommunityToolkit.Aspire.Hosting.Umami.csproj" IsAspireProjectResource="false" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Umami.BlazorApp\CommunityToolkit.Aspire.Hosting.Umami.BlazorApp.csproj" />
   </ItemGroup>
 
 </Project>
