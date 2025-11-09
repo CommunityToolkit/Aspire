@@ -11,6 +11,7 @@ var umami = builder
     .AddUmami("umami", port: 55932)
     .WithStorageBackend(postgresdb);
 
-var blazor = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Umami_BlazorApp>("blazor");
+var front = builder
+    .AddJavaScriptApp("front", "../umami-vite-app");
 
 builder.Build().Run();
