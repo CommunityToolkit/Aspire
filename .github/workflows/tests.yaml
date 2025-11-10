@@ -8,7 +8,7 @@ jobs:
     env:
       DOTNET_CONFIGURATION: Release
       DAPR_VERSION: "1.15.0"
-      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}
+      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.csproj
       CI: true
       NPM_CONFIG_PACKAGE_LOCK: false
     runs-on: "${{ matrix.os }}"
