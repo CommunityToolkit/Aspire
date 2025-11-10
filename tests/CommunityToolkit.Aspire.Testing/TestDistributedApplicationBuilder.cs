@@ -3,7 +3,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Components.Common.TestUtilities;
-using Xunit.Abstractions;
 
 namespace Aspire.Hosting.Utils;
 

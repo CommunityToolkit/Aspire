@@ -15,9 +15,9 @@ public sealed class SqlServerContainerFixture : IAsyncLifetime
     public string GetConnectionString() => Container?.GetConnectionString() ??
         throw new InvalidOperationException("The test container was not initialized.");
 
-    public async Task InitializeAsync() => Container = await CreateContainerAsync();
+    public async ValueTask InitializeAsync() => Container = await CreateContainerAsync();
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (Container is not null)
             await Container.DisposeAsync();

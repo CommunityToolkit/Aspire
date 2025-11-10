@@ -3,9 +3,7 @@
 
 using System.Diagnostics;
 using System.Text.Json.Nodes;
-using Microsoft.DotNet.XUnitExtensions;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,6 +11,7 @@ using Json.Schema;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Xunit;
+using Aspire.Components.Common.Tests;
 
 namespace Aspire.Components.ConformanceTests;
 
@@ -45,6 +44,8 @@ public abstract class ConformanceTests<TService, TOptions>
 
     protected virtual bool SupportsKeyedRegistrations => false;
 
+    protected virtual bool IsComponentBuiltBeforeHost => false;
+
     protected bool MetricsAreSupported => CheckIfImplemented(SetMetrics);
 
     // every Component has to support health checks, this property is a temporary workaround
@@ -53,6 +54,8 @@ public abstract class ConformanceTests<TService, TOptions>
     protected virtual void DisableRetries(TOptions options) { }
 
     protected bool TracingIsSupported => CheckIfImplemented(SetTracing);
+
+    protected virtual bool CheckOptionClassSealed => true;
 
     /// <summary>
     /// Calls the actual Component
@@ -85,20 +88,26 @@ public abstract class ConformanceTests<TService, TOptions>
     /// </summary>
     protected abstract void SetMetrics(TOptions options, bool enabled);
 
-    [ConditionalFact]
+    [Fact]
     public void OptionsTypeIsSealed()
     {
         if (typeof(TOptions) == typeof(object))
         {
-            throw new SkipTestException("Not implemented yet");
+            Assert.Skip("Not implemented yet");
+        }
+
+        if (!CheckOptionClassSealed)
+        {
+            Assert.Skip("Opt-out of test");
         }
 
         Assert.True(typeof(TOptions).IsSealed);
     }
 
-    [ConditionalTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [ActiveIssue("https://github.com/dotnet/aspire/issues/11820", typeof(PlatformDetection), nameof(PlatformDetection.IsRunningFromAzdo))]
     public void HealthChecksRegistersHealthCheckService(bool enabled)
     {
         SkipIfHealthChecksAreNotSupported();
@@ -110,7 +119,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Equal(enabled, healthCheckService is not null);
     }
 
-    [ConditionalFact]
+    [Fact]
     public async Task EachKeyedComponentRegistersItsOwnHealthCheck()
     {
         SkipIfHealthChecksAreNotSupported();
@@ -124,18 +133,21 @@ public abstract class ConformanceTests<TService, TOptions>
 
         List<string> registeredNames = new();
         await healthCheckService.CheckHealthAsync(healthCheckRegistration =>
+#pragma warning disable xUnit1030 // Do not call ConfigureAwait(false) in test method
         {
             registeredNames.Add(healthCheckRegistration.Name);
             return false;
         }).ConfigureAwait(false);
+#pragma warning restore xUnit1030 // Do not call ConfigureAwait(false) in test method
 
         Assert.Equal(2, registeredNames.Count);
         Assert.All(registeredNames, name => Assert.True(name.Contains(key1) || name.Contains(key2), $"{name} did not contain the key."));
     }
 
-    [ConditionalTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [ActiveIssue("https://github.com/dotnet/aspire/issues/11820", typeof(PlatformDetection), nameof(PlatformDetection.IsRunningFromAzdo))]
     public void TracingRegistersTraceProvider(bool enabled)
     {
         SkipIfTracingIsNotSupported();
@@ -148,9 +160,10 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Equal(enabled, tracer is not null);
     }
 
-    [ConditionalTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [ActiveIssue("https://github.com/dotnet/aspire/issues/11820", typeof(PlatformDetection), nameof(PlatformDetection.IsRunningFromAzdo))]
     public void MetricsRegistersMeterProvider(bool enabled)
     {
         SkipIfMetricsAreNotSupported();
@@ -162,9 +175,10 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Equal(enabled, meter is not null);
     }
 
-    [ConditionalTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [ActiveIssue("https://github.com/dotnet/aspire/issues/11820", typeof(PlatformDetection), nameof(PlatformDetection.IsRunningFromAzdo))]
     public void ServiceLifetimeIsAsExpected(bool useKey)
     {
         SkipIfRequiredServerConnectionCanNotBeEstablished();
@@ -213,7 +227,7 @@ public abstract class ConformanceTests<TService, TOptions>
                 : serviceProvider.GetKeyedService<TService>(key);
     }
 
-    [ConditionalFact]
+    [Fact]
     public void CanRegisterMultipleInstancesUsingDifferentKeys()
     {
         SkipIfKeyedRegistrationIsNotSupported();
@@ -229,7 +243,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.NotSame(serviceForKey1, serviceForKey2);
     }
 
-    [ConditionalFact]
+    [Fact]
     public void WhenKeyedRegistrationIsUsedThenItsImpossibleToResolveWithoutKey()
     {
         SkipIfKeyedRegistrationIsNotSupported();
@@ -249,11 +263,12 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Throws<InvalidOperationException>(host.Services.GetRequiredService<TService>);
     }
 
-    [ConditionalTheory]
+    [Theory]
     [InlineData(true, true)]
     [InlineData(true, false)]
     [InlineData(false, true)]
     [InlineData(false, false)]
+    [ActiveIssue("https://github.com/dotnet/aspire/issues/11820", typeof(PlatformDetection), nameof(PlatformDetection.IsRunningFromAzdo))]
     public void LoggerFactoryIsUsedByRegisteredClient(bool registerAfterLoggerFactory, bool useKey)
     {
         SkipIfRequiredServerConnectionCanNotBeEstablished();
@@ -298,28 +313,29 @@ public abstract class ConformanceTests<TService, TOptions>
         }
     }
 
-    [ConditionalTheory]
+    [Theory]
     [InlineData(null)]
     [InlineData("key")]
-    public async Task HealthCheckReportsExpectedStatus(string? key)
+    [ActiveIssue("https://github.com/dotnet/aspire/issues/11820", typeof(PlatformDetection), nameof(PlatformDetection.IsRunningFromAzdo))]
+    public virtual async Task HealthCheckReportsExpectedStatus(string? key)
     {
         SkipIfHealthChecksAreNotSupported();
 
         // DisableRetries so the test doesn't take so long retrying when the server isn't available.
         using IHost host = CreateHostWithComponent(configureComponent: DisableRetries, key: key);
 
-        HealthCheckService healthCheckService = host.Services.GetRequiredService<HealthCheckService>();
+        var healthCheckService = host.Services.GetRequiredService<HealthCheckService>();
 
-        HealthReport healthReport = await healthCheckService.CheckHealthAsync().ConfigureAwait(false);
+        var healthReport = await healthCheckService.CheckHealthAsync();
 
-        HealthStatus expected = CanConnectToServer ? HealthStatus.Healthy : HealthStatus.Unhealthy;
+        var expected = CanConnectToServer ? HealthStatus.Healthy : HealthStatus.Unhealthy;
 
         Assert.Equal(expected, healthReport.Status);
         Assert.NotEmpty(healthReport.Entries);
         Assert.Contains(healthReport.Entries, entry => entry.Value.Status == expected);
     }
 
-    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/112")]
+    [Fact]
     public void ConfigurationSchemaValidJsonConfigTest()
     {
         var schema = JsonSchema.FromFile(JsonSchemaPath);
@@ -330,7 +346,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.True(results.IsValid);
     }
 
-    [Fact(Skip = "https://github.com/CommunityToolkit/Aspire/issues/112")]
+    [Fact]
     public void ConfigurationSchemaInvalidJsonConfigTest()
     {
         var schema = JsonSchema.FromFile(JsonSchemaPath);
@@ -350,13 +366,15 @@ public abstract class ConformanceTests<TService, TOptions>
     /// Ensures that when the connection information is missing, an exception isn't thrown before the host
     /// is built, so any exception can be logged with ILogger.
     /// </summary>
-    [ConditionalTheory]
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [ActiveIssue("https://github.com/dotnet/aspire/issues/11820", typeof(PlatformDetection), nameof(PlatformDetection.IsRunningFromAzdo))]
     public void ConnectionInformationIsDelayValidated(bool useKey)
     {
+        SkipIfComponentIsBuiltBeforeHost();
+
         SetupConnectionInformationIsDelayValidated();
-        SkipIfKeyedRegistrationIsNotSupported(useKey);
 
         var builder = Host.CreateEmptyApplicationBuilder(null);
 
@@ -371,7 +389,7 @@ public abstract class ConformanceTests<TService, TOptions>
                 : host.Services.GetRequiredKeyedService<TService>(key));
     }
 
-    [ConditionalFact]
+    [Fact]
     public void FavorsNamedConfigurationOverTopLevelConfigurationWhenBothProvided_DisableTracing()
     {
         SkipIfNamedConfigNotSupported();
@@ -393,7 +411,7 @@ public abstract class ConformanceTests<TService, TOptions>
         Assert.Null(host.Services.GetService<TracerProvider>());
     }
 
-    [ConditionalFact]
+    [Fact]
     public void FavorsNamedConfigurationOverTopLevelConfigurationWhenBothProvided_DisableHealthChecks()
     {
         SkipIfNamedConfigNotSupported();
@@ -481,7 +499,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!HealthChecksAreSupported)
         {
-            throw new SkipTestException("Health checks aren't supported.");
+            Assert.Skip("Health checks aren't supported.");
         }
     }
 
@@ -489,7 +507,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (useKey && !SupportsKeyedRegistrations)
         {
-            throw new SkipTestException("Does not support Keyed Services");
+            Assert.Skip("Does not support Keyed Services");
         }
     }
 
@@ -497,7 +515,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!TracingIsSupported)
         {
-            throw new SkipTestException("Tracing is not supported.");
+            Assert.Skip("Tracing is not supported.");
         }
     }
 
@@ -505,7 +523,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!MetricsAreSupported)
         {
-            throw new SkipTestException("Metrics are not supported.");
+            Assert.Skip("Metrics are not supported.");
         }
     }
 
@@ -513,7 +531,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!CanCreateClientWithoutConnectingToServer && !CanConnectToServer)
         {
-            throw new SkipTestException("Unable to connect to the server.");
+            Assert.Skip("Unable to connect to the server.");
         }
     }
 
@@ -521,7 +539,7 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!CanConnectToServer)
         {
-            throw new SkipTestException("Unable to connect to the server.");
+            Assert.Skip("Unable to connect to the server.");
         }
     }
 
@@ -529,12 +547,20 @@ public abstract class ConformanceTests<TService, TOptions>
     {
         if (!SupportsNamedConfig || ConfigurationSectionName is null)
         {
-            throw new SkipTestException("Named configuration is not supported.");
+            Assert.Skip("Named configuration is not supported.");
         }
     }
 
     public static string CreateConfigKey(string prefix, string? key, string suffix)
         => string.IsNullOrEmpty(key) ? $"{prefix}:{suffix}" : $"{prefix}:{key}:{suffix}";
+
+    protected void SkipIfComponentIsBuiltBeforeHost()
+    {
+        if (IsComponentBuiltBeforeHost)
+        {
+            Assert.Skip("Component is built before host.");
+        }
+    }
 
     protected HostApplicationBuilder CreateHostBuilder(HostApplicationBuilderSettings? hostSettings = null, string? key = null)
     {

@@ -1,13 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-// Copied from: https://github.com/dotnet/aspire/blob/d31331d6132aeb22940dcd8834344956ba811373/tests/Aspire.Components.Common.Tests/RequiresDockerAttribute.cs
+using Aspire.Components.Common.Tests;
+using Microsoft.DotNet.XUnitExtensions;
+using Xunit.v3;
 
-using Xunit.Sdk;
+namespace CommunityToolkit.Aspire.Testing;
 
-namespace Aspire.Components.Common.Tests;
-
-[TraitDiscoverer("Aspire.Components.Common.Tests.RequiresDockerDiscoverer", "CommunityToolkit.Aspire.Testing")]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
 public class RequiresDockerAttribute : Attribute, ITraitAttribute
 {
@@ -23,12 +22,21 @@ public class RequiresDockerAttribute : Attribute, ITraitAttribute
     //                - https://github.com/dotnet/aspire/issues/4291
     // - Linux - Local, or CI: always assume that docker is installed
     public static bool IsSupported =>
-        !OperatingSystem.IsWindows() ||
-        !PlatformDetection.IsRunningOnCI;
+        OperatingSystem.IsLinux() || !PlatformDetection.IsRunningOnCI; // non-linux on CI does not support docker
 
     public string? Reason { get; init; }
     public RequiresDockerAttribute(string? reason = null)
     {
         Reason = reason;
+    }
+
+    public IReadOnlyCollection<KeyValuePair<string, string>> GetTraits()
+    {
+        if (!IsSupported)
+        {
+            return [new KeyValuePair<string, string>(XunitConstants.Category, "failing")];
+        }
+
+        return [];
     }
 }

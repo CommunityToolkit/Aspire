@@ -100,12 +100,13 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="OpenFeature.Contrib.Providers.Flagd" Version="0.3.3" />
     <PackageVersion Include="OpenFeature.Providers.Ofrep" Version="0.1.2" />
-    <PackageVersion Include="MartinCostello.Logging.XUnit" Version="0.6.0" />
+    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageVersion Include="xunit.extensibility.execution" Version="2.9.3" />
-    <PackageVersion Include="Microsoft.DotNet.XUnitExtensions" Version="9.0.0-beta.24568.1" />
+    <PackageVersion Include="xunit.v3" Version="3.1.0" />
+    <PackageVersion Include="xunit.v3.assert" Version="3.1.0" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.1.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
+    <PackageVersion Include="Microsoft.DotNet.XUnitV3Extensions" Version="11.0.0-beta.25509.1" />
     <PackageVersion Include="GitHubActionsTestLogger" Version="2.4.1" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->

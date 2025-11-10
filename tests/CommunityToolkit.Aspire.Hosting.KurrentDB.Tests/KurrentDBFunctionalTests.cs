@@ -1,12 +1,12 @@
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using KurrentDB.Client;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using System.Text;
 using System.Text.Json;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.KurrentDB.Tests;
 
