@@ -5,8 +5,7 @@ sudo apt-get update && \
     sudo rm -rf /var/lib/apt/lists/*
 
 echo Install .NET dev certs
-dotnet tool update -g linux-dev-certs
-dotnet linux-dev-certs install
+dotnet dev-certs https --trust
 
 echo Install JS monorepo tools
 npm install -g turbo
