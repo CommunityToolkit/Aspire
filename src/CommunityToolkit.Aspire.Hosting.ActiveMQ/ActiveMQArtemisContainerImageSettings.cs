@@ -7,7 +7,7 @@ internal static class ActiveMQArtemisContainerImageSettings
 {
     public const string Registry = "docker.io";
     public const string Image = "apache/activemq-artemis";
-    public const string Tag = "2.42.0";
+    public const string Tag = "2.44.0";
     public const string EnvironmentVariableUsername = "ARTEMIS_USER";
     public const string EnvironmentVariablePassword = "ARTEMIS_PASSWORD";
     public const string JolokiaPath = "/console/jolokia/read/org.apache.activemq.artemis:broker=%220.0.0.0%22/Started";
