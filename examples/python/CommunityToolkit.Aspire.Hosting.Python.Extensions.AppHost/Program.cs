@@ -1,4 +1,5 @@
-#pragma warning disable CS0612
+#pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddUvicornApp("uvicornapp", "../uvicornapp-api", "main:app");

@@ -2,6 +2,7 @@ using System;
 
 namespace Aspire.Hosting.ApplicationModel;
 
+[Obsolete("VirtualEnvironment is now part of Aspire.Hosting.Python internal implementation. Use Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.WithVirtualEnvironment or WithUvEnvironment instead. This class will be removed in a future release.")]
 internal sealed class VirtualEnvironment(string virtualEnvironmentPath)
 {
     /// <summary>

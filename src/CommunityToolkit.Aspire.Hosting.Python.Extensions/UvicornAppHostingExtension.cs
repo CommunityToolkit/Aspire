@@ -1,5 +1,5 @@
-﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Python;
+﻿using System.ComponentModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
 using UvicornAppResource = Aspire.Hosting.ApplicationModel.UvicornAppResource;
 
@@ -20,6 +20,8 @@ public static class UvicornAppHostingExtension
     /// <param name="args">Optional arguments to pass to the script.</param>
     /// <returns>An <see cref="IResourceBuilder{UvicornAppResource}"/> for the Uvicorn application resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
+    [Obsolete("AddUvicornApp is now part of Aspire.Hosting.Python. Use the Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.AddUvicornApp method instead. This method will be removed in a future release.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static IResourceBuilder<UvicornAppResource> AddUvicornApp(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -32,6 +34,7 @@ public static class UvicornAppHostingExtension
         return builder.AddUvicornApp(name, projectDirectory, appName, ".venv", args);
     }
 
+    [Obsolete]
     private static IResourceBuilder<UvicornAppResource> AddUvicornApp(this IDistributedApplicationBuilder builder,
         string name,
         string projectDirectory,

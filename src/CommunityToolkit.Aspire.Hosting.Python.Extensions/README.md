@@ -1,5 +1,15 @@
 # CommunityToolkit.Aspire.Hosting.Python.Extensions library
 
+> **⚠️ DEPRECATION NOTICE**  
+> This package is deprecated as of Aspire 13.0. The functionality provided by this package is now part of the core `Aspire.Hosting.Python` package.
+>
+> **Migration Guide:**
+> - Replace `AddUvicornApp()` calls with `Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.AddUvicornApp()`
+> - Replace `AddUvApp()` calls with `AddPythonApp().WithUvEnvironment()`
+> - Update resource type references from `CommunityToolkit.Aspire.Hosting.Python.Extensions.UvicornAppResource` to `Aspire.Hosting.ApplicationModel.UvicornAppResource`
+>
+> This package will be removed in a future release. Please migrate your applications to use the core `Aspire.Hosting.Python` package.
+
 Provides extensions methods and resource definitions for the .NET Aspire AppHost to extend the support for Python applications. Current support includes:
 - Uvicorn
 - Uv
