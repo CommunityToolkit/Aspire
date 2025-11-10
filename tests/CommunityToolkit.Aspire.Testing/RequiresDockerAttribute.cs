@@ -32,7 +32,7 @@ public class RequiresDockerAttribute : Attribute, ITraitAttribute
 
     public IReadOnlyCollection<KeyValuePair<string, string>> GetTraits()
     {
-        if (IsSupported)
+        if (!IsSupported)
         {
             return [new KeyValuePair<string, string>(XunitConstants.Category, "failing")];
         }

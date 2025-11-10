@@ -8,7 +8,7 @@ jobs:
     env:
       DOTNET_CONFIGURATION: Release
       DAPR_VERSION: "1.15.0"
-      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.csproj
+      TEST_PROJECT_PATH: tests/CommunityToolkit.Aspire.${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}
       CI: true
       NPM_CONFIG_PACKAGE_LOCK: false
     runs-on: "${{ matrix.os }}"
@@ -92,11 +92,11 @@ jobs:
         env:
           CI: false
         run: |
-          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
+          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }} -o ${{ github.workspace }}/artifacts/${{ matrix.name }}
 
       - name: Run tests
         run: >-
-          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}
+          dotnet ${{ github.workspace }}/artifacts/${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.dll
           --configuration ${{ env.DOTNET_CONFIGURATION }}
           --logger "console;verbosity=normal"
           --logger "trx"
@@ -108,6 +108,9 @@ jobs:
           --collect "XPlat Code Coverage"
           --no-restore
           --no-build -- RunConfiguration.CollectSourceInformation=true
+          --filter-not-trait "category=failing"
+          --report-trx --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
+          --ignore-exit-code 8
         env:
           CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
 
