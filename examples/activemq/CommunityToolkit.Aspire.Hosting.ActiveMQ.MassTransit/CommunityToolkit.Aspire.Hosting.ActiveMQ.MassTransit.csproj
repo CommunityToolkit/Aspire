@@ -9,7 +9,6 @@
     <PackageReference Include="MassTransit" />
     <PackageReference Include="MassTransit.ActiveMQ" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Apache.NMS.AMQP" />
   </ItemGroup>
 
   <ItemGroup>
