@@ -18,6 +18,7 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="GitHubActionsTestLogger" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,6 +40,8 @@
     <!-- ignore exit code 8 (zero tests ran)
          https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-exit-codes -->
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --ignore-exit-code 8</TestRunnerAdditionalArguments>
+
+    <!-- <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner> -->
   </PropertyGroup>
 
 </Project>
