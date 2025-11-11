@@ -79,7 +79,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.20" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
-    <PackageVersion Include="Microsoft.Build" Version="17.14.28" />
+    <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.12" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
@@ -118,9 +118,5 @@
   <ItemGroup Label="System">
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
     <PackageVersion Include="System.Linq.AsyncEnumerable" Version="$(DotNetExtensionsVersion)" />
-  </ItemGroup>
-
-  <ItemGroup Label="Microsoft.Build" Condition="'$(TargetFramework)' == 'net8.0'">
-    <PackageVersion Update="Microsoft.Build" Version="17.11.48" />
   </ItemGroup>
 </Project>
