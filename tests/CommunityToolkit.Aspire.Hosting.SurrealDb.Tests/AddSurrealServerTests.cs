@@ -93,7 +93,7 @@ public class AddSurrealServerTests
         var connectionStringResource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
         var connectionString = await connectionStringResource.GetConnectionStringAsync(default);
 
-        Assert.Equal(await ReferenceExpression.Create($"Server=ws://localhost:8000/rpc;User=root;Password={password:uri}").GetValueAsync(CancellationToken.None), connectionString);
+        Assert.Equal(await ReferenceExpression.Create($"Server=ws://localhost:8000/rpc;User=root;Password={password}").GetValueAsync(CancellationToken.None), connectionString);
         Assert.Equal("Server=ws://{surreal.bindings.tcp.host}:{surreal.bindings.tcp.port}/rpc;User=root;Password={pass.value}", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 
@@ -119,7 +119,7 @@ public class AddSurrealServerTests
         var connectionStringResource = (IResourceWithConnectionString)surrealResource;
         var connectionString = await connectionStringResource.GetConnectionStringAsync();
 
-        Assert.Equal(await ReferenceExpression.Create($"Server=ws://localhost:8000/rpc;User=root;Password={password:uri};Namespace=myns;Database=mydb").GetValueAsync(CancellationToken.None), connectionString);
+        Assert.Equal(await ReferenceExpression.Create($"Server=ws://localhost:8000/rpc;User=root;Password={password};Namespace=myns;Database=mydb").GetValueAsync(CancellationToken.None), connectionString);
         Assert.Equal("{ns.connectionString};Database=mydb", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 
