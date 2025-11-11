@@ -81,7 +81,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var componentReferenceAnnotations = daprSidecar.Annotations.OfType<DaprComponentReferenceAnnotation>();
 
-            var secrets = new Dictionary<string, string>();
+            var secretValueProviders = new Dictionary<string, IValueProvider>();
             var endpointEnvironmentVars = new Dictionary<string, IValueProvider>();
             var hasValueProviders = false;
 
@@ -97,17 +97,17 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                     }
                 }
 
-                // Check if there are any secrets that need to be added to the secret store
+                // Collect secret value providers to be resolved later when environment is set up
                 if (componentReferenceAnnotation.Component.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations))
                 {
                     foreach (var secretAnnotation in secretAnnotations)
                     {
-                        secrets[secretAnnotation.Key] = (await secretAnnotation.Value.GetValueAsync(cancellationToken))!;
+                        secretValueProviders[secretAnnotation.Key] = secretAnnotation.Value;
                     }
                 }
 
                 // If we have any secrets or value providers, ensure the secret store path is added
-                if ((secrets.Count > 0 || hasValueProviders) && onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath))
+                if ((secretValueProviders.Count > 0 || hasValueProviders) && onDemandResourcesPaths.TryGetValue("secretstore", out var secretStorePath))
                 {
                     string onDemandResourcesPathDirectory = Path.GetDirectoryName(secretStorePath)!;
                     if (onDemandResourcesPathDirectory is not null)
@@ -136,13 +136,15 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                 }
             }
 
-            if (secrets.Count > 0 || endpointEnvironmentVars.Count > 0)
+            if (secretValueProviders.Count > 0 || endpointEnvironmentVars.Count > 0)
             {
                 daprSidecar.Annotations.Add(new EnvironmentCallbackAnnotation(async context =>
                 {
-                    foreach (var secret in secrets)
+                    // Resolve secrets when environment is being set up (when parameter values are available)
+                    foreach (var (secretKey, secretValueProvider) in secretValueProviders)
                     {
-                        context.EnvironmentVariables.TryAdd(secret.Key, secret.Value);
+                        var secretValue = await secretValueProvider.GetValueAsync(context.CancellationToken);
+                        context.EnvironmentVariables.TryAdd(secretKey, secretValue ?? string.Empty);
                     }
 
                     // Add value provider references
