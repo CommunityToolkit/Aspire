@@ -16,5 +16,10 @@ public class SqliteResource(string name, string databasePath, string databaseFil
 
     /// <inheritdoc/>
     public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"Data Source={DatabaseFilePath};Cache=Shared;Mode=ReadWriteCreate");
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("DataSource", ReferenceExpression.Create($"{DatabaseFilePath}"));
+    }
 }
 
