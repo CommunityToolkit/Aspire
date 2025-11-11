@@ -14,7 +14,7 @@ var postgresdb = postgres.AddDatabase("postgresdb");
 
 var umami = builder
     .AddUmami("umami", port: 55932)
-    .WithStorageBackend(postgresdb)
+    .WithPostgreSQL(postgresdb)
     .OnResourceReady(async (resource, _, ct) =>
     {
         var umamiEndpoint = await resource.GetEndpoint("http").GetValueAsync(ct).ConfigureAwait(false);

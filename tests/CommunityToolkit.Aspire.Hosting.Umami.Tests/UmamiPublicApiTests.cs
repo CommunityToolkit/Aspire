@@ -33,16 +33,16 @@ public class UmamiPublicApiTests
         Assert.Equal(nameof(name), exception.ParamName);
     }
 
-     [Fact]
-     public void WithStorageBackendShouldThrowWhenBuilderIsNull()
-     {
-         IResourceBuilder<UmamiResource> builder = null!;
+    [Fact]
+    public void WithPostgreSQLShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<UmamiResource> builder = null!;
 
-         var action = () => builder.WithStorageBackend(null!);
+        var action = () => builder.WithPostgreSQL(null!);
 
-         var exception = Assert.Throws<ArgumentNullException>(action);
-         Assert.Equal(nameof(builder), exception.ParamName);
-     }
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
 
     [Fact]
     public void CtorUmamiResourceShouldThrowWhenNameIsNull()
