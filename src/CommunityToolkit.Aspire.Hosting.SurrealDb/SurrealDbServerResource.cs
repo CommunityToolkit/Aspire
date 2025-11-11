@@ -20,8 +20,8 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     /// <param name="userName">A parameter that contains the SurrealDB username.</param>
     /// <param name="password">A parameter that contains the SurrealDB password.</param>
     public SurrealDbServerResource(
-        [ResourceName] string name, 
-        ParameterResource? userName, 
+        [ResourceName] string name,
+        ParameterResource? userName,
         ParameterResource password
     ) : base(name)
     {
@@ -64,7 +64,7 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
 
     private ReferenceExpression ConnectionString =>
         ReferenceExpression.Create(
-            $"Server={SchemeUri}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password={PasswordParameter:uri}");
+            $"Server={SchemeUri}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password={PasswordParameter}");
 
     /// <summary>
     /// Gets the connection string expression for the SurrealDB instance.
