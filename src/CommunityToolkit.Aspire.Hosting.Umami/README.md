@@ -21,7 +21,7 @@ var db = builder.AddPostgres("postgres")
                 .AddDatabase("db");
 
 var umami = builder.AddUmami("umami")
-                   .WithStorageBackend(db);
+                   .WithPostgreSQL(db);
 ```
 
 ## Additional Information

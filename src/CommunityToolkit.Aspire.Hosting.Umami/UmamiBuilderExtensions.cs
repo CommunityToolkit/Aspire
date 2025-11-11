@@ -33,7 +33,7 @@ public static class UmamiBuilderExtensions
     /// var db = builder.AddPostgres("postgres")
     ///   .AddDatabase("db");
     /// var umami = builder.AddUmami("umami")
-    ///   .WithStorageBackend(db);
+    ///   .WithPostgreSQL(db);
     ///  
     /// builder.Build().Run(); 
     /// </code>
@@ -71,7 +71,7 @@ public static class UmamiBuilderExtensions
     /// <param name="builder">The Umami resource builder.</param>
     /// <param name="database">The PostgreSQL database resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<UmamiResource> WithStorageBackend(
+    public static IResourceBuilder<UmamiResource> WithPostgreSQL(
         this IResourceBuilder<UmamiResource> builder, 
         IResourceBuilder<PostgresDatabaseResource> database
     )
