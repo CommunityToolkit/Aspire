@@ -20,8 +20,8 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     /// <param name="userName">A parameter that contains the SurrealDB username.</param>
     /// <param name="password">A parameter that contains the SurrealDB password.</param>
     public SurrealDbServerResource(
-        [ResourceName] string name, 
-        ParameterResource? userName, 
+        [ResourceName] string name,
+        ParameterResource? userName,
         ParameterResource password
     ) : base(name)
     {
@@ -36,6 +36,16 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     /// Gets the primary endpoint for the SurrealDB instance.
     /// </summary>
     public EndpointReference PrimaryEndpoint { get; }
+
+    /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
 
     /// <summary>
     /// Gets the parameter that contains the SurrealDB username.
@@ -54,7 +64,7 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
 
     private ReferenceExpression ConnectionString =>
         ReferenceExpression.Create(
-            $"Server={SchemeUri}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password='{PasswordParameter}'");
+            $"Server={SchemeUri}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/rpc;User={UserNameReference};Password={PasswordParameter}");
 
     /// <summary>
     /// Gets the connection string expression for the SurrealDB instance.
@@ -71,6 +81,14 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
             return ConnectionString;
         }
     }
+
+    /// <summary>
+    /// Gets the connection URI expression for the SurrealDB instance.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>ws://{host}:{port}/rpc</c>.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"{SchemeUri}://{Host}:{Port}/rpc");
 
     /// <summary>
     /// Gets the connection string for the SurrealDB instance.
@@ -97,5 +115,14 @@ public class SurrealDbServerResource : ContainerResource, IResourceWithConnectio
     internal void AddNamespace(string name, string namespaceName)
     {
         _namespaces.TryAdd(name, namespaceName);
+    }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Username", UserNameReference);
+        yield return new("Password", ReferenceExpression.Create($"{PasswordParameter:uri}"));
+        yield return new("Uri", UriExpression);
     }
 }
