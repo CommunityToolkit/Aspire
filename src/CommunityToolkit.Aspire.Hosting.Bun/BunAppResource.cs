@@ -6,5 +6,4 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The name of the resource.</param>
 /// <param name="workingDirectory">The working directory for the Bun app to launch from.</param>
 public class BunAppResource(string name, string workingDirectory) :
-    ExecutableResource(name, "bun", workingDirectory)
-{ }
+    ExecutableResource(name, "bun", workingDirectory);

@@ -2,10 +2,11 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests;
 
-#pragma warning disable CS0612
+#pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
 public class ResourceCreationTests
 {
-    [Fact]
+    [Fact(Skip = "Being removed with https://github.com/CommunityToolkit/Aspire/issues/917")]
     public void DefaultUvicornApp()
     {
         var builder = DistributedApplication.CreateBuilder();

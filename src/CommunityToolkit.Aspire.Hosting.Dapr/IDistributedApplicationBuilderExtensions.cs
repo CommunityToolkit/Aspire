@@ -30,7 +30,7 @@ public static partial class IDistributedApplicationBuilderExtensions
             builder.Services.Configure(configure);
         }
 
-        builder.Services.TryAddLifecycleHook<DaprDistributedApplicationLifecycleHook>();
+        builder.Services.TryAddEventingSubscriber<DaprDistributedApplicationLifecycleHook>();
 
         return builder;
     }

@@ -8,6 +8,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The name of the resource.</param>
 /// <param name="executablePath">The path to the executable used to run the python app.</param>
 /// <param name="workingDirectory">The working directory for uv.</param>
+[Obsolete("UvAppResource is now superseded by functionality in Aspire.Hosting.Python. Use Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.AddPythonApp with WithUvEnvironment instead. This class will be removed in a future release.")]
 public class UvAppResource(string name, string executablePath, string workingDirectory)
     : PythonAppResource(name, executablePath, workingDirectory), IResourceWithServiceDiscovery
 {

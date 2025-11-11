@@ -28,6 +28,16 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 
     /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
+
+    /// <summary>
     /// Gets the TCP endpoint for the RavenDB server.
     /// </summary>
     public EndpointReference TcpEndpoint => tcpEndpoint ??= new(this, TcpEndpointName);
@@ -38,6 +48,14 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// </summary>
     public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create(
         $"URL={(IsSecured ? "https://" : "http://")}{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+
+    /// <summary>
+    /// Gets the connection URI expression for the RavenDB server.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>http://{host}:{port}</c> or <c>https://{host}:{port}</c> depending on security settings.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"{(IsSecured ? "https://" : "http://")}{Host}:{Port}");
 
     private readonly Dictionary<string, string> _databases = new();
 
@@ -55,5 +73,12 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     internal void AddDatabase(string name, string databaseName)
     {
         _databases.TryAdd(name, databaseName);
+    }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Uri", UriExpression);
     }
 }

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-
-namespace Aspire.Hosting.ApplicationModel;
+﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents an Ollama container.
@@ -28,6 +26,16 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
     public EndpointReference PrimaryEndpoint => _primaryEndpointReference ??= new(this, OllamaEndpointName);
 
     /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
+
+    /// <summary>
     /// Gets the connection string expression for the Ollama server.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
@@ -36,7 +44,15 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
       );
 
     /// <summary>
-    ///     Adds a model to the list of models to download on initial startup.
+    /// Gets the connection URI expression for the Ollama server.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>http://{host}:{port}</c>.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{Host}:{Port}");
+
+    /// <summary>
+    /// Adds a model to the list of models to download on initial startup.
     /// </summary>
     /// <param name="modelName">The name of the model</param>
     public void AddModel(string modelName)
@@ -46,5 +62,12 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
         {
             _models.Add(modelName);
         }
+    }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Uri", UriExpression);
     }
 }
