@@ -12,25 +12,25 @@ public class MinioPublicApiTests
     {
         IDistributedApplicationBuilder builder = null!;
         const string name = "Minio";
-    
+
         var action = () => builder.AddMinioContainer(name);
-    
+
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
     }
-    
+
     [Fact]
     public void AddMinioContainerShouldThrowWhenNameIsNull()
     {
         IDistributedApplicationBuilder builder = new DistributedApplicationBuilder([]);
         string name = null!;
-    
+
         var action = () => builder.AddMinioContainer(name);
-    
+
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(name), exception.ParamName);
     }
-    
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -68,7 +68,7 @@ public class MinioPublicApiTests
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(source), exception.ParamName);
     }
-    
+
     [Fact]
     public void VerifyMinioContainerResourceWithHostPort()
     {
@@ -92,7 +92,7 @@ public class MinioPublicApiTests
             .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 2000));
 
         var connectionString = await minio.Resource.GetConnectionStringAsync();
-        Assert.Equal("Endpoint=http://localhost:2000;AccessKey=minioadmin;SecretKey=p@ssw0rd1", connectionString);
+        Assert.Equal(await ReferenceExpression.Create($"Endpoint=http://localhost:2000;AccessKey=minioadmin;SecretKey={password}").GetValueAsync(CancellationToken.None), connectionString);
     }
 
     [Fact]
