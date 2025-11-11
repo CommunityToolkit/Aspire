@@ -92,7 +92,7 @@ public class MinioPublicApiTests
             .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 2000));
 
         var connectionString = await minio.Resource.GetConnectionStringAsync();
-        Assert.Equal(await ReferenceExpression.Create($"Endpoint=http://localhost:2000;AccessKey=minioadmin;SecretKey={password:uri}").GetValueAsync(CancellationToken.None), connectionString);
+        Assert.Equal(await ReferenceExpression.Create($"Endpoint=http://localhost:2000;AccessKey=minioadmin;SecretKey={password}").GetValueAsync(CancellationToken.None), connectionString);
     }
 
     [Fact]
