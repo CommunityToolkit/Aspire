@@ -1,5 +1,7 @@
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Utils;
+using Aspire.Hosting.Python;
 
 namespace Aspire.Hosting;
 
@@ -9,73 +11,94 @@ namespace Aspire.Hosting;
 public static class StreamlitAppHostingExtension
 {
     /// <summary>
-    /// Adds a Streamlit application to the distributed application builder.
+    /// Adds a Streamlit application to the application model.
     /// </summary>
-    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the Streamlit application.</param>
-    /// <param name="projectDirectory">The directory of the project containing the Streamlit application.</param>
-    /// <param name="scriptPath">The path to the Python script to be run by Streamlit.</param>
-    /// <param name="args">Optional arguments to pass to the Streamlit command.</param>
+    /// <param name="appDirectory">The path to the directory containing the Streamlit application.</param>
+    /// <param name="scriptPath">The path to the Python script to be run by Streamlit (relative to appDirectory).</param>
     /// <returns>An <see cref="IResourceBuilder{StreamlitAppResource}"/> for the Streamlit application resource.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="name"/> or <paramref name="scriptPath"/> is null or empty.</exception>
+    /// <remarks>
+    /// <para>
+    /// This method uses the Aspire.Hosting.Python integration to run Streamlit applications.
+    /// By default, it uses the <c>.venv</c> virtual environment in the app directory.
+    /// Use standard Python extension methods like <c>WithVirtualEnvironment</c>, <c>WithPip</c>, or <c>WithUv</c> to customize the environment.
+    /// </para>
+    /// <para>
+    /// **⚠️ EXPERIMENTAL:** This integration is experimental and subject to change. The underlying implementation
+    /// will be updated to use public APIs when they become available in Aspire.Hosting.Python (expected in Aspire 13.1).
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// Add a Streamlit application to the application model:
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// builder.AddStreamlitApp("dashboard", "../streamlit-app", "app.py")
+    ///        .WithHttpEndpoint(env: "PORT");
+    ///
+    /// builder.Build().Run();
+    /// </code>
+    /// </example>
+    [Experimental("CTASPIRE001", UrlFormat = "https://github.com/CommunityToolkit/Aspire/issues/{0}")]
     public static IResourceBuilder<StreamlitAppResource> AddStreamlitApp(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        string projectDirectory,
-        string scriptPath,
-        params string[] args)
-    {
-        return builder.AddStreamlitApp(name, projectDirectory, scriptPath, ".venv", args);
-    }
-
-    private static IResourceBuilder<StreamlitAppResource> AddStreamlitApp(
-        this IDistributedApplicationBuilder builder,
-        string name,
-        string projectDirectory,
-        string scriptPath,
-        string virtualEnvironmentPath,
-        params string[] args)
+        string appDirectory,
+        string scriptPath)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(appDirectory);
         ArgumentException.ThrowIfNullOrWhiteSpace(scriptPath);
 
-        string wd = projectDirectory ?? Path.Combine("..", name);
-
-        var normalizedAppHostDirectory = PathNormalizer.NormalizePathForCurrentPlatform(builder.AppHostDirectory);
-        var normalizedWd = PathNormalizer.NormalizePathForCurrentPlatform(wd);
-        projectDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(normalizedAppHostDirectory, normalizedWd));
-
-        var projectResource = new StreamlitAppResource(name, projectDirectory);
-
-        return builder.AddResource(projectResource)
-            .WithEnvironment(context =>
-            {
-                // Streamlit uses STREAMLIT_SERVER_PORT instead of PORT, so map PORT to STREAMLIT_SERVER_PORT
-                if (context.EnvironmentVariables.TryGetValue("PORT", out var portValue))
-                {
-                    context.EnvironmentVariables["STREAMLIT_SERVER_PORT"] = portValue;
-                }
-            })
+        // Use AddPythonExecutable to run streamlit from the virtual environment
+        var pythonBuilder = builder.AddPythonExecutable(name, appDirectory, "streamlit")
+            .WithDebugging()
+            .WithHttpEndpoint(env: "PORT")
             .WithArgs(context =>
             {
-                AddProjectArguments(scriptPath, args, context);
+                context.Args.Add("run");
+                context.Args.Add(scriptPath);
+
+                // Add --server.headless to run without browser opening
+                context.Args.Add("--server.headless");
+                context.Args.Add("true");
+
+                // Configure server port from endpoint
+                var endpoint = ((IResourceWithEndpoints)context.Resource).GetEndpoint("http");
+                context.Args.Add("--server.port");
+                context.Args.Add(endpoint.Property(EndpointProperty.TargetPort));
+
+                // Configure server address
+                context.Args.Add("--server.address");
+                if (builder.ExecutionContext.IsPublishMode)
+                {
+                    context.Args.Add("0.0.0.0");
+                }
+                else
+                {
+                    context.Args.Add(endpoint.EndpointAnnotation.TargetHost);
+                }
             });
-    }
 
-    private static void AddProjectArguments(string scriptPath, string[] scriptArgs, CommandLineArgsCallbackContext context)
-    {
-        context.Args.Add("run");
-        context.Args.Add(scriptPath);
+        // Create a StreamlitAppResource wrapping the PythonAppResource
+        // This allows for Streamlit-specific extension methods in the future
+        var streamlitResource = new StreamlitAppResource(
+            pythonBuilder.Resource.Name,
+            pythonBuilder.Resource.Command,
+            pythonBuilder.Resource.WorkingDirectory);
 
-        // Add --server.headless to run without browser opening
-        context.Args.Add("--server.headless");
-        context.Args.Add("true");
-
-        foreach (var arg in scriptArgs)
+        // Copy annotations from the Python resource
+        foreach (var annotation in pythonBuilder.Resource.Annotations)
         {
-            context.Args.Add(arg);
+            streamlitResource.Annotations.Add(annotation);
         }
+
+        // Replace the resource in the builder
+        builder.Resources.Remove(pythonBuilder.Resource);
+        var streamlitBuilder = builder.AddResource(streamlitResource);
+
+        return streamlitBuilder;
     }
 }

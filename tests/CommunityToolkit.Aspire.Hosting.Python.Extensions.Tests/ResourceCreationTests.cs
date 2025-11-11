@@ -4,6 +4,7 @@ namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests;
 
 #pragma warning disable CS0612 // Type or member is obsolete
 #pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CTASPIRE001 // Experimental API
 public class ResourceCreationTests
 {
     [Fact(Skip = "Being removed with https://github.com/CommunityToolkit/Aspire/issues/917")]
@@ -59,7 +60,8 @@ public class ResourceCreationTests
 
         Assert.NotNull(resource);
 
-        Assert.Equal("streamlit", resource.Command);
+        // Command will be the full path to streamlit executable in venv, so just check it contains "streamlit"
+        Assert.Contains("streamlit", resource.Command);
         Assert.Equal(NormalizePathForCurrentPlatform("../../examples/python/streamlit-api"), resource.WorkingDirectory);
     }
 
