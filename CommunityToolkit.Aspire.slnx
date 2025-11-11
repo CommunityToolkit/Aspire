@@ -30,11 +30,6 @@
   <Folder Name="/examples/deno/">
     <Project Path="examples/deno/CommunityToolkit.Aspire.Hosting.Deno.AppHost/CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj" />
   </Folder>
-  <Folder Name="/examples/kurrentdb/">
-    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService.csproj" />
-    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.csproj" />
-    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults.csproj" />
-  </Folder>
   <Folder Name="/examples/elasticsearch-ext/">
     <Project Path="examples/elasticsearch-ext/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost.csproj" />
   </Folder>
