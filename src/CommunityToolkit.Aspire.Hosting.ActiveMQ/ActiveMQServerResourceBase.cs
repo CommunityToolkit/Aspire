@@ -73,7 +73,7 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
         yield return new("Host", ReferenceExpression.Create($"{Host}"));
         yield return new("Port", ReferenceExpression.Create($"{Port}"));
         yield return new("Username", UserNameReference);
-        yield return new("Password", ReferenceExpression.Create($"{PasswordParameter:uri}"));
+        yield return new("Password", ReferenceExpression.Create($"{PasswordParameter}"));
         yield return new("Uri", UriExpression);
     }
 
