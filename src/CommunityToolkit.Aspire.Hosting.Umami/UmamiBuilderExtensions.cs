@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
+using System.Text;
 
 namespace Aspire.Hosting;
 
@@ -78,14 +79,27 @@ public static class UmamiBuilderExtensions
         builder.WaitFor(database);
         builder.WithEnvironment(async (context) =>
         {
-            var connectionString = await database.Resource.UriExpression.GetValueAsync(CancellationToken.None).ConfigureAwait(false);
-            if (connectionString is null)
-            {
-                throw new DistributedApplicationException($"Failed to retrieve the connection string of the '{database.Resource.Name}' resource.");
-            }
+            var dbResource = database.Resource;
+            var serverResource = dbResource.Parent;
             
-            // TODO : How to use container host?
-            context.EnvironmentVariables[DatabaseStorageEnvVarName] = connectionString;
+            var username = await serverResource.UserNameReference.GetValueAsync(context.CancellationToken);
+            var password = await serverResource.PasswordParameter.GetValueAsync(context.CancellationToken);
+            var host = serverResource.Name;
+            var port = serverResource.PrimaryEndpoint.TargetPort!.ToString()!;
+            
+            var connectionString = new StringBuilder();
+            connectionString.Append("postgresql://");
+            connectionString.Append(username);
+            connectionString.Append(':');
+            connectionString.Append(password);
+            connectionString.Append('@');;
+            connectionString.Append(host);
+            connectionString.Append(':');;
+            connectionString.Append(port);
+            connectionString.Append('/');
+            connectionString.Append(dbResource.DatabaseName);
+            
+            context.EnvironmentVariables[DatabaseStorageEnvVarName] = connectionString.ToString();
         });
         
         return builder;
