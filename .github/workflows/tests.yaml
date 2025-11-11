@@ -92,11 +92,11 @@ jobs:
         env:
           CI: false
         run: |
-          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
+          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }} -o ${{ github.workspace }}/artifacts/${{ matrix.name }}
 
       - name: Run tests
         run: >-
-          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}
+          dotnet run ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}
           --configuration ${{ env.DOTNET_CONFIGURATION }}
           --logger "console;verbosity=normal"
           --logger "trx"
@@ -107,7 +107,15 @@ jobs:
           --results-directory testresults
           --collect "XPlat Code Coverage"
           --no-restore
-          --no-build -- RunConfiguration.CollectSourceInformation=true
+          --no-build
+          --filter-not-trait "category=failing"
+          --report-trx
+          --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
+          --ignore-exit-code 8
+          -- RunConfiguration.CollectSourceInformation=true
+             --coverage
+             --coverage-output-format cobertura
+             --coverage-output coverage.cobertura.xml
         env:
           CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
 

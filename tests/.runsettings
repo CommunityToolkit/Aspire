@@ -2,6 +2,6 @@
 <RunSettings>
   <RunConfiguration>
     <!-- Filter out failing (wrong framework, platform, runtime or activeissue) tests -->
-    <TestCaseFilter>category!=unsupported-platform</TestCaseFilter>
+    <TestCaseFilter>category!=failing</TestCaseFilter>
   </RunConfiguration>
 </RunSettings>
