@@ -1,4 +1,6 @@
-﻿using Aspire.Hosting.ApplicationModel;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder;
 
 namespace Aspire.Hosting;
@@ -76,5 +78,6 @@ public static class DataApiBuilderHostingExtension
 
     private static IResourceBuilder<DataApiBuilderContainerResource> WithDataApiBuilderDefaults(
         this IResourceBuilder<DataApiBuilderContainerResource> builder) =>
-        builder.WithOtlpExporter();
+        builder.WithOtlpExporter()
+            .WithHttpHealthCheck("/health");
 }

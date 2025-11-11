@@ -14,7 +14,7 @@ public class JavaHostingComponentTests(AspireIntegrationTestFixture<Projects.Com
     {
         var httpClient = fixture.CreateHttpClient(resourceName);
 
-        await fixture.App.WaitForTextAsync("Started SpringMavenApplication", resourceName).WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
 
         var response = await httpClient.GetAsync("/");
 
