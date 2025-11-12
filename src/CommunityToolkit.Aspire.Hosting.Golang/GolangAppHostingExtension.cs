@@ -96,13 +96,13 @@ public static class GolangAppHostingExtension
             publish.WithDockerfileBuilder(workingDirectory, context =>
             {
                 var buildArgs = new List<string> { "build", "-o", "/app/server" };
-                
+
                 if (buildTags is { Length: > 0 })
                 {
                     buildArgs.Add("-tags");
                     buildArgs.Add(string.Join(",", buildTags));
                 }
-                
+
                 buildArgs.Add(executable);
 
                 var buildStage = context.Builder
