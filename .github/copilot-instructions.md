@@ -1,4 +1,4 @@
-## .NET Aspire Community Toolkit — Copilot Coding Instructions
+## Aspire Community Toolkit — Copilot Coding Instructions
 
 ### Project Overview
 
