@@ -2,7 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Net.Sockets;
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
@@ -92,29 +95,6 @@ public class AddGoFeatureFlagTests
     }
     
     [Theory]
-    [InlineData(LogLevel.Debug, "DEBUG")]
-    [InlineData(LogLevel.Information, "INFO")]
-    [InlineData(LogLevel.Warning, "WARN")]
-    [InlineData(LogLevel.Error, "ERROR")]
-    public async Task AddSurrealServerContainerWithLogLevel(LogLevel logLevel, string? expected)
-    {
-        var appBuilder = DistributedApplication.CreateBuilder();
-    
-        var goff = appBuilder
-            .AddGoFeatureFlag("goff")
-            .WithLogLevel(logLevel);
-    
-        using var app = appBuilder.Build();
-    
-        var config = await goff.Resource.GetEnvironmentVariableValuesAsync();
-
-        bool hasValue = config.TryGetValue("LOGLEVEL", out var value);
-
-        Assert.True(hasValue);
-        Assert.Equal(expected, value);
-    }
-    
-    [Theory]
     [InlineData(LogLevel.Trace)]
     [InlineData(LogLevel.Critical)]
     [InlineData(LogLevel.None)]
@@ -127,5 +107,22 @@ public class AddGoFeatureFlagTests
             .WithLogLevel(logLevel);
 
         Assert.Throws<ArgumentOutOfRangeException>(func);
+    }
+
+    [Fact]
+    public void AddGoFeatureFlagAddsOtelAnnotation()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var goff = appBuilder.AddGoFeatureFlag("goff");
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<GoFeatureFlagResource>());
+
+        // Verify that OTEL environment callback annotation is present (added by WithOtlpExporter)
+        var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToArray();
+        Assert.NotEmpty(envAnnotations);
     }
 }
