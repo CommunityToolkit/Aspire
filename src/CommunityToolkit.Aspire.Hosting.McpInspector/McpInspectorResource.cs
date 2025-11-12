@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using Aspire.Hosting.JavaScript;
 
 namespace Aspire.Hosting.ApplicationModel;
 

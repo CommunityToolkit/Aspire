@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
-    <PackageReference Include="Aspire.Hosting.NodeJS" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
     <PackageReference Include="AspNetCore.HealthChecks.Uris" />
   </ItemGroup>
 
