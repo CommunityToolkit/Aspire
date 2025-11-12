@@ -48,6 +48,8 @@ namespace Aspire.Hosting.ApplicationModel
         public string ModelName { get { throw null; } }
 
         public OllamaResource Parent { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
     public partial class OllamaResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
@@ -56,11 +58,19 @@ namespace Aspire.Hosting.ApplicationModel
 
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
+        public EndpointReferenceExpression Host { get { throw null; } }
+
         public System.Collections.Generic.IReadOnlyList<string> Models { get { throw null; } }
+
+        public EndpointReferenceExpression Port { get { throw null; } }
 
         public EndpointReference PrimaryEndpoint { get { throw null; } }
 
+        public ReferenceExpression UriExpression { get { throw null; } }
+
         public void AddModel(string modelName) { }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
     public partial class OpenWebUIResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
@@ -69,8 +79,16 @@ namespace Aspire.Hosting.ApplicationModel
 
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
+        public EndpointReferenceExpression Host { get { throw null; } }
+
         public System.Collections.Generic.IReadOnlyList<OllamaResource> OllamaResources { get { throw null; } }
 
+        public EndpointReferenceExpression Port { get { throw null; } }
+
         public EndpointReference PrimaryEndpoint { get { throw null; } }
+
+        public ReferenceExpression UriExpression { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 }

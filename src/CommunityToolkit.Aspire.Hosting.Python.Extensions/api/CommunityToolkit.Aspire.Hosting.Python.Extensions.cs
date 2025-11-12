@@ -10,22 +10,28 @@ namespace Aspire.Hosting
 {
     public static partial class UvAppHostingExtension
     {
+        [System.Obsolete("AddUvApp is now part of Aspire.Hosting.Python. Use Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.AddPythonApp with WithUvEnvironment instead. This method will be removed in a future release.")]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.UvAppResource> AddUvApp(this IDistributedApplicationBuilder builder, string name, string projectDirectory, string scriptPath, params string[] scriptArgs) { throw null; }
     }
 
     public static partial class UvicornAppHostingExtension
     {
+        [System.Obsolete("AddUvicornApp is now part of Aspire.Hosting.Python. Use the Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.AddUvicornApp method instead. This method will be removed in a future release.")]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.UvicornAppResource> AddUvicornApp(this IDistributedApplicationBuilder builder, string name, string projectDirectory, string appName, params string[] args) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
+    [System.Obsolete("UvAppResource is now superseded by functionality in Aspire.Hosting.Python. Use Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.AddPythonApp with WithUvEnvironment instead. This class will be removed in a future release.")]
     public partial class UvAppResource : Python.PythonAppResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
     {
         public UvAppResource(string name, string executablePath, string workingDirectory) : base(default!, default!, default!) { }
     }
 
+    [System.Obsolete("UvicornAppResource is now part of Aspire.Hosting.Python. Use Aspire.Hosting.ApplicationModel.UvicornAppResource instead. This class will be removed in a future release.")]
     public partial class UvicornAppResource : Python.PythonAppResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
     {
         public UvicornAppResource(string name, string executablePath, string workingDirectory) : base(default!, default!, default!) { }

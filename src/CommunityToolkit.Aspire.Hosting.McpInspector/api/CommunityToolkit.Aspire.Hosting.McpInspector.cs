@@ -43,7 +43,7 @@ namespace Aspire.Hosting
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class McpInspectorResource : ExecutableResource
+    public partial class McpInspectorResource : JavaScript.JavaScriptAppResource
     {
         public const string ClientEndpointName = "client";
         public const string InspectorVersion = "0.17.2";
