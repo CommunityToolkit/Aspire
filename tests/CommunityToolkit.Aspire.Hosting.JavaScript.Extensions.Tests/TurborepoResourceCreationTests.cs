@@ -302,11 +302,18 @@ public class TurborepoResourceCreationTests
 
         foreach (var turboApp in apps)
         {
-            Assert.True(turboApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var execution));
-            Assert.Equal(packageManager, execution.ExecutableName);
-            Assert.Equal("turbo", execution.ScriptCommand);
+            var launcherName = packageManager switch
+            {
+                "npm" => "npx",
+                "yarn" => "yarn",
+                "pnpm" => "pnpx",
+                _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
+            };
+
+            Assert.Equal(launcherName, turboApp.Command);
             var args = await turboApp.GetArgumentValuesAsync();
             Assert.Collection(args,
+                arg => Assert.Equal("turbo", arg),
                 arg => Assert.Equal("run", arg),
                 arg => Assert.Equal("dev", arg),
                 arg => Assert.Equal("--filter", arg),

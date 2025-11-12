@@ -295,11 +295,20 @@ public class NxResourceCreationTests
 
         foreach (var nxApp in apps)
         {
-            Assert.True(nxApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var execution));
-            Assert.Equal(packageManager, execution.ExecutableName);
-            Assert.Equal("nx", execution.ScriptCommand);
+            var launcherName = packageManager switch
+            {
+                "npm" => "npx",
+                "yarn" => "yarn",
+                "pnpm" => "pnpx",
+                _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
+            };
+
+            Assert.Equal(launcherName, nxApp.Command);
             var args = await nxApp.GetArgumentValuesAsync();
-            Assert.Equal("serve", args[0]);
+            Assert.Collection(args,
+                arg => Assert.Equal("nx", arg),
+                arg => Assert.Equal("serve", arg),
+                arg => Assert.Equal(nxApp.Name, arg));
         }
     }
 

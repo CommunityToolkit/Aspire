@@ -78,7 +78,11 @@ public static partial class JavaScriptHostingExtensions
         // If the workspace is configured to use a package manager, bring that annotation forward
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation))
         {
-            rb.WithAnnotation(executionAnnotation);
+            rb.WithCommand(executionAnnotation.ExecutableName)
+              .WithArgs(context =>
+              {
+                  context.Args.Insert(0, executionAnnotation.ScriptCommand ?? "nx");
+              });
         }
 
         // If the workspace has an installer annotation, wait for the installer to complete
@@ -118,7 +122,11 @@ public static partial class JavaScriptHostingExtensions
         // If the workspace is configured to use a package manager, bring that annotation forward
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation))
         {
-            rb.WithAnnotation(executionAnnotation);
+            rb.WithCommand(executionAnnotation.ExecutableName)
+              .WithArgs(context =>
+              {
+                  context.Args.Insert(0, executionAnnotation.ScriptCommand ?? "nx");
+              });
         }
 
         // If the workspace has an installer annotation, wait for the installer to complete
@@ -166,7 +174,13 @@ public static partial class JavaScriptHostingExtensions
             }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager, runScriptCommand: "nx"));
+        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager switch
+        {
+            "npm" => "npx",
+            "yarn" => "yarn",
+            "pnpm" => "pnpx",
+            _ => packageManager
+        }, runScriptCommand: "nx"));
     }
 
     /// <summary>
@@ -203,7 +217,13 @@ public static partial class JavaScriptHostingExtensions
             }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager, runScriptCommand: "turbo"));
+        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager switch
+        {
+            "npm" => "npx",
+            "yarn" => "yarn",
+            "pnpm" => "pnpx",
+            _ => packageManager
+        }, runScriptCommand: "turbo"));
     }
 
     /// <summary>
