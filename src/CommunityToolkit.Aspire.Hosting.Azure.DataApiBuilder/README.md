@@ -124,7 +124,11 @@ To enable OTEL telemetry in Data API builder, add the following configuration to
   "runtime": {
     "telemetry": {
       "open-telemetry": {
-        "enabled": true
+        "enabled": true,
+        "service-name": "@env('OTEL_SERVICE_NAME')",
+        "endpoint": "@env('OTEL_EXPORTER_OTLP_ENDPOINT')",
+        "exporter-protocol": "grpc",
+        "headers": "@env('OTEL_EXPORTER_OTLP_HEADERS')"
       }
     }
   }
