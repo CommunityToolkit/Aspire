@@ -135,37 +135,17 @@ To enable OTEL telemetry in Data API builder, add the following configuration to
 }
 ```
 
+The configuration includes the following settings:
+- `enabled`: Enables/disables OTEL telemetry (default: `false`)
+- `service-name`: Logical name for the service in traces. Uses the `@env('OTEL_SERVICE_NAME')` syntax to reference the environment variable automatically set by Aspire
+- `endpoint`: OTEL collector endpoint URL. Uses `@env('OTEL_EXPORTER_OTLP_ENDPOINT')` to reference the Aspire-provided endpoint
+- `exporter-protocol`: Protocol for exporting telemetry. Set to `grpc` for efficient binary transport
+- `headers`: Custom headers for OTEL export. Uses `@env('OTEL_EXPORTER_OTLP_HEADERS')` to reference Aspire-provided headers
+
 With this configuration, Data API builder will:
 - Export traces and metrics to the Aspire dashboard via OTLP (OpenTelemetry Protocol)
 - Automatically use the OTEL endpoint provided by the Aspire app host
 - Include telemetry for REST and GraphQL operations, database queries, and system metrics
-
-#### Advanced OTEL Configuration
-
-Data API builder supports additional OTEL configuration options in the `dab-config.json` file:
-
-```json
-{
-  "runtime": {
-    "telemetry": {
-      "open-telemetry": {
-        "enabled": true,
-        "service-name": "my-dab-service",
-        "exporter-protocol": "grpc"
-      }
-    }
-  }
-}
-```
-
-Available settings:
-- `enabled`: Enables/disables OTEL telemetry (default: `false`)
-- `service-name`: Logical name for the service in traces (optional, defaults to the resource name)
-- `endpoint`: OTEL collector endpoint URL (optional, automatically set by Aspire)
-- `exporter-protocol`: Choose between `grpc` or `httpprotobuf` (optional, defaults to `grpc`)
-- `headers`: Custom headers for OTEL export (optional)
-
-> **Note**: The `endpoint` setting is automatically configured by the Aspire integration and typically doesn't need to be set manually.
 
 For more information about Data API builder telemetry, see the [official documentation](https://learn.microsoft.com/azure/data-api-builder/concept/monitor/open-telemetry).
 
