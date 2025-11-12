@@ -58,7 +58,7 @@ public class TurborepoResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
-    public async Task Turborepo_RunWithPackageManager_InfersFromInstallerWhenNotProvided(string packageManager)
+    public async Task Turborepo_WithPackageManagerLaunch_InfersFromInstallerWhenNotProvided(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -70,7 +70,7 @@ public class TurborepoResourceCreationTests
             "yarn" => turbo.WithYarn(),
             "pnpm" => turbo.WithPnpm(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager), $"Unsupported package manager: {packageManager}"),
-        }).RunWithPackageManager();
+        }).WithPackageManagerLaunch();
 
         // Add an app to the Turborepo workspace to verify app-level command/args
         var app1 = turbo.AddApp("app1");
@@ -98,12 +98,12 @@ public class TurborepoResourceCreationTests
     }
 
     [Fact]
-    public async Task Turborepo_RunWithPackageManager_WithPnpmAndYarn()
+    public async Task Turborepo_WithPackageManagerLaunch_WithPnpmAndYarn()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var turboPnpm = builder.AddTurborepoApp("turbo-pnpm").WithPnpm().RunWithPackageManager();
-        var turboYarn = builder.AddTurborepoApp("turbo-yarn").WithYarn().RunWithPackageManager();
+        var turboPnpm = builder.AddTurborepoApp("turbo-pnpm").WithPnpm().WithPackageManagerLaunch();
+        var turboYarn = builder.AddTurborepoApp("turbo-yarn").WithYarn().WithPackageManagerLaunch();
 
         turboPnpm.AddApp("app1-pnpm");
         turboYarn.AddApp("app1-yarn");
@@ -144,11 +144,11 @@ public class TurborepoResourceCreationTests
     }
 
     [Fact]
-    public async Task Turborepo_NoRunWithPackageManager_Defaults_AppCommandsIncludeNpxOrDefault()
+    public async Task Turborepo_NoWithPackageManagerLaunch_Defaults_AppCommandsIncludeNpxOrDefault()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        // Turborepo without RunWithPackageManager or installer
+        // Turborepo without WithPackageManagerLaunch or installer
         var turbo = builder.AddTurborepoApp("turbo-default");
         turbo.AddApp("app-turbo-default");
 
@@ -207,38 +207,38 @@ public class TurborepoResourceCreationTests
     }
 
     [Fact]
-    public void Turborepo_RunWithPackageManager_CalledTwiceWithDifferent_Throws()
+    public void Turborepo_WithPackageManagerLaunch_CalledTwiceWithDifferent_Throws()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var turbo = builder.AddTurborepoApp("turbo-conflict")
             .WithPnpm()
-            .RunWithPackageManager();
+            .WithPackageManagerLaunch();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => turbo.RunWithPackageManager("npm"));
+        var ex = Assert.Throws<InvalidOperationException>(() => turbo.WithPackageManagerLaunch("npm"));
         Assert.Contains("already configured to run with the 'pnpm' package manager", ex.Message);
     }
 
     [Fact]
-    public void Turborepo_RunWithPackageManager_ThrowsWhenNotConfigured()
+    public void Turborepo_WithPackageManagerLaunch_ThrowsWhenNotConfigured()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            builder.AddTurborepoApp("turbo-no-config").RunWithPackageManager());
+            builder.AddTurborepoApp("turbo-no-config").WithPackageManagerLaunch());
 
         Assert.Contains("not configured with a package manager", ex.Message);
     }
 
     [Fact]
-    public void Turborepo_RunWithPackageManager_ExplicitOverride_UsesExplicitValue()
+    public void Turborepo_WithPackageManagerLaunch_ExplicitOverride_UsesExplicitValue()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         // Configure with npm but explicitly run with yarn
         var turbo = builder.AddTurborepoApp("turbo-override")
             .WithNpm()
-            .RunWithPackageManager("yarn");
+            .WithPackageManagerLaunch("yarn");
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -255,14 +255,14 @@ public class TurborepoResourceCreationTests
     }
 
     [Fact]
-    public void Turborepo_RunWithPackageManager_CalledTwiceWithSame_DoesNotThrow()
+    public void Turborepo_WithPackageManagerLaunch_CalledTwiceWithSame_DoesNotThrow()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var turbo = builder.AddTurborepoApp("turbo-idempotent")
             .WithYarn()
-            .RunWithPackageManager()
-            .RunWithPackageManager(); // Second call with same inferred value
+            .WithPackageManagerLaunch()
+            .WithPackageManagerLaunch(); // Second call with same inferred value
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -288,7 +288,7 @@ public class TurborepoResourceCreationTests
             "pnpm" => turbo.WithPnpm(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
         };
-        turbo = turbo.RunWithPackageManager();
+        turbo = turbo.WithPackageManagerLaunch();
 
         turbo.AddApp("app1");
         turbo.AddApp("app2");
@@ -362,7 +362,7 @@ public class TurborepoResourceCreationTests
 
         var turbo = builder.AddTurborepoApp("turbo-with-install")
             .WithYarn(install: true)
-            .RunWithPackageManager();
+            .WithPackageManagerLaunch();
 
         turbo.AddApp("app1");
 

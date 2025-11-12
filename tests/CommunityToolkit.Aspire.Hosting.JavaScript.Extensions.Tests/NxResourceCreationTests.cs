@@ -58,10 +58,10 @@ public class NxResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
-    public async Task Nx_RunWithPackageManager_InfersFromInstallerWhenNotProvided(string packageManager)
+    public async Task Nx_WithPackageManagerLaunch_InfersFromInstallerWhenNotProvided(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
-        // Attach a yarn installer annotation to the Nx resource, then call RunWithPackageManager with no arg
+        // Attach a yarn installer annotation to the Nx resource, then call WithPackageManagerLaunch with no arg
         var nxBuilder = builder.AddNxApp("nx-with-installer");
 
         nxBuilder = (packageManager switch
@@ -70,7 +70,7 @@ public class NxResourceCreationTests
             "yarn" => nxBuilder.WithYarn(),
             "pnpm" => nxBuilder.WithPnpm(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager), $"Unsupported package manager: {packageManager}"),
-        }).RunWithPackageManager();
+        }).WithPackageManagerLaunch();
 
         // Add an app to the Nx workspace to verify app-level command/args
         var app1 = nxBuilder.AddApp("app1");
@@ -97,21 +97,21 @@ public class NxResourceCreationTests
     }
 
     [Fact]
-    public void Nx_RunWithPackageManager_ThrowsWhenNotConfigured()
+    public void Nx_WithPackageManagerLaunch_ThrowsWhenNotConfigured()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         // No installer and no packageManager argument should cause an exception
-        Assert.Throws<InvalidOperationException>(() => builder.AddNxApp("nx-no-installer").RunWithPackageManager());
+        Assert.Throws<InvalidOperationException>(() => builder.AddNxApp("nx-no-installer").WithPackageManagerLaunch());
     }
 
     [Fact]
-    public async Task Nx_RunWithPackageManager_WithPnpmAndYarn()
+    public async Task Nx_WithPackageManagerLaunch_WithPnpmAndYarn()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var nxPnpm = builder.AddNxApp("nx-pnpm").WithPnpm().RunWithPackageManager();
-        var nxYarn = builder.AddNxApp("nx-yarn").WithYarn().RunWithPackageManager();
+        var nxPnpm = builder.AddNxApp("nx-pnpm").WithPnpm().WithPackageManagerLaunch();
+        var nxYarn = builder.AddNxApp("nx-yarn").WithYarn().WithPackageManagerLaunch();
 
         // add apps to both (use unique app names)
         nxPnpm.AddApp("app1-pnpm");
@@ -149,11 +149,11 @@ public class NxResourceCreationTests
     }
 
     [Fact]
-    public async Task Nx_NoRunWithPackageManager_Defaults_AppCommandsIncludeNpxOrDefault()
+    public async Task Nx_NoWithPackageManagerLaunch_Defaults_AppCommandsIncludeNpxOrDefault()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        // Nx without RunWithPackageManager or installer
+        // Nx without WithPackageManagerLaunch or installer
         var nx = builder.AddNxApp("nx-default");
         nx.AddApp("app-nx-default");
 
@@ -178,7 +178,7 @@ public class NxResourceCreationTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        // Configure package manager but don't call RunWithPackageManager
+        // Configure package manager but don't call WithPackageManagerLaunch
         var nxBuilder = builder.AddNxApp("nx-configured-only");
         nxBuilder = packageManager switch
         {
@@ -210,14 +210,14 @@ public class NxResourceCreationTests
     }
 
     [Fact]
-    public void Nx_RunWithPackageManager_ExplicitOverride_UsesExplicitValue()
+    public void Nx_WithPackageManagerLaunch_ExplicitOverride_UsesExplicitValue()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         // Configure with npm but explicitly run with yarn
         var nx = builder.AddNxApp("nx-override")
             .WithNpm()
-            .RunWithPackageManager("yarn");
+            .WithPackageManagerLaunch("yarn");
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -234,14 +234,14 @@ public class NxResourceCreationTests
     }
 
     [Fact]
-    public void Nx_RunWithPackageManager_CalledTwiceWithSame_DoesNotThrow()
+    public void Nx_WithPackageManagerLaunch_CalledTwiceWithSame_DoesNotThrow()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var nx = builder.AddNxApp("nx-idempotent")
             .WithYarn()
-            .RunWithPackageManager()
-            .RunWithPackageManager(); // Second call with same inferred value
+            .WithPackageManagerLaunch()
+            .WithPackageManagerLaunch(); // Second call with same inferred value
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -252,16 +252,16 @@ public class NxResourceCreationTests
     }
 
     [Fact]
-    public void Nx_RunWithPackageManager_CalledTwiceWithDifferent_Throws()
+    public void Nx_WithPackageManagerLaunch_CalledTwiceWithDifferent_Throws()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var nx = builder.AddNxApp("nx-conflict")
             .WithYarn()
-            .RunWithPackageManager(); // Sets yarn
+            .WithPackageManagerLaunch(); // Sets yarn
 
         // Trying to change to pnpm should throw
-        var ex = Assert.Throws<InvalidOperationException>(() => nx.RunWithPackageManager("pnpm"));
+        var ex = Assert.Throws<InvalidOperationException>(() => nx.WithPackageManagerLaunch("pnpm"));
         Assert.Contains("already configured to run with the 'yarn' package manager", ex.Message);
     }
 
@@ -281,7 +281,7 @@ public class NxResourceCreationTests
             "pnpm" => nx.WithPnpm(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
         };
-        nx = nx.RunWithPackageManager();
+        nx = nx.WithPackageManagerLaunch();
 
         nx.AddApp("app1");
         nx.AddApp("app2");
@@ -351,7 +351,7 @@ public class NxResourceCreationTests
 
         var nx = builder.AddNxApp("nx-with-install")
             .WithYarn(install: true)
-            .RunWithPackageManager();
+            .WithPackageManagerLaunch();
 
         nx.AddApp("app1");
 

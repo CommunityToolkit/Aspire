@@ -139,7 +139,7 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="packageManager">The package manager to use. If none is provided it will attempt to use the installer annotation's resource command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the Nx workspace is already configured to use a different package manager.</exception>
-    public static IResourceBuilder<NxResource> RunWithPackageManager(this IResourceBuilder<NxResource> builder, string? packageManager = null)
+    public static IResourceBuilder<NxResource> WithPackageManagerLaunch(this IResourceBuilder<NxResource> builder, string? packageManager = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -176,7 +176,7 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="packageManager">The package manager to use. If none is provided it will attempt to use the installer annotation's resource command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the Turborepo workspace is already configured to use a different package manager.</exception>
-    public static IResourceBuilder<TurborepoResource> RunWithPackageManager(this IResourceBuilder<TurborepoResource> builder, string? packageManager = null)
+    public static IResourceBuilder<TurborepoResource> WithPackageManagerLaunch(this IResourceBuilder<TurborepoResource> builder, string? packageManager = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
