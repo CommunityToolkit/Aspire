@@ -13,6 +13,7 @@
 Provides extensions methods and resource definitions for the .NET Aspire AppHost to extend the support for Python applications. Current support includes:
 - Uvicorn
 - Uv
+- Streamlit
 
 ## Getting Started
 
@@ -43,6 +44,15 @@ Then, in the _Program.cs_ file of `AddUvApp`, define a Uvicorn resource, then ca
 
 ```csharp
 var uvicorn = builder.AddUvApp("uvapp", "../uv-api", "uv-api")
+    .WithHttpEndpoint(env: "PORT");
+```
+
+### Streamlit example usage
+
+Then, in the _Program.cs_ file of your AppHost project, define a Streamlit resource, then call `Add`:
+
+```csharp
+var streamlit = builder.AddStreamlitApp("streamlitapp", "../streamlit-api", "app.py")
     .WithHttpEndpoint(env: "PORT");
 ```
 
