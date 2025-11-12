@@ -1,8 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\examples\nodejs-ext\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost.csproj" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
-  </ItemGroup>
-
-</Project>

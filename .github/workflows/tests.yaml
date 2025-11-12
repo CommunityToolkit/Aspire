@@ -44,7 +44,7 @@ jobs:
             Hosting.MongoDB.Extensions.Tests,
             Hosting.MySql.Extensions.Tests,
             Hosting.Ngrok.Tests,
-            Hosting.NodeJS.Extensions.Tests,
+            Hosting.JavaScript.Extensions.Tests,
             Hosting.Ollama.Tests,
             Hosting.OpenTelemetryCollector.Tests,
             Hosting.PapercutSmtp.Tests,
