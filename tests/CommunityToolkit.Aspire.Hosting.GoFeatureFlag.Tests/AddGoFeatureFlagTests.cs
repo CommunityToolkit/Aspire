@@ -98,7 +98,7 @@ public class AddGoFeatureFlagTests
     [InlineData(LogLevel.Trace)]
     [InlineData(LogLevel.Critical)]
     [InlineData(LogLevel.None)]
-    public void AddSurrealServerContainerWithLogLevelThrowsOnUnsupportedLogLevel(LogLevel logLevel)
+    public void AddGoFeatureFlagWithLogLevelThrowsOnUnsupportedLogLevel(LogLevel logLevel)
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
