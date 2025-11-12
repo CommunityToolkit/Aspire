@@ -87,11 +87,16 @@ public class NxResourceCreationTests
         // Verify the created NxAppResource command and args
         var nxAppResource = Assert.Single(appModel.Resources.OfType<NxAppResource>());
         // For the inferred package manager, AddApp uses the corresponding command
-        Assert.True(nxAppResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var appPm));
-        Assert.Equal(packageManager, appPm.ExecutableName);
-        Assert.Equal("nx", nxAppResource.Command);
+        Assert.Equal(packageManager switch
+        {
+            "npm" => "npx",
+            "yarn" => "yarn",
+            "pnpm" => "pnpx",
+            _ => packageManager
+        }, nxAppResource.Command);
         var nxAppArgs = await nxAppResource.GetArgumentValuesAsync();
         Assert.Collection(nxAppArgs,
+                arg => Assert.Equal("nx", arg),
                 arg => Assert.Equal("serve", arg),
                 arg => Assert.Equal("app1", arg));
     }
@@ -126,11 +131,10 @@ public class NxResourceCreationTests
         Assert.Equal("pnpm", pmPnpm.ExecutableName);
 
         var nxPnpmApp = appModel.Resources.OfType<NxAppResource>().Single(r => r.Name == "app1-pnpm");
-        Assert.True(nxPnpmApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var appPmPnpm));
-        Assert.Equal("pnpm", appPmPnpm.ExecutableName);
-        Assert.Equal("nx", nxPnpmApp.Command);
+        Assert.Equal("pnpx", nxPnpmApp.Command);
         var pnpmArgs = await nxPnpmApp.GetArgumentValuesAsync();
         Assert.Collection(pnpmArgs,
+            arg => Assert.Equal("nx", arg),
             arg => Assert.Equal("serve", arg),
             arg => Assert.Equal("app1-pnpm", arg));
 
@@ -139,11 +143,10 @@ public class NxResourceCreationTests
         Assert.Equal("yarn", pmYarn.ExecutableName);
 
         var nxYarnApp = appModel.Resources.OfType<NxAppResource>().Single(r => r.Name == "app1-yarn");
-        Assert.True(nxYarnApp.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var appPmYarn));
-        Assert.Equal("yarn", appPmYarn.ExecutableName);
-        Assert.Equal("nx", nxYarnApp.Command);
+        Assert.Equal("yarn", nxYarnApp.Command);
         var yarnArgs = await nxYarnApp.GetArgumentValuesAsync();
         Assert.Collection(yarnArgs,
+            arg => Assert.Equal("nx", arg),
             arg => Assert.Equal("serve", arg),
             arg => Assert.Equal("app1-yarn", arg));
     }

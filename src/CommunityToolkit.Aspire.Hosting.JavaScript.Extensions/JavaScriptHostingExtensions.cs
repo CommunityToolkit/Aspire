@@ -78,7 +78,13 @@ public static partial class JavaScriptHostingExtensions
         // If the workspace is configured to use a package manager, bring that annotation forward
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation))
         {
-            rb.WithCommand(executionAnnotation.ExecutableName)
+            rb.WithCommand(executionAnnotation.ExecutableName switch
+            {
+                "npm" => "npx",
+                "yarn" => "yarn",
+                "pnpm" => "pnpx",
+                _ => executionAnnotation.ExecutableName
+            })
               .WithArgs(context =>
               {
                   context.Args.Insert(0, executionAnnotation.ScriptCommand ?? "nx");
@@ -122,7 +128,13 @@ public static partial class JavaScriptHostingExtensions
         // If the workspace is configured to use a package manager, bring that annotation forward
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation))
         {
-            rb.WithCommand(executionAnnotation.ExecutableName)
+            rb.WithCommand(executionAnnotation.ExecutableName switch
+            {
+                "npm" => "npx",
+                "yarn" => "yarn",
+                "pnpm" => "pnpx",
+                _ => executionAnnotation.ExecutableName
+            })
               .WithArgs(context =>
               {
                   context.Args.Insert(0, executionAnnotation.ScriptCommand ?? "nx");
@@ -174,13 +186,7 @@ public static partial class JavaScriptHostingExtensions
             }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager switch
-        {
-            "npm" => "npx",
-            "yarn" => "yarn",
-            "pnpm" => "pnpx",
-            _ => packageManager
-        }, runScriptCommand: "nx"));
+        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager, runScriptCommand: "nx"));
     }
 
     /// <summary>
@@ -217,13 +223,7 @@ public static partial class JavaScriptHostingExtensions
             }
         }
 
-        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager switch
-        {
-            "npm" => "npx",
-            "yarn" => "yarn",
-            "pnpm" => "pnpx",
-            _ => packageManager
-        }, runScriptCommand: "turbo"));
+        return builder.WithAnnotation(new JavaScriptPackageManagerAnnotation(packageManager, runScriptCommand: "turbo"));
     }
 
     /// <summary>
