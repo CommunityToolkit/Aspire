@@ -12,15 +12,15 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).0.0-preview.1.25531.6</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).0.0</AspireVersion>
     <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
-    <AspirePreviewSuffix>preview.1.25522.3</AspirePreviewSuffix>
+    <AspirePreviewSuffix>preview.1.25560.3</AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.0-rc.2.25502.107</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.0</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
     <MEAIVersion>9.9.0</MEAIVersion>
-    <ServiceDiscoveryVersion>10.0.0-preview.1.25520.3</ServiceDiscoveryVersion>
+    <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
     <IsPackable>false</IsPackable>
     <MoqVersion>4.20.72</MoqVersion>
 

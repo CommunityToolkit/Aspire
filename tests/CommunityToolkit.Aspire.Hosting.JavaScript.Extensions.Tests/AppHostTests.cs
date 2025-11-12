@@ -1,8 +1,8 @@
 using CommunityToolkit.Aspire.Testing;
 
-namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests;
 
-public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_NodeJS_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_NodeJS_Extensions_AppHost>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_JavaScript_Extensions_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_JavaScript_Extensions_AppHost>>
 {
     [Theory]
     [InlineData("turbo-web")]
