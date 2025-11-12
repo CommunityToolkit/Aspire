@@ -29,6 +29,18 @@ To have the Golang application listen on the correct port, you can use the follo
 r.Run(":"+os.Getenv("PORT"))
 ```
 
+## Publishing
+
+When publishing your Aspire application, the Golang resource automatically generates a multi-stage Dockerfile for containerization. This means you don't need to manually create a Dockerfile for your Golang application.
+
+The generated Dockerfile:
+- Uses `golang:1.23` as the build stage to compile your application
+- Uses `alpine:latest` as the runtime stage for a smaller final image
+- Respects your build tags if specified
+- Builds the executable specified in your `AddGolangApp` call
+
+This automatic Dockerfile generation happens when you publish your Aspire application and requires no additional configuration.
+
 ## Additional Information
 
 https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-golang

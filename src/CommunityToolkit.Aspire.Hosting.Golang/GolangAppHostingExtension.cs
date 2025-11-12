@@ -68,10 +68,55 @@ public static class GolangAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithGolangDefaults()
-                      .WithArgs([.. allArgs]);
+                      .WithArgs([.. allArgs])
+                      .PublishAsGolangDockerfile(workingDirectory, executable, buildTags);
     }
 
     private static IResourceBuilder<GolangAppExecutableResource> WithGolangDefaults(
         this IResourceBuilder<GolangAppExecutableResource> builder) =>
         builder.WithOtlpExporter();
+
+    /// <summary>
+    /// Configures the Golang application to be published as a Dockerfile with automatic multi-stage build generation.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="workingDirectory">The working directory containing the Golang application.</param>
+    /// <param name="executable">The path to the Golang package directory or source file to be executed.</param>
+    /// <param name="buildTags">The optional build tags to be used when building the Golang application.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
+    private static IResourceBuilder<GolangAppExecutableResource> PublishAsGolangDockerfile(
+        this IResourceBuilder<GolangAppExecutableResource> builder,
+        string workingDirectory,
+        string executable,
+        string[]? buildTags)
+    {
+        return builder.PublishAsDockerFile(publish =>
+        {
+            publish.WithDockerfileBuilder(workingDirectory, context =>
+            {
+                var buildArgs = new List<string> { "build", "-o", "/app/server" };
+                
+                if (buildTags is { Length: > 0 })
+                {
+                    buildArgs.Add("-tags");
+                    buildArgs.Add(string.Join(",", buildTags));
+                }
+                
+                buildArgs.Add(executable);
+
+                var buildStage = context.Builder
+                    .From("golang:1.23", "builder")
+                    .WorkDir("/build")
+                    .Copy(".", "./")
+                    .Run(string.Join(" ", ["go", .. buildArgs]));
+
+                context.Builder
+                    .From("alpine:latest")
+                    .CopyFrom(buildStage.StageName!, "/app/server", "/app/server")
+                    .Entrypoint(["/app/server"]);
+            });
+        });
+    }
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
 }
