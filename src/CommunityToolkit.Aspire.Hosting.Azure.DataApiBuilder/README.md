@@ -113,6 +113,58 @@ var dab = builder.AddDataAPIBuilder("dab")
     .WithImageTag("latest");
 ```
 
+### OpenTelemetry Instrumentation
+
+The Data API builder integration automatically configures OpenTelemetry (OTEL) instrumentation for distributed tracing and metrics. The integration uses the standard `.WithOtlpExporter()` method which sets up the necessary OTEL environment variables that Data API builder automatically recognizes.
+
+To enable OTEL telemetry in Data API builder, add the following configuration to your `dab-config.json` file:
+
+```json
+{
+  "runtime": {
+    "telemetry": {
+      "open-telemetry": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+With this configuration, Data API builder will:
+- Export traces and metrics to the Aspire dashboard via OTLP (OpenTelemetry Protocol)
+- Automatically use the OTEL endpoint provided by the Aspire app host
+- Include telemetry for REST and GraphQL operations, database queries, and system metrics
+
+#### Advanced OTEL Configuration
+
+Data API builder supports additional OTEL configuration options in the `dab-config.json` file:
+
+```json
+{
+  "runtime": {
+    "telemetry": {
+      "open-telemetry": {
+        "enabled": true,
+        "service-name": "my-dab-service",
+        "exporter-protocol": "grpc"
+      }
+    }
+  }
+}
+```
+
+Available settings:
+- `enabled`: Enables/disables OTEL telemetry (default: `false`)
+- `service-name`: Logical name for the service in traces (optional, defaults to the resource name)
+- `endpoint`: OTEL collector endpoint URL (optional, automatically set by Aspire)
+- `exporter-protocol`: Choose between `grpc` or `httpprotobuf` (optional, defaults to `grpc`)
+- `headers`: Custom headers for OTEL export (optional)
+
+> **Note**: The `endpoint` setting is automatically configured by the Aspire integration and typically doesn't need to be set manually.
+
+For more information about Data API builder telemetry, see the [official documentation](https://learn.microsoft.com/azure/data-api-builder/concept/monitor/open-telemetry).
+
 ## Known Issues
 
 The current imlpementation of the Data API builder .NET Aspire integration does not support HTTPS endpoints. However, this is only a dev-time consideration. Service discovery when published can use HTTPS without any problems.

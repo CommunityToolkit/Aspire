@@ -27,6 +27,11 @@
         "provider": "Simulator"
       },
       "mode": "development"
+    },
+    "telemetry": {
+      "open-telemetry": {
+        "enabled": true
+      }
     }
   },
   "entities": {
