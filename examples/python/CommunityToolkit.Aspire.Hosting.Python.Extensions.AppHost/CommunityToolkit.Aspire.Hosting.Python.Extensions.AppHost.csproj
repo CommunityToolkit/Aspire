@@ -10,10 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Python.Extensions\CommunityToolkit.Aspire.Hosting.Python.Extensions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
   
