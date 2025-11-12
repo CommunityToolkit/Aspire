@@ -4,13 +4,13 @@
 
 [![CI](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-ci.yml) | [![main branch](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-main.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-main.yml) | [![Latest Release](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-release.yml/badge.svg)](https://github.com/CommunityToolkit/Aspire/actions/workflows/dotnet-release.yml)
 
-The Aspire Community Toolkit is a collection of integrations and extensions for developing with .NET Aspire.
+The Aspire Community Toolkit is a collection of integrations and extensions for developing with Aspire.
 
-All features are contributed by you, our amazing .NET community, and maintained by a core set of maintainers. Check out our [FAQ](./docs/faq.md) for more information.
+All features are contributed by you, our amazing Aspire community, and maintained by a core set of maintainers. Check out our [FAQ](./docs/faq.md) for more information.
 
 ## 👀 What does this repo contain?
 
-This repository contains the source code for the Aspire Community Toolkit, a collection of community created Integrations and extensions for [.NET Aspire](https://aka.ms/dotnet/aspire).
+This repository contains the source code for the Aspire Community Toolkit, a collection of community created Integrations and extensions for [Aspire](https://aka.ms/dotnet/aspire).
 
 | Package                                                                                                                                                                                                                                                                                                                                                                                      | Description                                                                                                                                                                 |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
