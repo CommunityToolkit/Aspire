@@ -12,7 +12,7 @@ namespace Aspire.Hosting
     {
         public static ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> AddBunApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string entryPoint = "index.ts", bool watch = false) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> WithBunPackageInstallation(this ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> resource) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> WithBunPackageInstallation(this ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.BunInstallerResource>>? configureInstaller = null) { throw null; }
     }
 }
 
@@ -21,5 +21,10 @@ namespace Aspire.Hosting.ApplicationModel
     public partial class BunAppResource : ExecutableResource
     {
         public BunAppResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    public partial class BunInstallerResource : ExecutableResource
+    {
+        public BunInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
     }
 }
