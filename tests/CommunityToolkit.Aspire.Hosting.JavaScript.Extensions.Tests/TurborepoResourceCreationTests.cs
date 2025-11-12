@@ -1,7 +1,7 @@
 using Aspire.Hosting;
-using Aspire.Hosting.NodeJs;
+using Aspire.Hosting.JavaScript;
 
-namespace CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests;
+namespace CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests;
 
 public class TurborepoResourceCreationTests
 {

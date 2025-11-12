@@ -1,14 +1,14 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.NodeJs;
+using Aspire.Hosting.JavaScript;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
 
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for adding Node.js applications to the distributed application builder.
+/// Provides extension methods for adding JavaScript applications to the distributed application builder.
 /// </summary>
-public static partial class NodeJSHostingExtensions
+public static partial class JavaScriptHostingExtensions
 {
     /// <summary>
     /// Adds an Nx monorepo workspace to the distributed application builder.
@@ -207,12 +207,12 @@ public static partial class NodeJSHostingExtensions
     }
 
     /// <summary>
-    /// Maps the endpoint port for the <see cref="NodeAppResource"/> to the appropriate command line argument.
+    /// Maps the endpoint port for the <see cref="JavaScriptAppResource"/> to the appropriate command line argument.
     /// </summary>
     /// <param name="builder">The Node.js app resource.</param>
     /// <param name="endpointName">The name of the endpoint to map. If not specified, it will use the first HTTP or HTTPS endpoint found.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<TResource> WithMappedEndpointPort<TResource>(this IResourceBuilder<TResource> builder, string? endpointName = null) where TResource : NodeAppResource
+    public static IResourceBuilder<TResource> WithMappedEndpointPort<TResource>(this IResourceBuilder<TResource> builder, string? endpointName = null) where TResource : JavaScriptAppResource
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -220,7 +220,7 @@ public static partial class NodeJSHostingExtensions
         {
             var resource = builder.Resource;
 
-            // monorepo tools and npm (from Aspire.Hosting.NodeJS) need `--`, but yarn and pnpm don't
+            // monorepo tools and npm (from Aspire.Hosting.JavaScript) need `--`, but yarn and pnpm don't
             if (!resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var executionAnnotation) || executionAnnotation.ExecutableName == "npm")
             {
                 ctx.Args.Add("--");
@@ -373,7 +373,7 @@ public static partial class NodeJSHostingExtensions
         }
     }
 
-    private static IResourceBuilder<TResource> WithNodeDefaults<TResource>(this IResourceBuilder<TResource> builder) where TResource : NodeAppResource =>
+    private static IResourceBuilder<TResource> WithNodeDefaults<TResource>(this IResourceBuilder<TResource> builder) where TResource : JavaScriptAppResource =>
         builder.WithOtlpExporter()
             .WithEnvironment("NODE_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production")
             .WithCertificateTrustConfiguration((ctx) =>

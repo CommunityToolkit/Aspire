@@ -10,10 +10,10 @@ When using monorepos, multiple applications share the same `package.json` and wo
 // This causes race conditions - multiple installers for the same directory
 var app1 = builder.AddYarnApp("app-1", "./Frontend", args: ["app1"])
     .WithYarnPackageInstallation();
-    
+
 var app2 = builder.AddYarnApp("app-2", "./Frontend", args: ["app2"])
     .WithYarnPackageInstallation();
-    
+
 var app3 = builder.AddYarnApp("app-3", "./Frontend", args: ["app3"])
     .WithYarnPackageInstallation();
 ```
@@ -48,10 +48,10 @@ var app3 = turbo.AddApp("app3");
 
 Both Nx and Turborepo support yarn and pnpm package managers:
 
-- `.WithYarnPackageInstaller()` - uses yarn
-- `.WithPnpmPackageInstaller()` - uses pnpm
+-   `.WithYarnPackageInstaller()` - uses yarn
+-   `.WithPnpmPackageInstaller()` - uses pnpm
 
-> **Note**: npm support (`AddNpmApp`, `WithNpmPackageInstallation`) is now provided by [Aspire.Hosting.NodeJS](https://www.nuget.org/packages/Aspire.Hosting.NodeJS) starting with Aspire 13.
+> **Note**: npm support (`AddNpmApp`, `WithNpmPackageInstallation`) is now provided by [Aspire.Hosting.JavaScript](https://www.nuget.org/packages/Aspire.Hosting.JavaScript) starting with Aspire 13.
 
 ### Configuring Package Manager for App Execution
 
@@ -74,9 +74,10 @@ nxDefault.AddApp("app1"); // Runs: nx serve app1 (no package manager prefix)
 ```
 
 **Command Generation Examples:**
-- `RunWithPackageManager("yarn")` → `yarn nx serve app1` or `yarn turbo run dev --filter app1`  
-- `RunWithPackageManager("pnpm")` → `pnpm nx serve app1` or `pnpm turbo run dev --filter app1`
-- No `RunWithPackageManager()` → `nx serve app1` or `turbo run dev --filter app1`
+
+-   `RunWithPackageManager("yarn")` → `yarn nx serve app1` or `yarn turbo run dev --filter app1`
+-   `RunWithPackageManager("pnpm")` → `pnpm nx serve app1` or `pnpm turbo run dev --filter app1`
+-   No `RunWithPackageManager()` → `nx serve app1` or `turbo run dev --filter app1`
 
 ## How It Works
 
@@ -87,12 +88,14 @@ nxDefault.AddApp("app1"); // Runs: nx serve app1 (no package manager prefix)
 ## Commands Generated
 
 ### Nx Apps
-- Command: `nx serve {appName}`
-- The `appName` parameter controls which app Nx serves
 
-### Turborepo Apps  
-- Command: `turbo run dev --filter {filter}`
-- The `filter` parameter controls which packages Turborepo builds/serves
+-   Command: `nx serve {appName}`
+-   The `appName` parameter controls which app Nx serves
+
+### Turborepo Apps
+
+-   Command: `turbo run dev --filter {filter}`
+-   The `filter` parameter controls which packages Turborepo builds/serves
 
 ## Migration
 
@@ -102,10 +105,10 @@ If you're currently using the workaround pattern:
 // Old workaround approach
 var app1 = builder.AddYarnApp("app-1", "./Frontend", args: ["app1"])
     .WithYarnPackageInstallation();
-    
+
 var app2 = builder.AddYarnApp("app-2", "./Frontend", args: ["app2"])
     .WaitFor(app1); // Manual dependency
-    
+
 var app3 = builder.AddYarnApp("app-3", "./Frontend", args: ["app3"])
     .WaitFor(app1); // Manual dependency
 ```
@@ -119,7 +122,7 @@ var nx = builder.AddNxApp("nx", workingDirectory: "./Frontend")
     .RunWithPackageManager(); // Configure package manager for app execution
 
 var app1 = nx.AddApp("app-1", appName: "app1");
-var app2 = nx.AddApp("app-2", appName: "app2");  
+var app2 = nx.AddApp("app-2", appName: "app2");
 var app3 = nx.AddApp("app-3", appName: "app3");
 ```
 
@@ -131,12 +134,12 @@ This provides cleaner syntax and automatic dependency management.
 
 It's important to understand the difference between package installation and app execution:
 
-- **Package Installer** (`.WithYarnPackageInstaller()`, `.WithPnpmPackageInstaller()`) - Controls how packages are installed in the workspace
-- **Package Manager for Apps** (`.RunWithPackageManager()`) - Controls which command is used to run individual apps
+-   **Package Installer** (`.WithYarnPackageInstaller()`, `.WithPnpmPackageInstaller()`) - Controls how packages are installed in the workspace
+-   **Package Manager for Apps** (`.RunWithPackageManager()`) - Controls which command is used to run individual apps
 
 ```csharp
 var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
-    .WithPnpmPackageInstaller()       // Install packages with: pnpm install  
+    .WithPnpmPackageInstaller()       // Install packages with: pnpm install
     .RunWithPackageManager("yarn");   // Run apps with: yarn nx serve app1
 
 // This is valid - you can install with pnpm but run apps with yarn

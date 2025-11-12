@@ -18,11 +18,5 @@
   <ItemGroup>
     <Compile Include="$(SharedDir)\Adminer\AdminerLoginServer.cs" Link="AdminerLoginServer.cs" />
   </ItemGroup>
-  
-  <!-- Workaround for https://github.com/dotnet/aspire/issues/7779 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
-  </ItemGroup>
 
 </Project>
