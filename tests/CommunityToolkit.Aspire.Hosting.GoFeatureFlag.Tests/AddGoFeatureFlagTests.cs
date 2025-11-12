@@ -121,7 +121,15 @@ public class AddGoFeatureFlagTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<GoFeatureFlagResource>());
 
-        // Verify that OTEL environment callback annotation is present (added by WithOtlpExporter)
+        // Verify that OtlpExporterAnnotation is present (added by WithOtlpExporter)
+        // This annotation marks the resource as an OTEL exporter
+        Assert.True(resource.HasAnnotationOfType<OtlpExporterAnnotation>());
+        
+        // Verify that environment callback annotation is present for OTEL configuration
+        // The callback will set environment variables like:
+        // - OTEL_EXPORTER_OTLP_ENDPOINT
+        // - OTEL_EXPORTER_OTLP_PROTOCOL
+        // - OTEL_SERVICE_NAME
         var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToArray();
         Assert.NotEmpty(envAnnotations);
     }
