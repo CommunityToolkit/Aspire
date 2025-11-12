@@ -13,7 +13,6 @@
     -   Hosting integrations: extension methods in `Aspire.Hosting` namespace.
     -   Client integrations: extension methods in `Microsoft.Extensions.Hosting` namespace.
     -   Use file-scoped namespaces.
--   **Installer resources:** For Node.js, package installers (npm/yarn/pnpm) are modeled as `ExecutableResource` instances, providing dashboard visibility and proper process management. See `src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/REFACTORING_NOTES.md` for rationale and migration.
 
 ### Coding Style
 
