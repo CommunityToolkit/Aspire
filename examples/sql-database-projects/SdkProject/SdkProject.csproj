@@ -1,7 +1,5 @@
 <Project Sdk="MSBuild.Sdk.SqlProj/3.2.0">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <TargetFrameworks>net8.0</TargetFrameworks>
         <SqlServerVersion>Sql150</SqlServerVersion>
         <RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
         <!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->
