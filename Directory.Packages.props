@@ -113,5 +113,4 @@
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
   </ItemGroup>
-
 </Project>
