@@ -35,7 +35,7 @@ When publishing your Aspire application, the Golang resource automatically gener
 
 The generated Dockerfile:
 - Uses `golang:1.23` as the build stage to compile your application
-- Uses `alpine:latest` as the runtime stage for a smaller final image
+- Uses `alpine:3.21` as the runtime stage for a smaller final image
 - Respects your build tags if specified
 - Builds the executable specified in your `AddGolangApp` call
 

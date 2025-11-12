@@ -112,7 +112,7 @@ public static class GolangAppHostingExtension
                     .Run(string.Join(" ", ["go", .. buildArgs]));
 
                 context.Builder
-                    .From("alpine:latest")
+                    .From("alpine:3.21")
                     .CopyFrom(buildStage.StageName!, "/app/server", "/app/server")
                     .Entrypoint(["/app/server"]);
             });
