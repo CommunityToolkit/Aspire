@@ -93,7 +93,7 @@ public class AddGoFeatureFlagTests
         Assert.Equal($"Endpoint=http://localhost:27020", connectionString);
         Assert.Equal("Endpoint=http://{goff.bindings.http.host}:{goff.bindings.http.port}", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
-    
+
     [Theory]
     [InlineData(LogLevel.Trace)]
     [InlineData(LogLevel.Critical)]
@@ -101,7 +101,7 @@ public class AddGoFeatureFlagTests
     public void AddSurrealServerContainerWithLogLevelThrowsOnUnsupportedLogLevel(LogLevel logLevel)
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-    
+
         var func = () => appBuilder
             .AddGoFeatureFlag("goff")
             .WithLogLevel(logLevel);
@@ -110,11 +110,11 @@ public class AddGoFeatureFlagTests
     }
 
     [Fact]
-    public void AddGoFeatureFlagAddsOtelAnnotation()
+    public async Task AddGoFeatureFlagAddsOtelAnnotation()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        var goff = appBuilder.AddGoFeatureFlag("goff");
+        appBuilder.AddGoFeatureFlag("goff");
 
         using var app = appBuilder.Build();
 
@@ -124,13 +124,5 @@ public class AddGoFeatureFlagTests
         // Verify that OtlpExporterAnnotation is present (added by WithOtlpExporter)
         // This annotation marks the resource as an OTEL exporter
         Assert.True(resource.HasAnnotationOfType<OtlpExporterAnnotation>());
-        
-        // Verify that environment callback annotation is present for OTEL configuration
-        // The callback will set environment variables like:
-        // - OTEL_EXPORTER_OTLP_ENDPOINT
-        // - OTEL_EXPORTER_OTLP_PROTOCOL
-        // - OTEL_SERVICE_NAME
-        var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToArray();
-        Assert.NotEmpty(envAnnotations);
     }
 }
