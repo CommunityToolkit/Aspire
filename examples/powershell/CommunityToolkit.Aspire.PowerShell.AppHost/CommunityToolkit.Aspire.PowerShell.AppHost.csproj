@@ -1,6 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,8 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting" />
-    <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.Azure.Storage" />
   </ItemGroup>
 

@@ -9,14 +9,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>e290de9f-eab3-428b-bd01-f53b072f8406</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="ErikEJ.Dacpac.Chinook" IsAspirePackageResource="true" />
   </ItemGroup>
 
