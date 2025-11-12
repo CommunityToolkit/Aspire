@@ -110,7 +110,7 @@ public class AddGoFeatureFlagTests
     }
 
     [Fact]
-    public async Task AddGoFeatureFlagAddsOtelAnnotation()
+    public void AddGoFeatureFlagAddsOtelAnnotation()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
