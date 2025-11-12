@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <Description>An Aspire hosting integration capable of deploying SQL Server Database Projects as part of your AppHost.</Description>
     <AdditionalPackageTags>hosting sql sqlproj</AdditionalPackageTags>
     <!--Microsoft.SqlServer.DacFx package have vulnerable dependency-->
@@ -11,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.SqlServer" />
-    <PackageReference Include="Microsoft.Build" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.SqlServer.DacFx" />
   </ItemGroup>
@@ -22,11 +20,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests" />
-  </ItemGroup>
-
-  <!-- Workaround for https://github.com/dotnet/aspire/issues/7779 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' or '$(TargetFramework)' == 'net10.0'">
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
 </Project>

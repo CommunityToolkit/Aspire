@@ -1,11 +1,6 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <TargetFrameworks>net8.0</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <OutputType>Exe</OutputType>
     <UserSecretsId>e290de9f-eab3-428b-bd01-f53b072f8406</UserSecretsId>
   </PropertyGroup>
