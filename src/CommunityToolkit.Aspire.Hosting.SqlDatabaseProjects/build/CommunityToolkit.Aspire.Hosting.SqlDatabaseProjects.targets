@@ -62,4 +62,8 @@ namespace Packages%3B
     <!-- The purpose of this target is to take all of the generated package metadata and write them to the intermediate build directory
       and reference them for compilation. There will be a ClassName.PackageMetadata.g.cs file for each referenced project. -->
     <Target Name="WriteAspirePackageMetadataSources" DependsOnTargets="$(WriteAspirePackageMetadataSourcesDependsOn)" BeforeTargets="CoreCompile" />
+
+  <Target Name="DeleteMSBuildBadAssemblies" DependsOnTargets="Build" AfterTargets="Build">
+    <Delete Files="$(OutputPath)Microsoft.Build.dll;$(OutputPath)Microsoft.Build.Framework.dll;$(OutputPath)Microsoft.NET.StringTools.dll" />
+  </Target>
 </Project>

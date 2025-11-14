@@ -1,18 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-    <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
-
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <IsAspireHost>true</IsAspireHost>
         <UserSecretsId>dea39c19-075e-4a9d-aba2-ffd65de91136</UserSecretsId>
     </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Aspire.Hosting.AppHost" />
-    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Ngrok\CommunityToolkit.Aspire.Hosting.Ngrok.csproj" IsAspireProjectResource="false" />

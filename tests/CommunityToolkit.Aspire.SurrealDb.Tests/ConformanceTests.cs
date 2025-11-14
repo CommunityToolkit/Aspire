@@ -9,12 +9,12 @@ using SurrealDb.Net;
 
 namespace CommunityToolkit.Aspire.SurrealDb.Tests;
 
-public class ConformanceTests : 
-    ConformanceTests<SurrealDbClient, SurrealDbClientSettings>, 
+public class ConformanceTests :
+    ConformanceTests<SurrealDbClient, SurrealDbClientSettings>,
     IClassFixture<SurrealDbContainerFixture>
 {
     private readonly SurrealDbContainerFixture _containerFixture;
-    
+
     protected override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
 
     protected override string ActivitySourceName => string.Empty;
@@ -24,6 +24,8 @@ public class ConformanceTests :
     protected override bool CanConnectToServer => RequiresDockerAttribute.IsSupported;
 
     protected override bool SupportsKeyedRegistrations => true;
+
+    protected override bool CanCreateClientWithoutConnectingToServer => false;
 
     public ConformanceTests(SurrealDbContainerFixture containerFixture)
     {

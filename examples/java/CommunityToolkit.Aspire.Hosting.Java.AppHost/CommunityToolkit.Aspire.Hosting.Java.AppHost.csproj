@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,10 +8,6 @@
 
     <JavaAppRoot>$(MSBuildProjectDirectory)/../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven</JavaAppRoot>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Java.ApiApp/CommunityToolkit.Aspire.Hosting.Java.ApiApp.csproj" />

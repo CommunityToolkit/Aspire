@@ -1,5 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,10 +7,6 @@
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>9ea31b5e-317f-4692-8a61-e60ac7ec0d0a</UserSecretsId>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.KurrentDB\CommunityToolkit.Aspire.Hosting.KurrentDB.csproj" IsAspireProjectResource="false" />

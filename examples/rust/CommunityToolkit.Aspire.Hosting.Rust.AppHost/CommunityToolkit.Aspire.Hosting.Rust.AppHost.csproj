@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,10 +7,6 @@
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>ac9b4409-a7e7-465e-a16c-19293aaa12aa</UserSecretsId>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Rust\CommunityToolkit.Aspire.Hosting.Rust.csproj" IsAspireProjectResource="false" />
