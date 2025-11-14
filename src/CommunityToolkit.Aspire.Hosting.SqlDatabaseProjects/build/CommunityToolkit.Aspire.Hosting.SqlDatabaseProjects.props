@@ -1,0 +1,7 @@
+﻿<Project>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build" PrivateAssets="true" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="true" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NET.StringTools" PrivateAssets="true" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>
