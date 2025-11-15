@@ -106,8 +106,8 @@
     <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost.csproj" />
     <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.ServiceDefauls/CommunityToolkit.Aspire.Hosting.Ngrok.ServiceDefauls.csproj" />
   </Folder>
-  <Folder Name="/examples/nodejs-ext/">
-    <Project Path="examples/nodejs-ext/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.AppHost.csproj" />
+  <Folder Name="/examples/javascript-ext/">
+    <Project Path="examples/javascript-ext/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/ollama/">
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.AppHost/CommunityToolkit.Aspire.Hosting.Ollama.AppHost.csproj" />
@@ -184,7 +184,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
@@ -237,7 +237,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />

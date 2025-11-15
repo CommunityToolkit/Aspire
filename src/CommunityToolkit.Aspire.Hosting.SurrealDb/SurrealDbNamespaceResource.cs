@@ -54,4 +54,9 @@ public class SurrealDbNamespaceResource : Resource, IResourceWithParent<SurrealD
     {
         _databases.TryAdd(name, databaseName);
     }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() =>
+        Parent.CombineProperties([
+            new("Namespace", ReferenceExpression.Create($"{NamespaceName}"))
+        ]);
 }

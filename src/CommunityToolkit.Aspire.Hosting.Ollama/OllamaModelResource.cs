@@ -26,6 +26,11 @@ public class OllamaModelResource(string name, string modelName, OllamaResource p
     /// </summary>
     public string ModelName { get; } = ThrowIfNull(modelName);
 
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() =>
+        Parent.CombineProperties([
+            new("Model", ReferenceExpression.Create($"{ModelName}"))
+        ]);
+
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);
 }

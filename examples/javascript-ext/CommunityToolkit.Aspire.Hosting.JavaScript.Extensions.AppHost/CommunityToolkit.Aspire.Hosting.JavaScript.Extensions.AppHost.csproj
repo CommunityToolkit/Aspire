@@ -1,0 +1,15 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+  
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>125d4633-7e41-4639-b0ce-cfc16cd67e39</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.JavaScript.Extensions\CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

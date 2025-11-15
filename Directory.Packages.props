@@ -6,14 +6,13 @@
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.NodeJS" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
+    <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)-$(AspirePreviewSuffix)" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Python" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Rabbitmq" Version="$(AspireVersion)" />
@@ -44,11 +43,12 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetExtensionsVersion)" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.9.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="$(ServiceDiscoveryVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(DotNetExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="$(DotNetExtensionsVersion)" />
     <!-- OpenTelemetry packages -->
@@ -79,7 +79,9 @@
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.20" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
     <PackageVersion Include="Microsoft.Build" Version="17.11.48" />
-    <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.2" />
+    <PackageVersion Include="Microsoft.Build.Framework" Version="17.11.48" />
+    <PackageVersion Include="Microsoft.NET.StringTools" Version="17.11.48" />
+    <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.12" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
@@ -113,8 +115,9 @@
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
   </ItemGroup>
-  <ItemGroup Label=".NET 9 Overrides" Condition="'$(TargetFramework)' == 'net9.0'">
-    <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="9.0.10" />
+
+  <ItemGroup Label="System">
+    <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
+    <PackageVersion Include="System.Linq.AsyncEnumerable" Version="$(DotNetExtensionsVersion)" />
   </ItemGroup>
 </Project>
