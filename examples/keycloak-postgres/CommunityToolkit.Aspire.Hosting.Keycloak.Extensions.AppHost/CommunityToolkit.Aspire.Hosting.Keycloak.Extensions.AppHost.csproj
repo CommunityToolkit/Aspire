@@ -8,8 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting"/>
-    <PackageReference Include="Aspire.Hosting.AppHost"/>
     <PackageReference Include="Aspire.Hosting.Keycloak"/>
     <PackageReference Include="Aspire.Hosting.PostgreSQL"/>
   </ItemGroup>
