@@ -9,4 +9,11 @@
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.KurrentDB\KurrentDBContainerImageTags.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Linq.Async">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Linq.AsyncEnumerable" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+  </ItemGroup>
 </Project>
