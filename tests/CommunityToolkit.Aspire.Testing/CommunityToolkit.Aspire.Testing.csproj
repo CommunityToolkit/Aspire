@@ -1,17 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
   <PropertyGroup>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <IsTestProject>false</IsTestProject>
-    <IsAspireHost>true</IsAspireHost>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" IsAspireProjectResource="false" />
-  </ItemGroup>
-  
   <ItemGroup>
     <!--
       This intentionally does not reference 'xunit', 'xunit.core', or any runner packages.

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Minio;
 using System.Data.Common;
 
@@ -12,6 +13,7 @@ public sealed class MinioClientSettings
     private const string ConnectionStringEndpoint = "Endpoint";
     private const string AccessKey = "AccessKey";
     private const string SecretKey = "SecretKey";
+    private const string UseSslKey = "UseSsl";
     
     /// <summary>
     /// Endpoint URL
@@ -42,37 +44,53 @@ public sealed class MinioClientSettings
     
     internal void ParseConnectionString(string? connectionString)
     {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return;
+        }
+
+        // If the connection string is an absolute URI, use it as endpoint.
         if (Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
         {
             Endpoint = uri;
+            return;
         }
-        else
-        {
-            var connectionBuilder = new DbConnectionStringBuilder
-            {
-                ConnectionString = connectionString
-            };
 
-            if (connectionBuilder.TryGetValue(ConnectionStringEndpoint, out var endpoint) 
-                &&
-                Uri.TryCreate(endpoint.ToString(), UriKind.Absolute, out var serviceUri))
+        var connectionBuilder = new DbConnectionStringBuilder
+        {
+            ConnectionString = connectionString
+        };
+
+        if (connectionBuilder.TryGetValue(ConnectionStringEndpoint, out var endpoint) 
+            &&
+            Uri.TryCreate(endpoint.ToString(), UriKind.Absolute, out var serviceUri))
+        {
+            Endpoint = serviceUri;
+        }
+        
+        // Check for UseSsl (and variants) in the connection string and parse it if present.
+        if (connectionBuilder.TryGetValue(UseSslKey, out var useSslObj)
+            && useSslObj is string useSslValue 
+            && bool.TryParse(useSslValue, out var parsed))
             {
-                Endpoint = serviceUri;
+                UseSsl = parsed;
             }
-            
-            if (connectionBuilder.TryGetValue(AccessKey, out var accessKey)
-                &&
-                connectionBuilder.TryGetValue(SecretKey, out var secretKey)
-                && 
-                !string.IsNullOrEmpty(accessKey.ToString()) && !string.IsNullOrEmpty(secretKey.ToString()))
+        
+        if (connectionBuilder.TryGetValue(AccessKey, out var accessKeyValue) &&
+            connectionBuilder.TryGetValue(SecretKey, out var secretKeyValue) &&
+            accessKeyValue is string accessKey &&
+            secretKeyValue is string secretKey &&
+            !string.IsNullOrEmpty(accessKey) &&
+            !string.IsNullOrEmpty(secretKey))
             {
                 Credentials = new MinioCredentials
                 {
-                    AccessKey = accessKey.ToString()!, SecretKey = secretKey.ToString()!
+                    AccessKey = accessKey,
+                    SecretKey = secretKey
                 };
             }
-        }
     }
+
 }
 
 /// <summary>

@@ -1,5 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -8,10 +7,6 @@
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>5a6548a5-b5dd-40f0-876a-9e3d4ac91fd1</UserSecretsId>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Golang\CommunityToolkit.Aspire.Hosting.Golang.csproj" IsAspireProjectResource="false" />

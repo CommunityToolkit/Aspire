@@ -1,12 +1,12 @@
 ## 💡 Creating an Integration
 
-So, you want to create a new integration for the .NET Aspire Community Toolkit? That's awesome! This guide will walk you through the process of creating a new integration.
+So, you want to create a new integration for the Aspire Community Toolkit? That's awesome! This guide will walk you through the process of creating a new integration.
 
 First up, make sure you've had a read of the [Contributing guide](../CONTRIBUTING.md) to understand the contribution guidelines, and then familiarise yourself with creating a custom .NET Aspire integration for [hosting](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-hosting-integration?tabs=windows) or for [clients](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-client-integration).
 
 ## 📂 Repository Structure
 
-The repository structure for the .NET Aspire Community Toolkit is as follows:
+The repository structure for the Aspire Community Toolkit is as follows:
 
 -   `src/` - Contains the source code for the toolkit and where you'll create your integration.
 -   `tests/` - Contains the test projects for the toolkit and where you'll create unit and integration tests (where applicable).
@@ -133,4 +133,4 @@ Here's an example from the OllamaSharp integration:
 
 ## 🎉 You're done
 
-That's it! You've created a new integration for the .NET Aspire Community Toolkit. If you have any questions or need help, feel free to reach out to the maintainers or the community on GitHub Discussions.
+That's it! You've created a new integration for the Aspire Community Toolkit. If you have any questions or need help, feel free to reach out to the maintainers or the community on GitHub Discussions.

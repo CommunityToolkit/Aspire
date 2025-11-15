@@ -14,4 +14,10 @@
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
   </ItemGroup>
 
+
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Minio.Client.Tests" />
+  </ItemGroup>
+
 </Project>
