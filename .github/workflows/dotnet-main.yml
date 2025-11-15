@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  DEFAULT_DOTNET_VERSION: "8.0.x"
+  DEFAULT_DOTNET_VERSION: "10.0.x"
 
 permissions:
   contents: read
