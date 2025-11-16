@@ -1,7 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
 using System.Diagnostics;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
