@@ -102,7 +102,7 @@ public static class GolangAppHostingExtension
         {
             publish.WithDockerfileBuilder(workingDirectory, context =>
             {
-                var buildArgs = new List<string> { "build", "-o", "/app/server" };
+                var buildArgs = new List<string> { "build", "-o", "server" };
 
                 if (buildTags is { Length: > 0 })
                 {
@@ -120,13 +120,13 @@ public static class GolangAppHostingExtension
                     .From(goVersion, "builder")
                     .WorkDir("/build")
                     .Copy(".", "./")
-                    .Run(string.Join(" ", ["go", .. buildArgs]));
+                    .Run(string.Join(" ", ["CGO_ENABLED=0", "go", .. buildArgs]));
 
                 var runtimeImage = baseImageAnnotation?.RuntimeImage ?? $"alpine:{DefaultAlpineVersion}";
 
                 context.Builder
                     .From(runtimeImage)
-                    .CopyFrom(buildStage.StageName!, "/app/server", "/app/server")
+                    .CopyFrom(buildStage.StageName!, "/build/server", "/app/server")
                     .Entrypoint(["/app/server"]);
             });
         });
