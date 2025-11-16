@@ -1,5 +1,11 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Aspire.Hosting;
 
@@ -91,6 +97,8 @@ public static class GolangAppHostingExtension
         string executable,
         string[]? buildTags)
     {
+        const string DefaultAlpineVersion = "3.21";
+
         return builder.PublishAsDockerFile(publish =>
         {
             publish.WithDockerfileBuilder(workingDirectory, context =>
@@ -105,18 +113,109 @@ public static class GolangAppHostingExtension
 
                 buildArgs.Add(executable);
 
+                // Get custom base image from annotation, if present
+                context.Resource.TryGetLastAnnotation<DockerfileBaseImageAnnotation>(out var baseImageAnnotation);
+                var goVersion = baseImageAnnotation?.BuildImage ?? GetDefaultGoBaseImage(workingDirectory, context.Services);
+
                 var buildStage = context.Builder
-                    .From("golang:1.23", "builder")
+                    .From(goVersion, "builder")
                     .WorkDir("/build")
                     .Copy(".", "./")
                     .Run(string.Join(" ", ["go", .. buildArgs]));
 
+                var runtimeImage = baseImageAnnotation?.RuntimeImage ?? $"alpine:{DefaultAlpineVersion}";
+
                 context.Builder
-                    .From("alpine:3.21")
+                    .From(runtimeImage)
                     .CopyFrom(buildStage.StageName!, "/app/server", "/app/server")
                     .Entrypoint(["/app/server"]);
             });
         });
     }
 #pragma warning restore ASPIREDOCKERFILEBUILDER001
+
+    private static string GetDefaultGoBaseImage(string workingDirectory, IServiceProvider serviceProvider)
+    {
+        const string DefaultGoVersion = "1.23";
+        var logger = serviceProvider.GetService<ILogger<GolangAppExecutableResource>>() ?? NullLogger<GolangAppExecutableResource>.Instance;
+        var goVersion = DetectGoVersion(workingDirectory, logger) ?? DefaultGoVersion;
+        return $"golang:{goVersion}";
+    }
+
+    /// <summary>
+    /// Detects the Go version to use for a project by checking go.mod and the installed Go toolchain.
+    /// </summary>
+    /// <param name="workingDirectory">The working directory of the Go project.</param>
+    /// <param name="logger">The logger for diagnostic messages.</param>
+    /// <returns>The detected Go version as a string, or <c>null</c> if no version is detected.</returns>
+    private static string? DetectGoVersion(string workingDirectory, ILogger logger)
+    {
+        // Check go.mod file
+        var goModPath = Path.Combine(workingDirectory, "go.mod");
+        if (File.Exists(goModPath))
+        {
+            try
+            {
+                var goModContent = File.ReadAllText(goModPath);
+                // Look for "go X.Y" or "go X.Y.Z" line in go.mod
+                var match = Regex.Match(goModContent, @"^\s*go\s+(\d+\.\d+(?:\.\d+)?)", RegexOptions.Multiline);
+                if (match.Success)
+                {
+                    var version = match.Groups[1].Value;
+                    // Extract major.minor (e.g., "1.22" from "1.22.3")
+                    var versionParts = version.Split('.');
+                    if (versionParts.Length >= 2)
+                    {
+                        var majorMinor = $"{versionParts[0]}.{versionParts[1]}";
+                        logger.LogDebug("Detected Go version {Version} from go.mod file", majorMinor);
+                        return majorMinor;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug(ex, "Failed to parse go.mod file");
+            }
+        }
+
+        // Try to detect from installed Go toolchain
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "go",
+                Arguments = "version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process != null)
+            {
+                var output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+
+                if (process.ExitCode == 0)
+                {
+                    // Output format: "go version goX.Y.Z ..."
+                    var match = Regex.Match(output, @"go version go(\d+\.\d+)");
+                    if (match.Success)
+                    {
+                        var version = match.Groups[1].Value;
+                        logger.LogDebug("Detected Go version {Version} from installed toolchain", version);
+                        return version;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug(ex, "Failed to detect Go version from installed toolchain");
+        }
+
+        logger.LogDebug("No Go version detected, will use default version");
+        return null;
+    }
 }

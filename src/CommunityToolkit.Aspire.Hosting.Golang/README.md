@@ -33,8 +33,31 @@ r.Run(":"+os.Getenv("PORT"))
 
 When publishing your Aspire application, the Golang resource automatically generates a multi-stage Dockerfile for containerization. This means you don't need to manually create a Dockerfile for your Golang application.
 
-The generated Dockerfile:
-- Uses `golang:1.23` as the build stage to compile your application
+### Automatic Version Detection
+
+The integration automatically detects the Go version to use by:
+1. Checking the `go.mod` file for the Go version directive
+2. Falling back to the installed Go toolchain version
+3. Using Go 1.23 as the default if no version is detected
+
+### Customizing Base Images
+
+You can customize the base images used in the Dockerfile by using the `DockerfileBaseImageAnnotation`:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithHttpEndpoint(env: "PORT")
+    .WithAnnotation(new DockerfileBaseImageAnnotation
+    {
+        BuildImage = "golang:1.22-alpine",  // Custom build stage image
+        RuntimeImage = "alpine:3.20"         // Custom runtime stage image
+    });
+```
+
+### Generated Dockerfile
+
+The automatically generated Dockerfile:
+- Uses the detected or default Go version (e.g., `golang:1.22`) as the build stage
 - Uses `alpine:3.21` as the runtime stage for a smaller final image
 - Respects your build tags if specified
 - Builds the executable specified in your `AddGolangApp` call
