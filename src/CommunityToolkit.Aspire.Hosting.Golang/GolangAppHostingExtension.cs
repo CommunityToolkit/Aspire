@@ -147,7 +147,7 @@ public static class GolangAppHostingExtension
     /// <param name="workingDirectory">The working directory of the Go project.</param>
     /// <param name="logger">The logger for diagnostic messages.</param>
     /// <returns>The detected Go version as a string, or <c>null</c> if no version is detected.</returns>
-    private static string? DetectGoVersion(string workingDirectory, ILogger logger)
+    internal static string? DetectGoVersion(string workingDirectory, ILogger logger)
     {
         // Check go.mod file
         var goModPath = Path.Combine(workingDirectory, "go.mod");
@@ -171,9 +171,17 @@ public static class GolangAppHostingExtension
                     }
                 }
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                logger.LogDebug(ex, "Failed to parse go.mod file");
+                logger.LogDebug(ex, "Failed to parse go.mod file due to IO error");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                logger.LogDebug(ex, "Failed to parse go.mod file due to unauthorized access");
+            }
+            catch (RegexMatchTimeoutException ex)
+            {
+                logger.LogDebug(ex, "Failed to parse go.mod file due to regex timeout");
             }
         }
 
@@ -193,8 +201,11 @@ public static class GolangAppHostingExtension
             using var process = Process.Start(startInfo);
             if (process != null)
             {
-                var output = process.StandardOutput.ReadToEnd();
+                // Read both output and error asynchronously to avoid deadlock
+                var outputTask = process.StandardOutput.ReadToEndAsync();
+                var errorTask = process.StandardError.ReadToEndAsync();
                 process.WaitForExit();
+                var output = outputTask.GetAwaiter().GetResult();
 
                 if (process.ExitCode == 0)
                 {
@@ -209,9 +220,13 @@ public static class GolangAppHostingExtension
                 }
             }
         }
-        catch (Exception ex)
+        catch (IOException ex)
         {
-            logger.LogDebug(ex, "Failed to detect Go version from installed toolchain");
+            logger.LogDebug(ex, "Failed to detect Go version from installed toolchain due to IO error");
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            logger.LogDebug(ex, "Failed to detect Go version from installed toolchain - go command not found or not executable");
         }
 
         logger.LogDebug("No Go version detected, will use default version");
