@@ -42,16 +42,14 @@ The integration automatically detects the Go version to use by:
 
 ### Customizing Base Images
 
-You can customize the base images used in the Dockerfile by using the `DockerfileBaseImageAnnotation`:
+You can customize the base images used in the Dockerfile:
 
 ```csharp
 var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT")
-    .WithAnnotation(new DockerfileBaseImageAnnotation
-    {
-        BuildImage = "golang:1.22-alpine",  // Custom build stage image
-        RuntimeImage = "alpine:3.20"         // Custom runtime stage image
-    });
+    .WithDockerfileBaseImage(
+        buildImage: "golang:1.22-alpine",
+        runtimeImage: "alpine:3.20");
 ```
 
 ### Generated Dockerfile
