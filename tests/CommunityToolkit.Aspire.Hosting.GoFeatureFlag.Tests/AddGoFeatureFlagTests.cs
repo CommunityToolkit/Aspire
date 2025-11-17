@@ -2,7 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Net.Sockets;
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
@@ -90,42 +93,86 @@ public class AddGoFeatureFlagTests
         Assert.Equal($"Endpoint=http://localhost:27020", connectionString);
         Assert.Equal("Endpoint=http://{goff.bindings.http.host}:{goff.bindings.http.port}", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
-    
+
     [Theory]
     [InlineData(LogLevel.Debug, "DEBUG")]
     [InlineData(LogLevel.Information, "INFO")]
     [InlineData(LogLevel.Warning, "WARN")]
     [InlineData(LogLevel.Error, "ERROR")]
-    public async Task AddSurrealServerContainerWithLogLevel(LogLevel logLevel, string? expected)
+    public void AddGoFeatureFlagWithLogLevel(LogLevel logLevel, string? expected)
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-    
+
         var goff = appBuilder
             .AddGoFeatureFlag("goff")
             .WithLogLevel(logLevel);
-    
+
         using var app = appBuilder.Build();
-    
-        var config = await goff.Resource.GetEnvironmentVariableValuesAsync();
 
-        bool hasValue = config.TryGetValue("LOGLEVEL", out var value);
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<GoFeatureFlagResource>());
+        
+        // Get all environment callback annotations
+        var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.NotEmpty(envAnnotations);
+        
+        // Find the callback that sets LOGLEVEL (not the OTEL one)
+        // We need to test each callback to find the one that sets LOGLEVEL
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+        
+        string? logLevelValue = null;
+        foreach (var annotation in envAnnotations)
+        {
+            var testContext = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+            try
+            {
+                annotation.Callback(testContext);
+                if (testContext.EnvironmentVariables.TryGetValue("LOGLEVEL", out var value))
+                {
+                    logLevelValue = value?.ToString();
+                    break;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // This is the OTEL callback that requires service provider, skip it
+                continue;
+            }
+        }
 
-        Assert.True(hasValue);
-        Assert.Equal(expected, value);
+        Assert.NotNull(logLevelValue);
+        Assert.Equal(expected, logLevelValue);
     }
-    
+
     [Theory]
     [InlineData(LogLevel.Trace)]
     [InlineData(LogLevel.Critical)]
     [InlineData(LogLevel.None)]
-    public void AddSurrealServerContainerWithLogLevelThrowsOnUnsupportedLogLevel(LogLevel logLevel)
+    public void AddGoFeatureFlagWithLogLevelThrowsOnUnsupportedLogLevel(LogLevel logLevel)
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-    
+
         var func = () => appBuilder
             .AddGoFeatureFlag("goff")
             .WithLogLevel(logLevel);
 
         Assert.Throws<ArgumentOutOfRangeException>(func);
+    }
+
+    [Fact]
+    public void AddGoFeatureFlagAddsOtelAnnotation()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddGoFeatureFlag("goff");
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<GoFeatureFlagResource>());
+
+        // Verify that OtlpExporterAnnotation is present (added by WithOtlpExporter)
+        // This annotation marks the resource as an OTEL exporter
+        Assert.True(resource.HasAnnotationOfType<OtlpExporterAnnotation>());
     }
 }
