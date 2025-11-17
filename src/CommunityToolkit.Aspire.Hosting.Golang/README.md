@@ -57,6 +57,7 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
 The automatically generated Dockerfile:
 - Uses the detected or default Go version (e.g., `golang:1.22`) as the build stage
 - Uses `alpine:3.21` as the runtime stage for a smaller final image
+- Installs CA certificates in the runtime image for HTTPS support
 - Respects your build tags if specified
 - Builds the executable specified in your `AddGolangApp` call
 

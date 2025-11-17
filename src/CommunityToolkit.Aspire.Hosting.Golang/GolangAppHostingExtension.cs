@@ -126,6 +126,8 @@ public static class GolangAppHostingExtension
 
                 context.Builder
                     .From(runtimeImage)
+                    .Run("apk --no-cache add ca-certificates")
+                    .WorkDir("/app")
                     .CopyFrom(buildStage.StageName!, "/build/server", "/app/server")
                     .Entrypoint(["/app/server"]);
             });
