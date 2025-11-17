@@ -95,6 +95,56 @@ public class AddGoFeatureFlagTests
     }
 
     [Theory]
+    [InlineData(LogLevel.Debug, "DEBUG")]
+    [InlineData(LogLevel.Information, "INFO")]
+    [InlineData(LogLevel.Warning, "WARN")]
+    [InlineData(LogLevel.Error, "ERROR")]
+    public void AddGoFeatureFlagWithLogLevel(LogLevel logLevel, string? expected)
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var goff = appBuilder
+            .AddGoFeatureFlag("goff")
+            .WithLogLevel(logLevel);
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<GoFeatureFlagResource>());
+        
+        // Get all environment callback annotations
+        var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.NotEmpty(envAnnotations);
+        
+        // Find the callback that sets LOGLEVEL (not the OTEL one)
+        // We need to test each callback to find the one that sets LOGLEVEL
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+        
+        string? logLevelValue = null;
+        foreach (var annotation in envAnnotations)
+        {
+            var testContext = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+            try
+            {
+                annotation.Callback(testContext);
+                if (testContext.EnvironmentVariables.TryGetValue("LOGLEVEL", out var value))
+                {
+                    logLevelValue = value?.ToString();
+                    break;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // This is the OTEL callback that requires service provider, skip it
+                continue;
+            }
+        }
+
+        Assert.NotNull(logLevelValue);
+        Assert.Equal(expected, logLevelValue);
+    }
+
+    [Theory]
     [InlineData(LogLevel.Trace)]
     [InlineData(LogLevel.Critical)]
     [InlineData(LogLevel.None)]
