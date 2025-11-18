@@ -13,6 +13,29 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
         try
         {
+            var waitingTasks = new List<Task>();
+            if (target is SqlServerDatabaseResource)
+            {
+                waitingTasks.Add(resourceNotificationService.WaitForDependenciesAsync(target, cancellationToken));
+            }
+
+            if (resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations))
+            {
+                foreach (var waitAnnotation in waitAnnotations)
+                {
+                    var targetState = waitAnnotation.WaitType switch
+                    {
+                        WaitType.WaitForCompletion => KnownResourceStates.Finished,
+                        WaitType.WaitUntilHealthy => KnownResourceStates.Running,
+                        WaitType.WaitUntilStarted => KnownResourceStates.Starting,
+                        _ => throw new NotSupportedException($"Wait type {waitAnnotation.WaitType} is not supported."),
+                    };
+                    waitingTasks.Add(resourceNotificationService.WaitForResourceAsync(waitAnnotation.Resource.Name, targetState, cancellationToken));
+                }
+            }
+
+            await Task.WhenAll(waitingTasks);
+
             var dacpacPath = resource.GetDacpacPath();
             if (!Path.IsPathRooted(dacpacPath))
             {
