@@ -433,14 +433,14 @@ public class AddOllamaTests
             {
                 Assert.Equal("ListAllModels", annotation.Name);
                 Assert.Equal("List All Models", annotation.DisplayName);
-                Assert.Equal("List all models in the Ollama container.", annotation.DisplayDescription);
+                Assert.Equal("List all models in the Ollama resource.", annotation.DisplayDescription);
                 Assert.Equal("AppsList", annotation.IconName);
             },
             annotation =>
             {
                 Assert.Equal("ListRunningModels", annotation.Name);
                 Assert.Equal("List Running Models", annotation.DisplayName);
-                Assert.Equal("List all running models in the Ollama container.", annotation.DisplayDescription);
+                Assert.Equal("List all running models in the Ollama resource.", annotation.DisplayDescription);
                 Assert.Equal("AppsList", annotation.IconName);
             });
     }
