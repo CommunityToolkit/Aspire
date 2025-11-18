@@ -13,7 +13,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
         try
         {
-            var waitingTasks = new List<Task>();
+            List<Task> waitingTasks = [];
             if (target is SqlServerDatabaseResource)
             {
                 waitingTasks.Add(resourceNotificationService.WaitForDependenciesAsync(target, cancellationToken));
