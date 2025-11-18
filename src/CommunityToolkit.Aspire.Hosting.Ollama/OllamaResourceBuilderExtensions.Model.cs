@@ -11,12 +11,12 @@ namespace Aspire.Hosting;
 public static partial class OllamaResourceBuilderExtensions
 {
     /// <summary>
-    /// Adds a model to the Ollama container.
+    /// Adds a model to the Ollama resource.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<IOllamaResource> builder, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
@@ -28,13 +28,13 @@ public static partial class OllamaResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a model to the Ollama container.
+    /// Adds a model to the Ollama resource.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<IOllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));
@@ -55,13 +55,13 @@ public static partial class OllamaResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a model from Hugging Face to the Ollama container. Only models in GGUF format are supported.
+    /// Adds a model from Hugging Face to the Ollama resource. Only models in GGUF format are supported.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<OllamaResource> builder, [ResourceName] string name, string modelName)
+    public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<IOllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(modelName, nameof(modelName));

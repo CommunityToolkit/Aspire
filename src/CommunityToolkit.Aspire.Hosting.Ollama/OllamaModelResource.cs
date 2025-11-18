@@ -9,12 +9,12 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The name for the resource.</param>
 /// <param name="modelName">The name of the LLM model, can include a tag.</param>
 /// <param name="parent">The <see cref="OllamaResource"/> parent.</param>
-public class OllamaModelResource(string name, string modelName, OllamaResource parent) : Resource(name), IResourceWithParent<OllamaResource>, IResourceWithConnectionString
+public class OllamaModelResource(string name, string modelName, IOllamaResource parent) : Resource(name), IResourceWithParent<IOllamaResource>, IResourceWithConnectionString
 {
     /// <summary>
-    /// Gets the parent Ollama container resource.
+    /// Gets the parent Ollama resource.
     /// </summary>
-    public OllamaResource Parent { get; } = ThrowIfNull(parent);
+    public IOllamaResource Parent { get; } = ThrowIfNull(parent);
 
     /// <summary>
     /// Gets the connection string expression for the Ollama model.
