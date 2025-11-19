@@ -23,10 +23,15 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             {
                 foreach (var waitAnnotation in waitAnnotations)
                 {
+                    if (waitAnnotation.WaitType == WaitType.WaitUntilHealthy)
+                    {
+                        waitingTasks.Add(resourceNotificationService.WaitForResourceHealthyAsync(waitAnnotation.Resource.Name, cancellationToken));
+                        continue;
+                    }
+
                     var targetState = waitAnnotation.WaitType switch
                     {
                         WaitType.WaitForCompletion => KnownResourceStates.Finished,
-                        WaitType.WaitUntilHealthy => KnownResourceStates.Running,
                         WaitType.WaitUntilStarted => KnownResourceStates.Starting,
                         _ => throw new NotSupportedException($"Wait type {waitAnnotation.WaitType} is not supported."),
                     };
