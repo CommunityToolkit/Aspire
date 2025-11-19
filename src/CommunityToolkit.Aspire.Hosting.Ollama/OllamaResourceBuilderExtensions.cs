@@ -101,9 +101,18 @@ public static partial class OllamaResourceBuilderExtensions
 
         return vendor switch
         {
-            OllamaGpuVendor.Nvidia => builder.WithContainerRuntimeArgs("--gpus", "all"),
+            OllamaGpuVendor.Nvidia => builder.WithNvidiaGPUSupport(),
             OllamaGpuVendor.AMD => builder.WithAMDGPUSupport(),
             _ => throw new ArgumentException("Invalid GPU vendor", nameof(vendor))
+        };
+    }
+
+    private static IResourceBuilder<OllamaResource> WithNvidiaGPUSupport(this IResourceBuilder<OllamaResource> builder)
+    {
+        return builder.ApplicationBuilder.GetContainerRuntime() switch
+        {
+            "podman" => builder.WithContainerRuntimeArgs("--device", "nvidia.com/gpu=all"),
+            _ => builder.WithContainerRuntimeArgs("--gpus", "all"),
         };
     }
 
@@ -170,4 +179,9 @@ public static partial class OllamaResourceBuilderExtensions
     {
         return JsonSerializer.Serialize(obj, jsonSerializerOptions);
     }
+
+    private static string? GetContainerRuntime(this IDistributedApplicationBuilder builder) 
+        // For config names, see https://github.com/dotnet/aspire/blob/91481d9b5a5602d3d641fa8ade554c95bcac22b5/src/Shared/KnownConfigNames.cs
+        => (builder.Configuration["ASPIRE_CONTAINER_RUNTIME"]
+        ?? builder.Configuration["DOTNET_ASPIRE_CONTAINER_RUNTIME"])?.ToLowerInvariant();
 }
