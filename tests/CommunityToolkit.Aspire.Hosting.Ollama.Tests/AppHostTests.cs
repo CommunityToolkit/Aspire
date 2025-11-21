@@ -8,33 +8,50 @@ namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 public class AppHostTests(AspireIntegrationTestFixture<Projects.Ollama_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.Ollama_AppHost>>
 {
     [Fact]
-    public async Task ResourceStartsAndRespondsOk()
+    public async Task OllamaResourcesStartAndRespondOk()
     {
-        var resourceName = "ollama";
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Running).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var distributedAppModel = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
+        var ollamaResources = distributedAppModel.Resources.OfType<IOllamaResource>().ToList();
+        
+        var rns = fixture.ResourceNotificationService;
+        
+        await Task.WhenAll([
+            .. ollamaResources.Select(o => rns.WaitForResourceAsync(o.Name, KnownResourceStates.Running))
+        ]).WaitAsync(TimeSpan.FromMinutes(5));
+        
+        foreach (var ollama in ollamaResources)
+        {
+            using var httpClient = fixture.CreateHttpClient(ollama.Name);
 
-        var response = await httpClient.GetAsync("/");
+            var response = await httpClient.GetAsync("/");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        } 
     }
 
     [Fact]
-    public async Task OllamaListsAvailableModels()
+    public async Task OllamaResourcesListAvailableModels()
     {
         var distributedAppModel = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
+        var ollamaResources = distributedAppModel.Resources.OfType<IOllamaResource>().ToList();
         var modelResources = distributedAppModel.Resources.OfType<OllamaModelResource>().ToList();
+        
         var rns = fixture.ResourceNotificationService;
 
         await Task.WhenAll([
-                rns.WaitForResourceHealthyAsync("ollama"),
+                .. ollamaResources.Select(o => rns.WaitForResourceHealthyAsync(o.Name)),
                 .. modelResources.Select(m => rns.WaitForResourceHealthyAsync(m.Name))
             ]).WaitAsync(TimeSpan.FromMinutes(10));
-        var httpClient = fixture.CreateHttpClient("ollama");
+        
+        foreach (var ollama in ollamaResources)
+        {
+            using var httpClient = fixture.CreateHttpClient(ollama.Name);
 
-        var models = (await new OllamaApiClient(httpClient).ListLocalModelsAsync()).ToList();
+            var models = (await new OllamaApiClient(httpClient).ListLocalModelsAsync()).ToList();
+            var ollamaModels = modelResources.Where(m => m.Parent == ollama).ToList();
 
-        Assert.NotEmpty(models);
-        Assert.Equal(modelResources.Count, models.Count);
+            Assert.NotEmpty(models);
+            Assert.Equal(ollamaModels.Count, models.Count);
+        }
     }
 }

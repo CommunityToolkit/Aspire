@@ -8,7 +8,7 @@ namespace Aspire.Hosting;
 public static partial class OllamaResourceBuilderExtensions
 {
     /// <summary>
-    /// Adds an administration web UI Ollama to the application model using Open WebUI. This version the package defaults to the main tag of the Open WebUI container image
+    /// Adds an Open WebUI container to the application model for administering Ollama. This version of the package defaults to the main tag of the Open WebUI container image.
     /// </summary>
     /// <example>
     /// Use in application host with an Ollama resource
@@ -28,7 +28,8 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="containerName">The name of the container (Optional).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>See https://openwebui.com for more information about Open WebUI</remarks>
-    public static IResourceBuilder<T> WithOpenWebUI<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<OpenWebUIResource>>? configureContainer = null, string? containerName = null) where T : OllamaResource
+    public static IResourceBuilder<T> WithOpenWebUI<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<OpenWebUIResource>>? configureContainer = null, string? containerName = null)
+        where T : class, IOllamaResource
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
@@ -95,6 +96,21 @@ public static partial class OllamaResourceBuilderExtensions
         context.EnvironmentVariables.Add("ENABLE_SIGNUP", "false");
         context.EnvironmentVariables.Add("ENABLE_COMMUNITY_SHARING", "false"); // by default don't enable sharing
         context.EnvironmentVariables.Add("WEBUI_AUTH", "false"); // https://docs.openwebui.com/#quick-start-with-docker--recommended
-        context.EnvironmentVariables.Add("OLLAMA_BASE_URLS", string.Join(";", resource.OllamaResources.Select(resource => $"http://{resource.Name}:{resource.PrimaryEndpoint.TargetPort}")));
+        
+        ReferenceExpressionBuilder builder = new();
+        
+        for (int i = 0; i < resource.OllamaResources.Count; i++)
+        {
+            var ollama = resource.OllamaResources[i];
+            builder.Append($"{ollama.PrimaryEndpoint}");
+
+            if (i != resource.OllamaResources.Count - 1)
+                builder.AppendLiteral(";");
+        }
+
+        if (!builder.IsEmpty)
+        {
+            context.EnvironmentVariables["OLLAMA_BASE_URLS"] = builder.Build();
+        }
     }
 }
