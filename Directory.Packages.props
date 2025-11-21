@@ -92,7 +92,7 @@
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.1" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
-    <PackageVersion Include="KurrentDB.Client" Version="1.1.0" />
+    <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
