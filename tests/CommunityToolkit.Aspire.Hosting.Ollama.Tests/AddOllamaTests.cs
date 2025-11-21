@@ -619,25 +619,43 @@ public class AddOllamaTests
 
         using var app = builder.Build();
 
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = AssertSingleResource<OllamaResource>(app);
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        await AssertContainerRuntimeArgs(resource,
+            "--gpus",
+            "all");
+    }
 
-        Assert.True(resource.TryGetLastAnnotation(out ContainerRuntimeArgsCallbackAnnotation? argsAnnotations));
-        ContainerRuntimeArgsCallbackContext context = new([]);
-        await argsAnnotations.Callback(context);
+    [Fact]
+    public async Task WithNvidiaGPUSupportOnPodman()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.Configuration["ASPIRE_CONTAINER_RUNTIME"] = "podman";
+        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.Nvidia);
 
-        Assert.Collection(
-            context.Args,
-            arg =>
-            {
-                Assert.Equal("--gpus", arg);
-            },
-            arg =>
-            {
-                Assert.Equal("all", arg);
-            }
-        );
+        using var app = builder.Build();
+
+        var resource = AssertSingleResource<OllamaResource>(app);
+
+        await AssertContainerRuntimeArgs(resource,
+            "--device",
+            "nvidia.com/gpu=all");
+    }
+
+    [Fact]
+    public async Task WithNvidiaGPUSupportOnPodmanLegacy()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.Configuration["DOTNET_ASPIRE_CONTAINER_RUNTIME"] = "podman";
+        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.Nvidia);
+
+        using var app = builder.Build();
+
+        var resource = AssertSingleResource<OllamaResource>(app);
+
+        await AssertContainerRuntimeArgs(resource,
+            "--device",
+            "nvidia.com/gpu=all");
     }
 
     [Fact]
@@ -648,36 +666,34 @@ public class AddOllamaTests
 
         using var app = builder.Build();
 
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = AssertSingleResource<OllamaResource>(app);
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.True(resource.TryGetLastAnnotation(out ContainerRuntimeArgsCallbackAnnotation? argsAnnotations));
-        ContainerRuntimeArgsCallbackContext context = new([]);
-        await argsAnnotations.Callback(context);
-
-        Assert.Collection(
-            context.Args,
-            arg =>
-            {
-                Assert.Equal("--device", arg);
-            },
-            arg =>
-            {
-                Assert.Equal("/dev/kfd", arg);
-            },
-            arg =>
-            {
-                Assert.Equal("--device", arg);
-            },
-            arg =>
-            {
-                Assert.Equal("/dev/dri", arg);
-            }
-        );
+        await AssertContainerRuntimeArgs(resource,
+            "--device", "/dev/kfd",
+            "--device", "/dev/dri");
 
         Assert.True(resource.TryGetLastAnnotation<ContainerImageAnnotation>(out var imageAnnotation));
         Assert.NotNull(imageAnnotation);
         Assert.EndsWith("-rocm", imageAnnotation.Tag, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static T AssertSingleResource<T>(DistributedApplication app) where T : ContainerResource
+    {
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        return Assert.Single(appModel.Resources.OfType<T>());
+    }
+
+    private static async Task AssertContainerRuntimeArgs(ContainerResource resource, params string[] expectedArgs)
+    {
+        Assert.True(resource.TryGetLastAnnotation(out ContainerRuntimeArgsCallbackAnnotation? argsAnnotations));
+        Assert.NotNull(argsAnnotations);
+        ContainerRuntimeArgsCallbackContext context = new([]);
+        await argsAnnotations.Callback(context);
+
+        Assert.Equal(expectedArgs.Length, context.Args.Count);
+        for (int i = 0; i < expectedArgs.Length; i++)
+        {
+            Assert.Equal(expectedArgs[i], context.Args[i]);
+        }
     }
 }
