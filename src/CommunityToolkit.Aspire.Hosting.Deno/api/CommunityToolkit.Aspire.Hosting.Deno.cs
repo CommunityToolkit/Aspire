@@ -14,7 +14,7 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DenoAppResource> AddDenoTask(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string taskName = "start", string[]? args = null) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.DenoAppResource> WithDenoPackageInstallation(this ApplicationModel.IResourceBuilder<ApplicationModel.DenoAppResource> resource) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.DenoAppResource> WithDenoPackageInstallation(this ApplicationModel.IResourceBuilder<ApplicationModel.DenoAppResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DenoInstallerResource>>? configureInstaller = null) { throw null; }
     }
 }
 
@@ -23,5 +23,10 @@ namespace Aspire.Hosting.ApplicationModel
     public partial class DenoAppResource : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
     {
         public DenoAppResource(string name, string command, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    public partial class DenoInstallerResource : ExecutableResource
+    {
+        public DenoInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
     }
 }
