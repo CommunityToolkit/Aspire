@@ -7,8 +7,7 @@
 /// Constructs an <see cref="OllamaExecutableResource"/>.
 /// </remarks>
 /// <param name="name">The name of the resource.</param>
-/// <param name="command">The command to execute.</param>
-public class OllamaExecutableResource(string name, string command) : ExecutableResource(name, command, string.Empty), IOllamaResource
+public class OllamaExecutableResource(string name) : ExecutableResource(name, "ollama", string.Empty), IOllamaResource
 {
     internal const string OllamaEndpointName = "http";
     internal const int DefaultHttpPort = 11434;

@@ -80,6 +80,21 @@ public class AddOllamaLocalTests
         Assert.Equal(11435, endpoint.TargetPort);
         Assert.Equal("http://localhost:11435", config["OLLAMA_HOST"]);
     }
+    
+    [Fact]
+    public void VerifyExcludedFromManifestByDefault()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllamaLocal("ollama");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
+    }
         
     [Fact]
     public void CanSetMultipleModels()

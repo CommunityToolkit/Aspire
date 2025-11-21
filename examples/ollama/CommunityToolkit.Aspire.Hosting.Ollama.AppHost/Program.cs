@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var ollama = builder.AddOllamaLocal("ollama", targetPort: 11435)
+var ollama = builder.AddOllamaLocal("ollama")
     .WithOpenWebUI();
 
 var phi3 = ollama.AddModel("phi3", "phi3");
