@@ -1,16 +1,17 @@
 ﻿namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// A resource that represents an Ollama container.
+/// A resource that represents an Ollama executable resource.
 /// </summary>
 /// <remarks>
-/// Constructs an <see cref="OllamaResource"/>.
+/// Constructs an <see cref="OllamaExecutableResource"/>.
 /// </remarks>
-/// <param name="name">The name for the resource.</param>
-public class OllamaResource(string name) : ContainerResource(name), IOllamaResource
+/// <param name="name">The name of the resource.</param>
+public class OllamaExecutableResource(string name) : ExecutableResource(name, "ollama", string.Empty), IOllamaResource
 {
     internal const string OllamaEndpointName = "http";
-
+    internal const int DefaultHttpPort = 11434;
+    
     private readonly List<string> _models = [];
 
     private EndpointReference? _primaryEndpointReference;
@@ -31,9 +32,9 @@ public class OllamaResource(string name) : ContainerResource(name), IOllamaResou
     /// Gets the connection string expression for the Ollama server.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
-      ReferenceExpression.Create(
-        $"Endpoint={PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}"
-      );
+        ReferenceExpression.Create(
+            $"Endpoint={PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}"
+        );
     
     /// <inheritdoc/>
     public ReferenceExpression UriExpression => ReferenceExpression.Create($"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{Host}:{Port}");
@@ -47,7 +48,7 @@ public class OllamaResource(string name) : ContainerResource(name), IOllamaResou
             _models.Add(modelName);
         }
     }
-
+    
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
         yield return new("Host", ReferenceExpression.Create($"{Host}"));

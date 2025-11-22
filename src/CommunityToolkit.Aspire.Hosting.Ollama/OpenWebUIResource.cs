@@ -39,19 +39,19 @@ public class OpenWebUIResource(string name) : ContainerResource(name), IResource
     /// </remarks>
     public ReferenceExpression UriExpression => ConnectionStringExpression;
 
-    private readonly List<OllamaResource> ollamaResources = [];
+    private readonly List<IOllamaResource> ollamaResources = [];
 
     /// <summary>
     /// Gets the list of Ollama resources that are associated with this Open WebUI resource.
     /// </summary>
-    public IReadOnlyList<OllamaResource> OllamaResources => ollamaResources;
+    public IReadOnlyList<IOllamaResource> OllamaResources => ollamaResources;
 
     /// <summary>
     /// Adds an Ollama resource to the Open WebUI resource.
     /// </summary>
     /// <param name="ollamaResource">The Ollama resource to add.</param>
     /// <exception cref="InvalidOperationException">Thrown if the resource is already added.</exception>
-    internal void AddOllamaResource(OllamaResource ollamaResource)
+    internal void AddOllamaResource(IOllamaResource ollamaResource)
     {
         if (ollamaResources.Contains(ollamaResource))
         {

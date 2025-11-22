@@ -9,12 +9,12 @@ using System.Text.Json;
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for adding an Ollama container to the application model.
+/// Provides extension methods for adding Ollama resources to the application model.
 /// </summary>
 public static partial class OllamaResourceBuilderExtensions
 {
     /// <summary>
-    /// Adds the Ollama container to the application model.
+    /// Adds an Ollama container resource to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
@@ -25,50 +25,40 @@ public static partial class OllamaResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        var resource = new OllamaResource(name)
-            .AddServerResourceCommand(
-                name: "ListAllModels",
-                displayName: "List All Models",
-                executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
-                {
-                    var models = await ollamaClient.ListLocalModelsAsync(ct);
-
-                    if (!models.Any())
-                    {
-                        logger.LogInformation("No models found in the Ollama container.");
-                        return CommandResults.Success();
-                    }
-
-                    logger.LogInformation("Models: {Models}", models.ToJson());
-
-                    return CommandResults.Success();
-                },
-                displayDescription: "List all models in the Ollama container.",
-                iconName: "AppsList"
-            ).AddServerResourceCommand(
-                name: "ListRunningModels",
-                displayName: "List Running Models",
-                executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
-                {
-                    var models = await ollamaClient.ListRunningModelsAsync(ct);
-
-                    if (!models.Any())
-                    {
-                        logger.LogInformation("No running models found in the Ollama container.");
-                        return CommandResults.Success();
-                    }
-
-                    logger.LogInformation("Running Models: {Models}", models.ToJson());
-
-                    return CommandResults.Success();
-                },
-                displayDescription: "List all running models in the Ollama container.",
-                iconName: "AppsList"
-            );
+        var resource = new OllamaResource(name).AddOllamaDefaultCommands();
         return builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = OllamaContainerImageTags.Image, Tag = OllamaContainerImageTags.Tag, Registry = OllamaContainerImageTags.Registry })
           .WithHttpEndpoint(port: port, targetPort: 11434, name: OllamaResource.OllamaEndpointName)
           .WithHttpHealthCheck("/");
+    }
+    
+    /// <summary>
+    /// Adds an Ollama executable resource to the application model.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
+    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
+    /// <param name="port">An optional fixed port to bind to the Ollama process. This will be provided randomly by Aspire if not set.</param>
+    /// <param name="targetPort">An optional fixed port to run the Ollama process. This will default to 11434 if not set.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<OllamaExecutableResource> AddOllamaLocal(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null, int? targetPort = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
+        var resource = new OllamaExecutableResource(name).AddOllamaDefaultCommands();
+        return builder.AddResource(resource)
+            .ExcludeFromManifest()
+            .WithArgs(["serve"])
+            .WithHttpEndpoint(port: port, targetPort: targetPort ?? OllamaExecutableResource.DefaultHttpPort, name: OllamaExecutableResource.OllamaEndpointName)
+            .WithHttpHealthCheck("/")
+            .WithEnvironment(context =>
+            {
+                if (context.EnvironmentVariables.ContainsKey("OLLAMA_HOST"))
+                    return;
+                
+                var ollamaEndpoint = resource.GetEndpoint(OllamaExecutableResource.OllamaEndpointName);
+                context.EnvironmentVariables["OLLAMA_HOST"] = ReferenceExpression.Create($"{ollamaEndpoint.Property(EndpointProperty.Scheme)}://{ollamaEndpoint.EndpointAnnotation.TargetHost}:{ollamaEndpoint.Property(EndpointProperty.TargetPort)}");
+            });
     }
 
     /// <summary>
@@ -128,17 +118,61 @@ public static partial class OllamaResourceBuilderExtensions
         return builder.WithContainerRuntimeArgs("--device", "/dev/kfd", "--device", "/dev/dri");
     }
 
-    private static OllamaResource AddServerResourceCommand(
-        this OllamaResource ollamaResource,
+    private static T AddOllamaDefaultCommands<T>(this T ollamaResource) where T : IOllamaResource
+    {
+        return ollamaResource
+            .AddServerResourceCommand(
+                name: "ListAllModels",
+                displayName: "List All Models",
+                executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
+                {
+                    var models = await ollamaClient.ListLocalModelsAsync(ct);
+
+                    if (!models.Any())
+                    {
+                        logger.LogInformation("No models found in the Ollama resource.");
+                        return CommandResults.Success();
+                    }
+
+                    logger.LogInformation("Models: {Models}", models.ToJson());
+
+                    return CommandResults.Success();
+                },
+                displayDescription: "List all models in the Ollama resource.",
+                iconName: "AppsList"
+            ).AddServerResourceCommand(
+                name: "ListRunningModels",
+                displayName: "List Running Models",
+                executeCommand: async (ollamaResource, ollamaClient, logger, notificationService, ct) =>
+                {
+                    var models = await ollamaClient.ListRunningModelsAsync(ct);
+
+                    if (!models.Any())
+                    {
+                        logger.LogInformation("No running models found in the Ollama resource.");
+                        return CommandResults.Success();
+                    }
+
+                    logger.LogInformation("Running Models: {Models}", models.ToJson());
+
+                    return CommandResults.Success();
+                },
+                displayDescription: "List all running models in the Ollama resource.",
+                iconName: "AppsList"
+            );
+    }
+    
+    private static T AddServerResourceCommand<T>(
+        this T ollamaResource,
         string name,
         string displayName,
-        Func<OllamaResource, IOllamaApiClient, ILogger, ResourceNotificationService, CancellationToken, Task<ExecuteCommandResult>> executeCommand,
+        Func<IOllamaResource, IOllamaApiClient, ILogger, ResourceNotificationService, CancellationToken, Task<ExecuteCommandResult>> executeCommand,
         string? displayDescription,
         object? parameter = null,
         string? confirmationMessage = null,
         string? iconName = null,
         IconVariant? iconVariant = IconVariant.Filled,
-        bool isHighlighted = false)
+        bool isHighlighted = false) where T : IOllamaResource
     {
         ollamaResource.Annotations.Add(new ResourceCommandAnnotation(
             name: name,

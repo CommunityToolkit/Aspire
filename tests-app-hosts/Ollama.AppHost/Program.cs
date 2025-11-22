@@ -1,7 +1,7 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
-var ollama = builder.AddOllama("ollama");
+builder.AddOllamaLocal("ollama", targetPort: 11435).AddModel("tinyllama");
 
-var tinyllama = ollama.AddModel("tinyllama");
+builder.AddOllama("ollama2").AddModel("tinyllama");
 
 builder.Build().Run();

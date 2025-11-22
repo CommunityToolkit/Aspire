@@ -2,20 +2,20 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
-public class AddOllamaTests
+public class AddOllamaLocalTests
 {
     [Fact]
     public void VerifyCustomModel()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var ollama = builder.AddOllama("ollama", port: null);
+        var ollama = builder.AddOllamaLocal("ollama", port: null);
         var model = ollama.AddModel("custom:tag");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var ollamaResource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var ollamaResource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
         var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
 
         Assert.Equal("ollama", ollamaResource.Name);
@@ -27,44 +27,80 @@ public class AddOllamaTests
     }
 
     [Fact]
-    public void VerifyDefaultPort()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: null);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
-
-        Assert.Equal(11434, endpoint.TargetPort);
-    }
-
-    [Fact]
     public void VerifyCustomPort()
     {
         var builder = DistributedApplication.CreateBuilder();
-        builder.AddOllama("ollama", port: 12345);
+        builder.AddOllamaLocal("ollama", port: 12345);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
 
         var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
 
         Assert.Equal(12345, endpoint.Port);
     }
-
+    
     [Fact]
-    public void CanSetMultpleModels()
+    public async Task VerifyDefaultTargetPort()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var ollama = builder.AddOllama("ollama", port: null);
+        builder.AddOllamaLocal("ollama", port: null);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
+        var config = await resource.GetEnvironmentVariableValuesAsync();
+        
+        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        
+        Assert.Equal(11434, endpoint.TargetPort);
+        Assert.Equal("http://localhost:11434", config["OLLAMA_HOST"]);
+    }
+    
+    [Fact]
+    public async Task VerifyCustomTargetPort()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddOllamaLocal("ollama", targetPort: 11435);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
+        var config = await resource.GetEnvironmentVariableValuesAsync();
+        
+        var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        
+        Assert.Equal(11435, endpoint.TargetPort);
+        Assert.Equal("http://localhost:11435", config["OLLAMA_HOST"]);
+    }
+    
+    [Fact]
+    public void VerifyExcludedFromManifestByDefault()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllamaLocal("ollama");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
+    }
+        
+    [Fact]
+    public void CanSetMultipleModels()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var ollama = builder.AddOllamaLocal("ollama", port: null);
 
         var llama3 = ollama.AddModel("llama3");
         var phi3 = ollama.AddModel("phi3");
@@ -73,7 +109,7 @@ public class AddOllamaTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var ollamaResource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var ollamaResource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
 
         var modelResources = appModel.Resources.OfType<OllamaModelResource>();
 
@@ -100,27 +136,27 @@ public class AddOllamaTests
     [Fact]
     public void DistributedApplicationBuilderCannotBeNull()
     {
-        Assert.Throws<ArgumentNullException>(() => DistributedApplication.CreateBuilder().AddOllama(null!, port: null));
+        Assert.Throws<ArgumentNullException>(() => DistributedApplication.CreateBuilder().AddOllamaLocal(null!, port: null));
     }
 
     [Fact]
     public void ResourceNameCannotBeOmitted()
     {
         string name = "";
-        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllama(name, port: null));
+        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllamaLocal(name, port: null));
 
         name = " ";
-        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllama(name, port: null));
+        Assert.Throws<ArgumentException>(() => DistributedApplication.CreateBuilder().AddOllamaLocal(name, port: null));
 
         name = null!;
-        Assert.Throws<ArgumentNullException>(() => DistributedApplication.CreateBuilder().AddOllama(name, port: null));
+        Assert.Throws<ArgumentNullException>(() => DistributedApplication.CreateBuilder().AddOllamaLocal(name, port: null));
     }
 
     [Fact]
-    public void ModelNameCannotBeOmmitted()
+    public void ModelNameCannotBeOmitted()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var ollama = builder.AddOllama("ollama", port: null);
+        var ollama = builder.AddOllamaLocal("ollama", port: null);
 
         string name = "";
         Assert.Throws<ArgumentException>(() => ollama.AddModel(name));
@@ -132,203 +168,6 @@ public class AddOllamaTests
         Assert.Throws<ArgumentNullException>(() => ollama.AddModel(name));
     }
 
-    [Fact]
-    public void OpenWebUIConfigured()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
-
-        Assert.Equal("ollama-openwebui", resource.Name);
-        Assert.Equal("http", resource.PrimaryEndpoint.EndpointName);
-        Assert.Equal(8080, resource.PrimaryEndpoint.TargetPort);
-
-        Assert.True(resource.TryGetAnnotationsOfType<ContainerImageAnnotation>(out var imageAnnotations));
-        var imageAnnotation = Assert.Single(imageAnnotations);
-        Assert.Equal(OllamaContainerImageTags.OpenWebUIImage, imageAnnotation.Image);
-        Assert.Equal(OllamaContainerImageTags.OpenWebUITag, imageAnnotation.Tag);
-        Assert.Equal(OllamaContainerImageTags.OpenWebUIRegistry, imageAnnotation.Registry);
-
-        Assert.False(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out _));
-
-        var relationshipAnnotations = resource.Annotations.OfType<ResourceRelationshipAnnotation>();
-
-        var waitForAnnotation = relationshipAnnotations.FirstOrDefault(a => a.Type == "WaitFor");
-
-        Assert.NotNull(waitForAnnotation);
-        Assert.Equal("ollama", waitForAnnotation.Resource.Name);
-
-        Assert.Single(resource.OllamaResources);
-    }
-
-    [Fact]
-    public void OpenWebUIResourceExcludedFromManifestByDefault()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
-
-        Assert.True(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
-    }
-
-    [Fact]
-    public void OpenWebUIConfiguredWithMultipleOllamaServers()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI();
-        _ = builder.AddOllama("ollama2", port: null).WithOpenWebUI();
-
-        using var app = builder.Build();
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
-        
-        Assert.Equal(2, resource.OllamaResources.Count);
-        Assert.Multiple(() =>
-        {
-            Assert.Equal("ollama", resource.OllamaResources[0].Name);
-            Assert.Equal("ollama2", resource.OllamaResources[1].Name);
-        });
-    }
-
-    [Fact]
-    public void OpenWebUIHostPortCanBeSet()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI(r => r.WithHostPort(1234));
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
-
-        var annotation = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
-        Assert.Equal(1234, annotation.Port);
-    }
-
-    [Theory]
-    [InlineData("volumeName")]
-    [InlineData(null)]
-    public void CanPersistVolumeOfOpenWebUI(string? volumeName)
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama", port: null).WithOpenWebUI(configureContainer: container =>
-        {
-            container.WithDataVolume(volumeName);
-        });
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
-
-        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
-        var annotation = Assert.Single(annotations);
-
-        Assert.Equal("/app/backend/data", annotation.Target);
-
-        if (volumeName is null)
-        {
-            Assert.NotNull(annotation.Source);
-        }
-        else
-        {
-            Assert.Equal(volumeName, annotation.Source);
-        }
-    }
-
-    [Fact]
-    public void NoDataVolumeNameGeneratesOne()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").WithDataVolume();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
-
-        var annotation = Assert.Single(annotations);
-
-        Assert.NotNull(annotation.Source);
-    }
-
-    [Fact]
-    public void SpecifiedDataVolumeNameIsUsed()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").WithDataVolume("data");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
-
-        var annotation = Assert.Single(annotations);
-
-        Assert.Equal("data", annotation.Source);
-    }
-
-    [Theory]
-    [InlineData("data")]
-    [InlineData(null)]
-    public void CorrectTargetPathOnVolumeMount(string? volumeName)
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").WithDataVolume(volumeName);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
-
-        var annotation = Assert.Single(annotations);
-
-        Assert.Equal("/root/.ollama", annotation.Target);
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void ReadOnlyVolumeMount(bool isReadOnly)
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").WithDataVolume(isReadOnly: isReadOnly);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
-
-        var annotation = Assert.Single(annotations);
-
-        Assert.Equal(isReadOnly, annotation.IsReadOnly);
-    }
-
     [Theory]
     [InlineData("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS")]
     [InlineData("hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS@sha256:1234567890abcdef")]
@@ -337,13 +176,13 @@ public class AddOllamaTests
     public void HuggingFaceModel(string modelName)
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").AddHuggingFaceModel("llama", modelName);
+        _ = builder.AddOllamaLocal("ollama").AddHuggingFaceModel("llama", modelName);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
 
         var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
 
@@ -359,13 +198,13 @@ public class AddOllamaTests
     public void HuggingFaceModelWithoutDomainPrefixHasItAdded()
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").AddHuggingFaceModel("llama", "bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS");
+        _ = builder.AddOllamaLocal("ollama").AddHuggingFaceModel("llama", "bartowski/Llama-3.2-1B-Instruct-GGUF:IQ4_XS");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
 
         var modelResource = Assert.Single(appModel.Resources.OfType<OllamaModelResource>());
 
@@ -378,16 +217,16 @@ public class AddOllamaTests
     }
 
     [Fact]
-    public void OllamaRegistersHttpHealthCheck()
+    public void OllamaLocalRegistersHttpHealthCheck()
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama");
+        _ = builder.AddOllamaLocal("ollama");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
 
         Assert.True(resource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations));
 
@@ -396,33 +235,18 @@ public class AddOllamaTests
         Assert.Contains("/", annotation.Key);
         Assert.Contains(resource.Name, annotation.Key);
     }
-
+    
     [Fact]
-    public void ResourceIncludedInManifestByDefault()
+    public void OllamaLocalRegistrationContainsResourceCommandAnnotations()
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama");
+        _ = builder.AddOllamaLocal("ollama");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
-
-        Assert.False(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
-    }
-
-    [Fact]
-    public void OllamaRegistrationContainsResourceCommandAnnotations()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
 
         Assert.True(resource.TryGetAnnotationsOfType<ResourceCommandAnnotation>(out var annotations));
 
@@ -446,10 +270,10 @@ public class AddOllamaTests
     }
 
     [Fact]
-    public void OllamaModelResourceRegistersCustomHealthCheck()
+    public void OllamaLocalModelResourceRegistersCustomHealthCheck()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var ollama = builder.AddOllama("ollama");
+        var ollama = builder.AddOllamaLocal("ollama");
         _ = ollama.AddModel("custom:tag");
 
         using var app = builder.Build();
@@ -466,10 +290,10 @@ public class AddOllamaTests
     }
 
     [Fact]
-    public void OllamaModelResourceRegistersResourceCommandAnnotations()
+    public void OllamaLocalModelResourceRegistersResourceCommandAnnotations()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var ollama = builder.AddOllama("ollama");
+        var ollama = builder.AddOllamaLocal("ollama");
         _ = ollama.AddModel("custom:tag");
 
         using var app = builder.Build();
@@ -522,10 +346,10 @@ public class AddOllamaTests
     [InlineData("Delete")]
     [InlineData("ModelInfo")]
     [InlineData("Stop")]
-    public void OllamaModelResourceCommandsUpdateState(string commandType)
+    public void OllamaLocalModelResourceCommandsUpdateState(string commandType)
     {
         var builder = DistributedApplication.CreateBuilder();
-        var ollama = builder.AddOllama("ollama");
+        var ollama = builder.AddOllamaLocal("ollama");
         _ = ollama.AddModel("custom:tag");
 
         using var app = builder.Build();
@@ -571,13 +395,13 @@ public class AddOllamaTests
     public void OllamaResourceCommandsUpdateState(string commandType)
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama");
+        _ = builder.AddOllamaLocal("ollama");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<OllamaResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
 
         var command = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == commandType);
 
@@ -609,90 +433,122 @@ public class AddOllamaTests
         state = command.UpdateState(context);
         Assert.Equal(ResourceCommandState.Enabled, state);
     }
-
+    
     [Fact]
-    public async Task WithNvidiaGPUSupport()
+    public void OpenWebUIConfigured()
     {
         var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.Nvidia);
+        _ = builder.AddOllamaLocal("ollama", port: null).WithOpenWebUI();
 
         using var app = builder.Build();
 
-        var resource = AssertSingleResource<OllamaResource>(app);
-
-        await AssertContainerRuntimeArgs(resource,
-            "--gpus",
-            "all");
-    }
-
-    [Fact]
-    public async Task WithNvidiaGPUSupportOnPodman()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.Configuration["ASPIRE_CONTAINER_RUNTIME"] = "podman";
-        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.Nvidia);
-
-        using var app = builder.Build();
-
-        var resource = AssertSingleResource<OllamaResource>(app);
-
-        await AssertContainerRuntimeArgs(resource,
-            "--device",
-            "nvidia.com/gpu=all");
-    }
-
-    [Fact]
-    public async Task WithNvidiaGPUSupportOnPodmanLegacy()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        builder.Configuration["DOTNET_ASPIRE_CONTAINER_RUNTIME"] = "podman";
-        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.Nvidia);
-
-        using var app = builder.Build();
-
-        var resource = AssertSingleResource<OllamaResource>(app);
-
-        await AssertContainerRuntimeArgs(resource,
-            "--device",
-            "nvidia.com/gpu=all");
-    }
-
-    [Fact]
-    public async Task WithAMDGPUSupport()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        _ = builder.AddOllama("ollama").WithGPUSupport(OllamaGpuVendor.AMD);
-
-        using var app = builder.Build();
-
-        var resource = AssertSingleResource<OllamaResource>(app);
-
-        await AssertContainerRuntimeArgs(resource,
-            "--device", "/dev/kfd",
-            "--device", "/dev/dri");
-
-        Assert.True(resource.TryGetLastAnnotation<ContainerImageAnnotation>(out var imageAnnotation));
-        Assert.NotNull(imageAnnotation);
-        Assert.EndsWith("-rocm", imageAnnotation.Tag, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static T AssertSingleResource<T>(DistributedApplication app) where T : ContainerResource
-    {
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        return Assert.Single(appModel.Resources.OfType<T>());
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.Equal("ollama-openwebui", resource.Name);
+        Assert.Equal("http", resource.PrimaryEndpoint.EndpointName);
+        Assert.Equal(8080, resource.PrimaryEndpoint.TargetPort);
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerImageAnnotation>(out var imageAnnotations));
+        var imageAnnotation = Assert.Single(imageAnnotations);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUIImage, imageAnnotation.Image);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUITag, imageAnnotation.Tag);
+        Assert.Equal(OllamaContainerImageTags.OpenWebUIRegistry, imageAnnotation.Registry);
+
+        Assert.False(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out _));
+
+        var relationshipAnnotations = resource.Annotations.OfType<ResourceRelationshipAnnotation>();
+
+        var waitForAnnotation = relationshipAnnotations.FirstOrDefault(a => a.Type == "WaitFor");
+
+        Assert.NotNull(waitForAnnotation);
+        Assert.Equal("ollama", waitForAnnotation.Resource.Name);
+
+        Assert.Single(resource.OllamaResources);
     }
 
-    private static async Task AssertContainerRuntimeArgs(ContainerResource resource, params string[] expectedArgs)
+    [Fact]
+    public void OpenWebUIResourceExcludedFromManifestByDefault()
     {
-        Assert.True(resource.TryGetLastAnnotation(out ContainerRuntimeArgsCallbackAnnotation? argsAnnotations));
-        Assert.NotNull(argsAnnotations);
-        ContainerRuntimeArgsCallbackContext context = new([]);
-        await argsAnnotations.Callback(context);
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllamaLocal("ollama", port: null).WithOpenWebUI();
 
-        Assert.Equal(expectedArgs.Length, context.Args.Count);
-        for (int i = 0; i < expectedArgs.Length; i++)
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
+    }
+
+    [Fact]
+    public void OpenWebUIConfiguredWithMultipleOllamaServers()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllamaLocal("ollama", port: null).WithOpenWebUI();
+        _ = builder.AddOllamaLocal("ollama2", port: null).WithOpenWebUI();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.Equal(2, resource.OllamaResources.Count);
+        Assert.Multiple(() =>
         {
-            Assert.Equal(expectedArgs[i], context.Args[i]);
+            Assert.Equal("ollama", resource.OllamaResources[0].Name);
+            Assert.Equal("ollama2", resource.OllamaResources[1].Name);
+        });
+    }
+
+    [Fact]
+    public void OpenWebUIHostPortCanBeSet()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllamaLocal("ollama", port: null).WithOpenWebUI(r => r.WithHostPort(1234));
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        var annotation = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
+        Assert.Equal(1234, annotation.Port);
+    }
+
+    [Theory]
+    [InlineData("volumeName")]
+    [InlineData(null)]
+    public void CanPersistVolumeOfOpenWebUI(string? volumeName)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddOllamaLocal("ollama", port: null).WithOpenWebUI(configureContainer: container =>
+        {
+            container.WithDataVolume(volumeName);
+        });
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<OpenWebUIResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+        var annotation = Assert.Single(annotations);
+
+        Assert.Equal("/app/backend/data", annotation.Target);
+
+        if (volumeName is null)
+        {
+            Assert.NotNull(annotation.Source);
+        }
+        else
+        {
+            Assert.Equal(volumeName, annotation.Source);
         }
     }
 }
