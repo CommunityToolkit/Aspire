@@ -8,13 +8,6 @@ namespace CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests;
 [RequiresDocker]
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Azure_DataApiBuilder_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Azure_DataApiBuilder_AppHost>>
 {
-    static AppHostTests()
-    {
-        // Set OtlpApiKey to ensure OTEL headers are configured by Aspire
-        // This is required for the dab-config.json which references @env('OTEL_EXPORTER_OTLP_HEADERS')
-        Environment.SetEnvironmentVariable("AppHost__OtlpApiKey", Guid.NewGuid().ToString());
-    }
-
     [Fact]
     public async Task ResourceStartsAndRespondsOk()
     {
