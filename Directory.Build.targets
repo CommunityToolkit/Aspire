@@ -17,4 +17,14 @@
       <PackageVersion>$(PackageVersion)-$(ToolkitPreviewVersion)</PackageVersion>
     </PropertyGroup>
   </Target>
+
+  <!--
+    Workaround to avoid long path length issues that block building in Visual Studio.
+    This needs to go into Directory.Build.targets as it needs to be set after `IntermediateOutputPath` is defined
+
+    See: https://developercommunity.visualstudio.com/t/GeneratedMsBuildEditorConfigeditorconf/11004277
+  -->
+  <PropertyGroup>
+    <GeneratedMSBuildEditorConfigFile>$(IntermediateOutputPath)\GeneratedMSBuildEditorConfig.editorconfig</GeneratedMSBuildEditorConfigFile>
+  </PropertyGroup>  
 </Project>
