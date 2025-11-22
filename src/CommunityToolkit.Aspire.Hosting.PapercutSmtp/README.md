@@ -37,3 +37,16 @@ var xyz = builder.AddProject<Xyz>("application")
 
 builder.Build().Run();
 ```
+
+### Example 3: Get URI from connection-string using DbConnectionStringBuilder
+
+```csharp
+string? papercutConnectionString = builder.Configuration.GetConnectionString("papercut");
+DbConnectionStringBuilder connectionBuilder = new()
+{
+    ConnectionString = papercutConnectionString 
+};
+
+Uri endpoint = new(connectionBuilder["Endpoint"].ToString()!, UriKind.Absolute);
+builder.Services.AddScoped(_ => new SmtpClient(endpoint.Host, endpoint.Port));
+```

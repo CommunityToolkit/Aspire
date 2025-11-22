@@ -6,8 +6,8 @@
 /// <param name="name"></param>
 public class PapercutSmtpContainerResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
-    internal const int HttpEndpointPort = 80;
-    internal const int SmtpEndpointPort = 25;
+    internal const int HttpEndpointPort = 8080;
+    internal const int SmtpEndpointPort = 2525;
     internal const string HttpEndpointName = "http";
     internal const string SmtpEndpointName = "smtp";
     private EndpointReference? _smtpEndpoint;
