@@ -1,8 +1,8 @@
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 using Microsoft.Build.Locator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 using Microsoft.SqlServer.Dac;
 
 namespace Aspire.Hosting;
@@ -55,11 +55,20 @@ public static class SqlProjectBuilderExtensions
         var resource = new SqlProjectResource(name);
         
         return builder.AddResource(resource)
+                      .WithIconName("DatabaseArrowUp")
                       .WithInitialState(new CustomResourceSnapshot
                       {
                           Properties = [],
                           ResourceType = "SqlProject",
-                          State = new ResourceStateSnapshot("Pending", KnownResourceStateStyles.Info)
+                      })
+                      .OnInitializeResource(async (resource, evt, ct) => {
+                          await evt.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, evt.Services));
+
+                          if (resource.TryGetAnnotationsOfType<DacpackTargetAnnotation>(out var annotations))
+                          {
+                              var tasks = annotations.Select(x => RunPublish(resource, x, evt.Services, ct));
+                              await Task.WhenAll(tasks);
+                          }
                       })
                       .ExcludeFromManifest();
     }
@@ -79,16 +88,34 @@ public static class SqlProjectBuilderExtensions
 
         var resource = new SqlPackageResource<TPackage>(name);
 
+        var packageAnnotation = new TPackage();
+
         return builder.AddResource(resource)
-                      .WithAnnotation(new TPackage())
+                      .WithAnnotation(packageAnnotation)
+                      .WithIconName("DatabaseArrowUp")
                       .WithInitialState(new CustomResourceSnapshot
                       {
-                          Properties = [],
+                          Properties = [
+                              new("resource.source", $"{packageAnnotation.PackageId}@{packageAnnotation.PackageVersion}"),
+                              new("package.id", packageAnnotation.PackageId),
+                              new("package.version", packageAnnotation.PackageVersion),
+                              new("package.path", packageAnnotation.PackageId)
+                              ],
                           ResourceType = "SqlPackage",
-                          State = new ResourceStateSnapshot("Pending", KnownResourceStateStyles.Info)
+                      })
+                      .OnInitializeResource(async (resource, evt, ct) => {
+                          await evt.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, evt.Services));
+
+                          if (resource.TryGetAnnotationsOfType<DacpackTargetAnnotation>(out var annotations))
+                          {
+                              var tasks = annotations.Select(x => RunPublish(resource, x, evt.Services, ct));
+                              await Task.WhenAll(tasks);
+                          }
                       })
                       .ExcludeFromManifest();
     }
+
+
 
     /// <summary>
     /// Specifies the path to the .dacpac file.
@@ -245,24 +272,11 @@ public static class SqlProjectBuilderExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<IDacpacChecksumService, DacpacChecksumService>();
         builder.ApplicationBuilder.Services.TryAddSingleton<SqlProjectPublishService>();
 
-        builder.WithParentRelationship(target.Resource);
+        var annotation = new DacpackTargetAnnotation(target.Resource, targetDatabaseName);
 
-        if (target.Resource is SqlServerDatabaseResource)
-        {
-            builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
-            {
-                await PublishOrMark(builder, target, targetDatabaseName, resourceReady.Services, ct);
-            });
-        }
-        else
-        {
-            builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => 
-            {
-                await PublishOrMark(builder, target, targetDatabaseName, @event.Services, ct);
-            });
-        }
-
-        builder.WaitFor(target);
+        builder.WithParentRelationship(target.Resource)
+            .WithAnnotation(annotation)
+            .WaitFor(target);
 
         var commandOptions = new CommandOptions
         {
@@ -272,7 +286,7 @@ public static class SqlProjectBuilderExtensions
             Description = "Deploy the SQL Server Database Project to the target database.",
             UpdateState = (context) =>
             {
-                if (context.ResourceSnapshot?.State?.Text is string stateText && (stateText == KnownResourceStates.Finished || stateText == KnownResourceStates.NotStarted))
+                if (context.ResourceSnapshot?.State?.Text is string stateText && (KnownResourceStates.TerminalStates.Contains(stateText) || stateText == KnownResourceStates.NotStarted))
                 {
                     return ResourceCommandState.Enabled;
                 }
@@ -285,38 +299,18 @@ public static class SqlProjectBuilderExtensions
 
         builder.WithCommand("deploy", "Deploy", async (context) =>
         {
-            var service = context.ServiceProvider.GetRequiredService<SqlProjectPublishService>();
-            await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, context.CancellationToken);
+            await RunPublish(builder.Resource, annotation, context.ServiceProvider, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
         }, commandOptions);
 
         return builder;
     }
 
-    private static async Task PublishOrMark<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider services, CancellationToken ct) where TResource : IResourceWithDacpac
-    {
-        if (builder.Resource.HasAnnotationOfType<ExplicitStartupAnnotation>())
-        {
-            await MarkNotStarted(builder, services);
-        }
-        else
-        {
-            await RunPublish(builder, target, targetDatabaseName, services, ct);
-        }
-    }
 
-    private static async Task MarkNotStarted<TResource>(IResourceBuilder<TResource> builder, IServiceProvider serviceProvider)
-        where TResource : IResourceWithDacpac
-    {
-        var resourceNotificationService = serviceProvider.GetRequiredService<ResourceNotificationService>();
-        await resourceNotificationService.PublishUpdateAsync(builder.Resource,
-            state => state with { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, KnownResourceStateStyles.Info) });
-    }
-
-    private static async Task RunPublish<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider serviceProvider, CancellationToken ct) 
+    private static async Task RunPublish<TResource>(TResource resource, DacpackTargetAnnotation annotation, IServiceProvider serviceProvider, CancellationToken ct) 
         where TResource : IResourceWithDacpac
     {
         var service = serviceProvider.GetRequiredService<SqlProjectPublishService>();
-        await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, ct);
+        await service.PublishSqlProject(resource, annotation.Target, annotation.TargetDatabaseName, ct);
     }
 }
