@@ -1,8 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Eventing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.SqlServer.Dac;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
@@ -11,7 +9,6 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
     public async Task PublishSqlProject(IResourceWithDacpac resource, IResourceWithConnectionString target, string? targetDatabaseName, CancellationToken cancellationToken)
     {
         var logger = resourceLoggerService.GetLogger(resource);
-
         ResourceStateSnapshot? failureState = KnownResourceStates.FailedToStart;
 
         try
@@ -86,7 +83,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
 
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with {
-                    State = KnownResourceStates.Exited,
+                    State = failureState,
                     ExitCode = failureState == KnownResourceStates.Finished ? 1 : state.ExitCode });
         }
     }

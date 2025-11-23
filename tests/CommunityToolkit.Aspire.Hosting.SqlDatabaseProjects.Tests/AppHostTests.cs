@@ -13,7 +13,15 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [InlineData("chinook", "InvoiceLine", "TargetDatabase")]
     public async Task ProjectBasedResourceStartsAndRespondsOk(string resourceName, string tableName, string database)
     {
-        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.Finished).WaitAsync(TimeSpan.FromMinutes(5));
+        await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.TerminalStates).WaitAsync(TimeSpan.FromMinutes(5));
+
+        if (!fixture.ResourceNotificationService.TryGetCurrentState(resourceName, out var resourceEvent))
+        {
+            throw new InvalidOperationException();
+        }
+
+        Assert.Equal(KnownResourceStates.Finished, resourceEvent.Snapshot.State?.Text);
+        Assert.Equal(0, resourceEvent.Snapshot.ExitCode);
 
         string? connectionString = await fixture.GetConnectionString(database);
         Assert.NotNull(connectionString);
