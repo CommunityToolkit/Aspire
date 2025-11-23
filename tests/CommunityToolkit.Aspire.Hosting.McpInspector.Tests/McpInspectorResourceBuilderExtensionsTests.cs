@@ -407,4 +407,88 @@ public class McpInspectorResourceBuilderExtensionsTests
         var expected = new Uri("http://localhost:1234/route/mcp/nested/path");
         Assert.Equal(expected, result);
     }
+
+    [Fact]
+    public void WithMcpServerSupportsHttpsEndpoint()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Create a mock MCP server resource with https endpoint (uses name "https")
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer")
+            .WithHttpsEndpoint(name: "https");
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector")
+            .WithMcpServer(mockServer, isDefault: true);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        Assert.Equal("inspector", inspectorResource.Name);
+
+        Assert.Single(inspectorResource.McpServers);
+        Assert.NotNull(inspectorResource.DefaultMcpServer);
+        Assert.Equal("mcpServer", inspectorResource.DefaultMcpServer.Name);
+
+        // Verify that the endpoint was successfully resolved (https should be preferred)
+        var serverMetadata = inspectorResource.McpServers.Single();
+        Assert.NotNull(serverMetadata.Endpoint);
+        Assert.Equal("https", serverMetadata.Endpoint.EndpointName);
+    }
+
+    [Fact]
+    public void WithMcpServerPrefersHttpsOverHttp()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Create a mock MCP server resource with both https and http endpoints
+        // AddProject creates "http" by default, we add "https" with explicit name
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer")
+            .WithHttpsEndpoint(name: "https");
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector")
+            .WithMcpServer(mockServer, isDefault: true);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        var serverMetadata = inspectorResource.McpServers.Single();
+
+        // Verify the endpoint is the https one (https should be preferred)
+        Assert.Equal("https", serverMetadata.Endpoint.EndpointName);
+    }
+
+    [Fact]
+    public void WithMcpServerWithBothEndpointsUsesHttps()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // AddProject creates both http and https endpoints by default
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector")
+            .WithMcpServer(mockServer, isDefault: true);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+        var serverMetadata = inspectorResource.McpServers.Single();
+
+        // Verify the endpoint is the https one (preferred when both exist)
+        Assert.Equal("https", serverMetadata.Endpoint.EndpointName);
+    }
 }

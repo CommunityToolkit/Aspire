@@ -67,7 +67,7 @@ public class McpInspectorResource(string name) : JavaScriptAppResource(name, "np
 
         McpServerMetadata item = new(
             mcpServer.Name,
-            mcpServer.GetEndpoint("http") ?? throw new InvalidOperationException($"The MCP server {mcpServer.Name} must have a 'http' endpoint defined."),
+            mcpServer.GetEndpoint("https") ?? mcpServer.GetEndpoint("http") ?? throw new InvalidOperationException($"The MCP server {mcpServer.Name} must have an 'https' or 'http' endpoint defined."),
             transportType,
             path);
 
