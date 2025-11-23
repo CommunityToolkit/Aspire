@@ -273,14 +273,11 @@ public static class SqlProjectBuilderExtensions
             Description = "Deploy the SQL Server Database Project to the target database.",
             UpdateState = (context) =>
             {
-                if (context.ResourceSnapshot?.State?.Text is string stateText && (KnownResourceStates.TerminalStates.Contains(stateText) || stateText == KnownResourceStates.NotStarted))
-                {
-                    return ResourceCommandState.Enabled;
-                }
-                else
-                {
-                    return ResourceCommandState.Disabled;
-                }
+                var state = context.ResourceSnapshot?.State?.Text;
+
+                return state == KnownResourceStates.Running || state == KnownResourceStates.Starting
+                    ? ResourceCommandState.Disabled
+                    : ResourceCommandState.Enabled;
             },
         };
 
