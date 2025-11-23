@@ -14,12 +14,9 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task ProjectBasedResourceStartsAndRespondsOk(string resourceName, string tableName, string database)
     {
         await fixture.ResourceNotificationService.WaitForResourceAsync(resourceName, KnownResourceStates.TerminalStates).WaitAsync(TimeSpan.FromMinutes(5));
+        fixture.ResourceNotificationService.TryGetCurrentState(resourceName, out var resourceEvent);
 
-        if (!fixture.ResourceNotificationService.TryGetCurrentState(resourceName, out var resourceEvent))
-        {
-            throw new InvalidOperationException();
-        }
-
+        Assert.NotNull(resourceEvent);
         Assert.Equal(KnownResourceStates.Finished, resourceEvent.Snapshot.State?.Text);
         Assert.Equal(0, resourceEvent.Snapshot.ExitCode);
 
