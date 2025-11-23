@@ -5,6 +5,7 @@ using Microsoft.Build.Locator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.SqlServer.Dac;
+using System.Collections.Immutable;
 
 namespace Aspire.Hosting;
 
@@ -38,8 +39,10 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        return builder.AddSqlProject(name)
-                      .WithAnnotation(new TProject());
+        var projectAnnotation = new TProject();
+
+        return builder.AddDacPacResource(name, new SqlProjectResource(name), [ new(CustomResourceKnownProperties.Source, projectAnnotation.ProjectPath) ])
+            .WithAnnotation(projectAnnotation);
     }
 
     /// <summary>
@@ -53,17 +56,7 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        var resource = new SqlProjectResource(name);
-
-        return builder.AddResource(resource)
-                      .WithIconName("DatabaseArrowUp")
-                      .WithInitialState(new CustomResourceSnapshot
-                      {
-                          Properties = [],
-                          ResourceType = "SqlProject",
-                          State = KnownResourceStates.Waiting
-                      })
-                      .ExcludeFromManifest();
+        return builder.AddDacPacResource(name, new SqlProjectResource(name), []);
     }
 
     /// <summary>
@@ -79,22 +72,27 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        var resource = new SqlPackageResource<TPackage>(name);
-
         var packageAnnotation = new TPackage();
+        var properties = ImmutableArray.Create<ResourcePropertySnapshot>(
+                new(CustomResourceKnownProperties.Source, $"{packageAnnotation.PackageId}@{packageAnnotation.PackageVersion}"),
+                new("package.id", packageAnnotation.PackageId),
+                new("package.version", packageAnnotation.PackageVersion),
+                new("package.path", packageAnnotation.PackageId)
+            );
 
+        return builder.AddDacPacResource(name, new SqlPackageResource<TPackage>(name), properties)
+            .WithAnnotation(packageAnnotation);
+    }
+
+    private static IResourceBuilder<T> AddDacPacResource<T>(this IDistributedApplicationBuilder builder, string name, T resource, ImmutableArray<ResourcePropertySnapshot> properties)
+        where T : IResourceWithDacpac
+    {
         return builder.AddResource(resource)
-                      .WithAnnotation(packageAnnotation)
                       .WithIconName("DatabaseArrowUp")
                       .WithInitialState(new CustomResourceSnapshot
                       {
-                          Properties = [
-                              new("resource.source", $"{packageAnnotation.PackageId}@{packageAnnotation.PackageVersion}"),
-                              new("package.id", packageAnnotation.PackageId),
-                              new("package.version", packageAnnotation.PackageVersion),
-                              new("package.path", packageAnnotation.PackageId)
-                              ],
-                          ResourceType = "SqlPackage",
+                          Properties = properties,
+                          ResourceType = "SqlProject",
                           State = KnownResourceStates.Waiting
                       })
                       .ExcludeFromManifest();
