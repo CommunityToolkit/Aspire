@@ -64,7 +64,10 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with { State = KnownResourceStates.Running });
+                state => state with { 
+                    State = KnownResourceStates.Running,
+                    StartTimeStamp = DateTime.UtcNow
+                });
 
             deployer.Deploy(dacpacPath, options, connectionString, targetDatabaseName, logger, cancellationToken);
 
@@ -74,7 +77,11 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with { State = KnownResourceStates.Finished, ExitCode = 0 });
+                state => state with { 
+                    State = KnownResourceStates.Finished,
+                    ExitCode = 0,
+                    StopTimeStamp = DateTime.UtcNow
+                });
 
         }
         catch (Exception ex)
@@ -84,7 +91,9 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             await resourceNotificationService.PublishUpdateAsync(resource,
                 state => state with {
                     State = failureState,
-                    ExitCode = failureState == KnownResourceStates.Finished ? 1 : state.ExitCode });
+                    ExitCode = failureState == KnownResourceStates.Finished ? 1 : state.ExitCode,
+                    StopTimeStamp = DateTime.UtcNow
+                });
         }
     }
 }
