@@ -19,7 +19,7 @@ public static class GolangAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
+    /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddGolangApp with buildTags parameter instead. This method will be removed in a future version.")]
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[] args)
@@ -31,7 +31,7 @@ public static class GolangAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
+    /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <param name="buildTags">The optional build tags to be used when building the Golang application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[]? args = null, string[]? buildTags = null)
@@ -44,7 +44,7 @@ public static class GolangAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
     /// <param name="executable">The path to the Golang package directory or source file to be executed. Use "." to execute the program in the current directory. For example, "./cmd/server".</param>
-    /// <param name="args">The optinal arguments to be passed to the executable when it is started.</param>
+    /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <param name="buildTags">The optional build tags to be used when building the Golang application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string executable, string[]? args = null, string[]? buildTags = null)
