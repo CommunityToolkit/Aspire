@@ -3,7 +3,6 @@
 
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
-using Aspire.Hosting.Utils;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
@@ -50,7 +49,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
             Container = new ContainerBuilder()
                 .WithImage($"{SurrealDbContainerImageTags.Registry}/{SurrealDbContainerImageTags.Image}:{SurrealDbContainerImageTags.Tag}")
                 .WithPortBinding(_port, true)
-                .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(_port)))
+                .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(_port).ForStatusCodeMatching(code => (int)code >= 200 && (int)code <= 399)))
                 .WithEnvironment("SURREAL_USER", _username)
                 .WithEnvironment("SURREAL_PASS", _password)
                 .WithCommand("start", "memory")
