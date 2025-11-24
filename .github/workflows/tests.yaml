@@ -92,12 +92,14 @@ jobs:
         env:
           CI: false
         run: |
-          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }} -o ${{ github.workspace }}/artifacts/${{ matrix.name }}
+          dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
 
       - name: Run tests
         run: >-
-          dotnet
-          ${{ github.workspace }}/artifacts/${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.dll
+          dotnet run
+          --project "${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}"
+          --no-build
+          --configuration ${{ env.DOTNET_CONFIGURATION }}
           --crashdump
           --hangdump
           --hangdump-timeout 7m
