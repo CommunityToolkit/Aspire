@@ -96,9 +96,9 @@ jobs:
 
       - name: Run tests
         run: >-
-          dotnet run ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}
+          dotnet run
+          --project "${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}"
           --configuration ${{ env.DOTNET_CONFIGURATION }}
-          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
           --crashdump
           --hangdump
           --hangdump-timeout 7m

@@ -20,6 +20,8 @@
     <PackageReference Include="GitHubActionsTestLogger" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" />
   </ItemGroup>
 
   <ItemGroup>
