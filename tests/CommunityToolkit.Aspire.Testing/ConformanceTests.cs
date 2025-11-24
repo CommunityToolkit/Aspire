@@ -270,11 +270,6 @@ public abstract class ConformanceTests<TService, TOptions>
         SkipIfRequiredServerConnectionCanNotBeEstablished();
         SkipIfKeyedRegistrationIsNotSupported(useKey);
 
-        if (RequiredLogCategories.Length == 0 && NotAcceptableLogCategories.Length == 0)
-        {
-            throw new SkipTestException("No log categories specified to test against.");
-        }
-
         string? key = useKey ? "key" : null;
         HostApplicationBuilder builder = CreateHostBuilder(key: key);
 
