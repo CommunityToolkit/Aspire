@@ -96,11 +96,9 @@ jobs:
 
       - name: Run tests
         run: >-
-          dotnet run
-          --project "${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}"
+          dotnet
+          ${{ github.workspace }}/artifacts/${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.dll
           --configuration ${{ env.DOTNET_CONFIGURATION }}
-          --no-restore
-          --no-build
           --crashdump
           --hangdump
           --hangdump-timeout 7m
@@ -109,7 +107,7 @@ jobs:
           --report-trx
           --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
           --coverage
-          
+
           --ignore-exit-code 8
           --report-github
         env:
