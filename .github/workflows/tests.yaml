@@ -106,8 +106,6 @@ jobs:
           --report-trx
           --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
           --coverage
-
-          --ignore-exit-code 8
           --report-github
         env:
           CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
