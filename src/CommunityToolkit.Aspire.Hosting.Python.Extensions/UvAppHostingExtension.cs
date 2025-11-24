@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
 
@@ -18,6 +19,8 @@ public static class UvAppHostingExtension
     /// <param name="scriptArgs">Optional arguments to pass to the script.</param>
     /// <returns>An <see cref="IResourceBuilder{UvAppResource}"/> for the Uv application resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
+    [Obsolete("AddUvApp is now part of Aspire.Hosting.Python. Use Aspire.Hosting.Python.PythonAppResourceBuilderExtensions.AddPythonApp with WithUvEnvironment instead. This method will be removed in a future release.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     public static IResourceBuilder<UvAppResource> AddUvApp(
         this IDistributedApplicationBuilder builder,
         string name,
@@ -30,6 +33,7 @@ public static class UvAppHostingExtension
         return builder.AddUvApp(name, scriptPath, projectDirectory, ".venv", scriptArgs);
     }
 
+    [Obsolete]
     private static IResourceBuilder<UvAppResource> AddUvApp(this IDistributedApplicationBuilder builder,
         string name,
         string scriptPath,

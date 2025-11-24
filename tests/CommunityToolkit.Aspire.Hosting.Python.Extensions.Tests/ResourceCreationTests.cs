@@ -2,7 +2,9 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Python.Extensions.Tests;
 
-#pragma warning disable CS0612
+#pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CTASPIRE001 // Experimental API
 public class ResourceCreationTests
 {
     [Fact(Skip = "Being removed with https://github.com/CommunityToolkit/Aspire/issues/917")]
@@ -41,6 +43,26 @@ public class ResourceCreationTests
 
         Assert.Equal("uv", resource.Command);
         Assert.Equal(NormalizePathForCurrentPlatform("../../examples/python/uv-api"), resource.WorkingDirectory);
+    }
+
+    [Fact]
+    public void DefaultStreamlitApp()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddStreamlitApp("streamlitapp", "../../examples/python/streamlit-api", "app.py");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<StreamlitAppResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        // Command will be the full path to streamlit executable in venv, so just check it contains "streamlit"
+        Assert.Contains("streamlit", resource.Command);
+        Assert.Equal(NormalizePathForCurrentPlatform("../../examples/python/streamlit-api"), resource.WorkingDirectory);
     }
 
     static string NormalizePathForCurrentPlatform(string path)

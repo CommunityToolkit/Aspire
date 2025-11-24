@@ -79,7 +79,7 @@ jobs:
           --file-list "${{ github.workspace }}/SignClientFileList.txt"
           --timestamp-url "http://timestamp.digicert.com"
           --publisher-name ".NET Foundation"
-          --description ".NET Aspire Community Toolkit"
+          --description "Aspire Community Toolkit"
           --description-url "https://github.com/CommunityToolkit/Aspire"
           --azure-key-vault-url "${{ secrets.SIGN_KEY_VAULT_URL }}"
           --azure-key-vault-client-id ${{ secrets.SIGN_CLIENT_ID }}

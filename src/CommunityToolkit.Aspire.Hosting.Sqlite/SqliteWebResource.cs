@@ -16,9 +16,34 @@ public class SqliteWebResource(string name) : ContainerResource(name), IResource
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 
     /// <summary>
+    /// Gets the host endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <summary>
+    /// Gets the port endpoint reference for this resource.
+    /// </summary>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
+
+    /// <summary>
     /// Gets the connection string expression for the Open WebUI endpoint.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
        ReferenceExpression.Create(
             $"{PrimaryEndpoint.Property(EndpointProperty.Url)}");
+
+    /// <summary>
+    /// Gets the connection URI expression for the Sqlite Web endpoint.
+    /// </summary>
+    /// <remarks>
+    /// Format: <c>http://{host}:{port}</c>. The scheme reflects the endpoint configuration and may be <c>https</c> when TLS is enabled.
+    /// </remarks>
+    public ReferenceExpression UriExpression => ConnectionStringExpression;
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Uri", UriExpression);
+    }
 }

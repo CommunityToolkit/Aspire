@@ -60,7 +60,8 @@ public static class GoFeatureFlagBuilderExtensions
                 name: GoFeatureFlagResource.PrimaryEndpointName)
             .WithHttpHealthCheck("/health")
             .WithEntrypoint("/go-feature-flag")
-            .WithArgs(args);
+            .WithArgs(args)
+            .WithOtlpExporter();
     }
 
     /// <summary>

@@ -238,19 +238,13 @@ Each hosting integration should have a corresponding sample application in the `
 Here is an example of the `csproj` file for the AppHost project for the Bun hosting integration:
 
 ```xml
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)" />
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>7e518d7d-87e8-4337-8806-1c99acce5dfb</UserSecretsId>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" IsAspireProjectResource="false" />
@@ -345,3 +339,286 @@ Key points:
 ### Auto-Generated `api` Folder Warning
 
 Do NOT create or manually edit an `api` folder or any files within it for hosting integrations. Files under paths like `src/CommunityToolkit.Aspire.Hosting.[HostingName]/api/` are generated automatically (e.g. by source generators or build tooling). Manual changes will be overwritten and should instead be implemented in normal source files outside `api`. If you need new generated capabilities, extend the generator or add new partial types outside the `api` directory.
+
+## Language-Based Hosting Integrations
+
+When creating hosting integrations for programming languages (e.g., Golang, Rust, Python, Node.js, Java), there are additional capabilities and patterns to consider beyond basic executable hosting:
+
+### Package Manager Support
+
+Language-based hosting integrations should support the ecosystem's package managers and dependency management:
+
+- **Build Tags/Features**: Allow users to specify conditional compilation flags (e.g., Go build tags: `buildTags: ["dev", "production"]`)
+- **Dependency Installation**: Optionally support automatic dependency installation before running (e.g., `go mod download`, `npm install`)
+- **Executable Path Flexibility**: Support both default entry points (e.g., `"."` for Go) and custom paths (e.g., `"./cmd/server"`)
+
+Example from Golang integration:
+
+```csharp
+public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(
+    this IDistributedApplicationBuilder builder,
+    [ResourceName] string name,
+    string workingDirectory,
+    string executable,
+    string[]? args = null,
+    string[]? buildTags = null)
+{
+    var allArgs = new List<string> { "run" };
+
+    if (buildTags is { Length: > 0 })
+    {
+        allArgs.Add("-tags");
+        allArgs.Add(string.Join(",", buildTags));
+    }
+
+    allArgs.Add(executable);
+    // ... rest of implementation
+}
+```
+
+### Publish as Container (Multi-Stage Builds)
+
+Language-based integrations should automatically generate optimized Dockerfiles using multi-stage builds when publishing:
+
+- **Build Stage**: Uses the language's official SDK image to compile/build the application
+- **Runtime Stage**: Uses a minimal base image (e.g., Alpine Linux) for smaller final images
+- **Security**: Install necessary certificates (e.g., CA certificates for HTTPS support)
+- **Optimization**: Disable unnecessary features in build (e.g., `CGO_ENABLED=0` for Go)
+
+Example from Golang integration:
+
+```csharp
+private static IResourceBuilder<GolangAppExecutableResource> PublishAsGolangDockerfile(
+    this IResourceBuilder<GolangAppExecutableResource> builder,
+    string workingDirectory,
+    string executable,
+    string[]? buildTags)
+{
+    const string DefaultAlpineVersion = "3.21";
+
+    return builder.PublishAsDockerFile(publish =>
+    {
+        publish.WithDockerfileBuilder(workingDirectory, context =>
+        {
+            var buildArgs = new List<string> { "build", "-o", "server" };
+
+            if (buildTags is { Length: > 0 })
+            {
+                buildArgs.Add("-tags");
+                buildArgs.Add(string.Join(",", buildTags));
+            }
+
+            buildArgs.Add(executable);
+
+            // Get custom base image from annotation, if present
+            context.Resource.TryGetLastAnnotation<DockerfileBaseImageAnnotation>(out var baseImageAnnotation);
+            var goVersion = baseImageAnnotation?.BuildImage ?? GetDefaultGoBaseImage(workingDirectory, context.Services);
+
+            var buildStage = context.Builder
+                .From(goVersion, "builder")
+                .WorkDir("/build")
+                .Copy(".", "./")
+                .Run(string.Join(" ", ["CGO_ENABLED=0", "go", .. buildArgs]));
+
+            var runtimeImage = baseImageAnnotation?.RuntimeImage ?? $"alpine:{DefaultAlpineVersion}";
+
+            context.Builder
+                .From(runtimeImage)
+                .Run("apk --no-cache add ca-certificates")
+                .WorkDir("/app")
+                .CopyFrom(buildStage.StageName!, "/build/server", "/app/server")
+                .Entrypoint(["/app/server"]);
+        });
+    });
+}
+```
+
+### TLS/HTTPS Support
+
+For language integrations that may need secure connections:
+
+- **CA Certificates**: Install CA certificates in runtime image for HTTPS client requests
+- **Runtime Configuration**: Ensure the generated container supports TLS connections (e.g., `apk --no-cache add ca-certificates`)
+
+Example from Golang Dockerfile generation:
+
+```csharp
+context.Builder
+    .From(runtimeImage)
+    .Run("apk --no-cache add ca-certificates")  // Enables HTTPS support
+    .WorkDir("/app")
+    // ... rest of configuration
+```
+
+### Version Detection
+
+Automatically detect and use the appropriate language version from project files:
+
+- **Project Files**: Parse version from language-specific files (e.g., `go.mod`, `package.json`, `Cargo.toml`)
+- **Installed Toolchain**: Fall back to the installed language toolchain version
+- **Default Version**: Use a sensible default if detection fails
+
+Example from Golang integration:
+
+```csharp
+internal static string? DetectGoVersion(string workingDirectory, ILogger logger)
+{
+    // Check go.mod file
+    var goModPath = Path.Combine(workingDirectory, "go.mod");
+    if (File.Exists(goModPath))
+    {
+        try
+        {
+            var goModContent = File.ReadAllText(goModPath);
+            // Look for "go X.Y" or "go X.Y.Z" line in go.mod
+            var match = Regex.Match(goModContent, @"^\s*go\s+(\d+\.\d+(?:\.\d+)?)", RegexOptions.Multiline);
+            if (match.Success)
+            {
+                var version = match.Groups[1].Value;
+                // Extract major.minor (e.g., "1.22" from "1.22.3")
+                var versionParts = version.Split('.');
+                if (versionParts.Length >= 2)
+                {
+                    var majorMinor = $"{versionParts[0]}.{versionParts[1]}";
+                    logger.LogDebug("Detected Go version {Version} from go.mod file", majorMinor);
+                    return majorMinor;
+                }
+            }
+        }
+        catch (IOException ex)
+        {
+            logger.LogDebug(ex, "Failed to parse go.mod file due to IO error");
+        }
+    }
+
+    // Try to detect from installed Go toolchain
+    try
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "go",
+            Arguments = "version",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = Process.Start(startInfo);
+        if (process != null)
+        {
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode == 0)
+            {
+                var match = Regex.Match(output, @"go version go(\d+\.\d+)");
+                if (match.Success)
+                {
+                    var version = match.Groups[1].Value;
+                    logger.LogDebug("Detected Go version {Version} from installed toolchain", version);
+                    return version;
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogDebug(ex, "Failed to detect Go version from installed toolchain");
+    }
+
+    logger.LogDebug("No Go version detected, will use default version");
+    return null;
+}
+```
+
+### Optimizing and Securing Container Images
+
+Allow users to customize base images for both build and runtime stages:
+
+- **Customizable Build Image**: Let users override the builder/SDK image (e.g., `golang:1.22-alpine` instead of `golang:1.22`)
+- **Customizable Runtime Image**: Let users override the runtime image (e.g., `alpine:3.20` instead of `alpine:3.21`)
+- **Annotation-Based Configuration**: Use annotations to store custom base image settings
+
+Example annotation and extension method:
+
+```csharp
+// Annotation to store custom base images
+internal sealed record DockerfileBaseImageAnnotation : IResourceAnnotation
+{
+    public string? BuildImage { get; init; }
+    public string? RuntimeImage { get; init; }
+}
+
+// Extension method to configure base images
+public static IResourceBuilder<TResource> WithDockerfileBaseImage<TResource>(
+    this IResourceBuilder<TResource> builder,
+    string? buildImage = null,
+    string? runtimeImage = null)
+    where TResource : IResource
+{
+    return builder.WithAnnotation(new DockerfileBaseImageAnnotation
+    {
+        BuildImage = buildImage,
+        RuntimeImage = runtimeImage
+    });
+}
+```
+
+Usage example:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithHttpEndpoint(env: "PORT")
+    .WithDockerfileBaseImage(
+        buildImage: "golang:1.22-alpine",
+        runtimeImage: "alpine:3.20");
+```
+
+### Documentation Requirements
+
+For language-based integrations, the README.md should include:
+
+- **Publishing Section**: Explain automatic Dockerfile generation
+- **Version Detection**: Document how version detection works
+- **Customization Options**: Show how to customize base images
+- **TLS Support**: Note that CA certificates are included for HTTPS
+- **Build Options**: Document package manager flags, build tags, etc.
+
+Example README structure:
+
+```markdown
+## Publishing
+
+When publishing your Aspire application, the [Language] resource automatically generates a multi-stage Dockerfile for containerization.
+
+### Automatic Version Detection
+
+The integration automatically detects the [Language] version to use by:
+1. Checking the [project file] for the version directive
+2. Falling back to the installed toolchain version
+3. Using [version] as the default if no version is detected
+
+### Customizing Base Images
+
+You can customize the base images used in the Dockerfile:
+
+[code example]
+
+### Generated Dockerfile
+
+The automatically generated Dockerfile:
+- Uses the detected or default [Language] version as the build stage
+- Uses a minimal runtime image for a smaller final image
+- Installs CA certificates for HTTPS support
+- Respects build options if specified
+```
+
+### Testing Considerations
+
+When testing language-based integrations:
+
+- **Unit Tests**: Verify build arguments, version detection logic, and annotation handling
+- **Integration Tests**: Test the full publishing workflow if possible
+- **Version Detection Tests**: Mock file system and process execution to test version detection
+- **Dockerfile Generation**: Verify the generated Dockerfile structure matches expectations

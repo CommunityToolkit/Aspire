@@ -7,7 +7,7 @@
 /// Constructs an <see cref="OllamaResource"/>.
 /// </remarks>
 /// <param name="name">The name for the resource.</param>
-public class OllamaResource(string name) : ContainerResource(name), IResourceWithConnectionString
+public class OllamaResource(string name) : ContainerResource(name), IOllamaResource
 {
     internal const string OllamaEndpointName = "http";
 
@@ -15,15 +15,17 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
 
     private EndpointReference? _primaryEndpointReference;
 
-    /// <summary>
-    /// Adds a model to the list of models to download on initial startup.
-    /// </summary>
+    /// <inheritdoc/>
     public IReadOnlyList<string> Models => _models;
 
-    /// <summary>
-    /// Gets the endpoint for the Ollama server.
-    /// </summary>
+    /// <inheritdoc/>
     public EndpointReference PrimaryEndpoint => _primaryEndpointReference ??= new(this, OllamaEndpointName);
+    
+    /// <inheritdoc/>
+    public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
+
+    /// <inheritdoc/>
+    public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
 
     /// <summary>
     /// Gets the connection string expression for the Ollama server.
@@ -32,11 +34,11 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
       ReferenceExpression.Create(
         $"Endpoint={PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}"
       );
+    
+    /// <inheritdoc/>
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{Host}:{Port}");
 
-    /// <summary>
-    /// Adds a model to the list of models to download on initial startup.
-    /// </summary>
-    /// <param name="modelName">The name of the model</param>
+    /// <inheritdoc/>
     public void AddModel(string modelName)
     {
         ArgumentException.ThrowIfNullOrEmpty(modelName, nameof(modelName));
@@ -44,5 +46,12 @@ public class OllamaResource(string name) : ContainerResource(name), IResourceWit
         {
             _models.Add(modelName);
         }
+    }
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Uri", UriExpression);
     }
 }

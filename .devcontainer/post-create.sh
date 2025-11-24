@@ -7,23 +7,13 @@ sudo apt-get update && \
 echo Install .NET dev certs
 dotnet dev-certs https --trust
 
-echo Install JS monorepo tools
-npm install -g turbo
-npm install -g nx
-
-echo Install Aspire 9 templates
-dotnet new install Aspire.ProjectTemplates
+echo Install Aspire
+curl -sSL https://aspire.dev/install.sh | bash
 
 echo Installing Bun
 curl -fsSL https://bun.sh/install | bash
 
-echo Installing uvicorn
-pip install uvicorn
-
 echo Setting up dapr
 dapr init
-
-echo Installing uv
-pip install uv
 
 echo Done!

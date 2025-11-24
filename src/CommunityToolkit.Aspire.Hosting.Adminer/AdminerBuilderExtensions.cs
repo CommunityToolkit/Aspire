@@ -52,6 +52,7 @@ public static class AdminerBuilderExtensions
                                                .WithImageRegistry(AdminerContainerImageTags.Registry)
                                                .WithHttpEndpoint(targetPort: 8080, port: port, name: AdminerContainerResource.PrimaryEndpointName)
                                                .WithUrlForEndpoint(AdminerContainerResource.PrimaryEndpointName, e => e.DisplayText = "Adminer Dashboard")
+                                               .WithIconName("WindowDatabase")
                                                .ExcludeFromManifest();
 
             adminerContainerBuilder.WithContainerFiles(

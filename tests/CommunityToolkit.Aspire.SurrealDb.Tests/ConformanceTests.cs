@@ -26,6 +26,8 @@ public class ConformanceTests :
 
     protected override bool SupportsKeyedRegistrations => true;
 
+    protected override bool CanCreateClientWithoutConnectingToServer => false;
+
     public ConformanceTests(SurrealDbContainerFixture containerFixture)
     {
         _containerFixture = containerFixture;

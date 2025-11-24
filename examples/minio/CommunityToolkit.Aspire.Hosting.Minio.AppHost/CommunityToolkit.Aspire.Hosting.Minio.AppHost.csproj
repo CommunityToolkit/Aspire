@@ -1,18 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="$(AspireAppHostSdkVersion)"/>
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>bfe6b134-1a06-4449-a146-ba3cdb0d02a5</UserSecretsId>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-  </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Minio\CommunityToolkit.Aspire.Hosting.Minio.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Minio.ApiService\CommunityToolkit.Aspire.Hosting.Minio.ApiService.csproj" />

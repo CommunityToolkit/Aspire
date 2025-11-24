@@ -24,8 +24,6 @@ exporters:
     endpoint: ${env:ASPIRE_ENDPOINT}
     headers:
       x-otlp-api-key: ${env:ASPIRE_API_KEY}
-    tls:
-      insecure_skip_verify: true
   
 service:
   pipelines:
