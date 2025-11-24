@@ -98,24 +98,19 @@ jobs:
         run: >-
           dotnet run ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}
           --configuration ${{ env.DOTNET_CONFIGURATION }}
-          --logger "console;verbosity=normal"
-          --logger "trx"
           --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
-          --blame
-          --blame-hang-timeout 7m
-          --blame-crash
-          --results-directory testresults
-          --collect "XPlat Code Coverage"
+          --crashdump
+          --hangdump
+          --hangdump-timeout 7m
+          --results-directory "${{ github.workspace }}/testresults"
+          --collect
           --no-restore
           --no-build
           --filter-not-trait "category=failing"
           --report-trx
           --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
           --ignore-exit-code 8
-          -- RunConfiguration.CollectSourceInformation=true
-             --coverage
-             --coverage-output-format cobertura
-             --coverage-output coverage.cobertura.xml
+          --report-github
         env:
           CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
 

@@ -12,6 +12,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Xunit;
 using Aspire.Components.Common.Tests;
+using Microsoft.DotNet.XUnitExtensions;
 
 namespace Aspire.Components.ConformanceTests;
 
