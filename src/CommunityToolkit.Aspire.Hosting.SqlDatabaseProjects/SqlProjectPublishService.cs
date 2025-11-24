@@ -1,18 +1,21 @@
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Eventing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
-internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksumService dacpacChecksumService, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService, IDistributedApplicationEventing eventing, IServiceProvider serviceProvider)
+internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksumService dacpacChecksumService, IHostEnvironment hostEnvironment, ResourceLoggerService resourceLoggerService, ResourceNotificationService resourceNotificationService)
 {
     public async Task PublishSqlProject(IResourceWithDacpac resource, IResourceWithConnectionString target, string? targetDatabaseName, CancellationToken cancellationToken)
     {
         var logger = resourceLoggerService.GetLogger(resource);
+        ResourceStateSnapshot? failureState = KnownResourceStates.FailedToStart;
 
         try
         {
+            await resourceNotificationService.PublishUpdateAsync(resource,
+                state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Starting, KnownResourceStateStyles.Error) });
+
             var dacpacPath = resource.GetDacpacPath();
             if (!Path.IsPathRooted(dacpacPath))
             {
@@ -38,10 +41,11 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             {
                 logger.LogError("Failed to retrieve connection string for target database {TargetDatabaseResourceName}.", target.Name);
                 await resourceNotificationService.PublishUpdateAsync(resource,
-                    state => state with { State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error) });
+                    state => state with { State = KnownResourceStates.FailedToStart });
                 return;
             }
 
+            failureState = KnownResourceStates.Finished;
             string? checksum = null;
 
             if (resource.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>())
@@ -52,7 +56,7 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
                 if (result is null)
                 {
                     await resourceNotificationService.PublishUpdateAsync(resource,
-                        state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success) });
+                        state => state with { State = KnownResourceStates.Finished });
                     return;
                 }
 
@@ -60,7 +64,10 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with { State = new ResourceStateSnapshot("Publishing", KnownResourceStateStyles.Info) });
+                state => state with { 
+                    State = KnownResourceStates.Running,
+                    StartTimeStamp = DateTime.UtcNow
+                });
 
             deployer.Deploy(dacpacPath, options, connectionString, targetDatabaseName, logger, cancellationToken);
 
@@ -70,16 +77,23 @@ internal class SqlProjectPublishService(IDacpacDeployer deployer, IDacpacChecksu
             }
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with { State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success) });
+                state => state with { 
+                    State = KnownResourceStates.Finished,
+                    ExitCode = 0,
+                    StopTimeStamp = DateTime.UtcNow
+                });
 
-            await eventing.PublishAsync(new ResourceReadyEvent(resource, serviceProvider), cancellationToken);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to publish database project.");
 
             await resourceNotificationService.PublishUpdateAsync(resource,
-                state => state with { State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error) });
+                state => state with {
+                    State = failureState,
+                    ExitCode = failureState == KnownResourceStates.Finished ? 1 : state.ExitCode,
+                    StopTimeStamp = DateTime.UtcNow
+                });
         }
     }
 }

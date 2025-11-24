@@ -1,9 +1,11 @@
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
+using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 using Microsoft.Build.Locator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 using Microsoft.SqlServer.Dac;
+using System.Collections.Immutable;
 
 namespace Aspire.Hosting;
 
@@ -37,8 +39,10 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        return builder.AddSqlProject(name)
-                      .WithAnnotation(new TProject());
+        var projectAnnotation = new TProject();
+
+        return builder.AddDacPacResource(name, new SqlProjectResource(name), [ new(CustomResourceKnownProperties.Source, projectAnnotation.ProjectPath) ])
+            .WithAnnotation(projectAnnotation);
     }
 
     /// <summary>
@@ -52,16 +56,7 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        var resource = new SqlProjectResource(name);
-        
-        return builder.AddResource(resource)
-                      .WithInitialState(new CustomResourceSnapshot
-                      {
-                          Properties = [],
-                          ResourceType = "SqlProject",
-                          State = new ResourceStateSnapshot("Pending", KnownResourceStateStyles.Info)
-                      })
-                      .ExcludeFromManifest();
+        return builder.AddDacPacResource(name, new SqlProjectResource(name), []);
     }
 
     /// <summary>
@@ -77,15 +72,28 @@ public static class SqlProjectBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
 
-        var resource = new SqlPackageResource<TPackage>(name);
+        var packageAnnotation = new TPackage();
+        var properties = ImmutableArray.Create<ResourcePropertySnapshot>(
+                new(CustomResourceKnownProperties.Source, $"{packageAnnotation.PackageId}@{packageAnnotation.PackageVersion}"),
+                new("package.id", packageAnnotation.PackageId),
+                new("package.version", packageAnnotation.PackageVersion),
+                new("package.path", packageAnnotation.PackageId)
+            );
 
+        return builder.AddDacPacResource(name, new SqlPackageResource<TPackage>(name), properties)
+            .WithAnnotation(packageAnnotation);
+    }
+
+    private static IResourceBuilder<T> AddDacPacResource<T>(this IDistributedApplicationBuilder builder, string name, T resource, ImmutableArray<ResourcePropertySnapshot> properties)
+        where T : IResourceWithDacpac
+    {
         return builder.AddResource(resource)
-                      .WithAnnotation(new TPackage())
+                      .WithIconName("DatabaseArrowUp")
                       .WithInitialState(new CustomResourceSnapshot
                       {
-                          Properties = [],
-                          ResourceType = "SqlPackage",
-                          State = new ResourceStateSnapshot("Pending", KnownResourceStateStyles.Info)
+                          Properties = properties,
+                          ResourceType = "SqlProject",
+                          State = KnownResourceStates.Waiting
                       })
                       .ExcludeFromManifest();
     }
@@ -96,7 +104,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="dacpacPath">Path to the .dacpac file.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> WithDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath) 
+    public static IResourceBuilder<SqlProjectResource> WithDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath)
         => InternalWithDacpac(builder, dacpacPath);
 
     /// <summary>
@@ -120,7 +128,7 @@ public static class SqlProjectBuilderExtensions
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    public static IResourceBuilder<SqlProjectResource> WithSkipWhenDeployed(this IResourceBuilder<SqlProjectResource> builder) 
+    public static IResourceBuilder<SqlProjectResource> WithSkipWhenDeployed(this IResourceBuilder<SqlProjectResource> builder)
         => InternalWithSkipWhenDeployed(builder);
 
     /// <summary>
@@ -232,7 +240,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="IResourceWithConnectionString"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
     public static IResourceBuilder<SqlPackageResource<TPackage>> WithReference<TPackage>(
-        this IResourceBuilder<SqlPackageResource<TPackage>> builder,  IResourceBuilder<IResourceWithConnectionString> target)
+        this IResourceBuilder<SqlPackageResource<TPackage>> builder, IResourceBuilder<IResourceWithConnectionString> target)
         where TPackage : IPackageMetadata
     {
         return InternalWithReference(builder, target);
@@ -247,22 +255,15 @@ public static class SqlProjectBuilderExtensions
 
         builder.WithParentRelationship(target.Resource);
 
-        if (target.Resource is SqlServerDatabaseResource)
+        target.OnResourceReady(async (targetResource, evt, ct) =>
         {
-            builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(target.Resource, async (resourceReady, ct) =>
+            if (builder.Resource.TryGetAnnotationsOfType<ExplicitStartupAnnotation>(out _))
             {
-                await PublishOrMark(builder, target, targetDatabaseName, resourceReady.Services, ct);
-            });
-        }
-        else
-        {
-            builder.ApplicationBuilder.Eventing.Subscribe<AfterResourcesCreatedEvent>(async (@event, ct) => 
-            {
-                await PublishOrMark(builder, target, targetDatabaseName, @event.Services, ct);
-            });
-        }
+                return;
+            }
 
-        builder.WaitFor(target);
+            await ExecuteResource(builder.Resource, target.Resource, targetDatabaseName, evt.Services, ct);
+        });
 
         var commandOptions = new CommandOptions
         {
@@ -272,51 +273,31 @@ public static class SqlProjectBuilderExtensions
             Description = "Deploy the SQL Server Database Project to the target database.",
             UpdateState = (context) =>
             {
-                if (context.ResourceSnapshot?.State?.Text is string stateText && (stateText == KnownResourceStates.Finished || stateText == KnownResourceStates.NotStarted))
-                {
-                    return ResourceCommandState.Enabled;
-                }
-                else
-                {
-                    return ResourceCommandState.Disabled;
-                }
+                var state = context.ResourceSnapshot?.State?.Text;
+
+                return state == KnownResourceStates.Running || state == KnownResourceStates.Starting
+                    ? ResourceCommandState.Disabled
+                    : ResourceCommandState.Enabled;
             },
-        };           
+        };
 
         builder.WithCommand("deploy", "Deploy", async (context) =>
         {
-            var service = context.ServiceProvider.GetRequiredService<SqlProjectPublishService>();
-            await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, context.CancellationToken);
+            await ExecuteResource(builder.Resource, target.Resource, targetDatabaseName, context.ServiceProvider, context.CancellationToken);
             return new ExecuteCommandResult { Success = true };
         }, commandOptions);
 
         return builder;
     }
 
-    private static async Task PublishOrMark<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider services, CancellationToken ct) where TResource : IResourceWithDacpac
-    {
-        if (builder.Resource.HasAnnotationOfType<ExplicitStartupAnnotation>())
-        {
-            await MarkNotStarted(builder, services);
-        }
-        else
-        {
-            await RunPublish(builder, target, targetDatabaseName, services, ct);
-        }
-    }
 
-    private static async Task MarkNotStarted<TResource>(IResourceBuilder<TResource> builder, IServiceProvider serviceProvider)
+    private static async Task ExecuteResource<TResource>(TResource resource, IResourceWithConnectionString target, string? targetDatabaseName, IServiceProvider serviceProvider, CancellationToken ct)
         where TResource : IResourceWithDacpac
     {
-        var resourceNotificationService = serviceProvider.GetRequiredService<ResourceNotificationService>();
-        await resourceNotificationService.PublishUpdateAsync(builder.Resource,
-            state => state with { State = new ResourceStateSnapshot(KnownResourceStates.NotStarted, KnownResourceStateStyles.Info) });
-    }
+        var eventing = serviceProvider.GetRequiredService<IDistributedApplicationEventing>();
+        await eventing.PublishAsync(new BeforeResourceStartedEvent(resource, serviceProvider), ct);
 
-    private static async Task RunPublish<TResource>(IResourceBuilder<TResource> builder, IResourceBuilder<IResourceWithConnectionString> target, string? targetDatabaseName, IServiceProvider serviceProvider, CancellationToken ct) 
-        where TResource : IResourceWithDacpac
-    {
         var service = serviceProvider.GetRequiredService<SqlProjectPublishService>();
-        await service.PublishSqlProject(builder.Resource, target.Resource, targetDatabaseName, ct);
+        await service.PublishSqlProject(resource, target, targetDatabaseName, ct);
     }
 }
