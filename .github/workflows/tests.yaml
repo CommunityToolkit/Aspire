@@ -98,7 +98,6 @@ jobs:
         run: >-
           dotnet
           ${{ github.workspace }}/artifacts/${{ matrix.name }}/CommunityToolkit.Aspire.${{ matrix.name }}.dll
-          --configuration ${{ env.DOTNET_CONFIGURATION }}
           --crashdump
           --hangdump
           --hangdump-timeout 7m
