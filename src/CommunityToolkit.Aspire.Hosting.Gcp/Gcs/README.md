@@ -1,4 +1,4 @@
-# PANW.Aspire.Hosting.Gcp.Gcs
+# CommunityToolkit.Aspire.Hosting.Gcp.Gcs
 Provides extension methods and resource definitions for a .NET Aspire AppHost to configure Gcs and buckets.
 
 ## Usage Example
