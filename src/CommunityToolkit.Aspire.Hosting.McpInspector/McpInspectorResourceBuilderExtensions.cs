@@ -44,10 +44,17 @@ public static class McpInspectorResourceBuilderExtensions
 
         var proxyTokenParameter = options.ProxyToken?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-proxyToken");
 
-        var resource = builder.AddResource(new McpInspectorResource(name))
-            .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
-            .WithCommand("npx")
-            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
+        // Determine the command and install configuration based on the package manager
+        var (command, installArgs, runArgs) = GetPackageManagerConfig(options.PackageManager, options.InspectorVersion);
+
+        var resource = builder.AddResource(new McpInspectorResource(name, command));
+
+        // Apply the appropriate package manager configuration
+        resource = ApplyPackageManagerConfiguration(resource, options.PackageManager, installArgs);
+
+        resource = resource
+            .WithCommand(command)
+            .WithArgs(runArgs)
             .ExcludeFromManifest()
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
@@ -260,5 +267,42 @@ public static class McpInspectorResourceBuilderExtensions
         var relative = string.Join("/", escapedSegments);
 
         return new Uri(baseUri, relative);
+    }
+
+    private static (string command, string[] installArgs, string[] runArgs) GetPackageManagerConfig(string packageManager, string inspectorVersion)
+    {
+        var packageName = $"@modelcontextprotocol/inspector@{inspectorVersion}";
+
+        return packageManager.ToLowerInvariant() switch
+        {
+            "yarn" => (
+                "yarn",
+                [packageName],
+                ["dlx", packageName]
+            ),
+            "pnpm" => (
+                "pnpm",
+                [packageName],
+                ["dlx", packageName]
+            ),
+            _ => ( // npm (default)
+                "npx",
+                ["-y", packageName, "--no-save", "--no-package-lock"],
+                ["-y", packageName]
+            )
+        };
+    }
+
+    private static IResourceBuilder<McpInspectorResource> ApplyPackageManagerConfiguration(
+        IResourceBuilder<McpInspectorResource> resource,
+        string packageManager,
+        string[] installArgs)
+    {
+        return packageManager.ToLowerInvariant() switch
+        {
+            "yarn" => resource.WithYarn(install: true, installArgs: installArgs),
+            "pnpm" => resource.WithPnpm(install: true, installArgs: installArgs),
+            _ => resource.WithNpm(install: true, installArgs: installArgs) // npm (default)
+        };
     }
 }

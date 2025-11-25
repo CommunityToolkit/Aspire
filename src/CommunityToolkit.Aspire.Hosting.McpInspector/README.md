@@ -56,14 +56,37 @@ var inspector = builder.AddMcpInspector("inspector", options =>
     .WithMcpServer(mcpServer);
 ```
 
+#### Using alternative package managers
+
+By default, the MCP Inspector uses npm/npx to run the inspector. You can configure it to use yarn or pnpm instead:
+
+```csharp
+// Using pnpm
+var inspector = builder.AddMcpInspector("inspector", options =>
+{
+    options.PackageManager = "pnpm";
+})
+    .WithMcpServer(mcpServer);
+
+// Using yarn
+var inspector = builder.AddMcpInspector("inspector", options =>
+{
+    options.PackageManager = "yarn";
+})
+    .WithMcpServer(mcpServer);
+```
+
+When using pnpm, the inspector will use `pnpm dlx` to run the package. When using yarn, it will use `yarn dlx`.
+
 #### Configuration options
 
 The `McpInspectorOptions` class provides the following configuration properties:
 
--   `ClientPort`: Port for the client application (default: 6274
+-   `ClientPort`: Port for the client application (default: 6274)
 -   `ServerPort`: Port for the server proxy application (default: 6277)
 -   `InspectorVersion`: Version of the Inspector app to use (default: latest supported version)
 -   `ProxyToken`: Custom authentication token parameter (default: auto-generated)
+-   `PackageManager`: The package manager to use for running the inspector. Supported values are "npm" (default), "yarn", and "pnpm".
 
 ## Additional Information
 
