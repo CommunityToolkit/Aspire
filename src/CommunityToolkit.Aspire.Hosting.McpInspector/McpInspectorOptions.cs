@@ -27,13 +27,4 @@ public class McpInspectorOptions
     /// If <see langword="null"/> a random token will be generated.
     /// </summary>
     public IResourceBuilder<ParameterResource>? ProxyToken { get; set; }
-
-    /// <summary>
-    /// Gets or sets the package manager to use for running the MCP Inspector.
-    /// Supported values are "npm" (default), "yarn", and "pnpm".
-    /// When set to "yarn", commands will use "yarn dlx".
-    /// When set to "pnpm", commands will use "pnpm dlx".
-    /// When set to "npm" or not specified, commands will use "npx".
-    /// </summary>
-    public string PackageManager { get; set; } = "npm";
 }
