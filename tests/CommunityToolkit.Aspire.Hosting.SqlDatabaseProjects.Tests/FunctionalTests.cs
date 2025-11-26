@@ -1,9 +1,8 @@
-﻿using Aspire.Components.Common.Tests;
-using Aspire.Hosting;
+﻿using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests;
 

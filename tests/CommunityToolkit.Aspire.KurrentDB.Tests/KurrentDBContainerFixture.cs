@@ -3,6 +3,7 @@
 
 using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Hosting.KurrentDB;
+using CommunityToolkit.Aspire.Testing;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
@@ -22,7 +23,7 @@ public sealed class KurrentDBContainerFixture : IAsyncLifetime
         return $"{endpoint}?tls=false";
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (RequiresDockerAttribute.IsSupported)
         {
@@ -39,7 +40,7 @@ public sealed class KurrentDBContainerFixture : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (Container is not null)
         {
