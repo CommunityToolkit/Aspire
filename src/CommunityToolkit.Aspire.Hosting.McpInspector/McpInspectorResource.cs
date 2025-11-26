@@ -6,9 +6,15 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Resource for the MCP Inspector server.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
-public class McpInspectorResource(string name) : JavaScriptAppResource(name, "npx", "")
+/// <param name="packageName">The npm package name for the MCP Inspector.</param>
+public class McpInspectorResource(string name, string packageName) : JavaScriptAppResource(name, "npx", "")
 {
     internal readonly string ConfigPath = Path.GetTempFileName();
+
+    /// <summary>
+    /// Gets the npm package name for the MCP Inspector.
+    /// </summary>
+    internal string PackageName { get; } = packageName;
 
     /// <summary>
     /// The name of the client endpoint.
