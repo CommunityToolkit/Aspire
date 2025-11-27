@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Aspire.Hosting;
@@ -38,7 +39,7 @@ public static class StripeExtensions
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
         IResourceBuilder<IResourceWithEndpoints> forwardTo,
-        string webhookPath = "webhooks/stripe",
+        string webhookPath = "/webhooks/stripe",
         IEnumerable<string>? events = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -59,7 +60,7 @@ public static class StripeExtensions
             builder.WithArgs("--events", string.Join(",", events));
         }
 
-        return builder;
+        return builder.ResolveSecret();
     }
 
     /// <summary>
@@ -73,7 +74,7 @@ public static class StripeExtensions
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
         IResourceBuilder<ExternalServiceResource> forwardTo,
-        string webhookPath = "webhooks/stripe",
+        string webhookPath = "/webhooks/stripe",
         IEnumerable<string>? events = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -112,7 +113,7 @@ public static class StripeExtensions
             builder.WithArgs("--events", string.Join(",", events));
         }
 
-        return builder;
+        return builder.ResolveSecret();
     }
 
     /// <summary>
@@ -152,10 +153,78 @@ public static class StripeExtensions
         ArgumentNullException.ThrowIfNull(source, nameof(source));
         ArgumentException.ThrowIfNullOrEmpty(webhookSigningSecretEnvVarName, nameof(webhookSigningSecretEnvVarName));
 
+        if (builder is IResourceBuilder<IResourceWithWaitSupport> waitResource)
+        {
+            waitResource.WaitFor(source);
+        }
+
         return builder.WithEnvironment(context =>
         {
-            context.EnvironmentVariables.Add(webhookSigningSecretEnvVarName, "");
+            context.EnvironmentVariables.Add(webhookSigningSecretEnvVarName, ReferenceExpression.Create($"{source.Resource.WebhookSigningSecret}"));
         });
+    }
+
+    private static IResourceBuilder<StripeResource> ResolveSecret(this IResourceBuilder<StripeResource> builder)
+    {
+        builder.OnBeforeResourceStarted(async (resource, @event, ct) =>
+        {
+            var stdOut = new StringWriter();
+            var stdErr = new StringWriter();
+
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = resource.Command,
+                    Arguments = "listen --print-secret",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                }
+            };
+
+            process.OutputDataReceived += (sender, e) =>
+            {
+                if (e.Data is not null)
+                {
+                    stdOut.WriteLine(e.Data);
+                }
+            };
+
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data is not null)
+                {
+                    stdErr.WriteLine(e.Data);
+                }
+            };
+
+            if (!process.Start())
+            {
+                throw new InvalidOperationException("Failed to start Stripe CLI process to retrieve webhook signing secret.");
+            }
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
+
+            if (process.ExitCode != 0)
+            {
+                throw new InvalidOperationException($"Stripe CLI process exited with code {process.ExitCode}. Error output: {stdErr}");
+            }
+
+            var secret = stdOut.ToString().Trim();
+            if (string.IsNullOrEmpty(secret))
+            {
+                throw new InvalidOperationException("Failed to retrieve webhook signing secret from Stripe CLI output.");
+            }
+
+            resource.WebhookSigningSecret = secret;
+        });
+
+        return builder;
     }
 
     internal static bool UrlIsValidForExternalService(string? url, [NotNullWhen(true)] out Uri? uri, [NotNullWhen(false)] out string? message)
