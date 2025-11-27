@@ -153,7 +153,7 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentException>(() => builder.AddStripe(""));
+        Assert.Throws<ArgumentException>(() => builder.AddStripe(""!));
     }
 
     [Fact]
@@ -312,10 +312,17 @@ public class AddStripeTests
         Assert.Throws<ArgumentException>(() => api.WithReference(stripe, webhookSigningSecretEnvVarName: ""));
     }
 
-    private class TestProject : ProjectResource, IResourceWithEnvironment
+    private class TestProject : ProjectResource, IResourceWithEnvironment, IProjectMetadata
     {
+        public TestProject()
+            : this("test-project")
+        {
+
+        }
         public TestProject(string name) : base(name)
         {
         }
+
+        public string ProjectPath => "";
     }
 }

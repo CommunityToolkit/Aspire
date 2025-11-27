@@ -139,12 +139,7 @@ public static class StripeExtensions
 
         return builder.WithEnvironment(context =>
         {
-            context.EnvironmentVariables[webhookSigningSecretEnvVarName] = new StripeWebhookSecretExpression(source.Resource);
+            context.EnvironmentVariables[webhookSigningSecretEnvVarName] = $"{source.Resource.Name}.outputs.webhookSigningSecret";
         });
-    }
-
-    private sealed class StripeWebhookSecretExpression(StripeResource resource) : ReferenceExpression
-    {
-        public override string? ValueExpression => $"{{{resource.Name}.outputs.webhookSigningSecret}}";
     }
 }

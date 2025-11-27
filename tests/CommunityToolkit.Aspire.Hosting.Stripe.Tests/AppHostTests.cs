@@ -2,8 +2,8 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Stripe.Tests;
 
-public class AppHostTests(AspireIntegrationTestFixture<AppHost.AppHostMarker> fixture) 
-    : IClassFixture<AspireIntegrationTestFixture<AppHost.AppHostMarker>>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Stripe_AppHost> fixture)
+    : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Stripe_AppHost>>
 {
     [Fact]
     [Trait("RequiresTools", "stripe")]

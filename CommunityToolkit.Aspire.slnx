@@ -158,7 +158,7 @@
     <Project Path="examples/sqlserver-ext/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/stripe/">
-    <Project Path="examples/stripe/API/API.csproj" />
+    <Project Path="examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.Api/CommunityToolkit.Aspire.Hosting.Stripe.Api.csproj" />
     <Project Path="examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.AppHost/CommunityToolkit.Aspire.Hosting.Stripe.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/surrealdb/">

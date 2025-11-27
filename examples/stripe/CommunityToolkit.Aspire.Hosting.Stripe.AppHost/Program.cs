@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var api = builder.AddProject<Projects.API>("api");
+var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
 // Forward Stripe webhooks to the API's webhook endpoint
 var stripe = builder.AddStripe("stripe")
