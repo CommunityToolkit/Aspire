@@ -1,5 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.Stripe.Tests;
 
@@ -26,8 +25,10 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+
         builder.AddStripe("stripe")
-            .WithListen("http://localhost:5082/webhooks");
+            .WithListen(externalEndpoint, webhookPath: "webhooks");
 
         using var app = builder.Build();
 
@@ -39,7 +40,8 @@ public class AddStripeTests
 
         Assert.Collection(args,
             arg => Assert.Equal("listen", arg),
-            arg => Assert.Equal("--forward-to=http://localhost:5082/webhooks", arg)
+            arg => Assert.Equal("--forward-to", arg),
+            arg => Assert.Equal("http://localhost:5082/webhooks", arg)
         );
     }
 
@@ -48,8 +50,10 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+
         builder.AddStripe("stripe")
-            .WithListen("http://localhost:5082/webhooks", events: "payment_intent.created,charge.succeeded");
+            .WithListen(externalEndpoint, webhookPath: "webhooks", events: ["payment_intent.created,charge.succeeded"]);
 
         using var app = builder.Build();
 
@@ -61,7 +65,8 @@ public class AddStripeTests
 
         Assert.Collection(args,
             arg => Assert.Equal("listen", arg),
-            arg => Assert.Equal("--forward-to=http://localhost:5082/webhooks", arg),
+            arg => Assert.Equal("--forward-to", arg),
+            arg => Assert.Equal("http://localhost:5082/webhooks", arg),
             arg => Assert.Equal("--events", arg),
             arg => Assert.Equal("payment_intent.created,charge.succeeded", arg)
         );
@@ -72,9 +77,12 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+        var apiKey = builder.AddParameter("api-key", "sk_test_123");
+
         builder.AddStripe("stripe")
-            .WithListen("http://localhost:5082/webhooks")
-            .WithApiKey("sk_test_123");
+            .WithListen(externalEndpoint)
+            .WithApiKey(apiKey);
 
         using var app = builder.Build();
 
@@ -95,8 +103,10 @@ public class AddStripeTests
 
         var apiKey = builder.AddParameter("stripe-api-key");
 
-        var stripe = builder.AddStripe("stripe")
-            .WithListen("http://localhost:5082/webhooks")
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+
+        builder.AddStripe("stripe")
+            .WithListen(externalEndpoint)
             .WithApiKey(apiKey);
 
         using var app = builder.Build();
@@ -115,11 +125,10 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var api = builder.AddProject<TestProject>("api")
-            .WithHttpEndpoint(port: 5082, name: "http");
+        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
         var stripe = builder.AddStripe("stripe")
-            .WithListen(api.GetEndpoint("http"));
+            .WithListen(api);
 
         using var app = builder.Build();
 
@@ -161,7 +170,7 @@ public class AddStripeTests
     {
         IResourceBuilder<StripeResource> builder = null!;
 
-        Assert.Throws<ArgumentNullException>(() => builder.WithListen("http://localhost:5000"));
+        Assert.Throws<ArgumentNullException>(() => builder.WithListen((IResourceBuilder<IResourceWithEndpoints>)null!));
     }
 
     [Fact]
@@ -170,16 +179,7 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
         var stripe = builder.AddStripe("stripe");
 
-        Assert.Throws<ArgumentNullException>(() => stripe.WithListen((string)null!));
-    }
-
-    [Fact]
-    public void WithListenEmptyUrlThrows()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var stripe = builder.AddStripe("stripe");
-
-        Assert.Throws<ArgumentException>(() => stripe.WithListen(""));
+        Assert.Throws<ArgumentNullException>(() => stripe.WithListen((IResourceBuilder<ExternalServiceResource>)null!));
     }
 
     [Fact]
@@ -188,7 +188,7 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
         var stripe = builder.AddStripe("stripe");
 
-        Assert.Throws<ArgumentNullException>(() => stripe.WithListen((EndpointReference)null!));
+        Assert.Throws<ArgumentNullException>(() => stripe.WithListen((IResourceBuilder<IResourceWithEndpoints>)null!));
     }
 
     [Fact]
@@ -196,7 +196,10 @@ public class AddStripeTests
     {
         IResourceBuilder<StripeResource> builder = null!;
 
-        Assert.Throws<ArgumentNullException>(() => builder.WithApiKey("sk_test_123"));
+        var ex = Record.Exception(() => builder.WithApiKey(null!));
+
+        var aex = Assert.IsType<ArgumentNullException>(ex);
+        Assert.Equal("builder", aex.ParamName);
     }
 
     [Fact]
@@ -205,25 +208,10 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
         var stripe = builder.AddStripe("stripe");
 
-        Assert.Throws<ArgumentNullException>(() => stripe.WithApiKey((string)null!));
-    }
+        var ex = Record.Exception(() => stripe.WithApiKey(null!));
 
-    [Fact]
-    public void WithApiKeyEmptyKeyThrows()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var stripe = builder.AddStripe("stripe");
-
-        Assert.Throws<ArgumentException>(() => stripe.WithApiKey(""));
-    }
-
-    [Fact]
-    public void WithApiKeyNullParameterThrows()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var stripe = builder.AddStripe("stripe");
-
-        Assert.Throws<ArgumentNullException>(() => stripe.WithApiKey((IResourceBuilder<ParameterResource>)null!));
+        var aex = Assert.IsType<ArgumentNullException>(ex);
+        Assert.Equal("apiKey", aex.ParamName);
     }
 
     [Fact]
@@ -231,17 +219,18 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var stripe = builder.AddStripe("stripe")
-            .WithListen("http://localhost:5082/webhooks");
+        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
-        var api = builder.AddProject<TestProject>("api")
-            .WithReference(stripe);
+        var stripe = builder.AddStripe("stripe")
+            .WithListen(api);
+
+        api.WithReference(stripe);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var apiResource = Assert.Single(appModel.Resources.OfType<TestProject>());
+        var apiResource = Assert.Single(appModel.Resources.OfType<ProjectResource>());
 
         // Verify that an EnvironmentCallbackAnnotation was added
         var envAnnotations = apiResource.Annotations.OfType<EnvironmentCallbackAnnotation>();
@@ -253,17 +242,17 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
+        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
         var stripe = builder.AddStripe("stripe")
-            .WithListen("http://localhost:5082/webhooks");
+            .WithListen(api);
 
-        var api = builder.AddProject<TestProject>("api")
-            .WithReference(stripe, webhookSigningSecretEnvVarName: "CUSTOM_STRIPE_SECRET");
+        api.WithReference(stripe, webhookSigningSecretEnvVarName: "CUSTOM_STRIPE_SECRET");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var apiResource = Assert.Single(appModel.Resources.OfType<TestProject>());
+        var apiResource = Assert.Single(appModel.Resources.OfType<ProjectResource>());
 
         // Verify that an EnvironmentCallbackAnnotation was added
         var envAnnotations = apiResource.Annotations.OfType<EnvironmentCallbackAnnotation>();
@@ -276,7 +265,7 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
         var stripe = builder.AddStripe("stripe");
 
-        IResourceBuilder<TestProject> apiBuilder = null!;
+        IResourceBuilder<ProjectResource> apiBuilder = null!;
 
         Assert.Throws<ArgumentNullException>(() => apiBuilder.WithReference(stripe));
     }
@@ -285,7 +274,7 @@ public class AddStripeTests
     public void WithReferenceNullSourceThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var api = builder.AddProject<TestProject>("api");
+        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
         Assert.Throws<ArgumentNullException>(() => api.WithReference((IResourceBuilder<StripeResource>)null!));
     }
@@ -296,7 +285,7 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
 
         var stripe = builder.AddStripe("stripe");
-        var api = builder.AddProject<TestProject>("api");
+        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
         Assert.Throws<ArgumentNullException>(() => api.WithReference(stripe, webhookSigningSecretEnvVarName: null!));
     }
@@ -307,22 +296,8 @@ public class AddStripeTests
         var builder = DistributedApplication.CreateBuilder();
 
         var stripe = builder.AddStripe("stripe");
-        var api = builder.AddProject<TestProject>("api");
+        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
         Assert.Throws<ArgumentException>(() => api.WithReference(stripe, webhookSigningSecretEnvVarName: ""));
-    }
-
-    private class TestProject : ProjectResource, IResourceWithEnvironment, IProjectMetadata
-    {
-        public TestProject()
-            : this("test-project")
-        {
-
-        }
-        public TestProject(string name) : base(name)
-        {
-        }
-
-        public string ProjectPath => "";
     }
 }

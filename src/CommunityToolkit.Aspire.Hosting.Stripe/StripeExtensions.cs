@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Aspire.Hosting;
 
@@ -27,81 +28,91 @@ public static class StripeExtensions
     }
 
     /// <summary>
-    /// Configures the Stripe CLI to listen for webhooks and forward them to the specified endpoint.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="reference">A reference to an endpoint to forward webhooks to.</param>
-    /// <param name="events">Optional comma-separated list of specific webhook events to listen for (e.g., "payment_intent.created,charge.succeeded"). If not specified, all events are forwarded.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<StripeResource> WithListen(
-        this IResourceBuilder<StripeResource> builder,
-        EndpointReference reference,
-        string? events = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentNullException.ThrowIfNull(reference, nameof(reference));
-
-        return builder.WithListen(ReferenceExpression.Create($"{reference.Property(EndpointProperty.Url)}"), events);
-    }
-
-    /// <summary>
-    /// Configures the Stripe CLI to listen for webhooks and forward them to the specified URL.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="forwardTo">The URL to forward webhooks to (e.g., "http://localhost:5000/webhooks/stripe").</param>
-    /// <param name="events">Optional comma-separated list of specific webhook events to listen for (e.g., "payment_intent.created,charge.succeeded"). If not specified, all events are forwarded.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<StripeResource> WithListen(
-        this IResourceBuilder<StripeResource> builder,
-        string forwardTo,
-        string? events = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(forwardTo, nameof(forwardTo));
-
-        return builder.WithListen(ReferenceExpression.Create($"{forwardTo}"), events);
-    }
-
-    /// <summary>
     /// Configures the Stripe CLI to listen for webhooks and forward them to the specified URL expression.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="forwardTo">The URL expression to forward webhooks to.</param>
+    /// <param name="forwardTo">The resource to forward webhooks to.</param>
+    /// <param name="webhookPath">The path to the webhook endpoint.</param>
     /// <param name="events">Optional comma-separated list of specific webhook events to listen for (e.g., "payment_intent.created,charge.succeeded"). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
-        ReferenceExpression forwardTo,
-        string? events = null)
+        IResourceBuilder<IResourceWithEndpoints> forwardTo,
+        string webhookPath = "webhooks/stripe",
+        IEnumerable<string>? events = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(forwardTo, nameof(forwardTo));
 
         builder.WithArgs("listen");
-        builder.WithArgs(context => context.Args.Add($"--forward-to={forwardTo}"));
-
-        if (!string.IsNullOrEmpty(events))
+        builder.WithArgs(context =>
         {
-            builder.WithArgs("--events", events);
+            if (!forwardTo.Resource.TryGetEndpoints(out var endpoints) || !endpoints.Any())
+            {
+                throw new InvalidOperationException($"The resource '{forwardTo.Resource.Name}' does not have any endpoints defined.");
+            }
+            context.Args.Add($"--forward-to={endpoints.First().AllocatedEndpoint}{webhookPath}");
+        });
+
+        if (events is not null && events.Any())
+        {
+            builder.WithArgs("--events", string.Join(",", events));
         }
 
         return builder;
     }
 
     /// <summary>
-    /// Configures the Stripe CLI to use a specific API key.
+    /// Configures the Stripe CLI to listen for webhooks and forward them to the specified URL expression.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="apiKey">The Stripe API key to use.</param>
+    /// <param name="forwardTo">The resource to forward webhooks to.</param>
+    /// <param name="webhookPath">The path to the webhook endpoint.</param>
+    /// <param name="events">Optional comma-separated list of specific webhook events to listen for (e.g., "payment_intent.created,charge.succeeded"). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<StripeResource> WithApiKey(
+    public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
-        string apiKey)
+        IResourceBuilder<ExternalServiceResource> forwardTo,
+        string webhookPath = "webhooks/stripe",
+        IEnumerable<string>? events = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(apiKey, nameof(apiKey));
+        ArgumentNullException.ThrowIfNull(forwardTo, nameof(forwardTo));
 
-        return builder.WithArgs("--api-key", apiKey);
+        builder.WithArgs("listen");
+
+        if (forwardTo.Resource.Uri is not null)
+        {
+            builder.WithArgs($"--forward-to");
+            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri.ToString()}{webhookPath}"));
+        }
+        else if (forwardTo.Resource.UrlParameter is not null)
+        {
+            builder.WithArgs(async context =>
+            {
+                if (!context.ExecutionContext.IsPublishMode)
+                {
+                    var url = await forwardTo.Resource.UrlParameter.GetValueAsync(context.CancellationToken).ConfigureAwait(false);
+                    if (!UrlIsValidForExternalService(url, out var _, out var message))
+                    {
+                        throw new DistributedApplicationException($"The URL parameter '{forwardTo.Resource.UrlParameter.Name}' for the external service '{forwardTo.Resource.Name}' is invalid: {message}");
+                    }
+                }
+                context.Args.Add($"--forward-to");
+                context.Args.Add(ReferenceExpression.Create($"{forwardTo.Resource.UrlParameter}{webhookPath}"));
+            });
+        }
+        else
+        {
+            throw new InvalidOperationException($"The external service resource '{forwardTo.Resource.Name}' does not have a defined URI.");
+        }
+
+        if (events is not null && events.Any())
+        {
+            builder.WithArgs("--events", string.Join(",", events));
+        }
+
+        return builder;
     }
 
     /// <summary>
@@ -117,7 +128,11 @@ public static class StripeExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(apiKey, nameof(apiKey));
 
-        return builder.WithArgs(context => context.Args.Add($"--api-key={apiKey.Resource}"));
+        return builder.WithArgs(context =>
+        {
+            context.Args.Add($"--api-key");
+            context.Args.Add(apiKey);
+        });
     }
 
     /// <summary>
@@ -139,7 +154,45 @@ public static class StripeExtensions
 
         return builder.WithEnvironment(context =>
         {
-            context.EnvironmentVariables[webhookSigningSecretEnvVarName] = $"{source.Resource.Name}.outputs.webhookSigningSecret";
+            context.EnvironmentVariables.Add(webhookSigningSecretEnvVarName, "");
         });
+    }
+
+    internal static bool UrlIsValidForExternalService(string? url, [NotNullWhen(true)] out Uri? uri, [NotNullWhen(false)] out string? message)
+    {
+        if (url is null || !Uri.TryCreate(url, UriKind.Absolute, out uri))
+        {
+            uri = null;
+            message = "The URL for the external service must be an absolute URI.";
+            return false;
+        }
+
+        if (GetUriValidationException(uri) is { } exception)
+        {
+            message = exception.Message;
+            uri = null;
+            return false;
+        }
+
+        message = null;
+
+        return true;
+    }
+
+    private static ArgumentException? GetUriValidationException(Uri uri)
+    {
+        if (!uri.IsAbsoluteUri)
+        {
+            return new ArgumentException("The URI for the external service must be absolute.", nameof(uri));
+        }
+        if (uri.AbsolutePath != "/")
+        {
+            return new ArgumentException("The URI absolute path must be \"/\".", nameof(uri));
+        }
+        if (!string.IsNullOrEmpty(uri.Fragment))
+        {
+            return new ArgumentException("The URI cannot contain a fragment.", nameof(uri));
+        }
+        return null;
     }
 }
