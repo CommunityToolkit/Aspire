@@ -6,7 +6,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Stripe_AppHost>>
 {
     [Fact]
-    [Trait("RequiresTools", "stripe")]
+    [RequiresAuthenticatedTool("stripe")]
     public async Task ResourceStartsAndRespondsOk()
     {
         var resourceName = "api";
@@ -24,7 +24,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     }
 
     [Fact]
-    [Trait("RequiresTools", "stripe")]
+    [RequiresAuthenticatedTool("stripe")]
     public async Task StripeResourceIsCreated()
     {
         var app = fixture.App;
