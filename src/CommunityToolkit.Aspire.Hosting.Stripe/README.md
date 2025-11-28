@@ -23,7 +23,9 @@ Then, in the _Program.cs_ file of your AppHost project, add the Stripe CLI and c
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var stripe = builder.AddStripe("stripe")
+var stripeApiKey = builder.AddParameter("stripe-api-key", "sk_test_default", secret: true); // Override for real keys
+
+var stripe = builder.AddStripe("stripe", stripeApiKey)
     .WithListen("http://localhost:5082/payments/stripe-webhook");
 
 var api = builder.AddProject<Projects.API>("api")
@@ -33,9 +35,11 @@ builder.Build().Run();
 ```
 
 This will:
+
 1. Start the Stripe CLI listening for webhook events
 2. Forward all webhook events to `http://localhost:5082/payments/stripe-webhook`
-3. Make the webhook signing secret available to the API project via the `STRIPE_WEBHOOK_SECRET` environment variable
+3. Provide the Stripe API key to the container via the `STRIPE_API_KEY` environment variable
+4. Make the webhook signing secret available to the API project via the `STRIPE_WEBHOOK_SECRET` environment variable
 
 ### Forwarding to an Aspire endpoint
 
@@ -47,7 +51,9 @@ var builder = DistributedApplication.CreateBuilder(args);
 var api = builder.AddProject<Projects.API>("api")
     .WithHttpEndpoint(port: 5082, name: "http");
 
-var stripe = builder.AddStripe("stripe")
+var stripeApiKey = builder.AddParameter("stripe-api-key", "sk_test_default", secret: true);
+
+var stripe = builder.AddStripe("stripe", stripeApiKey)
     .WithListen(
         ReferenceExpression.Create($"{api.GetEndpoint("http").Property(EndpointProperty.Url)}/payments/stripe-webhook"),
         events: "payment_intent.created,charge.succeeded");
@@ -70,19 +76,14 @@ var api = builder.AddProject<Projects.API>("api")
 
 ### Configuring API key
 
-You can provide a Stripe API key directly or via a parameter:
+`AddStripe` requires an `IResourceBuilder<ParameterResource>` that supplies your Stripe API key. The value is exposed to the container as the `STRIPE_API_KEY` environment variable. You can optionally reuse the same parameter to add the `--api-key` command-line argument:
 
 ```csharp
-// Direct API key
-var stripe = builder.AddStripe("stripe")
-    .WithListen("http://localhost:5082/webhooks")
-    .WithApiKey("sk_test_...");
+var apiKey = builder.AddParameter("stripe-api-key", "sk_test_default", secret: true);
 
-// Using a parameter (recommended for sensitive data)
-var apiKey = builder.AddParameter("stripe-api-key", secret: true);
-var stripe = builder.AddStripe("stripe")
+var stripe = builder.AddStripe("stripe", apiKey)
     .WithListen("http://localhost:5082/webhooks")
-    .WithApiKey(apiKey);
+    .WithApiKey(apiKey); // optional: forwards the key to the CLI via --api-key
 ```
 
 ### Filtering events
@@ -91,26 +92,29 @@ You can filter which webhook events the Stripe CLI listens for:
 
 ```csharp
 var stripe = builder.AddStripe("stripe")
-    .WithListen("http://localhost:5082/webhooks", 
+    .WithListen("http://localhost:5082/webhooks",
                 events: "payment_intent.created,charge.succeeded");
 ```
 
 ## How it works
 
 The Stripe CLI integration:
-- Runs `stripe listen --forward-to <url>` to listen for webhook events from Stripe's test environment
-- Forwards those events to your local application endpoint
-- Exposes the webhook signing secret so your application can verify webhook authenticity
-- Provides a development-friendly way to test webhook integrations without deploying to production
+
+-   Runs `stripe listen --forward-to <url>` to listen for webhook events from Stripe's test environment
+-   Forwards those events to your local application endpoint
+-   Exposes the webhook signing secret so your application can verify webhook authenticity
+-   Provides a development-friendly way to test webhook integrations without deploying to production
 
 ## Additional Information
 
 For more information about the Stripe CLI:
-- [Stripe CLI Documentation](https://stripe.com/docs/stripe-cli)
-- [Testing webhooks locally](https://stripe.com/docs/webhooks/test)
+
+-   [Stripe CLI Documentation](https://stripe.com/docs/stripe-cli)
+-   [Testing webhooks locally](https://stripe.com/docs/webhooks/test)
 
 https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-stripe
 
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
+

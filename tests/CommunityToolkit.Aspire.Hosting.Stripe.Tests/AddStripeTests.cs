@@ -1,15 +1,20 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.Stripe;
 
 namespace CommunityToolkit.Aspire.Hosting.Stripe.Tests;
 
 public class AddStripeTests
 {
+    private const string TestApiKeyValue = "sk_test_123";
+
     [Fact]
-    public void StripeUsesStripeCommand()
+    public void StripeConfiguresContainerImage()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
-        builder.AddStripe("stripe");
+        builder.AddStripe("stripe", apiKey);
 
         using var app = builder.Build();
 
@@ -17,17 +22,21 @@ public class AddStripeTests
 
         var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
 
-        Assert.Equal("stripe", resource.Command);
+        var containerAnnotation = Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal(StripeContainerImageTags.Image, containerAnnotation.Image);
+        Assert.Equal(StripeContainerImageTags.Tag, containerAnnotation.Tag);
+        Assert.Equal(StripeContainerImageTags.Registry, containerAnnotation.Registry);
     }
 
     [Fact]
     public async Task StripeWithListenAddsListenArgs()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
         var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
 
-        builder.AddStripe("stripe")
+        builder.AddStripe("stripe", apiKey)
             .WithListen(externalEndpoint, webhookPath: "webhooks");
 
         using var app = builder.Build();
@@ -49,10 +58,11 @@ public class AddStripeTests
     public async Task StripeWithListenAndEventsAddsEventArgs()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
         var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
 
-        builder.AddStripe("stripe")
+        builder.AddStripe("stripe", apiKey)
             .WithListen(externalEndpoint, webhookPath: "webhooks", events: ["payment_intent.created,charge.succeeded"]);
 
         using var app = builder.Build();
@@ -80,7 +90,7 @@ public class AddStripeTests
         var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
         var apiKey = builder.AddParameter("api-key", "sk_test_123");
 
-        builder.AddStripe("stripe")
+        builder.AddStripe("stripe", apiKey)
             .WithListen(externalEndpoint)
             .WithApiKey(apiKey);
 
@@ -101,11 +111,11 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var apiKey = builder.AddParameter("stripe-api-key");
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
         var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
 
-        builder.AddStripe("stripe")
+        builder.AddStripe("stripe", apiKey)
             .WithListen(externalEndpoint)
             .WithApiKey(apiKey);
 
@@ -124,10 +134,11 @@ public class AddStripeTests
     public void StripeWithListenToEndpointReference()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
         var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
-        var stripe = builder.AddStripe("stripe")
+        var stripe = builder.AddStripe("stripe", apiKey)
             .WithListen(api);
 
         using var app = builder.Build();
@@ -145,24 +156,27 @@ public class AddStripeTests
     public void AddStripeNullBuilderThrows()
     {
         IDistributedApplicationBuilder builder = null!;
+        var apiKey = DistributedApplication.CreateBuilder().AddParameter("stripe-api-key", TestApiKeyValue);
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddStripe("stripe"));
+        Assert.Throws<ArgumentNullException>(() => builder.AddStripe("stripe", apiKey));
     }
 
     [Fact]
     public void AddStripeNullNameThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddStripe(null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddStripe(null!, apiKey));
     }
 
     [Fact]
     public void AddStripeEmptyNameThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
-        Assert.Throws<ArgumentException>(() => builder.AddStripe(""!));
+        Assert.Throws<ArgumentException>(() => builder.AddStripe(""!, apiKey));
     }
 
     [Fact]
@@ -177,7 +191,8 @@ public class AddStripeTests
     public void WithListenNullUrlThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var stripe = builder.AddStripe("stripe");
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
 
         Assert.Throws<ArgumentNullException>(() => stripe.WithListen((IResourceBuilder<ExternalServiceResource>)null!));
     }
@@ -186,7 +201,8 @@ public class AddStripeTests
     public void WithListenNullEndpointReferenceThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var stripe = builder.AddStripe("stripe");
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
 
         Assert.Throws<ArgumentNullException>(() => stripe.WithListen((IResourceBuilder<IResourceWithEndpoints>)null!));
     }
@@ -206,7 +222,8 @@ public class AddStripeTests
     public void WithApiKeyNullKeyThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var stripe = builder.AddStripe("stripe");
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
 
         var ex = Record.Exception(() => stripe.WithApiKey(null!));
 
@@ -218,10 +235,11 @@ public class AddStripeTests
     public void WithReferenceAddsWebhookSecretEnvironmentVariable()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
         var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
-        var stripe = builder.AddStripe("stripe")
+        var stripe = builder.AddStripe("stripe", apiKey)
             .WithListen(api);
 
         api.WithReference(stripe);
@@ -241,9 +259,10 @@ public class AddStripeTests
     public void WithReferenceCustomEnvironmentVariableName()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
 
         var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
-        var stripe = builder.AddStripe("stripe")
+        var stripe = builder.AddStripe("stripe", apiKey)
             .WithListen(api);
 
         api.WithReference(stripe, webhookSigningSecretEnvVarName: "CUSTOM_STRIPE_SECRET");
@@ -263,7 +282,8 @@ public class AddStripeTests
     public void WithReferenceNullBuilderThrows()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var stripe = builder.AddStripe("stripe");
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
 
         IResourceBuilder<ProjectResource> apiBuilder = null!;
 
@@ -284,7 +304,8 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var stripe = builder.AddStripe("stripe");
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
         var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
         Assert.Throws<ArgumentNullException>(() => api.WithReference(stripe, webhookSigningSecretEnvVarName: null!));
@@ -295,7 +316,8 @@ public class AddStripeTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var stripe = builder.AddStripe("stripe");
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
         var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
         Assert.Throws<ArgumentException>(() => api.WithReference(stripe, webhookSigningSecretEnvVarName: ""));

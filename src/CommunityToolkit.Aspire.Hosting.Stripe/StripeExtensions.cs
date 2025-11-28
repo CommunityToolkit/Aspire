@@ -1,4 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.Stripe;
+using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
@@ -14,17 +16,27 @@ public static class StripeExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
+    /// <param name="apiKey">The parameter builder providing the Stripe API key.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<StripeResource> AddStripe(
         this IDistributedApplicationBuilder builder,
-        [ResourceName] string name)
+        [ResourceName] string name,
+        IResourceBuilder<ParameterResource> apiKey)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+        ArgumentNullException.ThrowIfNull(apiKey, nameof(apiKey));
 
-        var resource = new StripeResource(name);
+        StripeResource resource = new(name);
 
         return builder.AddResource(resource)
+            .WithImage(StripeContainerImageTags.Image)
+            .WithImageTag(StripeContainerImageTags.Tag)
+            .WithImageRegistry(StripeContainerImageTags.Registry)
+            .WithEnvironment(context =>
+            {
+                context.EnvironmentVariables.Add("STRIPE_API_KEY", ReferenceExpression.Create($"{apiKey}"));
+            })
             .ExcludeFromManifest();
     }
 
@@ -166,62 +178,85 @@ public static class StripeExtensions
 
     private static IResourceBuilder<StripeResource> ResolveSecret(this IResourceBuilder<StripeResource> builder)
     {
-        builder.OnBeforeResourceStarted(async (resource, @event, ct) =>
+        builder.OnBeforeResourceStarted((resource, @event, ct) =>
         {
-            var stdOut = new StringWriter();
-            var stdErr = new StringWriter();
-
-            using var process = new Process
+            return Task.Run(async () =>
             {
-                StartInfo = new ProcessStartInfo
+                var notificationService = @event.Services.GetRequiredService<ResourceNotificationService>();
+                var loggerService = @event.Services.GetRequiredService<ResourceLoggerService>();
+
+                await foreach (var resourceEvent in notificationService.WatchAsync(ct).ConfigureAwait(false))
                 {
-                    FileName = resource.Command,
-                    Arguments = "listen --print-secret",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
+                    if (!string.Equals(resource.Name, resourceEvent.Resource.Name, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
 
-            process.OutputDataReceived += (sender, e) =>
+                    _ = WatchResourceLogsAsync(resourceEvent.ResourceId, loggerService, ct);
+                    break;
+                }
+            }, ct);
+
+            async Task WatchResourceLogsAsync(string resourceId, ResourceLoggerService loggerService, CancellationToken cancellationToken)
             {
-                if (e.Data is not null)
+                try
                 {
-                    stdOut.WriteLine(e.Data);
+                    await foreach (var logEvent in loggerService.WatchAsync(resourceId).WithCancellation(cancellationToken).ConfigureAwait(false))
+                    {
+                        foreach (var line in logEvent)
+                        {
+                            if (TryExtractSigningSecret(line.Content, out var signingSecret))
+                            {
+                                resource.WebhookSigningSecret = signingSecret;
+                                return;
+                            }
+                        }
+                    }
                 }
-            };
-
-            process.ErrorDataReceived += (sender, e) =>
-            {
-                if (e.Data is not null)
+                catch (TaskCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    stdErr.WriteLine(e.Data);
+                    // Expected when the resource is shutting down.
                 }
-            };
-
-            if (!process.Start())
-            {
-                throw new InvalidOperationException("Failed to start Stripe CLI process to retrieve webhook signing secret.");
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Expected when the resource is shutting down.
+                }
             }
 
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            await process.WaitForExitAsync(ct).ConfigureAwait(false);
-
-            if (process.ExitCode != 0)
+            static bool TryExtractSigningSecret(string? content, out string? secret)
             {
-                throw new InvalidOperationException($"Stripe CLI process exited with code {process.ExitCode}. Error output: {stdErr}");
-            }
+                secret = null;
 
-            var secret = stdOut.ToString().Trim();
-            if (string.IsNullOrEmpty(secret))
-            {
-                throw new InvalidOperationException("Failed to retrieve webhook signing secret from Stripe CLI output.");
-            }
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return false;
+                }
 
-            resource.WebhookSigningSecret = secret;
+                const string Prefix = "whsec_";
+                var startIndex = content.IndexOf(Prefix, StringComparison.OrdinalIgnoreCase);
+                if (startIndex < 0)
+                {
+                    return false;
+                }
+
+                var endIndex = startIndex + Prefix.Length;
+                while (endIndex < content.Length && IsSecretCharacter(content[endIndex]))
+                {
+                    endIndex++;
+                }
+
+                var candidate = content.Substring(startIndex, endIndex - startIndex).TrimEnd('.', ';', ',', ')', '"');
+
+                if (candidate.Length <= Prefix.Length)
+                {
+                    return false;
+                }
+
+                secret = candidate;
+                return true;
+
+                static bool IsSecretCharacter(char value) => char.IsLetterOrDigit(value) || value is '_' or '-';
+            }
         });
 
         return builder;
