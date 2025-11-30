@@ -4,6 +4,7 @@ var server = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInsp
 
 builder.AddMcpInspector("mcp-inspector")
     .WithMcpServer(server)
+    .WithPnpm()
     ;
 
 builder.Build().Run();

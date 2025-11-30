@@ -54,8 +54,12 @@ public static class McpInspectorResourceBuilderExtensions
 
         var packageName = $"@modelcontextprotocol/inspector@{options.InspectorVersion}";
 
-        var resource = builder.AddResource(new McpInspectorResource(name, packageName))
+        var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName));
+
+        resourceBuilder
             .ExcludeFromManifest()
+            .WithInspectorArgs()
+            .WithDefaultArgs()
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
@@ -115,8 +119,6 @@ public static class McpInspectorResourceBuilderExtensions
                 ctx.EnvironmentVariables["SERVER_PORT"] = serverProxyEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'server-proxy' endpoint must have a target port defined.");
                 ctx.EnvironmentVariables["MCP_PROXY_AUTH_TOKEN"] = proxyTokenParameter;
             })
-            .WithInspectorArgs()
-            .WithDefaultArgs()
             .WithUrls(async context =>
             {
                 var token = await proxyTokenParameter.GetValueAsync(CancellationToken.None);
@@ -134,13 +136,13 @@ public static class McpInspectorResourceBuilderExtensions
                 }
             });
 
-        resource.Resource.ProxyTokenParameter = proxyTokenParameter;
+        resourceBuilder.Resource.ProxyTokenParameter = proxyTokenParameter;
 
         // Add authenticated health check for server proxy /config endpoint
         var healthCheckKey = $"{name}_proxy_config_check";
         builder.Services.AddHealthChecks().AddUrlGroup(options =>
         {
-            var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
+            var serverProxyEndpoint = resourceBuilder.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
             var uri = serverProxyEndpoint.Url ?? throw new DistributedApplicationException("The MCP Inspector 'server-proxy' endpoint URL is not set. Ensure that the resource has been allocated before the health check is executed.");
             var healthCheckUri = new Uri(new Uri(uri), "/config");
             options.AddUri(healthCheckUri, async setup =>
@@ -151,7 +153,7 @@ public static class McpInspectorResourceBuilderExtensions
         }, healthCheckKey);
         builder.Services.SuppressHealthCheckHttpClientLogging(healthCheckKey);
 
-        return resource.WithHealthCheck(healthCheckKey);
+        return resourceBuilder.WithHealthCheck(healthCheckKey);
     }
 
     /// <summary>
@@ -280,28 +282,18 @@ public static class McpInspectorResourceBuilderExtensions
             var resource = builder.Resource;
             var packageName = resource.PackageName;
 
-            // Determine the arguments based on the package manager annotation
-            if (resource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var packageManagerAnnotation))
+            // Add the appropriate arguments based on the package manager
+            switch (resource.Command)
             {
-                // Add the appropriate arguments based on the package manager
-                switch (packageManagerAnnotation.ExecutableName)
-                {
-                    case "yarn":
-                    case "pnpm":
-                        ctx.Args.Insert(0, packageName);
-                        ctx.Args.Insert(0, "dlx");
-                        break;
-                    default: // npm/npx
-                        ctx.Args.Insert(0, packageName);
-                        ctx.Args.Insert(0, "-y");
-                        break;
-                }
-            }
-            else
-            {
-                // Default to npx args if no package manager annotation is found
-                ctx.Args.Insert(0, packageName);
-                ctx.Args.Insert(0, "-y");
+                case "yarn":
+                case "pnpm":
+                    ctx.Args.Insert(0, packageName);
+                    ctx.Args.Insert(0, "dlx");
+                    break;
+                default: // npm/npx
+                    ctx.Args.Insert(0, packageName);
+                    ctx.Args.Insert(0, "-y");
+                    break;
             }
         });
     }
@@ -310,41 +302,23 @@ public static class McpInspectorResourceBuilderExtensions
     /// Configures the MCP Inspector to use yarn as the package manager.
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
-    /// <param name="installArgs">The command-line arguments passed to "yarn install".</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<McpInspectorResource> WithYarn(this IResourceBuilder<McpInspectorResource> builder, params string[] installArgs)
+    public static IResourceBuilder<McpInspectorResource> WithYarn(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var packageName = builder.Resource.PackageName;
-        var finalInstallArgs = installArgs.Length > 0 ? installArgs : [packageName];
-
-        // Call the SDK's generic WithYarn method to set up the package manager
-        var result = JavaScriptHostingExtensions.WithYarn(builder, install: true, installArgs: finalInstallArgs);
-
-        // Add the executable annotation with Replace behavior to override any previous command
-        var executableAnnotation = new ExecutableAnnotation { Command = "yarn", WorkingDirectory = builder.Resource.WorkingDirectory };
-        return result.WithAnnotation(executableAnnotation, ResourceAnnotationMutationBehavior.Replace);
+        return builder.WithCommand("yarn");
     }
 
     /// <summary>
     /// Configures the MCP Inspector to use pnpm as the package manager.
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
-    /// <param name="installArgs">The command-line arguments passed to "pnpm install".</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<McpInspectorResource> WithPnpm(this IResourceBuilder<McpInspectorResource> builder, params string[] installArgs)
+    public static IResourceBuilder<McpInspectorResource> WithPnpm(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var packageName = builder.Resource.PackageName;
-        var finalInstallArgs = installArgs.Length > 0 ? installArgs : [packageName];
-
-        // Call the SDK's generic WithPnpm method to set up the package manager
-        var result = JavaScriptHostingExtensions.WithPnpm(builder, install: true, installArgs: finalInstallArgs);
-
-        // Add the executable annotation with Replace behavior to override any previous command
-        var executableAnnotation = new ExecutableAnnotation { Command = "pnpm", WorkingDirectory = builder.Resource.WorkingDirectory };
-        return result.WithAnnotation(executableAnnotation, ResourceAnnotationMutationBehavior.Replace);
+        return builder.WithCommand("pnpm");
     }
 }
