@@ -185,6 +185,9 @@
   <Folder Name="/examples/umami/">
     <Project Path="examples\umami\CommunityToolkit.Aspire.Hosting.Umami.AppHost\CommunityToolkit.Aspire.Hosting.Umami.AppHost.csproj" Type="Classic C#" />
   </Folder>
+  <Folder Name="/examples/zitadel/">
+    <Project Path="examples\zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
@@ -227,6 +230,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.KurrentDB/CommunityToolkit.Aspire.KurrentDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Meilisearch/CommunityToolkit.Aspire.Meilisearch.csproj" />

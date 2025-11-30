@@ -1,0 +1,12 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <UserSecretsId>981579ce-9426-4ad6-b6f1-192f3f4cf73b</UserSecretsId>
+    </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.csproj"  IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>
