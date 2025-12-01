@@ -48,6 +48,32 @@ public static class McpInspectorResourceBuilderExtensions
             .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
             .WithCommand("npx")
             .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
+            .WithCertificateTrustConfiguration(ctx =>
+            {
+                if (ctx.Scope == CertificateTrustScope.Append)
+                {
+                    ctx.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = ctx.CertificateBundlePath;
+                }
+                else
+                {
+                    if (ctx.EnvironmentVariables.TryGetValue("NODE_OPTIONS", out var existingOptionsObj))
+                    {
+                        ctx.EnvironmentVariables["NODE_OPTIONS"] = existingOptionsObj switch
+                        {
+                            // Attempt to append to existing NODE_OPTIONS if possible, otherwise overwrite
+                            string s when !string.IsNullOrEmpty(s) => $"{s} --use-openssl-ca",
+                            ReferenceExpression re => ReferenceExpression.Create($"{re} --use-openssl-ca"),
+                            _ => "--use-openssl-ca",
+                        };
+                    }
+                    else
+                    {
+                        ctx.EnvironmentVariables["NODE_OPTIONS"] = "--use-openssl-ca";
+                    }
+                }
+
+                return Task.CompletedTask;
+            })
             .ExcludeFromManifest()
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
