@@ -11,16 +11,18 @@ public static class ZitadelHostingExtensions
     /// <summary>
     /// Adds a Zitadel container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <param name="port"></param>
-    /// <param name="password"></param>
-    /// <param name="masterKey"></param>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder" /> to add the Zitadel container to.</param>
+    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
+    /// <param name="port">The host port used when launching the container. If <c>null</c> a random port will be assigned</param>
+    /// <param name="username">An optional parameter to set a username for the admin account, if <c>null</c> will auto generate one.</param>
+    /// <param name="password">An optional parameter to set a password for the admin account, if <c>null</c> will auto generate one.</param>
+    /// <param name="masterKey">An optional parameter to set the masterkey, if <c>null</c> will auto generate one.</param>
     /// <returns></returns>
     public static IResourceBuilder<ZitadelResource> AddZitadel(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? port = null,
+        IResourceBuilder<ParameterResource>? username = null,
         IResourceBuilder<ParameterResource>? password = null,
         IResourceBuilder<ParameterResource>? masterKey = null
     )
@@ -28,6 +30,7 @@ public static class ZitadelHostingExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
+        var usernameParameter = username?.Resource ?? new ParameterResource($"{name}-username", _ => "admin", false);
         var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", minSpecial: 1);
         var masterKeyParameter = masterKey?.Resource ?? ParameterResourceBuilderExtensions.CreateGeneratedParameter(builder, $"{name}-masterKey", true, new GenerateParameterDefault
         {
@@ -44,6 +47,7 @@ public static class ZitadelHostingExtensions
 
         var resource = new ZitadelResource(name)
         {
+            AdminUsernameParameter = usernameParameter,
             AdminPasswordParameter = passwordParameter
         };
 
@@ -74,7 +78,7 @@ public static class ZitadelHostingExtensions
             // Disable Login V2 for simpler setup (no separate login container needed)
             .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED", "false")
             // Configure admin user
-            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME", "admin")
+            .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME", usernameParameter)
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD", passwordParameter)
             .WithEnvironment("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED", "false");
     }

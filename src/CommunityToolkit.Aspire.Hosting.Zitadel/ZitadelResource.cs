@@ -12,10 +12,10 @@ public sealed class ZitadelResource(string name) : ContainerResource(name)
     /// <summary>
     /// The parameter that contains the (default) Zitadel admin username.
     /// </summary>
-    public ParameterResource? AdminUsernameParameter { get; }
+    public required ParameterResource AdminUsernameParameter { get; set; }
 
     /// <summary>
     /// The parameter that contains the (default) Zitadel admin password.
     /// </summary>
-    public ParameterResource AdminPasswordParameter { get; set; } = null!; // TODO fix null
+    public required ParameterResource AdminPasswordParameter { get; set; }
 }
