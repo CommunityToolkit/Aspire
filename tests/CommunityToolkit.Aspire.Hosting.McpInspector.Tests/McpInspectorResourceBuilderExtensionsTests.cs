@@ -513,7 +513,7 @@ public class McpInspectorResourceBuilderExtensionsTests
     }
 
     [Fact]
-    public void WithYarnSetsPackageManagerAnnotation()
+    public void WithYarnSetsCommand()
     {
         // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
@@ -528,14 +528,11 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
 
-        // Verify the JavaScriptPackageManagerAnnotation is set with yarn
-        Assert.True(inspectorResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pmAnnotation), 
-            "JavaScriptPackageManagerAnnotation should be present after calling WithYarn()");
-        Assert.Equal("yarn", pmAnnotation.ExecutableName);
+        Assert.Equal("yarn", inspectorResource.Command);
     }
 
     [Fact]
-    public void WithPnpmSetsPackageManagerAnnotation()
+    public void WithPnpmSetsCommand()
     {
         // Arrange
         var appBuilder = DistributedApplication.CreateBuilder();
@@ -550,10 +547,7 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
 
-        // Verify the JavaScriptPackageManagerAnnotation is set with pnpm
-        Assert.True(inspectorResource.TryGetLastAnnotation<JavaScriptPackageManagerAnnotation>(out var pmAnnotation), 
-            "JavaScriptPackageManagerAnnotation should be present after calling WithPnpm()");
-        Assert.Equal("pnpm", pmAnnotation.ExecutableName);
+        Assert.Equal("pnpm", inspectorResource.Command);
     }
 
     [Fact]
