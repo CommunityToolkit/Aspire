@@ -11,7 +11,7 @@ public class ResourceCreationTests
 
         var postgres = builder.AddPostgres("postgres");
 
-        builder.AddLogtoContainer("logto", postgres, "logtoDb");
+        builder.AddLogtoContainer("logto", postgres);
 
         using var app = builder.Build();
 
@@ -29,7 +29,7 @@ public class ResourceCreationTests
 
         var postgres = builder.AddPostgres("postgres");
 
-        builder.AddLogtoContainer("logto", postgres, "logtoDb");
+        builder.AddLogtoContainer("logto", postgres);
 
         using var app = builder.Build();
 
