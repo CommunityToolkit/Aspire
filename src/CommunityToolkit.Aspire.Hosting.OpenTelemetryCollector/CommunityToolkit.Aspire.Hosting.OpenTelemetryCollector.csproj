@@ -9,8 +9,4 @@
     <PackageReference Include="Aspire.Hosting" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="$(SharedDir)\DevCertHostingExtensions.cs" Link="Utils\DevCertHostingExtensions.cs" />
-  </ItemGroup>
-
 </Project>

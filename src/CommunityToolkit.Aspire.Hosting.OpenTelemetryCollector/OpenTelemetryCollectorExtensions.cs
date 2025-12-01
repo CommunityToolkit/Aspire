@@ -34,7 +34,7 @@ public static class OpenTelemetryCollectorExtensions
         var settings = new OpenTelemetryCollectorSettings();
         configureSettings?.Invoke(settings);
 
-        var isHttpsEnabled = !settings.ForceNonSecureReceiver && url.StartsWith("https", StringComparison.OrdinalIgnoreCase);
+        var isHttpsEnabled = !settings.ForceNonSecureReceiver;
 
         var resource = new OpenTelemetryCollectorResource(name);
         var resourceBuilder = builder.AddResource(resource)
@@ -44,30 +44,25 @@ public static class OpenTelemetryCollectorExtensions
             .WithIconName("DesktopPulse");
 
         if (settings.EnableGrpcEndpoint)
-            resourceBuilder.WithEndpoint(targetPort: 4317, name: OpenTelemetryCollectorResource.GrpcEndpointName, scheme: isHttpsEnabled ? "https" : "http");
+            ConfigureEndpoint(4317, OpenTelemetryCollectorResource.GrpcEndpointName);
+
         if (settings.EnableHttpEndpoint)
-            resourceBuilder.WithEndpoint(targetPort: 4318, name: OpenTelemetryCollectorResource.HttpEndpointName, scheme: isHttpsEnabled ? "https" : "http");
+            ConfigureEndpoint(4318, OpenTelemetryCollectorResource.HttpEndpointName);
 
-
-        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode)
+        void ConfigureEndpoint(int port, string name)
         {
-            resourceBuilder.RunWithHttpsDevCertificate();
+            resourceBuilder.WithEndpoint(targetPort: port, name: name, scheme: isHttpsEnabled ? "https" : "http");
 
-            // Not using `Path.Combine` as we MUST use unix style paths in the container
-            var certFilePath = $"{DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/{DevCertHostingExtensions.CERT_FILE_NAME}";
-            var certKeyPath = $"{DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/{DevCertHostingExtensions.CERT_KEY_FILE_NAME}";
-
-            if (settings.EnableHttpEndpoint)
+            if (isHttpsEnabled)
             {
-                resourceBuilder.WithArgs(
-                    $@"--config=yaml:receivers::otlp::protocols::http::tls::cert_file: ""{certFilePath}""",
-                    $@"--config=yaml:receivers::otlp::protocols::http::tls::key_file: ""{certKeyPath}""");
-            }
-            if (settings.EnableGrpcEndpoint)
-            {
-                resourceBuilder.WithArgs(
-                    $@"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: ""{certFilePath}""",
-                    $@"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""{certKeyPath}""");
+#pragma warning disable ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                resourceBuilder.WithServerAuthenticationCertificateConfiguration(ctx =>
+                {
+                    ctx.Arguments.Add(ReferenceExpression.Create($@"--config=yaml:receivers::otlp::protocols::{name}::tls::cert_file: ""{ctx.CertificatePath}"""));
+                    ctx.Arguments.Add(ReferenceExpression.Create($@"--config=yaml:receivers::otlp::protocols::{name}::tls::key_file: ""{ctx.KeyPath}"""));
+                    return Task.CompletedTask;
+                });
+#pragma warning restore ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             }
         }
 
