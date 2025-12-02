@@ -17,7 +17,6 @@ public static class ZitadelHostingExtensions
     /// <param name="username">An optional parameter to set a username for the admin account, if <c>null</c> will auto generate one.</param>
     /// <param name="password">An optional parameter to set a password for the admin account, if <c>null</c> will auto generate one.</param>
     /// <param name="masterKey">An optional parameter to set the masterkey, if <c>null</c> will auto generate one.</param>
-    /// <returns></returns>
     public static IResourceBuilder<ZitadelResource> AddZitadel(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,

@@ -20,7 +20,7 @@ Then, in the _Program.cs_ file of `AppHost`, define a Zitadel resource, then cal
 builder.AddZitadel("zitadel");
 ```
 
-Zitadel requires a Postgres database, you can add one with `AddDatabase`:
+Zitadel *requires* a Postgres database, you can add one with `AddDatabase`:
 ```csharp
 var database = builder.AddPostgres("postgres");
 
