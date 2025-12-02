@@ -71,6 +71,7 @@
   </Folder>
   <Folder Name="/examples/logto/">
     <Project Path="examples/logto/CommunityToolkit.Aspire.Hosting.Logto.AppHost/CommunityToolkit.Aspire.Hosting.Logto.AppHost.csproj" />
+    <Project Path="examples/logto/CommunityToolkit.Aspire.Hosting.Logto.ClientApi/CommunityToolkit.Aspire.Hosting.Logto.ClientApi.csproj" />
     <Project Path="examples/logto/CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/mailpit/">

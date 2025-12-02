@@ -32,7 +32,7 @@ public static class LogtoClientBuilder
     /// <exception cref="InvalidOperationException">
     /// Thrown if the configuration lacks a valid Logto Endpoint or AppId.
     /// </exception>
-    public static void AddLogtoClient(this IHostApplicationBuilder builder,
+    public static void AddLogtoSDKClient(this IHostApplicationBuilder builder,
         string? connectionName = null,
         string? configurationSectionName = DefaultConfigSectionName,
         Action<LogtoOptions>? configureSettings = null)
