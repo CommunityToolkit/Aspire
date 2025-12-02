@@ -127,4 +127,76 @@ public class ZitadelHostingExtensionsTests
 
         Assert.Equal(8888, endpoint.Port);
     }
+
+    [Fact]
+    public async Task AddZitadel_Uses_Custom_ExternalDomain()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var zitadel = builder.AddZitadel("zitadel", externalDomain: "auth.example.com");
+
+        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+
+        Assert.Equal("auth.example.com", env["ZITADEL_EXTERNALDOMAIN"]);
+    }
+
+    [Fact]
+    public async Task WithExternalDomain_Overrides_Default()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var zitadel = builder.AddZitadel("zitadel")
+            .WithExternalDomain("custom.domain.com");
+
+        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+
+        Assert.Equal("custom.domain.com", env["ZITADEL_EXTERNALDOMAIN"]);
+    }
+
+    [Fact]
+    public async Task WithExternalDomain_Can_Override_Parameter()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var zitadel = builder.AddZitadel("zitadel", externalDomain: "first.example.com")
+            .WithExternalDomain("second.example.com");
+
+        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+
+        // WithExternalDomain should override the parameter
+        Assert.Equal("second.example.com", env["ZITADEL_EXTERNALDOMAIN"]);
+    }
+
+    [Fact]
+    public void WithExternalDomain_Throws_If_Null()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var zitadel = builder.AddZitadel("zitadel");
+
+        var act = () => zitadel.WithExternalDomain(null!);
+
+        Assert.Throws<ArgumentNullException>(act);
+    }
+
+    [Fact]
+    public void WithExternalDomain_Throws_If_Empty()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var zitadel = builder.AddZitadel("zitadel");
+
+        var act = () => zitadel.WithExternalDomain("");
+
+        Assert.Throws<ArgumentException>(act);
+    }
+
+    [Fact]
+    public void WithExternalDomain_Throws_If_Whitespace()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var zitadel = builder.AddZitadel("zitadel");
+
+        var act = () => zitadel.WithExternalDomain("   ");
+
+        Assert.Throws<ArgumentException>(act);
+    }
 }
