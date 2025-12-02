@@ -51,7 +51,7 @@ public static class ZitadelHostingExtensions
             AdminPasswordParameter = passwordParameter
         };
 
-        return builder.AddResource(resource)
+        var zitadelBuilder = builder.AddResource(resource)
             .WithImage(ZitadelContainerImageTags.Image)
             .WithImageTag(ZitadelContainerImageTags.Tag)
             .WithImageRegistry(ZitadelContainerImageTags.Registry)
@@ -66,15 +66,14 @@ public static class ZitadelHostingExtensions
             .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
             .WithEnvironment("ZITADEL_EXTERNALDOMAIN", $"{name}.dev.localhost")
-            .WithUrlForEndpoint(ZitadelResource.HttpEndpointName, e => e.DisplayText = "Zitadel Dashboard")
-            .WithEnvironment(static ctx =>
-            {
-                if (ctx.Resource is ZitadelResource resource)
-                {
-                    ctx.EnvironmentVariables["ZITADEL_EXTERNALPORT"] =
-                        resource.GetEndpoint(ZitadelResource.HttpEndpointName).Port;
-                }
-            })
+            .WithUrlForEndpoint(ZitadelResource.HttpEndpointName, e => e.DisplayText = "Zitadel Dashboard");
+
+        // Use ReferenceExpression for the port to avoid issues with endpoint allocation
+        var endpoint = resource.GetEndpoint(ZitadelResource.HttpEndpointName);
+        var portExpression = ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.Port)}");
+
+        return zitadelBuilder
+            .WithEnvironment("ZITADEL_EXTERNALPORT", portExpression)
             // Disable Login V2 for simpler setup (no separate login container needed)
             .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED", "false")
             // Configure admin user
@@ -108,6 +107,8 @@ public static class ZitadelHostingExtensions
     /// <param name="database">The Postgres database resource to use for the database.</param>
     public static IResourceBuilder<ZitadelResource> WithDatabase(this IResourceBuilder<ZitadelResource> builder, IResourceBuilder<PostgresDatabaseResource> database)
     {
+        ArgumentNullException.ThrowIfNull(database);
+
         builder
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_USERNAME", database.Resource.Parent.UserNameReference)
             .WithEnvironment("ZITADEL_DATABASE_POSTGRES_USER_PASSWORD", database.Resource.Parent.PasswordParameter)
