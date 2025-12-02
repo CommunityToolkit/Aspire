@@ -291,6 +291,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj" />

@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL"/>
+    <ProjectReference Include="..\..\examples\zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost.csproj"/>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.csproj"/>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj"/>
+  </ItemGroup>
+
+</Project>
