@@ -1,5 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.JavaScript;
 using CommunityToolkit.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -54,9 +53,36 @@ public static class McpInspectorResourceBuilderExtensions
 
         var packageName = $"@modelcontextprotocol/inspector@{options.InspectorVersion}";
 
-        var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName));
+        var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName))
+            .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
+            .WithCommand("npx")
+            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
+            .WithCertificateTrustConfiguration(ctx =>
+            {
+                if (ctx.Scope == CertificateTrustScope.Append)
+                {
+                    ctx.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = ctx.CertificateBundlePath;
+                }
+                else
+                {
+                    if (ctx.EnvironmentVariables.TryGetValue("NODE_OPTIONS", out var existingOptionsObj))
+                    {
+                        ctx.EnvironmentVariables["NODE_OPTIONS"] = existingOptionsObj switch
+                        {
+                            // Attempt to append to existing NODE_OPTIONS if possible, otherwise overwrite
+                            string s when !string.IsNullOrEmpty(s) => $"{s} --use-openssl-ca",
+                            ReferenceExpression re => ReferenceExpression.Create($"{re} --use-openssl-ca"),
+                            _ => "--use-openssl-ca",
+                        };
+                    }
+                    else
+                    {
+                        ctx.EnvironmentVariables["NODE_OPTIONS"] = "--use-openssl-ca";
+                    }
+                }
 
-        resourceBuilder
+                return Task.CompletedTask;
+            })
             .ExcludeFromManifest()
             .WithInspectorArgs()
             .WithDefaultArgs()
