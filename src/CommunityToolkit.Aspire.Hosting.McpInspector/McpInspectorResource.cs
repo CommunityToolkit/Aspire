@@ -65,9 +65,17 @@ public class McpInspectorResource(string name) : JavaScriptAppResource(name, "np
             throw new InvalidOperationException($"The MCP server {mcpServer.Name} is already added to the MCP Inspector resource.");
         }
 
+        if (!mcpServer.TryGetEndpoints(out var endpoints) || !endpoints.Any())
+        {
+            throw new InvalidOperationException($"The MCP server {mcpServer.Name} must have at least one endpoint defined.");
+        }
+
         McpServerMetadata item = new(
             mcpServer.Name,
-            mcpServer.GetEndpoint("https") ?? mcpServer.GetEndpoint("http") ?? throw new InvalidOperationException($"The MCP server {mcpServer.Name} must have an 'https' or 'http' endpoint defined."),
+            mcpServer.GetEndpoint(
+                endpoints.FirstOrDefault(e => e.Name == "https")?.Name
+                ?? endpoints.FirstOrDefault(e => e.Name == "http")?.Name
+                ?? endpoints.First().Name),
             transportType,
             path);
 

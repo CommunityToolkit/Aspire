@@ -415,8 +415,7 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource with https endpoint (uses name "https")
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer")
-            .WithHttpsEndpoint(name: "https");
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -448,8 +447,7 @@ public class McpInspectorResourceBuilderExtensionsTests
 
         // Create a mock MCP server resource with both https and http endpoints
         // AddProject creates "http" by default, we add "https" with explicit name
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer")
-            .WithHttpsEndpoint(name: "https");
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
