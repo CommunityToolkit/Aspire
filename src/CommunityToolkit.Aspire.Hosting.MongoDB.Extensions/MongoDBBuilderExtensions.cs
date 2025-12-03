@@ -42,14 +42,14 @@ public static class MongoDBBuilderExtensions
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
+            .WithEnvironment(async context => await ConfigureDbGateContainer(context, builder.ApplicationBuilder));
 
         configureContainer?.Invoke(dbGateBuilder);
 
         return builder;
     }
 
-    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static async Task ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
     {
         var mongoDBInstances = applicationBuilder.Resources.OfType<MongoDBServerResource>();
 
@@ -66,7 +66,9 @@ public static class MongoDBBuilderExtensions
             // DbGate assumes MongoDB is being accessed over a default Aspire container network and hardcodes the resource address
             // This will need to be refactored once updated service discovery APIs are available
             context.EnvironmentVariables.Add($"LABEL_mongodb{counter}", mongoDBServer.Name);
-            context.EnvironmentVariables.Add($"URL_mongodb{counter}", mongoDBServer.ConnectionStringExpression);
+
+            // Forcing evaluation of the connection string here to avoid issues with late binding in DbGate
+            context.EnvironmentVariables.Add($"URL_mongodb{counter}", await mongoDBServer.ConnectionStringExpression.GetValueAsync(context.CancellationToken) ?? throw new InvalidOperationException($"Unable to resolve connection string for {mongoDBServer.Name}."));
             context.EnvironmentVariables.Add($"ENGINE_mongodb{counter}", "mongo@dbgate-plugin-mongo");
 
             counter++;
