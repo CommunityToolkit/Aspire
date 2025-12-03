@@ -93,6 +93,8 @@
     <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.1" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
+    <PackageVersion Include="Google.Cloud.Storage.V1" Version="4.13.0" />
+    <PackageVersion Include="Google.Cloud.PubSub.V1" Version="3.27.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
