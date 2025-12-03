@@ -629,4 +629,30 @@ public class McpInspectorResourceBuilderExtensionsTests
         Assert.Equal("-y", argsList[0]);
         Assert.Equal("@modelcontextprotocol/inspector@0.15.0", argsList[1]);
     }
+
+    [Fact]
+    public async Task AddMcpInspectorWithOptionsRespectsInspectorVersion()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var options = new McpInspectorOptions
+        {
+            InspectorVersion = "1.2.3"
+        };
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", options);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        var args = await inspectorResource.GetArgumentValuesAsync();
+        var argsList = args.ToList();
+
+        Assert.Equal("@modelcontextprotocol/inspector@1.2.3", argsList[1]);
+    }
 }
