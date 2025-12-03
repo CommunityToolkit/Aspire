@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Logto.Client\CommunityToolkit.Aspire.Hosting.Logto.Client.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication" />

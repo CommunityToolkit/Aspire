@@ -3,7 +3,9 @@
 namespace CommunityToolkit.Aspire.Hosting.Logto.Client;
 
 /// <summary>
-/// 
+/// Provides utility methods for extracting and validating endpoint information
+/// from connection strings in various formats. This helper is specifically designed
+/// to assist with parsing connection strings for use with the Logto client configuration.
 /// </summary>
 public class LogtoConnectionStringHelper
 {
