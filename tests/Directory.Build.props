@@ -38,10 +38,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --filter-not-trait &quot;category=failing&quot;</TestRunnerAdditionalArguments>
     <!-- ignore exit code 8 (zero tests ran)
          https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-exit-codes -->
-    <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --ignore-exit-code 8</TestRunnerAdditionalArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8 --filter-not-trait &quot;category=failing&quot;</TestingPlatformCommandLineArguments>
 
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
