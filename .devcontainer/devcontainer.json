@@ -15,7 +15,9 @@
       "version": "21"
     },
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/node:latest": {},
+    "ghcr.io/devcontainers/features/node:latest": {
+      "installYarnUsingApt": false,
+    },
     "ghcr.io/devcontainers-community/features/deno": {},
     "ghcr.io/devcontainers/features/go:latest": {},
     "ghcr.io/devcontainers/features/rust:latest": {},
