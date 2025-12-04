@@ -26,8 +26,7 @@ public class AddRustAppTests
         Assert.Equal("cargo", resource.Command);
         var args = await resource.GetArgumentValuesAsync();
         Assert.Collection(args,
-            arg => Assert.Equal("run", arg),
-            arg => Assert.Equal(".", arg));
+            arg => Assert.Equal("run", arg));
     }
 
     [Fact]
@@ -50,7 +49,6 @@ public class AddRustAppTests
         var args = await resource.GetArgumentValuesAsync();
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
-            arg => Assert.Equal(".", arg),
             arg => Assert.Equal("--verbose", arg));
     }
 }
