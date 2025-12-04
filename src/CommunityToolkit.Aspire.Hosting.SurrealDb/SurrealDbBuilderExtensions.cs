@@ -533,6 +533,9 @@ public static class SurrealDbBuilderExtensions
 
         foreach (var surrealInstance in surrealDbServerInstances)
         {
+            var username = await surrealInstance.UserNameReference.GetValueAsync(cancellationToken);
+            var password = await surrealInstance.PasswordParameter.GetValueAsync(cancellationToken);
+                
             if (surrealInstance.PrimaryEndpoint.IsAllocated)
             {
                 SurrealDbNamespaceResource? uniqueNamespace = null;
@@ -577,6 +580,8 @@ public static class SurrealDbBuilderExtensions
                 // How to do host resolution?
                 writer.WriteString("hostname", $"{endpoint.Host}:{endpoint.Port}");
                 writer.WriteString("mode", "root");
+                writer.WriteString("username", username);
+                writer.WriteString("password", password);
                 if (uniqueNamespace is not null)
                 {
                     writer.WriteString("namespace", uniqueNamespace.NamespaceName);
