@@ -159,4 +159,20 @@ public class AddBunAppTests
         Assert.Equal("bun-bun-install", installerResource.Name);
         Assert.Equal("bun", installerResource.Command);
     }
+
+    [Fact]
+    public void BunAppResourceImplementsIResourceWithServiceDiscovery()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddBunApp("bun");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
+
+        Assert.IsAssignableFrom<IResourceWithServiceDiscovery>(resource);
+    }
 }
