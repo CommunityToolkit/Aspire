@@ -32,6 +32,7 @@ jobs:
             Hosting.Flagd.Tests,
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
+            Hosting.JavaScript.Extensions.Tests,
             Hosting.Java.Tests,
             Hosting.k6.Tests,
             Hosting.Keycloak.Extensions.Tests,
@@ -44,7 +45,6 @@ jobs:
             Hosting.MongoDB.Extensions.Tests,
             Hosting.MySql.Extensions.Tests,
             Hosting.Ngrok.Tests,
-            Hosting.JavaScript.Extensions.Tests,
             Hosting.Ollama.Tests,
             Hosting.OpenTelemetryCollector.Tests,
             Hosting.PapercutSmtp.Tests,
@@ -58,6 +58,7 @@ jobs:
             Hosting.SqlDatabaseProjects.Tests,
             Hosting.Sqlite.Tests,
             Hosting.SqlServer.Extensions.Tests,
+            Hosting.Stripe.Tests,
             Hosting.SurrealDb.Tests,
 
             # Client integration tests
