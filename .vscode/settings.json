@@ -9,5 +9,12 @@
   ],
   "[aspnetcorerazor]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp"
+  },
+  "[go]": {
+    "editor.defaultFormatter": "golang.Go"
+  },
+  "go.goroot": null,
+  "gopls": {
+    "ui.semanticTokens": true
   }
 }
