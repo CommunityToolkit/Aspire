@@ -234,4 +234,68 @@ public static class GolangAppHostingExtension
         logger.LogDebug("No Go version detected, will use default version");
         return null;
     }
+
+    /// <summary>
+    /// Ensures Go module dependencies are tidied before the application starts using <c>go mod tidy</c>.
+    /// </summary>
+    /// <param name="builder">The Golang app resource builder.</param>
+    /// <param name="configureInstaller">Optional action to configure the installer resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<GolangAppExecutableResource> WithGoModTidy(
+        this IResourceBuilder<GolangAppExecutableResource> builder,
+        Action<IResourceBuilder<GoModInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        // Only install packages during development, not in publish mode
+        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{builder.Resource.Name}-go-mod-tidy";
+            var installer = new GoModInstallerResource(installerName, builder.Resource.WorkingDirectory);
+
+            var installerBuilder = builder.ApplicationBuilder.AddResource(installer)
+                .WithArgs("mod", "tidy")
+                .WithParentRelationship(builder.Resource)
+                .ExcludeFromManifest();
+
+            // Make the parent resource wait for the installer to complete
+            builder.WaitForCompletion(installerBuilder);
+
+            configureInstaller?.Invoke(installerBuilder);
+        }
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Ensures Go module dependencies are downloaded before the application starts using <c>go mod download</c>.
+    /// </summary>
+    /// <param name="builder">The Golang app resource builder.</param>
+    /// <param name="configureInstaller">Optional action to configure the installer resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<GolangAppExecutableResource> WithGoModDownload(
+        this IResourceBuilder<GolangAppExecutableResource> builder,
+        Action<IResourceBuilder<GoModInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        // Only install packages during development, not in publish mode
+        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{builder.Resource.Name}-go-mod-download";
+            var installer = new GoModInstallerResource(installerName, builder.Resource.WorkingDirectory);
+
+            var installerBuilder = builder.ApplicationBuilder.AddResource(installer)
+                .WithArgs("mod", "download")
+                .WithParentRelationship(builder.Resource)
+                .ExcludeFromManifest();
+
+            // Make the parent resource wait for the installer to complete
+            builder.WaitForCompletion(installerBuilder);
+
+            configureInstaller?.Invoke(installerBuilder);
+        }
+
+        return builder;
+    }
 }

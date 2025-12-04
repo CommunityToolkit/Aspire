@@ -29,6 +29,45 @@ To have the Golang application listen on the correct port, you can use the follo
 r.Run(":"+os.Getenv("PORT"))
 ```
 
+## Dependency Management
+
+The integration provides support for Go module dependency management using `go mod tidy` or `go mod download`.
+
+### Using `go mod tidy`
+
+To run `go mod tidy` before your application starts (to clean up and verify dependencies):
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy()
+    .WithHttpEndpoint(env: "PORT");
+```
+
+### Using `go mod download`
+
+To run `go mod download` before your application starts (to download dependencies without verification):
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModDownload()
+    .WithHttpEndpoint(env: "PORT");
+```
+
+Both methods create an installer resource that runs before your application starts, ensuring dependencies are available. The installer resource appears as a child resource in the Aspire dashboard.
+
+You can also customize the installer resource using the optional `configureInstaller` parameter:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy(configureInstaller: installer =>
+    {
+        installer.WithEnvironment("GOPROXY", "https://proxy.golang.org,direct");
+    })
+    .WithHttpEndpoint(env: "PORT");
+```
+
+> **Note:** The `WithGoModTidy` and `WithGoModDownload` methods only run during development. When publishing, the generated Dockerfile handles dependency management automatically.
+
 ## Publishing
 
 When publishing your Aspire application, the Golang resource automatically generates a multi-stage Dockerfile for containerization. This means you don't need to manually create a Dockerfile for your Golang application.
