@@ -38,12 +38,13 @@ public static class SqlServerBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        containerName ??= $"{builder.Resource.Name}-dbgate";
+        containerName ??= "dbgate";
 
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
+            .WaitFor(builder);
 
         configureContainer?.Invoke(dbGateBuilder);
 
@@ -90,48 +91,35 @@ public static class SqlServerBuilderExtensions
         return builder;
     }
 
-    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<SqlServerServerResource> builder)
     {
-        var sqlServerInstances = applicationBuilder.Resources.OfType<SqlServerServerResource>();
+        var sqlServerResource = builder.Resource;
 
-        var counter = 1;
+        var name = sqlServerResource.Name;
+        var label = $"LABEL_{name}";
 
         // Multiple WithDbGate calls will be ignored
-        if (context.EnvironmentVariables.ContainsKey($"LABEL_sqlserver{counter}"))
+        if (context.EnvironmentVariables.ContainsKey(label))
         {
             return;
         }
 
-        foreach (var sqlServerResource in sqlServerInstances)
-        {
-            // DbGate assumes SqlServer is being accessed over a default Aspire container network and hardcodes the resource address
-            // This will need to be refactored once updated service discovery APIs are available
-            context.EnvironmentVariables.Add($"LABEL_sqlserver{counter}", sqlServerResource.Name);
-            context.EnvironmentVariables.Add($"SERVER_sqlserver{counter}", sqlServerResource.Name);
-            context.EnvironmentVariables.Add($"USER_sqlserver{counter}", "sa");
-            context.EnvironmentVariables.Add($"PASSWORD_sqlserver{counter}", sqlServerResource.PasswordParameter);
-            context.EnvironmentVariables.Add($"PORT_sqlserver{counter}", sqlServerResource.PrimaryEndpoint.TargetPort!.ToString()!);
-            context.EnvironmentVariables.Add($"ENGINE_sqlserver{counter}", "mssql@dbgate-plugin-mssql");
+        // DbGate assumes SqlServer is being accessed over a default Aspire container network and hardcodes the resource address
+        // This will need to be refactored once updated service discovery APIs are available
+        context.EnvironmentVariables.Add(label, sqlServerResource.Name);
+        context.EnvironmentVariables.Add($"SERVER_{name}", sqlServerResource.Name);
+        context.EnvironmentVariables.Add($"USER_{name}", "sa");
+        context.EnvironmentVariables.Add($"PASSWORD_{name}", sqlServerResource.PasswordParameter);
+        context.EnvironmentVariables.Add($"PORT_{name}", sqlServerResource.PrimaryEndpoint.TargetPort!.ToString()!);
+        context.EnvironmentVariables.Add($"ENGINE_{name}", "mssql@dbgate-plugin-mssql");
 
-            counter++;
+        if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
+        {
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
         }
-
-        var instancesCount = sqlServerInstances.Count();
-        if (instancesCount > 0)
+        else
         {
-            var strBuilder = new StringBuilder();
-            strBuilder.AppendJoin(',', Enumerable.Range(1, instancesCount).Select(i => $"sqlserver{i}"));
-            var connections = strBuilder.ToString();
-
-            string CONNECTIONS = context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS")?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(CONNECTIONS))
-            {
-                context.EnvironmentVariables["CONNECTIONS"] = connections;
-            }
-            else
-            {
-                context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
-            }
+            context.EnvironmentVariables["CONNECTIONS"] = name;
         }
     }
 
