@@ -48,7 +48,6 @@ app.MapGet("/signin", async context =>
     }
 });
 
-// Маршрут логаута
 app.MapGet("/signout", async context =>
 {
     if (context.User?.Identity?.IsAuthenticated ?? false)
