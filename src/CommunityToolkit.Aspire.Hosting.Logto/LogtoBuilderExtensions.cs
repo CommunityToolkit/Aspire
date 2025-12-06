@@ -41,10 +41,7 @@ public static class LogtoBuilderExtensions
 
         builderWithResource
             .WithEntrypoint("sh")
-            .WithArgs(
-                "-c",
-                "npm run cli db seed -- --swe && npm start"
-            );
+            .WithArgs("-c", "npm run cli db seed -- --swe && npm start");
 
 
         return builderWithResource;

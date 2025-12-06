@@ -8,17 +8,21 @@ builder.AddServiceDefaults();
 
 builder.AddLogtoOIDC("logto", logtoOptions: config =>
 {
-    config.AppId = "8wnwpd8smxq51ebgd5lv1";
-    config.AppSecret = "SkOrdgpWNftsQlxAX7JD5gT5oospwOZ9";
+    config.AppId = "1oy1oel4jjk0vo1yzton0";
+    config.AppSecret = "1vYKGbSQ2QXvyf24lJy1cUDFKjrDdNxQ";
+},oidcOptions: opt =>
+{
+    opt.RequireHttpsMetadata = false;
 });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
 
-app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 
 
-app.Run();
 
 
 app.MapGet("/", () => "Hello World!");
@@ -56,3 +60,4 @@ app.MapGet("/signout", async context =>
         context.Response.Redirect("/");
     }
 });
+app.Run();

@@ -34,13 +34,13 @@ public class LogtoClientBuilderIntegrationTests
     }
 
     [Fact]
-    public async Task AddLogtoSDKClient_RegistersLogtoAuthenticationScheme()
+    public async Task AddLogtoOIDC_RegistersLogtoAuthenticationScheme()
     {
         // Arrange
         var builder = CreateBuilderWithBaseConfig();
 
         // Act
-        builder.AddLogtoSDKClient();
+        builder.AddLogtoOIDC();
         using var host = builder.Build();
 
         // Assert
@@ -52,14 +52,14 @@ public class LogtoClientBuilderIntegrationTests
     }
 
     [Fact]
-    public async Task AddLogtoSDKClient_AllowsOverrideOfAuthenticationScheme()
+    public async Task AddLogtoOIDC_AllowsOverrideOfAuthenticationScheme()
     {
         // Arrange
         var builder = CreateBuilderWithBaseConfig();
         const string customScheme = "MyLogto";
 
         // Act
-        builder.AddLogtoSDKClient(authenticationScheme: customScheme);
+        builder.AddLogtoOIDC(authenticationScheme: customScheme);
         using var host = builder.Build();
 
         // Assert
@@ -83,7 +83,7 @@ public class LogtoClientBuilderIntegrationTests
         var builder = CreateBuilderWithBaseConfig(extraConfig);
 
         // Act
-        builder.AddLogtoSDKClient(connectionName: "Logto");
+        builder.AddLogtoOIDC(connectionName: "Logto");
         using var host = builder.Build();
 
         // Assert: как минимум убедимся, что всё собралось
@@ -98,13 +98,13 @@ public class LogtoClientBuilderIntegrationTests
     }
 
     [Fact]
-    public void AddLogtoSDKClient_ConfigureSettings_CanOverrideOptions()
+    public void AddLogtoClient_ConfigureSettings_CanOverrideOptions()
     {
         // Arrange
         var builder = CreateBuilderWithBaseConfig();
 
         // Act
-        builder.AddLogtoSDKClient(configureSettings: opt =>
+        builder.AddLogtoOIDC(logtoOptions: opt =>
         {
             opt.Endpoint = "https://overridden.example.com";
             opt.AppId = "overridden-app-id";

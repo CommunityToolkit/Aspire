@@ -9,10 +9,10 @@ public class LogtoClientBuilderTests
     public void AddLogtoSDKClient_ThrowsArgumentNull_WhenBuilderIsNull()
     {
         IHostApplicationBuilder? builder = null;
-        
+
         var ex = Assert.Throws<ArgumentNullException>(() =>
-            builder!.AddLogtoSDKClient());
-        
+            builder!.AddLogtoOIDC());
+
         Assert.Equal("builder", ex.ParamName);
     }
 
@@ -24,9 +24,9 @@ public class LogtoClientBuilderTests
         {
             //empty
         });
-        
+
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            builder.AddLogtoSDKClient());
+            builder.AddLogtoOIDC());
 
         Assert.Contains("Logto Endpoint must be configured", ex.Message);
     }
@@ -42,9 +42,9 @@ public class LogtoClientBuilderTests
             ["Aspire:Logto:Client:AppId"] = "test-app-id",
             ["Aspire:Logto:Client:AppSecret"] = "test-secret",
         });
-        
-        builder.AddLogtoSDKClient();
-        
+
+        builder.AddLogtoOIDC();
+
         var host = builder.Build();
         Assert.NotNull(host);
     }
@@ -60,9 +60,9 @@ public class LogtoClientBuilderTests
             ["Aspire:Logto:Client:AppSecret"] = "test-secret",
             ["ConnectionStrings:Logto"] = "Endpoint=https://logto-from-cs.example.com"
         });
-        
-        builder.AddLogtoSDKClient(connectionName: "Logto");
-        
+
+        builder.AddLogtoOIDC(connectionName: "Logto");
+
         var host = builder.Build();
         Assert.NotNull(host);
     }
@@ -78,14 +78,13 @@ public class LogtoClientBuilderTests
             ["Aspire:Logto:Client:AppId"] = "test-app-id",
             ["Aspire:Logto:Client:AppSecret"] = "test-secret",
         });
-        
+
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            builder.AddLogtoSDKClient(configureSettings: opt =>
+            builder.AddLogtoOIDC(logtoOptions: opt =>
             {
-                // Кто-то в конфиге убил Endpoint
                 opt.Endpoint = "   ";
             }));
-        
+
         Assert.Equal("Logto Endpoint must be configured.", ex.Message);
     }
 
@@ -99,9 +98,9 @@ public class LogtoClientBuilderTests
             ["Aspire:Logto:Client:Endpoint"] = "https://logto-config.example.com",
             ["Aspire:Logto:Client:AppSecret"] = "test-secret",
         });
-        
+
         var ex = Assert.Throws<InvalidOperationException>(() =>
-            builder.AddLogtoSDKClient(configureSettings: opt =>
+            builder.AddLogtoOIDC(logtoOptions: _ =>
             {
                 //empty
             }));
