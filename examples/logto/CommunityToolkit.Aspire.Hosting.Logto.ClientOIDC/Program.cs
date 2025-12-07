@@ -8,8 +8,9 @@ builder.AddServiceDefaults();
 
 builder.AddLogtoOIDC("logto", logtoOptions: config =>
 {
-    config.AppId = "1oy1oel4jjk0vo1yzton0";
-    config.AppSecret = "1vYKGbSQ2QXvyf24lJy1cUDFKjrDdNxQ";
+    config.AppId = "s6zda5bqn1qlsjzaiklqn";
+    config.AppSecret = "Df77aDt13MG3nSTgo8eKZP2HdeSfbed0";
+    
 },oidcOptions: opt =>
 {
     opt.RequireHttpsMetadata = false;
@@ -46,6 +47,19 @@ app.MapGet("/signin", async context =>
     {
         context.Response.Redirect("/me");
     }
+});
+app.MapGet("/tokens", [Authorize] async (HttpContext ctx) =>
+{
+    var accessToken = await ctx.GetTokenAsync("access_token");
+    var idToken = await ctx.GetTokenAsync("id_token");
+    var refreshToken = await ctx.GetTokenAsync("refresh_token");
+
+    return Results.Ok(new
+    {
+        access_token = accessToken,
+        id_token = idToken,
+        refresh_token = refreshToken
+    });
 });
 
 app.MapGet("/signout", async context =>
