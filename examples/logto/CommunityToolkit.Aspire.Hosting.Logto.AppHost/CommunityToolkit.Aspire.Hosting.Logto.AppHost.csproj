@@ -10,7 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Logto\CommunityToolkit.Aspire.Hosting.Logto.csproj" 
                         IsAspireProjectResource="false"  />
-      <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Logto.ClientApi\CommunityToolkit.Aspire.Hosting.Logto.ClientApi.csproj" />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Logto.ClientOIDC\CommunityToolkit.Aspire.Hosting.Logto.ClientOIDC.csproj" />
     </ItemGroup>
 
     <ItemGroup>

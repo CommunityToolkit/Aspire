@@ -68,29 +68,41 @@ public static class LogtoClientBuilder
         return builder.Services;
     }
 
-
     /// <summary>
-    /// Configures and adds the Logto JWT Bearer authentication for the specified application's service collection.
+    /// 
     /// </summary>
-    /// <param name="builder">The authentication builder that is used to configure authentication services.</param>
-    /// <param name="serviceName">The name of the service to be used for identifying the current Logto endpoint configuration.</param>
-    /// <param name="appId">The application ID assigned to the Logto client.</param>
-    /// <param name="authenticationScheme">
-    /// The authentication scheme used for JWT Bearer authentication. Defaults to "Bearer".
-    /// </param>
-    /// <param name="configurationSectionName">
-    /// The name of the configuration section that contains Logto settings. Defaults to "Aspire:Logto:Client".
-    /// </param>
-    /// <param name="configureOptions">A delegate to further configure the JwtBearerOptions.</param>
-    /// <returns>
-    /// An updated <see cref="AuthenticationBuilder"/> instance with the configured Logto JWT Bearer authentication.
-    /// </returns>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when the Logto endpoint configuration is missing or invalid.
-    /// </exception>
+    /// <param name="builder"></param>
+    /// <param name="serviceName"></param>
+    /// <param name="appIndeficator"></param>
+    /// <param name="authenticationScheme"></param>
+    /// <param name="configurationSectionName"></param>
+    /// <param name="configureOptions"></param>
+    /// <returns></returns>
     public static AuthenticationBuilder AddLogtoJwtBearer(this AuthenticationBuilder builder,
         string serviceName,
-        string appId,
+        string appIndeficator,
+        string authenticationScheme = JwtBearerDefaults.AuthenticationScheme,
+        string? configurationSectionName = DefaultConfigSectionName,
+        Action<JwtBearerOptions>? configureOptions = null)
+    {
+        return AddLogtoJwtBearer(builder, serviceName, [appIndeficator], authenticationScheme,
+            configurationSectionName, configureOptions);
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="serviceName"></param>
+    /// <param name="appIndeficator"></param>
+    /// <param name="authenticationScheme"></param>
+    /// <param name="configurationSectionName"></param>
+    /// <param name="configureOptions"></param>
+    /// <returns></returns>
+    public static AuthenticationBuilder AddLogtoJwtBearer(this AuthenticationBuilder builder,
+        string serviceName,
+        IEnumerable<string> appIndeficator,
         string authenticationScheme = JwtBearerDefaults.AuthenticationScheme,
         string? configurationSectionName = DefaultConfigSectionName,
         Action<JwtBearerOptions>? configureOptions = null)
@@ -100,14 +112,16 @@ public static class LogtoClientBuilder
             .Configure<IConfiguration>((jwt, configuration) =>
             {
                 var logto = GetEndpoint(configuration, configurationSectionName, serviceName);
-
                 var issuer = logto.Endpoint.TrimEnd('/') + "/oidc";
-                jwt.Authority = issuer;
-                jwt.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidIssuer = issuer, ValidateIssuer = true, ValidAudience = appId, ValidateAudience = true
-                };
 
+                jwt.Authority = issuer;
+                jwt.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = issuer,
+                    ValidateAudience = true,
+                    ValidAudiences = appIndeficator
+                };
                 configureOptions?.Invoke(jwt);
             });
         builder.AddJwtBearer(authenticationScheme);
