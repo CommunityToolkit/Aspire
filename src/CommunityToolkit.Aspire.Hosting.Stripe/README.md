@@ -81,8 +81,9 @@ var api = builder.AddProject<Projects.API>("api")
 ```csharp
 var apiKey = builder.AddParameter("stripe-api-key", "sk_test_default", secret: true);
 
+var webhookEndpoint = builder.AddExternalService("webhook-endpoint", "http://localhost:5082");
 var stripe = builder.AddStripe("stripe", apiKey)
-    .WithListen("http://localhost:5082/webhooks")
+    .WithListen(webhookEndpoint, webhookPath: "/webhooks")
     .WithApiKey(apiKey); // optional: forwards the key to the CLI via --api-key
 ```
 
@@ -92,9 +93,10 @@ You can filter which webhook events the Stripe CLI listens for:
 
 ```csharp
 var stripeApiKey = builder.AddParameter("stripe-api-key", "sk_test_default", secret: true);
+var webhookEndpoint = builder.AddExternalService("webhook-endpoint", "http://localhost:5082");
 var stripe = builder.AddStripe("stripe", stripeApiKey)
-    .WithListen("http://localhost:5082/webhooks",
-                events: "payment_intent.created,charge.succeeded");
+    .WithListen(webhookEndpoint, webhookPath: "/webhooks",
+                events: ["payment_intent.created", "charge.succeeded"]);
 ```
 
 ## How it works

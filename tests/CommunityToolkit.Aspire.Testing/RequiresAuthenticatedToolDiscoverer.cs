@@ -14,7 +14,7 @@ public sealed class RequiresAuthenticatedToolDiscoverer : ITraitDiscoverer
     public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
     {
         string? toolName = null;
-        foreach (object? argument in traitAttribute.GetConstructorArguments())
+        foreach (object? argument in traitAttribute.GetConstructorArguments().Where(a => a is string))
         {
             if (argument is string value)
             {

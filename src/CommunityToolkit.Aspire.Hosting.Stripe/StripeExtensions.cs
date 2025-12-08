@@ -82,7 +82,7 @@ public static class StripeExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="forwardTo">The resource to forward webhooks to.</param>
     /// <param name="webhookPath">The path to the webhook endpoint.</param>
-    /// <param name="events">Optional comma-separated list of specific webhook events to listen for (e.g., "payment_intent.created,charge.succeeded"). If not specified, all events are forwarded.</param>
+    /// <param name="events">Optional collection of specific webhook events to listen for (e.g., ["payment_intent.created", "charge.succeeded"]). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
@@ -204,7 +204,7 @@ public static class StripeExtensions
                 {
                     await foreach (var logEvent in loggerService.WatchAsync(resourceId).WithCancellation(cancellationToken).ConfigureAwait(false))
                     {
-                        foreach (var line in logEvent)
+                        foreach (var line in logEvent.Where(l => !string.IsNullOrWhiteSpace(l.Content)))
                         {
                             if (TryExtractSigningSecret(line.Content, out var signingSecret))
                             {
