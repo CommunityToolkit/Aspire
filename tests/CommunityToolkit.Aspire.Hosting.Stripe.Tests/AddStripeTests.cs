@@ -63,7 +63,7 @@ public class AddStripeTests
         var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
 
         builder.AddStripe("stripe", apiKey)
-            .WithListen(externalEndpoint, webhookPath: "webhooks", events: ["payment_intent.created,charge.succeeded"]);
+            .WithListen(externalEndpoint, webhookPath: "webhooks", events: ["payment_intent.created", "charge.succeeded"]);
 
         using var app = builder.Build();
 
@@ -138,7 +138,7 @@ public class AddStripeTests
 
         var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
 
-        var stripe = builder.AddStripe("stripe", apiKey)
+        builder.AddStripe("stripe", apiKey)
             .WithListen(api);
 
         using var app = builder.Build();

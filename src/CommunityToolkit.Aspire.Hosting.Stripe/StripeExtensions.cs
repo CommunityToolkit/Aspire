@@ -1,7 +1,7 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Stripe;
 using Microsoft.Extensions.DependencyInjection;
-using System.Diagnostics;
+
 using System.Diagnostics.CodeAnalysis;
 
 namespace Aspire.Hosting;
@@ -46,7 +46,7 @@ public static class StripeExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="forwardTo">The resource to forward webhooks to.</param>
     /// <param name="webhookPath">The path to the webhook endpoint.</param>
-    /// <param name="events">Optional comma-separated list of specific webhook events to listen for (e.g., "payment_intent.created,charge.succeeded"). If not specified, all events are forwarded.</param>
+    /// <param name="events">Optional collection of specific webhook events to listen for (e.g., ["payment_intent.created", "charge.succeeded"]). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
@@ -64,7 +64,8 @@ public static class StripeExtensions
             {
                 throw new InvalidOperationException($"The resource '{forwardTo.Resource.Name}' does not have any endpoints defined.");
             }
-            context.Args.Add($"--forward-to={endpoints.First().AllocatedEndpoint}{webhookPath}");
+            context.Args.Add("--forward-to");
+            context.Args.Add($"{endpoints.First().AllocatedEndpoint}{webhookPath}");
         });
 
         if (events is not null && events.Any())
@@ -97,22 +98,22 @@ public static class StripeExtensions
         if (forwardTo.Resource.Uri is not null)
         {
             builder.WithArgs($"--forward-to");
-            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri.ToString()}{webhookPath}"));
+            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri}{webhookPath}"));
         }
         else if (forwardTo.Resource.UrlParameter is not null)
         {
             builder.WithArgs(async context =>
             {
+                string url = await forwardTo.Resource.UrlParameter.GetValueAsync(context.CancellationToken).ConfigureAwait(false);
                 if (!context.ExecutionContext.IsPublishMode)
                 {
-                    var url = await forwardTo.Resource.UrlParameter.GetValueAsync(context.CancellationToken).ConfigureAwait(false);
                     if (!UrlIsValidForExternalService(url, out var _, out var message))
                     {
                         throw new DistributedApplicationException($"The URL parameter '{forwardTo.Resource.UrlParameter.Name}' for the external service '{forwardTo.Resource.Name}' is invalid: {message}");
                     }
                 }
                 context.Args.Add($"--forward-to");
-                context.Args.Add(ReferenceExpression.Create($"{forwardTo.Resource.UrlParameter}{webhookPath}"));
+                context.Args.Add(ReferenceExpression.Create($"{url}{webhookPath}"));
             });
         }
         else
