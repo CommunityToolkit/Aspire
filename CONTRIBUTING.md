@@ -31,8 +31,7 @@ The Aspire Community Toolkit also has a list of issues that are labeled as [help
 
 The documentation for the Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/aspire/community-toolkit/). 
 
--   If you want to create new documentation or improve existing documentation, please raise an issue on the [aspire.dev repository](https://github.com/microsoft/aspire.dev).
--   If you find any issues with the documentation, you can contribute by submitting a PR to [the documentation repository](https://github.com/dotnet/docs-aspire).
+If you want to create new documentation, improve existing documentation, or report any issues with the documentation, please raise an issue on the [aspire.dev repository](https://github.com/microsoft/aspire.dev).
 
 ## 🚀 Create, Submit or Review Pull Request <a name="pr"></a>
 
