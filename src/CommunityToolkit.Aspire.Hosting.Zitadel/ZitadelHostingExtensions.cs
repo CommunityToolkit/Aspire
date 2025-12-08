@@ -17,22 +17,17 @@ public static class ZitadelHostingExtensions
     /// <param name="username">An optional parameter to set a username for the admin account, if <c>null</c> will auto generate one.</param>
     /// <param name="password">An optional parameter to set a password for the admin account, if <c>null</c> will auto generate one.</param>
     /// <param name="masterKey">An optional parameter to set the masterkey, if <c>null</c> will auto generate one.</param>
-    /// <param name="externalDomain">The external domain for Zitadel. Defaults to <c>{name}.dev.localhost</c> which works for local development. For production deployments, specify the actual domain (e.g., "auth.example.com").</param>
     public static IResourceBuilder<ZitadelResource> AddZitadel(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? port = null,
         IResourceBuilder<ParameterResource>? username = null,
         IResourceBuilder<ParameterResource>? password = null,
-        IResourceBuilder<ParameterResource>? masterKey = null,
-        string? externalDomain = null
+        IResourceBuilder<ParameterResource>? masterKey = null
     )
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
-
-        // Use provided external domain or default to {name}.dev.localhost
-        var domain = externalDomain ?? $"{name}.dev.localhost";
 
         var usernameParameter = username?.Resource ?? new ParameterResource($"{name}-username", _ => "admin", false);
         var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", minSpecial: 1);
@@ -69,14 +64,15 @@ public static class ZitadelHostingExtensions
             .WithEnvironment("ZITADEL_MASTERKEY", masterKeyParameter)
             .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
-            .WithEnvironment("ZITADEL_EXTERNALDOMAIN", domain)
             .WithUrlForEndpoint(ZitadelResource.HttpEndpointName, e => e.DisplayText = "Zitadel Dashboard");
 
         // Use ReferenceExpression for the port to avoid issues with endpoint allocation
         var endpoint = resource.GetEndpoint(ZitadelResource.HttpEndpointName);
         var portExpression = ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.Port)}");
+        var hostExpression = ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.Host)}");
 
         return zitadelBuilder
+            .WithEnvironment("ZITADEL_EXTERNALDOMAIN", hostExpression)
             .WithEnvironment("ZITADEL_EXTERNALPORT", portExpression)
             // Disable Login V2 for simpler setup (no separate login container needed)
             .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED", "false")
