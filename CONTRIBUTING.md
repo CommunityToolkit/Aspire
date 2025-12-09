@@ -22,7 +22,7 @@ The Aspire Community Toolkit also has a list of issues that are labeled as [help
 
 ## 📬 Add New Feature <a name="feature"></a>
 
--   To contribute a new feature, fill out the [Feature Request Template](https://github.com/CommunityToolkit/Aspire/issues/new?template=feature_request.md&labels=feature+request+:mailbox_with_mail:&title=[Feature]) and provide detailed information to express the proposal.
+-   To contribute a new feature, fill out the [Feature Request Template](https://github.com/CommunityToolkit/Aspire/issues/new?template=feature_proposal.yml) and provide detailed information to express the proposal.
 -   Once the Feature Request is submitted, it will be open for discussion.
 -   If it gets approved by the team, proceed to submit a PR of the proposed Feature.
 -   If the PR contains an error-free code and the reviewer signs off, the PR will be merged.
