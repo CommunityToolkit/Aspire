@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.OpenFga\CommunityToolkit.Aspire.Hosting.OpenFga.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="..\..\tests-app-hosts\OpenFga.AppHost\OpenFga.AppHost.csproj" />
+  </ItemGroup>
+
+</Project>
