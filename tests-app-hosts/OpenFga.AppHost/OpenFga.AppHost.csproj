@@ -1,0 +1,12 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+  
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>a9b8c7d6-e5f4-3a2b-1c0d-9e8f7a6b5c4d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.OpenFga\CommunityToolkit.Aspire.Hosting.OpenFga.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

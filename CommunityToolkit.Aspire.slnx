@@ -114,6 +114,9 @@
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Ollama.ServiceDefaults.csproj" />
     <Project Path="examples/ollama/CommunityToolkit.Aspire.Hosting.Ollama.Web/CommunityToolkit.Aspire.Hosting.Ollama.Web.csproj" />
   </Folder>
+  <Folder Name="/examples/openfga/">
+    <Project Path="examples/openfga/CommunityToolkit.Aspire.Hosting.OpenFga.AppHost/CommunityToolkit.Aspire.Hosting.OpenFga.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/opentelemetry-collector/">
     <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Api.csproj" />
     <Project Path="examples/opentelemetry-collector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost.csproj" />
@@ -186,6 +189,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenFga/CommunityToolkit.Aspire.Hosting.OpenFga.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" />
@@ -215,6 +219,9 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
   </Folder>
+  <Folder Name="/tests-app-hosts/">
+    <Project Path="tests-app-hosts/OpenFga.AppHost/OpenFga.AppHost.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
@@ -239,6 +246,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenFga.Tests/CommunityToolkit.Aspire.Hosting.OpenFga.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
