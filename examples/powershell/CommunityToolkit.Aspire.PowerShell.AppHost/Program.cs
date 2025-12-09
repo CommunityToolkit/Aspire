@@ -39,7 +39,7 @@ var script1 = ps.AddScript("script1", """
 
 // outputs "the sum of 2 and 3 is 5"
 var script2 = ps.AddScript("script2", """
-    & ./scripts/script.ps1 @args
+    & ./Scripts/script.ps1 @args
     """)
     .WithArgs(2, 3)
     .WaitForCompletion(script1);
