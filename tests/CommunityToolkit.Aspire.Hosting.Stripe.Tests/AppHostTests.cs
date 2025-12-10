@@ -1,0 +1,39 @@
+using Aspire.Components.Common.Tests;
+using CommunityToolkit.Aspire.Testing;
+
+namespace CommunityToolkit.Aspire.Hosting.Stripe.Tests;
+
+[RequiresDocker]
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Stripe_AppHost> fixture)
+    : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Stripe_AppHost>>
+{
+    [Fact]
+    [RequiresAuthenticatedTool("stripe")]
+    public async Task ResourceStartsAndRespondsOk()
+    {
+        var resourceName = "api";
+
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName)
+            .WaitAsync(TimeSpan.FromMinutes(1));
+
+        var httpClient = fixture.CreateHttpClient(resourceName);
+
+        var response = await httpClient.GetAsync("/");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Equal("Stripe Webhook API", body);
+    }
+
+    [Fact]
+    [RequiresAuthenticatedTool("stripe")]
+    public async Task StripeResourceIsCreated()
+    {
+        var app = fixture.App;
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var stripeResource = appModel.Resources.OfType<StripeResource>().SingleOrDefault();
+        Assert.NotNull(stripeResource);
+        Assert.Equal("stripe", stripeResource.Name);
+    }
+}
