@@ -22,14 +22,16 @@ The Aspire Community Toolkit also has a list of issues that are labeled as [help
 
 ## 📬 Add New Feature <a name="feature"></a>
 
--   To contribute a new feature, fill out the [Feature Request Template](https://github.com/CommunityToolkit/Aspire/issues/new?template=feature_request.md&labels=feature+request+:mailbox_with_mail:&title=[Feature]) and provide detailed information to express the proposal.
+-   To contribute a new feature, fill out the [Feature Request Template](https://github.com/CommunityToolkit/Aspire/issues/new?template=feature_proposal.yml) and provide detailed information to express the proposal.
 -   Once the Feature Request is submitted, it will be open for discussion.
 -   If it gets approved by the team, proceed to submit a PR of the proposed Feature.
 -   If the PR contains an error-free code and the reviewer signs off, the PR will be merged.
 
 ## 📝 Add or Improve Documentation <a name="docs"></a>
 
-The documentation for the Aspire Community Toolkit is available on the [Microsoft Docs](https://learn.microsoft.com/dotnet/aspire/community-toolkit/). If you find any issues with the documentation or want to add more information, you can contribute by submitting a PR to [the documentation repository](https://github.com/dotnet/docs-aspire).
+The documentation for the Aspire Community Toolkit is available on [aspire.dev](https://aspire.dev). 
+
+If you want to create new documentation, improve existing documentation, or report any issues with the documentation, please raise an issue on the [aspire.dev repository](https://github.com/microsoft/aspire.dev).
 
 ## 🚀 Create, Submit or Review Pull Request <a name="pr"></a>
 
