@@ -3,6 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.k6;
+using System.Globalization;
 
 namespace Aspire.Hosting;
 
