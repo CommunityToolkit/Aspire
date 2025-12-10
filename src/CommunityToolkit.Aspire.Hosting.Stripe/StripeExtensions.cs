@@ -98,13 +98,13 @@ public static class StripeExtensions
         if (forwardTo.Resource.Uri is not null)
         {
             builder.WithArgs($"--forward-to");
-            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri}{webhookPath}"));
+            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri.ToString()}{webhookPath}"));
         }
         else if (forwardTo.Resource.UrlParameter is not null)
         {
             builder.WithArgs(async context =>
             {
-                string url = await forwardTo.Resource.UrlParameter.GetValueAsync(context.CancellationToken).ConfigureAwait(false);
+                string? url = await forwardTo.Resource.UrlParameter.GetValueAsync(context.CancellationToken).ConfigureAwait(false);
                 if (!context.ExecutionContext.IsPublishMode)
                 {
                     if (!UrlIsValidForExternalService(url, out var _, out var message))

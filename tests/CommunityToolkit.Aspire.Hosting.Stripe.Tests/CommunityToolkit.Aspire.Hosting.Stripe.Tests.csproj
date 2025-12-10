@@ -1,4 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>  <UserSecretsId>737bbb5a-133b-43e8-8bb6-b86441528f8e</UserSecretsId>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.Stripe\StripeContainerImageTags.cs" />
     <ProjectReference Include="../../examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.AppHost/CommunityToolkit.Aspire.Hosting.Stripe.AppHost.csproj" />
