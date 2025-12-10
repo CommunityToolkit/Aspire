@@ -102,7 +102,7 @@ public static class K6BuilderExtensions
             "--address",
             $"0.0.0.0:{K6Port}",
             "--vus", 
-            virtualUsers, 
+            virtualUsers.ToString(CultureInfo.InvariantCulture), 
             "--duration", 
             duration, 
             scriptPath);
