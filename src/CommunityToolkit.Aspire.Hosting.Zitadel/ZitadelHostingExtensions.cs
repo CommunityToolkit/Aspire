@@ -1,5 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Zitadel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
@@ -64,12 +65,53 @@ public static class ZitadelHostingExtensions
             .WithEnvironment("ZITADEL_MASTERKEY", masterKeyParameter)
             .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
+            .WithHttpsCertificateConfiguration(ctx =>
+            {
+                ctx.EnvironmentVariables["ZITADEL_EXTERNALSECURE"] = "true";
+                ctx.EnvironmentVariables["ZITADEL_TLS_ENABLED"] = "true";
+                ctx.EnvironmentVariables["ZITADEL_TLS_CERTPATH"] = ctx.CertificatePath;
+                ctx.EnvironmentVariables["ZITADEL_TLS_KEYPATH"] = ctx.KeyPath;
+                return Task.CompletedTask;
+            })
             .WithUrlForEndpoint(ZitadelResource.HttpEndpointName, e => e.DisplayText = "Zitadel Dashboard");
 
         // Use ReferenceExpression for the port to avoid issues with endpoint allocation
-        var endpoint = resource.GetEndpoint(ZitadelResource.HttpEndpointName);
+        var endpoint = resource.GetEndpoint(ZitadelResource.HttpEndpointName, KnownNetworkIdentifiers.LocalhostNetwork);
         var portExpression = ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.Port)}");
         var hostExpression = ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.Host)}");
+
+        if (builder.ExecutionContext.IsRunMode)
+        {
+            builder.Eventing.Subscribe<BeforeStartEvent>((@event, cancellationToken) =>
+            {
+                var developerCertificateService = @event.Services.GetRequiredService<IDeveloperCertificateService>();
+
+                bool addHttps = false;
+                if (!zitadelBuilder.Resource.TryGetLastAnnotation<HttpsCertificateAnnotation>(out var annotation))
+                {
+                    if (developerCertificateService.UseForHttps)
+                    {
+                        // If no certificate is configured, and the developer certificate service supports container trust,
+                        // configure the resource to use the developer certificate for its key pair.
+                        addHttps = true;
+                    }
+                }
+                else if (annotation.UseDeveloperCertificate.GetValueOrDefault(developerCertificateService.UseForHttps) || annotation.Certificate is not null)
+                {
+                    addHttps = true;
+                }
+
+                if (addHttps)
+                {
+                    // If a TLS certificate is configured, override the endpoint to use HTTPS instead of HTTP
+                    // Zitadel only binds to a single port
+                    zitadelBuilder
+                        .WithEndpoint(ZitadelResource.HttpEndpointName, ep => ep.UriScheme = "https");
+                }
+
+                return Task.CompletedTask;
+            });
+        }
 
         return zitadelBuilder
             .WithEnvironment("ZITADEL_EXTERNALDOMAIN", hostExpression)
