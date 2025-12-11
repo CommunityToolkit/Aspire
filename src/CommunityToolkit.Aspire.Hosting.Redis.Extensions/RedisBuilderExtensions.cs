@@ -36,61 +36,42 @@ public static class RedisBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        containerName ??= $"{builder.Resource.Name}-dbgate";
+        containerName ??= "dbgate";
 
-        var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
+        var dbGateBuilder = builder.ApplicationBuilder.AddDbGate(containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
+            .WaitFor(builder);
 
         configureContainer?.Invoke(dbGateBuilder);
 
         return builder;
     }
 
-    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<RedisResource> builder)
     {
-        var reidsInstances = applicationBuilder.Resources.OfType<RedisResource>();
+        var redisResource = builder.Resource;
 
-        var counter = 1;
+        var name = redisResource.Name;
+        var lalbel = $"LABEL_{name}";
 
-        // Multiple WithDbGate calls will be ignored
-        if (context.EnvironmentVariables.ContainsKey($"LABEL_redis{counter}"))
+        // DbGate assumes Redis is being accessed over a default Aspire container network and hardcodes the resource address
+        var redisUrl = redisResource.PasswordParameter is not null ?
+            ReferenceExpression.Create($"redis://:{redisResource.PasswordParameter}@{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}") :
+            ReferenceExpression.Create($"redis://{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}");
+
+        context.EnvironmentVariables.Add(lalbel, name);
+        context.EnvironmentVariables.Add($"URL_{name}", redisUrl);
+        context.EnvironmentVariables.Add($"ENGINE_{name}", "redis@dbgate-plugin-redis");
+
+        if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            return;
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
         }
-
-        foreach (var redisResource in reidsInstances)
+        else
         {
-
-            // DbGate assumes Redis is being accessed over a default Aspire container network and hardcodes the resource address
-            var redisUrl = redisResource.PasswordParameter is not null ?
-                ReferenceExpression.Create($"redis://:{redisResource.PasswordParameter}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}") : 
-                ReferenceExpression.Create($"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}");
-
-            context.EnvironmentVariables.Add($"LABEL_redis{counter}", redisResource.Name);
-            context.EnvironmentVariables.Add($"URL_redis{counter}", redisUrl);
-            context.EnvironmentVariables.Add($"ENGINE_redis{counter}", "redis@dbgate-plugin-redis");
-
-            counter++;
-        }
-
-        var instancesCount = reidsInstances.Count();
-        if (instancesCount > 0)
-        {
-            var strBuilder = new StringBuilder();
-            strBuilder.AppendJoin(',', Enumerable.Range(1, instancesCount).Select(i => $"redis{i}"));
-            var connections = strBuilder.ToString();
-
-            string CONNECTIONS = context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS")?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(CONNECTIONS))
-            {
-                context.EnvironmentVariables["CONNECTIONS"] = connections;
-            }
-            else
-            {
-                context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
-            }
+            context.EnvironmentVariables["CONNECTIONS"] = name;
         }
     }
 }
