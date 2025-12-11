@@ -12,9 +12,8 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).0.0</AspireVersion>
-    <AspireAppHostSdkVersion>$(AspireVersion)</AspireAppHostSdkVersion>
-    <AspirePreviewSuffix>preview.1.25560.3</AspirePreviewSuffix>
+    <AspireVersion>$(AspireMajorVersion).1.0-preview.1.25610.7</AspireVersion>
+    <AspirePreviewSuffix></AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>10.0.0</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
