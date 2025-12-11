@@ -60,6 +60,7 @@ jobs:
             Hosting.SqlServer.Extensions.Tests,
             Hosting.Stripe.Tests,
             Hosting.SurrealDb.Tests,
+            Hosting.Zitadel.Tests,
 
             # Client integration tests
             GoFeatureFlag.Tests,
