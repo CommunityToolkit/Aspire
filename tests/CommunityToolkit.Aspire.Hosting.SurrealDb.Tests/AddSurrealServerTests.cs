@@ -5,6 +5,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
 
@@ -58,7 +59,7 @@ public class AddSurrealServerTests
         Assert.Equal(SurrealDbContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(SurrealDbContainerImageTags.Registry, containerAnnotation.Registry);
 
-        var config = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
+        var config = await surrealServer.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Collection(config,
             env =>
@@ -202,7 +203,7 @@ public class AddSurrealServerTests
 
         using var app = appBuilder.Build();
 
-        var config = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
+        var config = await surrealServer.Resource.GetEnvironmentVariablesAsync();
 
         bool hasValue = config.TryGetValue("SURREAL_LOG", out var value);
 

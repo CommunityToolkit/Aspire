@@ -27,7 +27,7 @@ public static class AzureRedisCacheDaprHostingExtensions
     /// <param name="builder">The Dapr component resource builder.</param>
     /// <param name="source">The Azure Redis cache resource builder.</param>
     /// <returns>The updated Dapr component resource builder.</returns>
-    public static IResourceBuilder<IDaprComponentResource> WithReference(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> source)
+    public static IResourceBuilder<IDaprComponentResource> WithReference(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureManagedRedisResource> source)
     {
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
@@ -55,7 +55,7 @@ public static class AzureRedisCacheDaprHostingExtensions
 
     // Private methods do not require XML documentation.
 
-    private static IResourceBuilder<IDaprComponentResource> ConfigureRedisStateComponent(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> redisBuilder)
+    private static IResourceBuilder<IDaprComponentResource> ConfigureRedisStateComponent(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureManagedRedisResource> redisBuilder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(redisBuilder, nameof(redisBuilder));
@@ -72,7 +72,7 @@ public static class AzureRedisCacheDaprHostingExtensions
         return builder;
     }
 
-    private static IResourceBuilder<IDaprComponentResource> ConfigureRedisPubSubComponent(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> redisBuilder)
+    private static IResourceBuilder<IDaprComponentResource> ConfigureRedisPubSubComponent(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureManagedRedisResource> redisBuilder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(redisBuilder, nameof(redisBuilder));
@@ -89,7 +89,7 @@ public static class AzureRedisCacheDaprHostingExtensions
         return builder;
     }
 
-    private static void ConfigureForManagedIdentityAuthentication(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> redisBuilder, string componentType)
+    private static void ConfigureForManagedIdentityAuthentication(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureManagedRedisResource> redisBuilder, string componentType)
     {
         var principalIdParam = new ProvisioningParameter(AzureBicepResource.KnownParameters.PrincipalId, typeof(string));
 
@@ -154,7 +154,7 @@ public static class AzureRedisCacheDaprHostingExtensions
     }
 
 
-    private static void ConfigureForAccessKeyAuthentication(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureRedisCacheResource> redisBuilder, string componentType)
+    private static void ConfigureForAccessKeyAuthentication(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureManagedRedisResource> redisBuilder, string componentType)
     {
         var kvNameParam = new ProvisioningParameter(redisKeyVaultNameKey, typeof(string));
         var secretStoreComponent = new ProvisioningParameter(secretStoreComponentKey, typeof(string));

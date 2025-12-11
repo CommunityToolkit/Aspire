@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.JavaScript;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests;
 
@@ -93,7 +94,7 @@ public class TurborepoResourceCreationTests
             "pnpm" => "pnpx",
             _ => packageManager
         }, turboApp.Command);
-        var turboArgs = await turboApp.GetArgumentValuesAsync();
+        var turboArgs = await turboApp.GetArgumentListAsync();
         Assert.Collection(turboArgs,
             arg => Assert.Equal("turbo", arg),
             arg => Assert.Equal("run", arg),
@@ -123,7 +124,7 @@ public class TurborepoResourceCreationTests
 
         var turboPnpmApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app1-pnpm");
         Assert.Equal("pnpx", turboPnpmApp.Command);
-        var tpnpmArgs = await turboPnpmApp.GetArgumentValuesAsync();
+        var tpnpmArgs = await turboPnpmApp.GetArgumentListAsync();
         Assert.Collection(tpnpmArgs,
             arg => Assert.Equal("turbo", arg),
             arg => Assert.Equal("run", arg),
@@ -137,7 +138,7 @@ public class TurborepoResourceCreationTests
 
         var turboYarnApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app1-yarn");
         Assert.Equal("yarn", turboYarnApp.Command);
-        var tyarnArgs = await turboYarnApp.GetArgumentValuesAsync();
+        var tyarnArgs = await turboYarnApp.GetArgumentListAsync();
         Assert.Collection(tyarnArgs,
             arg => Assert.Equal("turbo", arg),
             arg => Assert.Equal("run", arg),
@@ -162,7 +163,7 @@ public class TurborepoResourceCreationTests
         var turboApp = appModel.Resources.OfType<TurborepoAppResource>().Single(r => r.Name == "app-turbo-default");
         // Command should be 'turbo' (default) and args should include npx prefix
         Assert.Equal("turbo", turboApp.Command);
-        var turboArgs = await turboApp.GetArgumentValuesAsync();
+        var turboArgs = await turboApp.GetArgumentListAsync();
         Assert.Collection(turboArgs,
             arg => Assert.Equal("run", arg),
             arg => Assert.Equal("dev", arg),
@@ -201,7 +202,7 @@ public class TurborepoResourceCreationTests
         // App should use "turbo" directly, not wrapped via package manager
         var turboApp = Assert.Single(appModel.Resources.OfType<TurborepoAppResource>());
         Assert.Equal("turbo", turboApp.Command);
-        var args = await turboApp.GetArgumentValuesAsync();
+        var args = await turboApp.GetArgumentListAsync();
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
             arg => Assert.Equal("dev", arg),
@@ -314,7 +315,7 @@ public class TurborepoResourceCreationTests
             };
 
             Assert.Equal(launcherName, turboApp.Command);
-            var args = await turboApp.GetArgumentValuesAsync();
+            var args = await turboApp.GetArgumentListAsync();
             Assert.Collection(args,
                 arg => Assert.Equal("turbo", arg),
                 arg => Assert.Equal("run", arg),

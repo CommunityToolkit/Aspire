@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests;
 
@@ -25,7 +26,7 @@ public class ResourceCreationTests
 
         Assert.Equal("redis-dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
         Assert.Collection(envs,
@@ -132,7 +133,7 @@ public class ResourceCreationTests
 
         Assert.Equal("redis1-dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
         Assert.Collection(envs,

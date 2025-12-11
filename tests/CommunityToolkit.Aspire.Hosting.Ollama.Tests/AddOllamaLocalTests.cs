@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama.Tests;
 
@@ -42,7 +43,7 @@ public class AddOllamaLocalTests
 
         Assert.Equal(12345, endpoint.Port);
     }
-    
+
     [Fact]
     public async Task VerifyDefaultTargetPort()
     {
@@ -54,14 +55,14 @@ public class AddOllamaLocalTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
-        var config = await resource.GetEnvironmentVariableValuesAsync();
-        
+        var config = await resource.GetEnvironmentVariablesAsync();
+
         var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
-        
+
         Assert.Equal(11434, endpoint.TargetPort);
         Assert.Equal("http://localhost:11434", config["OLLAMA_HOST"]);
     }
-    
+
     [Fact]
     public async Task VerifyCustomTargetPort()
     {
@@ -73,14 +74,14 @@ public class AddOllamaLocalTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(appModel.Resources.OfType<OllamaExecutableResource>());
-        var config = await resource.GetEnvironmentVariableValuesAsync();
-        
+        var config = await resource.GetEnvironmentVariablesAsync();
+
         var endpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>());
-        
+
         Assert.Equal(11435, endpoint.TargetPort);
         Assert.Equal("http://localhost:11435", config["OLLAMA_HOST"]);
     }
-    
+
     [Fact]
     public void VerifyExcludedFromManifestByDefault()
     {
@@ -95,7 +96,7 @@ public class AddOllamaLocalTests
 
         Assert.True(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
     }
-        
+
     [Fact]
     public void CanSetMultipleModels()
     {
@@ -235,7 +236,7 @@ public class AddOllamaLocalTests
         Assert.Contains("/", annotation.Key);
         Assert.Contains(resource.Name, annotation.Key);
     }
-    
+
     [Fact]
     public void OllamaLocalRegistrationContainsResourceCommandAnnotations()
     {
@@ -433,7 +434,7 @@ public class AddOllamaLocalTests
         state = command.UpdateState(context);
         Assert.Equal(ResourceCommandState.Enabled, state);
     }
-    
+
     [Fact]
     public void OpenWebUIConfigured()
     {

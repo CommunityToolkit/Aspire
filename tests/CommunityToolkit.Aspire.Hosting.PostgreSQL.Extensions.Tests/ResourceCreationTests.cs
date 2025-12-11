@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using System.Text.Json;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests;
 
@@ -25,7 +26,7 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres-dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
         Assert.Collection(envs,
@@ -143,7 +144,7 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres1-dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
         Assert.Collection(envs,
@@ -239,7 +240,7 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres-dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
         Assert.Collection(envs,
@@ -300,7 +301,7 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres-adminer", adminerResource.Name);
 
-        var envs = await adminerResource.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -401,7 +402,7 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres1-adminer", adminerContainer.Name);
 
-        var envs = await adminerContainer.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerContainer.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 

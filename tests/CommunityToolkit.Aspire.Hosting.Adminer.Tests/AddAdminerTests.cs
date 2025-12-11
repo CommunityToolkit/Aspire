@@ -3,6 +3,7 @@ using System.Text.Json;
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Adminer.Tests;
 
@@ -178,7 +179,7 @@ public class AddAdminerTests
 
         Assert.Equal("postgres1-adminer", adminerContainerResource.Name);
 
-        var envs = await adminerContainerResource.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerContainerResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 

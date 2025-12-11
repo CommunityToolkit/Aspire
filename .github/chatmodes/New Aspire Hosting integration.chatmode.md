@@ -217,7 +217,7 @@ dotnet new aspire-apphost -n CommunityToolkit.Aspire.Hosting.<HostingIntegration
 
 Make sure to add the project to the solution with `dotnet sln add examples/CommunityToolkit.Aspire.Hosting.<HostingIntegrationName>.AppHost`.
 
-Once created, refer to existing AppHost `csproj` files to ensure that the right packages are referenced, such as `CommunityToolkit.Aspire.Hosting.<HostingIntegrationName>`. For the `Sdk`, ensure the version is `$(AspireAppHostSdkVersion)`, since we use a MSBuild variable to ensure that a consistent version is used across all App Host projects. Any `PackageReference` elements should **not** have a version specified.
+Once created, refer to existing AppHost `csproj` files to ensure that the right packages are referenced, such as `CommunityToolkit.Aspire.Hosting.<HostingIntegrationName>`. Any `PackageReference` elements should **not** have a version specified.
 
 Next, edit the `AppHost.cs` file that the template created to use the hosting integration.
 

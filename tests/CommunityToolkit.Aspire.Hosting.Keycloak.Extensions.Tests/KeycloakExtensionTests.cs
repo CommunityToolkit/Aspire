@@ -1,15 +1,11 @@
 ﻿using Aspire.Hosting;
 using Moq;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests;
 
 public class KeycloakExtensionTests
 {
-    private static async Task<IDictionary<string, string>> GetEnv(IResourceBuilder<KeycloakResource> kc)
-    {
-        return await kc.Resource.GetEnvironmentVariableValuesAsync();
-    }
-
     [Fact]
     public void WithPostgresDev_Should_Throw_If_Builder_Is_Null()
     {
@@ -50,7 +46,7 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db);
 
-        var env = await GetEnv(kc);
+        var env = await kc.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Equal("postgres", env["KC_DB"]);
         Assert.True(env.ContainsKey("KC_DB_URL"));
@@ -72,7 +68,7 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db, user, pass);
 
-        var env = await GetEnv(kc);
+        var env = await kc.Resource.GetEnvironmentVariablesAsync();
 
         Assert.False(ReferenceEquals(user.Resource, env["KC_DB_USERNAME"]));
         Assert.False(ReferenceEquals(pass.Resource, env["KC_DB_PASSWORD"]));
@@ -97,7 +93,7 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db);
 
-        var env = await GetEnv(kc);
+        var env = await kc.Resource.GetEnvironmentVariablesAsync();
         Assert.NotEqual("postgres", env["KC_DB_USERNAME"].ToString());
         Assert.NotEqual("postgres", env["KC_DB_PASSWORD"].ToString());
     }
@@ -115,7 +111,7 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db, xaEnabled: xaEnabled);
 
-        var env = await GetEnv(kc);
+        var env = await kc.Resource.GetEnvironmentVariablesAsync();
         Assert.Equal(xaEnabled.ToString().ToLower(), env["KC_TRANSACTION_XA_ENABLED"]);
     }
 }

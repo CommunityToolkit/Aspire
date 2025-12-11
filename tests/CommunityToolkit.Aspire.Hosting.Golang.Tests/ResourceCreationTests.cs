@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Golang.Extensions.Tests;
 
@@ -37,7 +38,7 @@ public class ResourceCreationTests
 
         Assert.NotNull(resource);
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
         Assert.Collection(
             args,
             arg =>
@@ -75,7 +76,7 @@ public class ResourceCreationTests
 
         Assert.NotNull(resource);
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
         Assert.Collection(
             args,
             arg =>
