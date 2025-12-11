@@ -2,7 +2,6 @@ using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Aspire.Hosting.Azure;
 using CommunityToolkit.Aspire.Hosting.Dapr;
-using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 
 using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
 
@@ -15,7 +14,7 @@ public class ResourceCreationTests
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-        var redisState = builder.AddAzureRedis("redisState")
+        var redisState = builder.AddAzureManagedRedis("redisState")
                                 .WithAccessKeyAuthentication()
                                 .RunAsContainer();
 
@@ -41,7 +40,7 @@ public class ResourceCreationTests
         // Check there's an annotation on it
         Assert.Contains(daprStateStore.Annotations, a => a is AzureDaprComponentPublishingAnnotation);
 
-        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureManagedRedisResource>());
 
         string redisBicep = redisCache.GetBicepTemplateString();
 
@@ -116,7 +115,7 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-        var redisState = builder.AddAzureRedis("redisState")
+        var redisState = builder.AddAzureManagedRedis("redisState")
             .RunAsContainer();
 
         var daprState = builder.AddDaprStateStore("statestore")
@@ -141,7 +140,7 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
         // Check there's an annotation on it
         Assert.Contains(daprStateStore.Annotations, a => a is AzureDaprComponentPublishingAnnotation);
 
-        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureManagedRedisResource>());
 
         string redisBicep = redisCache.GetBicepTemplateString();
 
@@ -190,7 +189,7 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-        var redisState = builder.AddAzureRedis("redisState")
+        var redisState = builder.AddAzureManagedRedis("redisState")
                                 .ConfigureInfrastructure(infr =>
                                 {
                                     var redis = infr.GetProvisionableResources().OfType<AzureRedisResource>().Single();
@@ -220,7 +219,7 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
         // Check there's an annotation on it
         Assert.Contains(daprStateStore.Annotations, a => a is AzureDaprComponentPublishingAnnotation);
 
-        var redisCache = Assert.Single(appModel.Resources.OfType<AzureRedisCacheResource>());
+        var redisCache = Assert.Single(appModel.Resources.OfType<AzureManagedRedisResource>());
 
         string redisBicep = redisCache.GetBicepTemplateString();
 
@@ -274,7 +273,7 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-        var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
+        var redisState = builder.AddAzureManagedRedis("redisState").RunAsContainer();
 
         // The Redis connection should only be used with state store components
         var unknownComponent = builder.AddDaprComponent("unknown", "component");
@@ -310,7 +309,7 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
         // Add the Redis state and Dapr state store
-        var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
+        var redisState = builder.AddAzureManagedRedis("redisState").RunAsContainer();
         var daprState = builder.AddDaprStateStore("statestore");
 
         // Add an app with a sidecar
