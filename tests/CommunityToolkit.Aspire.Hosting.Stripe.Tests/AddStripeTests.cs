@@ -2,6 +2,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Stripe;
 
+using CommunityToolkit.Aspire.Testing;
 namespace CommunityToolkit.Aspire.Hosting.Stripe.Tests;
 
 public class AddStripeTests
@@ -45,7 +46,7 @@ public class AddStripeTests
 
         var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("listen", arg),
@@ -71,7 +72,7 @@ public class AddStripeTests
 
         var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("listen", arg),
@@ -100,7 +101,7 @@ public class AddStripeTests
 
         var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
 
         Assert.Contains(args, arg => arg == "--api-key");
         Assert.Contains(args, arg => arg == "sk_test_123");

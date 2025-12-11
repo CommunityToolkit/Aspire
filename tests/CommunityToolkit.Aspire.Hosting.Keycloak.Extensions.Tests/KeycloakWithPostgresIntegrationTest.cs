@@ -1,6 +1,7 @@
 ﻿using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests;
 
@@ -72,7 +73,7 @@ public class KeycloakWithPostgresIntegrationTest
             .WaitForResourceHealthyAsync(kc.Resource.Name)
             .WaitAsync(TimeSpan.FromMinutes(5));
 
-        var env = await kc.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await kc.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Equal("postgres", env["KC_DB"]);
         Assert.True(env.ContainsKey("KC_DB_URL"));

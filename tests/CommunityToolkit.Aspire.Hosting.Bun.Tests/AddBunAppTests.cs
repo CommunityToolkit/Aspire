@@ -1,5 +1,5 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Bun.Tests;
 
@@ -34,7 +34,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
@@ -55,7 +55,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("--watch", arg),
@@ -77,7 +77,7 @@ public class AddBunAppTests
 
         var resource = Assert.Single(appModel.Resources.OfType<BunAppResource>());
 
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
 
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),

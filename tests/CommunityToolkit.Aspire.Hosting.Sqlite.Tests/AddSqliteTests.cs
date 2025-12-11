@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite;
 public class AddSqliteTests
@@ -120,7 +121,7 @@ public class AddSqliteTests
         Assert.Equal(SqliteContainerImageTags.SqliteWebTag, imageAnnotation.Tag);
         Assert.Equal(SqliteContainerImageTags.SqliteWebRegistry, imageAnnotation.Registry);
 
-        var env = await sqliteWeb.GetEnvironmentVariableValuesAsync();
+        var env = await sqliteWeb.GetEnvironmentVariablesAsync();
         var envVar = Assert.Single(env);
         Assert.Equal("SQLITE_DATABASE", envVar.Key);
         Assert.Equal(sqlite.Resource.DatabaseFileName, envVar.Value);
