@@ -12,10 +12,10 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).1.0-preview.1.25610.7</AspireVersion>
+    <AspireVersion>$(AspireMajorVersion).1.0-preview.1.25611.5</AspireVersion>
     <AspirePreviewSuffix></AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.0</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.1</DotNetExtensionsVersion>
     <OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
     <MEAIVersion>9.9.0</MEAIVersion>
