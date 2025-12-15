@@ -46,11 +46,24 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db);
 
-        var env = await kc.Resource.GetEnvironmentVariablesAsync();
+        Assert.True(kc.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+
+        foreach(var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        var env = context.EnvironmentVariables;
 
         Assert.Equal("postgres", env["KC_DB"]);
         Assert.True(env.ContainsKey("KC_DB_URL"));
-        var url = env["KC_DB_URL"];
+        var exp = (ReferenceExpression)env["KC_DB_URL"];
+
+        var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+        var url = await exp.GetValueAsync(cancellationToken: cancellationTokenSource.Token);
         Assert.StartsWith("jdbc:postgresql://", url);
         Assert.EndsWith("/keycloakdb", url);
     }
