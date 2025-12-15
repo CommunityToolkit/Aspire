@@ -122,21 +122,21 @@ jobs:
 
       - name: Upload bin log artifact
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: binlog-${{ matrix.name }}-${{ matrix.os }}
           path: "**/*.binlog"
 
       - name: Upload test results artifact
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: testresults-${{ matrix.name }}-${{ matrix.os }}
           path: testresults/**
 
       - name: Upload npm logs if failed
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
           path: ${{ runner.os == 'Windows' && 'C:\\npm\\cache\\_logs\\**' || '~/.npm/cache/_logs/**' }}
