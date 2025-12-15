@@ -60,12 +60,9 @@ public class KeycloakExtensionTests
         Assert.Equal("postgres", env["KC_DB"]);
         Assert.True(env.ContainsKey("KC_DB_URL"));
         var exp = (ReferenceExpression)env["KC_DB_URL"];
-
-        var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-
-        var url = await exp.GetValueAsync(cancellationToken: cancellationTokenSource.Token);
-        Assert.StartsWith("jdbc:postgresql://", url);
-        Assert.EndsWith("/keycloakdb", url);
+        var urlFormat = exp.Format;
+        Assert.StartsWith("jdbc:postgresql://", urlFormat);
+        Assert.EndsWith("/keycloakdb", urlFormat);
     }
 
     [Fact]
@@ -81,7 +78,16 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db, user, pass);
 
-        var env = await kc.Resource.GetEnvironmentVariablesAsync();
+        Assert.True(kc.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+
+        foreach (var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        var env = context.EnvironmentVariables;
 
         Assert.False(ReferenceEquals(user.Resource, env["KC_DB_USERNAME"]));
         Assert.False(ReferenceEquals(pass.Resource, env["KC_DB_PASSWORD"]));
@@ -106,7 +112,16 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db);
 
-        var env = await kc.Resource.GetEnvironmentVariablesAsync();
+        Assert.True(kc.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+
+        foreach (var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        var env = context.EnvironmentVariables;
         Assert.NotEqual("postgres", env["KC_DB_USERNAME"].ToString());
         Assert.NotEqual("postgres", env["KC_DB_PASSWORD"].ToString());
     }
@@ -124,7 +139,16 @@ public class KeycloakExtensionTests
         var kc = app.AddKeycloak("kc")
             .WithPostgres(db, xaEnabled: xaEnabled);
 
-        var env = await kc.Resource.GetEnvironmentVariablesAsync();
+        Assert.True(kc.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+
+        foreach (var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        var env = context.EnvironmentVariables;
         Assert.Equal(xaEnabled.ToString().ToLower(), env["KC_TRANSACTION_XA_ENABLED"]);
     }
 }
