@@ -4,10 +4,10 @@ using Azure.Provisioning;
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning.Expressions;
 using Azure.Provisioning.KeyVault;
+using Azure.Provisioning.RedisEnterprise;
 using Azure.Provisioning.Roles;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
-using AzureRedisResource = Azure.Provisioning.Redis.RedisResource;
 
 namespace Aspire.Hosting;
 
@@ -137,17 +137,18 @@ public static class AzureRedisCacheDaprHostingExtensions
 
         builder.WithAnnotation(new AzureDaprComponentPublishingAnnotation(configureInfrastructure));
 
-        // Configure the Redis resource to output the connection string
+        // Configure the Redis Enterprise resource to output the connection string
         redisBuilder.ConfigureInfrastructure(infrastructure =>
         {
-            var redisResource = infrastructure.GetProvisionableResources().OfType<AzureRedisResource>().SingleOrDefault();
+            var redisDatabase = infrastructure.GetProvisionableResources().OfType<RedisEnterpriseDatabase>().SingleOrDefault();
+            var redisCluster = infrastructure.GetProvisionableResources().OfType<RedisEnterpriseCluster>().SingleOrDefault();
             var outputExists = infrastructure.GetProvisionableResources().OfType<ProvisioningOutput>().Any(o => o.BicepIdentifier == daprConnectionStringKey);
 
-            if (redisResource is not null && !outputExists)
+            if (redisCluster is not null && !outputExists)
             {
                 infrastructure.Add(new ProvisioningOutput(daprConnectionStringKey, typeof(string))
                 {
-                    Value = BicepFunction.Interpolate($"{redisResource.HostName}:{redisResource.SslPort}")
+                    Value = BicepFunction.Interpolate($"{redisCluster.HostName}:10000")
                 });
             }
         });
@@ -205,11 +206,13 @@ public static class AzureRedisCacheDaprHostingExtensions
 
         builder.WithAnnotation(new AzureDaprComponentPublishingAnnotation(configureInfrastructure));
 
-        // Configure the Redis resource to output the connection string and set up Key Vault secret
+        // Configure the Redis Enterprise resource to output the connection string and set up Key Vault secret
         redisBuilder.ConfigureInfrastructure(infrastructure =>
         {
-            var redisResource = infrastructure.GetProvisionableResources().OfType<AzureRedisResource>().SingleOrDefault();
-            if (redisResource is not null)
+            var redisDatabase = infrastructure.GetProvisionableResources().OfType<RedisEnterpriseDatabase>().SingleOrDefault();
+            var redisCluster = infrastructure.GetProvisionableResources().OfType<RedisEnterpriseCluster>().SingleOrDefault();
+            
+            if (redisCluster is not null && redisDatabase is not null)
             {
                 var keyVault = infrastructure.GetProvisionableResources().OfType<KeyVaultService>().SingleOrDefault();
                 if (keyVault is null)
@@ -224,7 +227,7 @@ public static class AzureRedisCacheDaprHostingExtensions
                     Name = "redis-password",
                     Properties = new SecretProperties
                     {
-                        Value = redisResource.GetKeys().PrimaryKey
+                        Value = redisDatabase.GetKeys().PrimaryKey
                     }
                 };
 
@@ -237,7 +240,7 @@ public static class AzureRedisCacheDaprHostingExtensions
 
                 infrastructure.Add(new ProvisioningOutput(daprConnectionStringKey, typeof(string))
                 {
-                    Value = BicepFunction.Interpolate($"{redisResource.HostName}:{redisResource.SslPort}")
+                    Value = BicepFunction.Interpolate($"{redisCluster.HostName}:10000")
                 });
             }
         });
