@@ -1,4 +1,6 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a RavenDB container.
@@ -19,7 +21,16 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// </summary>
     internal string TcpEndpointName = "tcp";
 
+    /// <summary>
+    /// The public server URL (domain) configured for this resource./>.
+    /// </summary>
     internal string? PublicServerUrl { get; init; }
+
+    /// <summary>
+    /// Optional client certificate used by hosting code (health checks, database
+    /// creation, etc.) when connecting to this RavenDB server in secured setups.
+    /// </summary>
+    internal X509Certificate2? ClientCertificate { get; init; }
 
     private EndpointReference? _primaryEndpoint;
     private EndpointReference? tcpEndpoint;

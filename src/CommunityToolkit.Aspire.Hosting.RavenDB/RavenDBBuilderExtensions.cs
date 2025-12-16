@@ -1,6 +1,10 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.RavenDB;
 using Microsoft.Extensions.DependencyInjection;
+using Raven.Client.Documents;
+using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.Operations;
+using System.Data.Common;
 
 namespace Aspire.Hosting;
 
@@ -57,7 +61,8 @@ public static class RavenDBBuilderExtensions
 
         var serverResource = new RavenDBServerResource(name, isSecured: securedSettings is not null)
         {
-            PublicServerUrl = securedSettings?.PublicServerUrl
+            PublicServerUrl = securedSettings?.PublicServerUrl,
+            ClientCertificate = securedSettings?.ClientCertificate
         };
 
         return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port, serverSettings.TcpPort);
@@ -98,7 +103,7 @@ public static class RavenDBBuilderExtensions
     int? tcpPort)
     {
         string? connectionString = null;
-        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(serverResource, async (@event, ct) =>
+        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(serverResource, async (_, ct) =>
         {
             connectionString = await serverResource.ConnectionStringExpression.GetValueAsync(ct)
                 .ConfigureAwait(false);
@@ -111,12 +116,12 @@ public static class RavenDBBuilderExtensions
         var healthCheckKey = $"{name}_check";
         builder.Services.AddHealthChecks()
             .AddRavenDB(_ => connectionString ?? throw new InvalidOperationException("Connection string is unavailable"),
-                name: healthCheckKey);
+                name: healthCheckKey,
+                certificate: serverResource.ClientCertificate);
 
         var effectiveTcpPort = tcpPort ?? 38888;
-
-        return builder
-            .AddResource(serverResource)
+        
+        return builder.AddResource(serverResource)
             .WithEndpoint(
                 port: port,
                 targetPort: serverResource.IsSecured ? 443 : 8080,
@@ -189,12 +194,14 @@ public static class RavenDBBuilderExtensions
     /// <param name="builder">The resource builder for the RavenDB server.</param>
     /// <param name="name">The name of the database resource.</param>
     /// <param name="databaseName">The name of the database to create/add. Defaults to the same name as the resource if not provided.</param>
+    /// <param name="ensureCreated">Indicates whether the database should be created on startup if it does not already exist.</param>
     /// <returns>A resource builder for the newly added RavenDB database resource.</returns>
     /// <exception cref="DistributedApplicationException">Thrown when the connection string cannot be retrieved during configuration.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the connection string is unavailable.</exception>
     public static IResourceBuilder<RavenDBDatabaseResource> AddDatabase(this IResourceBuilder<RavenDBServerResource> builder,
         [ResourceName] string name,
-        string? databaseName = null)
+        string? databaseName = null,
+        bool ensureCreated = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -219,10 +226,40 @@ public static class RavenDBBuilderExtensions
         builder.ApplicationBuilder.Services.AddHealthChecks()
             .AddRavenDB(sp => connectionString ?? throw new InvalidOperationException("Connection string is unavailable"),
                 databaseName: databaseName,
-                name: healthCheckKey);
+                name: healthCheckKey, 
+                certificate: databaseResource.Parent.ClientCertificate);
 
-        return builder.ApplicationBuilder
-            .AddResource(databaseResource);
+        var dbBuilder = builder.ApplicationBuilder.AddResource(databaseResource);
+
+        if (ensureCreated)
+        {
+            dbBuilder.OnResourceReady(async (resource, _, ct) =>
+            {
+                var connString = await databaseResource.ConnectionStringExpression.GetValueAsync(ct);
+                if (string.IsNullOrEmpty(connString))
+                    throw new InvalidOperationException("RavenDB connection string is not available.");
+
+                var csb = new DbConnectionStringBuilder { ConnectionString = connString };
+
+                if (!csb.TryGetValue("URL", out var urlObj) || urlObj is not string url)
+                    throw new InvalidOperationException("Connection string is missing 'URL'.");
+
+                using var store = new DocumentStore
+                {
+                    Urls = [url],
+                    Certificate = databaseResource.Parent.ClientCertificate
+                }.Initialize();
+
+                var record = await store.Maintenance.Server
+                    .SendAsync(new GetDatabaseRecordOperation(resource.DatabaseName), ct);
+
+                if (record == null)
+                    await store.Maintenance.Server.SendAsync(new CreateDatabaseOperation(new DatabaseRecord(resource.DatabaseName)), ct);
+
+            });
+        }
+
+        return dbBuilder;
     }
 
     /// <summary>
@@ -290,4 +327,5 @@ public static class RavenDBBuilderExtensions
 
         return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "logs"), "/var/log/ravendb/logs", isReadOnly);
     }
+
 }
