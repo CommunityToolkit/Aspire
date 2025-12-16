@@ -152,6 +152,9 @@ public static class RavenDBBuilderExtensions
 
             if (securedServerSettings.CertificatePassword is not null)
                 environmentVariables.TryAdd("RAVEN_Security_Certificate_Password", securedServerSettings.CertificatePassword);
+
+            var publicUri = new Uri(securedServerSettings.PublicServerUrl);
+            environmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", $"tcp://{publicUri.Host}:{serverSettings.TcpPort ?? 38888}");
         }
 
         return environmentVariables;
@@ -160,17 +163,19 @@ public static class RavenDBBuilderExtensions
     private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, RavenDBServerResource serverResource, Dictionary<string, object>? environmentVariables = null)
     {
         context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{serverResource.TcpEndpoint.Port}");
-        context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
 
         if (environmentVariables is null)
         {
             context.EnvironmentVariables.TryAdd("RAVEN_Setup_Mode", "None");
             context.EnvironmentVariables.TryAdd("RAVEN_Security_UnsecuredAccessAllowed", "PrivateNetwork");
-            return;
+        }
+        else
+        {
+            foreach (var environmentVariable in environmentVariables)
+                context.EnvironmentVariables.TryAdd(environmentVariable.Key, environmentVariable.Value);
         }
 
-        foreach (var environmentVariable in environmentVariables)
-            context.EnvironmentVariables.TryAdd(environmentVariable.Key, environmentVariable.Value);
+        context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
     }
 
     /// <summary>
