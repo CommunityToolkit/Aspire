@@ -53,7 +53,12 @@ public static class RavenDBBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         var environmentVariables = GetEnvironmentVariablesFromServerSettings(serverSettings);
-        var serverResource = new RavenDBServerResource(name, isSecured: serverSettings is RavenDBSecuredServerSettings);
+        var securedSettings = serverSettings as RavenDBSecuredServerSettings;
+
+        var serverResource = new RavenDBServerResource(name, isSecured: securedSettings is not null)
+        {
+            PublicServerUrl = securedSettings?.PublicServerUrl
+        };
 
         return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port, serverSettings.TcpPort);
     }
