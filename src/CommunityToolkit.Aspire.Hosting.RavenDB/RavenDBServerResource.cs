@@ -19,6 +19,8 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// </summary>
     internal string TcpEndpointName = "tcp";
 
+    internal string? PublicServerUrl { get; init; }
+
     private EndpointReference? _primaryEndpoint;
     private EndpointReference? tcpEndpoint;
 
@@ -46,8 +48,17 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// Gets the connection string expression for the RavenDB server, 
     /// formatted as "http(s)://{Host}:{Port}" depending on the security setting.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create(
-        $"URL={(IsSecured ? "https://" : "http://")}{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+    public ReferenceExpression ConnectionStringExpression
+    {
+        get
+        {
+            if (IsSecured && !string.IsNullOrEmpty(PublicServerUrl))
+                return ReferenceExpression.Create($"URL={PublicServerUrl}");
+
+            return ReferenceExpression.Create(
+                $"URL={(IsSecured ? "https://" : "http://")}{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+        }
+    }
 
     /// <summary>
     /// Gets the connection URI expression for the RavenDB server.
