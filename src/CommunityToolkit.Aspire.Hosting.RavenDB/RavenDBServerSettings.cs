@@ -1,4 +1,6 @@
-﻿namespace CommunityToolkit.Aspire.Hosting.RavenDB;
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace CommunityToolkit.Aspire.Hosting.RavenDB;
 
 /// <summary>
 /// Represents the settings for configuring a RavenDB server resource.
@@ -50,13 +52,16 @@ public class RavenDBServerSettings
     /// <param name="certificatePath">The path to the certificate file.</param>
     /// <param name="certificatePassword">The password for the certificate file, if required. Optional.</param>
     /// <param name="serverUrl">The optional server URL.</param>
+    /// <param name="clientCertificate">Optional client certificate used by management code (health checks, ensure-database, etc.)
+    /// when connecting to a secured RavenDB instance. </param>
     public static RavenDBServerSettings Secured(string domainUrl, string certificatePath,
-        string? certificatePassword = null, string? serverUrl = null)
+        string? certificatePassword = null, string? serverUrl = null, X509Certificate2? clientCertificate = null)
     {
         return new RavenDBSecuredServerSettings(certificatePath, certificatePassword, domainUrl)
         {
             SetupMode = SetupMode.Secured,
-            ServerUrl = serverUrl
+            ServerUrl = serverUrl,
+            ClientCertificate = clientCertificate
         };
     }
 
@@ -67,13 +72,16 @@ public class RavenDBServerSettings
     /// <param name="certificatePath">The path to the certificate file.</param>
     /// <param name="certificatePassword">The password for the certificate file, if required. Optional.</param>
     /// <param name="serverUrl">The optional server URL.</param>
+    /// <param name="clientCertificate">Optional client certificate used by management code (health checks, ensure-database, etc.)
+    /// when connecting to a secured RavenDB instance. </param>
     public static RavenDBServerSettings SecuredWithLetsEncrypt(string domainUrl, string certificatePath,
-        string? certificatePassword = null, string? serverUrl = null)
+        string? certificatePassword = null, string? serverUrl = null, X509Certificate2? clientCertificate = null)
     {
         return new RavenDBSecuredServerSettings(certificatePath, certificatePassword, domainUrl)
         {
             SetupMode = SetupMode.LetsEncrypt,
-            ServerUrl = serverUrl
+            ServerUrl = serverUrl,
+            ClientCertificate = clientCertificate
         };
     }
 
@@ -107,6 +115,13 @@ public sealed class RavenDBSecuredServerSettings(string certificatePath, string?
     /// The public server URL (domain) that the secured RavenDB server will expose.
     /// </summary>
     public string PublicServerUrl { get; } = publicServerUrl;
+
+    /// <summary>
+    /// Optional client certificate that will be used by client components
+    /// (for example health checks or ensure-database logic) when connecting to
+    /// this secured RavenDB server.
+    /// </summary>
+    public X509Certificate2? ClientCertificate { get; init; }
 }
 
 /// <summary>
