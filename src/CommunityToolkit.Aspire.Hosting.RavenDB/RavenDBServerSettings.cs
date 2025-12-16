@@ -6,7 +6,7 @@
 public class RavenDBServerSettings
 {
     /// <summary>
-    /// The iternal URL for the RavenDB server.
+    /// The internal URL for the RavenDB server.
     /// If not specified, the container resource will automatically assign a random URL.
     /// </summary>
     public string? ServerUrl { get; set; }
@@ -20,6 +20,18 @@ public class RavenDBServerSettings
     /// Gets the licensing options configured for the server.
     /// </summary>
     public LicensingOptions? LicensingOptions { get; private set; }
+
+    /// <summary>
+    /// Optional port to expose for the HTTP endpoint (Studio / REST API).
+    /// If not set, Aspire will automatically assign a free port on the host at runtime.
+    /// </summary>
+    public int? Port { get; set; }
+
+    /// <summary>
+    /// Optional port to expose for the TCP endpoint (data / cluster traffic).
+    /// If not set, the default 38888 is used.
+    /// </summary>
+    public int? TcpPort { get; set; }
 
     /// <summary>
     /// Protected constructor to allow inheritance but prevent direct instantiation.

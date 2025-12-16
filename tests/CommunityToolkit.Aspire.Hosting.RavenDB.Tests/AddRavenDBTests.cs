@@ -135,4 +135,46 @@ public class AddRavenDBTests
 
         Assert.Equal(isReadOnly, annotation.IsReadOnly);
     }
+
+    [Fact]
+    public void CanAddRavenServerWithCustomPort()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var settings = RavenDBServerSettings.Unsecured();
+        settings.Port = 8081;
+
+        appBuilder.AddRavenDB("ravenServer", serverSettings: settings);
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var serverResource = Assert.Single(appModel.Resources.OfType<RavenDBServerResource>());
+        Assert.Equal("ravenServer", serverResource.Name);
+
+        var httpEndpoint = serverResource.Annotations.OfType<EndpointAnnotation>().FirstOrDefault(e => e.Name == "http");
+        Assert.Equal(settings.Port, httpEndpoint?.Port);
+    }
+
+    [Fact]
+    public void CanAddRavenServerWithCustomTcpPort()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var settings = RavenDBServerSettings.Unsecured();
+        settings.TcpPort = 38889;
+
+        appBuilder.AddRavenDB("ravenServer", serverSettings: settings);
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var serverResource = Assert.Single(appModel.Resources.OfType<RavenDBServerResource>());
+        Assert.Equal("ravenServer", serverResource.Name);
+
+        var tcpEndpoint = serverResource.Annotations.OfType<EndpointAnnotation>().FirstOrDefault(e => e.Name == "tcp");
+        Assert.Equal(settings.TcpPort, tcpEndpoint?.Port);
+    }
 }

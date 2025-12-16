@@ -8,7 +8,7 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// <summary>
     /// Indicates whether the server connection is secured (HTTPS) or not (HTTP).
     /// </summary>
-    private bool IsSecured { get; } = isSecured;
+    internal bool IsSecured { get; } = isSecured;
 
     /// <summary>
     /// Gets the protocol used for the primary endpoint, based on the security setting ("http" or "https").

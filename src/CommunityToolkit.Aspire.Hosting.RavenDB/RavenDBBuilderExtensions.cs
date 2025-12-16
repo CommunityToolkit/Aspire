@@ -53,7 +53,9 @@ public static class RavenDBBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         var environmentVariables = GetEnvironmentVariablesFromServerSettings(serverSettings);
-        return builder.AddRavenDB(name, secured: serverSettings is RavenDBSecuredServerSettings, environmentVariables);
+        var serverResource = new RavenDBServerResource(name, isSecured: serverSettings is RavenDBSecuredServerSettings);
+
+        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port, serverSettings.TcpPort);
     }
 
     /// <summary>
@@ -79,24 +81,48 @@ public static class RavenDBBuilderExtensions
 
         var serverResource = new RavenDBServerResource(name, secured);
 
+        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, port, tcpPort: null);
+    }
+
+    private static IResourceBuilder<RavenDBServerResource> AddRavenDbInternal(
+    IDistributedApplicationBuilder builder,
+    string name,
+    RavenDBServerResource serverResource,
+    Dictionary<string, object> environmentVariables,
+    int? port,
+    int? tcpPort)
+    {
         string? connectionString = null;
         builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(serverResource, async (@event, ct) =>
         {
-            connectionString = await serverResource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
+            connectionString = await serverResource.ConnectionStringExpression.GetValueAsync(ct)
+                .ConfigureAwait(false);
 
             if (connectionString is null)
-                throw new DistributedApplicationException($"ConnectionStringAvailableEvent was published for the '{serverResource.Name}' resource but the connection string was null.");
+                throw new DistributedApplicationException(
+                    $"ConnectionStringAvailableEvent was published for the '{serverResource.Name}' resource but the connection string was null.");
         });
 
         var healthCheckKey = $"{name}_check";
         builder.Services.AddHealthChecks()
-            .AddRavenDB(sp => connectionString ?? throw new InvalidOperationException("Connection string is unavailable"),
+            .AddRavenDB(_ => connectionString ?? throw new InvalidOperationException("Connection string is unavailable"),
                 name: healthCheckKey);
+
+        var effectiveTcpPort = tcpPort ?? 38888;
 
         return builder
             .AddResource(serverResource)
-            .WithEndpoint(port: port, targetPort: secured ? 443 : 8080, scheme: serverResource.PrimaryEndpointName, name: serverResource.PrimaryEndpointName, isProxied: false)
-            .WithEndpoint(port: 38888, name: serverResource.TcpEndpointName, isProxied: false)
+            .WithEndpoint(
+                port: port,
+                targetPort: serverResource.IsSecured ? 443 : 8080,
+                scheme: serverResource.PrimaryEndpointName,
+                name: serverResource.PrimaryEndpointName,
+                isProxied: false)
+            .WithEndpoint(
+                port: effectiveTcpPort,
+                targetPort: effectiveTcpPort,
+                name: serverResource.TcpEndpointName,
+                isProxied: false)
             .WithImage(RavenDBContainerImageTags.Image, RavenDBContainerImageTags.Tag)
             .WithImageRegistry(RavenDBContainerImageTags.Registry)
             .WithEnvironment(context => ConfigureEnvironmentVariables(context, serverResource, environmentVariables))
