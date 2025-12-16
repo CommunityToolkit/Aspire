@@ -253,4 +253,41 @@ public static class RavenDBBuilderExtensions
 
         return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/ravendb/data", isReadOnly);
     }
+
+    /// <summary>
+    /// Adds a bind mount for the logs folder to a RavenDB container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder for the RavenDB server.</param>
+    /// <param name="source">The source directory on the host to mount into the container.</param>
+    /// <param name="isReadOnly">Indicates whether the bind mount should be read-only. Defaults to false.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
+    public static IResourceBuilder<RavenDBServerResource> WithLogBindMount(
+        this IResourceBuilder<RavenDBServerResource> builder,
+        string source,
+        bool isReadOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(source);
+
+        return builder.WithBindMount(source, "/var/log/ravendb/logs", isReadOnly);
+    }
+
+    /// <summary>
+    /// Adds a named volume for the logs folder to a RavenDB container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder for the RavenDB server.</param>
+    /// <param name="name">
+    /// Optional name for the volume. Defaults to a generated name if not provided.
+    /// </param>
+    /// <param name="isReadOnly">Indicates whether the volume should be read-only. Defaults to false.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
+    public static IResourceBuilder<RavenDBServerResource> WithLogVolume(
+        this IResourceBuilder<RavenDBServerResource> builder,
+        string? name = null,
+        bool isReadOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "logs"), "/var/log/ravendb/logs", isReadOnly);
+    }
 }
