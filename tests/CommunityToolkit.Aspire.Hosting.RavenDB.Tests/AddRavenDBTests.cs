@@ -177,4 +177,43 @@ public class AddRavenDBTests
         var tcpEndpoint = serverResource.Annotations.OfType<EndpointAnnotation>().FirstOrDefault(e => e.Name == "tcp");
         Assert.Equal(settings.TcpPort, tcpEndpoint?.Port);
     }
+
+    [Fact]
+    public void CanAddRavenServerWithLogVolume()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        _ = builder.AddRavenDB("raven").WithLogVolume("logs");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<RavenDBServerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var logMount = Assert.Single(annotations, a => a.Target == "/var/log/ravendb/logs");
+
+        Assert.Equal("logs", logMount.Source);
+    }
+
+    [Fact]
+    public void CanAddRavenServerWithLogBindMount()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var hostLogPath = "/host-logs/ravendb";
+
+        _ = builder.AddRavenDB("raven").WithLogBindMount(hostLogPath);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<RavenDBServerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var annotations));
+
+        var logMount = Assert.Single(annotations, a => a.Target == "/var/log/ravendb/logs");
+
+        Assert.Equal(hostLogPath, logMount.Source);
+        Assert.Equal("/var/log/ravendb/logs", logMount.Target);
+    }
 }
