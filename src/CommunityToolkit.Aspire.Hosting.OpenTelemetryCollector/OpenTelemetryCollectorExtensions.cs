@@ -34,8 +34,6 @@ public static class OpenTelemetryCollectorExtensions
         var settings = new OpenTelemetryCollectorSettings();
         configureSettings?.Invoke(settings);
 
-        var isHttpsEnabled = !settings.ForceNonSecureReceiver && url.StartsWith("https", StringComparison.OrdinalIgnoreCase);
-
         var resource = new OpenTelemetryCollectorResource(name);
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(settings.CollectorImage, settings.CollectorTag)
@@ -43,33 +41,13 @@ public static class OpenTelemetryCollectorExtensions
             .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName])
             .WithIconName("DesktopPulse");
 
+        var useHttpsForReceivers = !settings.ForceNonSecureReceiver && url.StartsWith("https", StringComparison.OrdinalIgnoreCase);
+
         if (settings.EnableGrpcEndpoint)
-            resourceBuilder.WithEndpoint(targetPort: 4317, name: OpenTelemetryCollectorResource.GrpcEndpointName, scheme: isHttpsEnabled ? "https" : "http");
+            ConfigureReceiver(4317, OpenTelemetryCollectorResource.GrpcEndpointName);
+
         if (settings.EnableHttpEndpoint)
-            resourceBuilder.WithEndpoint(targetPort: 4318, name: OpenTelemetryCollectorResource.HttpEndpointName, scheme: isHttpsEnabled ? "https" : "http");
-
-
-        if (!settings.ForceNonSecureReceiver && isHttpsEnabled && builder.ExecutionContext.IsRunMode)
-        {
-            resourceBuilder.RunWithHttpsDevCertificate();
-
-            // Not using `Path.Combine` as we MUST use unix style paths in the container
-            var certFilePath = $"{DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/{DevCertHostingExtensions.CERT_FILE_NAME}";
-            var certKeyPath = $"{DevCertHostingExtensions.DEV_CERT_BIND_MOUNT_DEST_DIR}/{DevCertHostingExtensions.CERT_KEY_FILE_NAME}";
-
-            if (settings.EnableHttpEndpoint)
-            {
-                resourceBuilder.WithArgs(
-                    $@"--config=yaml:receivers::otlp::protocols::http::tls::cert_file: ""{certFilePath}""",
-                    $@"--config=yaml:receivers::otlp::protocols::http::tls::key_file: ""{certKeyPath}""");
-            }
-            if (settings.EnableGrpcEndpoint)
-            {
-                resourceBuilder.WithArgs(
-                    $@"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: ""{certFilePath}""",
-                    $@"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""{certKeyPath}""");
-            }
-        }
+            ConfigureReceiver(4318, OpenTelemetryCollectorResource.HttpEndpointName);
 
         if (!settings.DisableHealthcheck)
         {
@@ -83,6 +61,26 @@ public static class OpenTelemetryCollectorExtensions
                     );
         }
         return resourceBuilder;
+
+        void ConfigureReceiver(int port, string protocol)
+        {
+            var scheme = useHttpsForReceivers ? "https" : "http";
+            resourceBuilder.WithEndpoint(targetPort: port, name: protocol, scheme: scheme);
+
+            if (!useHttpsForReceivers)
+            {
+                return;
+            }
+
+#pragma warning disable ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            resourceBuilder.WithHttpsCertificateConfiguration(ctx =>
+            {
+                ctx.Arguments.Add(ReferenceExpression.Create($@"--config=yaml:receivers::otlp::protocols::{protocol}::tls::cert_file: ""{ctx.CertificatePath}"""));
+                ctx.Arguments.Add(ReferenceExpression.Create($@"--config=yaml:receivers::otlp::protocols::{protocol}::tls::key_file: ""{ctx.KeyPath}"""));
+                return Task.CompletedTask;
+            });
+#pragma warning restore ASPIRECERTIFICATES001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        }        
     }
 
     /// <summary>
@@ -123,5 +121,4 @@ public static class OpenTelemetryCollectorExtensions
         return builder.WithBindMount(configPath, $"/config/{configFileInfo.Name}")
             .WithArgs($"--config=/config/{configFileInfo.Name}");
     }
-
 }
