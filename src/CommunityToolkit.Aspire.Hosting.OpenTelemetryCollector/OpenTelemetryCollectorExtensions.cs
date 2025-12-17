@@ -38,7 +38,8 @@ public static class OpenTelemetryCollectorExtensions
 
         var resource = new OpenTelemetryCollectorResource(name);
         var resourceBuilder = builder.AddResource(resource)
-            .WithImage(settings.CollectorImage, settings.CollectorTag)
+            .WithImage(settings.Image, settings.CollectorTag)
+            .WithImageRegistry(settings.Registry)
             .WithEnvironment("ASPIRE_ENDPOINT", new HostUrl(url))
             .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName])
             .WithIconName("DesktopPulse");
