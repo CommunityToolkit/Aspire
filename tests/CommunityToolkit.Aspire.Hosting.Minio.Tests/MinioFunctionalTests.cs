@@ -1,10 +1,10 @@
 ﻿using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Hosting;
 using Minio;
 using Minio.DataModel.Args;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Minio.Tests;
 
