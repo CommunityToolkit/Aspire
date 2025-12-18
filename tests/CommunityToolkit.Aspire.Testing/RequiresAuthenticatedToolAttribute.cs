@@ -37,11 +37,13 @@ public sealed class RequiresAuthenticatedToolAttribute : Attribute, ITraitAttrib
 
     public IReadOnlyCollection<KeyValuePair<string, string>> GetTraits()
     {
+        IReadOnlyCollection<KeyValuePair<string, string>> traits = [new("RequiresTools", ToolName)];
+
         if (!IsSupported)
         {
-            return [new KeyValuePair<string, string>(XunitConstants.Category, "failing")];
+            traits = [.. traits, new KeyValuePair<string, string>(XunitConstants.Category, "unsupported-platform")];
         }
 
-        return [];
+        return traits;
     }
 }
