@@ -12,11 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" />
-    <PackageReference Include="coverlet.collector" />
     <PackageReference Include="MartinCostello.Logging.XUnit.v3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3.mtp-v2" />
-    <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="GitHubActionsTestLogger" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
@@ -35,14 +32,11 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
-
-  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <!-- ignore exit code 8 (zero tests ran)
          https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-exit-codes -->
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8 --filter-not-trait &quot;category=failing&quot;</TestingPlatformCommandLineArguments>
-
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
 </Project>
