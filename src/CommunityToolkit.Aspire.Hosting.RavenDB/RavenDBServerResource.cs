@@ -22,7 +22,7 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     internal string TcpEndpointName = "tcp";
 
     /// <summary>
-    /// The public server URL (domain) configured for this resource./>.
+    /// The public server URL (domain) configured for this resource.
     /// </summary>
     internal string? PublicServerUrl { get; init; }
 
