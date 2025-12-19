@@ -23,46 +23,47 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
         var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("postgres", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_postgres1", item.Key);
+                Assert.Equal("LABEL_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("SERVER_postgres1", item.Key);
+                Assert.Equal("SERVER_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("USER_postgres1", item.Key);
+                Assert.Equal("USER_postgres", item.Key);
                 Assert.Equal("postgres", item.Value);
             },
             async item =>
             {
-                Assert.Equal("PASSWORD_postgres1", item.Key);
+                Assert.Equal("PASSWORD_postgres", item.Key);
                 Assert.Equal(await postgresResource.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
-                Assert.Equal("PORT_postgres1", item.Key);
+                Assert.Equal("PORT_postgres", item.Key);
                 Assert.Equal(postgresResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_postgres1", item.Key);
+                Assert.Equal("ENGINE_postgres", item.Key);
                 Assert.Equal("postgres@dbgate-plugin-postgres", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("postgres1", item.Value);
             });
     }
 
@@ -80,7 +81,7 @@ public class ResourceCreationTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
     }
 
     [Fact]
@@ -141,11 +142,17 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
         var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("postgres1,postgres2", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
@@ -206,11 +213,6 @@ public class ResourceCreationTests
             {
                 Assert.Equal("ENGINE_postgres2", item.Key);
                 Assert.Equal("postgres@dbgate-plugin-postgres", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("postgres1,postgres2", item.Value);
             });
     }
 
@@ -237,46 +239,47 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
         var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("postgres", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_postgres1", item.Key);
+                Assert.Equal("LABEL_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("SERVER_postgres1", item.Key);
+                Assert.Equal("SERVER_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("USER_postgres1", item.Key);
+                Assert.Equal("USER_postgres", item.Key);
                 Assert.Equal(username, item.Value);
             },
             item =>
             {
-                Assert.Equal("PASSWORD_postgres1", item.Key);
+                Assert.Equal("PASSWORD_postgres", item.Key);
                 Assert.Equal(password, item.Value);
             },
             item =>
             {
-                Assert.Equal("PORT_postgres1", item.Key);
+                Assert.Equal("PORT_postgres", item.Key);
                 Assert.Equal(postgresResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_postgres1", item.Key);
+                Assert.Equal("ENGINE_postgres", item.Key);
                 Assert.Equal("postgres@dbgate-plugin-postgres", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("postgres1", item.Value);
             });
     }
 
