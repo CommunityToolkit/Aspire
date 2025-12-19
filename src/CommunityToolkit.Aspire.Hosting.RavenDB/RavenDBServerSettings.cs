@@ -1,4 +1,6 @@
-﻿namespace CommunityToolkit.Aspire.Hosting.RavenDB;
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace CommunityToolkit.Aspire.Hosting.RavenDB;
 
 /// <summary>
 /// Represents the settings for configuring a RavenDB server resource.
@@ -6,7 +8,7 @@
 public class RavenDBServerSettings
 {
     /// <summary>
-    /// The iternal URL for the RavenDB server.
+    /// The internal URL for the RavenDB server.
     /// If not specified, the container resource will automatically assign a random URL.
     /// </summary>
     public string? ServerUrl { get; set; }
@@ -20,6 +22,18 @@ public class RavenDBServerSettings
     /// Gets the licensing options configured for the server.
     /// </summary>
     public LicensingOptions? LicensingOptions { get; private set; }
+
+    /// <summary>
+    /// Optional port to expose for the HTTP endpoint (Studio / REST API).
+    /// If not set, Aspire will automatically assign a free port on the host at runtime.
+    /// </summary>
+    public int? Port { get; set; }
+
+    /// <summary>
+    /// Optional port to expose for the TCP endpoint (data / cluster traffic).
+    /// If not set, the default 38888 is used.
+    /// </summary>
+    public int? TcpPort { get; set; }
 
     /// <summary>
     /// Protected constructor to allow inheritance but prevent direct instantiation.
@@ -38,13 +52,16 @@ public class RavenDBServerSettings
     /// <param name="certificatePath">The path to the certificate file.</param>
     /// <param name="certificatePassword">The password for the certificate file, if required. Optional.</param>
     /// <param name="serverUrl">The optional server URL.</param>
+    /// <param name="clientCertificate">Optional client certificate used by management code (health checks, ensure-database, etc.)
+    /// when connecting to a secured RavenDB instance. </param>
     public static RavenDBServerSettings Secured(string domainUrl, string certificatePath,
-        string? certificatePassword = null, string? serverUrl = null)
+        string? certificatePassword = null, string? serverUrl = null, X509Certificate2? clientCertificate = null)
     {
         return new RavenDBSecuredServerSettings(certificatePath, certificatePassword, domainUrl)
         {
             SetupMode = SetupMode.Secured,
-            ServerUrl = serverUrl
+            ServerUrl = serverUrl,
+            ClientCertificate = clientCertificate
         };
     }
 
@@ -55,13 +72,16 @@ public class RavenDBServerSettings
     /// <param name="certificatePath">The path to the certificate file.</param>
     /// <param name="certificatePassword">The password for the certificate file, if required. Optional.</param>
     /// <param name="serverUrl">The optional server URL.</param>
+    /// <param name="clientCertificate">Optional client certificate used by management code (health checks, ensure-database, etc.)
+    /// when connecting to a secured RavenDB instance. </param>
     public static RavenDBServerSettings SecuredWithLetsEncrypt(string domainUrl, string certificatePath,
-        string? certificatePassword = null, string? serverUrl = null)
+        string? certificatePassword = null, string? serverUrl = null, X509Certificate2? clientCertificate = null)
     {
         return new RavenDBSecuredServerSettings(certificatePath, certificatePassword, domainUrl)
         {
             SetupMode = SetupMode.LetsEncrypt,
-            ServerUrl = serverUrl
+            ServerUrl = serverUrl,
+            ClientCertificate = clientCertificate
         };
     }
 
@@ -95,6 +115,13 @@ public sealed class RavenDBSecuredServerSettings(string certificatePath, string?
     /// The public server URL (domain) that the secured RavenDB server will expose.
     /// </summary>
     public string PublicServerUrl { get; } = publicServerUrl;
+
+    /// <summary>
+    /// Optional client certificate that will be used by client components
+    /// (for example health checks or ensure-database logic) when connecting to
+    /// this secured RavenDB server.
+    /// </summary>
+    public X509Certificate2? ClientCertificate { get; init; }
 }
 
 /// <summary>
