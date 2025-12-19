@@ -65,15 +65,18 @@ public static class ZitadelHostingExtensions
             .WithEnvironment("ZITADEL_MASTERKEY", masterKeyParameter)
             .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
-            .WithHttpsCertificateConfiguration(ctx =>
-            {
-                ctx.EnvironmentVariables["ZITADEL_EXTERNALSECURE"] = "true";
-                ctx.EnvironmentVariables["ZITADEL_TLS_ENABLED"] = "true";
-                ctx.EnvironmentVariables["ZITADEL_TLS_CERTPATH"] = ctx.CertificatePath;
-                ctx.EnvironmentVariables["ZITADEL_TLS_KEYPATH"] = ctx.KeyPath;
-                return Task.CompletedTask;
-            })
             .WithUrlForEndpoint(ZitadelResource.HttpEndpointName, e => e.DisplayText = "Zitadel Dashboard");
+
+#pragma warning disable ASPIRECERTIFICATES001 Allow for Zitadel SSL support
+        zitadelBuilder.WithHttpsCertificateConfiguration(ctx =>
+        {
+            ctx.EnvironmentVariables["ZITADEL_EXTERNALSECURE"] = "true";
+            ctx.EnvironmentVariables["ZITADEL_TLS_ENABLED"] = "true";
+            ctx.EnvironmentVariables["ZITADEL_TLS_CERTPATH"] = ctx.CertificatePath;
+            ctx.EnvironmentVariables["ZITADEL_TLS_KEYPATH"] = ctx.KeyPath;
+            return Task.CompletedTask;
+        });
+#pragma warning restore ASPIRECERTIFICATES001
 
         // Use ReferenceExpression for the port to avoid issues with endpoint allocation
         var endpoint = resource.GetEndpoint(ZitadelResource.HttpEndpointName, KnownNetworkIdentifiers.LocalhostNetwork);
@@ -82,6 +85,7 @@ public static class ZitadelHostingExtensions
 
         if (builder.ExecutionContext.IsRunMode)
         {
+#pragma warning disable ASPIRECERTIFICATES001 Allow for Zitadel SSL support
             builder.Eventing.Subscribe<BeforeStartEvent>((@event, cancellationToken) =>
             {
                 var developerCertificateService = @event.Services.GetRequiredService<IDeveloperCertificateService>();
@@ -111,6 +115,7 @@ public static class ZitadelHostingExtensions
 
                 return Task.CompletedTask;
             });
+#pragma warning restore ASPIRECERTIFICATES001
         }
 
         return zitadelBuilder
