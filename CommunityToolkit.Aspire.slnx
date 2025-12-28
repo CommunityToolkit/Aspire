@@ -179,9 +179,11 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Flyway/CommunityToolkit.Aspire.Hosting.Flyway.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Golang/CommunityToolkit.Aspire.Hosting.Golang.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Java/CommunityToolkit.Aspire.Hosting.Java.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.k6/CommunityToolkit.Aspire.Hosting.k6.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.KurrentDB/CommunityToolkit.Aspire.Hosting.KurrentDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
@@ -192,7 +194,6 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
@@ -234,10 +235,13 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Golang.Tests/CommunityToolkit.Aspire.Hosting.Golang.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Java.Tests/CommunityToolkit.Aspire.Hosting.Java.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.k6.Tests/CommunityToolkit.Aspire.Hosting.k6.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests.csproj" />
@@ -247,7 +251,6 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
@@ -263,7 +266,6 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests.csproj" />
