@@ -437,4 +437,88 @@ public class ResourceCreationTests
         Assert.Equal("ADMINER_SERVERS", item.Key);
         Assert.Equal(envValue, item.Value);
     }
+
+    [Fact]
+    public async Task WithFlywayMigrationAddsFlywayWithExpectedContainerArgs()
+    {
+        const string postgresResourceName = "postgres-for-testing";
+        const string postgresUsername = "not-default-username";
+        const string postgresPassword = "super-secure-password";
+        const string postgresDatabaseName = "my-db";
+
+        var builder = DistributedApplication.CreateBuilder();
+
+        var userNameParameter = builder.AddParameter("username-param", postgresUsername);
+        var passwordParameter = builder.AddParameter("password-param", postgresPassword);
+
+        var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
+        _ = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+            .AddDatabase(postgresDatabaseName)
+            .WithFlywayMigration(flywayResourceBuilder);
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var retrievedFlywayResource = appModel.Resources.OfType<FlywayResource>().SingleOrDefault();
+        Assert.NotNull(retrievedFlywayResource);
+
+        var expectedArgs = new List<string>
+        {
+            $"-url=jdbc:postgresql://{postgresResourceName}:5432/{postgresDatabaseName}",
+            $"-user={postgresUsername}",
+            $"-password={postgresPassword}",
+            "migrate"
+        };
+
+        var actualArgs = await retrievedFlywayResource.GetArgumentValuesAsync();
+        Assert.Equal(expectedArgs.Count, actualArgs.Length);
+        Assert.Collection(
+            actualArgs,
+            arg => Assert.Equal(expectedArgs[0], arg),
+            arg => Assert.Equal(expectedArgs[1], arg),
+            arg => Assert.Equal(expectedArgs[2], arg),
+            arg => Assert.Equal(expectedArgs[3], arg));
+    }
+
+    [Fact]
+    public async Task WithFlywayRepairAddsFlywayWithExpectedContainerArgs()
+    {
+        const string postgresResourceName = "postgres-for-testing";
+        const string postgresUsername = "not-default-username";
+        const string postgresPassword = "super-secure-password";
+        const string postgresDatabaseName = "my-db";
+
+        var builder = DistributedApplication.CreateBuilder();
+
+        var userNameParameter = builder.AddParameter("username-param", postgresUsername);
+        var passwordParameter = builder.AddParameter("password-param", postgresPassword);
+
+        var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
+        _ = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+            .AddDatabase(postgresDatabaseName)
+            .WithFlywayRepair(flywayResourceBuilder);
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var retrievedFlywayResource = appModel.Resources.OfType<FlywayResource>().SingleOrDefault();
+        Assert.NotNull(retrievedFlywayResource);
+
+        var expectedArgs = new List<string>
+        {
+            $"-url=jdbc:postgresql://{postgresResourceName}:5432/{postgresDatabaseName}",
+            $"-user={postgresUsername}",
+            $"-password={postgresPassword}",
+            "repair"
+        };
+
+        var actualArgs = await retrievedFlywayResource.GetArgumentValuesAsync();
+        Assert.Equal(expectedArgs.Count, actualArgs.Length);
+        Assert.Collection(
+            actualArgs,
+            arg => Assert.Equal(expectedArgs[0], arg),
+            arg => Assert.Equal(expectedArgs[1], arg),
+            arg => Assert.Equal(expectedArgs[2], arg),
+            arg => Assert.Equal(expectedArgs[3], arg));
+    }
 }
