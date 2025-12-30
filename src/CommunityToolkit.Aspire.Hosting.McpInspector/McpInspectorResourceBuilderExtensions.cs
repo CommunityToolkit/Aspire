@@ -56,7 +56,6 @@ public static class McpInspectorResourceBuilderExtensions
         var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName))
             .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
             .WithCommand("npx")
-            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
             .WithCertificateTrustConfiguration(ctx =>
             {
                 if (ctx.Scope == CertificateTrustScope.Append)
@@ -316,6 +315,9 @@ public static class McpInspectorResourceBuilderExtensions
                     ctx.Args.Insert(0, packageName);
                     ctx.Args.Insert(0, "dlx");
                     break;
+                case "bunx":
+                    ctx.Args.Insert(0, packageName);
+                    break;
                 default: // npm/npx
                     ctx.Args.Insert(0, packageName);
                     ctx.Args.Insert(0, "-y");
@@ -346,5 +348,17 @@ public static class McpInspectorResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder.WithCommand("pnpm");
+    }
+
+    /// <summary>
+    /// Configures the MCP Inspector to use bun as the package manager.
+    /// </summary>
+    /// <param name="builder">The MCP Inspector resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<McpInspectorResource> WithBun(this IResourceBuilder<McpInspectorResource> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithCommand("bunx");
     }
 }
