@@ -112,6 +112,25 @@ public class WithDaprSidecarTests
     }
 
     [Fact]
+    public void ResourceWithDaprSidecarAndNoWaitAnnotations_CreatesBasicSidecar()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var app = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WithDaprSidecar();
+
+        // Verify no wait annotations on the main resource
+        Assert.Empty(app.Resource.Annotations.OfType<WaitAnnotation>());
+
+        // Verify the sidecar resource exists
+        var sidecarResource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+
+        // Verify the sidecar is properly linked
+        var sidecarAnnotation = Assert.Single(app.Resource.Annotations.OfType<DaprSidecarAnnotation>());
+        Assert.Equal(sidecarResource, sidecarAnnotation.Sidecar);
+    }
+    
+    [Fact]
     public void ResourceWithWaitAnnotationAndDaprSidecar_SetsUpCorrectDependencies()
     {
         var builder = DistributedApplication.CreateBuilder();
