@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
 
@@ -110,5 +109,54 @@ public class WithDaprSidecarTests
         // Verify specific component references
         Assert.Contains(referenceAnnotations, a => a.Component.Name == "statestore");
         Assert.Contains(referenceAnnotations, a => a.Component.Name == "pubsub");
+    }
+
+    [Fact]
+    public void ResourceWithWaitAnnotationAndDaprSidecar_SetsUpCorrectDependencies()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        
+        var database = builder.AddContainer("db", "postgres");
+        
+        var app = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WaitFor(database)
+            .WithDaprSidecar();
+        
+        // Verify the main resource has the wait annotation
+        var waitAnnotation = Assert.Single(app.Resource.Annotations.OfType<WaitAnnotation>());
+        Assert.Equal("db", waitAnnotation.Resource.Name);
+        
+        // Verify the sidecar resource exists
+        var sidecarResource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        Assert.NotNull(sidecarResource);
+        
+        // The actual propagation happens in the lifecycle hook, but we can verify the setup is correct
+        var sidecarAnnotation = Assert.Single(app.Resource.Annotations.OfType<DaprSidecarAnnotation>());
+        Assert.Equal(sidecarResource, sidecarAnnotation.Sidecar);
+    }
+
+    [Fact] 
+    public void ResourceWithMultipleWaitAnnotationsAndDaprSidecar_HasAllWaitDependencies()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        
+        var database = builder.AddContainer("db", "postgres");
+        var redis = builder.AddContainer("cache", "redis");
+        
+        var app = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WaitFor(database)
+            .WaitFor(redis)
+            .WithDaprSidecar();
+        
+        // Verify the main resource has both wait annotations
+        var waitAnnotations = app.Resource.Annotations.OfType<WaitAnnotation>().ToList();
+        Assert.Equal(2, waitAnnotations.Count);
+        Assert.Contains(waitAnnotations, w => w.Resource.Name == "db");
+        Assert.Contains(waitAnnotations, w => w.Resource.Name == "cache");
+        
+        // Verify the sidecar resource exists and is properly linked
+        var sidecarResource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        var sidecarAnnotation = Assert.Single(app.Resource.Annotations.OfType<DaprSidecarAnnotation>());
+        Assert.Equal(sidecarResource, sidecarAnnotation.Sidecar);
     }
 }
