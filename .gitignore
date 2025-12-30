@@ -15,3 +15,7 @@ nuget
 
 *.binlog
 /examples/rust/actix_api/target
+
+target
+
+node_modules

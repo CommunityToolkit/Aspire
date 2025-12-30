@@ -427,6 +427,30 @@ public static class SurrealDbBuilderExtensions
                 context.EnvironmentVariables[ImportFileEnvVarName] = initFilePath;
             });
     }
+    
+    /// <summary>
+    /// Configures logging level for the SurrealDB container resource.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="logLevel">The log level to set.</param>
+    /// <returns>The <see cref="IResourceBuilder{SurrealDbServerResource}"/>.</returns>
+    public static IResourceBuilder<SurrealDbServerResource> WithLogLevel(
+        this IResourceBuilder<SurrealDbServerResource> builder,
+        LogLevel logLevel
+    )
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        string value = logLevel switch
+        {
+            LogLevel.Critical => "full",
+            LogLevel.Information => "info",
+            LogLevel.Warning => "warn",
+            _ => logLevel.ToString().ToLowerInvariant()
+        };
+
+        return builder.WithEnvironment("SURREAL_LOG", value);
+    }
 
     /// <summary>
     /// Adds a Surrealist UI instance for SurrealDB to the application model.
@@ -509,6 +533,9 @@ public static class SurrealDbBuilderExtensions
 
         foreach (var surrealInstance in surrealDbServerInstances)
         {
+            var username = await surrealInstance.UserNameReference.GetValueAsync(cancellationToken);
+            var password = await surrealInstance.PasswordParameter.GetValueAsync(cancellationToken);
+                
             if (surrealInstance.PrimaryEndpoint.IsAllocated)
             {
                 SurrealDbNamespaceResource? uniqueNamespace = null;
@@ -553,6 +580,8 @@ public static class SurrealDbBuilderExtensions
                 // How to do host resolution?
                 writer.WriteString("hostname", $"{endpoint.Host}:{endpoint.Port}");
                 writer.WriteString("mode", "root");
+                writer.WriteString("username", username);
+                writer.WriteString("password", password);
                 if (uniqueNamespace is not null)
                 {
                     writer.WriteString("namespace", uniqueNamespace.NamespaceName);

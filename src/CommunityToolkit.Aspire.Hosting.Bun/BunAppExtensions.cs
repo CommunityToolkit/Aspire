@@ -1,6 +1,4 @@
 ﻿using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Lifecycle;
-using CommunityToolkit.Aspire.Hosting.Bun;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
 
@@ -46,10 +44,27 @@ public static class BunAppExtensions
     /// Ensures the Bun packages are installed before the application starts using Bun as the package manager.
     /// </summary>
     /// <param name="resource">The Bun app resource.</param>
+    /// <param name="configureInstaller">Configure the Bun installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource)
+    public static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource, Action<IResourceBuilder<BunInstallerResource>>? configureInstaller = null)
     {
-        resource.ApplicationBuilder.Services.TryAddLifecycleHook<BunPackageInstallerLifecycleHook>();
+        // Only install packages during development, not in publish mode
+        if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            var installerName = $"{resource.Resource.Name}-bun-install";
+            var installer = new BunInstallerResource(installerName, resource.Resource.WorkingDirectory);
+
+            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
+                .WithArgs("install")
+                .WithParentRelationship(resource.Resource)
+                .ExcludeFromManifest();
+
+            // Make the parent resource wait for the installer to complete
+            resource.WaitForCompletion(installerBuilder);
+
+            configureInstaller?.Invoke(installerBuilder);
+        }
+
         return resource;
     }
 

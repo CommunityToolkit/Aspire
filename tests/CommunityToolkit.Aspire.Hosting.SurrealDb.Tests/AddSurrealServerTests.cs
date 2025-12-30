@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
@@ -33,16 +34,16 @@ public class AddSurrealServerTests
     public async Task AddSurrealServerContainerWithDefaultsAddsAnnotationMetadata()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-    
+
         var surrealServer = appBuilder.AddSurrealServer("surreal");
-    
+
         using var app = appBuilder.Build();
-    
+
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-    
+
         var containerResource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
         Assert.Equal("surreal", containerResource.Name);
-    
+
         var endpoint = Assert.Single(containerResource.Annotations.OfType<EndpointAnnotation>());
         Assert.Equal(8000, endpoint.TargetPort);
         Assert.False(endpoint.IsExternal);
@@ -51,12 +52,12 @@ public class AddSurrealServerTests
         Assert.Equal(ProtocolType.Tcp, endpoint.Protocol);
         Assert.Equal("tcp", endpoint.Transport);
         Assert.Equal("tcp", endpoint.UriScheme);
-    
+
         var containerAnnotation = Assert.Single(containerResource.Annotations.OfType<ContainerImageAnnotation>());
         Assert.Equal(SurrealDbContainerImageTags.Tag + "-dev", containerAnnotation.Tag);
         Assert.Equal(SurrealDbContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(SurrealDbContainerImageTags.Registry, containerAnnotation.Registry);
-    
+
         var config = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
 
         Assert.Collection(config,
@@ -77,7 +78,8 @@ public class AddSurrealServerTests
     public async Task SurrealServerCreatesConnectionString()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.Configuration["Parameters:pass"] = "p@ssw0rd1";
+        var password = "p@ssw0rd1";
+        appBuilder.Configuration["Parameters:pass"] = password;
 
         var pass = appBuilder.AddParameter("pass");
         appBuilder
@@ -91,15 +93,16 @@ public class AddSurrealServerTests
         var connectionStringResource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
         var connectionString = await connectionStringResource.GetConnectionStringAsync(default);
 
-        Assert.Equal("Server=ws://localhost:8000/rpc;User=root;Password='p@ssw0rd1'", connectionString);
-        Assert.Equal("Server=ws://{surreal.bindings.tcp.host}:{surreal.bindings.tcp.port}/rpc;User=root;Password='{pass.value}'", connectionStringResource.ConnectionStringExpression.ValueExpression);
+        Assert.Equal(await ReferenceExpression.Create($"Server=ws://localhost:8000/rpc;User=root;Password={password}").GetValueAsync(CancellationToken.None), connectionString);
+        Assert.Equal("Server=ws://{surreal.bindings.tcp.host}:{surreal.bindings.tcp.port}/rpc;User=root;Password={pass.value}", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 
     [Fact]
     public async Task SurrealServerDatabaseCreatesConnectionString()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.Configuration["Parameters:pass"] = "p@ssw0rd1";
+        var password = "p@ssw0rd1";
+        appBuilder.Configuration["Parameters:pass"] = password;
 
         var pass = appBuilder.AddParameter("pass");
         appBuilder
@@ -116,7 +119,7 @@ public class AddSurrealServerTests
         var connectionStringResource = (IResourceWithConnectionString)surrealResource;
         var connectionString = await connectionStringResource.GetConnectionStringAsync();
 
-        Assert.Equal("Server=ws://localhost:8000/rpc;User=root;Password='p@ssw0rd1';Namespace=myns;Database=mydb", connectionString);
+        Assert.Equal(await ReferenceExpression.Create($"Server=ws://localhost:8000/rpc;User=root;Password={password};Namespace=myns;Database=mydb").GetValueAsync(CancellationToken.None), connectionString);
         Assert.Equal("{ns.connectionString};Database=mydb", connectionStringResource.ConnectionStringExpression.ValueExpression);
     }
 
@@ -179,5 +182,31 @@ public class AddSurrealServerTests
 
         Assert.Equal("{ns1.connectionString};Database=imports", db1.Resource.ConnectionStringExpression.ValueExpression);
         Assert.Equal("{ns2.connectionString};Database=imports", db2.Resource.ConnectionStringExpression.ValueExpression);
+    }
+
+    [Theory]
+    [InlineData(LogLevel.Trace, "trace")]
+    [InlineData(LogLevel.Debug, "debug")]
+    [InlineData(LogLevel.Information, "info")]
+    [InlineData(LogLevel.Warning, "warn")]
+    [InlineData(LogLevel.Error, "error")]
+    [InlineData(LogLevel.Critical, "full")]
+    [InlineData(LogLevel.None, "none")]
+    public async Task AddSurrealServerContainerWithLogLevel(LogLevel logLevel, string expected)
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var surrealServer = appBuilder
+            .AddSurrealServer("surreal")
+            .WithLogLevel(logLevel);
+
+        using var app = appBuilder.Build();
+
+        var config = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
+
+        bool hasValue = config.TryGetValue("SURREAL_LOG", out var value);
+
+        Assert.True(hasValue);
+        Assert.Equal(expected, value);
     }
 }

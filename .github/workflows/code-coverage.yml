@@ -7,15 +7,15 @@ jobs:
   publish-coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Download test results
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           pattern: testresults-*
 
       - name: Combine coverage reports
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.4.13
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.1
         with:
           reports: "**/*.cobertura.xml"
           targetdir: "${{ github.workspace }}/report"
@@ -25,10 +25,10 @@ jobs:
           tag: "${{ github.run_number }}_${{ github.run_id }}"
           customSettings: ""
           toolpath: "reportgeneratortool"
-          assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.NodeJs;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis;-Aspire.Hosting.PostgreSQL;-Aspire.Hosting.MongoDB"
+          assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.JavaScript;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis;-Aspire.Hosting.PostgreSQL;-Aspire.Hosting.MongoDB"
 
       - name: Upload combined coverage XML
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage
           path: ${{ github.workspace }}/report
@@ -48,7 +48,7 @@ jobs:
           thresholds: "60 80"
 
       - name: Upload combined coverage markdown
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-markdown
           path: ${{ github.workspace }}/code-coverage-results.md
@@ -64,4 +64,3 @@ jobs:
       - name: Coverage on step summary
         if: always()
         run: cat "${{ github.workspace }}/report/SummaryGithub.md" >> $GITHUB_STEP_SUMMARY
-

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <AdditionalPackageTags>client sqlite data EntityFrameworkCore entity-framework-core ef orm</AdditionalPackageTags>
     <Description>An Aspire client integration for the Microsoft.EntityFrameworkCore.Sqlite package.</Description>
+    <IsPreview>true</IsPreview>
   </PropertyGroup>
 
   <ItemGroup>

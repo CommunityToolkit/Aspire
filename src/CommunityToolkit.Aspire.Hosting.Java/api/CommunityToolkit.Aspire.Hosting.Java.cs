@@ -66,6 +66,8 @@ namespace Aspire.Hosting.ApplicationModel
 
         public string[]? Args { get { throw null; } set { } }
 
+        public string[]? JvmArgs { get { throw null; } set { } }
+
         public string? OtelAgentPath { get { throw null; } set { } }
 
         public int Port { get { throw null; } set { } }

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  DEFAULT_DOTNET_VERSION: "8.0.x"
+  DEFAULT_DOTNET_VERSION: "10.0.x"
 
 permissions:
   contents: read
@@ -24,7 +24,7 @@ jobs:
       DAPR_VERSION: "1.15.0"
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup Runtimes, Caching, and Tools
         uses: ./.github/actions/setup-runtimes-caching
         with:
@@ -62,13 +62,13 @@ jobs:
           dotnet-version: ${{ env.DEFAULT_DOTNET_VERSION }}
 
       - name: Download Package List
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: nuget-packages
           path: ${{ github.workspace }}/packages
 
       - name: Download NuGet package list
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: nuget-list
           path: ${{ github.workspace }}
@@ -84,7 +84,7 @@ jobs:
           --file-list "${{ github.workspace }}/SignClientFileList.txt"
           --timestamp-url "http://timestamp.digicert.com"
           --publisher-name ".NET Foundation"
-          --description ".NET Aspire Community Toolkit"
+          --description "Aspire Community Toolkit"
           --description-url "https://github.com/CommunityToolkit/Aspire"
           --azure-key-vault-url "${{ secrets.SIGN_KEY_VAULT_URL }}"
           --azure-key-vault-client-id ${{ secrets.SIGN_CLIENT_ID }}
@@ -94,7 +94,7 @@ jobs:
           --verbosity Information
 
       - name: Upload Signed Packages as Artifacts (for release)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: signed-nuget-packages
           if-no-files-found: error
@@ -111,7 +111,7 @@ jobs:
     if: needs.detect-pr-label.outputs.skip_publish != 'true'
     steps:
       - name: Download package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: signed-nuget-packages
 
@@ -127,7 +127,7 @@ jobs:
     if: needs.detect-pr-label.outputs.skip_publish != 'true'
     steps:
       - name: Download package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: signed-nuget-packages
 

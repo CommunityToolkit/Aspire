@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using Aspire.Hosting.JavaScript;
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -6,9 +6,15 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Resource for the MCP Inspector server.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
-public class McpInspectorResource(string name) : ExecutableResource(name, "npx", "")
+/// <param name="packageName">The npm package name for the MCP Inspector.</param>
+public class McpInspectorResource(string name, string packageName) : JavaScriptAppResource(name, "npx", "")
 {
     internal readonly string ConfigPath = Path.GetTempFileName();
+
+    /// <summary>
+    /// Gets the npm package name for the MCP Inspector.
+    /// </summary>
+    internal string PackageName { get; } = packageName;
 
     /// <summary>
     /// The name of the client endpoint.
@@ -37,7 +43,7 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
     /// <summary>
     /// Gets the version of the MCP Inspector.
     /// </summary>
-    public const string InspectorVersion = "0.16.5";
+    public const string InspectorVersion = "0.17.2";
 
     private readonly List<McpServerMetadata> _mcpServers = [];
 
@@ -65,9 +71,17 @@ public class McpInspectorResource(string name) : ExecutableResource(name, "npx",
             throw new InvalidOperationException($"The MCP server {mcpServer.Name} is already added to the MCP Inspector resource.");
         }
 
+        if (!mcpServer.TryGetEndpoints(out var endpoints) || !endpoints.Any())
+        {
+            throw new InvalidOperationException($"The MCP server {mcpServer.Name} must have at least one endpoint defined.");
+        }
+
         McpServerMetadata item = new(
             mcpServer.Name,
-            mcpServer.GetEndpoint("http") ?? throw new InvalidOperationException($"The MCP server {mcpServer.Name} must have a 'http' endpoint defined."),
+            mcpServer.GetEndpoint(
+                endpoints.FirstOrDefault(e => e.Name == "https")?.Name
+                ?? endpoints.FirstOrDefault(e => e.Name == "http")?.Name
+                ?? endpoints.First().Name),
             transportType,
             path);
 

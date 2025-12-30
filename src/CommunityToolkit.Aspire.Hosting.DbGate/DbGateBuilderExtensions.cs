@@ -57,13 +57,13 @@ public static class DbGateBuilderExtensions
     /// Adds a DbGate container resource to the application.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
+    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency. Optional; defaults to <c>dbgate</c>.</param>
     /// <param name="port">The host port to bind the underlying container to.</param>
     /// <remarks>
     /// Multiple <see cref="AddDbGate(IDistributedApplicationBuilder, string, int?)"/> calls will return the same resource builder instance.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
+    public static IResourceBuilder<DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, [ResourceName] string name = "dbgate", int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -81,6 +81,7 @@ public static class DbGateBuilderExtensions
                                                .WithImageRegistry(DbGateContainerImageTags.Registry)
                                                .WithHttpEndpoint(targetPort: 3000, port: port, name: DbGateContainerResource.PrimaryEndpointName)
                                                .WithUrlForEndpoint(DbGateContainerResource.PrimaryEndpointName, e => e.DisplayText = "DbGate Dashboard")
+                                               .WithIconName("WindowDatabase")
                                                .ExcludeFromManifest();
 
             return dbGateContainerBuilder;

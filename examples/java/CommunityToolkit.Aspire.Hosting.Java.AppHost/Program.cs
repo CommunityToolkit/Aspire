@@ -22,7 +22,8 @@ var executableapp = builder.AddSpringApp("executableapp",
                                c.WithBuildArg("JAR_NAME", "spring-maven-0.0.1-SNAPSHOT.jar")
                                 .WithBuildArg("AGENT_PATH", "/agents")
                                 .WithBuildArg("SERVER_PORT", "8085");
-                           });
+                           })
+                           .WithHttpHealthCheck("/health");
 
 var webapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_WebApp>("webapp")
                     .WithExternalHttpEndpoints()

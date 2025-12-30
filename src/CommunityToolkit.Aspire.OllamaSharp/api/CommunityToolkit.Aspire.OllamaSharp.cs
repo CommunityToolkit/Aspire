@@ -12,6 +12,8 @@ namespace CommunityToolkit.Aspire.OllamaSharp
     {
         public bool DisableHealthChecks { get { throw null; } set { } }
 
+        public bool DisableTracing { get { throw null; } set { } }
+
         public System.Uri? Endpoint { get { throw null; } set { } }
 
         public int? HealthCheckTimeout { get { throw null; } set { } }
@@ -37,7 +39,13 @@ namespace Microsoft.Extensions.Hosting
 
     public static partial class AspireOllamaChatClientExtensions
     {
+        public static AI.ChatClientBuilder AddChatClient(this AspireOllamaApiClientBuilder builder, System.Action<AI.OpenTelemetryChatClient>? configureOpenTelemetry) { throw null; }
+
         public static AI.ChatClientBuilder AddChatClient(this AspireOllamaApiClientBuilder builder) { throw null; }
+
+        public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder, System.Action<AI.OpenTelemetryChatClient>? configureOpenTelemetry) { throw null; }
+
+        public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder, object serviceKey, System.Action<AI.OpenTelemetryChatClient>? configureOpenTelemetry) { throw null; }
 
         public static AI.ChatClientBuilder AddKeyedChatClient(this AspireOllamaApiClientBuilder builder, object serviceKey) { throw null; }
 

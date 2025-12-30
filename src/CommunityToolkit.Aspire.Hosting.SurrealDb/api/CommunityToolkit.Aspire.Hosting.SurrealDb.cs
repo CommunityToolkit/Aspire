@@ -29,6 +29,8 @@ namespace Aspire.Hosting
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithInitFiles(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string source) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithLogLevel(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, Microsoft.Extensions.Logging.LogLevel logLevel) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<T> WithSurrealist<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.SurrealistContainerResource>>? configureContainer = null, string? containerName = null)
             where T : ApplicationModel.SurrealDbServerResource { throw null; }
     }
@@ -45,6 +47,8 @@ namespace Aspire.Hosting.ApplicationModel
         public string DatabaseName { get { throw null; } }
 
         public SurrealDbNamespaceResource Parent { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
     public partial class SurrealDbNamespaceResource : Resource, IResourceWithParent<SurrealDbServerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IManifestExpressionProvider, IValueProvider, IValueWithReferences
@@ -58,6 +62,8 @@ namespace Aspire.Hosting.ApplicationModel
         public string NamespaceName { get { throw null; } }
 
         public SurrealDbServerResource Parent { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
     public partial class SurrealDbServerResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
@@ -66,13 +72,21 @@ namespace Aspire.Hosting.ApplicationModel
 
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
+        public EndpointReferenceExpression Host { get { throw null; } }
+
         public System.Collections.Generic.IReadOnlyDictionary<string, string> Namespaces { get { throw null; } }
 
         public ParameterResource PasswordParameter { get { throw null; } }
 
+        public EndpointReferenceExpression Port { get { throw null; } }
+
         public EndpointReference PrimaryEndpoint { get { throw null; } }
 
+        public ReferenceExpression UriExpression { get { throw null; } }
+
         public ParameterResource? UserNameParameter { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
 
         public System.Threading.Tasks.ValueTask<string?> GetConnectionStringAsync(System.Threading.CancellationToken cancellationToken = default) { throw null; }
     }

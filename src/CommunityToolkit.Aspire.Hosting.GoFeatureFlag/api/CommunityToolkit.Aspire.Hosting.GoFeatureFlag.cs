@@ -15,6 +15,8 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, string? name = null) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithGoffBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, string source) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithLogLevel(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, Microsoft.Extensions.Logging.LogLevel logLevel) { throw null; }
     }
 }
 
@@ -26,6 +28,14 @@ namespace Aspire.Hosting.ApplicationModel
 
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
+        public EndpointReferenceExpression Host { get { throw null; } }
+
+        public EndpointReferenceExpression Port { get { throw null; } }
+
         public EndpointReference PrimaryEndpoint { get { throw null; } }
+
+        public ReferenceExpression UriExpression { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 }

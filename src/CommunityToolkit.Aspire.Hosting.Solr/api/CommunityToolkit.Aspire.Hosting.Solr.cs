@@ -13,13 +13,25 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SolrResource> AddSolr(this IDistributedApplicationBuilder builder, string name, int? port = null, string? coreName = null) { throw null; }
     }
 }
+
 namespace Aspire.Hosting.ApplicationModel
 {
     public partial class SolrResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
     {
         public SolrResource(string name, string coreName) : base(default!, default) { }
-        public string CoreName { get { throw null; } set { } }
+
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
+
+        public string CoreName { get { throw null; } set { } }
+
+        public EndpointReferenceExpression Host { get { throw null; } }
+
+        public EndpointReferenceExpression Port { get { throw null; } }
+
         public EndpointReference PrimaryEndpoint { get { throw null; } }
+
+        public ReferenceExpression UriExpression { get { throw null; } }
+
+        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 }

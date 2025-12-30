@@ -6,7 +6,12 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
     <PackageReference Include="AspNetCore.HealthChecks.Uris" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\LoggingUtils.cs" Link="LoggingUtils.cs" />
   </ItemGroup>
 
 </Project>

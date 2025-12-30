@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>6445164b-1ed4-461b-baa5-86790b0c158d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenFeature.Contrib.Providers.Flagd" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

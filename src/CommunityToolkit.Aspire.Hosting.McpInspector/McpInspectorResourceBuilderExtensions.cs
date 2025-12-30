@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
@@ -36,6 +37,13 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="name">The name of the MCP Inspector container resource.</param>
     /// <param name="options">The <see cref="McpInspectorOptions"/> to configure the MCP Inspector resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    /// <remarks>
+    /// By default, the MCP Inspector uses npm/npx. To use a different package manager, chain the appropriate method:
+    /// <code>
+    /// builder.AddMcpInspector("inspector")
+    ///     .WithYarn();
+    /// </code>
+    /// </remarks>
     public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, McpInspectorOptions options)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -43,9 +51,41 @@ public static class McpInspectorResourceBuilderExtensions
 
         var proxyTokenParameter = options.ProxyToken?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-proxyToken");
 
-        var resource = builder.AddResource(new McpInspectorResource(name))
+        var packageName = $"@modelcontextprotocol/inspector@{options.InspectorVersion}";
+
+        var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName))
+            .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
+            .WithCommand("npx")
             .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
+            .WithCertificateTrustConfiguration(ctx =>
+            {
+                if (ctx.Scope == CertificateTrustScope.Append)
+                {
+                    ctx.EnvironmentVariables["NODE_EXTRA_CA_CERTS"] = ctx.CertificateBundlePath;
+                }
+                else
+                {
+                    if (ctx.EnvironmentVariables.TryGetValue("NODE_OPTIONS", out var existingOptionsObj))
+                    {
+                        ctx.EnvironmentVariables["NODE_OPTIONS"] = existingOptionsObj switch
+                        {
+                            // Attempt to append to existing NODE_OPTIONS if possible, otherwise overwrite
+                            string s when !string.IsNullOrEmpty(s) => $"{s} --use-openssl-ca",
+                            ReferenceExpression re => ReferenceExpression.Create($"{re} --use-openssl-ca"),
+                            _ => "--use-openssl-ca",
+                        };
+                    }
+                    else
+                    {
+                        ctx.EnvironmentVariables["NODE_OPTIONS"] = "--use-openssl-ca";
+                    }
+                }
+
+                return Task.CompletedTask;
+            })
             .ExcludeFromManifest()
+            .WithInspectorArgs()
+            .WithDefaultArgs()
             .WithHttpEndpoint(isProxied: false, port: options.ClientPort, env: "CLIENT_PORT", name: McpInspectorResource.ClientEndpointName)
             .WithHttpEndpoint(isProxied: false, port: options.ServerPort, env: "SERVER_PORT", name: McpInspectorResource.ServerProxyEndpointName)
             .WithHttpHealthCheck("/", endpointName: McpInspectorResource.ClientEndpointName)
@@ -105,7 +145,6 @@ public static class McpInspectorResourceBuilderExtensions
                 ctx.EnvironmentVariables["SERVER_PORT"] = serverProxyEndpoint.TargetPort?.ToString() ?? throw new InvalidOperationException("The MCP Inspector 'server-proxy' endpoint must have a target port defined.");
                 ctx.EnvironmentVariables["MCP_PROXY_AUTH_TOKEN"] = proxyTokenParameter;
             })
-            .WithDefaultArgs()
             .WithUrls(async context =>
             {
                 var token = await proxyTokenParameter.GetValueAsync(CancellationToken.None);
@@ -123,13 +162,13 @@ public static class McpInspectorResourceBuilderExtensions
                 }
             });
 
-        resource.Resource.ProxyTokenParameter = proxyTokenParameter;
+        resourceBuilder.Resource.ProxyTokenParameter = proxyTokenParameter;
 
         // Add authenticated health check for server proxy /config endpoint
         var healthCheckKey = $"{name}_proxy_config_check";
         builder.Services.AddHealthChecks().AddUrlGroup(options =>
         {
-            var serverProxyEndpoint = resource.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
+            var serverProxyEndpoint = resourceBuilder.GetEndpoint(McpInspectorResource.ServerProxyEndpointName);
             var uri = serverProxyEndpoint.Url ?? throw new DistributedApplicationException("The MCP Inspector 'server-proxy' endpoint URL is not set. Ensure that the resource has been allocated before the health check is executed.");
             var healthCheckUri = new Uri(new Uri(uri), "/config");
             options.AddUri(healthCheckUri, async setup =>
@@ -138,8 +177,9 @@ public static class McpInspectorResourceBuilderExtensions
                 setup.AddCustomHeader("X-MCP-Proxy-Auth", $"Bearer {token}");
             });
         }, healthCheckKey);
+        builder.Services.SuppressHealthCheckHttpClientLogging(healthCheckKey);
 
-        return resource.WithHealthCheck(healthCheckKey);
+        return resourceBuilder.WithHealthCheck(healthCheckKey);
     }
 
     /// <summary>
@@ -256,5 +296,55 @@ public static class McpInspectorResourceBuilderExtensions
         var relative = string.Join("/", escapedSegments);
 
         return new Uri(baseUri, relative);
+    }
+
+    /// <summary>
+    /// Sets up the command and arguments for the MCP Inspector based on the configured package manager.
+    /// </summary>
+    private static IResourceBuilder<McpInspectorResource> WithInspectorArgs(this IResourceBuilder<McpInspectorResource> builder)
+    {
+        return builder.WithArgs(ctx =>
+        {
+            var resource = builder.Resource;
+            var packageName = resource.PackageName;
+
+            // Add the appropriate arguments based on the package manager
+            switch (resource.Command)
+            {
+                case "yarn":
+                case "pnpm":
+                    ctx.Args.Insert(0, packageName);
+                    ctx.Args.Insert(0, "dlx");
+                    break;
+                default: // npm/npx
+                    ctx.Args.Insert(0, packageName);
+                    ctx.Args.Insert(0, "-y");
+                    break;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Configures the MCP Inspector to use yarn as the package manager.
+    /// </summary>
+    /// <param name="builder">The MCP Inspector resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<McpInspectorResource> WithYarn(this IResourceBuilder<McpInspectorResource> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithCommand("yarn");
+    }
+
+    /// <summary>
+    /// Configures the MCP Inspector to use pnpm as the package manager.
+    /// </summary>
+    /// <param name="builder">The MCP Inspector resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<McpInspectorResource> WithPnpm(this IResourceBuilder<McpInspectorResource> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithCommand("pnpm");
     }
 }

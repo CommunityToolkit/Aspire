@@ -1,6 +1,7 @@
 ﻿using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using System.Runtime.CompilerServices;
 using Xunit;
 
@@ -144,6 +145,61 @@ public class ResourceBuilderExtensionsTests
         
         // Verify the project itself doesn't have direct references to Dapr components
         Assert.DoesNotContain(project.Resource.Annotations, a => a is DaprComponentReferenceAnnotation);
+    }
+
+    [Fact]
+    public void SecretParameterValueStoredAsProviderNotResolvedValue()
+    {
+        // Arrange
+        // When a secret parameter is defined without an explicit value,
+        // it should be stored as an IValueProvider, not resolved immediately
+        var builder = DistributedApplication.CreateBuilder();
+
+        // Create a parameter without an explicit value (simulating user input via dashboard)
+        var secretParam = builder.AddParameter("secretPassword", secret: true);
+
+        // Add a Dapr component that uses the secret parameter
+        var pubsub = builder.AddDaprPubSub("pubsub")
+            .WithMetadata("password", secretParam.Resource);
+
+        // Act - Get the component resource and verify annotations
+        var componentResource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
+
+        // Assert - Verify that secret annotation exists with the IValueProvider
+        Assert.True(componentResource.TryGetAnnotationsOfType<DaprComponentSecretAnnotation>(out var secretAnnotations));
+        var secretAnnotation = Assert.Single(secretAnnotations);
+
+        // The key point: the Value should be an IValueProvider (ParameterResource), not a resolved string
+        Assert.NotNull(secretAnnotation.Value);
+        Assert.IsAssignableFrom<IValueProvider>(secretAnnotation.Value);
+
+        // Verify the key contains the parameter name
+        Assert.Equal("secretPassword", secretAnnotation.Key);
+    }
+
+    [Fact]
+    public void ValueProviderStoredInComponentAnnotation()
+    {
+        // Arrange
+        // This test verifies that value providers (like endpoint references)
+        // are stored in annotations, not resolved immediately
+        var builder = DistributedApplication.CreateBuilder();
+
+        var redis = builder.AddRedis("redis");
+        var pubsub = builder.AddDaprPubSub("pubsub")
+            .WithMetadata("redisHost", redis.GetEndpoint("tcp"));
+
+        // Act - Get the component and verify it has the value provider annotation
+        var componentResource = Assert.Single(builder.Resources.OfType<DaprComponentResource>());
+
+        // Assert - Verify that the component has the value provider annotation with IValueProvider
+        Assert.True(componentResource.TryGetAnnotationsOfType<DaprComponentValueProviderAnnotation>(out var valueProviderAnnotations));
+        var annotation = Assert.Single(valueProviderAnnotations);
+
+        // Verify that the ValueProvider is stored, not a resolved value
+        Assert.NotNull(annotation.ValueProvider);
+        Assert.IsAssignableFrom<IValueProvider>(annotation.ValueProvider);
+        Assert.Equal("redisHost", annotation.MetadataName);
     }
 
     // Test helper class that implements IValueProvider

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
 
@@ -78,5 +79,18 @@ public class GoFeatureFlagPublicApiTests
     
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(name), exception.ParamName);
+    }
+    
+    [Fact]
+    public void WithLogLevelShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<GoFeatureFlagResource> builder = null!;
+
+#pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var action = () => builder.WithLogLevel(LogLevel.Trace);
+#pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
     }
 }

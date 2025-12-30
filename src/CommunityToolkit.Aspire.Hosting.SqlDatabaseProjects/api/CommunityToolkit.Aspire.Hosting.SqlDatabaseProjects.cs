@@ -51,6 +51,11 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithReference<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, ApplicationModel.IResourceBuilder<ApplicationModel.SqlServerDatabaseResource> target)
             where TPackage : IPackageMetadata { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithSkipWhenDeployed(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithSkipWhenDeployed<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder)
+            where TPackage : IPackageMetadata { throw null; }
     }
 }
 
@@ -65,6 +70,10 @@ namespace Aspire.Hosting.ApplicationModel
     }
 
     public partial record DacpacMetadataAnnotation(string DacpacPath) : IResourceAnnotation
+    {
+    }
+
+    public sealed partial class DacpacSkipWhenDeployedAnnotation : IResourceAnnotation
     {
     }
 

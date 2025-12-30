@@ -33,11 +33,11 @@ public class ResourceCreationTests
 
         // First check if there are any resources with the annotation
         Assert.NotEmpty(resourcesWithAnnotation);
-        
+
         // Now check for a specific resource
-        var daprStateStore = Assert.Single(appModel.Resources.OfType<IDaprComponentResource>(), 
+        var daprStateStore = Assert.Single(appModel.Resources.OfType<IDaprComponentResource>(),
             r => r.Name == "statestore");
-            
+
         // Check there's an annotation on it
         Assert.Contains(daprStateStore.Annotations, a => a is AzureDaprComponentPublishingAnnotation);
 
@@ -96,15 +96,15 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
         // Get the actual bicep template and rearrange the ordering if needed
         var actualLines = redisBicep.Split(Environment.NewLine);
         var expectedLines = expectedRedisBicep.Split(Environment.NewLine);
-        
+
         // Compare the Redis resource configuration which is what we actually care about
-        var redisResourceSection = string.Join(Environment.NewLine, 
-            actualLines.Where(line => line.Contains("resource redisState") || 
-                                    line.Contains("name:") || 
-                                    line.Contains("sku:") || 
-                                    line.Contains("family:") || 
+        var redisResourceSection = string.Join(Environment.NewLine,
+            actualLines.Where(line => line.Contains("resource redisState") ||
+                                    line.Contains("name:") ||
+                                    line.Contains("sku:") ||
+                                    line.Contains("family:") ||
                                     line.Contains("capacity:")));
-                                    
+
         Assert.Contains("'Microsoft.Cache/redis@2024-11-01'", redisResourceSection);
 
         // Verify that resources with Dapr publishing annotations exist
@@ -133,11 +133,11 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
 
         // First check if there are any resources with the annotation
         Assert.NotEmpty(resourcesWithAnnotation);
-        
+
         // Now check for a specific resource
-        var daprStateStore = Assert.Single(appModel.Resources.OfType<IDaprComponentResource>(), 
+        var daprStateStore = Assert.Single(appModel.Resources.OfType<IDaprComponentResource>(),
             r => r.Name == "statestore");
-            
+
         // Check there's an annotation on it
         Assert.Contains(daprStateStore.Annotations, a => a is AzureDaprComponentPublishingAnnotation);
 
@@ -173,6 +173,8 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
             output connectionString string = '${redisState.properties.hostName},ssl=true'
 
             output name string = redisState.name
+
+            output hostName string = redisState.properties.hostName
 
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.sslPort}'
             """;
@@ -210,11 +212,11 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
 
         // First check if there are any resources with the annotation
         Assert.NotEmpty(resourcesWithAnnotation);
-        
+
         // Now check for a specific resource
-        var daprStateStore = Assert.Single(appModel.Resources.OfType<IDaprComponentResource>(), 
+        var daprStateStore = Assert.Single(appModel.Resources.OfType<IDaprComponentResource>(),
             r => r.Name == "statestore");
-            
+
         // Check there's an annotation on it
         Assert.Contains(daprStateStore.Annotations, a => a is AzureDaprComponentPublishingAnnotation);
 
@@ -252,6 +254,8 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
 
             output name string = redisState.name
 
+            output hostName string = redisState.properties.hostName
+
             output daprConnectionString string = '${redisState.properties.hostName}:${redisState.properties.port}'
             """;
 
@@ -271,32 +275,34 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
         var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
-        
+
         // The Redis connection should only be used with state store components
-        var unknownComponent = builder.AddDaprComponent("unknown","component");
-        
+        var unknownComponent = builder.AddDaprComponent("unknown", "component");
+
         // Create an app with a sidecar that references the unknown component
         var appBuilder = builder.AddContainer("myapp", "image")
-            .WithDaprSidecar(sidecar => {
+            .WithDaprSidecar(sidecar =>
+            {
                 // Reference the unknown component first
                 sidecar.WithReference(unknownComponent);
             });
-            
+
         // Attempting to create a non-state store reference to Redis should throw
-        var exception = Assert.Throws<InvalidOperationException>(() => {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
             unknownComponent.WithReference(redisState);
         });
-        
+
         // Verify the exception message contains information about the unsupported component type
         Assert.Contains("Unsupported Dapr component", exception.Message, StringComparison.OrdinalIgnoreCase);
-        
+
         // Demonstrate the correct way to reference Redis
         var stateStore = builder.AddDaprStateStore("statestore");
         stateStore.WithReference(redisState); // This should work correctly
-        
+
         using var app = builder.Build();
     }
-    
+
     [Fact]
     public void PreferredPattern_ReferencingRedisStateComponent()
     {
@@ -306,31 +312,32 @@ output redisKeyVaultName string = redisstate_kv_outputs_name
         // Add the Redis state and Dapr state store
         var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
         var daprState = builder.AddDaprStateStore("statestore");
-        
+
         // Add an app with a sidecar
         builder.AddContainer("myapp", "image")
-            .WithDaprSidecar(sidecar => {
+            .WithDaprSidecar(sidecar =>
+            {
                 // Reference both components through the sidecar
                 sidecar.WithReference(daprState);
                 // We can't directly reference Redis from the sidecar due to interface incompatibilities
                 // This line would fail with a compile error: sidecar.WithReference(redisState);
-                
+
                 // We need to first create a Dapr component that references Redis
                 var anotherState = builder.AddDaprStateStore("anotherstate");
                 anotherState.WithReference(redisState);
                 sidecar.WithReference(anotherState);
             });
-            
+
         using var app = builder.Build();
-        
+
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var sidecarResource = Assert.Single(appModel.Resources.OfType<IDaprSidecarResource>());
-        
+
         // Check for component reference annotations
         var referenceAnnotations = sidecarResource.Annotations
             .OfType<DaprComponentReferenceAnnotation>()
             .ToList();
-        
+
         Assert.Equal(2, referenceAnnotations.Count);
     }
 }

@@ -18,4 +18,10 @@ public class HomeController {
         return response;
     }
 
+    @GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, String> health() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "Healthy");
+        return response;
+    }
 }

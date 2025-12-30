@@ -35,6 +35,10 @@ func setupRouter() *gin.Engine {
 	r.Use(otelgin.Middleware(name))
 	r.Use(monitorInterceptor())
 
+    r.GET("/health", func(c *gin.Context) {
+        c.String(http.StatusOK, "ok")
+    })
+
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
 		// _, span := tracer.Start(c.Request.Context(), "ping")

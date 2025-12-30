@@ -1,4 +1,4 @@
-## .NET Aspire Community Toolkit — Copilot Coding Instructions
+## Aspire Community Toolkit — Copilot Coding Instructions
 
 ### Project Overview
 
@@ -13,7 +13,6 @@
     -   Hosting integrations: extension methods in `Aspire.Hosting` namespace.
     -   Client integrations: extension methods in `Microsoft.Extensions.Hosting` namespace.
     -   Use file-scoped namespaces.
--   **Installer resources:** For Node.js, package installers (npm/yarn/pnpm) are modeled as `ExecutableResource` instances, providing dashboard visibility and proper process management. See `src/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/REFACTORING_NOTES.md` for rationale and migration.
 
 ### Coding Style
 
@@ -56,12 +55,13 @@ public static class SomeProgramExtensions
 -   Integrations must add `Aspire.Hosting` as a dependency; see `Directory.Build.props` for shared MSBuild config.
 -   Use the [create-integration guide](../docs/create-integration.md) for new integrations.
 -   For Azure/Dapr integrations, see `src/Shared/DaprAzureExtensions/README.md` for shared resource patterns.
+-   Don't update files under _/api/_.cs (e.g. src/CommunityToolkit.Aspire.Hosting.Ollama/api/CommunityToolkit.Aspire.Hosting.Ollama.cs) as they are generated.
 
 ### External Dependencies & Integration
 
 -   Many integrations wrap external services (e.g., Dapr, MinIO, k6, Node.js, Python, Rust, Java, etc.).
 -   Each integration's README in `src/` or `examples/` details usage, supported versions, and special setup.
--   For Node.js, package manager flags can be customized via extension methods (see `src/CommunityToolkit.Aspire.Hosting.NodeJS.Extensions/README.md`).
+-   For Node.js, package manager flags can be customized via extension methods (see `src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/README.md`).
 
 ### Documentation & Contribution
 
@@ -72,3 +72,4 @@ public static class SomeProgramExtensions
 ---
 
 If you find any unclear or incomplete sections, please provide feedback to improve these instructions.
+

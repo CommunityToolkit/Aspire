@@ -8,24 +8,11 @@ public class DbGatePublicApiTests
     public void AddDbGateContainerShouldThrowWhenBuilderIsNull()
     {
         IDistributedApplicationBuilder builder = null!;
-        const string name = "dbgate";
 
-        var action = () => builder.AddDbGate(name);
+        var action = () => builder.AddDbGate();
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
-    }
-
-    [Fact]
-    public void AddDbGateContainerShouldThrowWhenNameIsNull()
-    {
-        IDistributedApplicationBuilder builder = new DistributedApplicationBuilder([]);
-        string name = null!;
-
-        var action = () => builder.AddDbGate(name);
-
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal(nameof(name), exception.ParamName);
     }
 
     [Theory]
@@ -56,7 +43,7 @@ public class DbGatePublicApiTests
     public void WithDataBindMountShouldThrowWhenSourceIsNull()
     {
         var builder = new DistributedApplicationBuilder([]);
-        var resourceBuilder = builder.AddDbGate("dbgate");
+        var resourceBuilder = builder.AddDbGate();
 
         string source = null!;
 

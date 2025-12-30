@@ -35,7 +35,7 @@ public static class PapercutSmtpHostingExtension
             .WithHttpEndpoint(targetPort: PapercutSmtpContainerResource.HttpEndpointPort,
                 port: httpPort,
                 name: PapercutSmtpContainerResource.HttpEndpointName)
-            .WithHttpHealthCheck("/health", httpPort, PapercutSmtpContainerResource.HttpEndpointName);
+            .WithHttpHealthCheck("/health", endpointName: PapercutSmtpContainerResource.HttpEndpointName);
 
         return rb;
     }
