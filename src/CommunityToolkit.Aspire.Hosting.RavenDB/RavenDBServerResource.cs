@@ -1,4 +1,6 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a RavenDB container.
@@ -8,7 +10,7 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// <summary>
     /// Indicates whether the server connection is secured (HTTPS) or not (HTTP).
     /// </summary>
-    private bool IsSecured { get; } = isSecured;
+    internal bool IsSecured { get; } = isSecured;
 
     /// <summary>
     /// Gets the protocol used for the primary endpoint, based on the security setting ("http" or "https").
@@ -18,6 +20,17 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// Gets the name for the TCP Endpoint
     /// </summary>
     internal string TcpEndpointName = "tcp";
+
+    /// <summary>
+    /// The public server URL (domain) configured for this resource.
+    /// </summary>
+    internal string? PublicServerUrl { get; init; }
+
+    /// <summary>
+    /// Optional client certificate used by hosting code (health checks, database
+    /// creation, etc.) when connecting to this RavenDB server in secured setups.
+    /// </summary>
+    internal X509Certificate2? ClientCertificate { get; init; }
 
     private EndpointReference? _primaryEndpoint;
     private EndpointReference? tcpEndpoint;
@@ -46,8 +59,17 @@ public class RavenDBServerResource(string name, bool isSecured) : ContainerResou
     /// Gets the connection string expression for the RavenDB server, 
     /// formatted as "http(s)://{Host}:{Port}" depending on the security setting.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create(
-        $"URL={(IsSecured ? "https://" : "http://")}{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+    public ReferenceExpression ConnectionStringExpression
+    {
+        get
+        {
+            if (IsSecured && !string.IsNullOrEmpty(PublicServerUrl))
+                return ReferenceExpression.Create($"URL={PublicServerUrl}");
+
+            return ReferenceExpression.Create(
+                $"URL={(IsSecured ? "https://" : "http://")}{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+        }
+    }
 
     /// <summary>
     /// Gets the connection URI expression for the RavenDB server.
