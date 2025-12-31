@@ -58,7 +58,9 @@ public class AddUmamiTests
         Assert.Equal(UmamiContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(UmamiContainerImageTags.Registry, containerAnnotation.Registry);
     
+#pragma warning disable CS0618 // Type or member is obsolete
         var config = await umami.Resource.GetEnvironmentVariableValuesAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
 
         Assert.Collection(config,
             env =>
