@@ -54,7 +54,6 @@ public static class McpInspectorResourceBuilderExtensions
         var packageName = $"@modelcontextprotocol/inspector@{options.InspectorVersion}";
 
         var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName))
-            .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
             .WithCommand("npx")
             .WithCertificateTrustConfiguration(ctx =>
             {
