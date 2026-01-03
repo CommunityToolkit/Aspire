@@ -30,8 +30,14 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithBun(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithMcpServer<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, ApplicationModel.IResourceBuilder<TResource> mcpServer, bool isDefault = true, McpTransportType transportType = McpTransportType.StreamableHttp, string path = "/mcp")
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithPnpm(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithYarn(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
     }
 
     public enum McpTransportType
@@ -48,7 +54,7 @@ namespace Aspire.Hosting.ApplicationModel
         public const string ClientEndpointName = "client";
         public const string InspectorVersion = "0.17.2";
         public const string ServerProxyEndpointName = "server-proxy";
-        public McpInspectorResource(string name) : base(default!, default!, default!) { }
+        public McpInspectorResource(string name, string packageName) : base(default!, default!, default!) { }
 
         public EndpointReference ClientEndpoint { get { throw null; } }
 

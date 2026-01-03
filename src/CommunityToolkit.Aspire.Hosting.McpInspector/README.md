@@ -27,7 +27,7 @@ You can specify the transport type (`StreamableHttp`) and set which server is th
 
 #### Using alternative package managers
 
-By default, the MCP Inspector uses npm/npx. You can configure it to use yarn or pnpm instead by chaining the appropriate method:
+By default, the MCP Inspector uses npm/npx. You can configure it to use yarn, pnpm, or bun instead by chaining the appropriate method:
 
 ```csharp
 // Using yarn
@@ -39,9 +39,14 @@ var inspector = builder.AddMcpInspector("inspector")
 var inspector = builder.AddMcpInspector("inspector")
     .WithPnpm()
     .WithMcpServer(mcpServer);
+
+// Using bun
+var inspector = builder.AddMcpInspector("inspector")
+    .WithBun()
+    .WithMcpServer(mcpServer);
 ```
 
-When using yarn or pnpm, the inspector will use `yarn dlx` or `pnpm dlx` respectively to run the MCP Inspector package.
+When using yarn, pnpm, or bun, the inspector will use `yarn dlx`, `pnpm dlx`, or `bunx` respectively to run the MCP Inspector package.
 
 #### Using options for complex configurations
 
