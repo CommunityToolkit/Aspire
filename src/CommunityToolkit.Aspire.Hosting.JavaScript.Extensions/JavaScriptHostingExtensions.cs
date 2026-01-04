@@ -53,6 +53,64 @@ public static partial class JavaScriptHostingExtensions
     }
 
     /// <summary>
+    /// Adds a yarn workspace to the distributed application builder.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the yarn workspace resource.</param>
+    /// <param name="workingDirectory">The working directory of the workspace. If not specified, it will be set to a path that is a sibling of the AppHost directory using the <paramref name="name"/> as the folder.</param>
+    /// <param name="install">When true (default), automatically installs packages before apps start. When false, only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<YarnWorkspaceResource> AddYarnWorkspaceApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? workingDirectory = null, bool install = true, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+
+        string wd = workingDirectory ?? Path.Combine("..", name);
+        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, wd));
+
+        var resource = new YarnWorkspaceResource(name, workingDirectory);
+
+        var rb = builder.AddResource(resource)
+            .WithIconName("CodeJsRectangle")
+            .WithInitialState(new CustomResourceSnapshot { Properties = [], ResourceType = "YarnWorkspace", State = KnownResourceStates.Running })
+            .WithAnnotation(new JavaScriptPackageManagerAnnotation("yarn", "run"));
+
+        AddMonorepoInstaller(rb, "yarn", install, configureInstaller);
+
+        return rb;
+    }
+
+    /// <summary>
+    /// Adds a pnpm workspace to the distributed application builder.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the pnpm workspace resource.</param>
+    /// <param name="workingDirectory">The working directory of the workspace. If not specified, it will be set to a path that is a sibling of the AppHost directory using the <paramref name="name"/> as the folder.</param>
+    /// <param name="install">When true (default), automatically installs packages before apps start. When false, only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<PnpmWorkspaceResource> AddPnpmWorkspaceApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? workingDirectory = null, bool install = true, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+
+        string wd = workingDirectory ?? Path.Combine("..", name);
+        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, wd));
+
+        var resource = new PnpmWorkspaceResource(name, workingDirectory);
+
+        var rb = builder.AddResource(resource)
+            .WithIconName("CodeJsRectangle")
+            .WithInitialState(new CustomResourceSnapshot { Properties = [], ResourceType = "PnpmWorkspace", State = KnownResourceStates.Running })
+            .WithAnnotation(new JavaScriptPackageManagerAnnotation("pnpm", "run"));
+
+        AddMonorepoInstaller(rb, "pnpm", install, configureInstaller);
+
+        return rb;
+    }
+
+    /// <summary>
     /// Adds an individual app to an Nx workspace.
     /// </summary>
     /// <param name="builder">The Nx workspace resource builder.</param>
@@ -140,6 +198,78 @@ public static partial class JavaScriptHostingExtensions
                   context.Args.Insert(0, executionAnnotation.ScriptCommand ?? "nx");
               });
         }
+
+        // If the workspace has an installer annotation, wait for the installer to complete
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
+        {
+            rb.WaitForCompletion(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
+        }
+
+        configure?.Invoke(rb);
+
+        return rb;
+    }
+
+    /// <summary>
+    /// Adds an individual app from a yarn workspace.
+    /// </summary>
+    /// <param name="builder">The yarn workspace resource builder.</param>
+    /// <param name="name">The name of the app resource.</param>
+    /// <param name="workspaceName">The yarn workspace package name to run. Defaults to <paramref name="name"/>.</param>
+    /// <param name="script">The script to run from the workspace package. Defaults to <c>dev</c>.</param>
+    /// <param name="configure">A function to configure the app resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<YarnWorkspaceAppResource> AddApp(this IResourceBuilder<YarnWorkspaceResource> builder, [ResourceName] string name, string? workspaceName = null, string? script = null, Func<IResourceBuilder<YarnWorkspaceAppResource>, IResourceBuilder<YarnWorkspaceAppResource>>? configure = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+
+        workspaceName ??= name;
+        script ??= "dev";
+
+        var resource = new YarnWorkspaceAppResource(name, builder.Resource.WorkingDirectory, workspaceName, script);
+
+        var rb = builder.ApplicationBuilder.AddResource(resource)
+            .WithNodeDefaults()
+            .WithIconName("CodeJsRectangle")
+            .WithArgs("workspace", workspaceName, "run", script)
+            .WithParentRelationship(builder.Resource);
+
+        // If the workspace has an installer annotation, wait for the installer to complete
+        if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
+        {
+            rb.WaitForCompletion(builder.ApplicationBuilder.CreateResourceBuilder(installerAnnotation.Resource));
+        }
+
+        configure?.Invoke(rb);
+
+        return rb;
+    }
+
+    /// <summary>
+    /// Adds an individual app from a pnpm workspace.
+    /// </summary>
+    /// <param name="builder">The pnpm workspace resource builder.</param>
+    /// <param name="name">The name of the app resource.</param>
+    /// <param name="filter">The pnpm filter to use. Defaults to <paramref name="name"/>.</param>
+    /// <param name="script">The script to run from the workspace package. Defaults to <c>dev</c>.</param>
+    /// <param name="configure">A function to configure the app resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<PnpmWorkspaceAppResource> AddApp(this IResourceBuilder<PnpmWorkspaceResource> builder, [ResourceName] string name, string? filter = null, string? script = null, Func<IResourceBuilder<PnpmWorkspaceAppResource>, IResourceBuilder<PnpmWorkspaceAppResource>>? configure = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+
+        filter ??= name;
+        script ??= "dev";
+
+        var resource = new PnpmWorkspaceAppResource(name, builder.Resource.WorkingDirectory, filter, script);
+
+        var rb = builder.ApplicationBuilder.AddResource(resource)
+            .WithNodeDefaults()
+            .WithIconName("CodeJsRectangle")
+            .WithArgs("--filter", filter, "run", script)
+            .WithParentRelationship(builder.Resource);
 
         // If the workspace has an installer annotation, wait for the installer to complete
         if (builder.Resource.TryGetLastAnnotation<JavaScriptPackageInstallerAnnotation>(out var installerAnnotation))
@@ -364,6 +494,8 @@ public static partial class JavaScriptHostingExtensions
             {
                 NxResource nx => nx.WorkingDirectory,
                 TurborepoResource turbo => turbo.WorkingDirectory,
+                YarnWorkspaceResource yarn => yarn.WorkingDirectory,
+                PnpmWorkspaceResource pnpm => pnpm.WorkingDirectory,
                 _ => throw new InvalidOperationException($"Unsupported resource type: {builder.Resource.GetType().Name}")
             };
 

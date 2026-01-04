@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.JavaScript.Extensions library
 
-This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.JavaScript) for Aspire, including support for frontend monorepos (Nx, Turborepo).
+This integration contains extensions for the [Node.js hosting package](https://nuget.org/packages/Aspire.Hosting.JavaScript) for Aspire, including support for frontend monorepos (Nx, Turborepo) and native package-manager workspaces (yarn, pnpm).
 
 ## Getting Started
 
@@ -14,7 +14,7 @@ dotnet add package CommunityToolkit.Aspire.Hosting.JavaScript.Extensions
 
 ### Example usage
 
-For Nx and Turborepo monorepos, use the dedicated monorepo methods to avoid package installation race conditions:
+For Nx, Turborepo, and package-manager workspaces, use the dedicated helpers to avoid package installation race conditions:
 
 ```csharp
 // Nx workspace
@@ -31,6 +31,20 @@ var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
 
 var turboApp1 = turbo.AddApp("app1");
 var turboApp2 = turbo.AddApp("app2", filter: "custom-filter");
+
+// Yarn workspace (package-manager native)
+var yarn = builder.AddYarnWorkspaceApp("yarn-workspace", workingDirectory: "../frontend", install: true);
+yarn.AddApp("yarn-web", workspaceName: "web")
+    .WithHttpEndpoint(env: "PORT")
+    .WithMappedEndpointPort()
+    .WithHttpHealthCheck();
+
+// pnpm workspace (package-manager native)
+var pnpm = builder.AddPnpmWorkspaceApp("pnpm-workspace", workingDirectory: "../frontend", install: true);
+pnpm.AddApp("pnpm-web", filter: "web")
+    .WithHttpEndpoint(env: "PORT")
+    .WithMappedEndpointPort()
+    .WithHttpHealthCheck();
 ```
 
 See [MONOREPO.md](./MONOREPO.md) for detailed documentation on monorepo support.
@@ -53,6 +67,8 @@ var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
 // Generated commands:
 // Nx with yarn: yarn nx serve app1
 // Turborepo with pnpm: pnpm turbo run dev --filter app1
+// Yarn workspace app: yarn workspace app1 run dev
+// pnpm workspace app: pnpm --filter app1 run dev
 ```
 
 ### Package installation with custom flags
