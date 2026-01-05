@@ -75,7 +75,7 @@ public class AddFlagdTests
 
         Assert.Equal("ghcr.io", containerAnnotation.Registry);
         Assert.Equal("open-feature/flagd", containerAnnotation.Image);
-        Assert.Equal("v0.12.9", containerAnnotation.Tag);
+        Assert.Equal("v0.13.1", containerAnnotation.Tag);
     }
 
     [Fact]
