@@ -35,6 +35,9 @@
     <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.csproj" />
     <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/elasticsearch-ext/">
+    <Project Path="examples/elasticsearch-ext/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/flagd/">
     <Project Path="examples/flagd/CommunityToolkit.Aspire.Hosting.Flagd.AppHost/CommunityToolkit.Aspire.Hosting.Flagd.AppHost.csproj" />
   </Folder>
@@ -174,6 +177,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Golang/CommunityToolkit.Aspire.Hosting.Golang.csproj" />
@@ -228,6 +232,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Golang.Tests/CommunityToolkit.Aspire.Hosting.Golang.Tests.csproj" />
