@@ -90,7 +90,7 @@ public class ResourceCreationTests
     public void WithElasticvueShouldChangeElasticvueHostPort()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var elasticsearchResourceBuilder = builder.AddElasticsearch("elasticsearch")
+        _ = builder.AddElasticsearch("elasticsearch")
             .WithElasticvue(c => c.WithHostPort(8068));
 
         using var app = builder.Build();
@@ -108,7 +108,7 @@ public class ResourceCreationTests
     public void WithElasticvueShouldChangeElasticvueContainerImageTag()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var elasticsearchResourceBuilder = builder.AddElasticsearch("elasticsearch")
+        _ = builder.AddElasticsearch("elasticsearch")
             .WithElasticvue(c => c.WithImageTag("manualTag"));
         using var app = builder.Build();
 
