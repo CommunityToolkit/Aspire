@@ -26,7 +26,7 @@ public class ResourceCreationTests
         Assert.Equal("true", environmentVariables["http.cors.enabled"]);
 
         Assert.True(environmentVariables.ContainsKey("http.cors.allow-origin"));
-        Assert.Equal("\"http://localhost:8069\"", environmentVariables["http.cors.allow-origin"]); // TODO Fix this when we can run the tests
+        Assert.Equal("\"http://localhost:8069\"", environmentVariables["http.cors.allow-origin"]);
     }
 
     [Fact]

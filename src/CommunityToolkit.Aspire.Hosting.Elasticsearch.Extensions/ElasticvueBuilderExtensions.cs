@@ -57,6 +57,7 @@ public static class ElasticvueBuilderExtensions
             return elasticVueContainerBuilder;
         }
     }
+
     /// <summary>
     /// Adds an administration and development platform for Elasticsearch to the application model using Elasticvue.
     /// </summary>
@@ -85,12 +86,13 @@ public static class ElasticvueBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        containerName ??= $"elasticvue";
+        containerName ??= "elasticvue";
 
         var elasticvueBuilder = AddElasticvue(builder.ApplicationBuilder, containerName);
 
         elasticvueBuilder
-            .WithEnvironment(context => ConfigureElasticvueContainer(context, builder.ApplicationBuilder));
+            .WithEnvironment(context => ConfigureElasticvueContainer(context, builder.ApplicationBuilder))
+            .WaitFor(builder);
 
         configureContainer?.Invoke(elasticvueBuilder);
 
@@ -120,7 +122,7 @@ public static class ElasticvueBuilderExtensions
         var currentClustersSettings = context.EnvironmentVariables.GetValueOrDefault("ELASTICVUE_CLUSTERS")?.ToString() ?? string.Empty;
         if (string.IsNullOrEmpty(currentClustersSettings))
         {
-            currentClustersSettings = "[]"; // Initialize with an empty JSON object if not set
+            currentClustersSettings = "[]"; // Initialize with an empty JSON array if not set
         }
 
         var currentClusters = JsonSerializer.Deserialize<List<ElasticvueEnvironmentSettings>>(currentClustersSettings) ?? throw new InvalidOperationException("ELASTICVUE_CLUSTERS environment variable deserialized to a null value.");
@@ -135,7 +137,6 @@ public static class ElasticvueBuilderExtensions
         var clustersJson = JsonSerializer.Serialize(currentClusters);
         context.EnvironmentVariables["ELASTICVUE_CLUSTERS"] = clustersJson;
     }
-
 }
 
 internal record ElasticvueEnvironmentSettings(string name, string uri, string username, string password);

@@ -4,7 +4,8 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Represents a container resource for Elasticvue.
 /// </summary>
 /// <param name="name">The name of the container resource.</param>
-public sealed class ElasticvueContainerResource(string name) : ContainerResource(name) {
+public sealed class ElasticvueContainerResource(string name) : ContainerResource(name)
+{
     internal const string PrimaryEndpointName = "http";
 
     private EndpointReference? _primaryEndpoint;
