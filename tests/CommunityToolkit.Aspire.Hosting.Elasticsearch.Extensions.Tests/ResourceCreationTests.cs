@@ -138,6 +138,10 @@ public class ResourceCreationTests
 
         var elasticsearchResource2 = elasticsearchResourceBuilder2.Resource;
 
+        // This resource should not be included in Elasticvue configuration
+        var elasticsearchResourceBuilder3 = builder.AddElasticsearch("elasticsearch3")
+            .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 9202));
+
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();

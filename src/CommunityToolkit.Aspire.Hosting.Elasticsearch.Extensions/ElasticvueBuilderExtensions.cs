@@ -34,7 +34,7 @@ public static class ElasticvueBuilderExtensions
     /// Multiple <see cref="AddElasticvue(IDistributedApplicationBuilder, string, int?)"/> calls will return the same resource builder instance.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    internal static IResourceBuilder<ElasticvueContainerResource> AddElasticvue(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
+    public static IResourceBuilder<ElasticvueContainerResource> AddElasticvue(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -89,7 +89,7 @@ public static class ElasticvueBuilderExtensions
         var elasticvueBuilder = AddElasticvue(builder.ApplicationBuilder, containerName);
 
         elasticvueBuilder
-            .WithEnvironment(context => ConfigureElasticvueContainer(context, builder.ApplicationBuilder))
+            .WithEnvironment(context => ConfigureElasticvueContainer(context, builder))
             .WaitFor(builder);
 
         configureContainer?.Invoke(elasticvueBuilder);
@@ -102,30 +102,22 @@ public static class ElasticvueBuilderExtensions
         return builder;
     }
 
-    private static async Task ConfigureElasticvueContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static async Task ConfigureElasticvueContainer(EnvironmentCallbackContext context, IResourceBuilder<ElasticsearchResource> builder)
     {
-        var elasticsearchInstances = applicationBuilder.Resources.OfType<ElasticsearchResource>();
-
-        var aspireClusters = await Task.WhenAll(  
-            elasticsearchInstances  
-                .Select(async elasticsearchResource => new ElasticvueEnvironmentSettings(  
-                    Name: elasticsearchResource.Name,  
-                    Uri: elasticsearchResource.PrimaryEndpoint.Url,  
-                    Username: "elastic",  
-                    Password: (await elasticsearchResource.PasswordParameter.GetValueAsync(context.CancellationToken))!  
-                ))  
+        var newCluster = new ElasticvueEnvironmentSettings(  
+            Name: builder.Resource.Name,  
+            Uri: builder.Resource.PrimaryEndpoint.Url,  
+            Username: "elastic",  
+            Password: (await builder.Resource.PasswordParameter.GetValueAsync(context.CancellationToken))!  
         );  
 
         var currentClusters = GetCurrentClustersFromEnvironment(context);
-        foreach (var cluster in aspireClusters)
+        if (!currentClusters.Any(c => c.Uri == newCluster.Uri))
         {
-            if (!currentClusters.Any(c => c.Uri == cluster.Uri))
-            {
-                currentClusters.Add(cluster);
-            }
+            currentClusters.Add(newCluster);
         }
 
-        var clustersJson = JsonSerializer.Serialize(currentClusters);
+        var clustersJson = JsonSerializer.Serialize(currentClusters, JsonSerializerOptions.Web);
         context.EnvironmentVariables["ELASTICVUE_CLUSTERS"] = clustersJson;
     }
 
