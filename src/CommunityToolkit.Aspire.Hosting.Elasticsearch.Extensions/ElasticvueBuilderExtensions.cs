@@ -44,25 +44,23 @@ public static class ElasticvueBuilderExtensions
             var builderForExistingResource = builder.CreateResourceBuilder(existingElasticVueResource);
             return builderForExistingResource;
         }
-        else
-        {
-            var elasticVueContainer = new ElasticvueContainerResource(name);
-            var elasticVueContainerBuilder = builder.AddResource(elasticVueContainer)
-                                                .WithImage(ElasticvueContainerImageTags.Image, ElasticvueContainerImageTags.Tag)
-                                                .WithImageRegistry(ElasticvueContainerImageTags.Registry)
-                                                .WithHttpEndpoint(targetPort: 8080, port: port, name: ElasticvueContainerResource.PrimaryEndpointName)
-                                                .WithUrlForEndpoint(ElasticvueContainerResource.PrimaryEndpointName, e => e.DisplayText = "Elasticvue Dashboard")
-                                                .ExcludeFromManifest();
 
-            return elasticVueContainerBuilder;
-        }
+        var elasticVueContainer = new ElasticvueContainerResource(name);
+        var elasticVueContainerBuilder = builder.AddResource(elasticVueContainer)
+                                            .WithImage(ElasticvueContainerImageTags.Image, ElasticvueContainerImageTags.Tag)
+                                            .WithImageRegistry(ElasticvueContainerImageTags.Registry)
+                                            .WithHttpEndpoint(targetPort: 8080, port: port, name: ElasticvueContainerResource.PrimaryEndpointName)
+                                            .WithUrlForEndpoint(ElasticvueContainerResource.PrimaryEndpointName, e => e.DisplayText = "Dashboard")
+                                            .ExcludeFromManifest();
+
+        return elasticVueContainerBuilder;
     }
 
     /// <summary>
     /// Adds an administration and development platform for Elasticsearch to the application model using Elasticvue.
     /// </summary>
     /// <remarks>
-    /// This version of the package defaults to the <inheritdoc cref="ElasticvueContainerImageTags.Tag"/> tag of the <inheritdoc cref="ElasticvueContainerImageTags.Image"/> container image.
+    /// This version of the package defaults to the <see cref="ElasticvueContainerImageTags.Tag"/> tag of the <see cref="ElasticvueContainerImageTags.Image"/> container image.
     /// </remarks>
     /// <param name="builder">The Elasticsearch server resource builder.</param>
     /// <param name="configureContainer">Configuration callback for Elasticvue container resource.</param>
@@ -108,27 +106,20 @@ public static class ElasticvueBuilderExtensions
     {
         var elasticsearchInstances = applicationBuilder.Resources.OfType<ElasticsearchResource>();
 
-        var aspireClusters = new List<ElasticvueEnvironmentSettings>();
-        foreach (var elasticsearchResource in elasticsearchInstances)
-        {
-            aspireClusters.Add(new ElasticvueEnvironmentSettings(
-                name: elasticsearchResource.Name,
-                uri: elasticsearchResource.PrimaryEndpoint.Url,
-                username: "elastic",
-                password: (await elasticsearchResource.PasswordParameter.GetValueAsync(CancellationToken.None))!
-            ));
-        }
+        var aspireClusters = await Task.WhenAll(  
+            elasticsearchInstances  
+                .Select(async elasticsearchResource => new ElasticvueEnvironmentSettings(  
+                    Name: elasticsearchResource.Name,  
+                    Uri: elasticsearchResource.PrimaryEndpoint.Url,  
+                    Username: "elastic",  
+                    Password: (await elasticsearchResource.PasswordParameter.GetValueAsync(context.CancellationToken))!  
+                ))  
+        );  
 
-        var currentClustersSettings = context.EnvironmentVariables.GetValueOrDefault("ELASTICVUE_CLUSTERS")?.ToString() ?? string.Empty;
-        if (string.IsNullOrEmpty(currentClustersSettings))
-        {
-            currentClustersSettings = "[]"; // Initialize with an empty JSON array if not set
-        }
-
-        var currentClusters = JsonSerializer.Deserialize<List<ElasticvueEnvironmentSettings>>(currentClustersSettings) ?? throw new InvalidOperationException("ELASTICVUE_CLUSTERS environment variable deserialized to a null value.");
+        var currentClusters = GetCurrentClustersFromEnvironment(context);
         foreach (var cluster in aspireClusters)
         {
-            if (!currentClusters.Any(c => c.uri == cluster.uri))
+            if (!currentClusters.Any(c => c.Uri == cluster.Uri))
             {
                 currentClusters.Add(cluster);
             }
@@ -137,6 +128,18 @@ public static class ElasticvueBuilderExtensions
         var clustersJson = JsonSerializer.Serialize(currentClusters);
         context.EnvironmentVariables["ELASTICVUE_CLUSTERS"] = clustersJson;
     }
-}
 
-internal record ElasticvueEnvironmentSettings(string name, string uri, string username, string password);
+    private static ICollection<ElasticvueEnvironmentSettings> GetCurrentClustersFromEnvironment(EnvironmentCallbackContext context)
+    {
+        var clustersSetting = context.EnvironmentVariables.GetValueOrDefault("ELASTICVUE_CLUSTERS")?.ToString();
+
+        if (string.IsNullOrEmpty(clustersSetting))
+        {
+            return [];
+        }
+
+        var clusters = JsonSerializer.Deserialize<List<ElasticvueEnvironmentSettings>>(clustersSetting, JsonSerializerOptions.Web);
+
+        return clusters ?? [];
+    }
+}

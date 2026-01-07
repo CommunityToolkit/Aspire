@@ -63,10 +63,10 @@ public class ResourceCreationTests
 
         var cluster = clusters.First();
 
-        Assert.Equal(elasticsearchResource.Name, cluster.name);
-        Assert.Equal(elasticsearchResource.GetEndpoint("http").Url, cluster.uri);
-        Assert.Equal("elastic", cluster.username);
-        Assert.Equal(await elasticsearchResource.PasswordParameter.GetValueAsync(default), cluster.password);
+        Assert.Equal(elasticsearchResource.Name, cluster.Name);
+        Assert.Equal(elasticsearchResource.GetEndpoint("http").Url, cluster.Uri);
+        Assert.Equal("elastic", cluster.Username);
+        Assert.Equal(await elasticsearchResource.PasswordParameter.GetValueAsync(default), cluster.Password);
     }
 
     [Fact]
@@ -159,18 +159,18 @@ public class ResourceCreationTests
         Assert.NotNull(clusters);
         Assert.Equal(2, clusters.Count);
 
-        var cluster1 = clusters.First(x => x.name == elasticsearchResource1.Name);
+        var cluster1 = clusters.First(x => x.Name == elasticsearchResource1.Name);
 
-        Assert.Equal(elasticsearchResource1.Name, cluster1.name);
-        Assert.Equal(elasticsearchResource1.GetEndpoint("http").Url, cluster1.uri);
-        Assert.Equal("elastic", cluster1.username);
-        Assert.Equal(await elasticsearchResource1.PasswordParameter.GetValueAsync(default), cluster1.password);
+        Assert.Equal(elasticsearchResource1.Name, cluster1.Name);
+        Assert.Equal(elasticsearchResource1.GetEndpoint("http").Url, cluster1.Uri);
+        Assert.Equal("elastic", cluster1.Username);
+        Assert.Equal(await elasticsearchResource1.PasswordParameter.GetValueAsync(default), cluster1.Password);
 
-        var cluster2 = clusters.First(x => x.name == elasticsearchResource2.Name);
+        var cluster2 = clusters.First(x => x.Name == elasticsearchResource2.Name);
 
-        Assert.Equal(elasticsearchResource2.Name, cluster2.name);
-        Assert.Equal(elasticsearchResource2.GetEndpoint("http").Url, cluster2.uri);
-        Assert.Equal("elastic", cluster2.username);
-        Assert.Equal(await elasticsearchResource2.PasswordParameter.GetValueAsync(default), cluster2.password);
+        Assert.Equal(elasticsearchResource2.Name, cluster2.Name);
+        Assert.Equal(elasticsearchResource2.GetEndpoint("http").Url, cluster2.Uri);
+        Assert.Equal("elastic", cluster2.Username);
+        Assert.Equal(await elasticsearchResource2.PasswordParameter.GetValueAsync(default), cluster2.Password);
     }
 }
