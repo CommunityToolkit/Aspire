@@ -31,18 +31,18 @@ public static class SftpHostingExtensions
         [ResourceName] string name,
         int? port = null)
     {
-        ArgumentNullException.ThrowIfNull("Service name must be specified.", nameof(name));
+        ArgumentNullException.ThrowIfNullOrEmpty(name, nameof(name));
         SftpContainerResource resource = new(name);
 
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(SftpContainerImageTags.Image)
             .WithImageTag(SftpContainerImageTags.Tag)
             .WithImageRegistry(SftpContainerImageTags.Registry)
-            .WithEndpoint("sftp", ep =>
+            .WithEndpoint(SftpContainerResource.SftpEndpointName, ep =>
             {
                 ep.Port = port;
                 ep.TargetPort = SftpContainerResource.SftpEndpointPort;
-                ep.UriScheme = "sftp";
+                ep.UriScheme = SftpContainerResource.SftpEndpointScheme;
             });
 
         return resourceBuilder;

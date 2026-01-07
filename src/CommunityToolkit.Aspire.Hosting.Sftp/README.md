@@ -1,4 +1,4 @@
-# CommunityToolkit.Hosting.Sftp
+# CommunityToolkit.Aspire.Hosting.Sftp
 
 ## Overview
 

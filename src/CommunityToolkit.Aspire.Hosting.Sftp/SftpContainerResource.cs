@@ -1,4 +1,6 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+﻿using System;
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents an SFTP container.
@@ -8,13 +10,14 @@ public class SftpContainerResource(string name) : ContainerResource(name), IReso
 {
     internal const int SftpEndpointPort = 22;
     internal const string SftpEndpointName = "sftp";
+    internal const string SftpEndpointScheme = "sftp";
 
     private EndpointReference? _sftpEndpoint;
 
     /// <summary>
     /// Gets the primary endpoint for the SFTP server.
     /// </summary>
-    private EndpointReference SftpEndpoint => _sftpEndpoint ??= new (this, SftpEndpointName);
+    private EndpointReference SftpEndpoint => _sftpEndpoint ??= new(this, SftpEndpointName);
 
     /// <summary>
     /// Gets the host endpoint reference for this resource.
@@ -29,9 +32,7 @@ public class SftpContainerResource(string name) : ContainerResource(name), IReso
     /// <summary>
     /// ConnectionString for the atmoz SFTP server in the form of sftp://host:port.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression => 
-        ReferenceExpression.Create(
-            $"sftp://{SftpEndpoint.Property(EndpointProperty.Host)}:{SftpEndpoint.Property(EndpointProperty.Port)}");
+    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"{SftpEndpoint.Url}");
 
     /// <summary>
     /// Gets the connection URI expression for the atmoz SFTP endpoint.
@@ -43,8 +44,12 @@ public class SftpContainerResource(string name) : ContainerResource(name), IReso
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
-        yield return new("Host", ReferenceExpression.Create($"{Host}"));
-        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        if (Uri.TryCreate(SftpEndpoint.Url, UriKind.Absolute, out var uri))
+        {
+            yield return new("Host", ReferenceExpression.Create($"{uri.Host}"));
+            yield return new("Port", ReferenceExpression.Create($"{uri.Port.ToString()}"));
+        }
+
         yield return new("Uri", UriExpression);
     }
 }

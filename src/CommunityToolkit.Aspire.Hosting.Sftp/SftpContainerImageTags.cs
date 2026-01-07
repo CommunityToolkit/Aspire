@@ -4,5 +4,5 @@ internal static class SftpContainerImageTags
 {
     public const string Registry = "docker.io";
     public const string Image = "atmoz/sftp";
-    public const string Tag = "latest";
+    public const string Tag = "debian";
 }

@@ -37,18 +37,9 @@ public class SftpFunctionalTests : IDisposable
 
         var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
-        try
-        {
-            await rns.WaitForResourceAsync(resourceBuilder.Resource.Name, "Running", new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
-        }
-        catch
-        {
-            ResourceEvent? resourceEvent = null;
+        using var runningTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 
-            var res = rns.TryGetCurrentState(resourceBuilder.Resource.Name, out resourceEvent);
-
-            throw;
-        }
+        await rns.WaitForResourceAsync(resourceBuilder.Resource.Name, "Running", runningTokenSource.Token);
 
         var hostBuilder = Host.CreateApplicationBuilder();
 
@@ -72,12 +63,10 @@ public class SftpFunctionalTests : IDisposable
 
             await retryPolicy.ExecuteAsync(async () =>
             {
-                await client.ConnectAsync(new CancellationTokenSource(TimeSpan.FromMinutes(1)).Token);
+                using var connectTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+
+                await client.ConnectAsync(connectTokenSource.Token);
             });
-        }
-        catch
-        {
-            throw;
         }
         finally
         {

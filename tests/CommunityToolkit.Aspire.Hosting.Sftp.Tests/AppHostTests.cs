@@ -16,13 +16,13 @@ public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<Co
 
         using var client = fix.CreateHttpClient("api");
 
-        var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "upload");
+        using var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "upload");
 
         var uploadResponse = await client.SendAsync(uploadRequest);
 
         uploadResponse.EnsureSuccessStatusCode();
 
-        var downloadRequest = new HttpRequestMessage(HttpMethod.Get, "download");
+        using var downloadRequest = new HttpRequestMessage(HttpMethod.Get, "download");
 
         var downloadResponse = await client.SendAsync(downloadRequest);
 
@@ -38,7 +38,7 @@ public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<Co
 
         var uri = new Uri(connectionString!);
 
-        var client = new SftpClient(uri.Host, uri.Port, "foo", "pass");
+        using var client = new SftpClient(uri.Host, uri.Port, "foo", "pass");
 
         try
         {
@@ -52,10 +52,6 @@ public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<Co
 
                 await client.ConnectAsync(CancellationToken.None);
             });
-        }
-        catch
-        {
-            throw;
         }
         finally
         {
