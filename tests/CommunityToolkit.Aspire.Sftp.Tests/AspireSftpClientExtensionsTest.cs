@@ -2,11 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Renci.SshNet;
-using Xunit;
 
 namespace CommunityToolkit.Aspire.Sftp.Tests;
 
@@ -95,15 +93,34 @@ public class AspireSftpClientExtensionsTest
     {
         var builder = CreateBuilder(DefaultConnectionString);
 
-        builder.AddSftpClient(DefaultConnectionName, settings =>
+        var ex = Assert.Throws<InvalidOperationException>(() =>
         {
-            settings.DisableHealthChecks = true;
-            settings.DisableTracing = true;
+            builder.AddSftpClient(DefaultConnectionName, settings =>
+            {
+                settings.DisableHealthChecks = true;
+                settings.DisableTracing = true;
+            });
         });
 
-        using var host = builder.Build();
+        Assert.Contains("Username", ex.Message);
+    }
 
-        Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<SftpClient>());
+    [Fact]
+    public void AddSftpClient_ThrowsWhenMissingConnectionString()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+        {
+            builder.AddSftpClient(DefaultConnectionName, settings =>
+            {
+                settings.DisableHealthChecks = true;
+                settings.DisableTracing = true;
+                settings.Username = "testuser";
+            });
+        });
+
+        Assert.Contains("ConnectionString", ex.Message);
     }
 
     [Fact]

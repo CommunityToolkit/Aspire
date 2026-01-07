@@ -16,17 +16,20 @@ public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<Co
 
         using var client = fix.CreateHttpClient("api");
 
+        using var healthRequest = new HttpRequestMessage(HttpMethod.Get, "health");
         using var uploadRequest = new HttpRequestMessage(HttpMethod.Post, "upload");
-
-        var uploadResponse = await client.SendAsync(uploadRequest);
-
-        uploadResponse.EnsureSuccessStatusCode();
-
         using var downloadRequest = new HttpRequestMessage(HttpMethod.Get, "download");
 
-        var downloadResponse = await client.SendAsync(downloadRequest);
+        await RunAsync(healthRequest);
+        await RunAsync(uploadRequest);
+        await RunAsync(downloadRequest);
 
-        downloadResponse.EnsureSuccessStatusCode();
+        async Task RunAsync(HttpRequestMessage req)
+        {
+            var res = await client.SendAsync(req);
+
+            res.EnsureSuccessStatusCode();
+        }
     }
 
     [Fact]

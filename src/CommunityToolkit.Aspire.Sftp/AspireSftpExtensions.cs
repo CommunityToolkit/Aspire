@@ -3,6 +3,7 @@
 
 using Aspire;
 using CommunityToolkit.Aspire.Sftp;
+using HealthChecks.Network;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -68,6 +69,23 @@ public static class AspireSftpExtensions
 
         configureSettings?.Invoke(settings);
 
+        if (string.IsNullOrEmpty(settings.Username))
+        {
+            throw new InvalidOperationException(
+                $"An SFTP client could not be configured. The '{nameof(settings.Username)}' must be provided " +
+                $"in the '{configurationSectionName}' configuration section.");
+        }
+
+        if (settings.ConnectionString is null)
+        {
+            throw new InvalidOperationException(
+                $"An SFTP client could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or " +
+                $"{nameof(settings.ConnectionString)} must be provided " +
+                $"in the '{configurationSectionName}' configuration section.");
+        }
+
+        var (host, port) = ParseConnectionString(settings.ConnectionString);
+
         if (serviceKey is null)
         {
             builder.Services.AddSingleton(ConfigureSftpClient);
@@ -79,63 +97,54 @@ public static class AspireSftpExtensions
 
         if (!settings.DisableTracing)
         {
-            builder.Services.AddOpenTelemetry()
-                .WithTracing(traceBuilder => traceBuilder.AddSource("Renci.SshNet"));
+            builder.Services.AddOpenTelemetry().WithTracing(traceBuilder => traceBuilder.AddSource("Renci.SshNet"));
         }
 
         if (!settings.DisableHealthChecks)
         {
             var healthCheckName = serviceKey is null ? "Sftp.Client" : $"Sftp.Client_{connectionName}";
 
-            builder.TryAddHealthCheck(new HealthCheckRegistration(
-                healthCheckName,
-                sp => new SftpHealthCheck(settings),
-                failureStatus: default,
-                tags: default,
-                timeout: settings.HealthCheckTimeout));
+            builder.Services.AddHealthChecks().AddSftpHealthCheck(Setup, healthCheckName, default, default, settings.HealthCheckTimeout);
+
+            void Setup(SftpHealthCheckOptions opt)
+            {
+                var bld = new SftpConfigurationBuilder(host, port, settings.Username);
+
+                if (!String.IsNullOrEmpty(settings.Password))
+                {
+                    bld.AddPasswordAuthentication(settings.Password);
+                }
+
+                if (!String.IsNullOrEmpty(settings.PrivateKeyFile))
+                {
+                    bld.AddPrivateKeyAuthentication(new PrivateKeyFile(settings.PrivateKeyFile, settings.PrivateKeyPassphrase));
+                }
+
+                opt.AddHost(bld.Build());
+            }
         }
 
         SftpClient ConfigureSftpClient(IServiceProvider serviceProvider)
         {
-            if (settings.ConnectionString is not null)
+            ConnectionInfo connectionInfo;
+
+            if (!string.IsNullOrEmpty(settings.PrivateKeyFile))
             {
-                var (host, port) = ParseConnectionString(settings.ConnectionString);
-
-                if (string.IsNullOrEmpty(settings.Username))
-                {
-                    throw new InvalidOperationException(
-                        $"An SFTP client could not be configured. The '{nameof(settings.Username)}' must be provided " +
-                        $"in the '{configurationSectionName}' configuration section.");
-                }
-
-                ConnectionInfo connectionInfo;
-
-                if (!string.IsNullOrEmpty(settings.PrivateKeyFile))
-                {
-                    var privateKeyFile = new PrivateKeyFile(settings.PrivateKeyFile);
-                    connectionInfo = new ConnectionInfo(host, port, settings.Username, new PrivateKeyAuthenticationMethod(settings.Username, privateKeyFile));
-                }
-                else if (!string.IsNullOrEmpty(settings.Password))
-                {
-                    connectionInfo = new ConnectionInfo(host, port, settings.Username, new PasswordAuthenticationMethod(settings.Username, settings.Password));
-                }
-                else
-                {
-                    throw new InvalidOperationException(
-                        $"An SFTP client could not be configured. Either '{nameof(settings.Password)}' or '{nameof(settings.PrivateKeyFile)}' must be provided " +
-                        $"in the '{configurationSectionName}' configuration section.");
-                }
-
-                var client = new SftpClient(connectionInfo);
-                return client;
+                var privateKeyFile = new PrivateKeyFile(settings.PrivateKeyFile);
+                connectionInfo = new ConnectionInfo(host, port, settings.Username, new PrivateKeyAuthenticationMethod(settings.Username, privateKeyFile));
+            }
+            else if (!string.IsNullOrEmpty(settings.Password))
+            {
+                connectionInfo = new ConnectionInfo(host, port, settings.Username, new PasswordAuthenticationMethod(settings.Username, settings.Password));
             }
             else
             {
                 throw new InvalidOperationException(
-                    $"An SFTP client could not be configured. Ensure valid connection information was provided in 'ConnectionStrings:{connectionName}' or " +
-                    $"{nameof(settings.ConnectionString)} must be provided " +
+                    $"An SFTP client could not be configured. Either '{nameof(settings.Password)}' or '{nameof(settings.PrivateKeyFile)}' must be provided " +
                     $"in the '{configurationSectionName}' configuration section.");
             }
+
+            return new SftpClient(connectionInfo);
         }
     }
 
