@@ -14,7 +14,7 @@ public class AspireSftpClientExtensionsTest
     private const string DefaultConnectionString = "sftp://localhost:22";
 
     [Fact]
-    public void AddSftpClient_RegistersSingleton()
+    public void AddSftpClient_RegistersService()
     {
         var builder = CreateBuilder(DefaultConnectionString);
 
@@ -33,7 +33,7 @@ public class AspireSftpClientExtensionsTest
     }
 
     [Fact]
-    public void AddKeyedSftpClient_RegistersKeyedSingleton()
+    public void AddKeyedSftpClient_RegistersKeyedService()
     {
         var builder = CreateBuilder(DefaultConnectionString);
 
@@ -55,18 +55,22 @@ public class AspireSftpClientExtensionsTest
     public void CanAddMultipleKeyedServices()
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
+
         builder.Configuration.AddInMemoryCollection([
             new KeyValuePair<string, string?>("ConnectionStrings:sftp1", "sftp://localhost:22"),
             new KeyValuePair<string, string?>("ConnectionStrings:sftp2", "sftp://localhost:2222"),
             new KeyValuePair<string, string?>("ConnectionStrings:sftp3", "sftp://localhost:2223"),
+
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:Username", "user1"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:Password", "pass1"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:DisableHealthChecks", "true"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:DisableTracing", "true"),
+
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:sftp2:Username", "user2"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:sftp2:Password", "pass2"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:sftp2:DisableHealthChecks", "true"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:sftp2:DisableTracing", "true"),
+
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:sftp3:Username", "user3"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:sftp3:Password", "pass3"),
             new KeyValuePair<string, string?>("Aspire:Sftp:Client:sftp3:DisableHealthChecks", "true"),
@@ -131,13 +135,17 @@ public class AspireSftpClientExtensionsTest
         builder.AddSftpClient(DefaultConnectionName, settings =>
         {
             settings.Username = "testuser";
+            settings.ConnectionString = "sftp://localhost:22";
             settings.DisableHealthChecks = true;
             settings.DisableTracing = true;
         });
 
         using var host = builder.Build();
 
-        Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<SftpClient>());
+        var ex = Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<SftpClient>());
+
+        Assert.Contains("Password", ex.Message);
+        Assert.Contains("PrivateKey", ex.Message);
     }
 
     [Fact]

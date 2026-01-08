@@ -33,7 +33,7 @@ app.MapPost("/upload", async (SftpClient client, CancellationToken cancellationT
 {
     try
     {
-        var tokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
         await client.ConnectAsync(tokenSource.Token);
 
@@ -59,7 +59,7 @@ app.MapGet("/download", async (SftpClient client, CancellationToken cancellation
 {
     try
     {
-        var tokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        using var tokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
         await client.ConnectAsync(tokenSource.Token);
 

@@ -1,12 +1,10 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Aspire;
 using CommunityToolkit.Aspire.Sftp;
 using HealthChecks.Network;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Renci.SshNet;
 
 namespace Microsoft.Extensions.Hosting;
@@ -126,25 +124,24 @@ public static class AspireSftpExtensions
 
         SftpClient ConfigureSftpClient(IServiceProvider serviceProvider)
         {
-            ConnectionInfo connectionInfo;
-
             if (!string.IsNullOrEmpty(settings.PrivateKeyFile))
             {
                 var privateKeyFile = new PrivateKeyFile(settings.PrivateKeyFile);
-                connectionInfo = new ConnectionInfo(host, port, settings.Username, new PrivateKeyAuthenticationMethod(settings.Username, privateKeyFile));
+
+                var connectionInfo = new PrivateKeyConnectionInfo(host, port, settings.Username, privateKeyFile);
+
+                return ActivatorUtilities.CreateInstance<SftpClient>(serviceProvider, connectionInfo);
             }
             else if (!string.IsNullOrEmpty(settings.Password))
             {
-                connectionInfo = new ConnectionInfo(host, port, settings.Username, new PasswordAuthenticationMethod(settings.Username, settings.Password));
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    $"An SFTP client could not be configured. Either '{nameof(settings.Password)}' or '{nameof(settings.PrivateKeyFile)}' must be provided " +
-                    $"in the '{configurationSectionName}' configuration section.");
+                var connectionInfo = new PasswordConnectionInfo(host, port, settings.Username, settings.Password ?? String.Empty);
+
+                return ActivatorUtilities.CreateInstance<SftpClient>(serviceProvider, connectionInfo);
             }
 
-            return new SftpClient(connectionInfo);
+            throw new InvalidOperationException(
+                $"An SFTP client could not be configured. Either '{nameof(settings.Password)}' or '{nameof(settings.PrivateKeyFile)}' must be provided " +
+                $"in the '{configurationSectionName}' configuration section.");
         }
     }
 

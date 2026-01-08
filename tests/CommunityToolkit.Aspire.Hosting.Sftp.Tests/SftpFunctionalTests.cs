@@ -164,7 +164,7 @@ public class SftpFunctionalTests : IDisposable
     }
 
     [Fact]
-    public async Task VerifySftpResourceWithRsaKeys()
+    public async Task VerifySftpResourceWithPrivateRsaKey()
     {
         resourceBuilder = builder
             .AddSftp("sftp")
@@ -182,7 +182,7 @@ public class SftpFunctionalTests : IDisposable
     }
 
     [Fact]
-    public async Task VerifySftpResourceWithEd25519Keys()
+    public async Task VerifySftpResourceWithPrivateEd25519Key()
     {
         resourceBuilder = builder
             .AddSftp("sftp")
