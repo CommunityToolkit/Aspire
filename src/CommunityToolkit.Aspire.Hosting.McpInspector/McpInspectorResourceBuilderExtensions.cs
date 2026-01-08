@@ -92,7 +92,7 @@ public static class McpInspectorResourceBuilderExtensions
             .WithEnvironment("MCP_AUTO_OPEN_ENABLED", "false")
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
-                annotation.DisplayText = "Client";;
+                annotation.DisplayText = "Client";
                 // DisplayOrder is unstable and will change in a future version of Aspire. See https://github.com/dotnet/aspire/pull/13785
                 // It can be re-added once the API has been fixed.
                 // annotation.DisplayOrder = 2;
