@@ -93,12 +93,16 @@ public static class McpInspectorResourceBuilderExtensions
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
                 annotation.DisplayText = "Client";
-                annotation.DisplayOrder = 2;
+                // DisplayOrder is unstable and will change in a future version of Aspire. See https://github.com/dotnet/aspire/pull/13785
+                // It can be re-added once the API has been fixed.
+                // annotation.DisplayOrder = 2;
             })
             .WithUrlForEndpoint(McpInspectorResource.ServerProxyEndpointName, annotation =>
             {
                 annotation.DisplayText = "Server Proxy";
-                annotation.DisplayOrder = 1;
+                // DisplayOrder is unstable and will change in a future version of Aspire. See https://github.com/dotnet/aspire/pull/13785
+                // It can be re-added once the API has been fixed.
+                // annotation.DisplayOrder = 1;
                 annotation.DisplayLocation = UrlDisplayLocation.DetailsOnly;
             })
             .OnBeforeResourceStarted(async (inspectorResource, @event, ct) =>
