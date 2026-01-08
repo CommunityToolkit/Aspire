@@ -79,6 +79,23 @@ public class AddFlagdTests
     }
 
     [Fact]
+    public void AddFlagdAddsOtelAnnotation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddFlagd(FlagdName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<FlagdResource>());
+
+        // Verify that OtlpExporterAnnotation is present (added by WithOtlpExporter)
+        // This annotation marks the resource as an OTEL exporter
+        Assert.True(resource.HasAnnotationOfType<OtlpExporterAnnotation>());
+    }
+
+    [Fact]
     public void AddFlagdSetsCorrectEndpoints()
     {
         var builder = DistributedApplication.CreateBuilder();
