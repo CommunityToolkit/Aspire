@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <IsAspireHost>true</IsAspireHost>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting.Azure.Storage" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Azure.Extensions\CommunityToolkit.Aspire.Hosting.Azure.Extensions.csproj" IsAspireProjectResource="false" />
+    </ItemGroup>
+
+</Project>
