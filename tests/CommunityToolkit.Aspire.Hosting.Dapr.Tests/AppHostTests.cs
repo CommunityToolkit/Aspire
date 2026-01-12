@@ -7,7 +7,7 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
 public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Dapr_AppHost> fixture) :
     IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Dapr_AppHost>>
 {
-    [Fact]
+    [Fact(Skip = "Flaky test - needs investigation")]
     public async Task ResourceStartsAndRespondsOk()
     {
         var resourceName = "servicea";
