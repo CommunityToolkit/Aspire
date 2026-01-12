@@ -30,14 +30,8 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithBun(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
-
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithMcpServer<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, ApplicationModel.IResourceBuilder<TResource> mcpServer, bool isDefault = true, McpTransportType transportType = McpTransportType.StreamableHttp, string path = "/mcp")
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }
-
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithPnpm(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
-
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithYarn(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
     }
 
     public enum McpTransportType
