@@ -200,7 +200,7 @@ public static class AspireOllamaSharpExtensions
         {
             HttpClient httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(httpClientKey);
 
-            OllamaApiClient client = new(httpClient);
+            OllamaApiClient client = new(httpClient, settings.SelectedModel ?? string.Empty, settings.JsonSerializerContext);
             if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
             {
                 client.SelectedModel = settings.SelectedModel;
