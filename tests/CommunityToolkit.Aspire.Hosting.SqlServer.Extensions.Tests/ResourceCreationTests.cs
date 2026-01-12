@@ -24,25 +24,31 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("sqlserver-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("sqlserver", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_sqlserver1", item.Key);
+                Assert.Equal("LABEL_sqlserver", item.Key);
                 Assert.Equal(sqlserverResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("SERVER_sqlserver1", item.Key);
+                Assert.Equal("SERVER_sqlserver", item.Key);
                 Assert.Equal(sqlserverResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("USER_sqlserver1", item.Key);
+                Assert.Equal("USER_sqlserver", item.Key);
                 Assert.Equal("sa", item.Value);
             },
             async item =>
@@ -52,18 +58,13 @@ public class ResourceCreationTests
             },
             item =>
             {
-                Assert.Equal("PORT_sqlserver1", item.Key);
+                Assert.Equal("PORT_sqlserver", item.Key);
                 Assert.Equal(sqlserverResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_sqlserver1", item.Key);
+                Assert.Equal("ENGINE_sqlserver", item.Key);
                 Assert.Equal("mssql@dbgate-plugin-mssql", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("sqlserver1", item.Value);
             });
     }
 
@@ -81,7 +82,7 @@ public class ResourceCreationTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("sqlserver1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
     }
 
     [Fact]
@@ -142,11 +143,17 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("sqlserver1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("sqlserver1,sqlserver2", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
@@ -207,11 +214,6 @@ public class ResourceCreationTests
             {
                 Assert.Equal("ENGINE_sqlserver2", item.Key);
                 Assert.Equal("mssql@dbgate-plugin-mssql", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("sqlserver1,sqlserver2", item.Value);
             });
     }
 

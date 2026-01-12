@@ -24,31 +24,32 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mongodb-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("mongodb", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_mongodb1", item.Key);
+                Assert.Equal("LABEL_mongodb", item.Key);
                 Assert.Equal(mongodbResource.Name, item.Value);
             },
             async item =>
             {
-                Assert.Equal("URL_mongodb1", item.Key);
+                Assert.Equal("URL_mongodb", item.Key);
                 Assert.Equal(await mongodbResource.ConnectionStringExpression.GetValueAsync(default), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_mongodb1", item.Key);
+                Assert.Equal("ENGINE_mongodb", item.Key);
                 Assert.Equal("mongo@dbgate-plugin-mongo", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1", item.Value);
             });
     }
 
@@ -66,7 +67,7 @@ public class ResourceCreationTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mongodb1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
     }
 
     [Fact]
@@ -129,11 +130,17 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mongodb1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("mongodb1,mongodb2", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
@@ -164,11 +171,6 @@ public class ResourceCreationTests
             {
                 Assert.Equal("ENGINE_mongodb2", item.Key);
                 Assert.Equal("mongo@dbgate-plugin-mongo", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1,mongodb2", item.Value);
             });
     }
 }

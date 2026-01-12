@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download test results
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: testresults-*
 
@@ -28,7 +28,7 @@ jobs:
           assemblyfilters: "-*.AppHost;-CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;-*.ServiceDefaults;-CommunityToolkit.Aspire.Testing;-Aspire.Hosting;-Aspire.Hosting.JavaScript;-Aspire.Hosting.SqlServer;-Aspire.Hosting.Python;-Aspire.Hosting.RabbitMQ;-Aspire.Hosting.Redis;-Aspire.Hosting.PostgreSQL;-Aspire.Hosting.MongoDB"
 
       - name: Upload combined coverage XML
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: coverage
           path: ${{ github.workspace }}/report
@@ -48,7 +48,7 @@ jobs:
           thresholds: "60 80"
 
       - name: Upload combined coverage markdown
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-markdown
           path: ${{ github.workspace }}/code-coverage-results.md
