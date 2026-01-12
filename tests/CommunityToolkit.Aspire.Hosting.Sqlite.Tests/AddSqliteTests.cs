@@ -2,6 +2,7 @@
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite;
+
 public class AddSqliteTests
 {
     [Fact]
