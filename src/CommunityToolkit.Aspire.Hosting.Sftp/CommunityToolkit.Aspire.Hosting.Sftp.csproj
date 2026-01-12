@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <Description>Aspire hosting integration for the atmoz SFTP container image.</Description>
     <AdditionalPackageTags>atmoz sftp hosting</AdditionalPackageTags>
   </PropertyGroup>

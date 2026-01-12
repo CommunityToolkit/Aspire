@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Polly;
 using Renci.SshNet;
 using Renci.SshNet.Common;
+using System;
 using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Sftp.Tests;
@@ -39,11 +40,13 @@ public class SftpFunctionalTests : IDisposable
 
         using var runningTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(15));
 
-        await rns.WaitForResourceAsync(resourceBuilder.Resource.Name, "Running", runningTokenSource.Token);
+        await rns.WaitForResourceHealthyAsync(resourceBuilder.Resource.Name, runningTokenSource.Token);
 
         var hostBuilder = Host.CreateApplicationBuilder();
 
-        hostBuilder.Configuration[$"ConnectionStrings:{resourceBuilder.Resource.Name}"] = await resourceBuilder.Resource.ConnectionStringExpression.GetValueAsync(default);
+        var connectionString = await resourceBuilder.Resource.ConnectionStringExpression.GetValueAsync(default);
+
+        hostBuilder.Configuration[$"ConnectionStrings:{resourceBuilder.Resource.Name}"] = connectionString;
 
         configure(hostBuilder);
 
@@ -57,6 +60,8 @@ public class SftpFunctionalTests : IDisposable
 
         try
         {
+            var uri = new Uri(connectionString!);
+
             var retryPolicy = Policy
                 .Handle<Exception>()
                 .WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(500));
@@ -67,6 +72,13 @@ public class SftpFunctionalTests : IDisposable
 
                 await client.ConnectAsync(connectTokenSource.Token);
             });
+
+            Assert.True(client.IsConnected);
+
+            Assert.NotNull(client.ConnectionInfo);
+            Assert.Equal(uri.Host, client.ConnectionInfo.Host);
+            Assert.Equal(uri.Port, client.ConnectionInfo.Port);
+            Assert.True(client.ConnectionInfo.IsAuthenticated);
         }
         finally
         {

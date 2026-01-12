@@ -29,9 +29,9 @@ public sealed class SftpSettings
     public string? PrivateKeyFile { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to a private key file for SFTP authentication.
+    /// Gets or sets the passphrase for the private key file for SFTP authentication.
     /// </summary>
-    public string PrivateKeyPassphrase { get; set; } = String.Empty;
+    public string PrivateKeyPassphrase { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a boolean value that indicates whether the SFTP health check is disabled or not.

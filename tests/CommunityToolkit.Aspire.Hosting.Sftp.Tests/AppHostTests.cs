@@ -1,3 +1,4 @@
+using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
 using Polly;
 using Projects;
@@ -6,13 +7,14 @@ using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Sftp.Tests;
 
+[RequiresDocker]
 public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<CommunityToolkit_Aspire_Hosting_Sftp_AppHost> fix)
     : IClassFixture<AspireIntegrationTestFixture<CommunityToolkit_Aspire_Hosting_Sftp_AppHost>>
 {
     [Fact]
     public async Task ApiUploadsAndDownloadsTestFile()
     {
-        await fix.ResourceNotificationService.WaitForResourceAsync("api", "Running");
+        await fix.ResourceNotificationService.WaitForResourceHealthyAsync("api");
 
         using var client = fix.CreateHttpClient("api");
 
@@ -28,14 +30,14 @@ public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<Co
         {
             var res = await client.SendAsync(req);
 
-            res.EnsureSuccessStatusCode();
+            Assert.True(res.IsSuccessStatusCode);
         }
     }
 
     [Fact]
     public async Task ResourcesStartAndClientConnects()
     {
-        await fix.ResourceNotificationService.WaitForResourceAsync("sftp", "Running");
+        await fix.ResourceNotificationService.WaitForResourceHealthyAsync("sftp");
 
         var connectionString = await fix.GetConnectionString("sftp");
 
@@ -53,8 +55,17 @@ public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<Co
             {
                 log.WriteLine($"Connecting to resource 'sftp' using connection string: {connectionString}");
 
-                await client.ConnectAsync(CancellationToken.None);
+                using var connectTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+
+                await client.ConnectAsync(connectTokenSource.Token);
             });
+
+            Assert.True(client.IsConnected);
+
+            Assert.NotNull(client.ConnectionInfo);
+            Assert.Equal(uri.Host, client.ConnectionInfo.Host);
+            Assert.Equal(uri.Port, client.ConnectionInfo.Port);
+            Assert.True(client.ConnectionInfo.IsAuthenticated);
         }
         finally
         {
