@@ -67,7 +67,7 @@ public static class ZitadelHostingExtensions
             .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
             .WithUrlForEndpoint(ZitadelResource.HttpEndpointName, e => e.DisplayText = "Zitadel Dashboard");
 
-#pragma warning disable ASPIRECERTIFICATES001 Allow for Zitadel SSL support
+#pragma warning disable ASPIRECERTIFICATES001
         zitadelBuilder.WithHttpsCertificateConfiguration(ctx =>
         {
             ctx.EnvironmentVariables["ZITADEL_EXTERNALSECURE"] = "true";
@@ -85,7 +85,7 @@ public static class ZitadelHostingExtensions
 
         if (builder.ExecutionContext.IsRunMode)
         {
-#pragma warning disable ASPIRECERTIFICATES001 Allow for Zitadel SSL support
+#pragma warning disable ASPIRECERTIFICATES001
             builder.Eventing.Subscribe<BeforeStartEvent>((@event, cancellationToken) =>
             {
                 var developerCertificateService = @event.Services.GetRequiredService<IDeveloperCertificateService>();
