@@ -54,7 +54,7 @@ namespace Aspire.Hosting.ApplicationModel
         public const string ClientEndpointName = "client";
         public const string InspectorVersion = "0.17.2";
         public const string ServerProxyEndpointName = "server-proxy";
-        public McpInspectorResource(string name, string packageName) : base(default!, default!, default!) { }
+        public McpInspectorResource(string name) : base(default!, default!, default!) { }
 
         public EndpointReference ClientEndpoint { get { throw null; } }
 
