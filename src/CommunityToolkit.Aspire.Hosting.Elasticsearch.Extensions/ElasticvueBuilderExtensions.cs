@@ -34,7 +34,7 @@ public static class ElasticvueBuilderExtensions
     /// Multiple <see cref="AddElasticvue(IDistributedApplicationBuilder, string, int?)"/> calls will return the same resource builder instance.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<ElasticvueContainerResource> AddElasticvue(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
+    internal static IResourceBuilder<ElasticvueContainerResource> AddElasticvue(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
