@@ -75,7 +75,24 @@ public class AddFlagdTests
 
         Assert.Equal("ghcr.io", containerAnnotation.Registry);
         Assert.Equal("open-feature/flagd", containerAnnotation.Image);
-        Assert.Equal("v0.12.9", containerAnnotation.Tag);
+        Assert.Equal("v0.13.1", containerAnnotation.Tag);
+    }
+
+    [Fact]
+    public void AddFlagdAddsOtelAnnotation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddFlagd(FlagdName);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<FlagdResource>());
+
+        // Verify that OtlpExporterAnnotation is present (added by WithOtlpExporter)
+        // This annotation marks the resource as an OTEL exporter
+        Assert.True(resource.HasAnnotationOfType<OtlpExporterAnnotation>());
     }
 
     [Fact]
