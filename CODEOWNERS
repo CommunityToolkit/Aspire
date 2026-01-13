@@ -71,11 +71,11 @@
 # CommunityToolkit.Aspire.RavenDB.Client
 # CommunityToolkit.Aspire.Hosting.RavenDB
 
-/examples/ravendb/ @shiranshalom
-/src/CommunityToolkit.Aspire.RavenDB.Client/ @shiranshalom
-/tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/ @shiranshalom
-/src/CommunityToolkit.Aspire.Hosting.RavenDB/ @shiranshalom
-/tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/ @shiranshalom
+/examples/ravendb/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/src/CommunityToolkit.Aspire.RavenDB.Client/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/src/CommunityToolkit.Aspire.Hosting.RavenDB/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/ @shiranshalom @aviv86 @karmeli87 @ppekrol
 
 # CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions
 
