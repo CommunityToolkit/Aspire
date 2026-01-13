@@ -48,6 +48,36 @@ builder.AddOllamaApiClient("ollama")
 
 The integration automatically registers the Microsoft.Extensions.AI telemetry source (`Experimental.Microsoft.Extensions.AI`) with OpenTelemetry for distributed tracing.
 
+#### Native AOT Support
+
+OllamaSharp supports .NET Native AOT when you provide a custom `JsonSerializerContext`. This is especially important when working with custom types in chat messages or using libraries like Semantic Kernel with complex vector store results.
+
+First, create a custom `JsonSerializerContext` that includes all types that will be serialized:
+
+```csharp
+using System.Text.Json.Serialization;
+using OllamaSharp.Models;
+
+[JsonSerializable(typeof(ChatRequest))]
+[JsonSerializable(typeof(ChatResponseStream))]
+[JsonSerializable(typeof(ChatDoneResponseStream))]
+// Add your custom types here
+public partial class MyCustomJsonContext : JsonSerializerContext
+{
+}
+```
+
+Then pass it when configuring the client:
+
+```csharp
+builder.AddOllamaApiClient("ollama", settings => 
+{
+    settings.JsonSerializerContext = MyCustomJsonContext.Default;
+});
+```
+
+For more information on Native AOT support with OllamaSharp, see the [OllamaSharp Native AOT documentation](https://github.com/awaescher/OllamaSharp/blob/main/docs/native-aot-support.md).
+
 ## Additional documentation
 
 -   https://github.com/awaescher/OllamaSharp
