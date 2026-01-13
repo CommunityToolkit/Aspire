@@ -39,4 +39,14 @@ public sealed class OllamaSharpSettings
     /// <remarks>Currently, the OllamaSharp SDK does not support tracing, but this is here for future use.</remarks>
     public bool DisableTracing { get; set; }
 
+    /// <summary>
+    /// Gets or sets the JSON serializer context for Native AOT support.
+    /// </summary>
+    /// <remarks>
+    /// When using Native AOT, provide a custom <see cref="System.Text.Json.Serialization.JsonSerializerContext"/> 
+    /// that includes all types that will be serialized. This is required for AOT compatibility.
+    /// See https://github.com/awaescher/OllamaSharp/blob/main/docs/native-aot-support.md for more information.
+    /// </remarks>
+    public System.Text.Json.Serialization.JsonSerializerContext? JsonSerializerContext { get; set; }
+
 }

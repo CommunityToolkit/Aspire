@@ -200,12 +200,8 @@ public static class AspireOllamaSharpExtensions
         {
             HttpClient httpClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient(httpClientKey);
 
-            OllamaApiClient client = new(httpClient);
-            if (!string.IsNullOrWhiteSpace(settings.SelectedModel))
-            {
-                client.SelectedModel = settings.SelectedModel;
-                client.Config.Model = settings.SelectedModel;
-            }
+            // Pass the selected model and JsonSerializerContext to the constructor
+            OllamaApiClient client = new(httpClient, settings.SelectedModel ?? string.Empty, settings.JsonSerializerContext);
 
             return client;
         }
