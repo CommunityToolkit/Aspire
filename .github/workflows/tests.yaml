@@ -32,9 +32,8 @@ jobs:
             Hosting.Flagd.Tests,
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
-            Hosting.JavaScript.Extensions.Tests,
             Hosting.Java.Tests,
-            Hosting.k6.Tests,
+            Hosting.JavaScript.Extensions.Tests,
             Hosting.Keycloak.Extensions.Tests,
             Hosting.KurrentDB.Tests,
             Hosting.LavinMQ.Tests,
@@ -54,12 +53,14 @@ jobs:
             Hosting.RavenDB.Tests,
             Hosting.Redis.Extensions.Tests,
             Hosting.Rust.Tests,
+            Hosting.Sftp.Tests,
             Hosting.Solr.Tests,
             Hosting.SqlDatabaseProjects.Tests,
-            Hosting.Sqlite.Tests,
             Hosting.SqlServer.Extensions.Tests,
+            Hosting.Sqlite.Tests,
             Hosting.Stripe.Tests,
             Hosting.SurrealDb.Tests,
+            Hosting.k6.Tests,
 
             # Client integration tests
             GoFeatureFlag.Tests,
@@ -71,8 +72,9 @@ jobs:
             Minio.Client.Tests,
             OllamaSharp.Tests,
             RavenDB.Client.Tests,
-            SurrealDb.Tests,
-          ]
+            Sftp.Tests,
+            SurrealDb.Tests
+        ]
 
     steps:
       - name: Checkout code
