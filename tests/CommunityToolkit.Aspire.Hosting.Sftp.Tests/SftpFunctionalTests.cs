@@ -1,3 +1,4 @@
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Hosting;
@@ -5,11 +6,11 @@ using Microsoft.Extensions.Logging;
 using Polly;
 using Renci.SshNet;
 using Renci.SshNet.Common;
-using System;
 using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Sftp.Tests;
 
+[RequiresDocker]
 public class SftpFunctionalTests : IDisposable
 {
     private readonly IDistributedApplicationTestingBuilder builder;
@@ -64,7 +65,7 @@ public class SftpFunctionalTests : IDisposable
 
             var retryPolicy = Policy
                 .Handle<Exception>()
-                .WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(500));
+                .WaitAndRetryAsync(5, _ => TimeSpan.FromMilliseconds(1000));
 
             await retryPolicy.ExecuteAsync(async () =>
             {

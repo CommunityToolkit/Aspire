@@ -49,7 +49,7 @@ public class AppHostTests(ITestOutputHelper log, AspireIntegrationTestFixture<Co
         {
             var retryPolicy = Policy
                 .Handle<Exception>()
-                .WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(500));
+                .WaitAndRetryAsync(5, _ => TimeSpan.FromMilliseconds(1000));
 
             await retryPolicy.ExecuteAsync(async () =>
             {
