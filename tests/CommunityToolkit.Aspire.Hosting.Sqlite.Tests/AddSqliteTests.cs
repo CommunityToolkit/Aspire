@@ -120,10 +120,10 @@ public class AddSqliteTests
         Assert.Equal(SqliteContainerImageTags.SqliteWebTag, imageAnnotation.Tag);
         Assert.Equal(SqliteContainerImageTags.SqliteWebRegistry, imageAnnotation.Registry);
 
-        var env = await sqliteWeb.GetEnvironmentVariableValuesAsync();
-        var envVar = Assert.Single(env);
-        Assert.Equal("SQLITE_DATABASE", envVar.Key);
-        Assert.Equal(sqlite.Resource.DatabaseFileName, envVar.Value);
+        Assert.True(sqliteWeb.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotation));
+        CommandLineArgsCallbackContext argsContext = new([]);
+        await argsAnnotation.Callback(argsContext);
+        Assert.Contains(sqlite.Resource.DatabaseFileName, argsContext.Args);
 
         Assert.True(sqliteWeb.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var bindMountAnnotations));
         var bindMountAnnotation = Assert.Single(bindMountAnnotations);

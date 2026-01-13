@@ -79,59 +79,47 @@ public static class MySqlBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        containerName ??= $"{builder.Resource.Name}-dbgate";
+        containerName ??= "dbgate";
 
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
+            .WaitFor(builder);
 
         configureContainer?.Invoke(dbGateBuilder);
 
         return builder;
     }
 
-    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<MySqlServerResource> builder)
     {
-        var mysqlInstances = applicationBuilder.Resources.OfType<MySqlServerResource>();
+        var mySqlServer = builder.Resource;
 
-        var counter = 1;
+        var name = mySqlServer.Name;
+        var label = $"LABEL_{name}";
 
         // Multiple WithDbGate calls will be ignored
-        if (context.EnvironmentVariables.ContainsKey($"LABEL_mysql{counter}"))
+        if (context.EnvironmentVariables.ContainsKey(label))
         {
             return;
         }
 
-        foreach (var mySqlServerResource in mysqlInstances)
-        {
-            // DbGate assumes MySql is being accessed over a default Aspire container network and hardcodes the resource address
-            context.EnvironmentVariables.Add($"LABEL_mysql{counter}", mySqlServerResource.Name);
-            context.EnvironmentVariables.Add($"SERVER_mysql{counter}", mySqlServerResource.Name);
-            context.EnvironmentVariables.Add($"USER_mysql{counter}", "root");
-            context.EnvironmentVariables.Add($"PASSWORD_mysql{counter}", mySqlServerResource.PasswordParameter);
-            context.EnvironmentVariables.Add($"PORT_mysql{counter}", mySqlServerResource.PrimaryEndpoint.TargetPort!.ToString()!);
-            context.EnvironmentVariables.Add($"ENGINE_mysql{counter}", "mysql@dbgate-plugin-mysql");
+        // DbGate assumes MySql is being accessed over a default Aspire container network and hardcodes the resource address
+        context.EnvironmentVariables.Add(label, name);
+        context.EnvironmentVariables.Add($"SERVER_{name}", name);
+        context.EnvironmentVariables.Add($"USER_{name}", "root");
+        context.EnvironmentVariables.Add($"PASSWORD_{name}", mySqlServer.PasswordParameter);
+        context.EnvironmentVariables.Add($"PORT_{name}", mySqlServer.PrimaryEndpoint.TargetPort!.ToString()!);
+        context.EnvironmentVariables.Add($"ENGINE_{name}", "mysql@dbgate-plugin-mysql");
 
-            counter++;
+        if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
+        {
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
         }
-
-        var instancesCount = mysqlInstances.Count();
-        if (instancesCount > 0)
+        else
         {
-            var strBuilder = new StringBuilder();
-            strBuilder.AppendJoin(',', Enumerable.Range(1, instancesCount).Select(i => $"mysql{i}"));
-            var connections = strBuilder.ToString();
-
-            string CONNECTIONS = context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS")?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(CONNECTIONS))
-            {
-                context.EnvironmentVariables["CONNECTIONS"] = connections;
-            }
-            else
-            {
-                context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
-            }
+            context.EnvironmentVariables["CONNECTIONS"] = name;
         }
     }
 
