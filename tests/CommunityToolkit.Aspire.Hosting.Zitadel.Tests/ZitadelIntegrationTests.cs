@@ -46,7 +46,7 @@ public class ZitadelIntegrationTests(
         var zitadelResource = appModel.Resources.OfType<ZitadelResource>()
             .Single(r => r.Name == zitadelName);
 
-        var env = await zitadelResource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadelResource.GetEnvironmentVariablesAsync();
 
         Assert.True(env.ContainsKey("ZITADEL_DATABASE_POSTGRES_HOST"));
         Assert.True(env.ContainsKey("ZITADEL_DATABASE_POSTGRES_PORT"));
@@ -70,7 +70,7 @@ public class ZitadelIntegrationTests(
         var zitadelResource = appModel.Resources.OfType<ZitadelResource>()
             .Single(r => r.Name == zitadelName);
 
-        var env = await zitadelResource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadelResource.GetEnvironmentVariablesAsync();
 
         Assert.True(env.ContainsKey("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME"));
         Assert.True(env.ContainsKey("ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD"));
