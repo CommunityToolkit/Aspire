@@ -33,8 +33,8 @@ jobs:
             Hosting.Flagd.Tests,
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
-            Hosting.Java.Tests,
             Hosting.JavaScript.Extensions.Tests,
+            Hosting.Java.Tests,
             Hosting.k6.Tests,
             Hosting.Keycloak.Extensions.Tests,
             Hosting.KurrentDB.Tests,
@@ -58,11 +58,10 @@ jobs:
             Hosting.Sftp.Tests,
             Hosting.Solr.Tests,
             Hosting.SqlDatabaseProjects.Tests,
-            Hosting.SqlServer.Extensions.Tests,
             Hosting.Sqlite.Tests,
+            Hosting.SqlServer.Extensions.Tests,
             Hosting.Stripe.Tests,
             Hosting.SurrealDb.Tests,
-            Hosting.k6.Tests,
 
             # Client integration tests
             GoFeatureFlag.Tests,
@@ -75,7 +74,7 @@ jobs:
             OllamaSharp.Tests,
             RavenDB.Client.Tests,
             Sftp.Tests,
-            SurrealDb.Tests
+            SurrealDb.Tests,
         ]
 
     steps:
