@@ -46,7 +46,10 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
             new KeyValuePair<string, string?>($"ConnectionStrings:{connectionName}", databaseConnectionString)
         ]);
 
-        clientBuilder.AddRavenDBClient(connectionName: connectionName);
+        clientBuilder.AddRavenDBClient(connectionName: connectionName, configureSettings: settings =>
+        {
+            settings.CreateDatabase = true;
+        });
         var host = clientBuilder.Build();
 
         using var documentStore = host.Services.GetRequiredService<IDocumentStore>();
