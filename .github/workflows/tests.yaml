@@ -31,6 +31,7 @@ jobs:
             Hosting.Deno.Tests,
             Hosting.Elasticsearch.Extensions.Tests,
             Hosting.Flagd.Tests,
+            Hosting.Flyway.Tests,
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
             Hosting.JavaScript.Extensions.Tests,
