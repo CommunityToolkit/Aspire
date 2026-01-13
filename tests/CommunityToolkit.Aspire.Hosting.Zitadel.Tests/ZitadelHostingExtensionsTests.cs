@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Zitadel;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Zitadel.Tests;
 
@@ -47,7 +48,7 @@ public class ZitadelHostingExtensionsTests
 
         var zitadel = builder.AddZitadel("zitadel");
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Equal("false", env["ZITADEL_TLS_ENABLED"]);
         Assert.Equal("false", env["ZITADEL_EXTERNALSECURE"]);
@@ -63,7 +64,7 @@ public class ZitadelHostingExtensionsTests
 
         var zitadel = builder.AddZitadel("zitadel");
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.NotNull(zitadel.Resource.AdminUsernameParameter);
         Assert.NotNull(zitadel.Resource.AdminPasswordParameter);
@@ -92,7 +93,7 @@ public class ZitadelHostingExtensionsTests
 
         var zitadel = builder.AddZitadel("zitadel", masterKey: masterKey);
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.True(env.ContainsKey("ZITADEL_MASTERKEY"));
     }
@@ -129,18 +130,6 @@ public class ZitadelHostingExtensionsTests
     }
 
     [Fact]
-    public async Task AddZitadel_Uses_Custom_ExternalDomain()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var zitadel = builder.AddZitadel("zitadel", externalDomain: "auth.example.com");
-
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
-
-        Assert.Equal("auth.example.com", env["ZITADEL_EXTERNALDOMAIN"]);
-    }
-
-    [Fact]
     public async Task WithExternalDomain_Overrides_Default()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -148,7 +137,7 @@ public class ZitadelHostingExtensionsTests
         var zitadel = builder.AddZitadel("zitadel")
             .WithExternalDomain("custom.domain.com");
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Equal("custom.domain.com", env["ZITADEL_EXTERNALDOMAIN"]);
     }
@@ -158,10 +147,10 @@ public class ZitadelHostingExtensionsTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var zitadel = builder.AddZitadel("zitadel", externalDomain: "first.example.com")
+        var zitadel = builder.AddZitadel("zitadel")
             .WithExternalDomain("second.example.com");
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         // WithExternalDomain should override the parameter
         Assert.Equal("second.example.com", env["ZITADEL_EXTERNALDOMAIN"]);

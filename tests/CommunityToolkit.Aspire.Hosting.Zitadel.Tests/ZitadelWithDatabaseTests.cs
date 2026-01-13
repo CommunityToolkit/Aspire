@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Zitadel.Tests;
 
@@ -47,7 +48,7 @@ public class ZitadelWithDatabaseTests
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(pg);
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Equal("zitadel-db", env["ZITADEL_DATABASE_POSTGRES_DATABASE"]);
     }
@@ -60,7 +61,7 @@ public class ZitadelWithDatabaseTests
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(pg, "custom-db");
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Equal("custom-db", env["ZITADEL_DATABASE_POSTGRES_DATABASE"]);
     }
@@ -75,7 +76,7 @@ public class ZitadelWithDatabaseTests
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(db);
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.True(env.ContainsKey("ZITADEL_DATABASE_POSTGRES_USER_USERNAME"));
         Assert.True(env.ContainsKey("ZITADEL_DATABASE_POSTGRES_USER_PASSWORD"));
@@ -96,7 +97,7 @@ public class ZitadelWithDatabaseTests
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(db);
 
-        var env = await zitadel.Resource.GetEnvironmentVariableValuesAsync();
+        var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.NotNull(env["ZITADEL_DATABASE_POSTGRES_USER_USERNAME"]);
         Assert.NotNull(env["ZITADEL_DATABASE_POSTGRES_USER_PASSWORD"]);

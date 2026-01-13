@@ -63,8 +63,6 @@ public static class ZitadelHostingExtensions
             )
             .WithHttpHealthCheck("/healthz")
             .WithEnvironment("ZITADEL_MASTERKEY", masterKeyParameter)
-            .WithEnvironment("ZITADEL_TLS_ENABLED", "false")
-            .WithEnvironment("ZITADEL_EXTERNALSECURE", "false")
             .WithUrlForEndpoint(ZitadelResource.HttpEndpointName, e => e.DisplayText = "Zitadel Dashboard");
 
 #pragma warning disable ASPIRECERTIFICATES001
