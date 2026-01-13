@@ -29,7 +29,9 @@ jobs:
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,
+            Hosting.Elasticsearch.Extensions.Tests,
             Hosting.Flagd.Tests,
+            Hosting.Flyway.Tests,
             Hosting.GoFeatureFlag.Tests,
             Hosting.Golang.Tests,
             Hosting.JavaScript.Extensions.Tests,
@@ -54,6 +56,7 @@ jobs:
             Hosting.RavenDB.Tests,
             Hosting.Redis.Extensions.Tests,
             Hosting.Rust.Tests,
+            Hosting.Sftp.Tests,
             Hosting.Solr.Tests,
             Hosting.SqlDatabaseProjects.Tests,
             Hosting.Sqlite.Tests,
@@ -71,8 +74,9 @@ jobs:
             Minio.Client.Tests,
             OllamaSharp.Tests,
             RavenDB.Client.Tests,
+            Sftp.Tests,
             SurrealDb.Tests,
-          ]
+        ]
 
     steps:
       - name: Checkout code

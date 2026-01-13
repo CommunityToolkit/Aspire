@@ -1,7 +1,6 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-
   </PropertyGroup>
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
@@ -10,6 +9,7 @@
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
@@ -20,6 +20,7 @@
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -93,6 +94,7 @@
     <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.1" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
+    <PackageVersion Include="SSH.NET" Version="2025.1.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
@@ -114,8 +116,8 @@
     <!-- Testcontainers packages -->
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
+    <PackageVersion Include="Polly" Version="8.6.4" />
   </ItemGroup>
-
   <ItemGroup Label="System">
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
     <PackageVersion Include="System.Linq.AsyncEnumerable" Version="$(DotNetExtensionsVersion)" />
