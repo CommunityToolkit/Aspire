@@ -15,10 +15,33 @@ public static class AzureQueueStorageResourceBuilderExtensions
     /// Adds an Azure Storage Explorer instance to a Queue storage resource.
     /// </summary>
     /// <param name="queues">The builder for the <see cref="AzureQueueStorageResource"/>.</param>
+    /// <param name="configureContainer">Configuration callback for Azure Storage Explorer container resource.</param>
     /// <param name="name">The name of the resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <example>
+    /// Add an Azure Storage Explorer container to the application model and reference it in a .NET project.
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var storage = builder.AddAzureStorage("storage")
+    ///     .RunAsEmulator(azurite =>
+    ///     {
+    ///         azurite
+    ///             .WithBlobPort(27000)
+    ///             .WithQueuePort(27001)
+    ///             .WithTablePort(27002);
+    ///     });
+    /// var queues = storage.AddQueues("queues")
+    ///     .WithAzureStorageExplorer();
+    ///  
+    /// builder.Build().Run(); 
+    /// </code>
+    /// </example>
+    /// </remarks>
     public static IResourceBuilder<AzureQueueStorageResource> WithAzureStorageExplorer(
         this IResourceBuilder<AzureQueueStorageResource> queues,
+        Action<IResourceBuilder<AzureStorageExplorerResource>>? configureContainer = null,
         [ResourceName] string? name = null
     )
     {
@@ -32,6 +55,8 @@ public static class AzureQueueStorageResourceBuilderExtensions
         {
             builder.WithAzurite();
         }
+
+        configureContainer?.Invoke(builder);
         
         return queues;
     }

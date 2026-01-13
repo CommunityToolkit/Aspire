@@ -6,25 +6,17 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents an Azure Storage Explorer container.
 /// </summary>
-public class AzureStorageExplorerResource : ContainerResource
+/// <param name="name">The name of the resource.</param>
+public class AzureStorageExplorerResource([ResourceName] string name) : ContainerResource(name)
 {
     internal const string PrimaryEndpointName = "http";
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AzureStorageExplorerResource"/> class.
-    /// </summary>
-    /// <param name="name">The name of the resource.</param>
-    public AzureStorageExplorerResource(
-        [ResourceName] string name
-    ) : base(name)
-    {
-        PrimaryEndpoint = new(this, PrimaryEndpointName);
-    }
+
+    private EndpointReference? _primaryEndpoint;
 
     /// <summary>
     /// Gets the primary endpoint for the Azure Storage Explorer instance.
     /// </summary>
-    public EndpointReference PrimaryEndpoint { get; }
+    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 
     /// <summary>
     /// Gets the host endpoint reference for this resource.

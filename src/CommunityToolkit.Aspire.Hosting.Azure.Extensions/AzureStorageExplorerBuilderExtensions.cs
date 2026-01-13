@@ -11,6 +11,22 @@ namespace Aspire.Hosting;
 public static class AzureStorageExplorerBuilderExtensions
 {
     private const int AzureStorageExplorerPort = 8080;
+ 
+    /// <summary>
+    /// Configures the host port that the Azure Storage Explorer resource is exposed on instead of using randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for Azure Storage Explorer.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
+    /// <returns>The resource builder for Azure Storage Explorer.</returns>
+    public static IResourceBuilder<AzureStorageExplorerResource> WithHostPort(this IResourceBuilder<AzureStorageExplorerResource> builder, int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(AzureStorageExplorerResource.PrimaryEndpointName, endpoint =>
+        {
+            endpoint.Port = port;
+        });
+    }
     
     /// <summary>
     /// Adds an Azure Storage Explorer resource to the application model.
@@ -20,31 +36,6 @@ public static class AzureStorageExplorerBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="port">The host port for the Azure Storage Explorer instance.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>
-    /// <example>
-    /// Add an Azure Storage Explorer container to the application model and reference it in a .NET project.
-    /// <code lang="csharp">
-    /// var builder = DistributedApplication.CreateBuilder(args);
-    ///
-    /// var storage = builder.AddAzureStorage("storage")
-    ///     .RunAsEmulator(azurite =>
-    ///     {
-    ///         azurite
-    ///             .WithBlobPort(27000)
-    ///             .WithQueuePort(27001)
-    ///             .WithTablePort(27002);
-    ///     });
-    /// var blobs = storage.AddBlobs("blobs");
-    /// 
-    /// var azureStorageExplorer = builder
-    ///     .AddAzureStorageExplorer("explorer")
-    ///     .WithAzurite()
-    ///     .WithBlobs(blobs);
-    ///  
-    /// builder.Build().Run(); 
-    /// </code>
-    /// </example>
-    /// </remarks>
     internal static IResourceBuilder<AzureStorageExplorerResource> AddAzureStorageExplorer(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -88,10 +79,12 @@ public static class AzureStorageExplorerBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.WithEnvironment(e =>
-        {
-            e.EnvironmentVariables["AZURE_STORAGE_CONNECTIONSTRING"] =
-                new ConnectionStringReference(resourceBuilder.Resource, optional: false);
-        });
+        return builder
+            .WaitFor(resourceBuilder)
+            .WithEnvironment(e =>
+            {
+                e.EnvironmentVariables["AZURE_STORAGE_CONNECTIONSTRING"] =
+                    new ConnectionStringReference(resourceBuilder.Resource, optional: false);
+            });
     }
 }
