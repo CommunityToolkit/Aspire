@@ -25,7 +25,7 @@ public class AppHostTests(
         // Test the health endpoint
         var request = new HttpRequestMessage(HttpMethod.Get, "/.well-known/openid-configuration");
         // Needs to match the external domain for Zitadel or we get a 404
-        request.Headers.Host = $"{resourceName}.dev.localhost";
+        request.Headers.Host = $"{fixture.App.GetEndpoint(resourceName, "http").Host}";
         var response = await httpClient.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -46,7 +46,7 @@ public class AppHostTests(
         // Test the health endpoint
         var request = new HttpRequestMessage(HttpMethod.Get, "/");
         // Needs to match the external domain for Zitadel or we get a 404
-        request.Headers.Host = $"{resourceName}.dev.localhost";
+        request.Headers.Host = $"{fixture.App.GetEndpoint(resourceName, "http").Host}";
         var response = await httpClient.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
