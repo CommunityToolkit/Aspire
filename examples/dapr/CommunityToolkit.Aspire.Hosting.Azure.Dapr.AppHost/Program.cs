@@ -2,7 +2,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddAzureContainerAppEnvironment("cae").WithDaprComponents();
 
-var redis = builder.AddAzureRedis("redisState")
+var redis = builder.AddAzureManagedRedis("redisState")
                    .RunAsContainer();
 
 // State store using Redis

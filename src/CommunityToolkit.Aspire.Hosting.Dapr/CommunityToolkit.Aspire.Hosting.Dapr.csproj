@@ -3,6 +3,7 @@
   <PropertyGroup>
     <AdditionalPackageTags>aspire integration hosting dapr</AdditionalPackageTags>
     <Description>Dapr support for .NET Aspire.</Description>
+    <IsPreview>true</IsPreview>
   </PropertyGroup>
 
   <ItemGroup>

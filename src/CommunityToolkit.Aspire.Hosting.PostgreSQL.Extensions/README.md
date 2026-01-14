@@ -2,7 +2,10 @@
 
 This integration contains extensions for the [PostgreSQL hosting package](https://nuget.org/packages/Aspire.Hosting.PostgreSQL) for .NET Aspire.
 
-The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) and [Adminer](https://github.com/vrana/adminer) to interact with the PostgreSQL database.
+The integration provides support for running:
+
+* [DbGate](https://github.com/dbgate/dbgate) and [Adminer](https://github.com/vrana/adminer) to interact with the PostgreSQL database.
+* [Flyway](https://github.com/flyway/flyway/) for database migrations.
 
 ## Getting Started
 
@@ -10,13 +13,15 @@ The integration provides support for running [DbGate](https://github.com/dbgate/
 
 In your AppHost project, install the package using the following command:
 
-```dotnetcli
+```shell
 dotnet add package CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions
 ```
 
 ### Example usage
 
-Then, in the _Program.cs_ file of `AppHost`, define an Postgres resource, then call `AddPostgres`:
+#### Adminer and DbGate
+
+In the _Program.cs_ file of `AppHost`, define an Postgres resource, then call `AddPostgres`:
 
 ```csharp
 var postgres = builder.AddPostgres("postgres")
@@ -24,9 +29,20 @@ var postgres = builder.AddPostgres("postgres")
     .WithAdminer();
 ```
 
+#### Flyway
+
+In the `AppHost` file, define a Flyway resource and link it to a Postgres database resource:
+
+```csharp
+var flyway = builder.AddFlyway("flyway", "./migrations");
+var postgres = builder.AddPostgres("postgres");
+var database = postgres.AddDatabase("database").WithFlywayMigration(flyway);
+flyway.WaitFor(database);
+```
+
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-postgresql-extensions
+https://aspire.dev/integrations/databases/postgres/postgresql-extensions/
 
 ## Feedback & contributing
 

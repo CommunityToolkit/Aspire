@@ -107,7 +107,7 @@ The easiest way to update that list is to run the `./eng/testing/generate-test-l
 
 You'll need to add a `README.md` file to the folder your integration is created in, this will be used in the NuGet package that is generated. This should be a high level overview of the integration and does not need to be a complete doc set.
 
-For the complete docs, you'll need to create a PR to the [`dotnet/docs-aspire`](https://github.com/dotnet/docs-aspire) repository, under the `docs/community-toolkit` folder. This will be reviewed by the docs owners and merged into the main docs for .NET Aspire. Also, remember to update the `docs/fundamentals/overview.md` in that repo with the new integration.
+For the complete docs, you'll need to create a PR to the [`microsoft/aspire.dev`](https://github.com/microsoft/aspire.dev) repository. This will be reviewed by the docs owners and merged into the main docs for .NET Aspire. The aspire.dev repository has an agent that can scaffold out a docs page from the README to help speed up your work.
 
 Lastly, update the `README.md` in the root of this repository to include your new integration in the table of integrations.
 

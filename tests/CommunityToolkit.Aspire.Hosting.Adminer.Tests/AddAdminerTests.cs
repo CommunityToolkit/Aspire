@@ -179,7 +179,7 @@ public class AddAdminerTests
 
         Assert.Equal("postgres1-adminer", adminerContainerResource.Name);
 
-        var envs = await adminerContainerResource.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerContainerResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 

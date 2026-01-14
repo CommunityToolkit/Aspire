@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\CommunityToolkit.Aspire.Hosting.Sftp.AppHost\home\foo\.ssh\keys\id_ed25519" Link="id_ed25519">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\CommunityToolkit.Aspire.Hosting.Sftp.AppHost\home\foo\.ssh\keys\id_ed25519.pub" Link="id_ed25519.pub" />
+    <None Include="..\CommunityToolkit.Aspire.Hosting.Sftp.AppHost\home\foo\.ssh\keys\id_rsa" Link="id_rsa">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\CommunityToolkit.Aspire.Hosting.Sftp.AppHost\home\foo\.ssh\keys\id_rsa.pub" Link="id_rsa.pub" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Sftp\CommunityToolkit.Aspire.Sftp.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Sftp.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Sftp.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

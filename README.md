@@ -52,6 +52,7 @@ This repository contains the source code for the Aspire Community Toolkit, a col
 | - **Learn More**: [`MinIO.Client`][minio-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Minio.Client][minio-client-shields]][minio-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Client.Minio][minio-client-shields-preview]][minio-client-nuget-preview]                                                                                                  | An Aspire client integration for the [MinIO](https://github.com/minio/minio-dotnet) package.                                                                                |
 | - **Learn More**: [`Hosting.SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields]][surrealdb-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SurrealDb][surrealdb-shields-preview]][surrealdb-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [SurrealDB](https://surrealdb.com/) container.                                                                                 |
 | - **Learn More**: [`SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields]][surrealdb-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields-preview]][surrealdb-client-nuget-preview]                                                                                       | An Aspire client integration for the [SurrealDB](https://github.com/surrealdb/surrealdb.net/) package.                                                                      |
+| - **Learn More**: [`Hosting.Elasticsearch.Extensions`][elasticsearch-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields]][elasticsearch-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields-preview]][elasticsearch-ext-nuget-preview]      | An integration that contains some additional extensions for hosting Elasticsearch container.                                                                                |
 
 ## 🙌 Getting Started
 
@@ -274,4 +275,8 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [surrealdb-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/
 [surrealdb-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.SurrealDb?label=nuget%20(preview)
 [surrealdb-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.SurrealDb/absoluteLatest
-
+[elasticsearch-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-elasticsearch-extensions
+[elasticsearch-ext-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions
+[elasticsearch-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions/
+[elasticsearch-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions?label=nuget%20(preview)
+[elasticsearch-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions/absoluteLatest
