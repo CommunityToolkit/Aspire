@@ -471,8 +471,8 @@ public class ResourceCreationTests
             "migrate"
         };
 
-        var actualArgs = await retrievedFlywayResource.GetArgumentValuesAsync();
-        Assert.Equal(expectedArgs.Count, actualArgs.Length);
+        var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
+        Assert.Equal(expectedArgs.Count, actualArgs.Count);
         Assert.Collection(
             actualArgs,
             arg => Assert.Equal(expectedArgs[0], arg),
@@ -513,8 +513,8 @@ public class ResourceCreationTests
             "repair"
         };
 
-        var actualArgs = await retrievedFlywayResource.GetArgumentValuesAsync();
-        Assert.Equal(expectedArgs.Count, actualArgs.Length);
+        var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
+        Assert.Equal(expectedArgs.Count, actualArgs.Count);
         Assert.Collection(
             actualArgs,
             arg => Assert.Equal(expectedArgs[0], arg),

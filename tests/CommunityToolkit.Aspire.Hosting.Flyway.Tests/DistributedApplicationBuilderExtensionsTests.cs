@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Flyway.Tests;
 
@@ -31,7 +32,7 @@ public sealed class DistributedApplicationBuilderExtensionsTests
         Assert.Equal(Path.GetFullPath(migrationScriptsPath), containerMountAnnotation.Source);
         Assert.Equal(FlywayResource.MigrationScriptsDirectory, containerMountAnnotation.Target);
 
-        var environmentVariableValues = await retrievedFlywayResource.GetEnvironmentVariableValuesAsync();
+        var environmentVariableValues = await retrievedFlywayResource.GetEnvironmentVariablesAsync();
         Assert.Equal($"filesystem:{FlywayResource.MigrationScriptsDirectory}", environmentVariableValues["FLYWAY_LOCATIONS"]);
         Assert.Equal("true", environmentVariableValues["REDGATE_DISABLE_TELEMETRY"]);
     }

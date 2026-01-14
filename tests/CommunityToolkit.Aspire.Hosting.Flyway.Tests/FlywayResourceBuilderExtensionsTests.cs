@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Flyway.Tests;
 
@@ -18,7 +19,7 @@ public sealed class FlywayResourceBuilderExtensionsTests
         var retrievedFlywayResource = appModel.Resources.OfType<FlywayResource>().SingleOrDefault();
         Assert.NotNull(retrievedFlywayResource);
 
-        var environmentVariableValues = await retrievedFlywayResource.GetEnvironmentVariableValuesAsync();
+        var environmentVariableValues = await retrievedFlywayResource.GetEnvironmentVariablesAsync();
         Assert.Equal("false", environmentVariableValues["REDGATE_DISABLE_TELEMETRY"]);
     }
 }
