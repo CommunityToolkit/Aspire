@@ -465,7 +465,7 @@ public class ResourceCreationTests
 
         var expectedArgs = new List<string>
         {
-            $"-url=jdbc:postgresql://{postgresResourceName}:5432/{postgresDatabaseName}",
+            $"-url=jdbc:postgresql://{postgresResourceName}.dev.internal:5432/{postgresDatabaseName}",
             $"-user={postgresUsername}",
             $"-password={postgresPassword}",
             "migrate"
@@ -507,7 +507,7 @@ public class ResourceCreationTests
 
         var expectedArgs = new List<string>
         {
-            $"-url=jdbc:postgresql://{postgresResourceName}:5432/{postgresDatabaseName}",
+            $"-url=jdbc:postgresql://{postgresResourceName}.dev.internal:5432/{postgresDatabaseName}",
             $"-user={postgresUsername}",
             $"-password={postgresPassword}",
             "repair"
