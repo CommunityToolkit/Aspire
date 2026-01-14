@@ -1,6 +1,8 @@
 ﻿using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Sqlite;
+
 public class AddSqliteTests
 {
     [Fact]
@@ -120,10 +122,9 @@ public class AddSqliteTests
         Assert.Equal(SqliteContainerImageTags.SqliteWebTag, imageAnnotation.Tag);
         Assert.Equal(SqliteContainerImageTags.SqliteWebRegistry, imageAnnotation.Registry);
 
-        Assert.True(sqliteWeb.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotation));
-        CommandLineArgsCallbackContext argsContext = new([]);
-        await argsAnnotation.Callback(argsContext);
-        Assert.Contains(sqlite.Resource.DatabaseFileName, argsContext.Args);
+        var env = await sqliteWeb.GetArgumentListAsync();
+        var envVar = Assert.Single(env);
+        Assert.Equal(sqlite.Resource.DatabaseFileName, envVar);
 
         Assert.True(sqliteWeb.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var bindMountAnnotations));
         var bindMountAnnotation = Assert.Single(bindMountAnnotations);

@@ -238,7 +238,7 @@ Each hosting integration should have a corresponding sample application in the `
 Here is an example of the `csproj` file for the AppHost project for the Bun hosting integration:
 
 ```xml
-<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -348,9 +348,9 @@ When creating hosting integrations for programming languages (e.g., Golang, Rust
 
 Language-based hosting integrations should support the ecosystem's package managers and dependency management:
 
-- **Build Tags/Features**: Allow users to specify conditional compilation flags (e.g., Go build tags: `buildTags: ["dev", "production"]`)
-- **Dependency Installation**: Optionally support automatic dependency installation before running (e.g., `go mod download`, `npm install`)
-- **Executable Path Flexibility**: Support both default entry points (e.g., `"."` for Go) and custom paths (e.g., `"./cmd/server"`)
+-   **Build Tags/Features**: Allow users to specify conditional compilation flags (e.g., Go build tags: `buildTags: ["dev", "production"]`)
+-   **Dependency Installation**: Optionally support automatic dependency installation before running (e.g., `go mod download`, `npm install`)
+-   **Executable Path Flexibility**: Support both default entry points (e.g., `"."` for Go) and custom paths (e.g., `"./cmd/server"`)
 
 Example from Golang integration:
 
@@ -380,10 +380,10 @@ public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(
 
 Language-based integrations should automatically generate optimized Dockerfiles using multi-stage builds when publishing:
 
-- **Build Stage**: Uses the language's official SDK image to compile/build the application
-- **Runtime Stage**: Uses a minimal base image (e.g., Alpine Linux) for smaller final images
-- **Security**: Install necessary certificates (e.g., CA certificates for HTTPS support)
-- **Optimization**: Disable unnecessary features in build (e.g., `CGO_ENABLED=0` for Go)
+-   **Build Stage**: Uses the language's official SDK image to compile/build the application
+-   **Runtime Stage**: Uses a minimal base image (e.g., Alpine Linux) for smaller final images
+-   **Security**: Install necessary certificates (e.g., CA certificates for HTTPS support)
+-   **Optimization**: Disable unnecessary features in build (e.g., `CGO_ENABLED=0` for Go)
 
 Example from Golang integration:
 
@@ -437,8 +437,8 @@ private static IResourceBuilder<GolangAppExecutableResource> PublishAsGolangDock
 
 For language integrations that may need secure connections:
 
-- **CA Certificates**: Install CA certificates in runtime image for HTTPS client requests
-- **Runtime Configuration**: Ensure the generated container supports TLS connections (e.g., `apk --no-cache add ca-certificates`)
+-   **CA Certificates**: Install CA certificates in runtime image for HTTPS client requests
+-   **Runtime Configuration**: Ensure the generated container supports TLS connections (e.g., `apk --no-cache add ca-certificates`)
 
 Example from Golang Dockerfile generation:
 
@@ -454,9 +454,9 @@ context.Builder
 
 Automatically detect and use the appropriate language version from project files:
 
-- **Project Files**: Parse version from language-specific files (e.g., `go.mod`, `package.json`, `Cargo.toml`)
-- **Installed Toolchain**: Fall back to the installed language toolchain version
-- **Default Version**: Use a sensible default if detection fails
+-   **Project Files**: Parse version from language-specific files (e.g., `go.mod`, `package.json`, `Cargo.toml`)
+-   **Installed Toolchain**: Fall back to the installed language toolchain version
+-   **Default Version**: Use a sensible default if detection fails
 
 Example from Golang integration:
 
@@ -536,9 +536,9 @@ internal static string? DetectGoVersion(string workingDirectory, ILogger logger)
 
 Allow users to customize base images for both build and runtime stages:
 
-- **Customizable Build Image**: Let users override the builder/SDK image (e.g., `golang:1.22-alpine` instead of `golang:1.22`)
-- **Customizable Runtime Image**: Let users override the runtime image (e.g., `alpine:3.20` instead of `alpine:3.21`)
-- **Annotation-Based Configuration**: Use annotations to store custom base image settings
+-   **Customizable Build Image**: Let users override the builder/SDK image (e.g., `golang:1.22-alpine` instead of `golang:1.22`)
+-   **Customizable Runtime Image**: Let users override the runtime image (e.g., `alpine:3.20` instead of `alpine:3.21`)
+-   **Annotation-Based Configuration**: Use annotations to store custom base image settings
 
 Example annotation and extension method:
 
@@ -579,11 +579,11 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
 
 For language-based integrations, the README.md should include:
 
-- **Publishing Section**: Explain automatic Dockerfile generation
-- **Version Detection**: Document how version detection works
-- **Customization Options**: Show how to customize base images
-- **TLS Support**: Note that CA certificates are included for HTTPS
-- **Build Options**: Document package manager flags, build tags, etc.
+-   **Publishing Section**: Explain automatic Dockerfile generation
+-   **Version Detection**: Document how version detection works
+-   **Customization Options**: Show how to customize base images
+-   **TLS Support**: Note that CA certificates are included for HTTPS
+-   **Build Options**: Document package manager flags, build tags, etc.
 
 Example README structure:
 
@@ -595,6 +595,7 @@ When publishing your Aspire application, the [Language] resource automatically g
 ### Automatic Version Detection
 
 The integration automatically detects the [Language] version to use by:
+
 1. Checking the [project file] for the version directive
 2. Falling back to the installed toolchain version
 3. Using [version] as the default if no version is detected
@@ -608,17 +609,19 @@ You can customize the base images used in the Dockerfile:
 ### Generated Dockerfile
 
 The automatically generated Dockerfile:
-- Uses the detected or default [Language] version as the build stage
-- Uses a minimal runtime image for a smaller final image
-- Installs CA certificates for HTTPS support
-- Respects build options if specified
+
+-   Uses the detected or default [Language] version as the build stage
+-   Uses a minimal runtime image for a smaller final image
+-   Installs CA certificates for HTTPS support
+-   Respects build options if specified
 ```
 
 ### Testing Considerations
 
 When testing language-based integrations:
 
-- **Unit Tests**: Verify build arguments, version detection logic, and annotation handling
-- **Integration Tests**: Test the full publishing workflow if possible
-- **Version Detection Tests**: Mock file system and process execution to test version detection
-- **Dockerfile Generation**: Verify the generated Dockerfile structure matches expectations
+-   **Unit Tests**: Verify build arguments, version detection logic, and annotation handling
+-   **Integration Tests**: Test the full publishing workflow if possible
+-   **Version Detection Tests**: Mock file system and process execution to test version detection
+-   **Dockerfile Generation**: Verify the generated Dockerfile structure matches expectations
+

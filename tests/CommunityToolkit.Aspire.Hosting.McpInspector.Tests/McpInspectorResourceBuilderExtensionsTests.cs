@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Eventing;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.McpInspector.Tests;
 
@@ -586,7 +587,8 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
 
-        var args = await GetArgsAsync(inspectorResource);
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
 
         Assert.Equal(new[] { "dlx", "@modelcontextprotocol/inspector@0.15.0" }, args);
     }
@@ -610,7 +612,8 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
 
-        var args = await GetArgsAsync(inspectorResource);
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
 
         Assert.Equal(new[] { "dlx", "@modelcontextprotocol/inspector@0.15.0" }, args);
     }
@@ -657,7 +660,8 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
 
-        var args = await GetArgsAsync(inspectorResource);
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
 
         Assert.Equal(new[] { "-y", "@modelcontextprotocol/inspector@0.15.0" }, args);
     }
@@ -682,7 +686,8 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
 
-        var args = await GetArgsAsync(inspectorResource);
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
 
         Assert.Equal("@modelcontextprotocol/inspector@1.2.3", args[1]);
     }

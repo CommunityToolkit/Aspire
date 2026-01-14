@@ -3,6 +3,7 @@ using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
 
@@ -243,7 +244,7 @@ public class AddDbGateTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 

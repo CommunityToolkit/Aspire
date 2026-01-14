@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests;
@@ -13,14 +14,14 @@ public class ResourceCreationTests
         _ = builder.AddElasticsearch("elasticsearch")
             .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 9201))
             .WithElasticvue(e => e.WithEndpoint("http", ep => ep.AllocatedEndpoint = new AllocatedEndpoint(ep, "localhost", 8069)));
-        
+
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var elasticsearchResource = appModel.Resources.OfType<ElasticsearchResource>().Single();
 
-        var environmentVariables = await elasticsearchResource.GetEnvironmentVariableValuesAsync();
+        var environmentVariables = await elasticsearchResource.GetEnvironmentVariablesAsync();
 
         Assert.True(environmentVariables.ContainsKey("http.cors.enabled"));
         Assert.Equal("true", environmentVariables["http.cors.enabled"]);
@@ -50,7 +51,7 @@ public class ResourceCreationTests
 
         Assert.Equal("elasticvue", elasticvueResource.Name);
 
-        var envs = await elasticvueResource.GetEnvironmentVariableValuesAsync();
+        var envs = await elasticvueResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -152,7 +153,7 @@ public class ResourceCreationTests
 
         Assert.Equal("elasticvue", elasticvueResource.Name);
 
-        var envs = await elasticvueResource.GetEnvironmentVariableValuesAsync();
+        var envs = await elasticvueResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 

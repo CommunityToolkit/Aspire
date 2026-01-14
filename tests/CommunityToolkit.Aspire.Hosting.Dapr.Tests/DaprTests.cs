@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
 
@@ -52,8 +53,8 @@ public class DaprTests
             e.AllocatedEndpoint = new(e, "localhost", ports[e.Name], targetPortExpression: $$$"""{{- portForServing "{{{e.Name}}}" -}}""");
         }
 
-        var config = await container.GetEnvironmentVariableValuesAsync(DistributedApplicationOperation.Run);
-        var sidecarArgs = await sideCarCli.GetArgumentValuesAsync();
+        var config = await container.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Run);
+        var sidecarArgs = await sideCarCli.GetArgumentListAsync();
 
         Assert.Equal("3500", config["DAPR_HTTP_PORT"]);
         Assert.Equal("50001", config["DAPR_GRPC_PORT"]);
@@ -151,8 +152,8 @@ public class DaprTests
             e.AllocatedEndpoint = new(e, "localhost", ports[e.Name], targetPortExpression: $$$"""{{- portForServing "{{{e.Name}}}" -}}""");
         }
 
-        var config = await container.GetEnvironmentVariableValuesAsync(DistributedApplicationOperation.Run);
-        var sidecarArgs = await sideCarCli.GetArgumentValuesAsync();
+        var config = await container.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Run);
+        var sidecarArgs = await sideCarCli.GetArgumentListAsync();
 
         Assert.Equal("http://host.docker.internal:3500", config["DAPR_HTTP_ENDPOINT"]);
         Assert.Equal("http://host.docker.internal:50001", config["DAPR_GRPC_ENDPOINT"]);

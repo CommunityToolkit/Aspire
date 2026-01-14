@@ -3,6 +3,7 @@
 
 using System.Net.Sockets;
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Meilisearch.Tests;
 
@@ -39,7 +40,7 @@ public class AddMeilisearchTests
         Assert.Equal(MeilisearchContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(MeilisearchContainerImageTags.Registry, containerAnnotation.Registry);
 
-        var config = await meilisearch.Resource.GetEnvironmentVariableValuesAsync();
+        var config = await meilisearch.Resource.GetEnvironmentVariablesAsync();
 
         var env = Assert.Single(config);
         Assert.Equal("MEILI_MASTER_KEY", env.Key);
@@ -80,7 +81,7 @@ public class AddMeilisearchTests
         Assert.Equal(MeilisearchContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(MeilisearchContainerImageTags.Registry, containerAnnotation.Registry);
 
-        var config = await meilisearch.Resource.GetEnvironmentVariableValuesAsync();
+        var config = await meilisearch.Resource.GetEnvironmentVariablesAsync();
 
         var env = Assert.Single(config);
         Assert.Equal("MEILI_MASTER_KEY", env.Key);

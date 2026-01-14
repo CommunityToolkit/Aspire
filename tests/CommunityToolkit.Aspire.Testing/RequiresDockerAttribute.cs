@@ -23,7 +23,7 @@ public class RequiresDockerAttribute : Attribute, ITraitAttribute
     //                - https://github.com/dotnet/aspire/issues/4291
     // - Linux - Local, or CI: always assume that docker is installed
     public static bool IsSupported =>
-        !OperatingSystem.IsWindows() ||
+        OperatingSystem.IsLinux() ||
         !PlatformDetection.IsRunningOnCI;
 
     public string? Reason { get; init; }
