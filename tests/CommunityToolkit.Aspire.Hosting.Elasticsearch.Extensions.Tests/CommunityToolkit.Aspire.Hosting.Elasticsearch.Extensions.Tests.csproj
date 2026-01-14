@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\elasticsearch-ext\CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost\CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions\CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+</Project>

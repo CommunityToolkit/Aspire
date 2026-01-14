@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests;
 
@@ -23,15 +24,21 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("redis-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("redis", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_redis1", item.Key);
+                Assert.Equal("LABEL_redis", item.Key);
                 Assert.Equal(redisResource.Name, item.Value);
             },
             async item =>
@@ -43,13 +50,8 @@ public class ResourceCreationTests
             },
             item =>
             {
-                Assert.Equal("ENGINE_redis1", item.Key);
+                Assert.Equal("ENGINE_redis", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("redis1", item.Value);
             });
     }
 
@@ -67,7 +69,7 @@ public class ResourceCreationTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("redis1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
     }
 
     [Fact]
@@ -130,11 +132,17 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("redis1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("redis1,redis2", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
@@ -171,11 +179,6 @@ public class ResourceCreationTests
             {
                 Assert.Equal("ENGINE_redis2", item.Key);
                 Assert.Equal("redis@dbgate-plugin-redis", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("redis1,redis2", item.Value);
             });
     }
 }

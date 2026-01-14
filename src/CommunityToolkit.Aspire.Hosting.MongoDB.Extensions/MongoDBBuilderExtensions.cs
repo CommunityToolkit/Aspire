@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using System.Diagnostics.Metrics;
 using System.Text;
 
 namespace Aspire.Hosting;
@@ -37,59 +38,45 @@ public static class MongoDBBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        containerName ??= $"{builder.Resource.Name}-dbgate";
+        containerName ??= "dbgate";
 
-        var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
+        var dbGateBuilder = builder.ApplicationBuilder.AddDbGate(containerName);
 
         dbGateBuilder
-            .WithEnvironment(async context => await ConfigureDbGateContainer(context, builder.ApplicationBuilder));
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
+            .WaitFor(builder);
 
         configureContainer?.Invoke(dbGateBuilder);
 
         return builder;
     }
 
-    private static async Task ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<MongoDBServerResource> builder)
     {
-        var mongoDBInstances = applicationBuilder.Resources.OfType<MongoDBServerResource>();
+        var mongoDBServer = builder.Resource;
 
-        var counter = 1;
+        var name = mongoDBServer.Name;
+        var label = $"LABEL_{name}";
 
         // Multiple WithDbGate calls will be ignored
-        if (context.EnvironmentVariables.ContainsKey($"LABEL_mongodb{counter}"))
+        if (context.EnvironmentVariables.ContainsKey(label))
         {
             return;
         }
 
-        foreach (var mongoDBServer in mongoDBInstances)
+        // DbGate assumes MongoDB is being accessed over a default Aspire container network and hardcodes the resource address
+        // This will need to be refactored once updated service discovery APIs are available
+        context.EnvironmentVariables.Add(label, name);
+        context.EnvironmentVariables.Add($"URL_{name}", mongoDBServer.ConnectionStringExpression);
+        context.EnvironmentVariables.Add($"ENGINE_{name}", "mongo@dbgate-plugin-mongo");
+
+        if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            // DbGate assumes MongoDB is being accessed over a default Aspire container network and hardcodes the resource address
-            // This will need to be refactored once updated service discovery APIs are available
-            context.EnvironmentVariables.Add($"LABEL_mongodb{counter}", mongoDBServer.Name);
-
-            // Forcing evaluation of the connection string here to avoid issues with late binding in DbGate
-            context.EnvironmentVariables.Add($"URL_mongodb{counter}", await mongoDBServer.ConnectionStringExpression.GetValueAsync(context.CancellationToken) ?? throw new InvalidOperationException($"Unable to resolve connection string for {mongoDBServer.Name}."));
-            context.EnvironmentVariables.Add($"ENGINE_mongodb{counter}", "mongo@dbgate-plugin-mongo");
-
-            counter++;
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
         }
-
-        var instancesCount = mongoDBInstances.Count();
-        if (instancesCount > 0)
+        else
         {
-            var strBuilder = new StringBuilder();
-            strBuilder.AppendJoin(',', Enumerable.Range(1, instancesCount).Select(i => $"mongodb{i}"));
-            var connections = strBuilder.ToString();
-
-            string CONNECTIONS = context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS")?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(CONNECTIONS))
-            {
-                context.EnvironmentVariables["CONNECTIONS"] = connections;
-            }
-            else
-            {
-                context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
-            }
+            context.EnvironmentVariables["CONNECTIONS"] = name;
         }
     }
 }

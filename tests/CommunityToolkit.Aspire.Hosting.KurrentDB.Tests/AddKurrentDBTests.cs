@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using System.Net.Sockets;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.KurrentDB.Tests;
 
@@ -39,7 +40,7 @@ public class AddKurrentDBTests
         Assert.Equal(KurrentDBContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(KurrentDBContainerImageTags.Registry, containerAnnotation.Registry);
 
-        var config = await kurrentdb.Resource.GetEnvironmentVariableValuesAsync();
+        var config = await kurrentdb.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Collection(config,
             env =>

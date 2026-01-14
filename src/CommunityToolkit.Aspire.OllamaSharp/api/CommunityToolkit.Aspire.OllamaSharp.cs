@@ -18,6 +18,8 @@ namespace CommunityToolkit.Aspire.OllamaSharp
 
         public int? HealthCheckTimeout { get { throw null; } set { } }
 
+        public System.Text.Json.Serialization.JsonSerializerContext? JsonSerializerContext { get { throw null; } set { } }
+
         public System.Collections.Generic.IReadOnlyList<string> Models { get { throw null; } set { } }
 
         public string? SelectedModel { get { throw null; } set { } }

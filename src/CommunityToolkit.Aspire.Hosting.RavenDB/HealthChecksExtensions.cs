@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Data.Common;
+using System.Security.Cryptography.X509Certificates;
 
 namespace CommunityToolkit.Aspire.Hosting.RavenDB;
 
@@ -15,6 +16,7 @@ internal static class HealthChecksExtensions
     /// <param name="builder">The <see cref="IHealthChecksBuilder"/>.</param>
     /// <param name="connectionStringFactory">A factory to build the connection string to use.</param>
     /// <param name="name">The health check name. Optional. If <c>null</c> the type name 'ravendb' will be used for the name.</param>
+    /// <param name="certificate">The client certificate to use for the connection. Optional.</param>
     /// <param name="failureStatus">that should be reported when the health check fails. Optional. If <c>null</c> then
     /// the default status of <see cref="HealthStatus.Unhealthy"/> will be reported.</param>
     /// <param name="tags">A list of tags that can be used to filter sets of health checks. Optional.</param>
@@ -24,6 +26,7 @@ internal static class HealthChecksExtensions
         this IHealthChecksBuilder builder,
         Func<IServiceProvider, string> connectionStringFactory,
         string? name = default,
+        X509Certificate2? certificate = null,
         HealthStatus? failureStatus = default,
         IEnumerable<string>? tags = default,
         TimeSpan? timeout = default)
@@ -33,7 +36,7 @@ internal static class HealthChecksExtensions
             sp =>
             {
                 var connectionString = ValidateConnectionString(connectionStringFactory, sp);
-                return new RavenDBHealthCheck(new RavenDBOptions { Urls = new[] { connectionString } });
+                return new RavenDBHealthCheck(new RavenDBOptions { Urls = new[] { connectionString }, Certificate = certificate});
             },
             failureStatus,
             tags,
@@ -47,6 +50,7 @@ internal static class HealthChecksExtensions
     /// <param name="connectionStringFactory">A factory to build the connection string to use.</param>
     /// <param name="databaseName">The database name to check.</param>
     /// <param name="name">The health check name. Optional. If <c>null</c> the type name 'ravendb' will be used for the name.</param>
+    /// <param name="certificate">The client certificate to use for the connection. Optional.</param>
     /// <param name="failureStatus">that should be reported when the health check fails. Optional. If <c>null</c> then
     /// the default status of <see cref="HealthStatus.Unhealthy"/> will be reported.</param>
     /// <param name="tags">A list of tags that can be used to filter sets of health checks. Optional.</param>
@@ -57,6 +61,7 @@ internal static class HealthChecksExtensions
         Func<IServiceProvider, string> connectionStringFactory,
         string databaseName,
         string? name = default,
+        X509Certificate2? certificate = null,
         HealthStatus? failureStatus = default,
         IEnumerable<string>? tags = default,
         TimeSpan? timeout = default)
@@ -69,7 +74,8 @@ internal static class HealthChecksExtensions
                 return new RavenDBHealthCheck(new RavenDBOptions
                 {
                     Urls = new[] { connectionString },
-                    Database = databaseName
+                    Database = databaseName,
+                    Certificate = certificate
                 });
             },
             failureStatus,
