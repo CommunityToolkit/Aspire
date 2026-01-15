@@ -184,7 +184,7 @@ public class ResourceCreationTests
     }
 
     [Fact]
-    public void GolangAppWithGoModTidyInstallFalseDoesNotCreateInstaller()
+    public void GolangAppWithGoModTidyInstallFalseCreatesInstallerWithExplicitStart()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -195,11 +195,18 @@ public class ResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
-        Assert.Empty(appModel.Resources.OfType<GoModInstallerResource>());
+        var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
+
+        // Installer should be created even with install: false
+        Assert.Equal("golang-go-mod-tidy", installerResource.Name);
+        Assert.Equal("go", installerResource.Command);
+
+        // Verify that the installer has ExplicitStartupAnnotation
+        Assert.True(installerResource.HasAnnotationOfType<ExplicitStartupAnnotation>());
     }
 
     [Fact]
-    public void GolangAppWithGoModDownloadInstallFalseDoesNotCreateInstaller()
+    public void GolangAppWithGoModDownloadInstallFalseCreatesInstallerWithExplicitStart()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -210,6 +217,13 @@ public class ResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
-        Assert.Empty(appModel.Resources.OfType<GoModInstallerResource>());
+        var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
+
+        // Installer should be created even with install: false
+        Assert.Equal("golang-go-mod-download", installerResource.Name);
+        Assert.Equal("go", installerResource.Command);
+
+        // Verify that the installer has ExplicitStartupAnnotation
+        Assert.True(installerResource.HasAnnotationOfType<ExplicitStartupAnnotation>());
     }
 }

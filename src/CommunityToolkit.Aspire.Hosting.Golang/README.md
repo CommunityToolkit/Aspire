@@ -43,11 +43,11 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT");
 ```
 
-By default, `WithGoModTidy()` runs `go mod tidy` before the application starts (equivalent to `install: true`). You can disable this behavior by setting `install: false`:
+By default, `WithGoModTidy()` runs `go mod tidy` before the application starts (equivalent to `install: true`). You can set `install: false` to create the installer resource but require explicit start:
 
 ```csharp
 var golang = builder.AddGolangApp("golang", "../gin-api")
-    .WithGoModTidy(install: false)  // Does not run go mod tidy
+    .WithGoModTidy(install: false)  // Installer created but requires explicit start
     .WithHttpEndpoint(env: "PORT");
 ```
 
@@ -61,15 +61,15 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT");
 ```
 
-Similarly, you can control whether the download runs:
+Similarly, you can control the installer behavior:
 
 ```csharp
 var golang = builder.AddGolangApp("golang", "../gin-api")
-    .WithGoModDownload(install: false)  // Does not run go mod download
+    .WithGoModDownload(install: false)  // Installer created but requires explicit start
     .WithHttpEndpoint(env: "PORT");
 ```
 
-Both methods create an installer resource that runs before your application starts when `install` is `true`, ensuring dependencies are available. The installer resource appears as a child resource in the Aspire dashboard.
+When `install` is `true` (default), the installer resource is created and the Go application waits for it to complete before starting. When `install` is `false`, the installer resource is still created but is set to require explicit start, appearing in the Aspire dashboard but not automatically executing.
 
 You can also customize the installer resource using the optional `configureInstaller` parameter:
 
@@ -82,7 +82,7 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT");
 ```
 
-> **Note:** The `WithGoModTidy` and `WithGoModDownload` methods only run in run mode (when the application is started locally). They do not run when publishing, as the generated Dockerfile handles dependency management automatically.
+> **Note:** The `WithGoModTidy` and `WithGoModDownload` methods only create installer resources in run mode (when the application is started locally). They do not run when publishing, as the generated Dockerfile handles dependency management automatically.
 
 ## Publishing
 
