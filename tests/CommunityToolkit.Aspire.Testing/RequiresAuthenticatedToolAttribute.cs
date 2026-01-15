@@ -41,7 +41,7 @@ public sealed class RequiresAuthenticatedToolAttribute : Attribute, ITraitAttrib
 
         if (!IsSupported)
         {
-            traits = [.. traits, new KeyValuePair<string, string>(XunitConstants.Category, "unsupported-platform")];
+            traits = [.. traits, new KeyValuePair<string, string>(XunitConstants.Category, "failing")];
         }
 
         return traits;

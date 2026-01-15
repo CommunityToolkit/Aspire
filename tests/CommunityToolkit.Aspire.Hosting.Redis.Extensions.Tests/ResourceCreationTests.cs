@@ -45,7 +45,7 @@ public class ResourceCreationTests
             {
                 var redisUrl = redisResource.PasswordParameter is not null ?
                 $"redis://:{await redisResource.PasswordParameter.GetValueAsync(default)}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
-                Assert.Equal("URL_redis1", item.Key);
+                Assert.Equal("URL_redis", item.Key);
                 Assert.Equal(redisUrl, item.Value);
             },
             item =>
