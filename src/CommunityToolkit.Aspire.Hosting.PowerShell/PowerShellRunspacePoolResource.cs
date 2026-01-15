@@ -37,11 +37,6 @@ public class PowerShellRunspacePoolResource(
     /// </summary>
     public RunspacePool? Pool { get; private set; }
 
-    private Dictionary<string, bool> scriptResourceCompletion = [];
-    internal void AddScriptResource(PowerShellScriptResource scriptResource) => scriptResourceCompletion.Add(scriptResource.Name, false);
-    internal void ScriptResourceCompleted(PowerShellScriptResource scriptResource) => scriptResourceCompletion[scriptResource.Name] = true;
-    internal bool ScriptsCompleted => scriptResourceCompletion.Any(r => r.Value == false);
-
     internal Task StartAsync(InitialSessionState sessionState, ResourceNotificationService notificationService, ILogger logger, CancellationToken token = default)
     {
         logger.LogInformation(

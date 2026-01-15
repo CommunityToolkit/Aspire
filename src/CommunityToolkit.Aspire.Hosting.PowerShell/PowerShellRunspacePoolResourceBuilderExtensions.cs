@@ -3,7 +3,6 @@ using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.Management.Automation;
 
 namespace CommunityToolkit.Aspire.Hosting.PowerShell;
@@ -50,34 +49,12 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
                 scriptLogger.LogInformation("Starting script '{ScriptName}'", scriptName);
 
                 _ = scriptResource.StartAsync(scriptLogger, notificationService, ct);
-
-                await notificationService.WaitForResourceAsync(scriptResource.Name, KnownResourceStates.Finished, ct);
-
-                ((IDisposable)scriptResource).Dispose();
-
-                builder.Resource.ScriptResourceCompleted(scriptResource);
-
-                if (builder.Resource.ScriptsCompleted)
-                {
-                    await notificationService.PublishUpdateAsync(builder.Resource, state => state with
-                    {
-                        State = KnownResourceStates.Finished,
-                        Properties = [
-                        .. state.Properties,
-                    ],
-                        StopTimeStamp = DateTime.Now,
-                    });
-
-                    ((IDisposable)builder.Resource).Dispose();
-                }
             }
             catch (Exception ex)
             {
                 scriptLogger.LogError(ex, "Failed to start script '{ScriptName}'", scriptName);
             }
         });
-
-        builder.Resource.AddScriptResource(scriptResource);
 
         return builder.ApplicationBuilder
             .AddResource(scriptResource)
