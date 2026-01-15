@@ -121,7 +121,7 @@ public class ResourceCreationTests
 
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
-        var args = await installerResource.GetArgumentValuesAsync();
+        var args = await installerResource.GetArgumentsAsync();
         Assert.Collection(
             args,
             arg => Assert.Equal("mod", arg),
