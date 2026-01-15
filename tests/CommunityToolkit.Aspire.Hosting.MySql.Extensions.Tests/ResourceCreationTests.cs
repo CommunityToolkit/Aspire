@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using System.Text.Json;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests;
 
@@ -25,7 +26,7 @@ public class ResourceCreationTests
 
         Assert.Equal("mysql-adminer", adminerResource.Name);
 
-        var envs = await adminerResource.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -126,7 +127,7 @@ public class ResourceCreationTests
 
         Assert.Equal("mysql1-adminer", adminerContainer.Name);
 
-        var envs = await adminerContainer.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerContainer.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -178,46 +179,46 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mysql-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_mysql1", item.Key);
+                Assert.Equal("LABEL_mysql", item.Key);
                 Assert.Equal(mysqlResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("SERVER_mysql1", item.Key);
+                Assert.Equal("SERVER_mysql", item.Key);
                 Assert.Equal(mysqlResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("USER_mysql1", item.Key);
+                Assert.Equal("USER_mysql", item.Key);
                 Assert.Equal("root", item.Value);
             },
             async item =>
             {
-                Assert.Equal("PASSWORD_mysql1", item.Key);
+                Assert.Equal("PASSWORD_mysql", item.Key);
                 Assert.Equal(await mysqlResource.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
-                Assert.Equal("PORT_mysql1", item.Key);
+                Assert.Equal("PORT_mysql", item.Key);
                 Assert.Equal(mysqlResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_mysql1", item.Key);
+                Assert.Equal("ENGINE_mysql", item.Key);
                 Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
             },
             item =>
             {
                 Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mysql1", item.Value);
+                Assert.Equal("mysql", item.Value);
             });
     }
 
@@ -235,7 +236,7 @@ public class ResourceCreationTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mysql1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
     }
 
     [Fact]
@@ -296,9 +297,9 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mysql1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
         Assert.Collection(envs,
@@ -334,6 +335,11 @@ public class ResourceCreationTests
             },
             item =>
             {
+                Assert.Equal("CONNECTIONS", item.Key);
+                Assert.Equal("mysql1,mysql2", item.Value);
+            },
+            item =>
+            {
                 Assert.Equal("LABEL_mysql2", item.Key);
                 Assert.Equal(mysqlResource2.Name, item.Value);
             },
@@ -361,11 +367,6 @@ public class ResourceCreationTests
             {
                 Assert.Equal("ENGINE_mysql2", item.Key);
                 Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mysql1,mysql2", item.Value);
             });
     }
 }

@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using System.Text.Json;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests;
 
@@ -23,46 +24,47 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("postgres", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_postgres1", item.Key);
+                Assert.Equal("LABEL_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("SERVER_postgres1", item.Key);
+                Assert.Equal("SERVER_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("USER_postgres1", item.Key);
+                Assert.Equal("USER_postgres", item.Key);
                 Assert.Equal("postgres", item.Value);
             },
             async item =>
             {
-                Assert.Equal("PASSWORD_postgres1", item.Key);
+                Assert.Equal("PASSWORD_postgres", item.Key);
                 Assert.Equal(await postgresResource.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>
             {
-                Assert.Equal("PORT_postgres1", item.Key);
+                Assert.Equal("PORT_postgres", item.Key);
                 Assert.Equal(postgresResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_postgres1", item.Key);
+                Assert.Equal("ENGINE_postgres", item.Key);
                 Assert.Equal("postgres@dbgate-plugin-postgres", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("postgres1", item.Value);
             });
     }
 
@@ -80,7 +82,7 @@ public class ResourceCreationTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
     }
 
     [Fact]
@@ -141,11 +143,17 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("postgres1,postgres2", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
@@ -206,11 +214,6 @@ public class ResourceCreationTests
             {
                 Assert.Equal("ENGINE_postgres2", item.Key);
                 Assert.Equal("postgres@dbgate-plugin-postgres", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("postgres1,postgres2", item.Value);
             });
     }
 
@@ -237,46 +240,47 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("postgres-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("postgres", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_postgres1", item.Key);
+                Assert.Equal("LABEL_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("SERVER_postgres1", item.Key);
+                Assert.Equal("SERVER_postgres", item.Key);
                 Assert.Equal(postgresResource.Name, item.Value);
             },
             item =>
             {
-                Assert.Equal("USER_postgres1", item.Key);
+                Assert.Equal("USER_postgres", item.Key);
                 Assert.Equal(username, item.Value);
             },
             item =>
             {
-                Assert.Equal("PASSWORD_postgres1", item.Key);
+                Assert.Equal("PASSWORD_postgres", item.Key);
                 Assert.Equal(password, item.Value);
             },
             item =>
             {
-                Assert.Equal("PORT_postgres1", item.Key);
+                Assert.Equal("PORT_postgres", item.Key);
                 Assert.Equal(postgresResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_postgres1", item.Key);
+                Assert.Equal("ENGINE_postgres", item.Key);
                 Assert.Equal("postgres@dbgate-plugin-postgres", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("postgres1", item.Value);
             });
     }
 
@@ -300,7 +304,7 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres-adminer", adminerResource.Name);
 
-        var envs = await adminerResource.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -401,7 +405,7 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres1-adminer", adminerContainer.Name);
 
-        var envs = await adminerContainer.GetEnvironmentVariableValuesAsync();
+        var envs = await adminerContainer.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
@@ -433,5 +437,89 @@ public class ResourceCreationTests
         var item = Assert.Single(envs);
         Assert.Equal("ADMINER_SERVERS", item.Key);
         Assert.Equal(envValue, item.Value);
+    }
+
+    [Fact]
+    public async Task WithFlywayMigrationAddsFlywayWithExpectedContainerArgs()
+    {
+        const string postgresResourceName = "postgres-for-testing";
+        const string postgresUsername = "not-default-username";
+        const string postgresPassword = "super-secure-password";
+        const string postgresDatabaseName = "my-db";
+
+        var builder = DistributedApplication.CreateBuilder();
+
+        var userNameParameter = builder.AddParameter("username-param", postgresUsername);
+        var passwordParameter = builder.AddParameter("password-param", postgresPassword);
+
+        var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
+        _ = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+            .AddDatabase(postgresDatabaseName)
+            .WithFlywayMigration(flywayResourceBuilder);
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var retrievedFlywayResource = appModel.Resources.OfType<FlywayResource>().SingleOrDefault();
+        Assert.NotNull(retrievedFlywayResource);
+
+        var expectedArgs = new List<string>
+        {
+            $"-url=jdbc:postgresql://{postgresResourceName}.dev.internal:5432/{postgresDatabaseName}",
+            $"-user={postgresUsername}",
+            $"-password={postgresPassword}",
+            "migrate"
+        };
+
+        var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
+        Assert.Equal(expectedArgs.Count, actualArgs.Count);
+        Assert.Collection(
+            actualArgs,
+            arg => Assert.Equal(expectedArgs[0], arg),
+            arg => Assert.Equal(expectedArgs[1], arg),
+            arg => Assert.Equal(expectedArgs[2], arg),
+            arg => Assert.Equal(expectedArgs[3], arg));
+    }
+
+    [Fact]
+    public async Task WithFlywayRepairAddsFlywayWithExpectedContainerArgs()
+    {
+        const string postgresResourceName = "postgres-for-testing";
+        const string postgresUsername = "not-default-username";
+        const string postgresPassword = "super-secure-password";
+        const string postgresDatabaseName = "my-db";
+
+        var builder = DistributedApplication.CreateBuilder();
+
+        var userNameParameter = builder.AddParameter("username-param", postgresUsername);
+        var passwordParameter = builder.AddParameter("password-param", postgresPassword);
+
+        var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
+        _ = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+            .AddDatabase(postgresDatabaseName)
+            .WithFlywayRepair(flywayResourceBuilder);
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var retrievedFlywayResource = appModel.Resources.OfType<FlywayResource>().SingleOrDefault();
+        Assert.NotNull(retrievedFlywayResource);
+
+        var expectedArgs = new List<string>
+        {
+            $"-url=jdbc:postgresql://{postgresResourceName}.dev.internal:5432/{postgresDatabaseName}",
+            $"-user={postgresUsername}",
+            $"-password={postgresPassword}",
+            "repair"
+        };
+
+        var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
+        Assert.Equal(expectedArgs.Count, actualArgs.Count);
+        Assert.Collection(
+            actualArgs,
+            arg => Assert.Equal(expectedArgs[0], arg),
+            arg => Assert.Equal(expectedArgs[1], arg),
+            arg => Assert.Equal(expectedArgs[2], arg),
+            arg => Assert.Equal(expectedArgs[3], arg));
     }
 }

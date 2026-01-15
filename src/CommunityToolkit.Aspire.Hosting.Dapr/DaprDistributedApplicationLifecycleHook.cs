@@ -61,7 +61,15 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var daprSidecar = daprAnnotation.Sidecar;
 
-
+            // Propagate WaitAnnotations from the original resource to the Dapr sidecar
+            if (resource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations))
+            {
+                foreach (var waitAnnotation in waitAnnotations)
+                {
+                    daprSidecar.Annotations.Add(waitAnnotation);
+                }
+            }
+            
             var sidecarOptionsAnnotation = daprSidecar.Annotations.OfType<DaprSidecarOptionsAnnotation>().LastOrDefault();
 
             var sidecarOptions = sidecarOptionsAnnotation?.Options;
@@ -204,6 +212,15 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
 
             var daprCliResourceName = $"{daprSidecar.Name}-cli";
             var daprCli = new ExecutableResource(daprCliResourceName, fileName, appHostDirectory);
+
+            // Propagate WaitAnnotations from the original resource to the Dapr CLI executable
+            if (resource.TryGetAnnotationsOfType<WaitAnnotation>(out var resourceWaitAnnotations))
+            {
+                foreach (var waitAnnotation in resourceWaitAnnotations)
+                {
+                    daprCli.Annotations.Add(waitAnnotation);
+                }
+            }
 
             // Make the Dapr CLI wait for the component resources it references
             foreach (var componentRef in componentReferenceAnnotations)

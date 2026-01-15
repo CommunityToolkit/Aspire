@@ -9,7 +9,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [Fact]
     public async Task ResourceStartsAndRespondsOk()
     {
-        var resourceName = "redis1-dbgate";
+        var resourceName = "dbgate";
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
         var httpClient = fixture.CreateHttpClient(resourceName);
 

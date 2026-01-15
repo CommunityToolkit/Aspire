@@ -54,9 +54,7 @@ public static class McpInspectorResourceBuilderExtensions
         var packageName = $"@modelcontextprotocol/inspector@{options.InspectorVersion}";
 
         var resourceBuilder = builder.AddResource(new McpInspectorResource(name, packageName))
-            .WithNpm(install: true, installArgs: ["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}", "--no-save", "--no-package-lock"])
             .WithCommand("npx")
-            .WithArgs(["-y", $"@modelcontextprotocol/inspector@{options.InspectorVersion}"])
             .WithCertificateTrustConfiguration(ctx =>
             {
                 if (ctx.Scope == CertificateTrustScope.Append)
@@ -93,12 +91,16 @@ public static class McpInspectorResourceBuilderExtensions
             .WithUrlForEndpoint(McpInspectorResource.ClientEndpointName, annotation =>
             {
                 annotation.DisplayText = "Client";
-                annotation.DisplayOrder = 2;
+                // DisplayOrder is unstable and will change in a future version of Aspire. See https://github.com/dotnet/aspire/pull/13785
+                // It can be re-added once the API has been fixed.
+                // annotation.DisplayOrder = 2;
             })
             .WithUrlForEndpoint(McpInspectorResource.ServerProxyEndpointName, annotation =>
             {
                 annotation.DisplayText = "Server Proxy";
-                annotation.DisplayOrder = 1;
+                // DisplayOrder is unstable and will change in a future version of Aspire. See https://github.com/dotnet/aspire/pull/13785
+                // It can be re-added once the API has been fixed.
+                // annotation.DisplayOrder = 1;
                 annotation.DisplayLocation = UrlDisplayLocation.DetailsOnly;
             })
             .OnBeforeResourceStarted(async (inspectorResource, @event, ct) =>
@@ -316,6 +318,9 @@ public static class McpInspectorResourceBuilderExtensions
                     ctx.Args.Insert(0, packageName);
                     ctx.Args.Insert(0, "dlx");
                     break;
+                case "bunx":
+                    ctx.Args.Insert(0, packageName);
+                    break;
                 default: // npm/npx
                     ctx.Args.Insert(0, packageName);
                     ctx.Args.Insert(0, "-y");
@@ -346,5 +351,17 @@ public static class McpInspectorResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder.WithCommand("pnpm");
+    }
+
+    /// <summary>
+    /// Configures the MCP Inspector to use bun as the package manager.
+    /// </summary>
+    /// <param name="builder">The MCP Inspector resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<McpInspectorResource> WithBun(this IResourceBuilder<McpInspectorResource> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithCommand("bunx");
     }
 }
