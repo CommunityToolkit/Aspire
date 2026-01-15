@@ -101,11 +101,15 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
+        var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
         Assert.Equal("golang-go-mod-tidy", installerResource.Name);
         Assert.Equal("go", installerResource.Command);
+
+        // Verify that the Golang app waits for the installer to complete
+        Assert.True(golangResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        Assert.Contains(waitAnnotations, w => w.Resource == installerResource);
     }
 
     [Fact]
@@ -121,7 +125,7 @@ public class ResourceCreationTests
 
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
-        var args = await installerResource.GetArgumentsAsync();
+        var args = await installerResource.GetArgumentListAsync();
         Assert.Collection(
             args,
             arg => Assert.Equal("mod", arg),
@@ -140,11 +144,15 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
+        var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
         Assert.Equal("golang-go-mod-download", installerResource.Name);
         Assert.Equal("go", installerResource.Command);
+
+        // Verify that the Golang app waits for the installer to complete
+        Assert.True(golangResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        Assert.Contains(waitAnnotations, w => w.Resource == installerResource);
     }
 
     [Fact]
@@ -160,7 +168,7 @@ public class ResourceCreationTests
 
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
-        var args = await installerResource.GetArgumentValuesAsync();
+        var args = await installerResource.GetArgumentListAsync();
         Assert.Collection(
             args,
             arg => Assert.Equal("mod", arg),
@@ -195,7 +203,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
+        Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
         // Installer should be created even with install: false
@@ -217,7 +225,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
+        Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
         // Installer should be created even with install: false
