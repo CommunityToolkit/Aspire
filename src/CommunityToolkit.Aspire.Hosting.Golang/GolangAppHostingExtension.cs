@@ -239,16 +239,18 @@ public static class GolangAppHostingExtension
     /// Ensures Go module dependencies are tidied before the application starts using <c>go mod tidy</c>.
     /// </summary>
     /// <param name="builder">The Golang app resource builder.</param>
+    /// <param name="install">When true (default), automatically runs go mod tidy before the application starts. When false, this method does nothing.</param>
     /// <param name="configureInstaller">Optional action to configure the installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<GolangAppExecutableResource> WithGoModTidy(
         this IResourceBuilder<GolangAppExecutableResource> builder,
+        bool install = true,
         Action<IResourceBuilder<GoModInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        // Only install packages during development, not in publish mode
-        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        // Only install packages if in run mode and install is true
+        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode && install)
         {
             var installerName = $"{builder.Resource.Name}-go-mod-tidy";
             var installer = new GoModInstallerResource(installerName, builder.Resource.WorkingDirectory);
@@ -271,16 +273,18 @@ public static class GolangAppHostingExtension
     /// Ensures Go module dependencies are downloaded before the application starts using <c>go mod download</c>.
     /// </summary>
     /// <param name="builder">The Golang app resource builder.</param>
+    /// <param name="install">When true (default), automatically runs go mod download before the application starts. When false, this method does nothing.</param>
     /// <param name="configureInstaller">Optional action to configure the installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<GolangAppExecutableResource> WithGoModDownload(
         this IResourceBuilder<GolangAppExecutableResource> builder,
+        bool install = true,
         Action<IResourceBuilder<GoModInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        // Only install packages during development, not in publish mode
-        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        // Only install packages if in run mode and install is true
+        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode && install)
         {
             var installerName = $"{builder.Resource.Name}-go-mod-download";
             var installer = new GoModInstallerResource(installerName, builder.Resource.WorkingDirectory);

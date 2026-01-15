@@ -182,4 +182,34 @@ public class ResourceCreationTests
 
         Assert.Throws<ArgumentNullException>(() => builder.WithGoModDownload());
     }
+
+    [Fact]
+    public void GolangAppWithGoModTidyInstallFalseDoesNotCreateInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGolangApp("golang", "../../examples/golang/gin-api").WithGoModTidy(install: false);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
+        Assert.Empty(appModel.Resources.OfType<GoModInstallerResource>());
+    }
+
+    [Fact]
+    public void GolangAppWithGoModDownloadInstallFalseDoesNotCreateInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGolangApp("golang", "../../examples/golang/gin-api").WithGoModDownload(install: false);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
+        Assert.Empty(appModel.Resources.OfType<GoModInstallerResource>());
+    }
 }

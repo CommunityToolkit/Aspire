@@ -43,6 +43,14 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT");
 ```
 
+By default, `WithGoModTidy()` runs `go mod tidy` before the application starts (equivalent to `install: true`). You can disable this behavior by setting `install: false`:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy(install: false)  // Does not run go mod tidy
+    .WithHttpEndpoint(env: "PORT");
+```
+
 ### Using `go mod download`
 
 To run `go mod download` before your application starts (to download dependencies without verification):
@@ -53,7 +61,15 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT");
 ```
 
-Both methods create an installer resource that runs before your application starts, ensuring dependencies are available. The installer resource appears as a child resource in the Aspire dashboard.
+Similarly, you can control whether the download runs:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModDownload(install: false)  // Does not run go mod download
+    .WithHttpEndpoint(env: "PORT");
+```
+
+Both methods create an installer resource that runs before your application starts when `install` is `true`, ensuring dependencies are available. The installer resource appears as a child resource in the Aspire dashboard.
 
 You can also customize the installer resource using the optional `configureInstaller` parameter:
 
@@ -66,7 +82,7 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT");
 ```
 
-> **Note:** The `WithGoModTidy` and `WithGoModDownload` methods only run during development. When publishing, the generated Dockerfile handles dependency management automatically.
+> **Note:** The `WithGoModTidy` and `WithGoModDownload` methods only run in run mode (when the application is started locally). They do not run when publishing, as the generated Dockerfile handles dependency management automatically.
 
 ## Publishing
 
