@@ -101,7 +101,7 @@ public class ResourceCreationTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var golangResource = Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
+        Assert.Single(appModel.Resources.OfType<GolangAppExecutableResource>());
         var installerResource = Assert.Single(appModel.Resources.OfType<GoModInstallerResource>());
 
         Assert.Equal("golang-go-mod-tidy", installerResource.Name);
