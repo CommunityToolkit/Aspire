@@ -39,6 +39,9 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
             .WaitAsync(TimeSpan.FromSeconds(90));
 
         await Task.WhenAll([ready1, ready2]);
+
+        Assert.True(ready1.IsCompletedSuccessfully);
+        Assert.True(ready2.IsCompletedSuccessfully);
     }
 }
 
