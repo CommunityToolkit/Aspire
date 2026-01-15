@@ -25,6 +25,7 @@ If you want to enable watch support you'll need a Postgres database:
 
 ```csharp
 var postgres = builder.AddPostgres("postgres")
+    .WithArgs("-c", "track_commit_timestamp=on")
     .AddDatabase("permify-db");
 
 var permify = builder.AddPermify("permify")
