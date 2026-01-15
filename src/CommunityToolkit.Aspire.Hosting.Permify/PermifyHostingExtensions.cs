@@ -34,7 +34,7 @@ public static class PermifyHostingExtensions
             .WithHttpsEndpoint(
                 targetPort: 8080,
                 port: httpPort,
-                name: PermifyResource.HttpEndpointName
+                name: PermifyResource.HttpsEndpointName
             )
             .WithEnvironment("PERMIFY_HTTP_ENABLED", "true")
             .WithEnvironment("PERMIFY_HTTP_PORT", "8080")

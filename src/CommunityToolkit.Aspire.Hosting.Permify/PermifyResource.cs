@@ -10,7 +10,7 @@ public sealed class PermifyResource(string name) : ContainerResource(name)
     /// <summary>
     /// The name of the HTTP API endpoint.
     /// </summary>
-    public const string HttpEndpointName = "http";
+    public const string HttpsEndpointName = "https";
 
     /// <summary>
     /// The name of the gRPC API endpoint.
