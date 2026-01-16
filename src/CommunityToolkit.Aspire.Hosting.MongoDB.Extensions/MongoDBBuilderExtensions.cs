@@ -56,7 +56,8 @@ public static class MongoDBBuilderExtensions
         var mongoDBServer = builder.Resource;
 
         var name = mongoDBServer.Name;
-        var label = $"LABEL_{name}";
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var label = $"LABEL_{connectionId}";
 
         // Multiple WithDbGate calls will be ignored
         if (context.EnvironmentVariables.ContainsKey(label))
@@ -67,16 +68,16 @@ public static class MongoDBBuilderExtensions
         // DbGate assumes MongoDB is being accessed over a default Aspire container network and hardcodes the resource address
         // This will need to be refactored once updated service discovery APIs are available
         context.EnvironmentVariables.Add(label, name);
-        context.EnvironmentVariables.Add($"URL_{name}", mongoDBServer.ConnectionStringExpression);
-        context.EnvironmentVariables.Add($"ENGINE_{name}", "mongo@dbgate-plugin-mongo");
+        context.EnvironmentVariables.Add($"URL_{connectionId}", mongoDBServer.ConnectionStringExpression);
+        context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "mongo@dbgate-plugin-mongo");
 
         if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{connectionId}";
         }
         else
         {
-            context.EnvironmentVariables["CONNECTIONS"] = name;
+            context.EnvironmentVariables["CONNECTIONS"] = connectionId;
         }
     }
 }
