@@ -20,7 +20,7 @@ The Golang application is configured to serve these files from the `/static` end
 
 ## Container Files Feature
 
-The Golang resource implements `IContainerFilesDestinationResource`, which tells the Aspire publishing pipeline where to copy files when building the container image. The default destination is `/app/static`, but this can be customized.
+The Golang resource implements `IContainerFilesDestinationResource`, which tells the Aspire publishing pipeline where to copy files when building the container image. In this example, `/app/static` is used as the conventional destination (and is returned by the `ContainerFilesDestination` property), but the actual destination is determined by the first parameter you pass to `WithContainerFiles` and can be customized.
 
 This feature works with any resource that produces output files, including:
 - Static file directories (like this example)
