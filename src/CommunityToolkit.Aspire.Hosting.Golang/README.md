@@ -121,7 +121,7 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithContainerFiles("/app/static", frontend.Resource);
 ```
 
-This will copy the output files from the `frontend` resource into the `/app/static` directory in the Golang container when publishing.
+This will copy the output files from the `frontend` resource into the `/app/static` directory in the Golang container when publishing. Note: `WithContainerFiles` is provided by the Aspire framework when the resource implements `IContainerFilesDestinationResource` and may require additional using directives (for example, `using Aspire.Hosting;`).
 
 ### Generated Dockerfile
 
