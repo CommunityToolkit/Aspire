@@ -87,4 +87,19 @@ public static class DbGateBuilderExtensions
             return dbGateContainerBuilder;
         }
     }
+
+    /// <summary>
+    /// Sanitizes a resource name to be used as a connection ID in DbGate environment variables.
+    /// </summary>
+    /// <param name="resourceName">The resource name to sanitize.</param>
+    /// <returns>A sanitized connection ID safe for use in environment variable names.</returns>
+    /// <remarks>
+    /// Environment variable names in Linux cannot contain hyphens, so they are replaced with underscores.
+    /// This ensures that resource names like "mysql-db" become "mysql_db" when used in environment variable names.
+    /// </remarks>
+    internal static string SanitizeConnectionId(string resourceName)
+    {
+        ArgumentNullException.ThrowIfNull(resourceName);
+        return resourceName.Replace('-', '_');
+    }
 }

@@ -97,7 +97,8 @@ public static class PostgresBuilderExtensions
         var postgresServer = builder.Resource;
 
         var name = postgresServer.Name;
-        var label = $"LABEL_{name}";
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var label = $"LABEL_{connectionId}";
 
         // Multiple WithDbGate calls will be ignored
         if (context.EnvironmentVariables.ContainsKey(label))
@@ -111,20 +112,20 @@ public static class PostgresBuilderExtensions
 
         // DbGate assumes Postgres is being accessed over a default Aspire container network and hardcodes the resource address
         // This will need to be refactored once updated service discovery APIs are available
-        context.EnvironmentVariables.Add($"LABEL_{name}", postgresServer.Name);
-        context.EnvironmentVariables.Add($"SERVER_{name}", postgresServer.Name);
-        context.EnvironmentVariables.Add($"USER_{name}", userParameter);
-        context.EnvironmentVariables.Add($"PASSWORD_{name}", postgresServer.PasswordParameter);
-        context.EnvironmentVariables.Add($"PORT_{name}", postgresServer.PrimaryEndpoint.TargetPort!.ToString()!);
-        context.EnvironmentVariables.Add($"ENGINE_{name}", "postgres@dbgate-plugin-postgres");
+        context.EnvironmentVariables.Add($"LABEL_{connectionId}", postgresServer.Name);
+        context.EnvironmentVariables.Add($"SERVER_{connectionId}", postgresServer.Name);
+        context.EnvironmentVariables.Add($"USER_{connectionId}", userParameter);
+        context.EnvironmentVariables.Add($"PASSWORD_{connectionId}", postgresServer.PasswordParameter);
+        context.EnvironmentVariables.Add($"PORT_{connectionId}", postgresServer.PrimaryEndpoint.TargetPort!.ToString()!);
+        context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "postgres@dbgate-plugin-postgres");
 
         if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{connectionId}";
         }
         else
         {
-            context.EnvironmentVariables["CONNECTIONS"] = name;
+            context.EnvironmentVariables["CONNECTIONS"] = connectionId;
         }
     }
 

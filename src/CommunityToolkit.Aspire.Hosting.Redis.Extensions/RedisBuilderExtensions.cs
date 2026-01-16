@@ -54,24 +54,25 @@ public static class RedisBuilderExtensions
         var redisResource = builder.Resource;
 
         var name = redisResource.Name;
-        var lalbel = $"LABEL_{name}";
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var label = $"LABEL_{connectionId}";
 
         // DbGate assumes Redis is being accessed over a default Aspire container network and hardcodes the resource address
         var redisUrl = redisResource.PasswordParameter is not null ?
             ReferenceExpression.Create($"redis://:{redisResource.PasswordParameter}@{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}") :
             ReferenceExpression.Create($"redis://{name}:{redisResource.PrimaryEndpoint.TargetPort?.ToString()}");
 
-        context.EnvironmentVariables.Add(lalbel, name);
-        context.EnvironmentVariables.Add($"URL_{name}", redisUrl);
-        context.EnvironmentVariables.Add($"ENGINE_{name}", "redis@dbgate-plugin-redis");
+        context.EnvironmentVariables.Add(label, name);
+        context.EnvironmentVariables.Add($"URL_{connectionId}", redisUrl);
+        context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "redis@dbgate-plugin-redis");
 
         if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{connectionId}";
         }
         else
         {
-            context.EnvironmentVariables["CONNECTIONS"] = name;
+            context.EnvironmentVariables["CONNECTIONS"] = connectionId;
         }
     }
 }
