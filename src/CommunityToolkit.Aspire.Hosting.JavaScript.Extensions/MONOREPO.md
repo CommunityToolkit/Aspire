@@ -26,7 +26,7 @@ Use the new monorepo-specific extension methods that create a shared package ins
 
 ```csharp
 var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
-    .WithYarnPackageInstaller();
+    .WithYarnPackageInstaller(); // Single shared installer
 
 var app1 = nx.AddApp("app1");
 var app2 = nx.AddApp("app2", appName: "my-app-2"); // Custom app name for nx serve
@@ -37,7 +37,7 @@ var app3 = nx.AddApp("app3");
 
 ```csharp
 var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
-    .WithPnpmPackageInstaller();
+    .WithPnpmPackageInstaller(); // Single shared installer
 
 var app1 = turbo.AddApp("app1");
 var app2 = turbo.AddApp("app2", filter: "custom-filter"); // Custom filter
