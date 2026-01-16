@@ -7,19 +7,13 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="workingDirectory">The working directory of the workspace.</param>
-/// <param name="workspaceName">The yarn workspace package name to run. (used in yarn workspace &lt;workspaceName&gt; run &lt;script&gt;)</param>
-/// <param name="script">The package script to run.</param>
+/// <param name="workspaceName">The yarn workspace package name to run. (used in yarn workspace &lt;workspaceName&gt; run dev)</param>
 /// <param name="command">The command to run (default is 'yarn').</param>
-public class YarnWorkspaceAppResource(string name, string workingDirectory, string workspaceName, string script, string command = "yarn")
+public class YarnWorkspaceAppResource(string name, string workingDirectory, string workspaceName, string command = "yarn")
     : JavaScriptAppResource(name, command, workingDirectory)
 {
     /// <summary>
     /// Gets the yarn workspace package name.
     /// </summary>
     public string WorkspaceName { get; } = workspaceName;
-
-    /// <summary>
-    /// Gets the script to run from the workspace package.
-    /// </summary>
-    public string Script { get; } = script;
 }

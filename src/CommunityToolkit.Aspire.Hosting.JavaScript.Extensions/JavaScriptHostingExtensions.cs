@@ -216,23 +216,21 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="builder">The yarn workspace resource builder.</param>
     /// <param name="name">The name of the app resource.</param>
     /// <param name="workspaceName">The yarn workspace package name to run. Defaults to <paramref name="name"/>.</param>
-    /// <param name="script">The script to run from the workspace package. Defaults to <c>dev</c>.</param>
     /// <param name="configure">A function to configure the app resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<YarnWorkspaceAppResource> AddApp(this IResourceBuilder<YarnWorkspaceResource> builder, [ResourceName] string name, string? workspaceName = null, string? script = null, Func<IResourceBuilder<YarnWorkspaceAppResource>, IResourceBuilder<YarnWorkspaceAppResource>>? configure = null)
+    public static IResourceBuilder<YarnWorkspaceAppResource> AddApp(this IResourceBuilder<YarnWorkspaceResource> builder, [ResourceName] string name, string? workspaceName = null, Func<IResourceBuilder<YarnWorkspaceAppResource>, IResourceBuilder<YarnWorkspaceAppResource>>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
         workspaceName ??= name;
-        script ??= "dev";
 
-        var resource = new YarnWorkspaceAppResource(name, builder.Resource.WorkingDirectory, workspaceName, script);
+        var resource = new YarnWorkspaceAppResource(name, builder.Resource.WorkingDirectory, workspaceName);
 
         var rb = builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
             .WithIconName("CodeJsRectangle")
-            .WithArgs("workspace", workspaceName, "run", script)
+            .WithArgs("workspace", workspaceName, "run", "dev")
             .WithParentRelationship(builder.Resource);
 
         // If the workspace has an installer annotation, wait for the installer to complete
@@ -252,23 +250,21 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="builder">The pnpm workspace resource builder.</param>
     /// <param name="name">The name of the app resource.</param>
     /// <param name="filter">The pnpm filter to use. Defaults to <paramref name="name"/>.</param>
-    /// <param name="script">The script to run from the workspace package. Defaults to <c>dev</c>.</param>
     /// <param name="configure">A function to configure the app resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<PnpmWorkspaceAppResource> AddApp(this IResourceBuilder<PnpmWorkspaceResource> builder, [ResourceName] string name, string? filter = null, string? script = null, Func<IResourceBuilder<PnpmWorkspaceAppResource>, IResourceBuilder<PnpmWorkspaceAppResource>>? configure = null)
+    public static IResourceBuilder<PnpmWorkspaceAppResource> AddApp(this IResourceBuilder<PnpmWorkspaceResource> builder, [ResourceName] string name, string? filter = null, Func<IResourceBuilder<PnpmWorkspaceAppResource>, IResourceBuilder<PnpmWorkspaceAppResource>>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
         filter ??= name;
-        script ??= "dev";
 
-        var resource = new PnpmWorkspaceAppResource(name, builder.Resource.WorkingDirectory, filter, script);
+        var resource = new PnpmWorkspaceAppResource(name, builder.Resource.WorkingDirectory, filter);
 
         var rb = builder.ApplicationBuilder.AddResource(resource)
             .WithNodeDefaults()
             .WithIconName("CodeJsRectangle")
-            .WithArgs("--filter", filter, "run", script)
+            .WithArgs("--filter", filter, "run", "dev")
             .WithParentRelationship(builder.Resource);
 
         // If the workspace has an installer annotation, wait for the installer to complete
