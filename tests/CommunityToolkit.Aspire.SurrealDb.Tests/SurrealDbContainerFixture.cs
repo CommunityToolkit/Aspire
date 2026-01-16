@@ -4,6 +4,7 @@
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
@@ -28,7 +29,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
         return $"Endpoint={endpoint};Username={_username};Password={_password}";
     }
     
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (RequiresDockerAttribute.IsSupported)
         {
@@ -60,7 +61,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (Container is not null)
         {

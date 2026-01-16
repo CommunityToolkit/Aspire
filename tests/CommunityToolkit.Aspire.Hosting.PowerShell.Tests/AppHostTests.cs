@@ -1,4 +1,3 @@
-using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.PowerShell.Tests;
@@ -14,7 +13,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         await fixture.ResourceNotificationService
             .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromSeconds(60));
-        
+
         Assert.True(true);
     }
 
@@ -40,6 +39,9 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
             .WaitAsync(TimeSpan.FromSeconds(90));
 
         await Task.WhenAll([ready1, ready2]);
+
+        Assert.True(ready1.IsCompletedSuccessfully);
+        Assert.True(ready2.IsCompletedSuccessfully);
     }
 }
 
