@@ -97,7 +97,7 @@ public static class DbGateBuilderExtensions
     /// Environment variable names in Linux cannot contain hyphens, so they are replaced with underscores.
     /// This ensures that resource names like "mysql-db" become "mysql_db" when used in environment variable names.
     /// </remarks>
-    internal static string SanitizeConnectionId(string resourceName)
+    public static string SanitizeConnectionId(string resourceName)
     {
         ArgumentNullException.ThrowIfNull(resourceName);
         return resourceName.Replace('-', '_');
