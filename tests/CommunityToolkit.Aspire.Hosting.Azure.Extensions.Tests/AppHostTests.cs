@@ -1,3 +1,4 @@
+using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests;
