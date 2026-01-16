@@ -34,17 +34,11 @@ var turboApp2 = turbo.AddApp("app2", filter: "custom-filter");
 
 // Yarn workspace (package-manager native)
 var yarn = builder.AddYarnWorkspaceApp("yarn-workspace", workingDirectory: "../frontend", install: true);
-yarn.AddApp("yarn-web", workspaceName: "web")
-    .WithHttpEndpoint(env: "PORT")
-    .WithMappedEndpointPort()
-    .WithHttpHealthCheck();
+yarn.AddApp("yarn-web", workspaceName: "web");
 
 // pnpm workspace (package-manager native)
 var pnpm = builder.AddPnpmWorkspaceApp("pnpm-workspace", workingDirectory: "../frontend", install: true);
-pnpm.AddApp("pnpm-web", filter: "web")
-    .WithHttpEndpoint(env: "PORT")
-    .WithMappedEndpointPort()
-    .WithHttpHealthCheck();
+pnpm.AddApp("pnpm-web", filter: "web");
 ```
 
 See [MONOREPO.md](./MONOREPO.md) for detailed documentation on monorepo support.
