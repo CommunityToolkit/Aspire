@@ -235,4 +235,24 @@ public class ResourceCreationTests
         // Verify that the installer has ExplicitStartupAnnotation
         Assert.True(installerResource.HasAnnotationOfType<ExplicitStartupAnnotation>());
     }
+
+    [Fact]
+    public void GolangAppImplementsIContainerFilesDestinationResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGolangApp("golang", "../../examples/golang/gin-api");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<GolangAppExecutableResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+        Assert.IsAssignableFrom<IContainerFilesDestinationResource>(resource);
+
+        // Verify the default destination path
+        Assert.Equal("/app/static", resource.ContainerFilesDestination);
+    }
 }

@@ -318,31 +318,4 @@ public static class GolangAppHostingExtension
 
         return builder;
     }
-
-    /// <summary>
-    /// Configures the Golang application to publish with container files from a source path or resource.
-    /// The files will be copied to the specified destination path within the Golang container when published.
-    /// </summary>
-    /// <param name="builder">The Golang app resource builder.</param>
-    /// <param name="sourcePath">The source path containing files to copy into the container.</param>
-    /// <param name="destinationPath">The destination path within the container. If not specified, uses the default destination from the Golang resource ("/app/static").</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>
-    /// This method uses the <c>WithContainerFiles</c> extension method from Aspire.Hosting to copy files
-    /// from the source path into the Golang container during publishing.
-    /// </remarks>
-    public static IResourceBuilder<GolangAppExecutableResource> PublishWithContainerFiles(
-        this IResourceBuilder<GolangAppExecutableResource> builder,
-        string sourcePath,
-        string? destinationPath = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath, nameof(sourcePath));
-
-        // Use the provided destination path or fall back to the resource's default
-        var targetPath = destinationPath ?? builder.Resource.ContainerFilesDestination;
-
-        // Use WithContainerFiles to copy files from the source path to the destination
-        return builder.WithContainerFiles(targetPath, sourcePath);
-    }
 }
