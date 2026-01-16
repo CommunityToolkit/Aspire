@@ -29,6 +29,61 @@ To have the Golang application listen on the correct port, you can use the follo
 r.Run(":"+os.Getenv("PORT"))
 ```
 
+## Dependency Management
+
+The integration provides support for Go module dependency management using `go mod tidy` or `go mod download`.
+
+### Using `go mod tidy`
+
+To run `go mod tidy` before your application starts (to clean up and verify dependencies):
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy()
+    .WithHttpEndpoint(env: "PORT");
+```
+
+By default, `WithGoModTidy()` runs `go mod tidy` before the application starts (equivalent to `install: true`). You can set `install: false` to create the installer resource but require explicit start:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy(install: false)  // Installer created but requires explicit start
+    .WithHttpEndpoint(env: "PORT");
+```
+
+### Using `go mod download`
+
+To run `go mod download` before your application starts (to download dependencies without verification):
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModDownload()
+    .WithHttpEndpoint(env: "PORT");
+```
+
+Similarly, you can control the installer behavior:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModDownload(install: false)  // Installer created but requires explicit start
+    .WithHttpEndpoint(env: "PORT");
+```
+
+When `install` is `true` (default), the installer resource is created and the Go application waits for it to complete before starting. When `install` is `false`, the installer resource is still created but is set to require explicit start, appearing in the Aspire dashboard but not automatically executing.
+
+You can also customize the installer resource using the optional `configureInstaller` parameter:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy(configureInstaller: installer =>
+    {
+        installer.WithEnvironment("GOPROXY", "https://proxy.golang.org,direct");
+    })
+    .WithHttpEndpoint(env: "PORT");
+```
+
+> **Note:** The `WithGoModTidy` and `WithGoModDownload` methods only create installer resources in run mode (when the application is started locally). They do not run when publishing, as the generated Dockerfile handles dependency management automatically.
+
 ## Publishing
 
 When publishing your Aspire application, the Golang resource automatically generates a multi-stage Dockerfile for containerization. This means you don't need to manually create a Dockerfile for your Golang application.

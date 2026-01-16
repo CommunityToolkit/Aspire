@@ -25,6 +25,7 @@ jobs:
             Hosting.Azure.Dapr.Redis.Tests,
             Hosting.Azure.Dapr.Tests,
             Hosting.Azure.DataApiBuilder.Tests,
+            Hosting.Azure.Extensions.Tests,
             Hosting.Bun.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,

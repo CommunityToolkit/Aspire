@@ -54,6 +54,7 @@ This repository contains the source code for the Aspire Community Toolkit, a col
 | - **Learn More**: [`SurrealDb`][surrealdb-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields]][surrealdb-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.SurrealDb][surrealdb-client-shields-preview]][surrealdb-client-nuget-preview]                                                                                       | An Aspire client integration for the [SurrealDB](https://github.com/surrealdb/surrealdb.net/) package.                                                                      |
 | - **Learn More**: [`Hosting.Elasticsearch.Extensions`][elasticsearch-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields]][elasticsearch-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields-preview]][elasticsearch-ext-nuget-preview]      | An integration that contains some additional extensions for hosting Elasticsearch container.                                                                                |
 | - **Learn More**: [`Hosting.Umami`][umami-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields]][umami-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields-preview]][umami-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [Umami](https://umami.is/) container.                                                                                 |
+| - **Learn More**: [`Hosting.Azure.Extensions`][azure-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Azure.Extensions][azure-ext-shields]][azure-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Azure.Extensions][azure-ext-shields-preview]][azure-ext-nuget-preview]                                              | An integration that contains some additional extensions for hosting Azure container.                                                                                    |
 
 ## 🙌 Getting Started
 
@@ -286,3 +287,8 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [umami-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Umami/
 [umami-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Umami?label=nuget%20(preview)
 [umami-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Umami/absoluteLatest
+[azure-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-azure-extensions
+[azure-ext-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Azure.Extensions
+[azure-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Extensions/
+[azure-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.Extensions?label=nuget%20(preview)
+[azure-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Extensions/absoluteLatest
