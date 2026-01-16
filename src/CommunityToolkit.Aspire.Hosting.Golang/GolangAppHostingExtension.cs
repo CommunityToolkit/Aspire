@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel.Docker;
 using CommunityToolkit.Aspire.Utils;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -123,12 +124,14 @@ public static class GolangAppHostingExtension
                     .Run(string.Join(" ", ["CGO_ENABLED=0", "go", .. buildArgs]));
 
                 var runtimeImage = baseImageAnnotation?.RuntimeImage ?? $"alpine:{DefaultAlpineVersion}";
+                var logger = context.Services.GetService<ILogger<GolangAppExecutableResource>>() ?? NullLogger<GolangAppExecutableResource>.Instance;
 
                 context.Builder
                     .From(runtimeImage)
                     .Run("apk --no-cache add ca-certificates")
                     .WorkDir("/app")
                     .CopyFrom(buildStage.StageName!, "/build/server", "/app/server")
+                    .AddContainerFiles(context.Resource, "/app", logger)
                     .Entrypoint(["/app/server"]);
             });
         });
