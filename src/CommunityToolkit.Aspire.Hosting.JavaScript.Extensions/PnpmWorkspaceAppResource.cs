@@ -7,7 +7,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="workingDirectory">The working directory of the workspace.</param>
-/// <param name="filter">The pnpm filter to use when running the package.</param>
+/// <param name="filter">The pnpm filter to use when running the package. (used in pnpm --filter &lt;filter&gt; run &lt;script&gt;)</param>
 /// <param name="script">The package script to run.</param>
 /// <param name="command">The command to run (default is 'pnpm').</param>
 public class PnpmWorkspaceAppResource(string name, string workingDirectory, string filter, string script, string command = "pnpm")
