@@ -231,9 +231,8 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         Assert.True(collectorResource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
         Assert.NotNull(imageAnnotations);
         Assert.Equal("mytag", imageAnnotations.Tag);
-        Assert.Equal("myregistry.io/myorg/mycollector", imageAnnotations.Image);
-        // Registry is likely set to null/empty when the full path is provided as image
-        Assert.Null(imageAnnotations.Registry);
+        Assert.Equal("myorg/mycollector", imageAnnotations.Image);
+        Assert.Equal("myregistry.io", imageAnnotations.Registry);
     }
 
     [Fact]
