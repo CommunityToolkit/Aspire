@@ -26,8 +26,7 @@ Use the new monorepo-specific extension methods that create a shared package ins
 
 ```csharp
 var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
-    .WithYarn(install: true) // Single shared installer
-    .WithPackageManagerLaunch();
+    .WithYarnPackageInstaller();
 
 var app1 = nx.AddApp("app1");
 var app2 = nx.AddApp("app2", appName: "my-app-2"); // Custom app name for nx serve
@@ -38,8 +37,7 @@ var app3 = nx.AddApp("app3");
 
 ```csharp
 var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
-    .WithPnpm(install: true) // Single shared installer
-    .WithPackageManagerLaunch();
+    .WithPnpmPackageInstaller();
 
 var app1 = turbo.AddApp("app1");
 var app2 = turbo.AddApp("app2", filter: "custom-filter"); // Custom filter
@@ -60,8 +58,10 @@ pnpm.AddApp("pnpm-web", filter: "web"); // Runs: pnpm --filter web run dev
 
 ## Package Managers
 
--   `.WithYarn()` / `.AddYarnWorkspaceApp()` - uses yarn
--   `.WithPnpm()` / `.AddPnpmWorkspaceApp()` - uses pnpm
+Both Nx and Turborepo support yarn and pnpm package managers:
+
+-   `.WithYarnPackageInstaller()` - uses yarn
+-   `.WithPnpmPackageInstaller()` - uses pnpm
 
 > **Note**: npm support (`AddNpmApp`, `WithNpmPackageInstallation`) is now provided by [Aspire.Hosting.JavaScript](https://www.nuget.org/packages/Aspire.Hosting.JavaScript) starting with Aspire 13.
 
@@ -72,12 +72,12 @@ Use `WithPackageManagerLaunch()` to configure which package manager command is u
 ```csharp
 // Auto-infer from package installer annotation
 var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
-    .WithYarn()
+    .WithYarnPackageInstaller()
     .WithPackageManagerLaunch(); // Will use 'yarn' command
 
 // Explicitly specify package manager (independent of installer)
 var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
-    .WithPnpm()
+    .WithPnpmPackageInstaller()
     .WithPackageManagerLaunch("yarn"); // Uses 'yarn' despite pnpm installer
 
 // Without WithPackageManagerLaunch - uses default commands
@@ -130,7 +130,7 @@ You can migrate to:
 ```csharp
 // New monorepo approach
 var nx = builder.AddNxApp("nx", workingDirectory: "./Frontend")
-    .WithYarn()
+    .WithYarnPackageInstaller()
     .WithPackageManagerLaunch(); // Configure package manager for app execution
 
 var app1 = nx.AddApp("app-1", appName: "app1");
@@ -151,7 +151,7 @@ It's important to understand the difference between package installation and app
 
 ```csharp
 var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
-    .WithPnpm(install: true)       // Install packages with: pnpm install
+    .WithPnpmPackageInstaller()       // Install packages with: pnpm install
     .WithPackageManagerLaunch("yarn");   // Run apps with: yarn nx serve app1
 
 // This is valid - you can install with pnpm but run apps with yarn
