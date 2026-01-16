@@ -3,7 +3,7 @@ using Aspire.Hosting.JavaScript;
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// A resource that represents a Node.js application running from a pnpm workspace package.
+/// A resource that represents a JavaScript application running from a pnpm workspace package.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="workingDirectory">The working directory of the workspace.</param>
