@@ -255,4 +255,25 @@ public class ResourceCreationTests
         // Verify the default destination path
         Assert.Equal("/app/static", resource.ContainerFilesDestination);
     }
+
+    [Fact]
+    public void GolangAppWithContainerFilesInterfaceSupportsPublishing()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var golang = builder.AddGolangApp("golang", "../../examples/golang/gin-api");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GolangAppExecutableResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+
+        // Verify the resource implements IContainerFilesDestinationResource
+        Assert.IsAssignableFrom<IContainerFilesDestinationResource>(resource);
+
+        // Verify the default destination path is set correctly
+        Assert.Equal("/app/static", resource.ContainerFilesDestination);
+    }
 }
