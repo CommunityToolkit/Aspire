@@ -49,11 +49,16 @@ var app3 = turbo.AddApp("app3");
 For projects that already use yarn or pnpm workspaces without Nx/Turbo, you can still get a shared installer and per-app execution helpers:
 
 ```csharp
-var yarn = builder.AddYarnWorkspaceApp("yarn-workspace", workingDirectory: "../frontend");
-yarn.AddApp("yarn-web", workspaceName: "web"); // Runs: yarn workspace web run dev
+var yarn = builder.AddYarnWorkspaceApp("yarn-workspace", workingDirectory: "../frontend"); // Single shared installer
 
-var pnpm = builder.AddPnpmWorkspaceApp("pnpm-workspace", workingDirectory: "../frontend");
-pnpm.AddApp("pnpm-web", filter: "web"); // Runs: pnpm --filter web run dev
+var app1 = yarn.AddApp("app1"); // Runs: yarn workspace app1 run dev
+var app2 = yarn.AddApp("app2", workspaceName: "custom-name"); // Custom workspace name. Runs: yarn workspace custom-name run dev
+
+var pnpm = builder.AddPnpmWorkspaceApp("pnpm-workspace", workingDirectory: "../frontend"); // Single shared installer
+
+var app1 = pnpm.AddApp("app1"); // Runs: pnpm --filter app1 run dev
+
+var app2 = pnpm.AddApp("app2", filter: "custom-filter"); // Custom filter. Runs: pnpm --filter custom-filter run dev
 ```
 
 ## Package Managers
