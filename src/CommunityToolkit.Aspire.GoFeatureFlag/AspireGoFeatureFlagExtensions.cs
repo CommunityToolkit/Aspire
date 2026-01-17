@@ -7,7 +7,7 @@ using HealthChecks.Uris;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using OpenFeature.Contrib.Providers.GOFeatureFlag;
+using OpenFeature.Providers.GOFeatureFlag;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -23,7 +23,7 @@ public static class AspireGoFeatureFlagExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="connectionName">The connection name to use to find a connection string.</param>
-    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="GoFeatureFlagProviderOptions"/>. It's invoked after the settings are read from the configuration.</param>
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="GOFeatureFlagProviderOptions"/>. It's invoked after the settings are read from the configuration.</param>
     /// <remarks>Reads the configuration from "Aspire:GoFeatureFlag:Client" section.</remarks>
     /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section</exception>
     public static void AddGoFeatureFlagClient(
@@ -41,7 +41,7 @@ public static class AspireGoFeatureFlagExtensions
     /// </summary>
     /// <param name="builder">The <see cref="IHostApplicationBuilder" /> to read config from and add services to.</param>
     /// <param name="name">The connection name to use to find a connection string.</param>
-    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="GoFeatureFlagProviderOptions"/>. It's invoked after the settings are read from the configuration.</param>
+    /// <param name="configureSettings">An optional method that can be used for customizing the <see cref="GOFeatureFlagProviderOptions"/>. It's invoked after the settings are read from the configuration.</param>
     /// <remarks>Reads the configuration from "Aspire:GoFeatureFlag:Client" section.</remarks>
     /// <exception cref="InvalidOperationException">If required ConnectionString is not provided in configuration section</exception>
     public static void AddKeyedGoFeatureFlagClient(
@@ -105,11 +105,11 @@ public static class AspireGoFeatureFlagExtensions
                 ));
         }
 
-        GoFeatureFlagProvider ConfigureGoFeatureFlagClient(GoFeatureFlagProviderOptions options)
+        GOFeatureFlagProvider ConfigureGoFeatureFlagClient(GOFeatureFlagProviderOptions options)
         {
             if (settings.Endpoint is not null)
             {
-                return new GoFeatureFlagProvider(options);
+                return new GOFeatureFlagProvider(options);
             }
             
             throw new InvalidOperationException(
