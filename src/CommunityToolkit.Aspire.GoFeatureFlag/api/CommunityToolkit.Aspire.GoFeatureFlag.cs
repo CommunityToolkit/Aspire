@@ -16,7 +16,7 @@ namespace CommunityToolkit.Aspire.GoFeatureFlag
 
         public int? HealthCheckTimeout { get { throw null; } set { } }
 
-        public OpenFeature.Contrib.Providers.GOFeatureFlag.GoFeatureFlagProviderOptions ProviderOptions { get { throw null; } set { } }
+        public OpenFeature.Providers.GOFeatureFlag.GoFeatureFlagProviderOptions ProviderOptions { get { throw null; } set { } }
     }
 }
 

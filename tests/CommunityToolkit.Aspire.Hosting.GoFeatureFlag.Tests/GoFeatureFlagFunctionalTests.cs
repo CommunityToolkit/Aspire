@@ -7,7 +7,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Xunit.Abstractions;
 using Aspire.Hosting.Utils;
-using OpenFeature.Contrib.Providers.GOFeatureFlag;
+using OpenFeature.Providers.GOFeatureFlag;
 using OpenFeature.Model;
 
 namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
@@ -16,7 +16,7 @@ namespace CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests;
 public class GoFeatureFlagFunctionalTests(ITestOutputHelper testOutputHelper)
 {
     private static readonly string SOURCE = Path.GetFullPath("./goff", Directory.GetCurrentDirectory());
-    
+
     [Fact]
     public async Task VerifyGoFeatureFlagResource()
     {
@@ -32,7 +32,7 @@ public class GoFeatureFlagFunctionalTests(ITestOutputHelper testOutputHelper)
         var rns = app.Services.GetRequiredService<ResourceNotificationService>();
 
         await rns.WaitForResourceHealthyAsync(goff.Resource.Name);
-        
+
         var hb = Host.CreateApplicationBuilder();
 
         hb.Configuration[$"ConnectionStrings:{goff.Resource.Name}"] = await goff.Resource.ConnectionStringExpression.GetValueAsync(default);
@@ -43,7 +43,7 @@ public class GoFeatureFlagFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await host.StartAsync();
 
-        var goFeatureFlagProvider = host.Services.GetRequiredService<GoFeatureFlagProvider>();
+        var goFeatureFlagProvider = host.Services.GetRequiredService<GOFeatureFlagProvider>();
 
         await VerifyTestData(goFeatureFlagProvider);
     }
@@ -89,7 +89,7 @@ public class GoFeatureFlagFunctionalTests(ITestOutputHelper testOutputHelper)
         await app.StopAsync();
     }
 
-    private static async Task VerifyTestData(GoFeatureFlagProvider goFeatureFlagProvider)
+    private static async Task VerifyTestData(GOFeatureFlagProvider goFeatureFlagProvider)
     {
         var userContext = EvaluationContext.Builder()
             .Set("targetingKey", Guid.NewGuid().ToString())

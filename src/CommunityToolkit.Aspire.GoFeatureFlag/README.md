@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.GoFeatureFlag
 
-Registers a [GoFeatureFlagProvider](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Contrib.Providers.GOFeatureFlag) in the DI container for connecting to a GO Feature Flag instance.
+Registers a [GoFeatureFlagProvider](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Providers.GOFeatureFlag) in the DI container for connecting to a GO Feature Flag instance.
 
 ## Getting started
 
