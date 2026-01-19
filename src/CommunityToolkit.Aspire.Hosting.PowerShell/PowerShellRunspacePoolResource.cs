@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Management.Automation;
@@ -37,7 +38,7 @@ public class PowerShellRunspacePoolResource(
     /// </summary>
     public RunspacePool? Pool { get; private set; }
 
-    internal Task StartAsync(InitialSessionState sessionState, ResourceNotificationService notificationService, ILogger logger, CancellationToken token = default)
+    internal Task StartAsync(InitialSessionState sessionState, ResourceNotificationService notificationService, ILogger logger, IHostApplicationLifetime hostLifetime, CancellationToken token = default)
     {
         logger.LogInformation(
             "Starting PowerShell runspace pool '{PoolName}' with {MinRunspaces} to {MaxRunspaces} runspaces",
@@ -48,6 +49,13 @@ public class PowerShellRunspacePoolResource(
         Pool = RunspaceFactory.CreateRunspacePool(MinRunspaces, MaxRunspaces, sessionState, new AspirePSHost(logger));
 
         ConfigureStateChangeNotifications(notificationService, logger);
+        
+        hostLifetime.ApplicationStopping.Register(() =>
+        {
+            // if we don't do this, xunit 3 will hang on exit because of open runspaces (foreground threads)
+            logger.LogInformation("Closing PowerShell runspace pool '{PoolName}'", Name);
+            Pool?.Close();
+        });
 
         return Task.Factory.FromAsync(Pool.BeginOpen, Pool.EndOpen, null);
     }
