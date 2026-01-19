@@ -94,8 +94,15 @@ public static class DbGateBuilderExtensions
     /// <param name="resourceName">The resource name to sanitize.</param>
     /// <returns>A sanitized connection ID safe for use in environment variable names.</returns>
     /// <remarks>
-    /// Environment variable names in Linux cannot contain hyphens, so they are replaced with underscores.
-    /// This ensures that resource names like "mysql-db" become "mysql_db" when used in environment variable names.
+    /// <para>
+    /// Environment variable names in Linux can only contain letters, numbers, and underscores, and cannot start with a number.
+    /// This method sanitizes resource names by replacing invalid characters with underscores.
+    /// </para>
+    /// <para>
+    /// Currently, only hyphens are replaced with underscores, as they are the most common invalid character in resource names.
+    /// Other invalid characters (e.g., dots, spaces, special characters) are not currently handled and may cause issues.
+    /// Resource names should follow standard naming conventions to avoid such characters.
+    /// </para>
     /// </remarks>
     public static string SanitizeConnectionId(string resourceName)
     {
