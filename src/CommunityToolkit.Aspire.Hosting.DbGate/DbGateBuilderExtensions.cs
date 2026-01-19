@@ -96,11 +96,11 @@ public static class DbGateBuilderExtensions
     /// <remarks>
     /// <para>
     /// Environment variable names in Linux can only contain letters, numbers, and underscores, and cannot start with a number.
-    /// This method sanitizes resource names by replacing invalid characters with underscores.
+    /// This method performs basic sanitization by replacing hyphens with underscores.
     /// </para>
     /// <para>
     /// Currently, only hyphens are replaced with underscores, as they are the most common invalid character in resource names.
-    /// Other invalid characters (e.g., dots, spaces, special characters) are not currently handled and may cause issues.
+    /// Other constraints (e.g., numeric prefixes, dots, spaces, special characters) are not enforced by this method.
     /// Resource names should follow standard naming conventions to avoid such characters.
     /// </para>
     /// </remarks>
