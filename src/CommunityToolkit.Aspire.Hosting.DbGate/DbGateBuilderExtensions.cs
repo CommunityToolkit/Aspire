@@ -95,13 +95,13 @@ public static class DbGateBuilderExtensions
     /// <returns>A sanitized connection ID safe for use in environment variable names.</returns>
     /// <remarks>
     /// <para>
-    /// Environment variable names in Linux can only contain letters, numbers, and underscores, and cannot start with a number.
-    /// This method performs basic sanitization by replacing hyphens with underscores.
+    /// This method performs basic sanitization by replacing hyphens with underscores, as hyphens are not valid
+    /// in Linux environment variable names.
     /// </para>
     /// <para>
-    /// Currently, only hyphens are replaced with underscores, as they are the most common invalid character in resource names.
-    /// Other constraints (e.g., numeric prefixes, dots, spaces, special characters) are not enforced by this method.
-    /// Resource names should follow standard naming conventions to avoid such characters.
+    /// Note: Linux environment variable names have additional constraints (must contain only letters, numbers, and underscores,
+    /// and cannot start with a number). This method does not validate or enforce these additional constraints.
+    /// Resource names should follow standard naming conventions to ensure compatibility.
     /// </para>
     /// </remarks>
     public static string SanitizeConnectionId(string resourceName)
