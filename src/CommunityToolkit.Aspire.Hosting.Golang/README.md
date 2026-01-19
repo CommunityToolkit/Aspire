@@ -107,6 +107,22 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
         runtimeImage: "alpine:3.20");
 ```
 
+### Container Files Support
+
+The Golang resource supports copying files from other resources into the container during publishing. This is useful for serving static frontend files from your Go application. The resource implements `IContainerFilesDestinationResource` with a default destination of `/app/static`.
+
+To copy files from another resource (such as a frontend build) into your Golang container, use the `WithContainerFiles` method:
+
+```csharp
+var frontend = builder.AddViteApp("frontend", "./frontend");
+
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithHttpEndpoint(env: "PORT")
+    .WithContainerFiles("/app/static", frontend.Resource);
+```
+
+This will copy the output files from the `frontend` resource into the `/app/static` directory in the Golang container when publishing. Note: `WithContainerFiles` is provided by the Aspire framework when the resource implements `IContainerFilesDestinationResource` and may require additional using directives (for example, `using Aspire.Hosting;`).
+
 ### Generated Dockerfile
 
 The automatically generated Dockerfile:
