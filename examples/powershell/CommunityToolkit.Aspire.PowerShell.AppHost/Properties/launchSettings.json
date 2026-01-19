@@ -7,6 +7,7 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:17118;http://localhost:15215",
       "environmentVariables": {
+        "DCP_DIAGNOSTICS_LOG_LEVEL": "debug",
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_ENVIRONMENT": "Development",
         "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21165",

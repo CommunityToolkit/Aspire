@@ -2,7 +2,13 @@ using CommunityToolkit.Aspire.Hosting.PowerShell;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var storage = builder.AddAzureStorage("storage").RunAsEmulator();
+var storage = builder.AddAzureStorage("storage")
+    // see: https://github.com/dotnet/aspire/issues/13811
+    .RunAsEmulator(azurite =>
+    {
+        azurite.WithArgs("--disableProductStyleUrl");
+    });
+
 var blob = storage.AddBlobs("myblob");
 
 var ps = builder.AddPowerShell("ps")
@@ -56,6 +62,7 @@ var script2 = ps.AddScript("script2", """
     """)
     .WithArgs(2, 3)
     .WaitForCompletion(script1);
+
 
 builder.Build().Run();
 

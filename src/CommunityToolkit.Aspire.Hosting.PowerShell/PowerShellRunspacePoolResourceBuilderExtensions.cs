@@ -3,7 +3,6 @@ using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.Management.Automation;
 
 namespace CommunityToolkit.Aspire.Hosting.PowerShell;
@@ -33,53 +32,7 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
 
         var scriptResource = new PowerShellScriptResource(name, scriptBlock, builder.Resource);
 
-        builder.ApplicationBuilder.Eventing.Subscribe<InitializeResourceEvent>(scriptResource, async (e, ct) =>
-        {
-            var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
-            var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
-
-            var scriptName = scriptResource.Name;
-            var scriptLogger = loggerService.GetLogger(scriptName);
-
-            try
-            {
-                // this will block until the runspace pool is started, which is implied by the WaitFor call
-                await builder.ApplicationBuilder.Eventing.PublishAsync(
-                    new BeforeResourceStartedEvent(scriptResource, e.Services), ct);
-
-                scriptLogger.LogInformation("Starting script '{ScriptName}'", scriptName);
-
-                _ = scriptResource.StartAsync(scriptLogger, notificationService, ct);
-
-                await notificationService.WaitForResourceAsync(scriptResource.Name, KnownResourceStates.Finished, ct);
-
-                ((IDisposable)scriptResource).Dispose();
-
-                builder.Resource.ScriptResourceCompleted(scriptResource);
-
-                if (builder.Resource.ScriptsCompleted)
-                {
-                    await notificationService.PublishUpdateAsync(builder.Resource, state => state with
-                    {
-                        State = KnownResourceStates.Finished,
-                        Properties = [
-                        .. state.Properties,
-                    ],
-                        StopTimeStamp = DateTime.Now,
-                    });
-
-                    ((IDisposable)builder.Resource).Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                scriptLogger.LogError(ex, "Failed to start script '{ScriptName}'", scriptName);
-            }
-        });
-
-        builder.Resource.AddScriptResource(scriptResource);
-
-        return builder.ApplicationBuilder
+        var scriptBuilder = builder.ApplicationBuilder
             .AddResource(scriptResource)
             .WithParentRelationship(builder.Resource)
             .WaitFor(builder)
@@ -111,6 +64,32 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
                         ResourceCommandState.Disabled :
                         ResourceCommandState.Enabled
             });
+
+        scriptBuilder.OnInitializeResource(async (res, e, ct) =>
+        {
+            var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
+            var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
+
+            var scriptName = res.Name;
+            var scriptLogger = loggerService.GetLogger(scriptName);
+
+            try
+            {
+                // this will block until the runspace pool is started, which is implied by the WaitFor call
+                await builder.ApplicationBuilder.Eventing.PublishAsync(
+                    new BeforeResourceStartedEvent(res, e.Services), ct);
+
+                scriptLogger.LogInformation("Starting script '{ScriptName}'", scriptName);
+
+                _ = res.StartAsync(scriptLogger, notificationService, ct);
+            }
+            catch (Exception ex)
+            {
+                scriptLogger.LogError(ex, "Failed to start script '{ScriptName}'", scriptName);
+            }
+        });
+
+        return scriptBuilder;
     }
 
     /// <summary>
