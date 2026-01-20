@@ -186,7 +186,7 @@
     <Project Path="examples\umami\CommunityToolkit.Aspire.Hosting.Umami.AppHost\CommunityToolkit.Aspire.Hosting.Umami.AppHost.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="CommunityToolkit.Aspire.Hosting.Supabase/CommunityToolkit.Aspire.Hosting.Supabase.csproj" Id="6ec212bc-5d0a-48a4-a27f-c20d388f0875" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Supabase/CommunityToolkit.Aspire.Hosting.Supabase.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
