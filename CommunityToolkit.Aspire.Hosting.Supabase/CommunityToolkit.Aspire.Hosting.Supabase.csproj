@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting a complete supabase stack integration</AdditionalPackageTags>
+    <Description>A complete Supabase stack integration for .NET Aspire, providing local development with full Supabase functionality including PostgreSQL, Auth (GoTrue), REST API (PostgREST), Storage, Kong API Gateway, Studio Dashboard, and Edge Functions.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+</Project>
