@@ -63,6 +63,7 @@ jobs:
             Hosting.Sqlite.Tests,
             Hosting.SqlServer.Extensions.Tests,
             Hosting.Stripe.Tests,
+            Hosting.Supabase.Tests,
             Hosting.SurrealDb.Tests,
             Hosting.Umami.Tests,
 

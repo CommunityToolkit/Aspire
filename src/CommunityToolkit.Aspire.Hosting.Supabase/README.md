@@ -457,8 +457,3 @@ builder.Build().Run();
 2. For full schema sync, ensure the database password is provided
 3. Check the console output for specific sync errors
 
----
-
-## License
-
-This Supabase Aspire integration is part of the MandateManager project.
