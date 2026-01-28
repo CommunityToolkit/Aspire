@@ -9,6 +9,6 @@ internal static class GoFeatureFlagContainerImageTags
     public const string Registry = "docker.io";
     /// <summary>gofeatureflag/go-feature-flag</summary>
     public const string Image = "gofeatureflag/go-feature-flag";
-    /// <summary>v1.41</summary>
-    public const string Tag = "v1.41";
+    /// <summary>v1.50</summary>
+    public const string Tag = "v1.50";
 }
