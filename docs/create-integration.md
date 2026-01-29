@@ -2,7 +2,7 @@
 
 So, you want to create a new integration for the Aspire Community Toolkit? That's awesome! This guide will walk you through the process of creating a new integration.
 
-First up, make sure you've had a read of the [Contributing guide](../CONTRIBUTING.md) to understand the contribution guidelines, and then familiarise yourself with creating a custom Aspire integration for [hosting](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-hosting-integration?tabs=windows) or for [clients](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-client-integration).
+First up, make sure you've had a read of the [Contributing guide](../CONTRIBUTING.md) to understand the contribution guidelines, and then familiarise yourself with creating a custom Aspire integration for [hosting](https://aspire.dev/integrations/custom-integrations/hosting-integrations/) or for [clients](https://aspire.dev/integrations/custom-integrations/client-integrations/).
 
 ## 📂 Repository Structure
 
