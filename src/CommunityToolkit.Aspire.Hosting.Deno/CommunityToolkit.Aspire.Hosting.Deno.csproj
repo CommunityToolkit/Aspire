@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting deno</AdditionalPackageTags>
-    <Description>A .NET Aspire for hosting Deno apps.</Description>
+    <Description>An Aspire for hosting Deno apps.</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,9 +1,9 @@
 # CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis library
 
-This package provides [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) integration for Azure Redis as a Dapr component. It allows you to configure dapr state to use Azure Redis as part of your .NET Aspire AppHost projects. 
+This package provides [Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) integration for Azure Redis as a Dapr component. It allows you to configure dapr state to use Azure Redis as part of your Aspire AppHost projects. 
 
 ## Usage
-To use this package, install it into your .NET Aspire AppHost project:
+To use this package, install it into your Aspire AppHost project:
 
 ```bash
 dotnet add package CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis

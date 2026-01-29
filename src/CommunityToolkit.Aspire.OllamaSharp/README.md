@@ -10,7 +10,7 @@ Registers `IOllamaApiClient` in the DI container to interact with the [Ollama](h
 
 ### Install the package
 
-Install the .NET Aspire OllamaSharp library using the following command:
+Install the Aspire OllamaSharp library using the following command:
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.OllamaSharp

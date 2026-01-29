@@ -1,15 +1,15 @@
 # CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects library
-This package provides [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) integration for SQL Server Database Projects. It allows you to publish SQL Database Projects as part of your .NET Aspire AppHost projects. It currently works with both [MSBuild.Sdk.SqlProj](https://github.com/rr-wfm/MSBuild.Sdk.SqlProj) and [Microsoft.Build.Sql](https://github.com/microsoft/DacFx) based projects.
+This package provides [Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) integration for SQL Server Database Projects. It allows you to publish SQL Database Projects as part of your Aspire AppHost projects. It currently works with both [MSBuild.Sdk.SqlProj](https://github.com/rr-wfm/MSBuild.Sdk.SqlProj) and [Microsoft.Build.Sql](https://github.com/microsoft/DacFx) based projects.
 
 ## Usage
 
-To use this package, install it into your .NET Aspire AppHost project:
+To use this package, install it into your Aspire AppHost project:
 
 ```bash
 dotnet add package CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects
 ```
 
-Next, add a reference to the MSBuild.Sdk.SqlProj or Microsoft.Build.Sql project you want to publish in your .NET Aspire AppHost project:
+Next, add a reference to the MSBuild.Sdk.SqlProj or Microsoft.Build.Sql project you want to publish in your Aspire AppHost project:
 
 ```bash
 dotnet add reference ../MySqlProj/MySqlProj.csproj
@@ -17,7 +17,7 @@ dotnet add reference ../MySqlProj/MySqlProj.csproj
 
 > Note: Adding this reference will currently result in warning ASPIRE004. This is a known issue and will be resolved in a future release.
 
-Finally add the project as a resource to your .NET Aspire AppHost:
+Finally add the project as a resource to your Aspire AppHost:
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
@@ -31,7 +31,7 @@ builder.AddSqlProject<Projects.MySqlProj>("mysqlproj")
 builder.Build().Run();
 ```
 
-Now when you run your .NET Aspire AppHost project you will see the SQL Database Project being published to the specified SQL Server.
+Now when you run your Aspire AppHost project you will see the SQL Database Project being published to the specified SQL Server.
 
 ## Local .dacpac file support
 
@@ -85,7 +85,7 @@ builder.Build().Run();
 
 ## Ability to skip deployment
 
-You can use the `WithSkipWhenDeployed` method to avoid re-deploying your SQL Database Project if no changes have been made. This is useful in scenarios where the SQL container database is persisted to permanent disk and will significantly improve the .NET Aspire AppHost project startup time.
+You can use the `WithSkipWhenDeployed` method to avoid re-deploying your SQL Database Project if no changes have been made. This is useful in scenarios where the SQL container database is persisted to permanent disk and will significantly improve the Aspire AppHost project startup time.
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);

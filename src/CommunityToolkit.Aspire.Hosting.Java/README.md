@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Java library
 
-Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Java/Spring applications either using either the JDK or a container and configuring the OpenTelemetry agent for Java.
+Provides extensions methods and resource definitions for the Aspire AppHost to support running Java/Spring applications either using either the JDK or a container and configuring the OpenTelemetry agent for Java.
 
 ## Getting Started
 

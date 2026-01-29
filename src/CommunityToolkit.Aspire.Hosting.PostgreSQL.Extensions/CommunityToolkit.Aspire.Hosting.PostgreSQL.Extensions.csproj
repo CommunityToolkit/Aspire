@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting postgres dbgate</AdditionalPackageTags>
-    <Description>A .NET Aspire integration for extending postgres hosting.</Description>
+    <Description>An Aspire integration for extending postgres hosting.</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Sqlite library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support creating and running SQLite databases.
+Provides extension methods and resource definitions for the Aspire AppHost to support creating and running SQLite databases.
 
 The integration also provides support for running [SQLite Web](https://github.com/coleifer/sqlite-web) to interact with the SQLite database.
 

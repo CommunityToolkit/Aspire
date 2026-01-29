@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting azure extensions</AdditionalPackageTags>
-    <Description>Azure extensions support for .NET Aspire.</Description>
+    <Description>Azure extensions support for Aspire.</Description>
   </PropertyGroup>
 
   <ItemGroup>

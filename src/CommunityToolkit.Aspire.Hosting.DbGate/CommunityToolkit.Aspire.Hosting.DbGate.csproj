@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting dbgate</AdditionalPackageTags>
-    <Description>A .NET Aspire integration for dbgate hosting.</Description>
+    <Description>An Aspire integration for dbgate hosting.</Description>
   </PropertyGroup>
 
   <ItemGroup>

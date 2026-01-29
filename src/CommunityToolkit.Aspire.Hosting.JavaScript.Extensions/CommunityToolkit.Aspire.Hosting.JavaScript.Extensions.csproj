@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting nodejs vite yarn pnpm npm</AdditionalPackageTags>
-    <Description>A .NET Aspire for hosting NodeJS apps using Vite, Yarn, PNPM, or NPM.</Description>
+    <Description>An Aspire for hosting NodeJS apps using Vite, Yarn, PNPM, or NPM.</Description>
   </PropertyGroup>
 
   <ItemGroup>

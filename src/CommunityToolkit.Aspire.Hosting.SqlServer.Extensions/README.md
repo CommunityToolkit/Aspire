@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.SqlServer.Extensions library
 
-This integration contains extensions for the [SqlServer hosting package](https://nuget.org/packages/Aspire.Hosting.SqlServer) for .NET Aspire.
+This integration contains extensions for the [SqlServer hosting package](https://nuget.org/packages/Aspire.Hosting.SqlServer) for Aspire.
 
 The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) and [Adminer](https://github.com/vrana/adminer) to interact with the SqlServer database.
 

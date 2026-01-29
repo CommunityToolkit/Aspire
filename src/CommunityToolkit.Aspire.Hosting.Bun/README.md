@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Bun library
 
-Provides extension methods and resource definitions for a .NET Aspire AppHost to configure a Bun project.
+Provides extension methods and resource definitions for an Aspire AppHost to configure a Bun project.
 
 ## Getting Started
 

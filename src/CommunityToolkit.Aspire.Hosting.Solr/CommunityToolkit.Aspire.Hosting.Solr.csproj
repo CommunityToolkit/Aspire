@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>A .NET Aspire hosting integration for Apache Solr.</Description>
+    <Description>An Aspire hosting integration for Apache Solr.</Description>
     <PackageTags>solr search hosting</PackageTags>
   </PropertyGroup>
   <ItemGroup>

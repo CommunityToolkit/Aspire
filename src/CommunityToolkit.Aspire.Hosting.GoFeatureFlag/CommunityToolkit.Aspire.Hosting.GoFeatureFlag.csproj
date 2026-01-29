@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting gofeatureflag</AdditionalPackageTags>
-    <Description>GO Feature Flag support for .NET Aspire.</Description>
+    <Description>GO Feature Flag support for Aspire.</Description>
   </PropertyGroup>
 
   <ItemGroup>

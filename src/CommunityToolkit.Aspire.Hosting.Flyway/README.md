@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Flyway
 
-A .NET Aspire hosting integration for [Flyway](https://flywaydb.org/), a database migration tool that helps manage and automate database schema changes.
+An Aspire hosting integration for [Flyway](https://flywaydb.org/), a database migration tool that helps manage and automate database schema changes.
 
 > This integration is meant to be used in conjunction with a database resource, such as PostgreSQL, and the Flyway extension built for that database resource.
 > It is also meant to be used by integration developers who want to add Flyway support to more database resources.

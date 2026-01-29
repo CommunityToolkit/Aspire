@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration runs [Data API builder](https://aka.ms/dab/docs) in a container. Data API builder generates secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB. 
+This Aspire Integration runs [Data API builder](https://aka.ms/dab/docs) in a container. Data API builder generates secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB. 
 
 ## Usage
 
@@ -151,4 +151,4 @@ For more information about Data API builder telemetry, see the [official documen
 
 ## Known Issues
 
-The current imlpementation of the Data API builder .NET Aspire integration does not support HTTPS endpoints. However, this is only a dev-time consideration. Service discovery when published can use HTTPS without any problems.
+The current imlpementation of the Data API builder Aspire integration does not support HTTPS endpoints. However, this is only a dev-time consideration. Service discovery when published can use HTTPS without any problems.

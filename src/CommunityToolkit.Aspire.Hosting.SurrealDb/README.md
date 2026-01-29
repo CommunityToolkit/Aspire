@@ -1,12 +1,12 @@
 # CommunityToolkit.Aspire.Hosting.SurrealDb library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [SurrealDB](https://surrealdb.com/) containers.
+Provides extension methods and resource definitions for the Aspire AppHost to support running [SurrealDB](https://surrealdb.com/) containers.
 
 ## Getting started
 
 ### Install the package
 
-In your AppHost project, install the .NET Aspire SurrealDB Hosting library with [NuGet](https://www.nuget.org):
+In your AppHost project, install the Aspire SurrealDB Hosting library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Hosting.SurrealDb

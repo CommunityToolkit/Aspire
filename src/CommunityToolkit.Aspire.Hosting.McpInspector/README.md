@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.McpInspector library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support adding an MCP Inspector resource. The MCP Inspector enables inspection and debugging of MCP (Model Context Protocol) servers, with support for multiple server configurations and transport types.
+Provides extension methods and resource definitions for the Aspire AppHost to support adding an MCP Inspector resource. The MCP Inspector enables inspection and debugging of MCP (Model Context Protocol) servers, with support for multiple server configurations and transport types.
 
 ## Getting Started
 

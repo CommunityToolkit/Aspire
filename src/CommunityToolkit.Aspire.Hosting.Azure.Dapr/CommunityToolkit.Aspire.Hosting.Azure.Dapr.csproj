@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>aspire integration hosting dapr azure</AdditionalPackageTags>
-    <Description>Azure Dapr support for .NET Aspire.</Description>
+    <Description>Azure Dapr support for Aspire.</Description>
     <IsPreview>true</IsPreview>
   </PropertyGroup>
 

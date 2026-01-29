@@ -2,7 +2,7 @@
 
 So, you want to create a new integration for the Aspire Community Toolkit? That's awesome! This guide will walk you through the process of creating a new integration.
 
-First up, make sure you've had a read of the [Contributing guide](../CONTRIBUTING.md) to understand the contribution guidelines, and then familiarise yourself with creating a custom .NET Aspire integration for [hosting](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-hosting-integration?tabs=windows) or for [clients](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-client-integration).
+First up, make sure you've had a read of the [Contributing guide](../CONTRIBUTING.md) to understand the contribution guidelines, and then familiarise yourself with creating a custom Aspire integration for [hosting](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-hosting-integration?tabs=windows) or for [clients](https://learn.microsoft.com/dotnet/aspire/extensibility/custom-client-integration).
 
 ## 📂 Repository Structure
 
@@ -18,7 +18,7 @@ Be sure to read through the [Setting up your Development Environment](./setup.md
 
 ## 🚀 Getting Started
 
-To create a new integration, you'll need to create a new project in the `src/` directory. The project needs to be prefixed with `CommunityToolkit.Aspire.` and should be named after the integration you're creating, using the naming guidelines from the .NET Aspire team. For example, if you're creating a **Hosting** integration, then the project name should be `CommunityToolkit.Aspire.Hosting.MyIntegration`, whereas if you're creating a **Client** integration, then the project name should be `CommunityToolkit.Aspire.MyIntegration`.
+To create a new integration, you'll need to create a new project in the `src/` directory. The project needs to be prefixed with `CommunityToolkit.Aspire.` and should be named after the integration you're creating, using the naming guidelines from the Aspire team. For example, if you're creating a **Hosting** integration, then the project name should be `CommunityToolkit.Aspire.Hosting.MyIntegration`, whereas if you're creating a **Client** integration, then the project name should be `CommunityToolkit.Aspire.MyIntegration`.
 
 > Note: All integration packages will have the `Aspire.Hosting` NuGet package added as a dependency, as well as some standard MSBuild properties. You can see what is pre-configured in the `Directory.Build.props` file.
 
@@ -95,7 +95,7 @@ GitHub Actions Windows runners do not support Linux container images, so if your
 
 #### Waiting for the resource to start
 
-If the resource your integration exposes does not integrate into the .NET Aspire health check model, you may need to parse its logs to determine when it is ready to accept requests. To do this, use the `WaitForTextAsync` extension method on the `DistributionApplication` object to wait for a specific message to appear in the logs. Do note that this method is marked with `CTASPIRE001` so you will need to disable that warning where you use it. You can learn more about `CTASPIRE001` in the [Diagnostics documentation](./diagnostics.md).
+If the resource your integration exposes does not integrate into the Aspire health check model, you may need to parse its logs to determine when it is ready to accept requests. To do this, use the `WaitForTextAsync` extension method on the `DistributionApplication` object to wait for a specific message to appear in the logs. Do note that this method is marked with `CTASPIRE001` so you will need to disable that warning where you use it. You can learn more about `CTASPIRE001` in the [Diagnostics documentation](./diagnostics.md).
 
 ### Adding Tests to the CI pipeline
 
@@ -107,7 +107,7 @@ The easiest way to update that list is to run the `./eng/testing/generate-test-l
 
 You'll need to add a `README.md` file to the folder your integration is created in, this will be used in the NuGet package that is generated. This should be a high level overview of the integration and does not need to be a complete doc set.
 
-For the complete docs, you'll need to create a PR to the [`microsoft/aspire.dev`](https://github.com/microsoft/aspire.dev) repository. This will be reviewed by the docs owners and merged into the main docs for .NET Aspire. The aspire.dev repository has an agent that can scaffold out a docs page from the README to help speed up your work.
+For the complete docs, you'll need to create a PR to the [`microsoft/aspire.dev`](https://github.com/microsoft/aspire.dev) repository. This will be reviewed by the docs owners and merged into the main docs for Aspire. The aspire.dev repository has an agent that can scaffold out a docs page from the README to help speed up your work.
 
 Lastly, update the `README.md` in the root of this repository to include your new integration in the table of integrations.
 
@@ -120,13 +120,13 @@ Your integration will be automatically packaged as a NuGet package when a PR is 
 Most of the NuGet metadata will be automatically added to the generated nuspec file during the packaging process in the CI pipeline but there are two pieces of metadata that you will need to add manually to the csproj file for your integration:
 
 -   `Description` - A short description of the integration.
--   `AdditionalTags` - A space-separated list of tags that describe the integration (some tags are added by default, such as `aspire`, use this to add more specific tags for your integration). Ensure to add the integration type (`client` or `hosting`) as a tag so the integration can be easily discovered in the Visual Studio tooling for .NET Aspire.
+-   `AdditionalTags` - A space-separated list of tags that describe the integration (some tags are added by default, such as `aspire`, use this to add more specific tags for your integration). Ensure to add the integration type (`client` or `hosting`) as a tag so the integration can be easily discovered in the Visual Studio tooling for Aspire.
 
 Here's an example from the OllamaSharp integration:
 
 ```xml
   <PropertyGroup>
-    <Description>A .NET Aspire client integration for the OllamaSharp library.</Description>
+    <Description>An Aspire client integration for the OllamaSharp library.</Description>
     <AdditionalPackageTags>ollama ai ollamasharp</AdditionalPackageTags>
   </PropertyGroup>
 ```

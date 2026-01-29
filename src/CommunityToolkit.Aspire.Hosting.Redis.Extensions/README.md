@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Redis.Extensions library
 
-This integration contains extensions for the [Redis hosting package](https://nuget.org/packages/Aspire.Hosting.Redis) for .NET Aspire.
+This integration contains extensions for the [Redis hosting package](https://nuget.org/packages/Aspire.Hosting.Redis) for Aspire.
 
 The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) to interact with the Redis database.
 

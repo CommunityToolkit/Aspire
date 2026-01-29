@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.GoFeatureFlag library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [GO Feature Flag](https://gofeatureflag.org/) containers.
+Provides extension methods and resource definitions for the Aspire AppHost to support running [GO Feature Flag](https://gofeatureflag.org/) containers.
 
 ## Getting Started
 
