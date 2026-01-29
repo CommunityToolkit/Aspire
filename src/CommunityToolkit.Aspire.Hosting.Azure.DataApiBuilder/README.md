@@ -151,4 +151,4 @@ For more information about Data API builder telemetry, see the [official documen
 
 ## Known Issues
 
-The current imlpementation of the Data API builder Aspire integration does not support HTTPS endpoints. However, this is only a dev-time consideration. Service discovery when published can use HTTPS without any problems.
+The current implementation of the Data API builder Aspire integration does not support HTTPS endpoints. However, this is only a dev-time consideration. Service discovery when published can use HTTPS without any problems.

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting k6</AdditionalPackageTags>
-    <Description>Granafa k6 support for Aspire.</Description>
+    <Description>Grafana k6 support for Aspire.</Description>
   </PropertyGroup>
 
   <ItemGroup>
