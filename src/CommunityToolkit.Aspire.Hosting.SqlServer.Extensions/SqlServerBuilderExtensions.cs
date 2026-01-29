@@ -96,7 +96,8 @@ public static class SqlServerBuilderExtensions
         var sqlServerResource = builder.Resource;
 
         var name = sqlServerResource.Name;
-        var label = $"LABEL_{name}";
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var label = $"LABEL_{connectionId}";
 
         // Multiple WithDbGate calls will be ignored
         if (context.EnvironmentVariables.ContainsKey(label))
@@ -107,19 +108,19 @@ public static class SqlServerBuilderExtensions
         // DbGate assumes SqlServer is being accessed over a default Aspire container network and hardcodes the resource address
         // This will need to be refactored once updated service discovery APIs are available
         context.EnvironmentVariables.Add(label, sqlServerResource.Name);
-        context.EnvironmentVariables.Add($"SERVER_{name}", sqlServerResource.Name);
-        context.EnvironmentVariables.Add($"USER_{name}", "sa");
-        context.EnvironmentVariables.Add($"PASSWORD_{name}", sqlServerResource.PasswordParameter);
-        context.EnvironmentVariables.Add($"PORT_{name}", sqlServerResource.PrimaryEndpoint.TargetPort!.ToString()!);
-        context.EnvironmentVariables.Add($"ENGINE_{name}", "mssql@dbgate-plugin-mssql");
+        context.EnvironmentVariables.Add($"SERVER_{connectionId}", sqlServerResource.Name);
+        context.EnvironmentVariables.Add($"USER_{connectionId}", "sa");
+        context.EnvironmentVariables.Add($"PASSWORD_{connectionId}", sqlServerResource.PasswordParameter);
+        context.EnvironmentVariables.Add($"PORT_{connectionId}", sqlServerResource.PrimaryEndpoint.TargetPort!.ToString()!);
+        context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "mssql@dbgate-plugin-mssql");
 
         if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{connectionId}";
         }
         else
         {
-            context.EnvironmentVariables["CONNECTIONS"] = name;
+            context.EnvironmentVariables["CONNECTIONS"] = connectionId;
         }
     }
 

@@ -369,4 +369,68 @@ public class ResourceCreationTests
                 Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
             });
     }
+
+    [Fact]
+    public async Task WithDbGateSanitizesResourceNameWithHyphens()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var mysqlResourceBuilder = builder.AddMySql("mysql-db")
+            .WithDbGate();
+
+        var mysqlResource = mysqlResourceBuilder.Resource;
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
+
+        Assert.NotNull(dbGateResource);
+
+        Assert.Equal("dbgate", dbGateResource.Name);
+
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
+
+        Assert.NotEmpty(envs);
+        Assert.Collection(envs,
+            item =>
+            {
+                // Connection ID should be sanitized (hyphens replaced with underscores)
+                Assert.Equal("LABEL_mysql_db", item.Key);
+                // But the label value should still be the original resource name
+                Assert.Equal(mysqlResource.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("SERVER_mysql_db", item.Key);
+                Assert.Equal(mysqlResource.Name, item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("USER_mysql_db", item.Key);
+                Assert.Equal("root", item.Value);
+            },
+            async item =>
+            {
+                Assert.Equal("PASSWORD_mysql_db", item.Key);
+                Assert.Equal(await mysqlResource.PasswordParameter.GetValueAsync(default), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("PORT_mysql_db", item.Key);
+                Assert.Equal(mysqlResource.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("ENGINE_mysql_db", item.Key);
+                Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
+            },
+            item =>
+            {
+                Assert.Equal("CONNECTIONS", item.Key);
+                // Connection ID in the CONNECTIONS value should also be sanitized
+                Assert.Equal("mysql_db", item.Value);
+            });
+    }
 }
