@@ -439,7 +439,7 @@ public static class SurrealDbBuilderExtensions
         LogLevel logLevel
     )
     {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(builder);
 
         string value = logLevel switch
         {
@@ -450,6 +450,24 @@ public static class SurrealDbBuilderExtensions
         };
 
         return builder.WithEnvironment("SURREAL_LOG", value);
+    }
+    
+    /// <summary>
+    /// Injects the appropriate environment variables to allow the resource to enable sending telemetry to the dashboard.
+    /// 1. It sets the OTLP endpoint to the value of the DOTNET_DASHBOARD_OTLP_ENDPOINT_URL environment variable.
+    /// 2. It sets the service name and instance id to the resource name and UID. Values are injected by the orchestrator.
+    /// 3. It sets a small batch schedule delay in development. This reduces the delay that OTLP exporter waits to sends telemetry and makes the dashboard telemetry pages responsive.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <returns>The <see cref="IResourceBuilder{SurrealDbServerResource}"/>.</returns>
+    public static IResourceBuilder<SurrealDbServerResource> WithOtlpExporter(
+        this IResourceBuilder<SurrealDbServerResource> builder
+    )
+    {
+        builder.WithEnvironment("SURREAL_TELEMETRY_PROVIDER", "otlp");
+        OtlpConfigurationExtensions.WithOtlpExporter(builder);
+        
+        return builder;
     }
 
     /// <summary>
