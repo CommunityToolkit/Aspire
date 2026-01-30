@@ -177,15 +177,20 @@
     <Project Path="examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.Api/CommunityToolkit.Aspire.Hosting.Stripe.Api.csproj" />
     <Project Path="examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.AppHost/CommunityToolkit.Aspire.Hosting.Stripe.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/supabase/">
+    <Project Path="examples/supabase/CommunityToolkit.Aspire.Hosting.Supabase.AppHost/CommunityToolkit.Aspire.Hosting.Supabase.AppHost.csproj" />
+    <Project Path="examples/supabase/CommunityToolkit.Aspire.Hosting.Supabase.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Supabase.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/surrealdb/">
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService/CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService.csproj" />
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost.csproj" />
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/umami/">
-    <Project Path="examples\umami\CommunityToolkit.Aspire.Hosting.Umami.AppHost\CommunityToolkit.Aspire.Hosting.Umami.AppHost.csproj" Type="Classic C#" />
+    <Project Path="examples\umami\CommunityToolkit.Aspire.Hosting.Umami.AppHost\CommunityToolkit.Aspire.Hosting.Umami.AppHost.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Supabase/CommunityToolkit.Aspire.Hosting.Supabase.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
@@ -238,7 +243,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Sftp/CommunityToolkit.Aspire.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" />
-    <Project Path="src\CommunityToolkit.Aspire.Hosting.Umami\CommunityToolkit.Aspire.Hosting.Umami.csproj" Type="Classic C#" />
+    <Project Path="src\CommunityToolkit.Aspire.Hosting.Umami\CommunityToolkit.Aspire.Hosting.Umami.csproj" />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
@@ -286,6 +291,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Supabase.Tests/CommunityToolkit.Aspire.Hosting.Supabase.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj" />
@@ -298,7 +304,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Sftp.Tests/CommunityToolkit.Aspire.Sftp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
-    <Project Path="tests\CommunityToolkit.Aspire.Hosting.Umami.Tests\CommunityToolkit.Aspire.Hosting.Umami.Tests.csproj" Type="Classic C#" />
+    <Project Path="tests\CommunityToolkit.Aspire.Hosting.Umami.Tests\CommunityToolkit.Aspire.Hosting.Umami.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Dapr/">
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />
