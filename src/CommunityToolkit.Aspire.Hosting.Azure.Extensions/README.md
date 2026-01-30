@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Azure.Extensions library
 
-This integration contains extensions for the [Azure Storage hosting package](https://nuget.org/packages/Aspire.Hosting.Azure.Storage) for .NET Aspire.
+This integration contains extensions for the [Azure Storage hosting package](https://nuget.org/packages/Aspire.Hosting.Azure.Storage) for Aspire.
 
 The integration provides support for running [Azure Storage Explorer](https://github.com/sebagomez/azurestorageexplorer) to interact with the Azure Storage resource: blobs, queues and tables.
 

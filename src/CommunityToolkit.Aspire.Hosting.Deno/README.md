@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Deno library
 
-Provides extension methods and resource definitions for a .NET Aspire AppHost to configure a Deno project.
+Provides extension methods and resource definitions for an Aspire AppHost to configure a Deno project.
 
 ## Getting Started
 

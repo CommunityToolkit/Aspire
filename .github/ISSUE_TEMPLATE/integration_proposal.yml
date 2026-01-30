@@ -16,8 +16,8 @@ body:
     validations:
       required: false
     attributes:
-      label: .NET Aspire issue link
-      description: If this was discussed in the .NET Aspire repository, please provide a link to the issue/discussion.
+      label: Aspire issue link
+      description: If this was discussed in the Aspire repository, please provide a link to the issue/discussion.
   - type: textarea
     id: description
     validations:

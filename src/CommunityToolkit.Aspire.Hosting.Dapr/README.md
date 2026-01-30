@@ -1,12 +1,12 @@
 # CommunityToolkit.Aspire.Hosting.Dapr library
 
-Provides extension methods and resource definitions for a .NET Aspire AppHost to configure Dapr resources.
+Provides extension methods and resource definitions for an Aspire AppHost to configure Dapr resources.
 
 ## Getting started
 
 ### Install the package
 
-In your AppHost project, install the .NET Aspire Dapr Hosting library with [NuGet](https://www.nuget.org):
+In your AppHost project, install the Aspire Dapr Hosting library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Hosting.Dapr

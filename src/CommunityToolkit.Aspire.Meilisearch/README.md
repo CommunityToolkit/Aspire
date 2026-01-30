@@ -10,7 +10,7 @@ Registers a [MeilisearchClient](https://github.com/meilisearch/meilisearch-dotne
 
 ### Install the package
 
-Install the .NET Aspire Meilisearch Client library with [NuGet](https://www.nuget.org):
+Install the Aspire Meilisearch Client library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Meilisearch
@@ -26,7 +26,7 @@ builder.AddMeilisearchClient("meilisearch");
 
 ## Configuration
 
-The .NET Aspire Meilisearch Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
+The Aspire Meilisearch Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
 
 ### Use a connection string
 
@@ -48,7 +48,7 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 
 ### Use configuration providers
 
-The .NET Aspire Meilisearch Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `MeilisearchClientSettings` from configuration by using the `Aspire:Meilisearch:Client` key. Example `appsettings.json` that configures some of the options:
+The Aspire Meilisearch Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `MeilisearchClientSettings` from configuration by using the `Aspire:Meilisearch:Client` key. Example `appsettings.json` that configures some of the options:
 
 ```json
 {

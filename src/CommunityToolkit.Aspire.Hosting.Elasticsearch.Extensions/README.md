@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions library
 
-This integration contains extensions for the [Elasticsearch hosting package](https://nuget.org/packages/Aspire.Hosting.Elasticsearch) for .NET Aspire.
+This integration contains extensions for the [Elasticsearch hosting package](https://nuget.org/packages/Aspire.Hosting.Elasticsearch) for Aspire.
 
 The integration provides support for running [Elasticvue](https://github.com/cars10/elasticvue) to interact with the Elasticsearch database.
 

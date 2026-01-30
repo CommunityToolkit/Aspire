@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions library
 
-This integration contains extensions for the [PostgreSQL hosting package](https://nuget.org/packages/Aspire.Hosting.PostgreSQL) for .NET Aspire.
+This integration contains extensions for the [PostgreSQL hosting package](https://nuget.org/packages/Aspire.Hosting.PostgreSQL) for Aspire.
 
 The integration provides support for running:
 

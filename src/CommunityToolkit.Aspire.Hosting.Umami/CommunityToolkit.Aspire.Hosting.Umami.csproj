@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting umami</AdditionalPackageTags>
-    <Description>Umami support for .NET Aspire.</Description>
+    <Description>Umami support for Aspire.</Description>
   </PropertyGroup>
 
   <ItemGroup>

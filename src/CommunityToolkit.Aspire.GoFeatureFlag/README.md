@@ -6,7 +6,7 @@ Registers a [GoFeatureFlagProvider](https://github.com/open-feature/dotnet-sdk-c
 
 ### Install the package
 
-Install the .NET Aspire GO Feature Flag Client library with [NuGet](https://www.nuget.org):
+Install the Aspire GO Feature Flag Client library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.GoFeatureFlag
@@ -22,7 +22,7 @@ builder.AddGoFeatureFlagClient("goff");
 
 ## Configuration
 
-The .NET Aspire GO Feature Flag Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
+The Aspire GO Feature Flag Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
 
 ### Use a connection string
 
@@ -44,7 +44,7 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 
 ### Use configuration providers
 
-The .NET Aspire GO Feature Flag Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `GoFeatureFlagClientSettings` from configuration by using the `Aspire:GoFeatureFlag:Client` key. Example `appsettings.json` that configures some of the options:
+The Aspire GO Feature Flag Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `GoFeatureFlagClientSettings` from configuration by using the `Aspire:GoFeatureFlag:Client` key. Example `appsettings.json` that configures some of the options:
 
 ```json
 {

@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.MinIO library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [MinIO](https://min.io/) containers.
+Provides extension methods and resource definitions for the Aspire AppHost to support running [MinIO](https://min.io/) containers.
 
 ## Getting Started
 
