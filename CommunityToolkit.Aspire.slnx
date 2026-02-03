@@ -135,6 +135,9 @@
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi.csproj" />
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/permify/">
+    <Project Path="examples/permify/CommunityToolkit.Aspire.Hosting.Permify.AppHost/CommunityToolkit.Aspire.Hosting.Permify.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/postgres-ext/">
     <Project Path="examples/postgres-ext/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost.csproj" />
   </Folder>
@@ -214,6 +217,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Permify/CommunityToolkit.Aspire.Hosting.Permify.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PowerShell/CommunityToolkit.Aspire.Hosting.PowerShell.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Python.Extensions/CommunityToolkit.Aspire.Hosting.Python.Extensions.csproj" />
@@ -275,6 +279,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Permify.Tests/CommunityToolkit.Aspire.Hosting.Permify.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
