@@ -94,8 +94,7 @@ public static class SqlProjectBuilderExtensions
                           Properties = properties,
                           ResourceType = "SqlProject",
                           State = KnownResourceStates.Waiting
-                      })
-                      .ExcludeFromManifest();
+                      });
     }
 
     /// <summary>

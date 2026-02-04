@@ -8,7 +8,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Represents a SQL Server Database project resource.
 /// </summary>
 /// <param name="name">Name of the resource.</param>
-public sealed class SqlProjectResource(string name) : Resource(name), IResourceWithWaitSupport, IResourceWithDacpac
+public sealed class SqlProjectResource(string name) : ProjectResource(name), IResourceWithWaitSupport, IResourceWithDacpac
 {
     string IResourceWithDacpac.GetDacpacPath()
     {
