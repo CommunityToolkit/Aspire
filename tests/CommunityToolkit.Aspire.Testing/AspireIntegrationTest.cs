@@ -71,7 +71,5 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
         }
     }
 
-    public Task InitializeAsync() => StartAsync().WaitAsync(TimeSpan.FromMinutes(10));
-
-    async Task IAsyncLifetime.DisposeAsync() => await DisposeAsync();
+    public async ValueTask InitializeAsync() => await StartAsync().WaitAsync(TimeSpan.FromMinutes(10));
 }
