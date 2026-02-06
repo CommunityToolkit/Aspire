@@ -76,11 +76,6 @@ public static class ZitadelHostingExtensions
         });
 #pragma warning restore ASPIRECERTIFICATES001
 
-        // Use ReferenceExpression for the port to avoid issues with endpoint allocation
-        var endpoint = resource.GetEndpoint(ZitadelResource.HttpEndpointName, KnownNetworkIdentifiers.LocalhostNetwork);
-        var portExpression = ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.Port)}");
-        var hostExpression = ReferenceExpression.Create($"{endpoint.Property(EndpointProperty.Host)}");
-
         if (builder.ExecutionContext.IsRunMode)
         {
 #pragma warning disable ASPIRECERTIFICATES001
@@ -117,8 +112,20 @@ public static class ZitadelHostingExtensions
         }
 
         return zitadelBuilder
-            .WithEnvironment("ZITADEL_EXTERNALDOMAIN", hostExpression)
-            .WithEnvironment("ZITADEL_EXTERNALPORT", portExpression)
+            .WithEnvironment(ctx =>
+            {
+                var resource = ctx.Resource;
+                if (resource.TryGetEndpoints(out var endpoints))
+                {
+                    var endpoint = endpoints.Single(e => e.Name == ZitadelResource.HttpEndpointName);
+                    ctx.EnvironmentVariables.TryAdd("ZITADEL_EXTERNALDOMAIN", endpoint.TargetHost);
+                    var port = endpoint.Port;
+                    if (port is not null)
+                    {
+                        ctx.EnvironmentVariables.TryAdd("ZITADEL_EXTERNALPORT", port);
+                    }
+                }
+            })
             // Disable Login V2 for simpler setup (no separate login container needed)
             .WithEnvironment("ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED", "false")
             // Configure admin user
