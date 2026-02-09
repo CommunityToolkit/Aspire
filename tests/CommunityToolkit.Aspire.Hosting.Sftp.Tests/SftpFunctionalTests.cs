@@ -1,12 +1,12 @@
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Renci.SshNet;
 using Renci.SshNet.Common;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Sftp.Tests;
 

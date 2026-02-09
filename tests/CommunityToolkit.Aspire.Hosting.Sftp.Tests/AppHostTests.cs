@@ -3,7 +3,6 @@ using CommunityToolkit.Aspire.Testing;
 using Polly;
 using Projects;
 using Renci.SshNet;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Sftp.Tests;
 

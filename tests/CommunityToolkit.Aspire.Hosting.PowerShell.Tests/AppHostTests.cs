@@ -1,4 +1,3 @@
-using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.PowerShell.Tests;
@@ -14,7 +13,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         await fixture.ResourceNotificationService
             .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromSeconds(60));
-        
+
         Assert.True(true);
     }
 
