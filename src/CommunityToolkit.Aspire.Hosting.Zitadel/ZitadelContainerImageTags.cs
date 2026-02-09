@@ -9,5 +9,5 @@ internal static class ZitadelContainerImageTags
     public const string Image = "zitadel/zitadel";
 
     /// <remarks>v4.9.0</remarks>
-    public const string Tag = "v4.9.0";
+    public const string Tag = "v4.10.1";
 }
