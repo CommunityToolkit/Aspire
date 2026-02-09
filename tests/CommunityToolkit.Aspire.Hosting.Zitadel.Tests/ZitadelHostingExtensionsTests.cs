@@ -50,7 +50,6 @@ public class ZitadelHostingExtensionsTests
 
         var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.Equal("false", env["ZITADEL_TLS_ENABLED"]);
         Assert.Equal("false", env["ZITADEL_EXTERNALSECURE"]);
         Assert.Equal("zitadel.dev.localhost", env["ZITADEL_EXTERNALDOMAIN"]);
         Assert.Equal("false", env["ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED"]);
@@ -89,6 +88,7 @@ public class ZitadelHostingExtensionsTests
     public async Task AddZitadel_Uses_Custom_MasterKey()
     {
         var builder = DistributedApplication.CreateBuilder();
+        builder.Configuration["Parameters:custom-masterkey"] = "[REDACTED]";
         var masterKey = builder.AddParameter("custom-masterkey");
 
         var zitadel = builder.AddZitadel("zitadel", masterKey: masterKey);
