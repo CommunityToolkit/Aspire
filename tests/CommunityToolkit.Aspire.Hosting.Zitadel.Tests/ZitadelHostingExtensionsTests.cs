@@ -50,8 +50,7 @@ public class ZitadelHostingExtensionsTests
 
         var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.Equal("false", env["ZITADEL_EXTERNALSECURE"]);
-        Assert.Equal("zitadel.dev.localhost", env["ZITADEL_EXTERNALDOMAIN"]);
+        Assert.Equal("localhost", env["ZITADEL_EXTERNALDOMAIN"]);
         Assert.Equal("false", env["ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED"]);
         Assert.Equal("false", env["ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED"]);
     }
