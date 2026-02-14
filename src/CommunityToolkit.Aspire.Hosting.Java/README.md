@@ -32,6 +32,12 @@ var executableapp = builder.AddSpringApp("executableapp",
                                ApplicationName = "target/app.jar",
                                OtelAgentPath = "../../../agents"
                            });
+
+// (Optional) Add a Maven build step
+executableapp.WithMavenBuild();
+
+// (Optional) Add a Gradle build step
+executableapp.WithGradleBuild();
 ```
 
 ## Additional Information

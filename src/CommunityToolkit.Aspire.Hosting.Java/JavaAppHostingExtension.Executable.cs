@@ -77,14 +77,51 @@ public static partial class JavaAppHostingExtension
     {
         mavenOptions ??= new MavenOptions();
 
-        if (mavenOptions.WorkingDirectory is null)
-        {
-            mavenOptions.WorkingDirectory = builder.Resource.WorkingDirectory;
-        }
+        mavenOptions.WorkingDirectory ??= builder.Resource.WorkingDirectory;
 
-        var annotation = new MavenBuildAnnotation(mavenOptions);
+        return builder.WithJavaBuild(
+            new MavenBuildAnnotation(mavenOptions),
+            "Maven",
+            (resource, services, ct, useNotificationService) =>
+                ExecuteBuild(resource, services, ct, useNotificationService, "Maven", mavenOptions));
+    }
 
-        if (builder.Resource.TryGetLastAnnotation<MavenBuildAnnotation>(out _))
+    /// <summary>
+    /// Adds a Gradle build step to the application model.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Gradle build step to.</param>
+    /// <param name="gradleOptions">The <see cref="GradleOptions"/> to configure the Gradle build step.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// This method adds a Gradle build step to the application model. The Gradle build step is executed before the Java application is started.
+    /// 
+    /// The Gradle build step is added as an executable resource named "gradle" with the command "gradlew --quiet clean build".
+    /// 
+    /// The Gradle build step is excluded from the manifest file.
+    /// </remarks>
+    public static IResourceBuilder<JavaAppExecutableResource> WithGradleBuild(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        GradleOptions? gradleOptions = null)
+    {
+        gradleOptions ??= new GradleOptions();
+
+        gradleOptions.WorkingDirectory ??= builder.Resource.WorkingDirectory;
+
+        return builder.WithJavaBuild(
+            new GradleBuildAnnotation(gradleOptions),
+            "Gradle",
+            (resource, services, ct, useNotificationService) =>
+                ExecuteBuild(resource, services, ct, useNotificationService, "Gradle", gradleOptions));
+    }
+
+    private static IResourceBuilder<JavaAppExecutableResource> WithJavaBuild<TAnnotation>(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        TAnnotation annotation,
+        string buildSystemName,
+        Func<JavaAppExecutableResource, IServiceProvider, CancellationToken, bool, Task<bool>> buildFunc)
+        where TAnnotation : IResourceAnnotation
+    {
+        if (builder.Resource.TryGetLastAnnotation<TAnnotation>(out _))
         {
             // Replace the existing annotation, but don't continue on and subscribe to the event again.
             builder.WithAnnotation(annotation, ResourceAnnotationMutationBehavior.Replace);
@@ -100,16 +137,16 @@ public static partial class JavaAppHostingExtension
                 return;
             }
 
-            await BuildWithMaven(javaAppResource, e.Services, ct).ConfigureAwait(false);
+            await buildFunc(javaAppResource, e.Services, ct, true).ConfigureAwait(false);
         });
 
         builder.WithCommand(
-            "build-with-maven",
-            "Build with Maven",
+            $"build-with-{buildSystemName.ToLowerInvariant()}",
+            $"Build with {buildSystemName}",
             async (context) =>
-                await BuildWithMaven(builder.Resource, context.ServiceProvider, context.CancellationToken, false).ConfigureAwait(false) ?
+                await buildFunc(builder.Resource, context.ServiceProvider, context.CancellationToken, false).ConfigureAwait(false) ?
                     new ExecuteCommandResult { Success = true } :
-                    new ExecuteCommandResult { Success = false, ErrorMessage = "Failed to build with Maven" },
+                    new ExecuteCommandResult { Success = false, ErrorMessage = $"Failed to build with {buildSystemName}" },
             new CommandOptions()
             {
                 IconName = "build",
@@ -124,94 +161,94 @@ public static partial class JavaAppHostingExtension
             });
 
         return builder;
+    }
 
-        static async Task<bool> BuildWithMaven(JavaAppExecutableResource javaAppResource, IServiceProvider services, CancellationToken ct, bool useNotificationService = true)
+    private static async Task<bool> ExecuteBuild(
+        JavaAppExecutableResource javaAppResource,
+        IServiceProvider services,
+        CancellationToken ct,
+        bool useNotificationService,
+        string buildSystemName,
+        JavaBuildOptions options)
+    {
+        var logger = services.GetRequiredService<ResourceLoggerService>().GetLogger(javaAppResource);
+        var notificationService = services.GetRequiredService<ResourceNotificationService>();
+
+        if (useNotificationService)
         {
-            if (!javaAppResource.TryGetLastAnnotation<MavenBuildAnnotation>(out var mavenOptionsAnnotation))
+            await notificationService.PublishUpdateAsync(javaAppResource, state => state with
             {
-                return false;
-            }
-
-            var mavenOptions = mavenOptionsAnnotation.MavenOptions;
-            var logger = services.GetRequiredService<ResourceLoggerService>().GetLogger(javaAppResource);
-            var notificationService = services.GetRequiredService<ResourceNotificationService>();
-
-            if (useNotificationService)
-            {
-                await notificationService.PublishUpdateAsync(javaAppResource, state => state with
-                {
-                    State = new("Building Maven project", KnownResourceStates.Starting)
-                }).ConfigureAwait(false);
-            }
-
-            logger.LogInformation("Building Maven project");
-
-            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-            var mvnw = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = isWindows ? "cmd" : "sh",
-                    Arguments = isWindows ? $"/c {mavenOptions.Command} {string.Join(" ", mavenOptions.Args)}" : $"./{mavenOptions.Command} {string.Join(" ", mavenOptions.Args)}",
-                    WorkingDirectory = mavenOptions.WorkingDirectory,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                }
-            };
-
-            mvnw.OutputDataReceived += async (sender, args) =>
-            {
-                if (!string.IsNullOrWhiteSpace(args.Data))
-                {
-                    if (useNotificationService)
-                    {
-                        await notificationService.PublishUpdateAsync(javaAppResource, state => state with
-                        {
-                            State = new(args.Data, KnownResourceStates.Starting)
-                        }).ConfigureAwait(false);
-                    }
-
-                    logger.LogInformation("{Data}", args.Data);
-                }
-            };
-
-            mvnw.ErrorDataReceived += async (sender, args) =>
-            {
-                if (!string.IsNullOrWhiteSpace(args.Data))
-                {
-                    if (useNotificationService)
-                    {
-                        await notificationService.PublishUpdateAsync(javaAppResource, state => state with
-                        {
-                            State = new(args.Data, KnownResourceStates.FailedToStart)
-                        }).ConfigureAwait(false);
-                    }
-
-                    logger.LogError("{Data}", args.Data);
-                }
-            };
-
-            mvnw.Start();
-            mvnw.BeginOutputReadLine();
-            mvnw.BeginErrorReadLine();
-
-            await mvnw.WaitForExitAsync(ct).ConfigureAwait(false);
-
-            if (mvnw.ExitCode != 0)
-            {
-                // always use notification service to push out errors in the maven build
-                await notificationService.PublishUpdateAsync(javaAppResource, state => state with
-                {
-                    State = new($"mvnw exited with {mvnw.ExitCode}", KnownResourceStates.FailedToStart)
-                }).ConfigureAwait(false);
-
-                return false;
-            }
-            return true;
+                State = new($"Building {buildSystemName} project", KnownResourceStates.Starting)
+            }).ConfigureAwait(false);
         }
+
+        logger.LogInformation("Building {BuildSystemName} project", buildSystemName);
+
+        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = isWindows ? "cmd" : "sh",
+                Arguments = isWindows ? $"/c {options.Command} {string.Join(" ", options.Args)}" : $"./{options.Command} {string.Join(" ", options.Args)}",
+                WorkingDirectory = options.WorkingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+            }
+        };
+
+        process.OutputDataReceived += async (sender, args) =>
+        {
+            if (!string.IsNullOrWhiteSpace(args.Data))
+            {
+                if (useNotificationService)
+                {
+                    await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+                    {
+                        State = new(args.Data, KnownResourceStates.Starting)
+                    }).ConfigureAwait(false);
+                }
+
+                logger.LogInformation("{Data}", args.Data);
+            }
+        };
+
+        process.ErrorDataReceived += async (sender, args) =>
+        {
+            if (!string.IsNullOrWhiteSpace(args.Data))
+            {
+                if (useNotificationService)
+                {
+                    await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+                    {
+                        State = new(args.Data, KnownResourceStates.FailedToStart)
+                    }).ConfigureAwait(false);
+                }
+
+                logger.LogError("{Data}", args.Data);
+            }
+        };
+
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        await process.WaitForExitAsync(ct).ConfigureAwait(false);
+
+        if (process.ExitCode != 0)
+        {
+            // always use notification service to push out errors in the build
+            await notificationService.PublishUpdateAsync(javaAppResource, state => state with
+            {
+                State = new($"{options.Command} exited with {process.ExitCode}", KnownResourceStates.FailedToStart)
+            }).ConfigureAwait(false);
+
+            return false;
+        }
+        return true;
     }
 
     private static IResourceBuilder<JavaAppExecutableResource> WithJavaDefaults(
