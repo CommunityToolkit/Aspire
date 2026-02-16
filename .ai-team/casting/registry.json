@@ -1,0 +1,25 @@
+{
+  "agents": {
+    "kaylee": {
+      "persistent_name": "Kaylee",
+      "universe": "Firefly",
+      "created_at": "2026-02-13T03:53:23Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "wash": {
+      "persistent_name": "Wash",
+      "universe": "Firefly",
+      "created_at": "2026-02-13T03:53:23Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "inara": {
+      "persistent_name": "Inara",
+      "universe": "Firefly",
+      "created_at": "2026-02-13T03:53:23Z",
+      "legacy_named": false,
+      "status": "active"
+    }
+  }
+}

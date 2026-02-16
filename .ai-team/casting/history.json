@@ -1,0 +1,20 @@
+{
+  "universe_usage_history": [
+    {
+      "assignment_id": "2026-02-13-aspire-communitytoolkit",
+      "universe": "Firefly",
+      "timestamp": "2026-02-13T03:53:23Z"
+    }
+  ],
+  "assignment_cast_snapshots": {
+    "2026-02-13-aspire-communitytoolkit": {
+      "universe": "Firefly",
+      "agent_map": {
+        "kaylee": "Kaylee",
+        "wash": "Wash",
+        "inara": "Inara"
+      },
+      "created_at": "2026-02-13T03:53:23Z"
+    }
+  }
+}
