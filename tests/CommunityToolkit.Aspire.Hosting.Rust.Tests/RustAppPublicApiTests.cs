@@ -41,4 +41,54 @@ public class RustAppPublicApiTests
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(workingDirectory), exception.ParamName);
     }
+
+    [Fact]
+    public void WithCargoCommandShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<RustAppExecutableResource> builder = null!;
+        const string command = "trunk";
+
+        var action = () => builder.WithCargoCommand(command);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithCargoCommandShouldThrowWhenCommandIsNull()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var builder = appBuilder.AddRustApp("rust-app", "rust_app");
+        const string command = null!;
+
+        var action = () => builder.WithCargoCommand(command!);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(command), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithCargoInstallShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<RustAppExecutableResource> builder = null!;
+        const string packageName = "trunk";
+
+        var action = () => builder.WithCargoInstall(packageName);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithCargoInstallShouldThrowWhenPackageNameIsNull()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var builder = appBuilder.AddRustApp("rust-app", "rust_app");
+        const string packageName = null!;
+
+        var action = () => builder.WithCargoInstall(packageName!);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(packageName), exception.ParamName);
+    }
 }
