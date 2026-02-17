@@ -4,12 +4,12 @@
   </PropertyGroup>
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
-    <PackageVersion Include="Aspire.Hosting" Version="13.2.0-preview.1.26110.16" />
+    <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="13.1.0" />
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
@@ -91,8 +91,8 @@
     <PackageVersion Include="SurrealDb.Net" Version="0.9.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
-    <PackageVersion Include="ModelContextProtocol" Version="0.8.0-preview.1" />
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.8.0-preview.1" />
+    <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
   </ItemGroup>
