@@ -5,6 +5,7 @@ sudo apt-get update && \
     sudo rm -rf /var/lib/apt/lists/*
 
 echo Install .NET dev certs
+export WSL_INTEROP=""
 dotnet dev-certs https --trust
 
 echo Install Aspire
