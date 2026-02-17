@@ -6,10 +6,11 @@ sudo apt-get update && \
 
 echo Install .NET dev certs
 EXIT_CODE=0
+PARTIAL_TRUST_EXIT_CODE=4 # Exit code 4 indicates "partial trust" per aspnetcore#65391.
 dotnet dev-certs https --trust || EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ] && [ $EXIT_CODE -ne 4 ]; then
+if [ "$EXIT_CODE" -ne 0 ] && [ "$EXIT_CODE" -ne "$PARTIAL_TRUST_EXIT_CODE" ]; then
   echo "dotnet dev-certs https --trust failed with exit code $EXIT_CODE"
-  exit $EXIT_CODE
+  exit "$EXIT_CODE"
 fi
 
 echo Install Aspire

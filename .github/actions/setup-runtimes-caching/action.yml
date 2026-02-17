@@ -87,9 +87,10 @@ runs:
       run: |
         EXIT_CODE=0
         dotnet dev-certs https --trust || EXIT_CODE=$?
-        if [ $EXIT_CODE -ne 0 ] && [ $EXIT_CODE -ne 4 ]; then
+        PARTIAL_TRUST_EXIT_CODE=4 # See aspnetcore#65391: exit code 4 indicates partial trust
+        if [ "$EXIT_CODE" -ne 0 ] && [ "$EXIT_CODE" -ne "$PARTIAL_TRUST_EXIT_CODE" ]; then
           echo "dotnet dev-certs https --trust failed with exit code $EXIT_CODE"
-          exit $EXIT_CODE
+          exit "$EXIT_CODE"
         fi
 
     - name: Setup Node globals
