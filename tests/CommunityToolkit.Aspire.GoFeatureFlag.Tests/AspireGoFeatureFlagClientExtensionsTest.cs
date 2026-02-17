@@ -6,7 +6,7 @@ using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
-using OpenFeature.Contrib.Providers.GOFeatureFlag;
+using OpenFeature.Providers.GOFeatureFlag;
 
 namespace CommunityToolkit.Aspire.GoFeatureFlag.Tests;
 
@@ -98,9 +98,9 @@ public class AspireGoFeatureFlagClientExtensionsTest(GoFeatureFlagContainerFixtu
 
         using var host = builder.Build();
 
-        var client1 = host.Services.GetRequiredService<GoFeatureFlagProvider>();
-        var client2 = host.Services.GetRequiredKeyedService<GoFeatureFlagProvider>("goff2");
-        var client3 = host.Services.GetRequiredKeyedService<GoFeatureFlagProvider>("goff3");
+        var client1 = host.Services.GetRequiredService<GOFeatureFlagProvider>();
+        var client2 = host.Services.GetRequiredKeyedService<GOFeatureFlagProvider>("goff2");
+        var client3 = host.Services.GetRequiredKeyedService<GOFeatureFlagProvider>("goff3");
 
         Assert.NotSame(client1, client2);
         Assert.NotSame(client1, client3);
@@ -122,8 +122,8 @@ public class AspireGoFeatureFlagClientExtensionsTest(GoFeatureFlagContainerFixtu
 
         using var host = builder.Build();
 
-        var client1 = host.Services.GetRequiredService<GoFeatureFlagProvider>();
-        var client2 = host.Services.GetRequiredKeyedService<GoFeatureFlagProvider>("goff2");
+        var client1 = host.Services.GetRequiredService<GOFeatureFlagProvider>();
+        var client2 = host.Services.GetRequiredKeyedService<GOFeatureFlagProvider>("goff2");
 
         Assert.NotSame(client1, client2);
     }

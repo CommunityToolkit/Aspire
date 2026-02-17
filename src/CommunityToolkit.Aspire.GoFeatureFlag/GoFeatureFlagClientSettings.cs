@@ -1,7 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using OpenFeature.Contrib.Providers.GOFeatureFlag;
+using OpenFeature.Providers.GOFeatureFlag;
+using OpenFeature.Providers.GOFeatureFlag.Models;
 using System.Data.Common;
 
 namespace CommunityToolkit.Aspire.GoFeatureFlag;
@@ -34,7 +35,11 @@ public sealed class GoFeatureFlagClientSettings
     /// <summary>
     /// Gets or sets the provider options that will be used to configure the GO Feature Flag client.
     /// </summary>
-    public GoFeatureFlagProviderOptions ProviderOptions { get; set; } = new();
+    public GOFeatureFlagProviderOptions ProviderOptions { get; set; } = new()
+    {
+        Endpoint = string.Empty,
+        EvaluationType = EvaluationType.Remote
+    };
 
     internal void ParseConnectionString(string? connectionString)
     {

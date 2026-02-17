@@ -1,5 +1,5 @@
 ---
-description: "This chat mode is to create a new .NET Aspire hosting integration, using the design in the Community Toolkit repo."
+description: "This chat mode is to create a new Aspire hosting integration, using the design in the Community Toolkit repo."
 tools: [
         "changes",
         "codebase",
@@ -17,7 +17,7 @@ tools: [
 
 # New Aspire Hosting Integration
 
-You are going to develop a new .NET Aspire hosting integration. The following in the process in which you need to go through to complete the task.
+You are going to develop a new Aspire hosting integration. The following in the process in which you need to go through to complete the task.
 
 ## 1. Collect Requirements
 
@@ -207,9 +207,9 @@ The extension method should meet the following requirements:
 
 ## 4. Sample Usage
 
-You need to create a sample usage of the hosting integration in the `examples` folder. This should be a minimal example that demonstrates how to use the hosting integration in a .NET Aspire application.
+You need to create a sample usage of the hosting integration in the `examples` folder. This should be a minimal example that demonstrates how to use the hosting integration in an Aspire application.
 
-Start by scaffolding a new .NET Aspire App Host project in the `examples` folder. This can be done using the following command:
+Start by scaffolding a new Aspire App Host project in the `examples` folder. This can be done using the following command:
 
 ```bash
 dotnet new aspire-apphost -n CommunityToolkit.Aspire.Hosting.<HostingIntegrationName>.AppHost -o examples/CommunityToolkit.Aspire.Hosting.<HostingIntegrationName>.AppHost

@@ -97,7 +97,8 @@ public static class MySqlBuilderExtensions
         var mySqlServer = builder.Resource;
 
         var name = mySqlServer.Name;
-        var label = $"LABEL_{name}";
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var label = $"LABEL_{connectionId}";
 
         // Multiple WithDbGate calls will be ignored
         if (context.EnvironmentVariables.ContainsKey(label))
@@ -107,19 +108,19 @@ public static class MySqlBuilderExtensions
 
         // DbGate assumes MySql is being accessed over a default Aspire container network and hardcodes the resource address
         context.EnvironmentVariables.Add(label, name);
-        context.EnvironmentVariables.Add($"SERVER_{name}", name);
-        context.EnvironmentVariables.Add($"USER_{name}", "root");
-        context.EnvironmentVariables.Add($"PASSWORD_{name}", mySqlServer.PasswordParameter);
-        context.EnvironmentVariables.Add($"PORT_{name}", mySqlServer.PrimaryEndpoint.TargetPort!.ToString()!);
-        context.EnvironmentVariables.Add($"ENGINE_{name}", "mysql@dbgate-plugin-mysql");
+        context.EnvironmentVariables.Add($"SERVER_{connectionId}", name);
+        context.EnvironmentVariables.Add($"USER_{connectionId}", "root");
+        context.EnvironmentVariables.Add($"PASSWORD_{connectionId}", mySqlServer.PasswordParameter);
+        context.EnvironmentVariables.Add($"PORT_{connectionId}", mySqlServer.PrimaryEndpoint.TargetPort!.ToString()!);
+        context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "mysql@dbgate-plugin-mysql");
 
         if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{name}";
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{connectionId}";
         }
         else
         {
-            context.EnvironmentVariables["CONNECTIONS"] = name;
+            context.EnvironmentVariables["CONNECTIONS"] = connectionId;
         }
     }
 

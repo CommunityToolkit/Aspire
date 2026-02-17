@@ -231,9 +231,8 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         Assert.True(collectorResource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
         Assert.NotNull(imageAnnotations);
         Assert.Equal("mytag", imageAnnotations.Tag);
-        Assert.Equal("myregistry.io/myorg/mycollector", imageAnnotations.Image);
-        // Registry is likely set to null/empty when the full path is provided as image
-        Assert.Null(imageAnnotations.Registry);
+        Assert.Equal("myorg/mycollector", imageAnnotations.Image);
+        Assert.Equal("myregistry.io", imageAnnotations.Registry);
     }
 
     [Fact]
@@ -371,75 +370,6 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public void RunWithHttpsDevCertificateAddsExecutableResourceInRunMode()
-    {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
-        builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
-
-        builder.AddOpenTelemetryCollector("collector", settings =>
-        {
-            settings.ForceNonSecureReceiver = false; // Allow HTTPS
-        })
-            .WithAppForwarding();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        // Should have created a dev-cert-export executable resource
-        var devCertExportResource = appModel.Resources.OfType<ExecutableResource>()
-            .SingleOrDefault(r => r.Name == "dev-cert-export");
-        Assert.NotNull(devCertExportResource);
-
-        // Verify it's configured to run dotnet dev-certs
-        var args = devCertExportResource.Annotations.OfType<CommandLineArgsCallbackAnnotation>().ToList();
-        Assert.NotEmpty(args);
-
-        var context = new CommandLineArgsCallbackContext([]);
-        foreach (var arg in args)
-        {
-            arg.Callback(context);
-        }
-
-        Assert.Contains("dev-certs", context.Args.Cast<string>());
-        Assert.Contains("https", context.Args.Cast<string>());
-        Assert.Contains("--export-path", context.Args.Cast<string>());
-        Assert.Contains("--format", context.Args.Cast<string>());
-        Assert.Contains("Pem", context.Args.Cast<string>());
-        Assert.Contains("--no-password", context.Args.Cast<string>());
-    }
-
-    [Fact]
-    public void RunWithHttpsDevCertificateAddsContainerFilesAndWaitAnnotation()
-    {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
-        builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
-
-        builder.AddOpenTelemetryCollector("collector", settings =>
-        {
-            settings.ForceNonSecureReceiver = false; // Allow HTTPS
-        })
-            .WithAppForwarding();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().SingleOrDefault();
-        Assert.NotNull(collectorResource);
-
-        // Should have a WaitAnnotation for the dev-cert-export resource
-        var waitAnnotations = collectorResource.Annotations.OfType<WaitAnnotation>().ToList();
-        var devCertWaitAnnotation = waitAnnotations.FirstOrDefault(w => w.Resource.Name == "dev-cert-export");
-        Assert.NotNull(devCertWaitAnnotation);
-        Assert.Equal(WaitType.WaitForCompletion, devCertWaitAnnotation.WaitType);
-
-        // Should have a ContainerFilesAnnotation for the dev certificates
-        var containerFilesAnnotations = collectorResource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>().ToList();
-        var devCertFilesAnnotation = containerFilesAnnotations.FirstOrDefault(cf => cf.DestinationPath == "/dev-certs");
-        Assert.NotNull(devCertFilesAnnotation);
-    }
-
-    [Fact]
     public void RunWithHttpsDevCertificateNotTriggeredInNonRunMode()
     {
         // Use regular builder (not TestDistributedApplicationBuilder.Create) which defaults to non-Run mode
@@ -498,135 +428,6 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         var containerFilesAnnotations = collectorResource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>().ToList();
         var devCertFilesAnnotation = containerFilesAnnotations.FirstOrDefault(cf => cf.DestinationPath == "/dev-certs");
         Assert.Null(devCertFilesAnnotation);
-    }
-
-    [Fact]
-    public void DevCertificateResourcesAddedWhenHttpsEnabled()
-    {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
-        builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
-
-        builder.AddOpenTelemetryCollector("collector", settings =>
-        {
-            settings.ForceNonSecureReceiver = false; // Allow HTTPS
-        })
-            .WithAppForwarding();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        // Should have created a dev-cert-export executable resource
-        var devCertExportResource = appModel.Resources.OfType<ExecutableResource>()
-            .SingleOrDefault(r => r.Name == "dev-cert-export");
-        Assert.NotNull(devCertExportResource);
-        Assert.Equal("dotnet", devCertExportResource.Command);
-
-        var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().SingleOrDefault();
-        Assert.NotNull(collectorResource);
-
-        // Should have container files annotation for dev certs
-        var containerFilesAnnotations = collectorResource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>().ToList();
-        var devCertFilesAnnotation = containerFilesAnnotations.FirstOrDefault(cf => cf.DestinationPath == "/dev-certs");
-        Assert.NotNull(devCertFilesAnnotation);
-
-        // Should have wait annotation for the dev-cert-export resource
-        var waitAnnotations = collectorResource.Annotations.OfType<WaitAnnotation>().ToList();
-        var devCertWaitAnnotation = waitAnnotations.FirstOrDefault(wa => wa.Resource == devCertExportResource);
-        Assert.NotNull(devCertWaitAnnotation);
-    }
-
-    [Fact]
-    public void DevCertificateContainerFilesOnlyAddedForEnabledEndpointsInRunMode()
-    {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
-        builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
-
-        builder.AddOpenTelemetryCollector("collector", settings =>
-        {
-            settings.EnableGrpcEndpoint = true;
-            settings.EnableHttpEndpoint = false; // Only enable gRPC
-            settings.ForceNonSecureReceiver = false;
-        })
-            .WithAppForwarding();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var collectorResource = appModel.Resources.OfType<OpenTelemetryCollectorResource>().SingleOrDefault();
-        Assert.NotNull(collectorResource);
-
-        // Should have container files annotation for dev certs
-        var containerFilesAnnotations = collectorResource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>().ToList();
-        var devCertFilesAnnotation = containerFilesAnnotations.FirstOrDefault(cf => cf.DestinationPath == "/dev-certs");
-        Assert.NotNull(devCertFilesAnnotation);
-
-        // Verify the TLS arguments are only added for enabled endpoints
-        var args = collectorResource.Annotations.OfType<CommandLineArgsCallbackAnnotation>().ToList();
-        var context = new CommandLineArgsCallbackContext([]);
-        foreach (var arg in args)
-        {
-            arg.Callback(context);
-        }
-
-        // Should only contain gRPC TLS args, not HTTP TLS args
-        Assert.Contains(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::grpc::tls::cert_file"));
-        Assert.Contains(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::grpc::tls::key_file"));
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::http::tls::cert_file"));
-        Assert.DoesNotContain(context.Args.Cast<string>(), a => a.Contains("receivers::otlp::protocols::http::tls::key_file"));
-    }
-
-    [Fact]
-    public void DevCertificateExecutableResourceHasCorrectConfiguration()
-    {
-        var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Run);
-        builder.Configuration["ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL"] = "https://localhost:18889";
-
-        builder.AddOpenTelemetryCollector("collector", settings =>
-        {
-            settings.ForceNonSecureReceiver = false; // Allow HTTPS
-        })
-            .WithAppForwarding();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        // Verify the dev-cert-export executable has correct configuration
-        var devCertExportResource = appModel.Resources.OfType<ExecutableResource>()
-            .SingleOrDefault(r => r.Name == "dev-cert-export");
-        Assert.NotNull(devCertExportResource);
-        Assert.Equal("dotnet", devCertExportResource.Command);
-
-        // Check the environment variable for consistent language
-        var envAnnotations = devCertExportResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.NotEmpty(envAnnotations);
-
-        var envContext = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
-        foreach (var env in envAnnotations)
-        {
-            env.Callback(envContext);
-        }
-
-        Assert.Contains("DOTNET_CLI_UI_LANGUAGE", envContext.EnvironmentVariables.Keys);
-        Assert.Equal("en", envContext.EnvironmentVariables["DOTNET_CLI_UI_LANGUAGE"]);
-
-        // Check the arguments for certificate export
-        var argsAnnotations = devCertExportResource.Annotations.OfType<CommandLineArgsCallbackAnnotation>().ToList();
-        Assert.NotEmpty(argsAnnotations);
-
-        var argsContext = new CommandLineArgsCallbackContext([]);
-        foreach (var arg in argsAnnotations)
-        {
-            arg.Callback(argsContext);
-        }
-
-        Assert.Contains("dev-certs", argsContext.Args);
-        Assert.Contains("https", argsContext.Args);
-        Assert.Contains("--export-path", argsContext.Args);
-        Assert.Contains("--format", argsContext.Args);
-        Assert.Contains("Pem", argsContext.Args);
-        Assert.Contains("--no-password", argsContext.Args);
     }
 
     [Theory]

@@ -1,12 +1,12 @@
 # CommunityToolkit.Aspire.Hosting.RavenDB library
 
-Provides extension methods and resource definitions for a .NET Aspire AppHost to configure a RavenDB resource.
+Provides extension methods and resource definitions for an Aspire AppHost to configure a RavenDB resource.
 
 ## Getting started
 
 ### Install the package
 
-In your AppHost project, install the .NET Aspire RavenDB Hosting library with [NuGet](https://www.nuget.org):
+In your AppHost project, install the Aspire RavenDB Hosting library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Hosting.RavenDB

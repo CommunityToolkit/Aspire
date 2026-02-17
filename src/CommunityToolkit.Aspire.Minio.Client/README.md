@@ -10,7 +10,7 @@ Registers a [MinIOClient](https://github.com/minio/minio-dotnet) in the DI conta
 
 ### Install the package
 
-Install the .NET Aspire MinIO Client library with [NuGet](https://www.nuget.org):
+Install the Aspire MinIO Client library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Minio.Client
@@ -26,7 +26,7 @@ builder.AddMinioClient("minio");
 
 ## Configuration
 
-The .NET Aspire MinIO Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
+The Aspire MinIO Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
 
 ### Use a connection string
 
@@ -48,7 +48,7 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 
 ### Use configuration providers
 
-The .NET Aspire MinIO Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration).
+The Aspire MinIO Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration).
 It loads the `MinioClientSettings` from configuration by using the `Aspire:Minio:Client` key.
 This key can be overriden by using the `configurationSectionName` method parameter.
 Example `appsettings.json` that configures some of the options:

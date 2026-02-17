@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Meilisearch library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [Meilisearch](https://meilisearch.com) containers.
+Provides extension methods and resource definitions for the Aspire AppHost to support running [Meilisearch](https://meilisearch.com) containers.
 
 ## Getting Started
 

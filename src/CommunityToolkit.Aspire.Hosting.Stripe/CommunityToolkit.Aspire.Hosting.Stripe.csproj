@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting stripe payments webhooks</AdditionalPackageTags>
-    <Description>A .NET Aspire integration for the Stripe CLI for local webhook forwarding and testing.</Description>
+    <Description>An Aspire integration for the Stripe CLI for local webhook forwarding and testing.</Description>
   </PropertyGroup>
 
   <ItemGroup>

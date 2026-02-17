@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>minio hosting cloud storage</AdditionalPackageTags>
-    <Description>A .NET Aspire hosting integration for MinIO</Description>
+    <Description>An Aspire hosting integration for MinIO</Description>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

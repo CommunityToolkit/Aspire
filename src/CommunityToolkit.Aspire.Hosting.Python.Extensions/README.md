@@ -10,7 +10,7 @@
 >
 > This package will be removed in a future release. Please migrate your applications to use the core `Aspire.Hosting.Python` package.
 
-Provides extensions methods and resource definitions for the .NET Aspire AppHost to extend the support for Python applications. Current support includes:
+Provides extensions methods and resource definitions for the Aspire AppHost to extend the support for Python applications. Current support includes:
 - Uvicorn
 - Uv
 - Streamlit

@@ -1,4 +1,5 @@
 ﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel.Docker;
 using CommunityToolkit.Aspire.Utils;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -123,12 +124,14 @@ public static class GolangAppHostingExtension
                     .Run(string.Join(" ", ["CGO_ENABLED=0", "go", .. buildArgs]));
 
                 var runtimeImage = baseImageAnnotation?.RuntimeImage ?? $"alpine:{DefaultAlpineVersion}";
+                var logger = context.Services.GetService<ILogger<GolangAppExecutableResource>>() ?? NullLogger<GolangAppExecutableResource>.Instance;
 
                 context.Builder
                     .From(runtimeImage)
                     .Run("apk --no-cache add ca-certificates")
                     .WorkDir("/app")
                     .CopyFrom(buildStage.StageName!, "/build/server", "/app/server")
+                    .AddContainerFiles(context.Resource, "/app", logger)
                     .Entrypoint(["/app/server"]);
             });
         });
@@ -233,5 +236,89 @@ public static class GolangAppHostingExtension
 
         logger.LogDebug("No Go version detected, will use default version");
         return null;
+    }
+
+    /// <summary>
+    /// Ensures Go module dependencies are tidied before the application starts using <c>go mod tidy</c>.
+    /// </summary>
+    /// <param name="builder">The Golang app resource builder.</param>
+    /// <param name="install">When true (default), automatically runs go mod tidy before the application starts. When false, the installer resource is created but requires explicit start.</param>
+    /// <param name="configureInstaller">Optional action to configure the installer resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<GolangAppExecutableResource> WithGoModTidy(
+        this IResourceBuilder<GolangAppExecutableResource> builder,
+        bool install = true,
+        Action<IResourceBuilder<GoModInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        // Only create installer resource if in run mode
+        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            var installerName = $"{builder.Resource.Name}-go-mod-tidy";
+            var installer = new GoModInstallerResource(installerName, builder.Resource.WorkingDirectory);
+
+            var installerBuilder = builder.ApplicationBuilder.AddResource(installer)
+                .WithArgs("mod", "tidy")
+                .WithParentRelationship(builder.Resource)
+                .ExcludeFromManifest();
+
+            configureInstaller?.Invoke(installerBuilder);
+
+            if (install)
+            {
+                // Make the parent resource wait for the installer to complete
+                builder.WaitForCompletion(installerBuilder);
+            }
+            else
+            {
+                // Add WithExplicitStart when install is false
+                installerBuilder.WithExplicitStart();
+            }
+        }
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Ensures Go module dependencies are downloaded before the application starts using <c>go mod download</c>.
+    /// </summary>
+    /// <param name="builder">The Golang app resource builder.</param>
+    /// <param name="install">When true (default), automatically runs go mod download before the application starts. When false, the installer resource is created but requires explicit start.</param>
+    /// <param name="configureInstaller">Optional action to configure the installer resource.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<GolangAppExecutableResource> WithGoModDownload(
+        this IResourceBuilder<GolangAppExecutableResource> builder,
+        bool install = true,
+        Action<IResourceBuilder<GoModInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
+        // Only create installer resource if in run mode
+        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            var installerName = $"{builder.Resource.Name}-go-mod-download";
+            var installer = new GoModInstallerResource(installerName, builder.Resource.WorkingDirectory);
+
+            var installerBuilder = builder.ApplicationBuilder.AddResource(installer)
+                .WithArgs("mod", "download")
+                .WithParentRelationship(builder.Resource)
+                .ExcludeFromManifest();
+
+            configureInstaller?.Invoke(installerBuilder);
+
+            if (install)
+            {
+                // Make the parent resource wait for the installer to complete
+                builder.WaitForCompletion(installerBuilder);
+            }
+            else
+            {
+                // Add WithExplicitStart when install is false
+                installerBuilder.WithExplicitStart();
+            }
+        }
+
+        return builder;
     }
 }

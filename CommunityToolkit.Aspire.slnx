@@ -8,6 +8,9 @@
   <Folder Name="/examples/adminer/">
     <Project Path="examples/adminer/CommunityToolkit.Aspire.Hosting.Adminer.AppHost/CommunityToolkit.Aspire.Hosting.Adminer.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/azure-ext/">
+    <Project Path="examples/azure-ext/CommunityToolkit.Aspire.Azure.Extensions.AppHost/CommunityToolkit.Aspire.Azure.Extensions.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/bun/">
     <Project Path="examples/bun/CommunityToolkit.Aspire.Hosting.Bun.AppHost/CommunityToolkit.Aspire.Hosting.Bun.AppHost.csproj" />
   </Folder>
@@ -29,11 +32,6 @@
   </Folder>
   <Folder Name="/examples/deno/">
     <Project Path="examples/deno/CommunityToolkit.Aspire.Hosting.Deno.AppHost/CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj" />
-  </Folder>
-  <Folder Name="/examples/kurrentdb/">
-    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService.csproj" />
-    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.csproj" />
-    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/elasticsearch-ext/">
     <Project Path="examples/elasticsearch-ext/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost.csproj" />
@@ -71,6 +69,11 @@
     <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Dev\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Dev.csproj" />
     <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod.csproj" />
     <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/kurrentdb/">
+    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService.csproj" />
+    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.csproj" />
+    <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults/CommunityToolkit.Aspire.Hosting.KurrentDB.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/lavinmq/">
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost.csproj" />
@@ -179,11 +182,15 @@
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost/CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost.csproj" />
     <Project Path="examples/surrealdb/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults/CommunityToolkit.Aspire.Hosting.SurrealDb.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/umami/">
+    <Project Path="examples\umami\CommunityToolkit.Aspire.Hosting.Umami.AppHost\CommunityToolkit.Aspire.Hosting.Umami.AppHost.csproj" Type="Classic C#" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Extensions/CommunityToolkit.Aspire.Hosting.Azure.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
@@ -231,6 +238,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Sftp/CommunityToolkit.Aspire.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" />
+    <Project Path="src\CommunityToolkit.Aspire.Hosting.Umami\CommunityToolkit.Aspire.Hosting.Umami.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
@@ -242,6 +250,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
@@ -289,6 +298,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Sftp.Tests/CommunityToolkit.Aspire.Sftp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <Project Path="tests\CommunityToolkit.Aspire.Hosting.Umami.Tests\CommunityToolkit.Aspire.Hosting.Umami.Tests.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/tests/Dapr/">
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />

@@ -10,6 +10,10 @@ using SurrealDb.Net;
 
 namespace CommunityToolkit.Aspire.SurrealDb.Tests;
 
+[CollectionDefinition("Conformance", DisableParallelization = true)]
+public class ConformanceCollection;
+
+[Collection("Conformance")]
 public class ConformanceTests :
     ConformanceTests<SurrealDbClient, SurrealDbClientSettings>,
     IClassFixture<SurrealDbContainerFixture>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>A .NET Aspire client integration for the OllamaSharp library.</Description>
+    <Description>An Aspire client integration for the OllamaSharp library.</Description>
     <AdditionalPackageTags>ollama ai ollamasharp client</AdditionalPackageTags>
   </PropertyGroup>
 

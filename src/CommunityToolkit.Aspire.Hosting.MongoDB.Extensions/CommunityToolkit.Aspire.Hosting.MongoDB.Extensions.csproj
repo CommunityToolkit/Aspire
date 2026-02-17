@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting mongodb dbgate</AdditionalPackageTags>
-    <Description>A .NET Aspire integration for extending mongodb hosting.</Description>
+    <Description>An Aspire integration for extending mongodb hosting.</Description>
   </PropertyGroup>
 
   <ItemGroup>

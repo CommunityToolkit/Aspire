@@ -65,4 +65,31 @@ public class DbGatePublicApiTests
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
     }
+
+    [Fact]
+    public void SanitizeConnectionIdShouldThrowWhenResourceNameIsNull()
+    {
+        string resourceName = null!;
+
+        var action = () => DbGateBuilderExtensions.SanitizeConnectionId(resourceName);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(resourceName), exception.ParamName);
+    }
+
+    [Theory]
+    [InlineData("mysql", "mysql")]
+    [InlineData("mysql-db", "mysql_db")]
+    [InlineData("my-sql-db", "my_sql_db")]
+    [InlineData("mysql_db", "mysql_db")]
+    [InlineData("mysql-", "mysql_")]
+    [InlineData("-mysql", "_mysql")]
+    [InlineData("--mysql--", "__mysql__")]
+    [InlineData("", "")]
+    public void SanitizeConnectionIdShouldReplaceHyphensWithUnderscores(string input, string expected)
+    {
+        var result = DbGateBuilderExtensions.SanitizeConnectionId(input);
+
+        Assert.Equal(expected, result);
+    }
 }

@@ -10,7 +10,7 @@ Registers an [SftpClient](https://github.com/sshnet/SSH.NET) in the DI container
 
 ### Install the package
 
-Install the .NET Aspire SFTP Client library with [NuGet](https://www.nuget.org):
+Install the Aspire SFTP Client library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Sftp
@@ -26,7 +26,7 @@ builder.AddSftpClient("sftp");
 
 ## Configuration
 
-The .NET Aspire SFTP Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
+The Aspire SFTP Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
 
 ### Use a connection string
 
@@ -48,7 +48,7 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 
 ### Use configuration providers
 
-The .NET Aspire SFTP Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `SftpSettings` from configuration by using the `Aspire:Sftp:Client` key. Example `appsettings.json` that configures some of the options:
+The Aspire SFTP Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `SftpSettings` from configuration by using the `Aspire:Sftp:Client` key. Example `appsettings.json` that configures some of the options:
 
 ```json
 {

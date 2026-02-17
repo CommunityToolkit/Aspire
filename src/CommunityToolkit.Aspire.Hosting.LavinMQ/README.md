@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration can be used to include [LavinMQ](https://lavinmq.com/) in a container.
+This Aspire Integration can be used to include [LavinMQ](https://lavinmq.com/) in a container.
 
 ## Usage
 

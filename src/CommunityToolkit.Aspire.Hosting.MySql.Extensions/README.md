@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.MySql.Extensions library
 
-This integration contains extensions for the [MySql hosting package](https://nuget.org/packages/Aspire.Hosting.MySql) for .NET Aspire.
+This integration contains extensions for the [MySql hosting package](https://nuget.org/packages/Aspire.Hosting.MySql) for Aspire.
 
 The integration provides support for running [Adminer](https://github.com/vrana/adminer) and [DbGate](https://github.com/dbgate/dbgate) to interact with the MySql database.
 

@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Solr
 
-This package provides a .NET Aspire hosting integration for [Apache Solr](https://solr.apache.org/), enabling you to add and configure a Solr container as part of your distributed application.
+This package provides an Aspire hosting integration for [Apache Solr](https://solr.apache.org/), enabling you to add and configure a Solr container as part of your distributed application.
 
 ## Getting Started
 

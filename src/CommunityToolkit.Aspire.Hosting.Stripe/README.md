@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Stripe library
 
-Provides extension methods and resource definitions for a .NET Aspire AppHost to configure the Stripe CLI for local webhook forwarding and testing.
+Provides extension methods and resource definitions for an Aspire AppHost to configure the Stripe CLI for local webhook forwarding and testing.
 
 ## Getting Started
 

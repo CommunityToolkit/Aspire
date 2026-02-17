@@ -210,4 +210,29 @@ public class AddSurrealServerTests
         Assert.True(hasValue);
         Assert.Equal(expected, value);
     }
+
+    [Fact]
+    public async Task AddSurrealServerContainerWithOtlpExporter()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var surrealServer = appBuilder
+            .AddSurrealServer("surreal")
+            .WithOtlpExporter();
+
+        using var app = appBuilder.Build();
+
+        // Verify that OtlpExporterAnnotation is present (added by WithOtlpExporter)
+        // This annotation marks the resource as an OTEL exporter
+        Assert.True(surrealServer.Resource.HasAnnotationOfType<OtlpExporterAnnotation>());
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        var variables = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
+        
+        bool hasValue = variables.TryGetValue("SURREAL_TELEMETRY_PROVIDER", out var value);
+        
+        Assert.True(hasValue);
+        Assert.Equal("otlp", value);
+    }
 }

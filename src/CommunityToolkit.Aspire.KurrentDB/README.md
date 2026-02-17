@@ -10,7 +10,7 @@ Registers an [KurrentDBClient](https://github.com/kurrent-io/KurrentDB-Client-Do
 
 ### Install the package
 
-Install the .NET Aspire KurrentDB Client library with [NuGet](https://www.nuget.org):
+Install the Aspire KurrentDB Client library with [NuGet](https://www.nuget.org):
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.KurrentDB
@@ -26,7 +26,7 @@ builder.AddKurrentDBClient("kurrentdb");
 
 ## Configuration
 
-The .NET Aspire KurrentDB Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
+The Aspire KurrentDB Client integration provides multiple options to configure the server connection based on the requirements and conventions of your project.
 
 ### Use a connection string
 
@@ -48,7 +48,7 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 
 ### Use configuration providers
 
-The .NET Aspire KurrentDB Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `KurrentDBSettings` from configuration by using the `Aspire:KurrentDB:Client` key. Example `appsettings.json` that configures some of the options:
+The Aspire KurrentDB Client integration supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `KurrentDBSettings` from configuration by using the `Aspire:KurrentDB:Client` key. Example `appsettings.json` that configures some of the options:
 
 ```json
 {

@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.k6 library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [Grafana k6](https://k6.io/) containers.
+Provides extension methods and resource definitions for the Aspire AppHost to support running [Grafana k6](https://k6.io/) containers.
 
 ## Getting Started
 

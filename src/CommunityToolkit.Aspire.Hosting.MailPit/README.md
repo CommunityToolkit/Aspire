@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration runs [MailPit](https://github.com/axllent/mailpit) in a container.
+This Aspire Integration runs [MailPit](https://github.com/axllent/mailpit) in a container.
 
 
 ## Usage

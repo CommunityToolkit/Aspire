@@ -25,6 +25,7 @@ jobs:
             Hosting.Azure.Dapr.Redis.Tests,
             Hosting.Azure.Dapr.Tests,
             Hosting.Azure.DataApiBuilder.Tests,
+            Hosting.Azure.Extensions.Tests,
             Hosting.Bun.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
@@ -63,6 +64,7 @@ jobs:
             Hosting.SqlServer.Extensions.Tests,
             Hosting.Stripe.Tests,
             Hosting.SurrealDb.Tests,
+            Hosting.Umami.Tests,
 
             # Client integration tests
             GoFeatureFlag.Tests,
