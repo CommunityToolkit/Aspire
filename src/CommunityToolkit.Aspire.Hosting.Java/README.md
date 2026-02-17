@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Java library
 
-Provides extensions methods and resource definitions for the Aspire AppHost to support running Java/Spring applications either using either the JDK or a container and configuring the OpenTelemetry agent for Java.
+Provides extension methods and resource definitions for the Aspire AppHost to support running Java applications.
 
 ## Getting Started
 
@@ -14,30 +14,48 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Java
 
 ### Example usage
 
-Then, in the _Program.cs_ file of `AppHost`, define a Java resource, then call `AddJavaApp` or `AddSpringApp`:
+In the _Program.cs_ file of `AppHost`, you can add a Java application:
 
 ```csharp
-// Define the Java container app resource
-var containerapp = builder.AddSpringApp("containerapp",
-                           new JavaAppContainerResourceOptions()
-                           {
-                               ContainerImageName = "<repository>/<image>",
-                               OtelAgentPath = "<agent-path>"
-                           });
+var javaApp = builder.AddJavaApp("javaApp", "../java-project")
+    .WithMavenBuild()
+    .WithHttpEndpoint(env: "SERVER_PORT");
+```
 
-// Define the Java executable app resource
-var executableapp = builder.AddSpringApp("executableapp",
-                           new JavaAppExecutableResourceOptions()
-                           {
-                               ApplicationName = "target/app.jar",
-                               OtelAgentPath = "../../../agents"
-                           });
+### Maven and Gradle support
 
-// (Optional) Add a Maven build step
-executableapp.WithMavenBuild();
+The integration provides support for Maven and Gradle build systems.
 
-// (Optional) Add a Gradle build step
-executableapp.WithGradleBuild();
+To run a Maven build before the application starts:
+
+```csharp
+var javaApp = builder.AddJavaApp("javaApp", "../java-project")
+    .WithMavenBuild();
+```
+
+To run a Gradle build before the application starts:
+
+```csharp
+var javaApp = builder.AddJavaApp("javaApp", "../java-project")
+    .WithGradleBuild();
+```
+
+### Customizing the JVM arguments
+
+You can customize the JVM arguments for the Java application:
+
+```csharp
+var javaApp = builder.AddJavaApp("javaApp", "../java-project")
+    .WithJvmArgs("-Xmx512m", "-Xms256m");
+```
+
+### Configuring OpenTelemetry Agent
+
+You can configure the OpenTelemetry Java Agent:
+
+```csharp
+var javaApp = builder.AddJavaApp("javaApp", "../java-project")
+    .WithOtelAgent("../agents/opentelemetry-javaagent.jar");
 ```
 
 ## Additional Information

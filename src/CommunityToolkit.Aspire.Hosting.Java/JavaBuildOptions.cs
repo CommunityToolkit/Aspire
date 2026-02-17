@@ -3,6 +3,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Represents the base options for configuring a Java build step.
 /// </summary>
+[Obsolete("This class will be removed in a future version.")]
 public abstract class JavaBuildOptions
 {
     /// <summary>
