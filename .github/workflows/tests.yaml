@@ -65,6 +65,7 @@ jobs:
             Hosting.Stripe.Tests,
             Hosting.SurrealDb.Tests,
             Hosting.Umami.Tests,
+            Hosting.Zitadel.Tests,
 
             # Client integration tests
             GoFeatureFlag.Tests,
