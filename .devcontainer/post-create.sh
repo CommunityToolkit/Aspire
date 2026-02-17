@@ -5,7 +5,7 @@ sudo apt-get update && \
     sudo rm -rf /var/lib/apt/lists/*
 
 echo Install .NET dev certs
-dotnet dev-certs https
+dotnet dev-certs https --trust
 
 echo Install Aspire
 curl -sSL https://aspire.dev/install.sh | bash
