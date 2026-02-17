@@ -1,5 +1,6 @@
+using System.Runtime.InteropServices;
 using Aspire.Hosting;
-using Aspire.Hosting.Eventing;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
 
@@ -10,15 +11,7 @@ public class ExecutableResourceCreationTests
     {
         IDistributedApplicationBuilder builder = null!;
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
-    }
-
-    [Fact]
-    public void AddSpringAppBuilderShouldNotBeNull()
-    {
-        IDistributedApplicationBuilder builder = null!;
-
-        Assert.Throws<ArgumentNullException>(() => builder.AddSpringApp("spring", Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory));
     }
 
     [Fact]
@@ -26,21 +19,10 @@ public class ExecutableResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp(null!, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp(null!, Environment.CurrentDirectory));
 
         const string name = "";
-        Assert.Throws<ArgumentException>(() => builder.AddJavaApp(name, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
-    }
-
-    [Fact]
-    public void AddSpringAppNameShouldNotBeNullOrWhiteSpace()
-    {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() => builder.AddSpringApp(null!, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
-
-        const string name = "";
-        Assert.Throws<ArgumentException>(() => builder.AddSpringApp(name, Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
+        Assert.Throws<ArgumentException>(() => builder.AddJavaApp(name, Environment.CurrentDirectory));
     }
 
     [Fact]
@@ -48,41 +30,17 @@ public class ExecutableResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", null!, new JavaAppExecutableResourceOptions()));
-        Assert.Throws<ArgumentException>(() => builder.AddJavaApp("java", "", new JavaAppExecutableResourceOptions()));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", workingDirectory: null!));
+        Assert.Throws<ArgumentException>(() => builder.AddJavaApp("java", workingDirectory: ""));
     }
 
     [Fact]
-    public void AddJavaAppExecutableResourceOptionsShouldNotBeNull()
+    public async Task AddJavaAppDetailsSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory, null!));
-    }
-
-    [Fact]
-    public void AddSpringAppContainerResourceOptionsShouldNotBeNull()
-    {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() => builder.AddSpringApp("spring", Environment.CurrentDirectory, null!));
-    }
-
-    [Fact]
-    public async Task AddJavaAppContainerDetailsSetOnResource()
-    {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            JvmArgs = ["-Dtest"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options);
+        builder.AddJavaApp("java", Environment.CurrentDirectory, "test.jar", args: ["--test"])
+               .WithJvmArgs("-Dtest");
 
         using var app = builder.Build();
 
@@ -96,191 +54,80 @@ public class ExecutableResourceCreationTests
         Assert.Equal(Environment.CurrentDirectory, resource.WorkingDirectory);
         Assert.Equal("java", resource.Command);
 
-        Assert.True(resource.TryGetLastAnnotation(out EndpointAnnotation? httpEndpointAnnotations));
-        Assert.Equal(options.Port, httpEndpointAnnotations.Port);
-
-        Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
-        CommandLineArgsCallbackContext context = new([]);
-        await argsAnnotations.Callback(context);
-
-        Assert.Equal([..options.JvmArgs, "-jar", options.ApplicationName, ..options.Args], context.Args);
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal("-Dtest", args[0]);
+        Assert.Contains("-jar", args);
+        Assert.Contains("test.jar", args);
+        Assert.Contains("--test", args);
     }
 
     [Fact]
-    public void AddingMavenOptions()
+    public void AddJavaAppWithMavenBuildCreatesResource()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
+        builder.AddJavaApp("java", Environment.CurrentDirectory)
             .WithMavenBuild();
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annotation = Assert.Single(resource.Annotations.OfType<MavenBuildAnnotation>());
+        var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<MavenBuildResource>());
 
-        Assert.NotNull(annotation.MavenOptions);
-        Assert.Equal("mvnw", annotation.MavenOptions.Command);
-        Assert.Equal("--quiet clean package", string.Join(' ', annotation.MavenOptions.Args));
-        Assert.Equal(Environment.CurrentDirectory, annotation.MavenOptions.WorkingDirectory);
+        Assert.Equal("java-maven-build", buildResource.Name);
+        Assert.Equal(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd" : Path.Combine(javaResource.WorkingDirectory, "mvnw"), buildResource.Command);
+        
+        Assert.True(javaResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        Assert.Contains(waitAnnotations, w => w.Resource == buildResource);
     }
 
     [Fact]
-    public void AddingMavenOptionsWithOverrides()
+    public void AddJavaAppWithGradleBuildCreatesResource()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithMavenBuild(new()
-            {
-                Args = ["clean", "package"],
-            });
+        builder.AddJavaApp("java", Environment.CurrentDirectory)
+            .WithGradleBuild();
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annotation = Assert.Single(resource.Annotations.OfType<MavenBuildAnnotation>());
+        var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<GradleBuildResource>());
 
-        Assert.NotNull(annotation.MavenOptions);
-        Assert.Equal("mvnw", annotation.MavenOptions.Command);
-        Assert.Equal("clean package", string.Join(' ', annotation.MavenOptions.Args));
-        Assert.Equal(Environment.CurrentDirectory, annotation.MavenOptions.WorkingDirectory);
+        Assert.Equal("java-gradle-build", buildResource.Name);
+        Assert.Equal(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd" : Path.Combine(javaResource.WorkingDirectory, "gradlew"), buildResource.Command);
+        
+        Assert.True(javaResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        Assert.Contains(waitAnnotations, w => w.Resource == buildResource);
     }
 
     [Fact]
-    public void ChainingAddMavenBuildOverridesPreviousOptions()
+    public async Task AddJavaAppWithOtelAgentSetsEnvironment()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithMavenBuild(new()
-            {
-                Args = ["clean", "package"],
-            })
-            .WithMavenBuild();
+        builder.AddJavaApp("java", Environment.CurrentDirectory)
+            .WithOtelAgent("/agents/opentelemetry-javaagent.jar");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annotation = Assert.Single(resource.Annotations.OfType<MavenBuildAnnotation>());
 
-        Assert.NotNull(annotation.MavenOptions);
-        Assert.Equal("mvnw", annotation.MavenOptions.Command);
-        Assert.Equal("--quiet clean package", string.Join(' ', annotation.MavenOptions.Args));
-        Assert.Equal(Environment.CurrentDirectory, annotation.MavenOptions.WorkingDirectory);
+        var config = await resource.GetEnvironmentVariablesAsync();
+        Assert.True(config.TryGetValue("JAVA_TOOL_OPTIONS", out var value));
+        Assert.Equal("-javaagent:/agents/opentelemetry-javaagent.jar", value);
     }
 
     [Fact]
-    public void AddingMavenBuildRegistersRebuildCommand()
+#pragma warning disable CS0618
+    public void DeprecatedAddJavaAppBuilderShouldNotBeNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        IDistributedApplicationBuilder builder = null!;
 
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithMavenBuild();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-maven");
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
     }
-
-    [Fact]
-    public void MultipleAddingMavenBuildRegistersSingleRebuildCommand()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithMavenBuild();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-maven");
-    }
-
-    [Theory]
-    [InlineData("Stopped", ResourceCommandState.Enabled)]
-    [InlineData("Finished", ResourceCommandState.Enabled)]
-    [InlineData("Exited", ResourceCommandState.Enabled)]
-    [InlineData("FailedToStart", ResourceCommandState.Enabled)]
-    [InlineData("Starting", ResourceCommandState.Disabled)]
-    [InlineData("Running", ResourceCommandState.Disabled)]
-    public void MavenBuildCommandAvailability(string text, ResourceCommandState expectedCommandState)
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithMavenBuild();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annoitation = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-maven");
-
-        var updateState = annoitation.UpdateState(new UpdateCommandStateContext()
-        {
-            ResourceSnapshot = new CustomResourceSnapshot()
-            {
-                State = new ResourceStateSnapshot(text, null),
-                ResourceType = "JavaAppExecutableResource",
-                Properties = []
-            },
-            ServiceProvider = app.Services
-        });
-        Assert.Equal(expectedCommandState, updateState);
-    }
+#pragma warning restore CS0618
 }

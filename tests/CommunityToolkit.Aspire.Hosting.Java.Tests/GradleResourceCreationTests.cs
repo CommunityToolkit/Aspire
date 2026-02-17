@@ -1,184 +1,47 @@
+using System.Runtime.InteropServices;
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
 
 public class GradleResourceCreationTests
 {
     [Fact]
-    public void AddingGradleOptions()
+    public void AddingGradleBuildCreatesResource()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
+        builder.AddJavaApp("java", Environment.CurrentDirectory)
             .WithGradleBuild();
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annotation = Assert.Single(resource.Annotations.OfType<GradleBuildAnnotation>());
+        var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<GradleBuildResource>());
 
-        Assert.NotNull(annotation.GradleOptions);
-        Assert.Equal("gradlew", annotation.GradleOptions.Command);
-        Assert.Equal("--quiet clean build", string.Join(' ', annotation.GradleOptions.Args));
-        Assert.Equal(Environment.CurrentDirectory, annotation.GradleOptions.WorkingDirectory);
+        Assert.Equal("java-gradle-build", buildResource.Name);
+        Assert.Equal(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd" : Path.Combine(Environment.CurrentDirectory, "gradlew"), buildResource.Command);
+        
+        Assert.True(javaResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
+        Assert.Contains(waitAnnotations, w => w.Resource == buildResource);
     }
 
     [Fact]
-    public void AddingGradleOptionsWithOverrides()
+    public async Task AddingGradleBuildWithOverrides()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithGradleBuild(new()
-            {
-                Args = ["clean", "build"],
-            });
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annotation = Assert.Single(resource.Annotations.OfType<GradleBuildAnnotation>());
-
-        Assert.NotNull(annotation.GradleOptions);
-        Assert.Equal("gradlew", annotation.GradleOptions.Command);
-        Assert.Equal("clean build", string.Join(' ', annotation.GradleOptions.Args));
-        Assert.Equal(Environment.CurrentDirectory, annotation.GradleOptions.WorkingDirectory);
-    }
-
-    [Fact]
-    public void ChainingAddGradleBuildOverridesPreviousOptions()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithGradleBuild(new()
-            {
-                Args = ["clean", "build"],
-            })
+        builder.AddJavaApp("java", Environment.CurrentDirectory)
             .WithGradleBuild();
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annotation = Assert.Single(resource.Annotations.OfType<GradleBuildAnnotation>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<GradleBuildResource>());
 
-        Assert.NotNull(annotation.GradleOptions);
-        Assert.Equal("gradlew", annotation.GradleOptions.Command);
-        Assert.Equal("--quiet clean build", string.Join(' ', annotation.GradleOptions.Args));
-        Assert.Equal(Environment.CurrentDirectory, annotation.GradleOptions.WorkingDirectory);
-    }
-
-    [Fact]
-    public void AddingGradleBuildRegistersRebuildCommand()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithGradleBuild();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-gradle");
-    }
-
-    [Fact]
-    public void MultipleAddingGradleBuildRegistersSingleRebuildCommand()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithGradleBuild();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-gradle");
-    }
-
-    [Theory]
-    [InlineData("Stopped", ResourceCommandState.Enabled)]
-    [InlineData("Finished", ResourceCommandState.Enabled)]
-    [InlineData("Exited", ResourceCommandState.Enabled)]
-    [InlineData("FailedToStart", ResourceCommandState.Enabled)]
-    [InlineData("Starting", ResourceCommandState.Disabled)]
-    [InlineData("Running", ResourceCommandState.Disabled)]
-    public void GradleBuildCommandAvailability(string text, ResourceCommandState expectedCommandState)
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var options = new JavaAppExecutableResourceOptions
-        {
-            ApplicationName = "test.jar",
-            Args = ["--test"],
-            OtelAgentPath = "otel-agent",
-            Port = 8080
-        };
-
-        builder.AddJavaApp("java", Environment.CurrentDirectory, options)
-            .WithGradleBuild();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
-        var annotation = Assert.Single(resource.Annotations.OfType<ResourceCommandAnnotation>(), a => a.Name == "build-with-gradle");
-
-        var updateState = annotation.UpdateState(new UpdateCommandStateContext()
-        {
-            ResourceSnapshot = new CustomResourceSnapshot()
-            {
-                State = new ResourceStateSnapshot(text, null),
-                ResourceType = "JavaAppExecutableResource",
-                Properties = []
-            },
-            ServiceProvider = app.Services
-        });
-        Assert.Equal(expectedCommandState, updateState);
+        var args = await buildResource.GetArgumentListAsync();
+        string[] expectedArgs = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ["/c", "gradlew.bat", "clean", "build"] : ["clean", "build"];
+        Assert.Equal(expectedArgs, args);
     }
 }

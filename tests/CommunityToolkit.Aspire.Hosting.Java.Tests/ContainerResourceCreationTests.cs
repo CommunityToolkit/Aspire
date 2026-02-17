@@ -1,9 +1,32 @@
 using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
+
 public class ContainerResourceCreationTests
 {
     [Fact]
+    public void AddJavaAppWithImageSetsDetails()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        builder.AddJavaContainerApp("java", "java-image", workingDirectory: ".", imageTag: "v1");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<JavaAppContainerResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+        Assert.Equal("java", resource.Name);
+
+        Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
+        Assert.Equal("java-image", imageAnnotations.Image);
+        Assert.Equal("v1", imageAnnotations.Tag);
+    }
+
+    [Fact]
+#pragma warning disable CS0618
     public void AddJavaAppBuilderShouldNotBeNull()
     {
         IDistributedApplicationBuilder builder = null!;
@@ -96,13 +119,10 @@ public class ContainerResourceCreationTests
         Assert.Equal(options.ContainerRegistry, imageAnnotations.Registry);
         Assert.Equal(options.ContainerImageTag, imageAnnotations.Tag);
 
-        Assert.True(resource.TryGetLastAnnotation(out EndpointAnnotation? httpEndpointAnnotations));
-        Assert.Equal(options.Port, httpEndpointAnnotations.Port);
-        Assert.Equal(options.TargetPort, httpEndpointAnnotations.TargetPort);
-
         Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
         CommandLineArgsCallbackContext context = new([]);
         await argsAnnotations.Callback(context);
         Assert.All(options.Args, arg => Assert.Contains(arg, context.Args));
     }
+#pragma warning restore CS0618
 }
