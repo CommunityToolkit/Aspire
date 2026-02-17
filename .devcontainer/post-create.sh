@@ -5,8 +5,12 @@ sudo apt-get update && \
     sudo rm -rf /var/lib/apt/lists/*
 
 echo Install .NET dev certs
-export WSL_INTEROP=""
-dotnet dev-certs https --trust
+EXIT_CODE=0
+dotnet dev-certs https --trust || EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ] && [ $EXIT_CODE -ne 4 ]; then
+  echo "dotnet dev-certs https --trust failed with exit code $EXIT_CODE"
+  exit $EXIT_CODE
+fi
 
 echo Install Aspire
 curl -sSL https://aspire.dev/install.sh | bash

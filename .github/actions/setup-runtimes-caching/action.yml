@@ -84,10 +84,13 @@ runs:
     - name: Setup .NET dev certs
       shell: bash
       if: ${{ matrix.os == 'ubuntu-latest' }}
-      env:
-        WSL_INTEROP: ""
       run: |
-        dotnet dev-certs https --trust
+        EXIT_CODE=0
+        dotnet dev-certs https --trust || EXIT_CODE=$?
+        if [ $EXIT_CODE -ne 0 ] && [ $EXIT_CODE -ne 4 ]; then
+          echo "dotnet dev-certs https --trust failed with exit code $EXIT_CODE"
+          exit $EXIT_CODE
+        fi
 
     - name: Setup Node globals
       shell: bash
