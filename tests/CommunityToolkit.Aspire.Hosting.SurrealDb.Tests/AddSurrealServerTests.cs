@@ -226,9 +226,7 @@ public class AddSurrealServerTests
         // This annotation marks the resource as an OTEL exporter
         Assert.True(surrealServer.Resource.HasAnnotationOfType<OtlpExporterAnnotation>());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        var variables = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
-#pragma warning restore CS0618 // Type or member is obsolete
+        var variables = await surrealServer.Resource.GetEnvironmentVariablesAsync();
         
         bool hasValue = variables.TryGetValue("SURREAL_TELEMETRY_PROVIDER", out var value);
         

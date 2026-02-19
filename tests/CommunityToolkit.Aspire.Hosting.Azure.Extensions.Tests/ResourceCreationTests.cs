@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.Extensions.Tests;
 
@@ -29,9 +30,7 @@ public class ResourceCreationTests
 
         Assert.Equal("blobs-explorer", azureStorageExplorerResource.Name);
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        var envs = await azureStorageExplorerResource.GetEnvironmentVariableValuesAsync();
-#pragma warning restore CS0618 // Type or member is obsolete
+        var envs = await azureStorageExplorerResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
 
