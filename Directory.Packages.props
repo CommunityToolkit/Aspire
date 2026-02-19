@@ -95,6 +95,7 @@
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
+    <PackageVersion Include="ChromaDB.Client" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
