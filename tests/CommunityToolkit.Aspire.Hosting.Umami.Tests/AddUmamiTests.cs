@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
 
@@ -58,9 +59,7 @@ public class AddUmamiTests
         Assert.Equal(UmamiContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(UmamiContainerImageTags.Registry, containerAnnotation.Registry);
     
-#pragma warning disable CS0618 // Type or member is obsolete
-        var config = await umami.Resource.GetEnvironmentVariableValuesAsync();
-#pragma warning restore CS0618 // Type or member is obsolete
+        var config = await umami.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Collection(config,
             env =>
