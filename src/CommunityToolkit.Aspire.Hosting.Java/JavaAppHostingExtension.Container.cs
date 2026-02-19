@@ -14,20 +14,16 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="image">The container image name.</param>
-    /// <param name="workingDirectory">The working directory containing the Java application.</param>
     /// <param name="imageTag">The container image tag.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<JavaAppContainerResource> AddJavaContainerApp(this IDistributedApplicationBuilder builder, [ResourceName] string name,
-        string image, string? workingDirectory = null, string? imageTag = null)
+        string image, string? imageTag = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         ArgumentException.ThrowIfNullOrWhiteSpace(image, nameof(image));
 
-        workingDirectory ??= builder.AppHostDirectory;
-
-        workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
-        var resource = new JavaAppContainerResource(name, workingDirectory);
+        var resource = new JavaAppContainerResource(name);
 
         return builder.AddResource(resource)
                       .WithImage(image, imageTag)
@@ -49,7 +45,7 @@ public static partial class JavaAppHostingExtension
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         ArgumentException.ThrowIfNullOrWhiteSpace(options.ContainerImageName, nameof(options.ContainerImageName));
 
-        var resource = new JavaAppContainerResource(name, builder.AppHostDirectory);
+        var resource = new JavaAppContainerResource(name);
 
         var rb = builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = options.ContainerImageName, Tag = options.ContainerImageTag, Registry = options.ContainerRegistry })

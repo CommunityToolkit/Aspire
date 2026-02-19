@@ -3,15 +3,18 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Represents the options for configuring a Maven build step.
 /// </summary>
-[Obsolete("This class will be removed in a future version.")]
-public sealed class MavenOptions : JavaBuildOptions
+public sealed class MavenOptions
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="MavenOptions"/> class.
+    /// Gets or sets the working directory to use for the command. If null, the working directory of the current process is used.
     /// </summary>
-    public MavenOptions()
-    {
-        Command = "mvnw";
-        Args = ["--quiet", "clean", "package"];
-    }
+    public string? WorkingDirectory { get; set; }
+    /// <summary>
+    /// Gets or sets the command to execute. Default is "mvnw".
+    /// </summary>
+    public string Command { get; set; } = "mvnw";
+    /// <summary>
+    /// Gets or sets the arguments to pass to the command. Default is "--quiet clean package".
+    /// </summary>
+    public string[] Args { get; set; } = ["--quiet", "clean", "package"];
 }

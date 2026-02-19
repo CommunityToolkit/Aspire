@@ -9,7 +9,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddJavaContainerApp("java", "java-image", workingDirectory: ".", imageTag: "v1");
+        builder.AddJavaContainerApp("java", "java-image", imageTag: "v1");
 
         using var app = builder.Build();
 
