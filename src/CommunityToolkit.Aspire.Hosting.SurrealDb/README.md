@@ -27,7 +27,7 @@ var myService = builder.AddProject<Projects.MyService>()
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-surrealdb
+https://aspire.dev/integrations/databases/surrealdb/
 
 ## Feedback & contributing
 
