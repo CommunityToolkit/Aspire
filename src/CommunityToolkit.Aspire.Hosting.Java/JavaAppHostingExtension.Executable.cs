@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel.Docker;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,21 +20,22 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="jarPath">The path to the jar file to execute. Default is <c>target/app.jar</c>.</param>
+    /// <param name="jarPath">The path to the jar file, relative to the resource working directory.</param>
     /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory,
-        string? jarPath = null, string[]? args = null)
+        string jarPath, string[]? args = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory, nameof(workingDirectory));
+        ArgumentException.ThrowIfNullOrWhiteSpace(jarPath, nameof(jarPath));
 
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
 
         var resource = new JavaAppExecutableResource(name, workingDirectory)
         {
-            JarPath = jarPath ?? "target/app.jar"
+            JarPath = jarPath
         };
 
         return builder.AddResource(resource)
@@ -70,7 +72,7 @@ public static partial class JavaAppHostingExtension
             {
                 if (!builder.Resource.TryGetLastAnnotation<JavaBuildAnnotation>(out var buildAnnotation))
                 {
-                    buildAnnotation = new JavaBuildAnnotation("eclipse-temurin:25-jdk-alpine", "./mvnw clean package -DskipTests");
+                    buildAnnotation = new JavaBuildAnnotation("eclipse-temurin:21-jdk-alpine", "./mvnw clean package -DskipTests");
                 }
 
                 var buildStage = context.Builder
@@ -82,10 +84,11 @@ public static partial class JavaAppHostingExtension
                 var logger = context.Services.GetService<ILogger<JavaAppExecutableResource>>() ?? NullLogger<JavaAppExecutableResource>.Instance;
 
                 context.Builder
-                    .From("eclipse-temurin:25-jre-alpine")
+                    .From("eclipse-temurin:21-jre-alpine")
                     .Run("apk --no-cache add ca-certificates")
                     .WorkDir("/app")
                     .CopyFrom(buildStage.StageName!, $"/build/{builder.Resource.JarPath}", "/app/app.jar")
+                    .AddContainerFiles(context.Resource, "/app", logger)
                     .Entrypoint(["java", "-jar", "/app/app.jar"]);
             });
         });
@@ -100,7 +103,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
     /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [Obsolete("Use AddJavaApp(string, string, string?, string[]?, string[]?) instead. This method will be removed in a future version.")]
+    [Obsolete("Use AddJavaApp(string, string, string, string[]?) instead. This method will be removed in a future version.")]
     public static IResourceBuilder<JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, JavaAppExecutableResourceOptions options)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -118,13 +121,14 @@ public static partial class JavaAppHostingExtension
             allArgs = [.. options.JvmArgs, .. allArgs];
 
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
-        var resource = new JavaAppExecutableResource(name, workingDirectory);
+        var resource = new JavaAppExecutableResource(name, "java", workingDirectory);
 
         return builder.AddResource(resource)
-                      .WithJavaDefaults(otelAgentPath: options.OtelAgentPath, port: options.Port)
+                      .WithJavaDefaults(options)
                       .WithHttpEndpoint(port: options.Port, name: JavaAppContainerResource.HttpEndpointName, isProxied: false)
                       .WithArgs(allArgs);
     }
+
 
     /// <summary>
     /// Adds a Spring application to the application model. Executes the executable Spring app.
@@ -135,123 +139,108 @@ public static partial class JavaAppHostingExtension
     /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddJavaApp instead. This method will be removed in a future version.")]
-    public static IResourceBuilder<JavaAppExecutableResource> AddSpringApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, JavaAppExecutableResourceOptions options) => builder.AddJavaApp(name, workingDirectory, options);
+    public static IResourceBuilder<JavaAppExecutableResource> AddSpringApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, JavaAppExecutableResourceOptions options) =>
+        builder.AddJavaApp(name, workingDirectory, options);
+
+    /// <summary>
+    /// Adds a Maven build step to the application model.
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Maven build step to.</param>
+    /// <param name="mavenOptions">The <see cref="MavenOptions"/> to configure the Maven build step.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [Obsolete("Use WithMavenBuild(string?, params string[]) instead. This method will be removed in a future version.")]
+    public static IResourceBuilder<JavaAppExecutableResource> WithMavenBuild(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        MavenOptions mavenOptions)
+    {
+        ArgumentNullException.ThrowIfNull(mavenOptions, nameof(mavenOptions));
+
+        return builder.WithMavenBuild(args: mavenOptions.Args);
+    }
 
 
     /// <summary>
     /// Adds a Maven build step to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Maven build step to.</param>
-    /// <param name="jarPath">The path to the jar file to execute. If not provided, it will be automatically detected in the 'target' directory.</param>
+    /// <param name="wrapperScript">The path to the Maven wrapper script, relative to the resource working directory. If not provided, defaults to <c>mvnw</c> (or <c>mvnw.cmd</c> on Windows) in the working directory.</param>
+    /// <param name="args">Arguments to pass to the Maven wrapper. If not provided, defaults to <c>clean package</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<T> WithMavenBuild<T>(
-        this IResourceBuilder<T> builder,
-        string? jarPath = null) where T : ExecutableResource
+    public static IResourceBuilder<JavaAppExecutableResource> WithMavenBuild(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        string? wrapperScript = null,
+        params string[] args)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        if (jarPath != null && builder.Resource is JavaAppExecutableResource executableResource)
-        {
-            executableResource.JarPath = jarPath;
-        }
+        string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".cmd" : string.Empty;
 
-        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
-        {
-            var buildResourceName = $"{builder.Resource.Name}-maven-build";
-            var buildResource = new MavenBuildResource(buildResourceName, builder.Resource.WorkingDirectory);
+        wrapperScript ??= $"mvnw{extension}";
 
-            var mavenBuilder = builder.ApplicationBuilder.AddResource(buildResource)
-                .WithParentRelationship(builder.Resource)
-                .ExcludeFromManifest();
+        string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, wrapperScript));
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                mavenBuilder.WithCommand("cmd");
-            }
-            else
-            {
-                mavenBuilder.WithCommand(Path.Combine(builder.Resource.WorkingDirectory, "mvnw"));
-            }
-
-            mavenBuilder.WithArgs(context =>
-            {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    context.Args.Add("/c");
-                    context.Args.Add("mvnw.cmd");
-                }
-
-                context.Args.Add("clean");
-                context.Args.Add("package");
-            });
-
-            builder.WaitForCompletion(mavenBuilder);
-        }
-
-        if (builder.Resource is JavaAppExecutableResource javaAppExecutableResource)
-        {
-            builder.ApplicationBuilder.CreateResourceBuilder(javaAppExecutableResource)
-                .PublishAsJavaDockerfile(builder.Resource.WorkingDirectory);
-        }
-
-        return builder;
+        return builder.WithJavaBuildStep(
+            buildResourceName: $"{builder.Resource.Name}-maven-build",
+            createResource: (name, workingDirectory) => new MavenBuildResource(name, workingDirectory),
+            wrapperPath: wrapperPath,
+            buildArgs: args.Length > 0 ? args : ["clean", "package"]);
     }
 
     /// <summary>
     /// Adds a Gradle build step to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Gradle build step to.</param>
-    /// <param name="jarPath">The path to the executable jar.</param>
+    /// <param name="wrapperScript">The path to the Gradle wrapper script, relative to the resource working directory. If not provided, defaults to <c>gradlew</c> (or <c>gradlew.bat</c> on Windows) in the working directory.</param>
+    /// <param name="args">Arguments to pass to the Gradle wrapper. If not provided, defaults to <c>clean build</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<T> WithGradleBuild<T>(
-        this IResourceBuilder<T> builder,
-        string? jarPath = null) where T : ExecutableResource
+    public static IResourceBuilder<JavaAppExecutableResource> WithGradleBuild(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        string? wrapperScript = null,
+        params string[] args)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        if (jarPath != null && builder.Resource is JavaAppExecutableResource executableResource)
-        {
-            executableResource.JarPath = jarPath;
-        }
+        string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".bat" : string.Empty;
+        
+        wrapperScript ??= $"gradlew{extension}";
 
+        string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, wrapperScript));
+
+        return builder.WithJavaBuildStep(
+            buildResourceName: $"{builder.Resource.Name}-gradle-build",
+            createResource: (name, workingDirectory) => new GradleBuildResource(name, workingDirectory),
+            wrapperPath: wrapperPath,
+            buildArgs: args.Length > 0 ? args : ["clean", "build"]);
+    }
+
+    private static IResourceBuilder<JavaAppExecutableResource> WithJavaBuildStep<TBuildResource>(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        string buildResourceName,
+        Func<string, string, TBuildResource> createResource,
+        string wrapperPath,
+        string[] buildArgs) where TBuildResource : ExecutableResource
+    {
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
-            var buildResourceName = $"{builder.Resource.Name}-gradle-build";
-            var buildResource = new GradleBuildResource(buildResourceName, builder.Resource.WorkingDirectory);
+            var buildResource = createResource(buildResourceName, builder.Resource.WorkingDirectory);
 
-            var gradleBuilder = builder.ApplicationBuilder.AddResource(buildResource)
+            var buildBuilder = builder.ApplicationBuilder.AddResource(buildResource)
+                .WithCommand(wrapperPath)
+                .WithArgs(buildArgs)
                 .WithParentRelationship(builder.Resource)
                 .ExcludeFromManifest();
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                gradleBuilder.WithCommand("cmd");
-            }
-            else
-            {
-                gradleBuilder.WithCommand(Path.Combine(builder.Resource.WorkingDirectory, "gradlew"));
-            }
-
-            gradleBuilder.WithArgs(context =>
-            {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    context.Args.Add("/c");
-                    context.Args.Add("gradlew.bat");
-                }
-
-                context.Args.Add("clean");
-                context.Args.Add("build");
-            });
-
-            builder.WaitForCompletion(gradleBuilder);
+            builder.WaitForCompletion(buildBuilder);
         }
 
-        if (builder.Resource is JavaAppExecutableResource javaAppExecutableResource)
-        {
-            builder.ApplicationBuilder.CreateResourceBuilder(javaAppExecutableResource)
-                .PublishAsJavaDockerfile(builder.Resource.WorkingDirectory);
-        }
+        // Use the file name only for the Dockerfile RUN command, since the wrapper
+        // is executed relative to the container's WORKDIR, not the host machine.
+        string wrapperFileName = Path.GetFileName(wrapperPath);
+        string buildCommand = $"./{wrapperFileName} {string.Join(' ', buildArgs)}";
+        builder.Resource.Annotations.Add(
+            new JavaBuildAnnotation("eclipse-temurin:21-jdk-alpine", buildCommand));
+        builder.ApplicationBuilder.CreateResourceBuilder(builder.Resource)
+            .PublishAsJavaDockerfile(builder.Resource.WorkingDirectory);
 
         return builder;
     }
@@ -270,9 +259,9 @@ public static partial class JavaAppHostingExtension
 
         return builder.WithArgs(context =>
         {
-            foreach (var arg in args)
+            for (int i = args.Length - 1; i >= 0; i--)
             {
-                context.Args.Insert(0, arg);
+                context.Args.Insert(0, args[i]);
             }
         });
     }
@@ -300,18 +289,10 @@ public static partial class JavaAppHostingExtension
     }
 
     [Obsolete("Use WithOtelAgent instead.")]
-    private static IResourceBuilder<T> WithJavaDefaults<T>(
-        this IResourceBuilder<T> builder,
-        string? otelAgentPath = null,
-        int? port = null) where T : IResourceWithEnvironment
-    {
-        builder.WithOtelAgent($"{otelAgentPath?.TrimEnd('/')}/opentelemetry-javaagent.jar");
-
-        if (port.HasValue)
-        {
-            builder.WithEnvironment("SERVER_PORT", port.Value.ToString(CultureInfo.InvariantCulture));
-        }
-
-        return builder;
-    }
+    private static IResourceBuilder<JavaAppExecutableResource> WithJavaDefaults(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        JavaAppExecutableResourceOptions options) =>
+        builder.WithOtlpExporter()
+               .WithEnvironment("JAVA_TOOL_OPTIONS", $"-javaagent:{options.OtelAgentPath?.TrimEnd('/')}/opentelemetry-javaagent.jar")
+               .WithEnvironment("SERVER_PORT", options.Port.ToString(CultureInfo.InvariantCulture));
 }

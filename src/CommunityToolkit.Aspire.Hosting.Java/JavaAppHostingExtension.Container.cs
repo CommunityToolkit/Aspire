@@ -37,7 +37,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [Obsolete("Use AddJavaApp(string, string, string?, string[]?) instead. This method will be removed in a future version.")]
+    [Obsolete("Use AddJavaContainerApp instead. This method will be removed in a future version.")]
     public static IResourceBuilder<JavaAppContainerResource> AddJavaApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, JavaAppContainerResourceOptions options)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -50,7 +50,7 @@ public static partial class JavaAppHostingExtension
         var rb = builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = options.ContainerImageName, Tag = options.ContainerImageTag, Registry = options.ContainerRegistry })
           .WithHttpEndpoint(port: options.Port, targetPort: options.TargetPort, name: JavaAppContainerResource.HttpEndpointName)
-          .WithJavaDefaults(otelAgentPath: options.OtelAgentPath);
+          .WithJavaDefaults(options);
 
         if (options.Args is { Length: > 0 })
         {
@@ -60,6 +60,7 @@ public static partial class JavaAppHostingExtension
         return rb;
     }
 
+
     /// <summary>
     /// Adds a Spring application to the application model. Executes the containerized Spring app.
     /// </summary>
@@ -68,5 +69,14 @@ public static partial class JavaAppHostingExtension
     /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddJavaApp instead. This method will be removed in a future version.")]
-    public static IResourceBuilder<JavaAppContainerResource> AddSpringApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, JavaAppContainerResourceOptions options) => builder.AddJavaApp(name, options);
+    public static IResourceBuilder<JavaAppContainerResource> AddSpringApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, JavaAppContainerResourceOptions options) =>
+        builder.AddJavaApp(name, options);
+
+#pragma warning disable CS0618
+    private static IResourceBuilder<JavaAppContainerResource> WithJavaDefaults(
+        this IResourceBuilder<JavaAppContainerResource> builder,
+        JavaAppContainerResourceOptions options) =>
+        builder.WithOtlpExporter()
+               .WithEnvironment("JAVA_TOOL_OPTIONS", $"-javaagent:{options.OtelAgentPath?.TrimEnd('/')}/opentelemetry-javaagent.jar");
+#pragma warning restore CS0618
 }
