@@ -34,6 +34,13 @@ public class RavenDBServerSettings
     /// If not set, the default 38888 is used.
     /// </summary>
     public int? TcpPort { get; set; }
+    
+    
+    /// <summary>
+    /// Advanced/debug optional parameter that forces the TCP scheme for the RavenDB server URL.
+    /// Useful for deployment scenarios with constrained http(s):// schema usage (e.g., only port 80 can use http)
+    /// </summary>
+    public bool? ForceTcpSchema { get; set; }
 
     /// <summary>
     /// Protected constructor to allow inheritance but prevent direct instantiation.

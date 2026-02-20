@@ -65,7 +65,8 @@ public static class RavenDBBuilderExtensions
             ClientCertificate = securedSettings?.ClientCertificate
         };
 
-        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port, serverSettings.TcpPort);
+        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port,
+            serverSettings.TcpPort, serverSettings.ForceTcpSchema);
     }
 
     /// <summary>
@@ -100,7 +101,8 @@ public static class RavenDBBuilderExtensions
     RavenDBServerResource serverResource,
     Dictionary<string, object> environmentVariables,
     int? port,
-    int? tcpPort)
+    int? tcpPort,
+    bool? forceTcpSchema = false)
     {
         string? connectionString = null;
         builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(serverResource, async (_, ct) =>
@@ -120,12 +122,13 @@ public static class RavenDBBuilderExtensions
                 certificate: serverResource.ClientCertificate);
 
         var effectiveTcpPort = tcpPort ?? 38888;
+        var useTcpSchema = forceTcpSchema ?? false;
         
         return builder.AddResource(serverResource)
             .WithEndpoint(
                 port: port,
                 targetPort: serverResource.IsSecured ? 443 : 8080,
-                scheme: serverResource.PrimaryEndpointName,
+                scheme: useTcpSchema? "tcp" : serverResource.PrimaryEndpointName,
                 name: serverResource.PrimaryEndpointName,
                 isProxied: false)
             .WithEndpoint(
