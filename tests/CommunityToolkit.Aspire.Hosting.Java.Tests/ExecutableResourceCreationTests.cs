@@ -11,46 +11,49 @@ public class ExecutableResourceCreationTests
     {
         IDistributedApplicationBuilder builder = null!;
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory, "app.jar"));
     }
 
     [Fact]
     public void AddJavaAppNameShouldNotBeNullOrWhiteSpace()
     {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp(null!, Environment.CurrentDirectory));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp(null!, Environment.CurrentDirectory, "app.jar"));
 
         const string name = "";
-        Assert.Throws<ArgumentException>(() => builder.AddJavaApp(name, Environment.CurrentDirectory));
+        Assert.Throws<ArgumentException>(() => builder.AddJavaApp(name, Environment.CurrentDirectory, "app.jar"));
     }
 
     [Fact]
     public void AddJavaAppWorkingDirectoryShouldNotBeNullOrWhiteSpace()
     {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", workingDirectory: null!));
-        Assert.Throws<ArgumentException>(() => builder.AddJavaApp("java", workingDirectory: ""));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", workingDirectory: null!, jarPath: "app.jar"));
+        Assert.Throws<ArgumentException>(() => builder.AddJavaApp("java", workingDirectory: "", jarPath: "app.jar"));
+    }
+
+    [Fact]
+    public void DefaultJavaApp()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("javaapp", "../java-project", "target/app.jar"));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        Assert.Equal("java", resource.Command);
     }
 
     [Fact]
     public async Task AddJavaAppDetailsSetOnResource()
     {
-        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "test.jar", args: ["--test"])
+                   .WithJvmArgs("-Dtest"));
 
-        builder.AddJavaApp("java", Environment.CurrentDirectory, "test.jar", args: ["--test"])
-               .WithJvmArgs("-Dtest");
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
 
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = appModel.Resources.OfType<JavaAppExecutableResource>().SingleOrDefault();
-
-        Assert.NotNull(resource);
         Assert.Equal("java", resource.Name);
-
         Assert.Equal(Environment.CurrentDirectory, resource.WorkingDirectory);
         Assert.Equal("java", resource.Command);
 
@@ -62,58 +65,121 @@ public class ExecutableResourceCreationTests
     }
 
     [Fact]
-    public void AddJavaAppWithMavenBuildCreatesResource()
+    public async Task JavaAppWithJvmArgsHasCorrectArgsAsync()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("javaapp", "../java-project", "target/app.jar")
+                   .WithJvmArgs("-Xmx512m"));
 
-        builder.AddJavaApp("java", Environment.CurrentDirectory)
-            .WithMavenBuild();
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
 
-        using var app = builder.Build();
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal("-Xmx512m", args[0]);
+        Assert.Contains("-jar", args);
+        Assert.Contains("target/app.jar", args);
+    }
 
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+    [Fact]
+    public async Task MavenBuildCreatesResourceWithCorrectArgs()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "target/app.jar")
+                   .WithMavenBuild());
+
         var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
         var buildResource = Assert.Single(appModel.Resources.OfType<MavenBuildResource>());
 
         Assert.Equal("java-maven-build", buildResource.Name);
-        Assert.Equal(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd" : Path.Combine(javaResource.WorkingDirectory, "mvnw"), buildResource.Command);
-        
+
+        string expectedWrapper = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mvnw.cmd" : "mvnw";
+        Assert.Equal(Path.GetFullPath(Path.Combine(javaResource.WorkingDirectory, expectedWrapper)), buildResource.Command);
+
         Assert.True(javaResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
         Assert.Contains(waitAnnotations, w => w.Resource == buildResource);
+
+        var args = await buildResource.GetArgumentListAsync();
+        Assert.Equal(["clean", "package"], args);
     }
 
     [Fact]
-    public void AddJavaAppWithGradleBuildCreatesResource()
+    public async Task MavenBuildWithCustomArgsReplacesDefaults()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "target/app.jar")
+                   .WithMavenBuild(args: ["-DskipTests", "-Pprod"]));
 
-        builder.AddJavaApp("java", Environment.CurrentDirectory)
-            .WithGradleBuild();
+        var buildResource = Assert.Single(appModel.Resources.OfType<MavenBuildResource>());
 
-        using var app = builder.Build();
+        var args = await buildResource.GetArgumentListAsync();
+        Assert.Equal(["-DskipTests", "-Pprod"], args);
+    }
 
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+    [Fact]
+    public void MavenBuildWithCustomWrapperUsesProvidedPath()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "target/app.jar")
+                   .WithMavenBuild(wrapperScript: "custom/mvnw"));
+
+        var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<MavenBuildResource>());
+        Assert.Equal(Path.GetFullPath(Path.Combine(javaResource.WorkingDirectory, "custom/mvnw")), buildResource.Command);
+    }
+
+    [Fact]
+    public async Task GradleBuildCreatesResourceWithCorrectArgs()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "build/libs/app.jar")
+                   .WithGradleBuild());
+
         var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
         var buildResource = Assert.Single(appModel.Resources.OfType<GradleBuildResource>());
 
         Assert.Equal("java-gradle-build", buildResource.Name);
-        Assert.Equal(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd" : Path.Combine(javaResource.WorkingDirectory, "gradlew"), buildResource.Command);
-        
+
+        string expectedWrapper = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "gradlew.bat" : "gradlew";
+        Assert.Equal(Path.GetFullPath(Path.Combine(javaResource.WorkingDirectory, expectedWrapper)), buildResource.Command);
+
         Assert.True(javaResource.TryGetAnnotationsOfType<WaitAnnotation>(out var waitAnnotations));
         Assert.Contains(waitAnnotations, w => w.Resource == buildResource);
+
+        var args = await buildResource.GetArgumentListAsync();
+        Assert.Equal(["clean", "build"], args);
+    }
+
+    [Fact]
+    public async Task GradleBuildWithCustomArgsReplacesDefaults()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "build/libs/app.jar")
+                   .WithGradleBuild(args: ["-x", "test", "--parallel"]));
+
+        var buildResource = Assert.Single(appModel.Resources.OfType<GradleBuildResource>());
+
+        var args = await buildResource.GetArgumentListAsync();
+        Assert.Equal(["-x", "test", "--parallel"], args);
+    }
+
+    [Fact]
+    public void GradleBuildWithCustomWrapperUsesProvidedPath()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "build/libs/app.jar")
+                   .WithGradleBuild(wrapperScript: "custom/gradlew"));
+
+        var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<GradleBuildResource>());
+        Assert.Equal(Path.GetFullPath(Path.Combine(javaResource.WorkingDirectory, "custom/gradlew")), buildResource.Command);
     }
 
     [Fact]
     public async Task AddJavaAppWithOtelAgentSetsEnvironment()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "target/app.jar")
+                   .WithOtelAgent("/agents/opentelemetry-javaagent.jar"));
 
-        builder.AddJavaApp("java", Environment.CurrentDirectory)
-            .WithOtelAgent("/agents/opentelemetry-javaagent.jar");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
 
         var config = await resource.GetEnvironmentVariablesAsync();
@@ -130,4 +196,12 @@ public class ExecutableResourceCreationTests
         Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
     }
 #pragma warning restore CS0618
+
+    private static DistributedApplicationModel BuildAppModel(Action<IDistributedApplicationBuilder> configure)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        configure(builder);
+        var app = builder.Build();
+        return app.Services.GetRequiredService<DistributedApplicationModel>();
+    }
 }
