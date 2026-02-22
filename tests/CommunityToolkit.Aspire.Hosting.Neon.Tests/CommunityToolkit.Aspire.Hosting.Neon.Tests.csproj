@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Neon\CommunityToolkit.Aspire.Hosting.Neon.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="..\..\examples\neon\CommunityToolkit.Aspire.Hosting.Neon.AppHost\CommunityToolkit.Aspire.Hosting.Neon.AppHost.csproj" />
+  </ItemGroup>
+</Project>

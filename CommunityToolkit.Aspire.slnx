@@ -117,6 +117,9 @@
     <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost/CommunityToolkit.Aspire.Hosting.Ngrok.AppHost.csproj" />
     <Project Path="examples/ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.ServiceDefauls/CommunityToolkit.Aspire.Hosting.Ngrok.ServiceDefauls.csproj" />
   </Folder>
+  <Folder Name="/examples/neon/">
+    <Project Path="examples/neon/CommunityToolkit.Aspire.Hosting.Neon.AppHost/CommunityToolkit.Aspire.Hosting.Neon.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/javascript-ext/">
     <Project Path="examples/javascript-ext/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.AppHost.csproj" />
   </Folder>
@@ -210,6 +213,8 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Minio/CommunityToolkit.Aspire.Hosting.Minio.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Neon/CommunityToolkit.Aspire.Hosting.Neon.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Neon.Provisioner/CommunityToolkit.Aspire.Neon.Provisioner.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
@@ -229,6 +234,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.KurrentDB/CommunityToolkit.Aspire.KurrentDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Neon/CommunityToolkit.Aspire.Neon.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Meilisearch/CommunityToolkit.Aspire.Meilisearch.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Microsoft.Data.Sqlite/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.csproj" />
@@ -271,6 +277,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Minio.Tests/CommunityToolkit.Aspire.Hosting.Minio.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests/CommunityToolkit.Aspire.Hosting.MySql.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Neon.Tests/CommunityToolkit.Aspire.Hosting.Neon.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
@@ -290,6 +297,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Neon.Tests/CommunityToolkit.Aspire.Neon.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Minio.Client.Tests/CommunityToolkit.Aspire.Minio.Client.Tests.csproj" />
