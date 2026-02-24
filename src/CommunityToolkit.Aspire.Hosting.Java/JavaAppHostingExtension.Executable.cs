@@ -10,7 +10,7 @@ namespace Aspire.Hosting;
 /// </summary>
 public static partial class JavaAppHostingExtension
 {
-    private const string JAVA_TOOL_OPTIONS = "JAVA_TOOL_OPTIONS";
+    private const string JavaToolOptions = "JAVA_TOOL_OPTIONS";
 
     /// <summary>
     /// Adds a Java application to the application model. Executes the executable Java app.
@@ -341,15 +341,15 @@ public static partial class JavaAppHostingExtension
     {
         var value = string.Join(' ', values);
 
-        if (context.EnvironmentVariables.TryGetValue(JAVA_TOOL_OPTIONS, out var existing) &&
+        if (context.EnvironmentVariables.TryGetValue(JavaToolOptions, out var existing) &&
             existing is string existingValue &&
             !string.IsNullOrEmpty(existingValue))
         {
-            context.EnvironmentVariables[JAVA_TOOL_OPTIONS] = $"{existingValue} {value}";
+            context.EnvironmentVariables[JavaToolOptions] = $"{existingValue} {value}";
         }
         else
         {
-            context.EnvironmentVariables[JAVA_TOOL_OPTIONS] = value;
+            context.EnvironmentVariables[JavaToolOptions] = value;
         }
     }
 
@@ -358,6 +358,6 @@ public static partial class JavaAppHostingExtension
         this IResourceBuilder<JavaAppExecutableResource> builder,
         JavaAppExecutableResourceOptions options) =>
         builder.WithOtlpExporter()
-               .WithEnvironment(JAVA_TOOL_OPTIONS, $"-javaagent:{options.OtelAgentPath?.TrimEnd('/')}/opentelemetry-javaagent.jar")
+               .WithEnvironment(JavaToolOptions, $"-javaagent:{options.OtelAgentPath?.TrimEnd('/')}/opentelemetry-javaagent.jar")
                .WithEnvironment("SERVER_PORT", options.Port.ToString(CultureInfo.InvariantCulture));
 }
