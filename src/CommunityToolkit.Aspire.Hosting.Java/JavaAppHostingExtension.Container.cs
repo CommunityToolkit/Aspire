@@ -35,7 +35,7 @@ public static partial class JavaAppHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>"
+    /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddJavaContainerApp instead. This method will be removed in a future version.")]
     public static IResourceBuilder<JavaAppContainerResource> AddJavaApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, JavaAppContainerResourceOptions options)
@@ -60,13 +60,12 @@ public static partial class JavaAppHostingExtension
         return rb;
     }
 
-
     /// <summary>
     /// Adds a Spring application to the application model. Executes the containerized Spring app.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>"
+    /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddJavaContainerApp instead. This method will be removed in a future version.")]
     public static IResourceBuilder<JavaAppContainerResource> AddSpringApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, JavaAppContainerResourceOptions options) =>

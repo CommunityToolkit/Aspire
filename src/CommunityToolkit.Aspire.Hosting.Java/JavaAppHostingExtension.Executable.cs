@@ -101,7 +101,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>"
+    /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddJavaApp(string, string, string, string[]?) instead. This method will be removed in a future version.")]
     public static IResourceBuilder<JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, JavaAppExecutableResourceOptions options)
@@ -129,14 +129,13 @@ public static partial class JavaAppHostingExtension
                       .WithArgs(allArgs);
     }
 
-
     /// <summary>
     /// Adds a Spring application to the application model. Executes the executable Spring app.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
-    /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>"
+    /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddJavaApp instead. This method will be removed in a future version.")]
     public static IResourceBuilder<JavaAppExecutableResource> AddSpringApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, JavaAppExecutableResourceOptions options) =>
@@ -157,7 +156,6 @@ public static partial class JavaAppHostingExtension
 
         return builder.WithMavenBuild(args: mavenOptions.Args);
     }
-
 
     /// <summary>
     /// Adds a Maven build step to the application model.
