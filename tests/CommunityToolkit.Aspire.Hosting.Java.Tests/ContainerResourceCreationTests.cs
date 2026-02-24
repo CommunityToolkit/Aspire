@@ -76,7 +76,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", (JavaAppContainerResourceOptions)null!));
     }
 
     [Fact]

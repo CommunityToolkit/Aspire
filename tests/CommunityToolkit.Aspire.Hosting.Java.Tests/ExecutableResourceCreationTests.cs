@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
@@ -58,14 +59,17 @@ public class ExecutableResourceCreationTests
         Assert.Equal("java", resource.Command);
 
         var args = await resource.GetArgumentListAsync();
-        Assert.Equal("-Dtest", args[0]);
         Assert.Contains("-jar", args);
         Assert.Contains("test.jar", args);
         Assert.Contains("--test", args);
+
+        var config = await resource.GetEnvironmentVariablesAsync();
+        Assert.True(config.TryGetValue("JAVA_TOOL_OPTIONS", out var jvmArgs));
+        Assert.Contains("-Dtest", jvmArgs);
     }
 
     [Fact]
-    public async Task JavaAppWithJvmArgsHasCorrectArgsAsync()
+    public async Task JavaAppWithJvmArgsSetsJavaToolOptionsEnvironmentVariable()
     {
         var appModel = BuildAppModel(builder =>
             builder.AddJavaApp("javaapp", "../java-project", "target/app.jar")
@@ -73,8 +77,11 @@ public class ExecutableResourceCreationTests
 
         var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
 
+        var config = await resource.GetEnvironmentVariablesAsync();
+        Assert.True(config.TryGetValue("JAVA_TOOL_OPTIONS", out var value));
+        Assert.Contains("-Xmx512m", value);
+
         var args = await resource.GetArgumentListAsync();
-        Assert.Equal("-Xmx512m", args[0]);
         Assert.Contains("-jar", args);
         Assert.Contains("target/app.jar", args);
     }
@@ -196,6 +203,92 @@ public class ExecutableResourceCreationTests
         Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", Environment.CurrentDirectory, new JavaAppExecutableResourceOptions()));
     }
 #pragma warning restore CS0618
+
+    [Fact]
+    public async Task MavenGoalCreatesResourceWithCorrectAnnotation()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithMavenGoal("spring-boot:run"));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        Assert.True(resource.TryGetLastAnnotation<JavaBuildToolAnnotation>(out var annotation));
+        string expectedWrapper = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mvnw.cmd" : "mvnw";
+        Assert.Equal(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, expectedWrapper)), annotation.WrapperPath);
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal("spring-boot:run", args[0]);
+    }
+
+    [Fact]
+    public async Task MavenGoalWithCustomArgsAddsArgs()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithMavenGoal("spring-boot:run", args: ["-Dspring-boot.run.profiles=dev"]));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal(["spring-boot:run", "-Dspring-boot.run.profiles=dev"], args);
+    }
+
+    [Fact]
+    public async Task MavenGoalDoesNotAddJarArgs()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithMavenGoal("spring-boot:run"));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.DoesNotContain("-jar", args);
+    }
+
+    [Fact]
+    public async Task GradleTaskCreatesResourceWithCorrectAnnotation()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithGradleTask("bootRun"));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        Assert.True(resource.TryGetLastAnnotation<JavaBuildToolAnnotation>(out var annotation));
+        string expectedWrapper = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "gradlew.bat" : "gradlew";
+        Assert.Equal(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, expectedWrapper)), annotation.WrapperPath);
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal("bootRun", args[0]);
+    }
+
+    [Fact]
+    public async Task GradleTaskWithCustomArgsAddsArgs()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithGradleTask("bootRun", args: ["--args=--spring.profiles.active=dev"]));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal(["bootRun", "--args=--spring.profiles.active=dev"], args);
+    }
+
+    [Fact]
+    public async Task GradleTaskDoesNotAddJarArgs()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithGradleTask("bootRun"));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.DoesNotContain("-jar", args);
+    }
 
     private static DistributedApplicationModel BuildAppModel(Action<IDistributedApplicationBuilder> configure)
     {

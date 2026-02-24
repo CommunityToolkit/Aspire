@@ -1,113 +1,104 @@
-# CommunityToolkit.Aspire.Hosting.Java library
+# CommunityToolkit.Aspire.Hosting.Java
 
-Provides extension methods and resource definitions for the Aspire AppHost to support running Java applications.
+Provides extension methods and resource definitions for the .NET Aspire AppHost to support running Java applications. The integration supports Maven, Gradle, and standalone JAR-based applications.
 
-## Getting Started
+## Install the package
 
-### Install the package
-
-In your AppHost project, install the package using the following command:
+In your AppHost project, install the package:
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Hosting.Java
 ```
 
-### Example usage
+## Add a Java application resource
 
-Then, in the _Program.cs_ file of `AppHost`, define a Java resource, then call `AddJavaApp`:
+### Run with Maven
+
+Use `WithMavenGoal` to run the application using a Maven goal:
 
 ```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "target/app.jar")
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithMavenGoal("spring-boot:run")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+Pass additional arguments:
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithMavenGoal("spring-boot:run", "-Dspring-boot.run.profiles=dev")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+### Run with Gradle
+
+Use `WithGradleTask` to run the application using a Gradle task:
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithGradleTask("bootRun")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+### Run with a JAR file
+
+To run an existing JAR file, pass the `jarPath` parameter:
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+## Build before run
+
+Use `WithMavenBuild` or `WithGradleBuild` to compile the application before it starts. This is typically not needed when using `WithMavenGoal` or `WithGradleTask`, as those goals usually handle building automatically.
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
     .WithMavenBuild()
-    .WithHttpEndpoint(env: "SERVER_PORT");
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 ```
 
-The `SERVER_PORT` environment variable is used to determine the port the Java application should listen on. It is randomly assigned by Aspire. The name of the environment variable can be changed by passing a different value to the `WithHttpEndpoint` method.
+## Add a containerized Java application
 
-The `jarPath` parameter specifies the path to the jar file, relative to the resource working directory.
-
-### Containerized Java applications
-
-To run a containerized Java application, use `AddJavaContainerApp`:
+To run a Java application from a container image, use `AddJavaContainerApp`:
 
 ```csharp
-var javaApp = builder.AddJavaContainerApp("javaApp", "my-java-image", "latest");
+var app = builder.AddJavaContainerApp("app", "my-java-image", "latest")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 ```
 
-## Build Systems
-
-The integration provides support for Maven and Gradle build systems. Build resources are created in run mode only — they do not run when publishing, as the generated Dockerfile handles the build automatically.
-
-### Maven
-
-To run a Maven build (`mvnw clean package`) before the application starts:
-
-```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "target/app.jar")
-    .WithMavenBuild();
-```
-
-### Gradle
-
-To run a Gradle build (`gradlew clean build`) before the application starts:
-
-```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "build/libs/app.jar")
-    .WithGradleBuild();
-```
-
-### Custom build arguments
-
-You can provide custom build arguments, replacing the defaults (`clean package` for Maven, `clean build` for Gradle):
-
-```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "target/app.jar")
-    .WithMavenBuild(args: ["clean", "install", "-DskipTests"]);
-```
-
-### Custom wrapper script
-
-You can override the wrapper script path, relative to the resource working directory:
-
-```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "build/libs/app.jar")
-    .WithGradleBuild(wrapperScript: "scripts/gradlew");
-```
-
-## JVM Configuration
+## JVM configuration
 
 ### JVM arguments
 
-You can customize the JVM arguments for the Java application:
+Use `WithJvmArgs` to configure JVM arguments:
 
 ```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "target/app.jar")
-    .WithJvmArgs("-Xmx512m", "-Xms256m");
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithMavenGoal("spring-boot:run")
+    .WithJvmArgs("-Xmx512m", "-Xms256m")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 ```
 
-### OpenTelemetry Agent
+### OpenTelemetry agent
 
-You can configure the OpenTelemetry Java Agent:
+Use `WithOtelAgent` to configure the OpenTelemetry Java Agent:
 
 ```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "target/app.jar")
-    .WithOtelAgent("../agents/opentelemetry-javaagent.jar");
+var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
+    .WithOtelAgent("../agents/opentelemetry-javaagent.jar")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 ```
 
 ## Publishing
 
-When publishing your Aspire application with a Maven or Gradle build configured, the Java resource automatically generates a multi-stage Dockerfile for containerization. To enable this, call `PublishAsJavaDockerfile`:
+When publishing, the Java resource automatically generates a multi-stage Dockerfile for containerization. If a Maven or Gradle build is configured (via `WithMavenBuild` or `WithGradleBuild`), the Dockerfile uses the build tool to compile the application inside the container.
 
-```csharp
-var javaApp = builder.AddJavaApp("javaApp", "../java-project", "target/app.jar")
-    .WithMavenBuild()
-    .PublishAsJavaDockerfile();
-```
+## Additional information
 
-## Additional Information
+- [Aspire Community Toolkit: Java hosting](https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-java)
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-java
+## Feedback and contributing
 
-## Feedback & contributing
-
-https://github.com/CommunityToolkit/Aspire
+- [GitHub repository](https://github.com/CommunityToolkit/Aspire)

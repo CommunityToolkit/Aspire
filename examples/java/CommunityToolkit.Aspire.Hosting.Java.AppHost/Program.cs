@@ -7,9 +7,8 @@ var containerapp = builder.AddJavaContainerApp("containerapp", image: "docker.io
                           .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 
 var executableapp = builder.AddJavaApp("executableapp",
-                           workingDirectory: "../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven",
-                           jarPath: "target/spring-maven-0.0.1-SNAPSHOT.jar")
-                           .WithMavenBuild()
+                           workingDirectory: "../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven")
+                           .WithMavenGoal("spring-boot:run")
                            .WithOtelAgent("../../../agents/opentelemetry-javaagent.jar")
                            .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT")
                            .WithHttpHealthCheck("/health");
