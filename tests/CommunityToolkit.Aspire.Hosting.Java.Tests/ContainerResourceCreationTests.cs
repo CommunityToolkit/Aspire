@@ -119,6 +119,10 @@ public class ContainerResourceCreationTests
         Assert.Equal(options.ContainerRegistry, imageAnnotations.Registry);
         Assert.Equal(options.ContainerImageTag, imageAnnotations.Tag);
 
+        Assert.True(resource.TryGetLastAnnotation(out EndpointAnnotation? httpEndpointAnnotations));
+        Assert.Equal(options.Port, httpEndpointAnnotations.Port);
+        Assert.Equal(options.TargetPort, httpEndpointAnnotations.TargetPort);
+
         Assert.True(resource.TryGetLastAnnotation(out CommandLineArgsCallbackAnnotation? argsAnnotations));
         CommandLineArgsCallbackContext context = new([]);
         await argsAnnotations.Callback(context);

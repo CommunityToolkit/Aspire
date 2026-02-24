@@ -4,7 +4,7 @@
 /// A resource that represents a Java application.
 /// </summary>
 public class JavaAppExecutableResource
-    : ExecutableResource, IResourceWithServiceDiscovery, IContainerFilesDestinationResource, IResourceWithWaitSupport
+    : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithWaitSupport
 {
     internal const string HttpEndpointName = "http";
 
@@ -29,9 +29,6 @@ public class JavaAppExecutableResource
         : base(name, command, workingDirectory)
     {
     }
-
-    /// <inheritdoc/>
-    public string? ContainerFilesDestination => "/app/static";
 
     /// <summary>
     /// Gets or sets the path to the JAR file to execute.

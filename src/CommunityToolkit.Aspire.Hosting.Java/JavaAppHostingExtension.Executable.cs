@@ -1,11 +1,7 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.ApplicationModel.Docker;
 using CommunityToolkit.Aspire.Utils;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Aspire.Hosting;
 
@@ -83,8 +79,6 @@ public static partial class JavaAppHostingExtension
                           }
                       });
 
-        resourceBuilder.PublishAsJavaDockerfile(workingDirectory);
-
         if (builder.ExecutionContext.IsRunMode)
         {
             builder.Eventing.Subscribe<BeforeStartEvent>((_, _) =>
@@ -100,46 +94,6 @@ public static partial class JavaAppHostingExtension
 
         return resourceBuilder;
     }
-
-    /// <summary>
-    /// Configures the Java application to be published as a Dockerfile with automatic multi-stage build generation.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="workingDirectory">The working directory containing the Java application.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-#pragma warning disable ASPIREDOCKERFILEBUILDER001
-    private static IResourceBuilder<JavaAppExecutableResource> PublishAsJavaDockerfile(
-        this IResourceBuilder<JavaAppExecutableResource> builder,
-        string workingDirectory)
-    {
-        return builder.PublishAsDockerFile(publish =>
-        {
-            publish.WithDockerfileBuilder(workingDirectory, context =>
-            {
-                if (!builder.Resource.TryGetLastAnnotation<JavaBuildAnnotation>(out var buildAnnotation))
-                {
-                    buildAnnotation = new JavaBuildAnnotation("eclipse-temurin:21-jdk-alpine", "./mvnw clean package -DskipTests");
-                }
-
-                var buildStage = context.Builder
-                    .From(buildAnnotation.BuildImage, "builder")
-                    .WorkDir("/build")
-                    .Copy(".", "./")
-                    .Run(buildAnnotation.BuildCommand);
-
-                var logger = context.Services.GetService<ILogger<JavaAppExecutableResource>>() ?? NullLogger<JavaAppExecutableResource>.Instance;
-
-                context.Builder
-                    .From("eclipse-temurin:21-jre-alpine")
-                    .Run("apk --no-cache add ca-certificates")
-                    .WorkDir("/app")
-                    .CopyFrom(buildStage.StageName!, $"/build/{builder.Resource.JarPath}", "/app/app.jar")
-                    .AddContainerFiles(context.Resource, "/app", logger)
-                    .Entrypoint(["java", "-jar", "/app/app.jar"]);
-            });
-        });
-    }
-#pragma warning restore ASPIREDOCKERFILEBUILDER001
 
     /// <summary>
     /// Adds a Java application to the application model. Executes the executable Java app.
@@ -278,13 +232,6 @@ public static partial class JavaAppHostingExtension
 
             builder.WaitForCompletion(buildBuilder);
         }
-
-        // Use the file name only for the Dockerfile RUN command, since the wrapper
-        // is executed relative to the container's WORKDIR, not the host machine.
-        string wrapperFileName = Path.GetFileName(wrapperPath);
-        string buildCommand = $"./{wrapperFileName} {string.Join(' ', buildArgs)}";
-        builder.Resource.Annotations.Add(
-            new JavaBuildAnnotation("eclipse-temurin:21-jdk-alpine", buildCommand));
 
         return builder;
     }

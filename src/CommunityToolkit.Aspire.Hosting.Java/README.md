@@ -91,10 +91,6 @@ var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
     .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 ```
 
-## Publishing
-
-When publishing, the Java resource automatically generates a multi-stage Dockerfile for containerization. If a Maven or Gradle build is configured (via `WithMavenBuild` or `WithGradleBuild`), the Dockerfile uses the build tool to compile the application inside the container.
-
 ## Additional information
 
 - [Aspire Community Toolkit: Java hosting](https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-java)

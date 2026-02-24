@@ -68,7 +68,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="options">The <see cref="JavaAppContainerResourceOptions"/> to configure the Java application.</param>"
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [Obsolete("Use AddJavaApp instead. This method will be removed in a future version.")]
+    [Obsolete("Use AddJavaContainerApp instead. This method will be removed in a future version.")]
     public static IResourceBuilder<JavaAppContainerResource> AddSpringApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, JavaAppContainerResourceOptions options) =>
         builder.AddJavaApp(name, options);
 
