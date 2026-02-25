@@ -27,7 +27,7 @@ public static partial class JavaAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithImage(image, imageTag)
-                      .WithOtelAgent();
+                      .WithOtlpExporter();
     }
 
     /// <summary>

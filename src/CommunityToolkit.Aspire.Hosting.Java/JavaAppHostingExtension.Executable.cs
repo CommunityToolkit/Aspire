@@ -62,7 +62,7 @@ public static partial class JavaAppHostingExtension
         var resource = new JavaAppExecutableResource(name, workingDirectory);
 
         var resourceBuilder = builder.AddResource(resource)
-                      .WithOtelAgent()
+                      .WithOtlpExporter()
                       .WithArgs(context =>
                       {
                           if (resource.TryGetLastAnnotation<JavaBuildToolAnnotation>(out var buildTool))
