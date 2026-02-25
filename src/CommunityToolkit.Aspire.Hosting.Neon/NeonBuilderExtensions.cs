@@ -52,10 +52,8 @@ public static class NeonBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentNullException.ThrowIfNull(apiKey);
 
-        NeonProjectOptions options = new();
-        configureOptions?.Invoke(options);
-
-        var resource = new NeonProjectResource(name, apiKey.Resource, options);
+        var resource = new NeonProjectResource(name, apiKey.Resource);
+        configureOptions?.Invoke(resource.Options);
 
         var healthCheckKey = $"{name}_neon_health";
 
@@ -66,8 +64,8 @@ public static class NeonBuilderExtensions
             Properties =
             [
                 new(CustomResourceKnownProperties.Source, "Neon API"),
-                new("Project", options.ProjectId ?? options.ProjectName ?? string.Empty),
-                new("Branch", options.Branch.BranchId ?? options.Branch.BranchName ?? string.Empty),
+                new("Project", resource.Options.ProjectId ?? resource.Options.ProjectName ?? string.Empty),
+                new("Branch", resource.Options.Branch.BranchId ?? resource.Options.Branch.BranchName ?? string.Empty),
             ],
         };
 
@@ -79,7 +77,7 @@ public static class NeonBuilderExtensions
             .WithHealthCheck(healthCheckKey)
             .ExcludeFromManifest();
 
-        _ = resourceBuilder.AddNeonProvisioner($"{name}-provisioner", NeonProvisionerMode.Attach);
+        _ = resourceBuilder.EnsureProvisioner();
 
         object provisionLock = new();
         Task? provisioningTask = null;
@@ -226,39 +224,6 @@ public static class NeonBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a Neon Postgres resource and configures an external one-shot provisioner using a default name.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
-    /// <param name="name">The name of the Neon resource.</param>
-    /// <param name="apiKey">The parameter builder providing the Neon API key.</param>
-    /// <param name="provisionMode">
-    /// The provisioner execution mode.
-    /// Use <see cref="NeonProvisionerMode.Attach"/> for pre-created resources or
-    /// <see cref="NeonProvisionerMode.Provision"/> to create missing resources idempotently.
-    /// </param>
-    /// <param name="configureOptions">An optional callback to configure Neon project options.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <remarks>
-    /// The provisioner resource name is derived as <c>{name}-provisioner</c>.
-    /// </remarks>
-    public static IResourceBuilder<NeonProjectResource> AddNeon(
-        this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        IResourceBuilder<ParameterResource> apiKey,
-        NeonProvisionerMode provisionMode,
-        Action<NeonProjectOptions>? configureOptions = null)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentNullException.ThrowIfNull(apiKey);
-
-        var neon = builder.AddNeon(name, apiKey, configureOptions);
-        _ = neon.AddProvisioner(provisionMode);
-
-        return neon;
-    }
-
-    /// <summary>
     /// Adds a Neon database resource to the application model.
     /// </summary>
     /// <param name="builder">The Neon project resource builder.</param>
@@ -284,7 +249,7 @@ public static class NeonBuilderExtensions
 
         if (builder.Resource.ProvisionerResource is not null)
         {
-            _ = builder.AddProvisioner(builder.Resource.Options.Provisioning.Mode);
+            _ = builder.EnsureProvisioner();
         }
 
         var dbHealthCheckKey = $"{name}_neon_db_health";

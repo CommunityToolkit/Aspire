@@ -6,4 +6,4 @@ internal sealed record NeonExternalProvisionerAnnotation(
 	IResourceWithWaitSupport Resource,
 	string ProjectPath,
 	string OutputFilePath,
-	NeonProvisionerMode Mode) : IResourceAnnotation;
+	NeonProvisionerIntent Mode) : IResourceAnnotation;

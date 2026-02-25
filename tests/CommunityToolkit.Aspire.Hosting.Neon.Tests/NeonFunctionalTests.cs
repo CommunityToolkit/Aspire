@@ -40,7 +40,7 @@ public class NeonFunctionalTests
         {
             using var builder = TestDistributedApplicationBuilder.Create();
             IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Attach);
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey).AsExisting();
 
             SetPropertyValue(neon.Resource, nameof(NeonProjectResource.ProjectId), "project-id");
             SetPropertyValue(neon.Resource, nameof(NeonProjectResource.EndpointId), "endpoint-id");
@@ -49,7 +49,7 @@ public class NeonFunctionalTests
                 neon.Resource.ProvisionerResource!,
                 projectPath,
                 Path.Combine(tempDir, "output.json"),
-                NeonProvisionerMode.Attach);
+                "attach");
 
             neon.Resource.Annotations.Add((IResourceAnnotation)annotation);
 
@@ -274,7 +274,7 @@ public class NeonFunctionalTests
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
-        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Attach);
+        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey).AsExisting();
         IResourceBuilder<NeonDatabaseResource> database = neon.AddDatabase("appdb", "appdb", "app_owner");
 
         object annotation = neon.Resource.Annotations.First(a => a.GetType().Name == "NeonExternalProvisionerAnnotation");
@@ -381,7 +381,7 @@ public class NeonFunctionalTests
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
-        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Attach);
+        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey).AsExisting();
 
         var suspend = neon.Resource.Annotations.OfType<ResourceCommandAnnotation>()
             .Single(a => a.Name == "neon-suspend");
@@ -414,13 +414,13 @@ public class NeonFunctionalTests
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", string.Empty, secret: true);
-        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Attach);
+        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey).AsExisting();
 
         object missingPathAnnotation = CreateProvisionerAnnotation(
             neon.Resource.ProvisionerResource!,
             "X:\\missing\\provisioner.csproj",
             Path.Combine(Path.GetTempPath(), "missing-output.json"),
-            NeonProvisionerMode.Attach);
+            "attach");
 
         DistributedApplicationException missingPathError = await Assert.ThrowsAsync<DistributedApplicationException>(async () =>
             _ = await InvokeHostingPrivateAsync(
@@ -439,7 +439,7 @@ public class NeonFunctionalTests
             neon.Resource.ProvisionerResource!,
             existingProjectPath,
             Path.Combine(Path.GetTempPath(), "missing-key-output.json"),
-            NeonProvisionerMode.Attach);
+            "attach");
 
         DistributedApplicationException missingApiKeyError = await Assert.ThrowsAsync<DistributedApplicationException>(async () =>
             _ = await InvokeHostingPrivateAsync(
@@ -458,7 +458,7 @@ public class NeonFunctionalTests
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
-        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Attach);
+        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey).AsExisting();
 
         using var app = builder.Build();
 
@@ -472,7 +472,7 @@ public class NeonFunctionalTests
                 neon.Resource.ProvisionerResource!,
                 "placeholder.csproj",
                 outputPath,
-                NeonProvisionerMode.Attach);
+                "attach");
 
             DistributedApplicationException ex = await Assert.ThrowsAsync<DistributedApplicationException>(async () =>
                 _ = await InvokeHostingPrivateAsync(
@@ -524,8 +524,39 @@ public class NeonFunctionalTests
 
             IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", settings.ApiKey, secret: true);
 
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Attach)
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName);
+
+            using var app = builder.Build();
+
+            await app.StartAsync(cts.Token);
+            await app.ResourceNotifications.WaitForResourceHealthyAsync(neon.Resource.Name, cts.Token);
+
+            string? connectionString = await neon.Resource.GetConnectionStringAsync(cts.Token);
+            Assert.False(string.IsNullOrWhiteSpace(connectionString));
+        });
+    }
+
+    [ConditionalFact]
+    [Trait("Category", "NeonIntegration")]
+    public async Task AttachMode_WithProjectAndBranchSelectors_DefaultsToAttach_AndBecomesHealthy()
+    {
+        await ExecuteOrSkipOnEnvironmentIssueAsync(async () =>
+        {
+            NeonIntegrationTestSettings settings = NeonIntegrationTestSettings.Require();
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            using var builder = TestDistributedApplicationBuilder.Create();
+
+            IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", settings.ApiKey, secret: true);
+
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
+                .WithProjectName(settings.ProjectName)
+                .WithBranchName(settings.ExistingBranchName);
+
+            Assert.NotNull(neon.Resource.ProvisionerResource);
+            Dictionary<string, string> env = await neon.Resource.ProvisionerResource!.GetEnvironmentVariablesAsync();
+            Assert.Equal("attach", env["NEON_MODE"]);
 
             using var app = builder.Build();
 
@@ -554,7 +585,7 @@ public class NeonFunctionalTests
             string databaseResourceName = $"olympusdb{suffix}";
             string databaseName = $"testq_{suffix}";
 
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Provision)
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
                 .AddEphemeralBranch(settings.EphemeralPrefix)
                 .WithContainerBuildOptions(_ => { });
@@ -587,7 +618,7 @@ public class NeonFunctionalTests
             IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", settings.ApiKey, secret: true);
             string suffix = Guid.NewGuid().ToString("N")[..8];
 
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Provision)
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
                 .AddEphemeralBranch(settings.EphemeralPrefix)
                 .WithContainerBuildOptions(_ => { });
@@ -625,7 +656,7 @@ public class NeonFunctionalTests
             IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", settings.ApiKey, secret: true);
             string suffix = Guid.NewGuid().ToString("N")[..8];
 
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Provision)
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
                 .AddEphemeralBranch(settings.EphemeralPrefix)
                 .WithAnonymizedData(anon =>
@@ -667,7 +698,7 @@ public class NeonFunctionalTests
             IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", settings.ApiKey, secret: true);
             string suffix = Guid.NewGuid().ToString("N")[..8];
 
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Provision)
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
                 .AddEphemeralBranch(settings.EphemeralPrefix)
                 .WithConnectionPooler();
@@ -701,7 +732,7 @@ public class NeonFunctionalTests
             string suffix = Guid.NewGuid().ToString("N")[..8];
             string branchName = $"it-{suffix}";
 
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Provision)
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
                 .AddBranch(branchName)
                 .WithBranchRestore()
@@ -741,7 +772,7 @@ public class NeonFunctionalTests
 
             IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", settings.ApiKey, secret: true);
 
-            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey, NeonProvisionerMode.Provision)
+            IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
                 .AddEphemeralBranch(settings.EphemeralPrefix);
 
@@ -904,12 +935,28 @@ public class NeonFunctionalTests
         IResourceWithWaitSupport resource,
         string projectPath,
         string outputPath,
-        NeonProvisionerMode mode)
+        string mode)
     {
         Type? annotationType = typeof(NeonProjectOptions).Assembly.GetType("CommunityToolkit.Aspire.Hosting.Neon.NeonExternalProvisionerAnnotation");
         Assert.NotNull(annotationType);
 
-        object? instance = Activator.CreateInstance(annotationType!, resource, projectPath, outputPath, mode);
+        ConstructorInfo? constructor = annotationType!.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .SingleOrDefault(candidate =>
+            {
+                ParameterInfo[] parameters = candidate.GetParameters();
+                return parameters.Length == 4
+                    && parameters[0].ParameterType.IsAssignableTo(typeof(IResourceWithWaitSupport))
+                    && parameters[1].ParameterType == typeof(string)
+                    && parameters[2].ParameterType == typeof(string);
+            });
+        Assert.NotNull(constructor);
+
+        ParameterInfo modeParameter = constructor!.GetParameters()[3];
+        object modeArgument = modeParameter.ParameterType.IsEnum
+            ? Enum.Parse(modeParameter.ParameterType, mode, ignoreCase: true)
+            : mode;
+
+        object? instance = constructor.Invoke([resource, projectPath, outputPath, modeArgument]);
         Assert.NotNull(instance);
         return instance!;
     }

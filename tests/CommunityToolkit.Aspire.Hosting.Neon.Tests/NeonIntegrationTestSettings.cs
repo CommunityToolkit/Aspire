@@ -5,7 +5,8 @@ namespace CommunityToolkit.Aspire.Hosting.Neon.Tests;
 internal sealed record NeonIntegrationTestSettings(
     string ApiKey,
     string ProjectName,
-    string EphemeralPrefix)
+    string EphemeralPrefix,
+    string ExistingBranchName)
 {
     public static NeonIntegrationTestSettings Require()
     {
@@ -37,11 +38,13 @@ internal sealed record NeonIntegrationTestSettings(
 
         string projectName = ReadOptional("NEON_INTEGRATION_PROJECT_NAME") ?? "aspire-neon-integration";
         string ephemeralPrefix = ReadOptional("NEON_INTEGRATION_EPHEMERAL_PREFIX") ?? "aspire-it-";
+        string existingBranchName = ReadOptional("NEON_INTEGRATION_EXISTING_BRANCH_NAME") ?? "main";
 
         settings = new NeonIntegrationTestSettings(
             apiKey,
             projectName,
-            ephemeralPrefix);
+            ephemeralPrefix,
+            existingBranchName);
 
         reason = null;
         return true;

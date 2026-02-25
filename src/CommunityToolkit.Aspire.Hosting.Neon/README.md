@@ -21,8 +21,7 @@ var neonApiKey = builder.AddParameter("neon-api-key", "your-key", secret: true);
 
 var neon = builder.AddNeon("neon", neonApiKey)
     .AddProject("aspire-neon")
-    .AddBranch("dev")
-    .AddProvisioner(NeonProvisionerMode.Provision);
+    .AddBranch("dev");
 
 var database = neon.AddDatabase("appdb", "appdb");
 
@@ -34,24 +33,28 @@ builder.Build().Run();
 
 ## Provisioning mode
 
-Select provisioning behavior directly when creating the Neon resource:
+Neon infers provisioning behavior from your fluent configuration:
 
 ```csharp
 var neon = builder.AddNeon("neon", neonApiKey)
     .AddProject("aspire-neon")
-    .AddBranch("dev")
-    .AddProvisioner(NeonProvisionerMode.Provision);
+    .AddBranch("dev");
 ```
+
+In this example, Neon uses `Provision` mode because project/branch creation is requested.
+For existing-only workflows, use `AsExisting()`.
 
 Neon creates a real provisioner resource (`{neonResourceName}-provisioner`) that performs a one-shot execution and exits.
 
-Calling `AddProvisioner(...)` is optional. If you don't call it, Neon startup uses a default one-shot provisioner execution in `Attach` mode.
+Neon wires the one-shot provisioner automatically and uses inferred mode based on current options.
 The provisioner project template is bundled with the hosting package and materialized at runtime under:
+
 - run mode: `.aspire/cache/neon/{appHostHash}/neon-provisioner`
 - publish mode: `.aspire/cache/neon/{appHostHash}/neon-provisioner`
 
 The provisioner writes startup output to a deterministic path:
-- run mode (host execution): `%TEMP%/aspire-neon-output/{appHostHash}/{neonResourceName}.json`
+
+- run mode (host execution): `%TEMP%/aspire-neon-output/{appHostHash}/{runOutputDiscriminator}/{neonResourceName}.json`
 - publish/deploy mode (container execution): `/tmp/aspire-neon-output/{appHostHash}/{neonResourceName}.json`
 
 ## Extension methods
@@ -63,8 +66,7 @@ The provisioner writes startup output to a deterministic path:
 | `WithProjectId(id)` | Use an existing project by ID. |
 | `WithProjectName(name)` | Resolve an existing project by name. |
 | `AddProject(name, ...)` | Create the project if it does not exist. |
-| `AddProvisioner(mode?)` | Add a one-shot provisioner using the default name pattern `{neonName}-provisioner`. |
-| `AddProvisioner(name, mode?)` | Configure the one-shot provisioner name/mode (name must match the default provisioner). |
+| `AsExisting()` | Use existing project/branch/endpoint resources only. |
 | `WithContainerBuildOptions(Action<dynamic>)` | Configure container build options for the underlying Neon provisioner resource when project-based provisioning is used. |
 | `WithProjectOptions(Action<NeonProjectOptions>)` | Configure project options via callback. |
 
@@ -98,16 +100,14 @@ The provisioner writes startup output to a deterministic path:
 
 ## Provisioning behavior
 
-- The `mode` parameter on `AddProvisioner` controls behavior.
-- `NeonProvisionerMode.Attach` validates and attaches to existing resources only (default).
-- `NeonProvisionerMode.Provision` creates missing resources idempotently, then attaches.
+- Provisioner mode is inferred from configuration.
+- `AsExisting` forces existing-only attach semantics.
 - AppHost startup is external-only: Neon reads the provisioner output file instead of performing startup-time Neon API resource resolution.
 
 ```csharp
 var neon = builder.AddNeon("neon", neonApiKey)
     .AddProject("aspire-neon")
-    .AddBranch("dev")
-    .AddProvisioner(NeonProvisionerMode.Provision);
+    .AddBranch("dev");
 
 var database = neon.AddDatabase("appdb", "appdb");
 
@@ -116,7 +116,7 @@ builder.AddProject<Projects.Api>("api")
     .WaitFor(neon);
 ```
 
-`AddProvisioner` forwards Neon configuration as environment variables to the provisioner resource and instructs the provisioner to emit a startup output artifact consumed by the Neon resource.
+Neon forwards configuration as environment variables to the provisioner resource and instructs the provisioner to emit a startup output artifact consumed by the Neon resource.
 
 External provisioner environment contract:
 
@@ -151,8 +151,7 @@ Ephemeral branches are a toolkit concept (not a Neon feature) that creates a fre
 ```csharp
 var neon = builder.AddNeon("neon", neonApiKey)
     .AddProject("aspire-neon")
-    .AddEphemeralBranch("aspire-")
-    .AddProvisioner(NeonProvisionerMode.Provision);
+    .AddEphemeralBranch("aspire-");
 ```
 
 When enabled, the provisioner deletes existing branches with the configured prefix before creating a new ephemeral branch. Ephemeral branches are created with a 1-day expiration so Neon can automatically clean up lingering branches.
@@ -177,8 +176,7 @@ The Neon resource follows a health-check–based lifecycle that integrates with 
 ```csharp
 var neon = builder.AddNeon("neon", neonApiKey)
     .AddProject("aspire-neon")
-    .AddBranch("dev")
-    .AddProvisioner(NeonProvisionerMode.Provision);
+    .AddBranch("dev");
 
 var database = neon.AddDatabase("appdb", "appdb");
 
@@ -232,7 +230,6 @@ You can restore a branch to a point-in-time state from another branch using the 
 var neon = builder.AddNeon("neon", neonApiKey)
     .WithProjectId("my-project-id")
     .WithBranchName("staging")
-    .AddProvisioner(NeonProvisionerMode.Provision)
     .WithBranchRestore(restore =>
     {
         restore.SourceBranchId = "br-main-abc123";
@@ -250,7 +247,6 @@ You can create branches with anonymized data using Neon's masking rules:
 var neon = builder.AddNeon("neon", neonApiKey)
     .AddProject("aspire-neon")
     .AddBranch("anonymized-dev")
-    .AddProvisioner(NeonProvisionerMode.Provision)
     .WithAnonymizedData(anon =>
     {
         anon.MaskingRules.Add(new NeonMaskingRule
@@ -291,15 +287,14 @@ if (!builder.ExecutionContext.IsPublishMode)
 {
     neon = builder.AddNeon("neon", neonApiKey)
         .AddProject("aspire-neon")
-        .AddEphemeralBranch("aspire-")
-        .AddProvisioner(NeonProvisionerMode.Provision);
+        .AddEphemeralBranch("aspire-");
 }
 else
 {
     neon = builder.AddNeon("neon", neonApiKey)
         .WithProjectId(builder.Configuration["Neon:ProjectId"]!)
         .WithBranchId(builder.Configuration["Neon:BranchId"]!)
-        .AddProvisioner(NeonProvisionerMode.Attach);
+        .AsExisting();
 }
 ```
 
@@ -311,7 +306,7 @@ This configuration allows local runs to create the project if needed and creates
 var neon = builder.AddNeon("neon", neonApiKey)
     .WithProjectId(builder.Configuration["Neon:ProjectId"]!)
     .WithBranchId(builder.Configuration["Neon:BranchId"]!)
-    .AddProvisioner(NeonProvisionerMode.Attach);
+    .AsExisting();
 ```
 
 In production, prefer explicit IDs and disable creation so deployments are deterministic. Provide `Neon:ProjectId` and optionally `Neon:BranchId` via configuration or environment variables.
@@ -343,7 +338,7 @@ You can use `AddProvisioner` to auto-register a provisioner named `<resourceName
 var neon = builder.AddNeon("neon", neonApiKey)
     .WithProjectId(builder.Configuration["Neon:ProjectId"]!)
     .WithBranchId(builder.Configuration["Neon:BranchId"]!)
-    .AddProvisioner(NeonProvisionerMode.Attach);
+    .AsExisting();
 
 var database = neon.AddDatabase("appdb", "appdb");
 
@@ -358,4 +353,4 @@ If needed, you can access the provisioner project resource directly:
 var neonProvisioner = neon.Resource.ProvisionerResource;
 ```
 
-`AddProvisioner(...)` returns the same Neon resource builder for fluent chaining.
+

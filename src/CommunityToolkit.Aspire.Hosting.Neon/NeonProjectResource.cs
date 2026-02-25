@@ -15,18 +15,15 @@ public sealed class NeonProjectResource : Resource, IResourceWithConnectionStrin
     /// </summary>
     /// <param name="name">The name of the resource.</param>
     /// <param name="apiKey">The Neon API key parameter.</param>
-    /// <param name="options">The Neon project options.</param>
     public NeonProjectResource(
         [ResourceName] string name,
-        ParameterResource apiKey,
-        NeonProjectOptions options
+        ParameterResource apiKey
     ) : base(name)
     {
         ArgumentNullException.ThrowIfNull(apiKey);
-        ArgumentNullException.ThrowIfNull(options);
 
         ApiKeyParameter = apiKey;
-        Options = options;
+        Options = new NeonProjectOptions();
     }
 
     /// <summary>

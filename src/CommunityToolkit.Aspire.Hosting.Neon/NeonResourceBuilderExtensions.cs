@@ -366,45 +366,31 @@ public static class NeonResourceBuilderExtensions
             return;
         }
 
-        _ = builder.AddProvisioner(builder.Resource.Options.Provisioning.Mode);
+        _ = EnsureProvisioner(builder);
     }
 
     /// <summary>
-    /// Adds an external one-shot provisioner project using the default name pattern <c>{neonResourceName}-provisioner</c>.
+    /// Configures Neon to use existing project and branch resources without creating missing artifacts.
     /// </summary>
     /// <param name="builder">The Neon project resource builder.</param>
-    /// <param name="mode">
-    /// The provisioner execution mode. Defaults to <see cref="NeonProvisionerMode.Attach"/>.
-    /// </param>
     /// <returns>The same Neon resource builder for fluent chaining.</returns>
-    public static IResourceBuilder<NeonProjectResource> AddProvisioner(
-        this IResourceBuilder<NeonProjectResource> builder,
-        NeonProvisionerMode mode = NeonProvisionerMode.Attach)
+    public static IResourceBuilder<NeonProjectResource> AsExisting(
+        this IResourceBuilder<NeonProjectResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        _ = builder.AddNeonProvisioner($"{builder.Resource.Name}-provisioner", mode);
+        SetExistingProvisioningDefaults(builder.Resource.Options);
+        RefreshProvisionerConfiguration(builder);
         return builder;
     }
 
-    /// <summary>
-    /// Adds an external one-shot provisioner project with a custom resource name.
-    /// </summary>
-    /// <param name="builder">The Neon project resource builder.</param>
-    /// <param name="name">The provisioner project resource name.</param>
-    /// <param name="mode">
-    /// The provisioner execution mode. Defaults to <see cref="NeonProvisionerMode.Attach"/>.
-    /// </param>
-    /// <returns>The same Neon resource builder for fluent chaining.</returns>
-    public static IResourceBuilder<NeonProjectResource> AddProvisioner(
-        this IResourceBuilder<NeonProjectResource> builder,
-        [ResourceName] string name,
-        NeonProvisionerMode mode = NeonProvisionerMode.Attach)
+    internal static IResourceBuilder<NeonProjectResource> EnsureProvisioner(
+        this IResourceBuilder<NeonProjectResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(name);
 
-        _ = builder.AddNeonProvisioner(name, mode);
+        NeonProvisionerIntent mode = ResolveProvisionerMode(builder.Resource.Options);
+        _ = AddNeonProvisioner(builder, $"{builder.Resource.Name}-provisioner", mode);
         return builder;
     }
 
@@ -421,9 +407,7 @@ public static class NeonResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(configure);
 
-        _ = builder.AddNeonProvisioner(
-            $"{builder.Resource.Name}-provisioner",
-            builder.Resource.Options.Provisioning.Mode);
+        _ = EnsureProvisioner(builder);
 
         if (builder.Resource.ProvisionerResource is not ProjectResource projectProvisioner)
         {
@@ -481,20 +465,10 @@ public static class NeonResourceBuilderExtensions
         return lambda.Compile();
     }
 
-    /// <summary>
-    /// Adds an external one-shot provisioner project and wires Neon to wait for its completion.
-    /// </summary>
-    /// <param name="builder">The Neon project resource builder.</param>
-    /// <param name="name">The provisioner project resource name.</param>
-    /// <param name="mode">
-    /// The provisioner execution mode. Defaults to <see cref="NeonProvisionerMode.Attach"/>.
-    /// Use <see cref="NeonProvisionerMode.Provision"/> to create missing resources before attaching.
-    /// </param>
-    /// <returns>A builder for the provisioner project resource.</returns>
-    public static IResourceBuilder<IResourceWithWaitSupport> AddNeonProvisioner(
+    private static IResourceBuilder<IResourceWithWaitSupport> AddNeonProvisioner(
         this IResourceBuilder<NeonProjectResource> builder,
         [ResourceName] string name,
-        NeonProvisionerMode mode = NeonProvisionerMode.Attach)
+        NeonProvisionerIntent mode)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
@@ -524,8 +498,6 @@ public static class NeonResourceBuilderExtensions
                 ApplyProvisionerEnvironment(existingProjectBuilder, builder.Resource, mode, existingOutputFilePath);
                 builder.WaitForCompletion(existingProjectBuilder);
                 builder.WithAnnotation(new NeonExternalProvisionerAnnotation(existingProjectBuilder.Resource, existingProjectPath, existingOutputFilePath, mode));
-
-                builder.Resource.Options.Provisioning.Mode = mode;
                 return existingProjectBuilder;
             }
 
@@ -534,8 +506,6 @@ public static class NeonResourceBuilderExtensions
                 var existingExecutableBuilder = builder.ApplicationBuilder.CreateResourceBuilder(existingExecutableResource);
                 ApplyProvisionerEnvironment(existingExecutableBuilder, builder.Resource, mode, existingOutputFilePath);
                 builder.WithAnnotation(new NeonExternalProvisionerAnnotation(existingExecutableBuilder.Resource, existingProjectPath, existingOutputFilePath, mode));
-
-                builder.Resource.Options.Provisioning.Mode = mode;
                 return existingExecutableBuilder;
             }
 
@@ -560,7 +530,6 @@ public static class NeonResourceBuilderExtensions
             builder.WithAnnotation(new NeonExternalProvisionerAnnotation(executableProvisioner.Resource, provisionerProjectPath, outputFilePath, mode));
 
             builder.Resource.ProvisionerResource = executableProvisioner.Resource;
-            builder.Resource.Options.Provisioning.Mode = mode;
             return executableProvisioner;
         }
 
@@ -574,8 +543,38 @@ public static class NeonResourceBuilderExtensions
         builder.WithAnnotation(new NeonExternalProvisionerAnnotation(projectProvisioner.Resource, provisionerProjectPath, outputFilePath, mode));
 
         builder.Resource.ProvisionerResource = projectProvisioner.Resource;
-        builder.Resource.Options.Provisioning.Mode = mode;
         return projectProvisioner;
+    }
+
+    private static NeonProvisionerIntent ResolveProvisionerMode(NeonProjectOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        NeonBranchOptions branch = options.Branch;
+        bool requiresProvisioning =
+            options.CreateProjectIfMissing ||
+            branch.CreateBranchIfMissing ||
+            branch.CreateEndpointIfMissing ||
+            branch.UseEphemeralBranch ||
+            branch.Restore.Enabled ||
+            branch.Anonymization.Enabled;
+
+        return requiresProvisioning
+            ? NeonProvisionerIntent.Provision
+            : NeonProvisionerIntent.Attach;
+    }
+
+    private static void SetExistingProvisioningDefaults(NeonProjectOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        options.CreateProjectIfMissing = false;
+
+        NeonBranchOptions branch = options.Branch;
+        branch.CreateBranchIfMissing = false;
+        branch.CreateEndpointIfMissing = false;
+        branch.UseEphemeralBranch = false;
+
     }
 
     private static string ResolveProvisionerOutputPath(IDistributedApplicationBuilder builder, string resourceName)
@@ -588,7 +587,24 @@ public static class NeonResourceBuilderExtensions
             return $"/tmp/aspire-neon-output/{appHostFingerprint}/{safeResourceName}.json";
         }
 
-        string outputDirectory = Path.Combine(Path.GetTempPath(), "aspire-neon-output", appHostFingerprint);
+        string runOutputDiscriminator = builder.Resources
+            .OfType<NeonProjectResource>()
+            .FirstOrDefault(resource => string.Equals(resource.Name, resourceName, StringComparison.Ordinal))?
+            .Options
+            .Provisioning
+            .RunOutputDiscriminator
+            ?? Guid.NewGuid().ToString("N")[..12];
+
+        NeonProjectResource? projectResource = builder.Resources
+            .OfType<NeonProjectResource>()
+            .FirstOrDefault(resource => string.Equals(resource.Name, resourceName, StringComparison.Ordinal));
+
+        if (projectResource is not null && string.IsNullOrWhiteSpace(projectResource.Options.Provisioning.RunOutputDiscriminator))
+        {
+            projectResource.Options.Provisioning.RunOutputDiscriminator = runOutputDiscriminator;
+        }
+
+        string outputDirectory = Path.Combine(Path.GetTempPath(), "aspire-neon-output", appHostFingerprint, runOutputDiscriminator);
         Directory.CreateDirectory(outputDirectory);
         return Path.Combine(outputDirectory, $"{safeResourceName}.json");
     }
@@ -636,7 +652,7 @@ public static class NeonResourceBuilderExtensions
     private static void ApplyProvisionerEnvironment<TResource>(
         IResourceBuilder<TResource> provisioner,
         NeonProjectResource resource,
-        NeonProvisionerMode mode,
+        NeonProvisionerIntent mode,
         string outputFilePath)
         where TResource : class, IResourceWithWaitSupport, IResourceWithEnvironment
     {
@@ -666,7 +682,12 @@ public static class NeonResourceBuilderExtensions
 
         provisioner
             .WithEnvironment(NeonProvisionerEnvironmentVariables.ApiKey, ReferenceExpression.Create($"{resource.ApiKeyParameter}"))
-            .WithEnvironment(NeonProvisionerEnvironmentVariables.Mode, mode == NeonProvisionerMode.Attach ? "attach" : "provision")
+            .WithEnvironment(NeonProvisionerEnvironmentVariables.Mode, mode switch
+            {
+                NeonProvisionerIntent.Attach => "attach",
+                NeonProvisionerIntent.Provision => "provision",
+                _ => throw new DistributedApplicationException($"Unsupported Neon provisioner intent '{mode}'.")
+            })
             .WithEnvironment(NeonProvisionerEnvironmentVariables.OutputFilePath, outputFilePath)
             .WithEnvironment(NeonProvisionerEnvironmentVariables.ProjectId, options.ProjectId ?? string.Empty)
             .WithEnvironment(NeonProvisionerEnvironmentVariables.ProjectName, options.ProjectName ?? string.Empty)
