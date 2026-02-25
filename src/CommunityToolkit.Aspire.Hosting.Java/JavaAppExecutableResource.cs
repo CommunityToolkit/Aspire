@@ -33,5 +33,5 @@ public class JavaAppExecutableResource
     /// <summary>
     /// Gets or sets the path to the JAR file to execute.
     /// </summary>
-    public string JarPath { get; set; } = "target/app.jar";
+    public string? JarPath { get; set; }
 }
