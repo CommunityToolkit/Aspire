@@ -179,7 +179,7 @@ public static partial class JavaAppHostingExtension
 
         return builder.WithJavaBuildStep(
             buildResourceName: $"{builder.Resource.Name}-maven-build",
-            createResource: (name, workingDirectory) => new MavenBuildResource(name, workingDirectory),
+            createResource: (name, wrapperScript, workingDirectory) => new MavenBuildResource(name, wrapperScript, workingDirectory),
             wrapperPath: wrapperPath,
             buildArgs: args.Length > 0 ? args : ["clean", "package"]);
     }
@@ -206,7 +206,7 @@ public static partial class JavaAppHostingExtension
 
         return builder.WithJavaBuildStep(
             buildResourceName: $"{builder.Resource.Name}-gradle-build",
-            createResource: (name, workingDirectory) => new GradleBuildResource(name, workingDirectory),
+            createResource: (name, wrapperScript, workingDirectory) => new GradleBuildResource(name, wrapperScript, workingDirectory),
             wrapperPath: wrapperPath,
             buildArgs: args.Length > 0 ? args : ["clean", "build"]);
     }
@@ -214,16 +214,15 @@ public static partial class JavaAppHostingExtension
     private static IResourceBuilder<JavaAppExecutableResource> WithJavaBuildStep<TBuildResource>(
         this IResourceBuilder<JavaAppExecutableResource> builder,
         string buildResourceName,
-        Func<string, string, TBuildResource> createResource,
+        Func<string, string, string, TBuildResource> createResource,
         string wrapperPath,
         string[] buildArgs) where TBuildResource : ExecutableResource
     {
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
-            var buildResource = createResource(buildResourceName, builder.Resource.WorkingDirectory);
+            var buildResource = createResource(buildResourceName, wrapperPath, builder.Resource.WorkingDirectory);
 
             var buildBuilder = builder.ApplicationBuilder.AddResource(buildResource)
-                .WithCommand(wrapperPath)
                 .WithArgs(buildArgs)
                 .WithParentRelationship(builder.Resource)
                 .ExcludeFromManifest();
