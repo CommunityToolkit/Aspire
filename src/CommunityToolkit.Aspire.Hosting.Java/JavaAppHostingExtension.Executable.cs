@@ -79,19 +79,6 @@ public static partial class JavaAppHostingExtension
                           }
                       });
 
-        if (builder.ExecutionContext.IsRunMode)
-        {
-            builder.Eventing.Subscribe<BeforeStartEvent>((_, _) =>
-            {
-                if (resource.TryGetLastAnnotation<JavaBuildToolAnnotation>(out var buildTool))
-                {
-                    resourceBuilder.WithCommand(buildTool.WrapperPath);
-                }
-
-                return Task.CompletedTask;
-            });
-        }
-
         return resourceBuilder;
     }
 
@@ -260,6 +247,11 @@ public static partial class JavaAppHostingExtension
         builder.Resource.Annotations.Add(
             new JavaBuildToolAnnotation(wrapperPath, args.Length > 0 ? [goal, .. args] : [goal]));
 
+        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            builder.WithCommand(wrapperPath);
+        }
+
         return builder;
     }
 
@@ -289,6 +281,11 @@ public static partial class JavaAppHostingExtension
 
         builder.Resource.Annotations.Add(
             new JavaBuildToolAnnotation(wrapperPath, args.Length > 0 ? [task, .. args] : [task]));
+
+        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            builder.WithCommand(wrapperPath);
+        }
 
         return builder;
     }
