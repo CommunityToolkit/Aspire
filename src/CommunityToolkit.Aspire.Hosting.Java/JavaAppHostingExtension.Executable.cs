@@ -249,6 +249,11 @@ public static partial class JavaAppHostingExtension
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(goal, nameof(goal));
 
+        if (builder.Resource.JarPath is not null)
+        {
+            throw new InvalidOperationException($"{nameof(WithMavenGoal)} cannot be used when a {nameof(JavaAppExecutableResource.JarPath)} has been specified. Use either {nameof(AddJavaApp)} with a {nameof(JavaAppExecutableResource.JarPath)} or {nameof(WithMavenGoal)}, not both.");
+        }
+
         string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".cmd" : string.Empty;
         string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, $"mvnw{extension}"));
 
@@ -273,6 +278,11 @@ public static partial class JavaAppHostingExtension
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrWhiteSpace(task, nameof(task));
+
+        if (builder.Resource.JarPath is not null)
+        {
+            throw new InvalidOperationException($"{nameof(WithGradleTask)} cannot be used when a {nameof(JavaAppExecutableResource.JarPath)} has been specified. Use either {nameof(AddJavaApp)} with a {nameof(JavaAppExecutableResource.JarPath)} or {nameof(WithGradleTask)}, not both.");
+        }
 
         string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".bat" : string.Empty;
         string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, $"gradlew{extension}"));

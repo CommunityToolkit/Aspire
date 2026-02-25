@@ -290,6 +290,26 @@ public class ExecutableResourceCreationTests
         Assert.DoesNotContain("-jar", args);
     }
 
+    [Fact]
+    public void WithMavenGoalThrowsWhenJarPathIsSet()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "my-app.jar")
+                   .WithMavenGoal("spring-boot:run"));
+    }
+
+    [Fact]
+    public void WithGradleTaskThrowsWhenJarPathIsSet()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "my-app.jar")
+                   .WithGradleTask("bootRun"));
+    }
+
     private static DistributedApplicationModel BuildAppModel(Action<IDistributedApplicationBuilder> configure)
     {
         var builder = DistributedApplication.CreateBuilder();
