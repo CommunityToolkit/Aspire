@@ -50,7 +50,7 @@ public class ExecutableResourceCreationTests
     {
         var appModel = BuildAppModel(builder =>
             builder.AddJavaApp("java", Environment.CurrentDirectory, "test.jar", args: ["--test"])
-                   .WithJvmArgs("-Dtest"));
+                   .WithJvmArgs(["-Dtest"]));
 
         var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
 
@@ -73,7 +73,7 @@ public class ExecutableResourceCreationTests
     {
         var appModel = BuildAppModel(builder =>
             builder.AddJavaApp("javaapp", "../java-project", "target/app.jar")
-                   .WithJvmArgs("-Xmx512m"));
+                   .WithJvmArgs(["-Xmx512m"]));
 
         var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
 

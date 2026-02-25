@@ -17,7 +17,7 @@ public static partial class JavaAppHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="workingDirectory">The working directory to use for the command.</param>
     /// <param name="jarPath">The path to the jar file, relative to the resource working directory.</param>
     /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
@@ -45,7 +45,7 @@ public static partial class JavaAppHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="workingDirectory">The working directory to use for the command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// Use <see cref="WithMavenGoal"/> or <see cref="WithGradleTask"/> to run the application via a build tool,
@@ -87,7 +87,7 @@ public static partial class JavaAppHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="workingDirectory">The working directory to use for the command.</param>
     /// <param name="options">The <see cref="JavaAppExecutableResourceOptions"/> to configure the Java application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [Obsolete("Use AddJavaApp(string, string, string, string[]?) instead. This method will be removed in a future version.")]
@@ -141,7 +141,7 @@ public static partial class JavaAppHostingExtension
     {
         ArgumentNullException.ThrowIfNull(mavenOptions, nameof(mavenOptions));
 
-        return builder.WithMavenBuild(args: mavenOptions.Args);
+        return builder.WithMavenBuild(wrapperScript: mavenOptions.Command, args: mavenOptions.Args);
     }
 
     /// <summary>
@@ -301,9 +301,15 @@ public static partial class JavaAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<T> WithJvmArgs<T>(
         this IResourceBuilder<T> builder,
-        params string[] args) where T : IResourceWithEnvironment
+        string[] args) where T : IResourceWithEnvironment
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(args, nameof(args));
+
+        if (args.Length == 0)
+        {
+            return builder;
+        }
 
         return builder.WithEnvironment(context =>
         {

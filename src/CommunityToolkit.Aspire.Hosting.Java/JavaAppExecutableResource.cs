@@ -12,7 +12,7 @@ public class JavaAppExecutableResource
     /// Initializes a new instance of the <see cref="JavaAppExecutableResource"/> class.
     /// </summary>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="workingDirectory">The working directory to use for the command.</param>
     public JavaAppExecutableResource(string name, string workingDirectory)
         : base(name, "java", workingDirectory)
     {
@@ -23,7 +23,7 @@ public class JavaAppExecutableResource
     /// </summary>
     /// <param name="name">The name of the resource.</param>
     /// <param name="command">The command to execute.</param>
-    /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
+    /// <param name="workingDirectory">The working directory to use for the command.</param>
     [Obsolete("Use JavaAppExecutableResource(string, string) instead. This constructor will be removed in a future version.")]
     public JavaAppExecutableResource(string name, string command, string workingDirectory)
         : base(name, command, workingDirectory)

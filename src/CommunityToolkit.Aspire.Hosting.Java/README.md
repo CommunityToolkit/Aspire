@@ -77,7 +77,7 @@ Use `WithJvmArgs` to configure JVM arguments:
 ```csharp
 var app = builder.AddJavaApp("app", "../java-project")
     .WithMavenGoal("spring-boot:run")
-    .WithJvmArgs("-Xmx512m", "-Xms256m")
+    .WithJvmArgs(["-Xmx512m", "-Xms256m"])
     .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 ```
 
