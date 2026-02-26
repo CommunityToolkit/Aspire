@@ -175,10 +175,10 @@ The following methods are available for configuring the Data API builder contain
 |AddDataAPIBuilder() || Adds a Data API builder container to the application.|
 || string name | The name of the resource. |
 || int httpPort | Optional HTTP port number for the Data API builder container. Defaults to a random port. |
-| WithConfigFile() || Adds one or more config or schema files to the container.
-|| FileInfo[] files | The config or schema file(s) to add. 
-| WithConfigFolder() || Adds all files from the specified folder(s) to the container.
-|| DirectoryInfo[] folders | The folder(s) from which to add all top-level config or schema files.
+| WithConfigFile() || Adds one or more config or schema files to the container. |
+|| FileInfo[] files | The config or schema file(s) to add. |
+| WithConfigFolder() || Adds all files from the specified folder(s) to the container. |
+|| DirectoryInfo[] folders | The folder(s) from which to add all top-level config or schema files. |
 
 ### Health Checks
 

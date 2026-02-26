@@ -5,4 +5,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "<Pending>", Scope = "member", Target = "~M:CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.TrekApiClient.GetSeriesAsync~System.Threading.Tasks.Task{System.Collections.Generic.List{CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.Series}}")]
+[assembly: SuppressMessage("Performance", "CA1873:Avoid potentially expensive logging", Justification = "The additional allocation cost from logging in TrekApiClient.GetSeriesAsync is acceptable for this sample Blazor application and simplifies the example code.", Scope = "member", Target = "~M:CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.TrekApiClient.GetSeriesAsync~System.Threading.Tasks.Task{System.Collections.Generic.List{CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.Series}}")]

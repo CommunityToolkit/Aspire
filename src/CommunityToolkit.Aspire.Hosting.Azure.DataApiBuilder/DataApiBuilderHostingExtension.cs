@@ -36,7 +36,7 @@ public static class DataApiBuilderHostingExtension
         params string[] configFilePaths)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(name);
+        ArgumentException.ThrowIfNullOrEmpty(name);
 
         var resource = new DataApiBuilderContainerResource(name);
 
