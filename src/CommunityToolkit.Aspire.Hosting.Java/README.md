@@ -93,7 +93,7 @@ var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
 
 ## Additional information
 
-- [Aspire Community Toolkit: Java hosting](https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-java)
+- [Aspire Community Toolkit: Java hosting](https://aspire.dev/integrations/frameworks/java/)
 
 ## Feedback and contributing
 
