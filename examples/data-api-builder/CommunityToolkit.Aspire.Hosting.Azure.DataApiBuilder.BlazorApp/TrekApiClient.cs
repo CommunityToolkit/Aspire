@@ -1,45 +1,56 @@
-﻿using System.Net.Http;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-
+﻿using System.Text.Json.Serialization;
 
 namespace CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp;
 
-public class TrekApiClient
+public class TrekApiClient(HttpClient httpClient, ILogger<TrekApiClient> logger)
 {
-    private readonly HttpClient httpClient;
-    private readonly ILogger<TrekApiClient> logger;
-
-    public TrekApiClient(HttpClient httpClient, ILogger<TrekApiClient> logger)
-    {
-        this.httpClient = httpClient;
-        this.logger = logger;
-    }
-
     public async Task<List<Series>> GetSeriesAsync()
     {
-        try
+        var response = await httpClient.GetAsync($"api/series");
+        response.EnsureSuccessStatusCode();
+        var result = await response.Content.ReadFromJsonAsync<DabResponse<Series>>();
+
+        if(result is null)
         {
-            var result = await httpClient.GetFromJsonAsync<SeriesList>($"api/series");
-            return result?.value ?? new List<Series>();
+            logger.LogError("Failed to deserialize response from Data API Builder.");
+            throw new Exception("Failed to deserialize response from Data API Builder.");
         }
-        catch (Exception ex)
+
+        if (result.Error is not null)
         {
-            logger.LogError(ex, "An error occurred while fetching series.");
-            return new List<Series>();
+            logger.LogError("API error: {Code} - {Message}", result.Error.Code, result.Error.Message);
+            throw new Exception($"{result.Error.Code}: {result.Error.Message}");
         }
+
+        return result.Value ?? [];
     }
 }
 
-public class SeriesList
+public class DabResponse<T>
 {
-    public List<Series> value { get; set; } = new List<Series>();
+    [JsonPropertyName("value")]
+    public List<T>? Value { get; set; }
+
+    [JsonPropertyName("nextLink")]
+    public string? NextLink { get; set; }
+
+    [JsonPropertyName("error")]
+    public DabError? Error { get; set; }
+}
+
+public class DabError
+{
+    [JsonPropertyName("code")]
+    public string Code { get; set; } = string.Empty;
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = string.Empty;
+
+    [JsonPropertyName("status")]
+    public int Status { get; set; }
 }
 
 public class Series
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public int Id { get; set; }
     public required string Name { get; set; }
-
 }

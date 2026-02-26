@@ -12,10 +12,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="dab-config-2.json">
+    <None Update="dab-config-anonymous-2.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="dab-config.json">
+    <None Update="dab-config-anonymous.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="dab-config-authenticated.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="config-folder\dab-folder-config-anonymous.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="config-folder\dab-folder-config-anonymous-2.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

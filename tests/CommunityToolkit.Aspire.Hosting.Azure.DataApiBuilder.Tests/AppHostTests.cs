@@ -31,6 +31,6 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var series = await response.Content.ReadFromJsonAsync<SeriesList>();
         Assert.NotNull(series);
-        Assert.Equal(5, series.value.Count);
+        Assert.Equal(5, series.Value.Count);
     }
 }
