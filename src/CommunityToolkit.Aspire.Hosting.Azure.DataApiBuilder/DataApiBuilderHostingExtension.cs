@@ -158,5 +158,27 @@ public static class DataApiBuilderHostingExtension
     private static IResourceBuilder<DataApiBuilderContainerResource> WithDataApiBuilderDefaults(
         this IResourceBuilder<DataApiBuilderContainerResource> builder) =>
         builder.WithOtlpExporter()
-            .WithHttpHealthCheck("/health");
+            .WithHttpHealthCheck("/health")
+            .WithUrls(context =>
+            {
+                context.Urls.Clear();
+                context.Urls.Add(new()
+                {
+                    Url = "/swagger",
+                    DisplayText = "Swagger",
+                    Endpoint = context.GetEndpoint(DataApiBuilderContainerResource.HttpEndpointName)
+                });
+                context.Urls.Add(new()
+                {
+                    Url = "/graphql",
+                    DisplayText = "GraphQL",
+                    Endpoint = context.GetEndpoint(DataApiBuilderContainerResource.HttpEndpointName)
+                });
+                context.Urls.Add(new()
+                {
+                    Url = "/health",
+                    DisplayText = "Health",
+                    Endpoint = context.GetEndpoint(DataApiBuilderContainerResource.HttpEndpointName)
+                });
+            });
 }
