@@ -38,7 +38,7 @@ public class AspireChromaClientExtensionsTests
     }
 
     [Fact]
-    public void AddChromaClient_HealthCheckShouldBeRegistered()
+    public async Task AddChromaClient_HealthCheckShouldBeRegistered()
     {
         var builder = CreateBuilder();
 
@@ -47,13 +47,12 @@ public class AspireChromaClientExtensionsTests
         using var host = builder.Build();
 
         var healthCheckService = host.Services.GetRequiredService<HealthCheckService>();
-        // The health check name should match the connection name for non-keyed
-        var registration = host.Services.GetRequiredService<IEnumerable<HealthCheckRegistration>>();
-        Assert.Contains(registration, x => x.Name == DefaultConnectionName);
+        var healthCheckReport = await healthCheckService.CheckHealthAsync();
+        Assert.Contains(healthCheckReport.Entries, x => x.Key == DefaultConnectionName);
     }
 
     [Fact]
-    public void AddKeyedChromaClient_HealthCheckShouldBeRegisteredWithSuffix()
+    public async Task AddKeyedChromaClient_HealthCheckShouldBeRegisteredWithSuffix()
     {
         var builder = CreateBuilder();
 
@@ -62,9 +61,8 @@ public class AspireChromaClientExtensionsTests
         using var host = builder.Build();
 
         var healthCheckService = host.Services.GetRequiredService<HealthCheckService>();
-        // The health check name should have _check suffix for keyed
-        var registration = host.Services.GetRequiredService<IEnumerable<HealthCheckRegistration>>();
-        Assert.Contains(registration, x => x.Name == $"{DefaultConnectionName}_check");
+        var healthCheckReport = await healthCheckService.CheckHealthAsync();
+        Assert.Contains(healthCheckReport.Entries, x => x.Key == $"{DefaultConnectionName}_check");
     }
 
     private static HostApplicationBuilder CreateBuilder()

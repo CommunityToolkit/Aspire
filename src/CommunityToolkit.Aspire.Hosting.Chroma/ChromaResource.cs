@@ -5,14 +5,9 @@ namespace CommunityToolkit.Aspire.Hosting.Chroma;
 /// <summary>
 /// A resource that represents a ChromaDB container.
 /// </summary>
-public class ChromaResource : ContainerResource, IResourceWithConnectionString
+public class ChromaResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
-
-    /// <param name="name">The name of the resource.</param>
-    public ChromaResource(string name) : base(name)
-    {
-    }
 
     private EndpointReference? _primaryEndpoint;
 

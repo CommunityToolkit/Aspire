@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Chroma\CommunityToolkit.Aspire.Hosting.Chroma.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Chroma\CommunityToolkit.Aspire.Chroma.csproj" />
+    <ProjectReference Include="..\..\examples\chromadb\CommunityToolkit.Aspire.Hosting.Chroma.AppHost\CommunityToolkit.Aspire.Hosting.Chroma.AppHost.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
   
