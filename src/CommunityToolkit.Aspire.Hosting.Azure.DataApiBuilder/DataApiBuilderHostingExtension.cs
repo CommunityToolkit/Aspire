@@ -41,6 +41,7 @@ public static class DataApiBuilderHostingExtension
         var resource = new DataApiBuilderContainerResource(name);
 
         var rb = builder.AddResource(resource)
+            .WithIconName("Drag")
             .WithImage(DataApiBuilderContainerImageTags.Image)
             .WithImageTag(DataApiBuilderContainerImageTags.Tag)
             .WithImageRegistry(DataApiBuilderContainerImageTags.Registry)
