@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.Chroma.Tests;
 
-public class AspireChromaClientExtensionsTests
+public class ChromaClientExtensionsTests
 {
     private const string DefaultConnectionName = "chroma";
     private const string DefaultConnectionString = "http://localhost:8000";
