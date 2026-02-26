@@ -93,6 +93,8 @@ namespace CommunityToolkit.Aspire.Hosting.RavenDB
     {
         protected RavenDBServerSettings() { }
 
+        public bool? ForceTcpScheme { get { throw null; } set { } }
+
         public LicensingOptions? LicensingOptions { get { throw null; } }
 
         public int? Port { get { throw null; } set { } }
