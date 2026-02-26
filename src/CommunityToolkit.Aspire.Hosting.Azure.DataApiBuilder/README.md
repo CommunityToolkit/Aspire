@@ -196,7 +196,7 @@ For more information about Data API builder's Simulator authentication provider,
 
 ### OpenTelemetry Instrumentation
 
-To enable OTEL telemetry in Data API builder, add the following configuration to your `dab-config.json` file:
+Aspire automatically injects `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_SERVICE_NAME` into the Data API builder container via `.WithOtlpExporter()`. To enable OTEL telemetry in Data API builder, add the following configuration to your `dab-config.json` file:
 
 ```json
 {
@@ -206,13 +206,19 @@ To enable OTEL telemetry in Data API builder, add the following configuration to
         "enabled": true,
         "service-name": "@env('OTEL_SERVICE_NAME')",
         "endpoint": "@env('OTEL_EXPORTER_OTLP_ENDPOINT')",
-        "exporter-protocol": "grpc",
-        "headers": "@env('OTEL_EXPORTER_OTLP_HEADERS')"
+        "exporter-protocol": "grpc"
       }
     }
   }
 }
 ```
+
+> **Warning:** Do **not** add `"headers": "@env('OTEL_EXPORTER_OTLP_HEADERS')"` unless your OTLP endpoint requires authentication (e.g., a cloud APM service). Aspire does not inject `OTEL_EXPORTER_OTLP_HEADERS`, and DAB requires all `@env()` references to resolve — an unset variable causes a fatal deserialization crash loop. If you need headers, set the environment variable explicitly on the container:
+>
+> ```csharp
+> builder.AddDataAPIBuilder("dab")
+>     .WithEnvironment("OTEL_EXPORTER_OTLP_HEADERS", "api-key=your-key");
+> ```
 
 For more information about Data API builder telemetry, see the [official documentation](https://learn.microsoft.com/azure/data-api-builder/concept/monitor/open-telemetry).
 
