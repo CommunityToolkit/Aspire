@@ -27,6 +27,7 @@ jobs:
             Hosting.Azure.DataApiBuilder.Tests,
             Hosting.Azure.Extensions.Tests,
             Hosting.Bun.Tests,
+            Hosting.Chroma.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,
@@ -67,6 +68,7 @@ jobs:
             Hosting.Umami.Tests,
 
             # Client integration tests
+            Chroma.Tests,
             GoFeatureFlag.Tests,
             KurrentDB.Tests,
             MassTransit.RabbitMQ.Tests,
