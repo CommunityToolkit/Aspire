@@ -23,7 +23,7 @@ public sealed class ChromaClientSettings
     public bool DisableHealthChecks { get; set; }
 
     /// <summary>
-    /// Gets or sets a integer value that indicates the ChromaDB health check timeout in milliseconds.
+    /// Gets or sets an integer value that indicates the ChromaDB health check timeout in milliseconds.
     /// </summary>
     public int? HealthCheckTimeout { get; set; }
 
