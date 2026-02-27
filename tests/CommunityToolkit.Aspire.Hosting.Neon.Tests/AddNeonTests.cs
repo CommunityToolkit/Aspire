@@ -1028,14 +1028,13 @@ public class AddNeonTests
     }
 
     [Fact]
-    public void WithProjectOptionsAndWithBranchOptionsThrowForNullConfigure()
+    public void ConfigureInfrastructureThrowsForNullConfigure()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
         var neon = builder.AddNeon("neon", apiKey);
 
-        Assert.Throws<ArgumentNullException>(() => neon.WithProjectOptions(null!));
-        Assert.Throws<ArgumentNullException>(() => neon.WithBranchOptions(null!));
+        Assert.Throws<ArgumentNullException>(() => neon.ConfigureInfrastructure(null!));
     }
 
     [Fact]
@@ -1059,36 +1058,15 @@ public class AddNeonTests
     }
 
     [Fact]
-    public async Task ForwardContainerBuildOptionsPrivateMethodIsInvocable()
+    public void GetProvisionerBuilderReturnsNullInRunMode()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey).AsExisting();
 
-        string projectPath = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..",
-            "..",
-            "..",
-            "..",
-            "..",
-            "tests",
-            "CommunityToolkit.Aspire.Hosting.Neon.Tests",
-            "CommunityToolkit.Aspire.Hosting.Neon.Tests.csproj"));
+        IResourceBuilder<ProjectResource>? provisionerBuilder = neon.GetProvisionerBuilder();
 
-        IResourceBuilder<ProjectResource> project = builder.AddProject(
-            "dummy-project",
-            projectPath);
-
-        MethodInfo? method = typeof(NeonResourceBuilderExtensions).GetMethod(
-            "ForwardContainerBuildOptions",
-            BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(method);
-
-        method!.Invoke(
-            null,
-            [
-                project,
-                (Action<dynamic>)(_ => { }),
-            ]);
+        Assert.Null(provisionerBuilder);
     }
 
     [Fact]

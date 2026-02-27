@@ -355,16 +355,14 @@ public class NeonFunctionalTests
 
     [Fact]
     [Trait("Category", "NeonIntegration")]
-    public void AddNeon_WithConfigureOptions_InvokesConfiguration()
+    public void ConfigureInfrastructure_InvokesConfiguration()
     {
         using var builder = TestDistributedApplicationBuilder.Create();
         IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
         bool invoked = false;
 
-        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon(
-            "neon",
-            apiKey,
-            options =>
+        IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
+            .ConfigureInfrastructure(options =>
             {
                 invoked = true;
                 options.ProjectId = "project-configured";
@@ -587,8 +585,7 @@ public class NeonFunctionalTests
 
             IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
-                .AddEphemeralBranch(settings.EphemeralPrefix)
-                .WithContainerBuildOptions(_ => { });
+                .AddEphemeralBranch(settings.EphemeralPrefix);
 
             IResourceBuilder<NeonDatabaseResource> database = neon.AddDatabase(databaseResourceName, databaseName, "neondb_owner");
 
@@ -620,8 +617,7 @@ public class NeonFunctionalTests
 
             IResourceBuilder<NeonProjectResource> neon = builder.AddNeon("neon", apiKey)
                 .AddProject(settings.ProjectName)
-                .AddEphemeralBranch(settings.EphemeralPrefix)
-                .WithContainerBuildOptions(_ => { });
+                .AddEphemeralBranch(settings.EphemeralPrefix);
 
             IResourceBuilder<NeonDatabaseResource> db1 = neon.AddDatabase($"db1{suffix}", $"db1_{suffix}", "neondb_owner");
             IResourceBuilder<NeonDatabaseResource> db2 = neon.AddDatabase($"db2{suffix}", $"db2_{suffix}", "neondb_owner");

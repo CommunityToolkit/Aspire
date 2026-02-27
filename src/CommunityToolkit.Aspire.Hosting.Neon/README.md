@@ -67,8 +67,8 @@ The provisioner writes startup output to a deterministic path:
 | `WithProjectName(name)` | Resolve an existing project by name. |
 | `AddProject(name, ...)` | Create the project if it does not exist. |
 | `AsExisting()` | Use existing project/branch/endpoint resources only. |
-| `WithContainerBuildOptions(Action<dynamic>)` | Configure container build options for the underlying Neon provisioner resource when project-based provisioning is used. |
-| `WithProjectOptions(Action<NeonProjectOptions>)` | Configure project options via callback. |
+| `ConfigureInfrastructure(Action<NeonProjectOptions>)` | Configure all infrastructure options via callback. |
+| `GetProvisionerBuilder()` | Get the provisioner `IResourceBuilder<ProjectResource>` to call Aspire SDK methods directly. |
 
 ### Organization
 
@@ -85,7 +85,6 @@ The provisioner writes startup output to a deterministic path:
 | `WithBranchName(name)` | Resolve an existing branch by name. |
 | `AddBranch(name, endpointType?)` | Create the branch if it does not exist. |
 | `AddEphemeralBranch(prefix?, endpointType?)` | Create a disposable branch for each run. |
-| `WithBranchOptions(Action<NeonBranchOptions>)` | Configure branch options via callback. |
 | `WithBranchRestore(Action<NeonBranchRestoreOptions>?)` | Restore (refresh) the branch from a source. |
 | `WithAnonymizedData(Action<NeonAnonymizationOptions>)` | Create an anonymized branch with masking rules. |
 | `AsDefaultBranch()` | Set the resolved branch as the project default. |
@@ -134,7 +133,7 @@ External provisioner environment contract:
 | `NEON_ENDPOINT_ID`, `NEON_ENDPOINT_TYPE`, `NEON_CREATE_ENDPOINT_IF_MISSING` | Endpoint attach/create behavior. |
 | `NEON_DATABASE_NAME`, `NEON_ROLE_NAME`, `NEON_USE_CONNECTION_POOLER`, `NEON_DATABASE_SPECS_JSON` | Database/role and connection output behavior. |
 
-You can configure these settings either with the `AddNeon` options callback or the fluent extensions shown above. If you use both, the last value written wins: the `AddNeon` callback runs first, and any subsequent extension call overrides the same option. If you already have a project ID, prefer `WithProjectId`.
+You can configure these settings using `ConfigureInfrastructure` or the fluent extensions shown above. If you use both, the last value written wins. If you already have a project ID, prefer `WithProjectId`.
 
 ### Organization example
 

@@ -19,7 +19,6 @@ public static class NeonBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="apiKey">The parameter builder providing the Neon API key.</param>
-    /// <param name="configureOptions">An optional callback to configure Neon project options.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <example>
@@ -44,16 +43,13 @@ public static class NeonBuilderExtensions
     public static IResourceBuilder<NeonProjectResource> AddNeon(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        IResourceBuilder<ParameterResource> apiKey,
-        Action<NeonProjectOptions>? configureOptions = null
-    )
+        IResourceBuilder<ParameterResource> apiKey)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentNullException.ThrowIfNull(apiKey);
 
         var resource = new NeonProjectResource(name, apiKey.Resource);
-        configureOptions?.Invoke(resource.Options);
 
         var healthCheckKey = $"{name}_neon_health";
 

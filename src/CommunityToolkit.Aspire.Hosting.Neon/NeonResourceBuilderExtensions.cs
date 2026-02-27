@@ -1,6 +1,4 @@
 using System.Text.Json;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using Aspire.Hosting.ApplicationModel;
@@ -82,24 +80,6 @@ public static class NeonResourceBuilderExtensions
             options.PostgresVersion = postgresVersion;
         }
 
-        RefreshProvisionerConfiguration(builder);
-        return builder;
-    }
-
-    /// <summary>
-    /// Configures project-level options using a callback.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="configure">The options configuration callback.</param>
-    /// <returns>The updated resource builder.</returns>
-    public static IResourceBuilder<NeonProjectResource> WithProjectOptions(
-        this IResourceBuilder<NeonProjectResource> builder,
-        Action<NeonProjectOptions> configure)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
-
-        configure(builder.Resource.Options);
         RefreshProvisionerConfiguration(builder);
         return builder;
     }
@@ -229,24 +209,6 @@ public static class NeonResourceBuilderExtensions
             branch.EphemeralBranchPrefix = prefix;
         }
 
-        RefreshProvisionerConfiguration(builder);
-        return builder;
-    }
-
-    /// <summary>
-    /// Configures branch options using a callback.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="configure">The branch options configuration callback.</param>
-    /// <returns>The updated resource builder.</returns>
-    public static IResourceBuilder<NeonProjectResource> WithBranchOptions(
-        this IResourceBuilder<NeonProjectResource> builder,
-        Action<NeonBranchOptions> configure)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
-
-        configure(builder.Resource.Options.Branch);
         RefreshProvisionerConfiguration(builder);
         return builder;
     }
@@ -395,74 +357,42 @@ public static class NeonResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Configures container build options for the underlying Neon provisioner project resource.
+    /// Configures Neon infrastructure options using a callback.
     /// </summary>
     /// <param name="builder">The Neon project resource builder.</param>
-    /// <param name="configure">The callback used to configure container build options.</param>
+    /// <param name="configure">The infrastructure configuration callback.</param>
     /// <returns>The same Neon resource builder for fluent chaining.</returns>
-    public static IResourceBuilder<NeonProjectResource> WithContainerBuildOptions(
+    public static IResourceBuilder<NeonProjectResource> ConfigureInfrastructure(
         this IResourceBuilder<NeonProjectResource> builder,
-        Action<dynamic> configure)
+        Action<NeonProjectOptions> configure)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(configure);
 
-        _ = EnsureProvisioner(builder);
-
-        if (builder.Resource.ProvisionerResource is not ProjectResource projectProvisioner)
-        {
-            return builder;
-        }
-
-        var provisionerBuilder = builder.ApplicationBuilder.CreateResourceBuilder(projectProvisioner);
-
-        ForwardContainerBuildOptions(provisionerBuilder, configure);
+        configure(builder.Resource.Options);
+        RefreshProvisionerConfiguration(builder);
         return builder;
     }
 
-    private static void ForwardContainerBuildOptions(
-        IResourceBuilder<ProjectResource> provisionerBuilder,
-        Action<dynamic> configure)
+    /// <summary>
+    /// Gets the resource builder for the underlying Neon provisioner project resource.
+    /// Returns <see langword="null"/> when the provisioner is not a <see cref="ProjectResource"/> (for example, in run mode).
+    /// </summary>
+    /// <param name="builder">The Neon project resource builder.</param>
+    /// <returns>An <see cref="IResourceBuilder{T}"/> for the provisioner <see cref="ProjectResource"/>, or <see langword="null"/>.</returns>
+    public static IResourceBuilder<ProjectResource>? GetProvisionerBuilder(
+        this IResourceBuilder<NeonProjectResource> builder)
     {
-        Assembly aspireAssembly = typeof(ProjectResource).Assembly;
-        Type? resourceExtensionsType = aspireAssembly.GetType("Aspire.Hosting.ApplicationModel.ResourceExtensions");
+        ArgumentNullException.ThrowIfNull(builder);
 
-        MethodInfo? genericMethod = resourceExtensionsType?
-            .GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .FirstOrDefault(method =>
-                method.Name == "WithContainerBuildOptions"
-                && method.IsGenericMethodDefinition
-                && method.GetGenericArguments().Length == 1
-                && method.GetParameters().Length == 2);
+        _ = EnsureProvisioner(builder);
 
-        if (genericMethod is null)
+        if (builder.Resource.ProvisionerResource is ProjectResource projectProvisioner)
         {
-            throw new DistributedApplicationException(
-                "Unable to locate Aspire WithContainerBuildOptions API for ProjectResource. Ensure your Aspire.Hosting package supports project container build options.");
+            return builder.ApplicationBuilder.CreateResourceBuilder(projectProvisioner);
         }
 
-        MethodInfo closedMethod = genericMethod.MakeGenericMethod(typeof(ProjectResource));
-        ParameterInfo callbackParameter = closedMethod.GetParameters()[1];
-        Type callbackType = callbackParameter.ParameterType;
-        Type optionsType = callbackType.GenericTypeArguments[0];
-        Delegate callbackDelegate = BuildDynamicCallback(callbackType, optionsType, configure);
-
-        _ = closedMethod.Invoke(null, [provisionerBuilder, callbackDelegate]);
-    }
-
-    private static Delegate BuildDynamicCallback(
-        Type callbackType,
-        Type optionsType,
-        Action<dynamic> configure)
-    {
-        ParameterExpression optionsParameter = Expression.Parameter(optionsType, "options");
-        ConstantExpression configureConstant = Expression.Constant(configure);
-        MethodInfo invoke = typeof(Action<dynamic>).GetMethod(nameof(Action<dynamic>.Invoke))!;
-
-        UnaryExpression optionsAsObject = Expression.Convert(optionsParameter, typeof(object));
-        MethodCallExpression call = Expression.Call(configureConstant, invoke, optionsAsObject);
-        LambdaExpression lambda = Expression.Lambda(callbackType, call, optionsParameter);
-        return lambda.Compile();
+        return null;
     }
 
     private static IResourceBuilder<IResourceWithWaitSupport> AddNeonProvisioner(
