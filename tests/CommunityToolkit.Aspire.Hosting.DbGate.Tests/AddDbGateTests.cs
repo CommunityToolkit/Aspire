@@ -244,6 +244,17 @@ public class AddDbGateTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
+        UpdateResourceEndpoint(mongodbResourceBuilder1.Resource);
+        UpdateResourceEndpoint(mongodbResourceBuilder2.Resource);
+        UpdateResourceEndpoint(postgresResourceBuilder1.Resource);
+        UpdateResourceEndpoint(postgresResourceBuilder2.Resource);
+        UpdateResourceEndpoint(redisResourceBuilder1.Resource);
+        UpdateResourceEndpoint(redisResourceBuilder2.Resource);
+        UpdateResourceEndpoint(sqlserverResourceBuilder1.Resource);
+        UpdateResourceEndpoint(sqlserverResourceBuilder2.Resource);
+        UpdateResourceEndpoint(mysqlResourceBuilder1.Resource);
+        UpdateResourceEndpoint(mysqlResourceBuilder2.Resource);
+
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
@@ -514,6 +525,13 @@ public class AddDbGateTests
                 Assert.Equal("ENGINE_mysql2", item.Key);
                 Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
             });
+
+        static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+        {
+            var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+            var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+            endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
+        }
     }
 
     [Fact]
