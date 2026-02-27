@@ -65,7 +65,8 @@ public static class RavenDBBuilderExtensions
             ClientCertificate = securedSettings?.ClientCertificate
         };
 
-        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port, serverSettings.TcpPort);
+        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port,
+            serverSettings.TcpPort, serverSettings.ForceTcpScheme);
     }
 
     /// <summary>
@@ -100,7 +101,8 @@ public static class RavenDBBuilderExtensions
     RavenDBServerResource serverResource,
     Dictionary<string, object> environmentVariables,
     int? port,
-    int? tcpPort)
+    int? tcpPort,
+    bool? forceTcpScheme = false)
     {
         string? connectionString = null;
         builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(serverResource, async (_, ct) =>
@@ -120,12 +122,13 @@ public static class RavenDBBuilderExtensions
                 certificate: serverResource.ClientCertificate);
 
         var effectiveTcpPort = tcpPort ?? 38888;
+        var useTcpScheme = forceTcpScheme ?? false;
         
         return builder.AddResource(serverResource)
             .WithEndpoint(
                 port: port,
                 targetPort: serverResource.IsSecured ? 443 : 8080,
-                scheme: serverResource.PrimaryEndpointName,
+                scheme: useTcpScheme? "tcp" : serverResource.PrimaryEndpointName,
                 name: serverResource.PrimaryEndpointName,
                 isProxied: false)
             .WithEndpoint(
@@ -172,7 +175,8 @@ public static class RavenDBBuilderExtensions
 
     private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, RavenDBServerResource serverResource, Dictionary<string, object>? environmentVariables = null)
     {
-        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{serverResource.TcpEndpoint.Port}");
+        var tcpPort = serverResource.TcpEndpoint.IsAllocated ? serverResource.TcpEndpoint.Port : serverResource.TcpEndpoint.TargetPort;
+        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{tcpPort}");
 
         if (environmentVariables is null)
         {
@@ -185,7 +189,19 @@ public static class RavenDBBuilderExtensions
                 context.EnvironmentVariables.TryAdd(environmentVariable.Key, environmentVariable.Value);
         }
 
-        context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
+        if (serverResource.TcpEndpoint.IsAllocated)
+        {
+            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
+        }
+        // Tcp endpoint is not allocated yet when we're generating manifest (e.g. aspire plugins)
+        // In such a case, just check if the public server url isn't set manually by the user
+        // If it is, use it with the container target port explicitly to generate the correct manifest
+        else if (serverResource.PublicServerUrl is not null) 
+        {
+            string publicHost = new Uri(serverResource.PublicServerUrl).Host;
+            string publicServerUrlTcp = $"tcp://{publicHost}:{serverResource.TcpEndpoint.TargetPort}";
+            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", publicServerUrlTcp);
+        }
     }
 
     /// <summary>
