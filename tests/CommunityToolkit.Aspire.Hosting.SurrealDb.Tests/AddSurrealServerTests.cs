@@ -230,8 +230,6 @@ public class AddSurrealServerTests
         // This annotation marks the resource as an OTEL exporter
         Assert.True(surrealServer.Resource.HasAnnotationOfType<OtlpExporterAnnotation>());
 
-        UpdateResourceEndpoint(surrealServer.Resource);
-
         var variables = await surrealServer.Resource.GetEnvironmentVariablesAsync();
         
         bool hasValue = variables.TryGetValue("SURREAL_TELEMETRY_PROVIDER", out var value);

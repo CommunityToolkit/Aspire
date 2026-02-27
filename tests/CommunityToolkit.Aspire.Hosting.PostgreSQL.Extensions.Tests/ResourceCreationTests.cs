@@ -465,8 +465,9 @@ public class ResourceCreationTests
         var passwordParameter = builder.AddParameter("password-param", postgresPassword);
 
         var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
-        _ = builder
-            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+        var postgresBuilder = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter);
+        _ = postgresBuilder
             .AddDatabase(postgresDatabaseName)
             .WithFlywayMigration(flywayResourceBuilder);
 
@@ -482,6 +483,10 @@ public class ResourceCreationTests
             $"-password={postgresPassword}",
             "migrate"
         };
+
+        var endpoint = postgresBuilder.Resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, $"{postgresResourceName}.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
 
         var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
         Assert.Equal(expectedArgs.Count, actualArgs.Count);
@@ -507,8 +512,9 @@ public class ResourceCreationTests
         var passwordParameter = builder.AddParameter("password-param", postgresPassword);
 
         var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
-        _ = builder
-            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+        var postgresBuilder = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter);
+        _ = postgresBuilder
             .AddDatabase(postgresDatabaseName)
             .WithFlywayRepair(flywayResourceBuilder);
 
@@ -524,6 +530,10 @@ public class ResourceCreationTests
             $"-password={postgresPassword}",
             "repair"
         };
+
+        var endpoint = postgresBuilder.Resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, $"{postgresResourceName}.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
 
         var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
         Assert.Equal(expectedArgs.Count, actualArgs.Count);
