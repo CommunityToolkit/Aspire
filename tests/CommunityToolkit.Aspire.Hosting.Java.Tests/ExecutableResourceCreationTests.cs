@@ -126,7 +126,8 @@ public class ExecutableResourceCreationTests
     {
         var appModel = BuildAppModel(builder =>
             builder.AddJavaApp("java", Environment.CurrentDirectory, "target/app.jar")
-                   .WithMavenBuild(wrapperScript: "custom/mvnw"));
+                   .WithWrapperPath("custom/mvnw")
+                   .WithMavenBuild());
 
         var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
         var buildResource = Assert.Single(appModel.Resources.OfType<MavenBuildResource>());
@@ -173,7 +174,8 @@ public class ExecutableResourceCreationTests
     {
         var appModel = BuildAppModel(builder =>
             builder.AddJavaApp("java", Environment.CurrentDirectory, "build/libs/app.jar")
-                   .WithGradleBuild(wrapperScript: "custom/gradlew"));
+                   .WithWrapperPath("custom/gradlew")
+                   .WithGradleBuild());
 
         var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
         var buildResource = Assert.Single(appModel.Resources.OfType<GradleBuildResource>());
@@ -291,6 +293,40 @@ public class ExecutableResourceCreationTests
     }
 
     [Fact]
+    public async Task MavenGoalWithCustomWrapperScriptUsesCustomPath()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithWrapperPath("../../mvnw")
+                   .WithMavenGoal("spring-boot:run"));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        Assert.True(resource.TryGetLastAnnotation<JavaBuildToolAnnotation>(out var annotation));
+        Assert.Equal(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "../../mvnw")), annotation.WrapperPath);
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal("spring-boot:run", args[0]);
+    }
+
+    [Fact]
+    public async Task GradleTaskWithCustomWrapperScriptUsesCustomPath()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory)
+                   .WithWrapperPath("../gradlew")
+                   .WithGradleTask("bootRun"));
+
+        var resource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+
+        Assert.True(resource.TryGetLastAnnotation<JavaBuildToolAnnotation>(out var annotation));
+        Assert.Equal(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "../gradlew")), annotation.WrapperPath);
+
+        var args = await resource.GetArgumentListAsync();
+        Assert.Equal("bootRun", args[0]);
+    }
+
+    [Fact]
     public void WithMavenGoalThrowsWhenJarPathIsSet()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -309,6 +345,35 @@ public class ExecutableResourceCreationTests
             builder.AddJavaApp("java", Environment.CurrentDirectory, "my-app.jar")
                    .WithGradleTask("bootRun"));
     }
+
+#pragma warning disable CS0618
+    [Fact]
+    public void DeprecatedMavenOptionsWithDefaultCommandUsesDefaultWrapper()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "target/app.jar")
+                   .WithMavenBuild(new MavenOptions()));
+
+        var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<MavenBuildResource>());
+
+        string expectedWrapper = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mvnw.cmd" : "mvnw";
+        Assert.Equal(Path.GetFullPath(Path.Combine(javaResource.WorkingDirectory, expectedWrapper)), buildResource.Command);
+    }
+
+    [Fact]
+    public void DeprecatedMavenOptionsWithCustomCommandUsesCustomWrapper()
+    {
+        var appModel = BuildAppModel(builder =>
+            builder.AddJavaApp("java", Environment.CurrentDirectory, "target/app.jar")
+                   .WithMavenBuild(new MavenOptions { Command = "tools/mvnw" }));
+
+        var javaResource = Assert.Single(appModel.Resources.OfType<JavaAppExecutableResource>());
+        var buildResource = Assert.Single(appModel.Resources.OfType<MavenBuildResource>());
+
+        Assert.Equal(Path.GetFullPath(Path.Combine(javaResource.WorkingDirectory, "tools/mvnw")), buildResource.Command);
+    }
+#pragma warning restore CS0618
 
     private static DistributedApplicationModel BuildAppModel(Action<IDistributedApplicationBuilder> configure)
     {

@@ -11,6 +11,8 @@ namespace Aspire.Hosting;
 public static partial class JavaAppHostingExtension
 {
     private const string JavaToolOptions = "JAVA_TOOL_OPTIONS";
+    private static readonly string DefaultMavenWrapper = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "mvnw.cmd" : "mvnw";
+    private static readonly string DefaultGradleWrapper = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "gradlew.bat" : "gradlew";
 
     /// <summary>
     /// Adds a Java application to the application model. Executes the executable Java app.
@@ -141,60 +143,64 @@ public static partial class JavaAppHostingExtension
     {
         ArgumentNullException.ThrowIfNull(mavenOptions, nameof(mavenOptions));
 
-        return builder.WithMavenBuild(wrapperScript: mavenOptions.Command, args: mavenOptions.Args);
+        // Only set a custom wrapper when the command differs from the default "mvnw".
+        // The default case is handled by WithMavenBuild, which applies the correct
+        // platform-specific wrapper name (e.g., mvnw.cmd on Windows).
+        if (!string.Equals(mavenOptions.Command, "mvnw", StringComparison.Ordinal))
+        {
+            builder.WithWrapperPath(mavenOptions.Command);
+        }
+
+        return builder.WithMavenBuild(args: mavenOptions.Args);
     }
 
     /// <summary>
     /// Adds a Maven build step to the application model.
+    /// The wrapper script path defaults to <c>mvnw</c> (or <c>mvnw.cmd</c> on Windows) in the resource's working directory,
+    /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Maven build step to.</param>
-    /// <param name="wrapperScript">The path to the Maven wrapper script, relative to the resource working directory. If not provided, defaults to <c>mvnw</c> (or <c>mvnw.cmd</c> on Windows) in the working directory.</param>
     /// <param name="args">Arguments to pass to the Maven wrapper. If not provided, defaults to <c>clean package</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<JavaAppExecutableResource> WithMavenBuild(
         this IResourceBuilder<JavaAppExecutableResource> builder,
-        string? wrapperScript = null,
         params string[] args)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".cmd" : string.Empty;
-
-        wrapperScript ??= $"mvnw{extension}";
-
-        string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, wrapperScript));
+        string resolvedWrapper = builder.Resource.TryGetLastAnnotation<WrapperAnnotation>(out var wrapper)
+            ? wrapper.WrapperPath
+            : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultMavenWrapper));
 
         return builder.WithJavaBuildStep(
             buildResourceName: $"{builder.Resource.Name}-maven-build",
             createResource: (name, wrapperScript, workingDirectory) => new MavenBuildResource(name, wrapperScript, workingDirectory),
-            wrapperPath: wrapperPath,
+            wrapperPath: resolvedWrapper,
             buildArgs: args.Length > 0 ? args : ["clean", "package"]);
     }
 
     /// <summary>
     /// Adds a Gradle build step to the application model.
+    /// The wrapper script path defaults to <c>gradlew</c> (or <c>gradlew.bat</c> on Windows) in the resource's working directory,
+    /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Gradle build step to.</param>
-    /// <param name="wrapperScript">The path to the Gradle wrapper script, relative to the resource working directory. If not provided, defaults to <c>gradlew</c> (or <c>gradlew.bat</c> on Windows) in the working directory.</param>
     /// <param name="args">Arguments to pass to the Gradle wrapper. If not provided, defaults to <c>clean build</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<JavaAppExecutableResource> WithGradleBuild(
         this IResourceBuilder<JavaAppExecutableResource> builder,
-        string? wrapperScript = null,
         params string[] args)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
 
-        string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".bat" : string.Empty;
-
-        wrapperScript ??= $"gradlew{extension}";
-
-        string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, wrapperScript));
+        string resolvedWrapper = builder.Resource.TryGetLastAnnotation<WrapperAnnotation>(out var wrapper)
+            ? wrapper.WrapperPath
+            : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultGradleWrapper));
 
         return builder.WithJavaBuildStep(
             buildResourceName: $"{builder.Resource.Name}-gradle-build",
             createResource: (name, wrapperScript, workingDirectory) => new GradleBuildResource(name, wrapperScript, workingDirectory),
-            wrapperPath: wrapperPath,
+            wrapperPath: resolvedWrapper,
             buildArgs: args.Length > 0 ? args : ["clean", "build"]);
     }
 
@@ -223,6 +229,8 @@ public static partial class JavaAppHostingExtension
     /// <summary>
     /// Configures the Java application to run using a Maven goal (e.g., <c>spring-boot:run</c>).
     /// In run mode, the resource command is changed from <c>java</c> to the Maven wrapper.
+    /// The wrapper script path defaults to <c>mvnw</c> (or <c>mvnw.cmd</c> on Windows) in the resource's working directory,
+    /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to configure.</param>
     /// <param name="goal">The Maven goal to execute (e.g., <c>spring-boot:run</c>).</param>
@@ -241,15 +249,16 @@ public static partial class JavaAppHostingExtension
             throw new InvalidOperationException($"{nameof(WithMavenGoal)} cannot be used when a {nameof(JavaAppExecutableResource.JarPath)} has been specified. Use either {nameof(AddJavaApp)} with a {nameof(JavaAppExecutableResource.JarPath)} or {nameof(WithMavenGoal)}, not both.");
         }
 
-        string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".cmd" : string.Empty;
-        string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, $"mvnw{extension}"));
+        string resolvedWrapper = builder.Resource.TryGetLastAnnotation<WrapperAnnotation>(out var wrapper)
+            ? wrapper.WrapperPath
+            : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultMavenWrapper));
 
         builder.Resource.Annotations.Add(
-            new JavaBuildToolAnnotation(wrapperPath, args.Length > 0 ? [goal, .. args] : [goal]));
+            new JavaBuildToolAnnotation(resolvedWrapper, args is { Length: > 0 } ? [goal, .. args] : [goal]));
 
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
-            builder.WithCommand(wrapperPath);
+            builder.WithCommand(resolvedWrapper);
         }
 
         return builder;
@@ -258,6 +267,8 @@ public static partial class JavaAppHostingExtension
     /// <summary>
     /// Configures the Java application to run using a Gradle task (e.g., <c>bootRun</c>).
     /// In run mode, the resource command is changed from <c>java</c> to the Gradle wrapper.
+    /// The wrapper script path defaults to <c>gradlew</c> (or <c>gradlew.bat</c> on Windows) in the resource's working directory,
+    /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to configure.</param>
     /// <param name="task">The Gradle task to execute (e.g., <c>bootRun</c>).</param>
@@ -276,15 +287,16 @@ public static partial class JavaAppHostingExtension
             throw new InvalidOperationException($"{nameof(WithGradleTask)} cannot be used when a {nameof(JavaAppExecutableResource.JarPath)} has been specified. Use either {nameof(AddJavaApp)} with a {nameof(JavaAppExecutableResource.JarPath)} or {nameof(WithGradleTask)}, not both.");
         }
 
-        string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".bat" : string.Empty;
-        string wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, $"gradlew{extension}"));
+        string resolvedWrapper = builder.Resource.TryGetLastAnnotation<WrapperAnnotation>(out var wrapper)
+            ? wrapper.WrapperPath
+            : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultGradleWrapper));
 
         builder.Resource.Annotations.Add(
-            new JavaBuildToolAnnotation(wrapperPath, args.Length > 0 ? [task, .. args] : [task]));
+            new JavaBuildToolAnnotation(resolvedWrapper, args is { Length: > 0 } ? [task, .. args] : [task]));
 
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
-            builder.WithCommand(wrapperPath);
+            builder.WithCommand(resolvedWrapper);
         }
 
         return builder;
@@ -364,6 +376,29 @@ public static partial class JavaAppHostingExtension
             context.EnvironmentVariables[JavaToolOptions] = value;
         }
     }
+
+    /// <summary>
+    /// Configures a custom build tool wrapper script path.
+    /// This is useful when the wrapper script is not in the default location or has a non-standard name. 
+    /// </summary>
+    /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to configure.</param>
+    /// <param name="wrapperScript">The path to the wrapper script, relative to the resource working directory or an absolute path.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<JavaAppExecutableResource> WithWrapperPath(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        string wrapperScript)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrWhiteSpace(wrapperScript, nameof(wrapperScript));
+
+        var wrapperPath = Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, wrapperScript));
+        
+        builder.Resource.Annotations.Add(new WrapperAnnotation(wrapperPath));
+        
+        return builder;
+    }
+
+    internal sealed record WrapperAnnotation(string WrapperPath) : IResourceAnnotation;
 
     [Obsolete("Use WithOtelAgent instead.")]
     private static IResourceBuilder<JavaAppExecutableResource> WithJavaDefaults(
