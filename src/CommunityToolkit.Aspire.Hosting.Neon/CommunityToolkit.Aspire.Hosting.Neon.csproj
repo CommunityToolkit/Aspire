@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting neon postgres database cloud</AdditionalPackageTags>
+    <Description>A .NET Aspire hosting integration for Neon Postgres.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\CommunityToolkit.Aspire.Neon.Provisioner\CommunityToolkit.Aspire.Neon.Provisioner.csproj"
+                      LogicalName="NeonProvisionerTemplate/CommunityToolkit.Aspire.Neon.Provisioner.csproj" />
+    <EmbeddedResource Include="..\CommunityToolkit.Aspire.Neon.Provisioner\Program.cs"
+                      LogicalName="NeonProvisionerTemplate/Program.cs" />
+    <EmbeddedResource Include="..\CommunityToolkit.Aspire.Neon.Provisioner\Shared\NeonApiClient.cs"
+                      LogicalName="NeonProvisionerTemplate/Shared/NeonApiClient.cs" />
+    <EmbeddedResource Include="..\CommunityToolkit.Aspire.Neon.Provisioner\Shared\NeonApiContracts.cs"
+                      LogicalName="NeonProvisionerTemplate/Shared/NeonApiContracts.cs" />
+    <EmbeddedResource Include="..\CommunityToolkit.Aspire.Neon.Provisioner\Shared\NeonProvisionerContracts.cs"
+                      LogicalName="NeonProvisionerTemplate/Shared/NeonProvisionerContracts.cs" />
+    <EmbeddedResource Include="..\CommunityToolkit.Aspire.Neon.Provisioner\Shared\NeonProvisionerEnvironmentVariables.cs"
+                      LogicalName="NeonProvisionerTemplate/Shared/NeonProvisionerEnvironmentVariables.cs" />
+  </ItemGroup>
+
+</Project>
