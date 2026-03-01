@@ -5,7 +5,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// Represents a Neon database resource.
 /// </summary>
-public sealed class NeonDatabaseResource : Resource, IResourceWithParent<NeonProjectResource>, IResourceWithConnectionString
+public sealed class NeonDatabaseResource : Resource, IResourceWithParent<NeonProjectResource>, IResourceWithConnectionString, IResourceWithWaitSupport
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="NeonDatabaseResource"/> class.
