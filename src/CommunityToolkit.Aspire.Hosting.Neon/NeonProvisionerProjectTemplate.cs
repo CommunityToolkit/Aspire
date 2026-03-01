@@ -117,11 +117,27 @@ internal static class NeonProvisionerProjectTemplate
 
     private static string ComputeAppHostFingerprint(string appHostDirectory)
     {
-        byte[] inputBytes = Encoding.UTF8.GetBytes(appHostDirectory);
-        byte[] hashBytes = SHA256.HashData(inputBytes);
+        using IncrementalHash hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
+        hasher.AppendData(Encoding.UTF8.GetBytes(appHostDirectory));
+
+        Assembly assembly = typeof(NeonProvisionerProjectTemplate).Assembly;
+        foreach ((string resourceName, _) in EmbeddedTemplateFiles)
+        {
+            using Stream? stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream is null)
+            {
+                continue;
+            }
+
+            byte[] content = new byte[stream.Length];
+            stream.ReadExactly(content);
+            hasher.AppendData(content);
+        }
+
+        byte[] hashBytes = hasher.GetCurrentHash();
         string hash = Convert.ToHexString(hashBytes);
 
         return hash[..16].ToLowerInvariant();
     }
-
 }

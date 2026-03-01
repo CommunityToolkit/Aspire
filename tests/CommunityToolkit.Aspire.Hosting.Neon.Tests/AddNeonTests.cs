@@ -1140,6 +1140,160 @@ public class AddNeonTests
         }
     }
 
+    [Fact]
+    public void PublishMode_SetsOutputVolumeNameOnNeonProject()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+
+        Assert.NotNull(neon.Resource.OutputVolumeName);
+        Assert.Contains("neon-output", neon.Resource.OutputVolumeName);
+    }
+
+    [Fact]
+    public void PublishMode_HostOutputDirectoryIsNull()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+
+        Assert.Null(neon.Resource.HostOutputDirectory);
+    }
+
+    [Fact]
+    public void PublishMode_ProvisionerHasNamedVolumeMount()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+
+        var provisionerResource = neon.Resource.ProvisionerResource;
+        Assert.NotNull(provisionerResource);
+        Assert.True(provisionerResource!.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var mounts));
+
+        var volumeMount = Assert.Single(mounts!, m => m.Target == "/neon-output");
+        Assert.Equal(ContainerMountType.Volume, volumeMount.Type);
+        Assert.Equal(neon.Resource.OutputVolumeName, volumeMount.Source);
+        Assert.False(volumeMount.IsReadOnly);
+    }
+
+    [Fact]
+    public void RunMode_SetsHostOutputDirectoryNotVolumeName()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+
+        Assert.NotNull(neon.Resource.HostOutputDirectory);
+        Assert.Null(neon.Resource.OutputVolumeName);
+    }
+
+    [Fact]
+    public void WithReference_RunMode_DelegatesToStandardWithReference()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+        var db = neon.AddDatabase("appdb");
+
+        var container = builder.AddContainer("worker", "my-worker-image")
+            .WithReference(db);
+
+        Assert.True(container.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var envCallbacks));
+        Assert.NotEmpty(envCallbacks);
+
+        Assert.Null(container.Resource.Entrypoint);
+    }
+
+    [Fact]
+    public void WithReference_PublishMode_ContainerGetsMountAndEntrypoint()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+        var db = neon.AddDatabase("appdb");
+
+        var container = builder.AddContainer("worker", "my-worker-image")
+            .WithReference(db);
+
+        Assert.Equal("/bin/sh", container.Resource.Entrypoint);
+
+        Assert.True(container.Resource.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var mounts));
+        var volumeMount = Assert.Single(mounts!, m => m.Target == "/neon-output");
+        Assert.Equal(ContainerMountType.Volume, volumeMount.Type);
+        Assert.Equal(neon.Resource.OutputVolumeName, volumeMount.Source);
+        Assert.True(volumeMount.IsReadOnly);
+    }
+
+    [Fact]
+    public void WithReference_PublishMode_ContainerHasArgsCallback()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+        var db = neon.AddDatabase("appdb");
+
+        var container = builder.AddContainer("worker", "my-worker-image")
+            .WithReference(db);
+
+        Assert.True(container.Resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out var argsCallbacks));
+        Assert.NotEmpty(argsCallbacks);
+    }
+
+    [Fact]
+    public void WithReference_PublishMode_NonContainerGetsEnvVars()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+        var db = neon.AddDatabase("appdb");
+
+        var project = builder.AddContainer("myapp", "myapp-image");
+
+        var result = project.WithReference(db);
+
+        Assert.Same(project, result);
+    }
+
+    [Fact]
+    public void WithReference_UsesCustomConnectionName()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+        var db = neon.AddDatabase("appdb");
+
+        var container = builder.AddContainer("worker", "my-worker-image")
+            .WithReference(db, connectionName: "MyCustomDb");
+
+        Assert.Equal("/bin/sh", container.Resource.Entrypoint);
+    }
+
+    [Fact]
+    public void WithReference_ThrowsOnNullBuilder()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+        var neon = builder.AddNeon("neon", apiKey);
+        var db = neon.AddDatabase("appdb");
+
+        IResourceBuilder<ContainerResource> nullBuilder = null!;
+
+        Assert.Throws<ArgumentNullException>(() => nullBuilder.WithReference(db));
+    }
+
+    [Fact]
+    public void WithReference_ThrowsOnNullSource()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var apiKey = builder.AddParameter("neon-api-key", "test", secret: true);
+
+        var container = builder.AddContainer("worker", "my-worker-image");
+
+        Assert.Throws<ArgumentNullException>(() => container.WithReference((IResourceBuilder<NeonDatabaseResource>)null!));
+    }
+
     private static async Task<object?> InvokePrivateStaticAsync(string methodName, params object[] args)
     {
         MethodInfo? method = typeof(NeonBuilderExtensions).GetMethod(

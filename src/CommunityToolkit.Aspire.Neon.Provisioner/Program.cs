@@ -149,6 +149,23 @@ try
     var outputJson = JsonSerializer.Serialize(result);
     await File.WriteAllTextAsync(outputFilePath, outputJson, CancellationToken.None).ConfigureAwait(false);
 
+    foreach (var dbOutput in databaseOutputs)
+    {
+        var envFileName = string.IsNullOrEmpty(dbOutput.ResourceName)
+            ? "default.env"
+            : $"{dbOutput.ResourceName}.env";
+        var envFilePath = Path.Combine(outputDirectory!, envFileName);
+        var envContent =
+            $"NEON_HOST={ShellEscape(dbOutput.Host ?? string.Empty)}\n" +
+            $"NEON_PORT={ShellEscape(dbOutput.Port?.ToString() ?? "5432")}\n" +
+            $"NEON_DATABASE={ShellEscape(dbOutput.DatabaseName)}\n" +
+            $"NEON_USERNAME={ShellEscape(dbOutput.RoleName)}\n" +
+            $"NEON_PASSWORD={ShellEscape(dbOutput.Password ?? string.Empty)}\n" +
+            $"NEON_CONNECTION_URI={ShellEscape(dbOutput.ConnectionUri)}\n";
+        await File.WriteAllTextAsync(envFilePath, envContent, CancellationToken.None).ConfigureAwait(false);
+        Console.WriteLine($"Env file written. Resource={dbOutput.ResourceName}, Path={envFilePath}");
+    }
+
     Console.WriteLine($"Neon provisioner completed ({mode}). Project={projectId}, Branch={branchId}, Endpoint={endpointId}, Output={outputFilePath}");
     return 0;
 }
@@ -199,6 +216,8 @@ static void TryWriteFailureArtifact(string? outputFilePath, Exception exception)
 }
 
 static string GetFailureArtifactPath(string outputFilePath) => $"{outputFilePath}.error.log";
+
+static string ShellEscape(string value) => "'" + value.Replace("'", "'\"'\"'") + "'";
 
 static string Require(string name)
 {

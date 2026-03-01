@@ -412,11 +412,13 @@ public static class NeonResourceBuilderExtensions
                     $"Neon provisioner is already configured. Custom provisioner name '{name}' is not supported after AddNeon().");
             }
 
-            var existingOutputFilePath = builder.Resource.TryGetLastAnnotation<NeonExternalProvisionerAnnotation>(out var existingAnnotation)
+            var existingHostOutputFilePath = builder.Resource.TryGetLastAnnotation<NeonExternalProvisionerAnnotation>(out var existingAnnotation)
                 ? existingAnnotation.OutputFilePath
-                : ResolveProvisionerOutputPath(builder.ApplicationBuilder, builder.Resource.Name);
+                : ResolveHostOutputFilePath(builder.ApplicationBuilder, builder.Resource.Name);
 
-            DeleteProvisionerArtifacts(existingOutputFilePath);
+            var existingProvisionerOutputFilePath = ResolveProvisionerOutputPath(builder.ApplicationBuilder, builder.Resource.Name);
+
+            DeleteProvisionerArtifacts(existingHostOutputFilePath);
 
             var existingProjectPath = builder.Resource.TryGetLastAnnotation<NeonExternalProvisionerAnnotation>(out existingAnnotation)
                 ? existingAnnotation.ProjectPath
@@ -425,17 +427,17 @@ public static class NeonResourceBuilderExtensions
             if (existingProvisioner is ProjectResource existingProjectResource)
             {
                 var existingProjectBuilder = builder.ApplicationBuilder.CreateResourceBuilder(existingProjectResource);
-                ApplyProvisionerEnvironment(existingProjectBuilder, builder.Resource, mode, existingOutputFilePath);
+                ApplyProvisionerEnvironment(existingProjectBuilder, builder.Resource, mode, existingProvisionerOutputFilePath);
                 builder.WaitForCompletion(existingProjectBuilder);
-                builder.WithAnnotation(new NeonExternalProvisionerAnnotation(existingProjectBuilder.Resource, existingProjectPath, existingOutputFilePath, mode));
+                builder.WithAnnotation(new NeonExternalProvisionerAnnotation(existingProjectBuilder.Resource, existingProjectPath, existingHostOutputFilePath, mode));
                 return existingProjectBuilder;
             }
 
             if (existingProvisioner is NeonProvisionerExecutableResource existingExecutableResource)
             {
                 var existingExecutableBuilder = builder.ApplicationBuilder.CreateResourceBuilder(existingExecutableResource);
-                ApplyProvisionerEnvironment(existingExecutableBuilder, builder.Resource, mode, existingOutputFilePath);
-                builder.WithAnnotation(new NeonExternalProvisionerAnnotation(existingExecutableBuilder.Resource, existingProjectPath, existingOutputFilePath, mode));
+                ApplyProvisionerEnvironment(existingExecutableBuilder, builder.Resource, mode, existingProvisionerOutputFilePath);
+                builder.WithAnnotation(new NeonExternalProvisionerAnnotation(existingExecutableBuilder.Resource, existingProjectPath, existingHostOutputFilePath, mode));
                 return existingExecutableBuilder;
             }
 
@@ -459,18 +461,25 @@ public static class NeonResourceBuilderExtensions
 
             builder.WithAnnotation(new NeonExternalProvisionerAnnotation(executableProvisioner.Resource, provisionerProjectPath, outputFilePath, mode));
 
+            builder.Resource.HostOutputDirectory = Path.GetDirectoryName(outputFilePath);
+
             builder.Resource.ProvisionerResource = executableProvisioner.Resource;
             return executableProvisioner;
         }
 
+        var volumeName = $"{SanitizeForFileName(builder.Resource.Name)}-neon-output";
+
         var projectProvisioner = builder.ApplicationBuilder
             .AddProject(name, provisionerProjectPath)
+            .WithAnnotation(new ContainerMountAnnotation(volumeName, NeonOutputMountPath, ContainerMountType.Volume, isReadOnly: false))
             .WithParentRelationship(builder.Resource);
 
         ApplyProvisionerEnvironment(projectProvisioner, builder.Resource, mode, outputFilePath);
 
         builder.WaitForCompletion(projectProvisioner);
         builder.WithAnnotation(new NeonExternalProvisionerAnnotation(projectProvisioner.Resource, provisionerProjectPath, outputFilePath, mode));
+
+        builder.Resource.OutputVolumeName = volumeName;
 
         builder.Resource.ProvisionerResource = projectProvisioner.Resource;
         return projectProvisioner;
@@ -507,15 +516,60 @@ public static class NeonResourceBuilderExtensions
 
     }
 
+    /// <summary>
+    /// The container mount path used for provisioner output in the shared volume pattern.
+    /// </summary>
+    private const string NeonOutputMountPath = "/neon-output";
+
+    /// <summary>
+    /// Returns the path where the provisioner should write output, as seen from
+    /// INSIDE the provisioner process/container. In run mode this is a host path
+    /// (the provisioner is a host process). In publish mode this is a container-
+    /// internal path that maps to the bind-mounted host directory.
+    /// </summary>
     private static string ResolveProvisionerOutputPath(IDistributedApplicationBuilder builder, string resourceName)
     {
-        string appHostFingerprint = ComputeHash(builder.AppHostDirectory);
         string safeResourceName = SanitizeForFileName(resourceName);
 
         if (!builder.ExecutionContext.IsRunMode)
         {
-            return $"/tmp/aspire-neon-output/{appHostFingerprint}/{safeResourceName}.json";
+            return $"{NeonOutputMountPath}/{safeResourceName}.json";
         }
+
+        string appHostFingerprint = ComputeHash(builder.AppHostDirectory);
+
+        string runOutputDiscriminator = builder.Resources
+            .OfType<NeonProjectResource>()
+            .FirstOrDefault(resource => string.Equals(resource.Name, resourceName, StringComparison.Ordinal))?
+            .Options
+            .Provisioning
+            .RunOutputDiscriminator
+            ?? Guid.NewGuid().ToString("N")[..12];
+
+        NeonProjectResource? projectResource = builder.Resources
+            .OfType<NeonProjectResource>()
+            .FirstOrDefault(resource => string.Equals(resource.Name, resourceName, StringComparison.Ordinal));
+
+        if (projectResource is not null && string.IsNullOrWhiteSpace(projectResource.Options.Provisioning.RunOutputDiscriminator))
+        {
+            projectResource.Options.Provisioning.RunOutputDiscriminator = runOutputDiscriminator;
+        }
+
+        string outputDirectory = Path.Combine(Path.GetTempPath(), "aspire-neon-output", appHostFingerprint, runOutputDiscriminator);
+        Directory.CreateDirectory(outputDirectory);
+        return Path.Combine(outputDirectory, $"{safeResourceName}.json");
+    }
+
+    /// <summary>
+    /// Returns the provisioner output file path on the HOST filesystem.
+    /// In run mode this is the same as <see cref="ResolveProvisionerOutputPath"/>.
+    /// In publish mode the provisioner writes to a container-internal path, but a
+    /// bind mount maps it back to this host path.
+    /// </summary>
+    private static string ResolveHostOutputFilePath(IDistributedApplicationBuilder builder, string resourceName)
+    {
+        string safeResourceName = SanitizeForFileName(resourceName);
+        string appHostFingerprint = ComputeHash(builder.AppHostDirectory);
 
         string runOutputDiscriminator = builder.Resources
             .OfType<NeonProjectResource>()

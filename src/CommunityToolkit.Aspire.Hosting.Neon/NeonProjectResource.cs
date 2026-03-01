@@ -87,6 +87,18 @@ public sealed class NeonProjectResource : Resource, IResourceWithConnectionStrin
     public IResourceWithWaitSupport? ProvisionerResource { get; internal set; }
 
     /// <summary>
+    /// Gets the host directory path where provisioner output files are written.
+    /// Used by consumer containers for bind mounts in run mode.
+    /// </summary>
+    public string? HostOutputDirectory { get; internal set; }
+
+    /// <summary>
+    /// Gets the Docker named volume used for sharing provisioner output in publish mode.
+    /// Consumers mount this volume to read per-database <c>.env</c> files at container startup.
+    /// </summary>
+    public string? OutputVolumeName { get; internal set; }
+
+    /// <summary>
     /// Gets the connection string expression for the Neon project.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>

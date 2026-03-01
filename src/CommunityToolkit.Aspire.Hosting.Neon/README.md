@@ -55,7 +55,9 @@ The provisioner project template is bundled with the hosting package and materia
 The provisioner writes startup output to a deterministic path:
 
 - run mode (host execution): `%TEMP%/aspire-neon-output/{appHostHash}/{runOutputDiscriminator}/{neonResourceName}.json`
-- publish/deploy mode (container execution): `/tmp/aspire-neon-output/{appHostHash}/{neonResourceName}.json`
+- publish/deploy mode (container execution): `/neon-output/{neonResourceName}.json`
+
+In publish mode, the provisioner uses a named Docker volume (`{neonResourceName}-neon-output`) mounted at `/neon-output`. Consumer containers mount the same volume (read-only) to access the provisioner output. The provisioner also writes per-database `.env` files alongside the JSON output (e.g., `/neon-output/appdb.env`).
 
 ## Extension methods
 
@@ -186,7 +188,11 @@ builder.AddProject<Projects.Api>("api")
 
 ## Consuming connection strings in dependent projects
 
-When a dependent project uses `.WithReference(database)`, Aspire injects the Neon connection string using the database resource name as the connection name.
+When a dependent project uses `.WithReference(database)`, the connection string is made available using the database resource name as the connection name.
+
+### Run mode
+
+In run mode, `.WithReference(database)` delegates to the standard Aspire `WithReference` which injects the connection string as `ConnectionStrings__{name}` once the provisioner finishes. No additional setup is needed in the consuming project:
 
 ```csharp
 var database = neon.AddDatabase("appdb", "appdb");
@@ -196,7 +202,7 @@ builder.AddProject<Projects.Api>("api")
     .WaitFor(neon);
 ```
 
-In the consuming project, use the same connection name (`appdb`) from configuration.
+In the consuming project, read the connection string using standard configuration:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -207,12 +213,44 @@ string connectionString = builder.Configuration.GetConnectionString("appdb")
 builder.Services.AddNpgsqlDataSource(connectionString);
 ```
 
-You can also use any other PostgreSQL registration path that reads `ConnectionStrings:appdb`.
+### Publish mode (Docker Compose, ACA, etc.)
 
-Entity Framework Core works as well:
+In publish mode, the provisioner runs as a container and writes per-database `.env` files to a shared Docker volume. `.WithReference(database)` handles the wiring differently based on the consumer type:
+
+**Container consumers** (e.g., `AddContainer`): The container entrypoint is automatically replaced with a shell wrapper that reads the `.env` file, extracts the connection URI, and exports it as `ConnectionStrings__{name}` before starting the original command. No code changes needed.
+
+**Project consumers** (e.g., `AddProject`): The container cannot have its entrypoint overridden from the hosting layer. Instead, helper environment variables (`NEON_OUTPUT_DIR` and `NEON_ENV_FILE__{name}`) are injected. The consumer application must read the `.env` file at startup using the client package:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
+
+// Resolves connection strings from Neon provisioner .env files.
+// Call this before any service that reads ConnectionStrings.
+builder.AddNeonConnectionStrings();
+
+string connectionString = builder.Configuration.GetConnectionString("appdb")
+    ?? throw new InvalidOperationException("Connection string 'appdb' was not found.");
+
+builder.Services.AddNpgsqlDataSource(connectionString);
+```
+
+Install the client package in your service project:
+
+```shell
+dotnet add package CommunityToolkit.Aspire.Neon
+```
+
+> **Note:** If you use `AddNeonClient("appdb")`, the env-file resolution happens automatically — you do not need to call `AddNeonConnectionStrings` separately.
+
+### Entity Framework Core
+
+Entity Framework Core works with both run and publish modes:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// Required in publish mode for project consumers:
+builder.AddNeonConnectionStrings();
 
 string connectionString = builder.Configuration.GetConnectionString("appdb")
     ?? throw new InvalidOperationException("Connection string 'appdb' was not found.");
@@ -331,25 +369,41 @@ builder.AddNeonClient("appdb");
 
 This is optional. The hosting integration already provides connection information to dependents via `.WithReference(...)`.
 
-You can use `AddProvisioner` to auto-register a provisioner named `<resourceName>-provisioner`:
+For publish mode with project consumers, you can also use `AddNeonConnectionStrings()` to resolve all provisioned connection strings without registering `NpgsqlDataSource`:
 
 ```csharp
-var neon = builder.AddNeon("neon", neonApiKey)
-    .WithProjectId(builder.Configuration["Neon:ProjectId"]!)
-    .WithBranchId(builder.Configuration["Neon:BranchId"]!)
-    .AsExisting();
+var builder = WebApplication.CreateBuilder(args);
+builder.AddNeonConnectionStrings(); // makes all Neon connection strings available
+```
 
-var database = neon.AddDatabase("appdb", "appdb");
+## WaitFor guidance
 
+In **run mode**, add `.WaitFor(neon)` to ensure the consumer waits until Neon provisioning is complete and the health check passes:
+
+```csharp
 builder.AddProject<Projects.Api>("api")
     .WithReference(database)
     .WaitFor(neon);
 ```
 
-If needed, you can access the provisioner project resource directly:
+You can also use `.WaitFor(database)` instead — both the `NeonProjectResource` and `NeonDatabaseResource` support `IResourceWithWaitSupport`.
+
+In **publish mode**, `.WithReference(database)` already handles waiting internally — it adds `WaitForCompletion` on the provisioner container and `WaitFor` on the database resource. An additional `.WaitFor(neon)` is not required but is harmless.
+
+## Accessing the provisioner resource
+
+The provisioner resource is created automatically by `AddNeon`. You can access it directly if needed:
 
 ```csharp
-var neonProvisioner = neon.Resource.ProvisionerResource;
+var neon = builder.AddNeon("neon", neonApiKey)
+    .AddProject("aspire-neon")
+    .AddBranch("dev");
+
+// Access the provisioner project resource for advanced configuration.
+var provisionerResource = neon.Resource.ProvisionerResource;
+
+// Or use GetProvisionerBuilder() to get an IResourceBuilder for fluent Aspire calls.
+var provisionerBuilder = neon.GetProvisionerBuilder();
 ```
 
 

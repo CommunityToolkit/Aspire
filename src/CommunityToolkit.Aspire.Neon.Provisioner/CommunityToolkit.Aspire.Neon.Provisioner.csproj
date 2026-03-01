@@ -7,6 +7,11 @@
     <Nullable>enable</Nullable>
     <DefineConstants>$(DefineConstants);NEON_PROVISIONER_ENTRYPOINT</DefineConstants>
     <IsPackable>false</IsPackable>
+    <!-- The provisioner writes to a Docker named volume whose root directory
+         is owned by root. .NET 8+ containers run as UID 1654 by default and
+         cannot write there, so we run the provisioner as root. This is safe
+         because the provisioner is a short-lived, one-shot process. -->
+    <ContainerUser>root</ContainerUser>
   </PropertyGroup>
 
 </Project>
