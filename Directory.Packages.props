@@ -9,7 +9,7 @@
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="13.1.0" />
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
@@ -44,7 +44,7 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(DotNetExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
     <!-- .NET packages -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.9.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="$(ServiceDiscoveryVersion)" />
@@ -91,8 +91,8 @@
     <PackageVersion Include="SurrealDb.Net" Version="0.9.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
-    <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.1" />
-    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.1" />
+    <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
   </ItemGroup>

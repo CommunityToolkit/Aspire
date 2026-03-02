@@ -26,6 +26,8 @@ public class ResourceCreationTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
+        UpdateResourceEndpoint(postgresResource);
+
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
@@ -145,6 +147,9 @@ public class ResourceCreationTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
+        UpdateResourceEndpoint(postgresResource1);
+        UpdateResourceEndpoint(postgresResource2);
+
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
@@ -242,6 +247,8 @@ public class ResourceCreationTests
 
         Assert.Equal("dbgate", dbGateResource.Name);
 
+        UpdateResourceEndpoint(postgresResource);
+
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
@@ -303,6 +310,8 @@ public class ResourceCreationTests
         Assert.NotNull(adminerResource);
 
         Assert.Equal("postgres-adminer", adminerResource.Name);
+
+        UpdateResourceEndpoint(postgresResource);
 
         var envs = await adminerResource.GetEnvironmentVariablesAsync();
 
@@ -405,6 +414,9 @@ public class ResourceCreationTests
 
         Assert.Equal("postgres1-adminer", adminerContainer.Name);
 
+        UpdateResourceEndpoint(postgresResource1);
+        UpdateResourceEndpoint(postgresResource2);
+
         var envs = await adminerContainer.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
@@ -453,8 +465,9 @@ public class ResourceCreationTests
         var passwordParameter = builder.AddParameter("password-param", postgresPassword);
 
         var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
-        _ = builder
-            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+        var postgresBuilder = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter);
+        _ = postgresBuilder
             .AddDatabase(postgresDatabaseName)
             .WithFlywayMigration(flywayResourceBuilder);
 
@@ -470,6 +483,10 @@ public class ResourceCreationTests
             $"-password={postgresPassword}",
             "migrate"
         };
+
+        var endpoint = postgresBuilder.Resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, $"{postgresResourceName}.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
 
         var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
         Assert.Equal(expectedArgs.Count, actualArgs.Count);
@@ -495,8 +512,9 @@ public class ResourceCreationTests
         var passwordParameter = builder.AddParameter("password-param", postgresPassword);
 
         var flywayResourceBuilder = builder.AddFlyway("flyway", "./Migrations");
-        _ = builder
-            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter)
+        var postgresBuilder = builder
+            .AddPostgres(postgresResourceName, userName: userNameParameter, password: passwordParameter);
+        _ = postgresBuilder
             .AddDatabase(postgresDatabaseName)
             .WithFlywayRepair(flywayResourceBuilder);
 
@@ -513,6 +531,10 @@ public class ResourceCreationTests
             "repair"
         };
 
+        var endpoint = postgresBuilder.Resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, $"{postgresResourceName}.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
+
         var actualArgs = await retrievedFlywayResource.GetArgumentListAsync();
         Assert.Equal(expectedArgs.Count, actualArgs.Count);
         Assert.Collection(
@@ -521,5 +543,12 @@ public class ResourceCreationTests
             arg => Assert.Equal(expectedArgs[1], arg),
             arg => Assert.Equal(expectedArgs[2], arg),
             arg => Assert.Equal(expectedArgs[3], arg));
+    }
+
+    static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+    {
+        var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
     }
 }
