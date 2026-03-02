@@ -6,7 +6,6 @@ using Aspire.Hosting;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Polly;
-using Xunit.Abstractions;
 using Meilisearch;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;

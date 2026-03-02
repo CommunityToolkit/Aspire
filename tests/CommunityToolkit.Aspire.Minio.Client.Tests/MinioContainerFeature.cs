@@ -1,5 +1,6 @@
 using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Hosting.Minio;
+using CommunityToolkit.Aspire.Testing;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
@@ -19,7 +20,7 @@ public class MinioContainerFeature : IAsyncLifetime
         return endpoint;
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (RequiresDockerAttribute.IsSupported)
         {
@@ -39,7 +40,7 @@ public class MinioContainerFeature : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (Container is not null)
         {

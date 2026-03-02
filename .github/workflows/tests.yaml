@@ -104,18 +104,19 @@ jobs:
 
       - name: Run tests
         run: >-
-          dotnet test ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}
+          dotnet run
+          --project "${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}"
+          --no-build
           --configuration ${{ env.DOTNET_CONFIGURATION }}
-          --logger "console;verbosity=normal"
-          --logger "trx"
-          --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
-          --blame
-          --blame-hang-timeout 7m
-          --blame-crash
-          --results-directory testresults
-          --collect "XPlat Code Coverage"
-          --no-restore
-          --no-build -- RunConfiguration.CollectSourceInformation=true
+          --crashdump
+          --hangdump
+          --hangdump-timeout 7m
+          --results-directory "${{ github.workspace }}/testresults"
+          --filter-not-trait "category=failing"
+          --report-trx
+          --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
+          --coverage
+          --report-github
         env:
           CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
 

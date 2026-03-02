@@ -6,6 +6,7 @@ using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.GoFeatureFlag.Tests;
 
@@ -22,7 +23,7 @@ public sealed class GoFeatureFlagContainerFixture : IAsyncLifetime
         return $"Endpoint={endpoint}";
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (RequiresDockerAttribute.IsSupported)
         {
@@ -38,7 +39,7 @@ public sealed class GoFeatureFlagContainerFixture : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (Container is not null)
         {
