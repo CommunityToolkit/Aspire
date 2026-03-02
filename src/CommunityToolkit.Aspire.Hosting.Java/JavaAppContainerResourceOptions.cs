@@ -3,6 +3,7 @@
 /// <summary>
 /// This represents the options entity for configuring a Java application running in a container.
 /// </summary>
+[Obsolete("This class will be removed in a future version.")]
 public class JavaAppContainerResourceOptions
 {
     /// <summary>
