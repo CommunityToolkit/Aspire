@@ -48,6 +48,8 @@ public class ZitadelWithDatabaseTests
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(pg);
 
+        UpdateResourceEndpoint(pg.Resource);
+
         var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Equal("zitadel-db", env["ZITADEL_DATABASE_POSTGRES_DATABASE"]);
@@ -60,6 +62,8 @@ public class ZitadelWithDatabaseTests
         var pg = builder.AddPostgres("postgres");
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(pg, "custom-db");
+
+        UpdateResourceEndpoint(pg.Resource);
 
         var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
@@ -75,6 +79,8 @@ public class ZitadelWithDatabaseTests
 
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(db);
+
+        UpdateResourceEndpoint(pg.Resource);
 
         var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
@@ -96,6 +102,8 @@ public class ZitadelWithDatabaseTests
 
         var zitadel = builder.AddZitadel("zitadel")
             .WithDatabase(db);
+
+        UpdateResourceEndpoint(pg.Resource);
 
         var env = await zitadel.Resource.GetEnvironmentVariablesAsync();
 
@@ -139,5 +147,12 @@ public class ZitadelWithDatabaseTests
             .ToList();
         
         Assert.NotEmpty(references);
+    }
+
+    static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+    {
+        var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
     }
 }

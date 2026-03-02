@@ -30,6 +30,10 @@ public class ResourceCreationTests
 
         Assert.Equal("blobs-explorer", azureStorageExplorerResource.Name);
 
+        var blobEndpoint = azureStorageResourceBuilder.Resource.GetEndpoint("blob").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(blobEndpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        blobEndpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
+
         var envs = await azureStorageExplorerResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
