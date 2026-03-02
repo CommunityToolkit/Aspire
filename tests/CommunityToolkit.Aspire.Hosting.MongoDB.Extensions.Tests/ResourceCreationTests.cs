@@ -11,6 +11,7 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder = builder.AddMongoDB("mongodb")
+            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource = mongodbResourceBuilder.Resource;
@@ -112,11 +113,13 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder1 = builder.AddMongoDB("mongodb1")
+            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource1 = mongodbResourceBuilder1.Resource;
 
         var mongodbResourceBuilder2 = builder.AddMongoDB("mongodb2")
+            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
             .WithDbGate();
 
         var mongodbResource2 = mongodbResourceBuilder2.Resource;
