@@ -12,6 +12,8 @@ namespace Aspire.Hosting
     {
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, string name = "dbgate", int? port = null) { throw null; }
 
+        public static string SanitizeConnectionId(string resourceName) { throw null; }
+
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
