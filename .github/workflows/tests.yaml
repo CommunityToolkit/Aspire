@@ -116,6 +116,8 @@ jobs:
           --report-trx
           --report-trx-filename "${{ matrix.name }}-${{ matrix.os }}.trx"
           --coverage
+          --coverage-output-format cobertura
+          --coverage-output coverage.cobertura.xml
           --report-github
         env:
           CUSTOM_CONTAINER_REGISTRY: ${{ secrets.CUSTOM_CONTAINER_REGISTRY }}
