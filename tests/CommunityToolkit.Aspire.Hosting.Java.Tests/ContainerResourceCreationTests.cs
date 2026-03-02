@@ -1,9 +1,32 @@
 using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Java.Tests;
+
 public class ContainerResourceCreationTests
 {
     [Fact]
+    public void AddJavaAppWithImageSetsDetails()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+
+        builder.AddJavaContainerApp("java", "java-image", imageTag: "v1");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = appModel.Resources.OfType<JavaAppContainerResource>().SingleOrDefault();
+
+        Assert.NotNull(resource);
+        Assert.Equal("java", resource.Name);
+
+        Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
+        Assert.Equal("java-image", imageAnnotations.Image);
+        Assert.Equal("v1", imageAnnotations.Tag);
+    }
+
+    [Fact]
+#pragma warning disable CS0618
     public void AddJavaAppBuilderShouldNotBeNull()
     {
         IDistributedApplicationBuilder builder = null!;
@@ -53,7 +76,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddJavaApp("java", (JavaAppContainerResourceOptions)null!));
     }
 
     [Fact]
@@ -105,4 +128,5 @@ public class ContainerResourceCreationTests
         await argsAnnotations.Callback(context);
         Assert.All(options.Args, arg => Assert.Contains(arg, context.Args));
     }
+#pragma warning restore CS0618
 }
