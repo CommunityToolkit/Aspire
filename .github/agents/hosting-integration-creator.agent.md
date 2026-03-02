@@ -238,7 +238,7 @@ Each hosting integration should have a corresponding sample application in the `
 Here is an example of the `csproj` file for the AppHost project for the Bun hosting integration:
 
 ```xml
-<Project Sdk="Aspire.AppHost.Sdk/13.2.0-preview.1.26126.8">
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0-preview.1.26152.2">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
