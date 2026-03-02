@@ -1,12 +1,14 @@
-# CommunityToolkit.Hosting.Azure.DataApiBuilder
+# CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
 
 ## Overview
 
-This Aspire Integration runs [Data API builder](https://aka.ms/dab/docs) in a container. Data API builder generates secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB. 
+This Aspire Integration runs [Data API builder](https://aka.ms/dab/docs) in a container. Data API builder generates secure, feature-rich REST and GraphQL endpoints for Tables, Views and Stored Procedures performing CRUD (Create, Read, Update, Delete, Execute) operations against Azure SQL Database, SQL Server, PostgreSQL, MySQL and Azure CosmosDB.
 
 ## Usage
 
 ### Example 1: Single data source
+
+The docs for a basic configuration file are at [MS Learn](https://learn.microsoft.com/en-us/azure/data-api-builder/configuration/).
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
@@ -15,7 +17,10 @@ var sqlDatabase = builder
     .AddSqlServer("your-server-name")
     .AddDatabase("your-database-name");
 
+var dabConfig = new FileInfo("./dab-config.json");
+
 var dab = builder.AddDataAPIBuilder("dab")
+    .WithConfigFile(dabConfig)
     .WithReference(sqlDatabase)
     .WaitFor(sqlDatabase);
 
@@ -28,6 +33,8 @@ builder.Build().Run();
 
 ### Example 2: Multiple data sources
 
+The docs for multi-source configuration are at [MS Learn](https://learn.microsoft.com/en-us/azure/data-api-builder/concept/config/multi-data-source). 
+
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -39,9 +46,11 @@ var sqlDatabase2 = builder
     .AddSqlServer("your-server-name")
     .AddDatabase("your-database-name");
 
-var dab = builder.AddDataAPIBuilder("dab", 
-        "./dab-config-1.json", 
-        "./dab-config-2.json")
+var dabConfig1 = new FileInfo("./dab-config-1.json");
+var dabConfig2 = new FileInfo("./dab-config-2.json");
+
+var dab = builder.AddDataAPIBuilder("dab")
+    .WithConfigFile(dabConfig1, dabConfig2)
     .WithReference(sqlDatabase1)
     .WithReference(sqlDatabase2)
     .WaitFor(sqlDatabase1)
@@ -54,7 +63,7 @@ var app = builder
 builder.Build().Run();
 ```
 
-> Note: All files are mounted/copied to the same `/App` folder.
+> Note: All files are mounted/copied to the same `/App` folder. Each config file must have a unique filename. If a duplicate filename is detected, a friendly `InvalidOperationException` is thrown.
 
 ### Example 3: Cosmos DB and a schema file
 
@@ -65,9 +74,11 @@ var cosmosdb = builder
     .AddAzureCosmosDB("myNewCosmosAccountName")
     .AddDatabase("myCosmosDatabaseName");
 
-var dab = builder.AddDataAPIBuilder("dab",
-        "./dab-config.json",
-        "./schema.graphql")
+var dabConfig = new FileInfo("./dab-config.json");
+var dabSchema = new FileInfo("./schema.graphql");   
+
+var dab = builder.AddDataAPIBuilder("dab")
+    .WithConfigFile(dabConfig, dabSchema)
     .WithReference(cosmosdb)
     .WaitFor(cosmosdb);
 
@@ -80,6 +91,8 @@ builder.Build().Run();
 
 ### Example 4: Connection string-only
 
+Sometimes your SQL Server is installed locally or part of your development environment and doesn't need to be created by Aspire. In these cases, you can use the `AddConnectionString` method. This also works for any data source type supported.
+
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -87,6 +100,7 @@ var sqlDatabase = builder
     .AddConnectionString("your-cs-name");
 
 var dab = builder.AddDataAPIBuilder("dab")
+    .WithConfigFile(new FileInfo("./dab-config.json"))
     .WithReference(sqlDatabase);
 
 var app = builder
@@ -96,28 +110,93 @@ var app = builder
 builder.Build().Run();
 ```
 
-### Configuration
+### Example 5: Custom image tag
 
-- `name` - The name of the resource.
-- `port` - The optional port number for the Data API builder container. Defaults to `random`.
-- `configFilePaths` - Opiotnal paths to the config/schema file(s) for Data API builder. Default is `./dab-config.json`.
-
-### Data API builder Container Image Configuration
-
-You can specify custom registry/image/tag values by using the `WithImageRegistry`/`WithImage`/`WithImageTag` methods:
+In some cases, including those times when you want to use a release candidate (RC) or a private build of the Data API builder container image, you may want to specify a custom image or image tag. For a custom image tag, you can do this with the `WithImageTag` method, a standard method in Aspire.
 
 ```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var sqlDatabase = builder
+    .AddConnectionString("your-cs-name");
+
 var dab = builder.AddDataAPIBuilder("dab")
-    .WithImageRegistry("mcr.microsoft.com")
-    .WithImage("azure-databases/data-api-builder")
-    .WithImageTag("latest");
+    .WithConfigFile(new FileInfo("./dab-config.json"))
+    .WithReference(sqlDatabase)
+    .WithImageTag("1.7.86-rc"); // specify a custom image tag
+
+var app = builder
+    .AddProject<Projects.Client>()
+    .WithReference(dab);
+
+builder.Build().Run();
 ```
+
+
+### Example 6: Testing with MCP Inspector
+
+Because version 1.7 and later of Data API builder has MCP capability for agentic applications, you can test and debug your instance with the MCP Inspector which is available through Aspire's CommunityToolkit.Aspire.Hosting.McpInspector version 13.1.1 or later. 
+
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var sqlDatabase = builder
+    .AddConnectionString("your-cs-name");
+
+var dab = builder.AddDataAPIBuilder("dab")
+    .WithConfigFile(new FileInfo("./dab-config.json"))
+    .WithReference(sqlDatabase)
+    .WithImageTag("1.7.86-rc"); // specify a custom image tag
+
+var mcp = builder
+    .AddMcpInspector("mcp-inspector", options =>
+    {
+        options.InspectorVersion = "0.20.0";
+    })
+    .WithMcpServer(dab, transportType: McpTransportType.StreamableHttp)
+    .WithParentRelationship(dab)
+    .WithEnvironment("DANGEROUSLY_OMIT_AUTH", "true")
+    .WaitFor(dab);
+
+var app = builder
+    .AddProject<Projects.Client>()
+    .WithReference(dab);
+
+builder.Build().Run();
+```
+
+## Toolkit Documentation
+
+The following methods are available for configuring the Data API builder container in Aspire:
+
+| Method | Parameter | Description |
+|-|-|-|
+|AddDataAPIBuilder() || Adds a Data API builder container to the application.|
+|| string name | The name of the resource. |
+|| int httpPort | Optional HTTP port number for the Data API builder container. Defaults to a random port. |
+| WithConfigFile() || Adds one or more config or schema files to the container. |
+|| FileInfo[] files | The config or schema file(s) to add. |
+| WithConfigFolder() || Adds all files from the specified folder(s) to the container. |
+|| DirectoryInfo[] folders | The folder(s) from which to add all top-level config or schema files. |
+
+### Health Checks
+
+If your Data API builder configuration requires authentication (e.g., EasyAuth, JWT, or any provider other than `Simulator`), the `/health` endpoint may return a non-200 status even when the service is otherwise healthy. In development, consider using the `Simulator` authentication provider in your `dab-config.json` to avoid health check failures:
+>
+> ```json
+> "authentication": {
+>   "provider": "Simulator"
+> }
+> ```
+
+For more information about Data API builder health checks, see the [official documentation](https://learn.microsoft.com/azure/data-api-builder/concept/monitor/health-checks).
+
+For more information about Data API builder's Simulator authentication provider, see the [official documentation](https://learn.microsoft.com/en-us/azure/data-api-builder/concept/security/how-to-authenticate-simulator).
 
 ### OpenTelemetry Instrumentation
 
-The Data API builder integration automatically configures OpenTelemetry (OTEL) instrumentation for distributed tracing and metrics. The integration uses the standard `.WithOtlpExporter()` method which sets up the necessary OTEL environment variables that Data API builder automatically recognizes.
-
-To enable OTEL telemetry in Data API builder, add the following configuration to your `dab-config.json` file:
+Aspire automatically injects `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_SERVICE_NAME` into the Data API builder container via `.WithOtlpExporter()`. To enable OTEL telemetry in Data API builder, add the following configuration to your `dab-config.json` file:
 
 ```json
 {
@@ -127,28 +206,19 @@ To enable OTEL telemetry in Data API builder, add the following configuration to
         "enabled": true,
         "service-name": "@env('OTEL_SERVICE_NAME')",
         "endpoint": "@env('OTEL_EXPORTER_OTLP_ENDPOINT')",
-        "exporter-protocol": "grpc",
-        "headers": "@env('OTEL_EXPORTER_OTLP_HEADERS')"
+        "exporter-protocol": "grpc"
       }
     }
   }
 }
 ```
 
-The configuration includes the following settings:
-- `enabled`: Enables/disables OTEL telemetry (default: `false`)
-- `service-name`: Logical name for the service in traces. Uses the `@env('OTEL_SERVICE_NAME')` syntax to reference the environment variable automatically set by Aspire
-- `endpoint`: OTEL collector endpoint URL. Uses `@env('OTEL_EXPORTER_OTLP_ENDPOINT')` to reference the Aspire-provided endpoint
-- `exporter-protocol`: Protocol for exporting telemetry. Set to `grpc` for efficient binary transport
-- `headers`: Custom headers for OTEL export. Uses `@env('OTEL_EXPORTER_OTLP_HEADERS')` to reference Aspire-provided headers
-
-With this configuration, Data API builder will:
-- Export traces and metrics to the Aspire dashboard via OTLP (OpenTelemetry Protocol)
-- Automatically use the OTEL endpoint provided by the Aspire app host
-- Include telemetry for REST and GraphQL operations, database queries, and system metrics
+> **Warning:** Do **not** add `"headers": "@env('OTEL_EXPORTER_OTLP_HEADERS')"` unless your OTLP endpoint requires authentication (e.g., a cloud APM service). Aspire does not inject `OTEL_EXPORTER_OTLP_HEADERS`, and DAB requires all `@env()` references to resolve — an unset variable causes a fatal deserialization crash loop. If you need headers, set the environment variable explicitly on the container:
+>
+> ```csharp
+> builder.AddDataAPIBuilder("dab")
+>     .WithEnvironment("OTEL_EXPORTER_OTLP_HEADERS", "api-key=your-key");
+> ```
 
 For more information about Data API builder telemetry, see the [official documentation](https://learn.microsoft.com/azure/data-api-builder/concept/monitor/open-telemetry).
 
-## Known Issues
-
-The current implementation of the Data API builder Aspire integration does not support HTTPS endpoints. However, this is only a dev-time consideration. Service discovery when published can use HTTPS without any problems.
