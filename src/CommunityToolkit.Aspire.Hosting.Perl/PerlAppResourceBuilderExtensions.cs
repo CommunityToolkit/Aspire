@@ -630,7 +630,10 @@ public static class PerlAppResourceBuilderExtensions
                 return;
             }
 
-            var installer = new PerlModuleInstallerResource(installerName.Replace(":", "COLON"), moduleName, resource?.Resource.WorkingDirectory ?? throw new ArgumentNullException());
+            var installer = new PerlModuleInstallerResource(
+                installerName.Replace(":", "8"), //limitation of aspire resource names not allowing colons, but perl module names often have colons, so replace with dashes for the installer resource name
+                moduleName, 
+                resource?.Resource.WorkingDirectory ?? throw new ArgumentNullException());
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
                 .WithParentRelationship(resource.Resource)
                 .ExcludeFromManifest();
@@ -722,7 +725,7 @@ public static class PerlAppResourceBuilderExtensions
         }
 
         var installer = new PerlModuleInstallerResource(
-            installerName.Replace(":", "COLON"),
+            installerName.Replace(":", "8"), //limitation of aspire resource names not allowing colons, but perl module names often have colons, so replace with dashes for the installer resource name
             packageName,
             resource.Resource.WorkingDirectory ?? throw new ArgumentNullException());
 
