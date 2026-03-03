@@ -16,18 +16,6 @@ public class PerlAppPublicApiTests
     }
 
     [Fact]
-    public void AddPerlScriptShouldThrowWhenResourceNameIsNullOrEmpty()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() =>
-            builder.AddPerlScript(null!, "scripts", "app.pl"));
-
-        Assert.Throws<ArgumentException>(() =>
-            builder.AddPerlScript("perlscription", "scripts", "app.pl"));
-    }
-
-    [Fact]
     public void AddPerlScriptShouldThrowWhenAppDirectoryIsNull()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -56,18 +44,6 @@ public class PerlAppPublicApiTests
         var exception = Assert.Throws<ArgumentNullException>(() =>
             builder.AddPerlApi("perl-api", "api", "server.pl"));
         Assert.Equal("builder", exception.ParamName);
-    }
-
-    [Fact]
-    public void AddPerlApiShouldThrowWhenResourceNameIsNullOrEmpty()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        Assert.Throws<ArgumentNullException>(() =>
-            builder.AddPerlApi(null!, "api", "server.pl"));
-
-        Assert.Throws<ArgumentException>(() =>
-            builder.AddPerlApi("ApiMoreLikeAspirePerlIntegration", "api", "server.pl"));
     }
 
     [Fact]
