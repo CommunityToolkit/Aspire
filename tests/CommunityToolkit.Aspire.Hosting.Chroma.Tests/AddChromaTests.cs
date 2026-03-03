@@ -84,7 +84,7 @@ public class AddChromaTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         appBuilder.AddChroma("chroma")
-            .WithDataBindMount("C:/chroma/data");
+            .WithDataBindMount("./chroma-data");
 
         using var app = appBuilder.Build();
 
@@ -92,7 +92,8 @@ public class AddChromaTests
 
         var containerResource = Assert.Single(appModel.Resources.OfType<ChromaResource>());
         var mountAnnotation = Assert.Single(containerResource.Annotations.OfType<ContainerMountAnnotation>());
-        Assert.Equal("C:/chroma/data", mountAnnotation.Source);
+        Assert.NotNull(mountAnnotation.Source);
+        Assert.Equal(Path.GetFullPath("./chroma-data").Replace('\\', '/'), mountAnnotation.Source.Replace('\\', '/'));
         Assert.Equal("/chroma/chroma", mountAnnotation.Target);
         Assert.Equal(ContainerMountType.BindMount, mountAnnotation.Type);
     }
