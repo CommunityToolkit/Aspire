@@ -19,3 +19,5 @@ nuget
 target
 
 node_modules
+examples/perl/*/local/
+examples/perl/multi-resource/MultiResource.AppHost/local/*

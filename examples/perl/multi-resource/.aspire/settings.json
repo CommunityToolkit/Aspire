@@ -1,0 +1,4 @@
+{
+  "language": "csharp",
+  "appHostPath": "../MultiResource.AppHost/MultiResource.AppHost.csproj"
+}
