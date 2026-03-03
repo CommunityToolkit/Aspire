@@ -27,11 +27,11 @@ and see if the UX as it helps you install things is helpful at all, for example:
 
 ## What I would like to finish before release
 
-- Double checking that I can run the API with HTTPS and respect the cert trust
-- Seeing if I can get a worker service perl app to generate telemetry manually with traces. [Success]
-- Ensure Carton usage is directionally similar to how npm in the javascript and pip in the python integrations work.  Do they try to include the resources in the repo as well?
-- Talking with some of the perl maintainers that made this possible.
-- Determine how to get make and gcc on PATH in windows, CPAN doesn't include the Strawberry distributed c\bin\gcc.exe and CPANM does, but make still has an issue, so both need to be alerted to the user. [Success]
+- [x] Double checking that I can run the API with HTTPS and respect the cert trust
+- [x] Seeing if I can get a worker service perl app to generate telemetry manually with traces. 
+- [ ] Ensure Carton usage is directionally similar to how npm in the javascript and pip in the python integrations work.  Do they try to include the resources in the repo as well?
+- [ ] Talking with some of the perl maintainers that made this possible.
+- [x] Determine how to get make and gcc on PATH in windows, CPAN doesn't include the Strawberry distributed c\bin\gcc.exe and CPANM does, but make still has an issue, so both need to be alerted to the user. 
 
 ## Getting Started
 

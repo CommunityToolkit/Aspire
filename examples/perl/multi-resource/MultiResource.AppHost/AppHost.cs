@@ -1,3 +1,5 @@
+#pragma warning disable ASPIRECERTIFICATES001
+
 // Demonstrates multi-resource orchestration — multiple Perl resources with
 // different package manager configurations, plus a .NET Blazor frontend
 // consuming the Perl API via service discovery.
@@ -13,7 +15,15 @@ var perlApi = builder.AddPerlApi("perl-api", ".", "../scripts/API.pl")
     .WithCarton()
     .WithProjectDependencies(deployment: false)
     .WithLocalLib()
-    .WithHttpEndpoint(targetPort: 3031, name: "http", env: "PORT");
+    .WithHttpEndpoint(name: "http", env: "PORT")
+    .WithHttpsEndpoint(name: "https", env: "HTTPS_PORT")
+    .WithHttpsCertificateConfiguration(ctx =>
+    {
+        // Expose the dev certificate PEM paths to Mojolicious daemon arguments.
+        ctx.EnvironmentVariables["TLS_CERT"] = ctx.CertificatePath;
+        ctx.EnvironmentVariables["TLS_KEY"] = ctx.KeyPath;
+        return Task.CompletedTask;
+    });
 
 // Perl worker using cpanm with individual package installs.
 // cpanm runs without sudo so modules install to ~/perl5 —
