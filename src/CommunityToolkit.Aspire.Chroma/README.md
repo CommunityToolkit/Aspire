@@ -28,7 +28,7 @@ public class MyService(ChromaClient chromaClient)
 {
     public async Task QueryAsync()
     {
-        var version = await chromaClient.GetVersion();
+        await chromaClient.Heartbeat();
         // ...
     }
 }
