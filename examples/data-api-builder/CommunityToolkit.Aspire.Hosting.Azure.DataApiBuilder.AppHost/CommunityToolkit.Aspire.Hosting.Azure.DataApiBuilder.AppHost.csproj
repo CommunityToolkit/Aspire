@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.1.1">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,11 +15,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.McpInspector\CommunityToolkit.Aspire.Hosting.McpInspector.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp\CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.BlazorApp.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update=".\dab-config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update=".\sql-server.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

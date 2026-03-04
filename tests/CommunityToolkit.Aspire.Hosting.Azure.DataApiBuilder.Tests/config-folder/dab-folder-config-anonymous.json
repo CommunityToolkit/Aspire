@@ -1,0 +1,26 @@
+{
+  "$schema": "https://github.com/Azure/data-api-builder/releases/download/v1.6.87/dab.draft.schema.json",
+  "data-source": {
+    "database-type": "mssql",
+    "connection-string": "missing-on-purpose"
+  },
+  "runtime": {
+    "host": {
+      "mode": "development"
+    }
+  },
+  "entities": {
+    "Director": {
+      "source": {
+        "object": "[dbo].[Director]",
+        "type": "table"
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [ "*" ]
+        }
+      ]
+    }
+  }
+}

@@ -29,8 +29,8 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var response = await httpClient.GetAsync("/api/series");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var series = await response.Content.ReadFromJsonAsync<SeriesList>();
+        var series = await response.Content.ReadFromJsonAsync<DabResponse<Series>>();
         Assert.NotNull(series);
-        Assert.Equal(5, series.value.Count);
+        Assert.Equal(5, series.Value!.Count);
     }
 }
