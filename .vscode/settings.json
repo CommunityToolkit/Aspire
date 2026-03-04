@@ -9,5 +9,8 @@
   ],
   "[aspnetcorerazor]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "dotnet build": true
   }
 }
