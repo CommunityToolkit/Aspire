@@ -10,7 +10,7 @@ internal sealed class ChromaHealthCheck(ChromaClient chromaClient) : IHealthChec
     {
         try
         {
-            await chromaClient.GetVersion().ConfigureAwait(false);
+            await chromaClient.Heartbeat().ConfigureAwait(false);
 
             return HealthCheckResult.Healthy();
         }
