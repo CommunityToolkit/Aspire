@@ -8,6 +8,7 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Xunit;
 using System.Linq.Expressions;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Meilisearch.Tests;
 
@@ -25,7 +26,7 @@ public sealed class MeilisearchContainerFixture : IAsyncLifetime
         return $"Endpoint={endpoint};MasterKey={_masterKey}";
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (RequiresDockerAttribute.IsSupported)
         {
@@ -55,7 +56,7 @@ public sealed class MeilisearchContainerFixture : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (Container is not null)
         {

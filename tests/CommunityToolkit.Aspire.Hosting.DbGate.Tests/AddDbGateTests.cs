@@ -181,13 +181,11 @@ public class AddDbGateTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder1 = builder.AddMongoDB("mongodb1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource1 = mongodbResourceBuilder1.Resource;
 
         var mongodbResourceBuilder2 = builder.AddMongoDB("mongodb2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
             .WithDbGate();
 
         var mongodbResource2 = mongodbResourceBuilder2.Resource;
@@ -203,13 +201,11 @@ public class AddDbGateTests
         var postgresResource2 = postgresResourceBuilder2.Resource;
 
         var redisResourceBuilder1 = builder.AddRedis("redis1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28017))
             .WithDbGate();
 
         var redisResource1 = redisResourceBuilder1.Resource;
 
         var redisResourceBuilder2 = builder.AddRedis("redis2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28018))
             .WithDbGate();
 
         var redisResource2 = redisResourceBuilder2.Resource;
