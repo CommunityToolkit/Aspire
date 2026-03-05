@@ -1,19 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Perl library
 
-Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Perl scripts.
-
-# Welcome Camel Curious Individual
-
-Please have a look around.  
-
-If you're here to give feedback, I hope to have made it easy for you.  I have a series of examples available to run.
-
-I highly recommend you just use the dev container, and then ensure you can run the following:
-
-- cpanm --version
-- carton --version
-- aspire --version
-- aspire update --self (then select staging)
+Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Perl.
 
 ## Getting Started
 
@@ -49,4 +36,6 @@ https://github.com/CommunityToolkit/Aspire
 
 ### Credits
 
-There are many people to thank, but the work of JJAtria in making the OpenTelemetry::SDK module is what makes this integration feel great.
+There are many people to thank, but the work of JJAtria in making the OpenTelemetry::SDK module is what makes this integration feel great in Aspire and without it, I don't know that I would have even attempted to create it.  
+
+Thanks also to the Aspire Discord community at large for all the assistance when I had questions about the internals of Aspire.
