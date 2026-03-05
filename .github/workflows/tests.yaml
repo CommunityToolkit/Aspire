@@ -50,6 +50,7 @@ jobs:
             Hosting.Ngrok.Tests,
             Hosting.Ollama.Tests,
             Hosting.OpenTelemetryCollector.Tests,
+            Hosting.Perl.Tests,
             Hosting.PapercutSmtp.Tests,
             Hosting.PostgreSQL.Extensions.Tests,
             Hosting.PowerShell.Tests,

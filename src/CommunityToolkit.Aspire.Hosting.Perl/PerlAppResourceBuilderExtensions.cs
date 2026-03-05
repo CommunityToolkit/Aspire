@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
+using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable ASPIREEXTENSION001
 #pragma warning disable ASPIRECOMMAND001
@@ -147,9 +148,15 @@ public static class PerlAppResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(entrypoint);
         ArgumentNullException.ThrowIfNull(virtualEnvironmentPath);
 
+        // Resolve the app directory against the AppHost directory so behavior is
+        // consistent between aspire run and integration test fixtures.
+        var resolvedAppDirectory = Path.IsPathRooted(appDirectory)
+            ? appDirectory
+            : Path.GetFullPath(appDirectory, builder.AppHostDirectory);
+
         builder.Services.TryAddSingleton<PerlInstallationManager>();
 
-        var resource = new PerlAppResource(resourceName, entrypoint, appDirectory);
+        var resource = new PerlAppResource(resourceName, entrypoint, resolvedAppDirectory);
 
         // Use just the entrypoint filename — the working directory is already set to appDirectory,
         // so Path.Combine(appDirectory, entrypoint) would double-nest the path.
@@ -234,7 +241,7 @@ public static class PerlAppResourceBuilderExtensions
             // Auto-detect project-level dependency files (GAP-11)
             //FEEDBACK: I don't know that I like this behavior.  Please explain why I should do this during runtime, 
             //is this because it happens automatically on publish?
-            if (HasDependencyFiles(appDirectory, builder.AppHostDirectory))
+            if (HasDependencyFiles(resolvedAppDirectory, builder.AppHostDirectory))
             {
                 resourceBuilder.WithProjectDependencies();
             }
@@ -417,6 +424,7 @@ public static class PerlAppResourceBuilderExtensions
     /// Carton only supports project-level dependency installation via <c>cpanfile</c>.
     /// Calling <see cref="WithPackage{TResource}"/> after <c>WithCarton()</c> will throw
     /// because Carton does not support installing individual modules.
+    /// To install Carton, you may use "cpanm Carton".
     /// </remarks>
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
@@ -429,7 +437,13 @@ public static class PerlAppResourceBuilderExtensions
         builder.WithAnnotation(new PerlPackageManagerAnnotation(PerlPackageManager.Carton),
             ResourceAnnotationMutationBehavior.Replace);
 
-        builder.WithRequiredCommand("carton", "https://metacpan.org/pod/Carton");
+        builder.WithRequiredCommand("carton", context => Task.FromResult(
+            File.Exists(context.ResolvedPath)
+                ? RequiredCommandValidationResult.Success()
+                : RequiredCommandValidationResult.Failure(
+                    "Carton is not installed or not available on PATH. " +
+                    "To install Carton, you may use \"cpanm Carton\".")),
+            "https://metacpan.org/pod/Carton");
 
         return builder;
     }
@@ -512,6 +526,7 @@ public static class PerlAppResourceBuilderExtensions
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    [Experimental("CTASPIREPERL001")]
     public static IResourceBuilder<TResource> WithPerlCertificateTrust<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -544,14 +559,14 @@ public static class PerlAppResourceBuilderExtensions
     /// </summary>
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="deployment">
+    /// <param name="cartonDeployment">
     /// If <c>true</c> and using Carton, adds <c>--deployment</c> for reproducible installs
     /// from <c>cpanfile.snapshot</c>. Ignored for other package managers.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
     public static IResourceBuilder<TResource> WithProjectDependencies<TResource>(
         this IResourceBuilder<TResource> builder,
-        bool deployment = false) where TResource : PerlAppResource
+        bool cartonDeployment = false) where TResource : PerlAppResource
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -562,7 +577,7 @@ public static class PerlAppResourceBuilderExtensions
             builder.WithCpanMinus();
         }
 
-        AddProjectDependencyInstaller(builder, deployment);
+        AddProjectDependencyInstaller(builder, cartonDeployment);
 
         return builder;
     }
@@ -800,7 +815,7 @@ public static class PerlAppResourceBuilderExtensions
     /// </summary>
     private static void AddProjectDependencyInstaller<TResource>(
         IResourceBuilder<TResource> resource,
-        bool deployment) where TResource : PerlAppResource
+        bool cartonDeployment) where TResource : PerlAppResource
     {
         if (!resource.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
@@ -867,7 +882,7 @@ public static class PerlAppResourceBuilderExtensions
             }
 
             var command = packageManager.ExecutableName;
-            var installArgs = BuildProjectInstallArgs(packageManager.PackageManager, deployment);
+            var installArgs = BuildProjectInstallArgs(packageManager.PackageManager, cartonDeployment);
 
             if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
                 perlbrewAnnotation.Environment is { } perlbrewEnv)
@@ -949,12 +964,12 @@ public static class PerlAppResourceBuilderExtensions
     /// <para>carton: <c>carton install [--deployment]</c></para>
     /// <para>cpan: not supported for project-level installs — throws.</para>
     /// </remarks>
-    internal static string[] BuildProjectInstallArgs(PerlPackageManager packageManager, bool deployment)
+    internal static string[] BuildProjectInstallArgs(PerlPackageManager packageManager, bool cartonDeployment)
     {
         return packageManager switch
         {
             PerlPackageManager.Cpanm => ["--installdeps", "--notest", "."],
-            PerlPackageManager.Carton => deployment
+            PerlPackageManager.Carton => cartonDeployment
                 ? ["install", "--deployment"]
                 : ["install"],
             PerlPackageManager.Cpan => throw new NotSupportedException(

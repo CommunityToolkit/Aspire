@@ -5,6 +5,8 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class ResourceCreationTests
 {
+    #region AddPerlScript
+
     [Fact]
     public void AddPerlScriptCreatesCorrectResourceType()
     {
@@ -59,6 +61,7 @@ public class ResourceCreationTests
     public void AddPerlScriptSetsWorkingDirectory()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var expectedWorkingDirectory = Path.GetFullPath("scripts", builder.AppHostDirectory);
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl");
 
@@ -67,7 +70,7 @@ public class ResourceCreationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.Equal("scripts", resource.WorkingDirectory);
+        Assert.Equal(expectedWorkingDirectory, resource.WorkingDirectory);
     }
 
     [Fact]
@@ -86,6 +89,10 @@ public class ResourceCreationTests
         Assert.Equal(EntrypointType.Script, annotation.Type);
         Assert.Equal("app.pl", annotation.Entrypoint);
     }
+
+    #endregion
+
+    #region AddPerlApi
 
     [Fact]
     public void AddPerlApiCreatesCorrectResourceType()
@@ -143,6 +150,10 @@ public class ResourceCreationTests
         Assert.Contains("daemon", context.Args);
     }
 
+    #endregion
+
+    #region Resource Contracts
+
     [Fact]
     public void AddPerlScriptImplementsIResourceWithServiceDiscovery()
     {
@@ -172,6 +183,10 @@ public class ResourceCreationTests
 
         Assert.IsAssignableFrom<ExecutableResource>(resource);
     }
+
+    #endregion
+
+    #region WithCpanm
 
     [Fact]
     public void WithCpanmAddsPackageManagerAnnotation()
@@ -222,6 +237,8 @@ public class ResourceCreationTests
         var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
         Assert.Contains("Mojolicious", installerResource.Name);
     }
+
+    #endregion
 
     #region AddPerlModule
 

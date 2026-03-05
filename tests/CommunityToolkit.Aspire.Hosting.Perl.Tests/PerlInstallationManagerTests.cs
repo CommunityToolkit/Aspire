@@ -9,6 +9,8 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlInstallationManagerTests
 {
+    #region Registration and Required Commands
+
     [Fact]
     public void PerlInstallationManagerIsRegisteredAsSingleton()
     {
@@ -77,6 +79,10 @@ public class PerlInstallationManagerTests
         Assert.NotNull(annotation.ValidationCallback);
     }
 
+    #endregion
+
+    #region Linux Positive Validation
+
     [LinuxOnlyFact]
     public async Task IsPerlInstalledAsync_ReturnsTrue_WhenPerlIsInstalled()
     {
@@ -108,7 +114,9 @@ public class PerlInstallationManagerTests
         Assert.True(result.IsValid);
     }
 
-    #region Negative Cases (AUDIT-13)
+    #endregion
+
+    #region Negative Cases 
 
     [Fact]
     public async Task IsPerlInstalledAsync_ReturnsFalse_WhenPerlIsNotInstalled()

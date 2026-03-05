@@ -7,6 +7,8 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlAppResourceTests
 {
+    #region PerlAppResource Type and Shape
+
     [Fact]
     public void PerlAppResourceInheritsFromExecutableResource()
     {
@@ -47,6 +49,10 @@ public class PerlAppResourceTests
         Assert.Equal("/path/to/scripts", resource.WorkingDirectory);
     }
 
+    #endregion
+
+    #region PerlModuleInstallerResource Type and Shape
+
     [Fact]
     public void PerlModuleInstallerResourceInheritsFromExecutableResource()
     {
@@ -63,6 +69,10 @@ public class PerlAppResourceTests
         Assert.Equal("Mojolicious-installer", resource.Name);
     }
 
+    #endregion
+
+    #region EntrypointType Enum Coverage
+
     [Fact]
     public void EntrypointTypeHasExpectedValues()
     {
@@ -70,8 +80,11 @@ public class PerlAppResourceTests
         Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.API));
         Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.Module));
         Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.Executable));
-        Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.OneLiner));
     }
+
+    #endregion
+
+    #region Application Model Composition
 
     [Fact]
     public void MultipleResourcesCanBeAddedToModel()
@@ -90,4 +103,6 @@ public class PerlAppResourceTests
         Assert.Contains(resources, r => r.Name == "script-app");
         Assert.Contains(resources, r => r.Name == "api-app");
     }
+
+    #endregion
 }

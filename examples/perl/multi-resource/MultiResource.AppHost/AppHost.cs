@@ -6,6 +6,19 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var secondLayerApi = builder.AddPerlApi("second-layer-api", ".", "../scripts/secondLayerApi.pl")
+    .WithCarton()
+    .WithProjectDependencies(cartonDeployment: false)
+    .WithLocalLib()
+    .WithHttpEndpoint(name: "http", env: "PORT")
+    .WithHttpsEndpoint(name: "https", env: "HTTPS_PORT")
+    .WithHttpsCertificateConfiguration(ctx =>
+    {
+        ctx.EnvironmentVariables["TLS_CERT"] = ctx.CertificatePath;
+        ctx.EnvironmentVariables["TLS_KEY"] = ctx.KeyPath;
+        return Task.CompletedTask;
+    });
+
 // Perl API using Carton for project-level dependency management.
 // appDirectory is "." (the project root) so that:
 //   1. carton install runs where cpanfile lives, and
@@ -13,8 +26,11 @@ var builder = DistributedApplication.CreateBuilder(args);
 // The script path is relative to that root.
 var perlApi = builder.AddPerlApi("perl-api", ".", "../scripts/API.pl")
     .WithCarton()
-    .WithProjectDependencies(deployment: false)
+    .WithProjectDependencies(cartonDeployment: false)
     .WithLocalLib()
+    .WithEnvironment("SECOND_LAYER_URL", secondLayerApi.GetEndpoint("https"))
+    .WithReference(secondLayerApi)
+    .WaitFor(secondLayerApi)
     .WithHttpEndpoint(name: "http", env: "PORT")
     .WithHttpsEndpoint(name: "https", env: "HTTPS_PORT")
     .WithHttpsCertificateConfiguration(ctx =>

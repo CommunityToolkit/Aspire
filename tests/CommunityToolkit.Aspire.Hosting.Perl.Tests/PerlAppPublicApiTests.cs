@@ -5,6 +5,8 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlAppPublicApiTests
 {
+    #region AddPerlScript Argument Validation
+
     [Fact]
     public void AddPerlScriptShouldThrowWhenBuilderIsNull()
     {
@@ -35,6 +37,10 @@ public class PerlAppPublicApiTests
         Assert.Throws<ArgumentException>(() =>
             builder.AddPerlScript("perl-app", "scripts", ""));
     }
+
+    #endregion
+
+    #region AddPerlApi Argument Validation
 
     [Fact]
     public void AddPerlApiShouldThrowWhenBuilderIsNull()
@@ -67,6 +73,10 @@ public class PerlAppPublicApiTests
             builder.AddPerlApi("perl-api", "api", ""));
     }
 
+    #endregion
+
+    #region WithCpanm Argument Validation
+
     [Fact]
     public void WithCpanmShouldThrowWhenResourceIsNull()
     {
@@ -88,4 +98,6 @@ public class PerlAppPublicApiTests
         Assert.Throws<ArgumentException>(() =>
             resource.WithCpanm(""));
     }
+
+    #endregion
 }

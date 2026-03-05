@@ -10,7 +10,7 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlbrewEnvironmentTests
 {
-    // --- PerlbrewEnvironment utility class tests ---
+    #region PerlbrewEnvironment Utility Class
 
     [Fact]
     public void NormalizeVersion_PrefixesPerlWhenMissing()
@@ -103,7 +103,9 @@ public class PerlbrewEnvironmentTests
         Assert.Equal("perl-5.40.0", env.Version);
     }
 
-    // --- WithPerlbrewEnvironment extension method tests ---
+    #endregion
+
+    #region WithPerlbrewEnvironment Extension
 
     [Fact]
     public void WithPerlbrewEnvironment_ChangesCommand()
@@ -283,7 +285,9 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, resource.Command);
     }
 
-    // --- Installer integration tests ---
+    #endregion
+
+    #region Installer Integration
 
     [Fact]
     public void WithPerlbrewEnvironmentAndCpanm_InstallerGetsPerlbrewAnnotation()
@@ -304,7 +308,9 @@ public class PerlbrewEnvironmentTests
         Assert.NotNull(annotation.Environment);
     }
 
-    // --- Windows berrybrew warning tests ---
+    #endregion
+
+    #region Validation Messaging
 
     [Fact]
     public async Task WithPerlbrewEnvironment_OnWindows_ValidationWarnsAboutBerrybrew()
@@ -341,4 +347,6 @@ public class PerlbrewEnvironmentTests
             Assert.Contains("not installed", result.ValidationMessage);
         }
     }
+
+    #endregion
 }

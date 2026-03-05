@@ -17,3 +17,13 @@ This API is marked as experimental as it does not have a stable implementation, 
 ## CTASPIRE003
 
 The API is marked for deprecation and will be removed in a future release.
+
+## CTASPIREPERL001
+
+This API is marked as experimental for the Perl hosting integration and may change or be removed in future updates.
+
+Current usage:
+
+- `WithPerlCertificateTrust(...)`
+
+Suppress this diagnostic only when you intentionally opt into the experimental API surface.

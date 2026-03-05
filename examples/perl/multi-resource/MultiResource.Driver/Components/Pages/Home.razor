@@ -8,7 +8,10 @@
 
 <p>This frontend consumes a Carton-managed Perl API while a cpanm-managed worker runs in the background.</p>
 
-<button class="btn btn-primary" @onclick="CallPerlApi">Call Perl API</button>
+<div class="d-flex gap-2">
+    <button class="btn btn-primary" @onclick="CallPerlApi">Call Perl API</button>
+    <button class="btn btn-secondary" @onclick="CallPeriphery">Periphery</button>
+</div>
 
 @if (apiResponse is not null)
 {
@@ -38,7 +41,23 @@
         try
         {
             var client = HttpClientFactory.CreateClient("perl-api");
-            apiResponse = await client.GetStringAsync("/");
+            apiResponse = await client.GetStringAsync("/pachinko");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task CallPeriphery()
+    {
+        apiResponse = null;
+        errorMessage = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("perl-api");
+            apiResponse = await client.GetStringAsync("/omega");
         }
         catch (Exception ex)
         {

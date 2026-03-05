@@ -3,6 +3,8 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
+#pragma warning disable CTASPIREPERL001
+
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PackageManagementTests
@@ -460,7 +462,7 @@ public class PackageManagementTests
     [Fact]
     public void BuildProjectInstallArgs_Cpanm_ReturnsInstalldeps()
     {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpanm, deployment: false);
+        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpanm, cartonDeployment: false);
 
         Assert.Equal(["--installdeps", "--notest", "."], args);
     }
@@ -468,7 +470,7 @@ public class PackageManagementTests
     [Fact]
     public void BuildProjectInstallArgs_Cpanm_IgnoresDeploymentFlag()
     {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpanm, deployment: true);
+        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpanm, cartonDeployment: true);
 
         // Deployment flag is only for Carton; cpanm ignores it
         Assert.Equal(["--installdeps", "--notest", "."], args);
@@ -477,7 +479,7 @@ public class PackageManagementTests
     [Fact]
     public void BuildProjectInstallArgs_Carton_ReturnsInstall()
     {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Carton, deployment: false);
+        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Carton, cartonDeployment: false);
 
         Assert.Equal(["install"], args);
     }
@@ -485,7 +487,7 @@ public class PackageManagementTests
     [Fact]
     public void BuildProjectInstallArgs_Carton_WithDeployment()
     {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Carton, deployment: true);
+        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Carton, cartonDeployment: true);
 
         Assert.Equal(["install", "--deployment"], args);
     }
@@ -494,7 +496,7 @@ public class PackageManagementTests
     public void BuildProjectInstallArgs_Cpan_Throws()
     {
         Assert.Throws<NotSupportedException>(() =>
-            PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpan, deployment: false));
+            PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpan, cartonDeployment: false));
     }
 
     #endregion

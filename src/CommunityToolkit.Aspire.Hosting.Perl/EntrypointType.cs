@@ -3,7 +3,7 @@ namespace CommunityToolkit.Aspire.Hosting.Perl;
 /// <summary>
 /// Defines the type of entrypoint for a Perl application.
 /// 
-/// Currently only Script is supported, but this enum is designed to be extensible for future entrypoint types.
+/// Supported entrypoint types currently include Script, API, Module, and Executable.
 /// </summary> 
 public enum EntrypointType
 {
@@ -22,11 +22,6 @@ public enum EntrypointType
     /// A Perl module to run as the main application (e.g., "MyApp::Main").
     /// </summary>
     Module,
-
-    /// <summary>
-    /// A Perl one-liner command to execute.
-    /// </summary>
-    OneLiner,
 
     /// <summary>
     /// A Perl API script to listen for HTTP requests.
