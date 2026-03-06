@@ -2,8 +2,8 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
-public class PerlIntegrationTests(AspireIntegrationTestFixture<Projects.MultiResource_AppHost> fixture)
-    : IClassFixture<AspireIntegrationTestFixture<Projects.MultiResource_AppHost>>
+public class PerlIntegrationTests(AspireIntegrationTestFixture<Projects.CpanmApiIntegration_AppHost> fixture)
+    : IClassFixture<AspireIntegrationTestFixture<Projects.CpanmApiIntegration_AppHost>>
 {
     #region Test Helpers
 
@@ -43,11 +43,11 @@ public class PerlIntegrationTests(AspireIntegrationTestFixture<Projects.MultiRes
 
     #endregion
 
-    #region Multi-resource API Endpoints
+    #region Cpanm API Integration Endpoints
 
 
     [Fact]
-    public async Task MultiResourceApi_PachinkoEndpoint_ReturnsExpectedText()
+    public async Task CpanmApiIntegration_RootEndpoint_ReturnsExpectedText()
     {
         const string resourceName = "perl-api";
         var httpClient = fixture.CreateHttpClient(resourceName);
@@ -56,22 +56,8 @@ public class PerlIntegrationTests(AspireIntegrationTestFixture<Projects.MultiRes
             .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromMinutes(2));
 
-        const string expected = "My name was Pachinko, I sang the Flamenco - my songs are something you never will forget!";
-        await WaitForExpectedTextAsync(httpClient, "/pachinko", expected, TimeSpan.FromMinutes(2));
-    }
-
-    [Fact]
-    public async Task MultiResourceApi_OmegaEndpoint_ReturnsSecondLayerText()
-    {
-        const string resourceName = "perl-api";
-        var httpClient = fixture.CreateHttpClient(resourceName);
-
-        await fixture.ResourceNotificationService
-            .WaitForResourceAsync(resourceName, KnownResourceStates.Running)
-            .WaitAsync(TimeSpan.FromMinutes(2));
-
-        const string expected = "Sometimes there's a crack in the world that I can peer through to see it for what it really is.";
-        await WaitForExpectedTextAsync(httpClient, "/omega", expected, TimeSpan.FromMinutes(2));
+        const string expected = "How fleeting, how fragile.";
+        await WaitForExpectedTextAsync(httpClient, "/", expected, TimeSpan.FromMinutes(2));
     }
 
     #endregion

@@ -11,7 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
-    <ProjectReference Include="../../examples/perl/multi-resource/MultiResource.AppHost/MultiResource.AppHost.csproj" />
+    <ProjectReference Include="../../examples/perl/cpanm-api-integration/CpanmApiIntegration.AppHost/CpanmApiIntegration.AppHost.csproj" />
     <!-- <ProjectReference Include="..\src\CommunityToolkit.Aspire.Hosting.Perl\CommunityToolkit.Aspire.Hosting.Perl.csproj" /> -->
   </ItemGroup>
 
