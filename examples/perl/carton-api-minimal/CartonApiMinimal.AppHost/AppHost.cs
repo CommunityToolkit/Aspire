@@ -5,7 +5,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 builder.AddPerlApi("carton-api", ".", "../scripts/API.pl")
     .WithCarton()
     .WithProjectDependencies(cartonDeployment: false)
-    .WithLocalLib()
+    .WithLocalLib("local") //to avoid 'sudo' applying to system perl.
     .WithHttpEndpoint(name: "http", env: "PORT")
     .WithHttpsEndpoint(name: "https", env: "HTTPS_PORT")
     .WithHttpsCertificateConfiguration(ctx =>

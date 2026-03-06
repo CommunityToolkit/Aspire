@@ -9,7 +9,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var secondLayerApi = builder.AddPerlApi("second-layer-api", ".", "../scripts/secondLayerApi.pl")
     .WithCarton()
     .WithProjectDependencies(cartonDeployment: false)
-    .WithLocalLib()
+    .WithLocalLib("local") //to avoid 'sudo' applying to system perl.
     .WithHttpEndpoint(name: "http", env: "PORT")
     .WithHttpsEndpoint(name: "https", env: "HTTPS_PORT")
     .WithHttpsCertificateConfiguration(ctx =>
@@ -27,7 +27,7 @@ var secondLayerApi = builder.AddPerlApi("second-layer-api", ".", "../scripts/sec
 var perlApi = builder.AddPerlApi("perl-api", ".", "../scripts/API.pl")
     .WithCarton()
     .WithProjectDependencies(cartonDeployment: false)
-    .WithLocalLib()
+    .WithLocalLib("local") //to avoid 'sudo' applying to system perl.
     .WithEnvironment("SECOND_LAYER_URL", secondLayerApi.GetEndpoint("https"))
     .WithReference(secondLayerApi)
     .WaitFor(secondLayerApi)
@@ -44,11 +44,11 @@ var perlApi = builder.AddPerlApi("perl-api", ".", "../scripts/API.pl")
 // Perl worker using cpanm with individual package installs.
 // cpanm runs without sudo so modules install to ~/perl5 —
 // WithLocalLib pointed there so the worker can find them in @INC.
-var perl5Home = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "perl5");
+
 var perlWorker = builder.AddPerlScript("perl-worker", "../scripts", "Worker.pl")
     .WithCpanMinus()
     .WithPackage("OpenTelemetry::SDK", force: true, skipTest: true)
-    .WithLocalLib(perl5Home);
+    .WithLocalLib("local");
 
 // Blazor frontend consuming the Perl API
 builder.AddProject<Projects.MultiResource_Driver>("multi-resource-driver")

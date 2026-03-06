@@ -536,6 +536,8 @@ public static class PerlAppResourceBuilderExtensions
                     "To install Carton, you may use \"cpanm Carton\".")),
             "https://metacpan.org/pod/Carton");
 
+        TryAttachLocalLibEnvironmentToProjectInstaller(builder);
+
         return builder;
     }
 
@@ -590,6 +592,9 @@ public static class PerlAppResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(path);
 
+        builder.WithAnnotation(new PerlLocalLibAnnotation(path),
+            ResourceAnnotationMutationBehavior.Replace);
+
         builder.WithEnvironment(context =>
         {
             var appDir = builder.Resource.WorkingDirectory ?? ".";
@@ -597,13 +602,10 @@ public static class PerlAppResourceBuilderExtensions
                 ? path
                 : Path.GetFullPath(Path.Combine(appDir, path));
 
-            var libPerl5 = Path.Combine(localLibPath, "lib", "perl5");
-
-            context.EnvironmentVariables["PERL5LIB"] = libPerl5;
-            context.EnvironmentVariables["PERL_LOCAL_LIB_ROOT"] = localLibPath;
-            context.EnvironmentVariables["PERL_MM_OPT"] = $"INSTALL_BASE={localLibPath}";
-            context.EnvironmentVariables["PERL_MB_OPT"] = $"--install_base {localLibPath}";
+            ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
         });
+
+        TryAttachLocalLibEnvironmentToProjectInstaller(builder);
 
         return builder;
     }
@@ -1005,6 +1007,52 @@ public static class PerlAppResourceBuilderExtensions
 
         resource.WaitForCompletion(installerBuilder);
         resource.WithAnnotation(new PerlProjectInstallerAnnotation(installer));
+
+        TryAttachLocalLibEnvironmentToProjectInstaller(resource);
+    }
+
+    private static void ApplyLocalLibEnvironment(IDictionary<string, object> environmentVariables, string localLibPath)
+    {
+        var libPerl5 = Path.Combine(localLibPath, "lib", "perl5");
+
+        environmentVariables["PERL5LIB"] = libPerl5;
+        environmentVariables["PERL_LOCAL_LIB_ROOT"] = localLibPath;
+        environmentVariables["PERL_MM_OPT"] = $"INSTALL_BASE={localLibPath}";
+        environmentVariables["PERL_MB_OPT"] = $"--install_base {localLibPath}";
+    }
+
+    private static void TryAttachLocalLibEnvironmentToProjectInstaller<TResource>(
+        IResourceBuilder<TResource> resource) where TResource : PerlAppResource
+    {
+        if (!resource.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager) ||
+            packageManager.PackageManager != PerlPackageManager.Carton)
+        {
+            return;
+        }
+
+        if (!resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation) ||
+            !resource.Resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectInstallerAnnotation))
+        {
+            return;
+        }
+
+        if (projectInstallerAnnotation.Resource.Annotations.OfType<PerlLocalLibInstallerEnvironmentAnnotation>().Any())
+        {
+            return;
+        }
+
+        projectInstallerAnnotation.Resource.Annotations.Add(new PerlLocalLibInstallerEnvironmentAnnotation());
+
+        projectInstallerAnnotation.Resource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+        {
+            var appDir = resource.Resource.WorkingDirectory ?? ".";
+            var localLibPath = Path.IsPathRooted(localLibAnnotation.Path)
+                ? localLibAnnotation.Path
+                : Path.GetFullPath(Path.Combine(appDir, localLibAnnotation.Path));
+
+            ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+            return Task.CompletedTask;
+        }));
     }
 
     /// <summary>

@@ -455,6 +455,43 @@ public class PackageManagementTests
         Assert.Equal(2, installers.Count);
     }
 
+    [Fact]
+    public void WithCartonAndLocalLib_ProjectInstallerGetsLocalLibEnvironment()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithCarton()
+            .WithProjectDependencies()
+            .WithLocalLib("vendor");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+
+        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.NotEmpty(envCallbacks);
+    }
+
+    [Fact]
+    public void WithLocalLibWithoutCarton_ProjectInstallerDoesNotGetLocalLibEnvironment()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithProjectDependencies()
+            .WithLocalLib("vendor");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+
+        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.Empty(envCallbacks);
+    }
+
     #endregion
 
     #region BuildProjectInstallArgs
