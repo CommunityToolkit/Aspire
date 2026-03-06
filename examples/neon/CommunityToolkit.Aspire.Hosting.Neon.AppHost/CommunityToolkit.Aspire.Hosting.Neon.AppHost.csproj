@@ -1,0 +1,14 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Neon\CommunityToolkit.Aspire.Hosting.Neon.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

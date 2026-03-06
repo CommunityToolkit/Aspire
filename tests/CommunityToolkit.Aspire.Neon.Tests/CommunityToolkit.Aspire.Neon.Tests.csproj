@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Neon\CommunityToolkit.Aspire.Neon.csproj" />
+  </ItemGroup>
+</Project>

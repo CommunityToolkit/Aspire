@@ -12,4 +12,8 @@
       <PackageReference Include="Aspire.Hosting.PostgreSQL" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Neon\CommunityToolkit.Aspire.Hosting.Neon.csproj" />
+    </ItemGroup>
+
 </Project>

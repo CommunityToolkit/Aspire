@@ -42,6 +42,8 @@ This repository contains the source code for the Aspire Community Toolkit, a col
 | - **Learn More**: [`GoFeatureFlag`][go-feature-flag-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.GoFeatureFlag][go-feature-flag-client-shields]][go-feature-flag-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.GoFeatureFlag][go-feature-flag-client-shields-preview]][go-feature-flag-client-nuget-preview]                                             | An Aspire client integration for the [GoFeatureFlag](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Providers.GOFeatureFlag) package. |
 | - **Learn More**: [`Hosting.MongoDB.Extensions`][mongodb-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.MongoDB.Extensions][mongodb-ext-shields]][mongodb-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.MongoDB.Extensions][mongodb-ext-shields-preview]][mongodb-ext-nuget-preview]                                                              | An integration that contains some additional extensions for hosting MongoDB container.                                                                                      |
 | - **Learn More**: [`Hosting.PostgreSQL.Extensions`][postgres-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.PostgreSQL.Extensions][postgres-ext-shields]][postgres-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions][postgres-ext-shields-preview]][postgres-ext-nuget-preview]                                                | An integration that contains some additional extensions for hosting PostgreSQL container.                                                                                   |
+| - **Learn More**: [`Hosting.Neon`][neon-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Neon][neon-hosting-shields]][neon-hosting-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Neon][neon-hosting-shields-preview]][neon-hosting-nuget-preview]                                                                                                           | A hosting integration for Neon Postgres provisioning and connection management.                                                                                           |
+| - **Learn More**: [`Neon`][neon-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Neon][neon-client-shields]][neon-client-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Neon][neon-client-shields-preview]][neon-client-nuget-preview]                                                                                                                         | An Aspire client integration for connecting to Neon Postgres using Npgsql.                                                                                                 |
 | - **Learn More**: [`Hosting.Redis.Extensions`][redis-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Redis.Extensions][redis-ext-shields]][redis-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Redis.Extensions][redis-ext-shields-preview]][redis-ext-nuget-preview]                                                                              | An integration that contains some additional extensions for hosting Redis container.                                                                                        |
 | - **Learn More**: [`Hosting.SqlServer.Extensions`][sqlserver-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.SqlServer.Extensions][sqlserver-ext-shields]][sqlserver-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.SqlServer.Extensions][sqlserver-ext-shields-preview]][sqlserver-ext-nuget-preview]                                              | An integration that contains some additional extensions for hosting SqlServer container.                                                                                    |
 | - **Learn More**: [`Hosting.LavinMQ`][lavinmq-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.LavinMQ][lavinmq-shields]][lavinmq-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.LavinMQ][lavinmq-shields-preview]][lavinmq-nuget-preview]                                                                                                           | An Aspire hosting integration for [LavinMQ](https://www.lavinmq.com).                                                                                                       |
@@ -70,6 +72,14 @@ Stable releases of the NuGet packages will be published to the [NuGet Gallery](h
     -   [Feed URL](https://pkgs.dev.azure.com/dotnet/CommunityToolkit/_packaging/CommunityToolkit-PullRequests/nuget/v3/index.json)
 
 _Stable releases are not published to the Azure Artifacts feeds, they can only be accessed from the NuGet Gallery._
+
+### 📦 Package generation
+
+NuGet packages are produced from packable projects under src. Packaging settings and versioning are centralized:
+
+- Packable projects set `IsPackable=true` and include their README via `PackageReadmeFile` (see [src/Directory.Build.props](src/Directory.Build.props) and [src/Directory.Build.targets](src/Directory.Build.targets)).
+- Packages are written to the repo-local nuget folder via `PackageOutputPath` in [src/Directory.Build.targets](src/Directory.Build.targets).
+- Versioning comes from `AspireMajorVersion` + toolkit version properties in [Directory.Build.props](Directory.Build.props). CI enforces release/preview version rules via [Directory.Build.targets](Directory.Build.targets).
 
 ## 📃 Documentation
 
@@ -229,6 +239,15 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [postgres-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/
 [postgres-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions?label=nuget%20(preview)
 [postgres-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/absoluteLatest
+[neon-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-neon
+[neon-hosting-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Neon
+[neon-hosting-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Neon/
+[neon-hosting-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Neon?label=nuget%20(preview)
+[neon-hosting-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Neon/absoluteLatest
+[neon-client-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Neon
+[neon-client-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Neon/
+[neon-client-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Neon?label=nuget%20(preview)
+[neon-client-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Neon/absoluteLatest
 [sqlserver-ext-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-sqlserver-extensions
 [sqlserver-ext-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions
 [sqlserver-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/

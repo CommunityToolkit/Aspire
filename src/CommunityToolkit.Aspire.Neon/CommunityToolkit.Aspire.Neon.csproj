@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>client neon postgres database</AdditionalPackageTags>
+    <Description>An Aspire client integration for Neon Postgres using Npgsql.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
+    <Compile Include="$(SharedDir)\ConnectionStringValidation.cs" Link="Utils\ConnectionStringValidation.cs" />
+  </ItemGroup>
+
+</Project>
