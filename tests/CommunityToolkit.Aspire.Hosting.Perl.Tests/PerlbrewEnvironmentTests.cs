@@ -328,7 +328,7 @@ public class PerlbrewEnvironmentTests
     }
 
     [LinuxOnlyFact]
-    public void WithPerlbrewEnvironmentAndCpanm_AddsCpanmBootstrapInstaller()
+    public void WithPerlbrewEnvironmentAndCpanm_DoesNotAddCpanmBootstrapInstaller()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -340,13 +340,13 @@ public class PerlbrewEnvironmentTests
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var cpanmBootstrapInstaller = Assert.Single(appModel.Resources.OfType<PerlCpanmInstallerResource>());
-
-        Assert.Equal("perl-app-perlbrew-cpanm-installer", cpanmBootstrapInstaller.Name);
+        Assert.DoesNotContain(
+            appModel.Resources.OfType<ExecutableResource>(),
+            resource => resource.Name == "perl-app-perlbrew-cpanm-installer");
     }
 
     [LinuxOnlyFact]
-    public void WithPerlbrewEnvironmentAndCpanm_ModuleInstallerWaitsForBootstrapInstaller()
+    public void WithPerlbrewEnvironmentAndCpanm_ModuleInstallerDoesNotWaitForBootstrapInstaller()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -357,7 +357,6 @@ public class PerlbrewEnvironmentTests
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var cpanmBootstrapInstaller = Assert.Single(appModel.Resources.OfType<PerlCpanmInstallerResource>());
         var moduleInstaller = appModel.Resources
             .OfType<PerlModuleInstallerResource>()
             .Single(r => r.Name.Contains("OpenTelemetry", StringComparison.Ordinal));
@@ -365,9 +364,9 @@ public class PerlbrewEnvironmentTests
         var appResource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
         PerlAppResourceBuilderExtensions.SetupDependencies(builder, appResource);
 
-        Assert.Contains(
+        Assert.DoesNotContain(
             moduleInstaller.Annotations.OfType<WaitAnnotation>(),
-            wait => wait.Resource == cpanmBootstrapInstaller && wait.WaitType == WaitType.WaitForCompletion);
+            wait => wait.Resource.Name == "perl-app-perlbrew-cpanm-installer" && wait.WaitType == WaitType.WaitForCompletion);
     }
 
     #endregion
@@ -437,12 +436,12 @@ public class PerlbrewEnvironmentTests
     }
 
     [LinuxOnlyFact]
-    public async Task WithPerlbrewEnvironment_WithInstallVersion_ValidationSucceedsWhenVersionMissing()
+    public async Task WithPerlbrewEnvironment_WhenVersionMissing_ValidationDoesNotBypassInstallInstructions()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root", installVersion: true);
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root");
 
         using var app = builder.Build();
 
@@ -463,12 +462,13 @@ public class PerlbrewEnvironmentTests
         }
         else
         {
-            Assert.True(result.IsValid);
+            Assert.False(result.IsValid);
+            Assert.Contains("Install with: perlbrew install perl-5.38.0", result.ValidationMessage);
         }
     }
 
     [LinuxOnlyFact]
-    public async Task WithPerlbrewEnvironmentAndCpanMinus_ValidationAllowsCpanmBootstrapFlow()
+    public async Task WithPerlbrewEnvironmentAndCpanMinus_ValidationFailsWhenCpanmIsMissing()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -488,27 +488,12 @@ public class PerlbrewEnvironmentTests
         var context = new RequiredCommandValidationContext("cpanm", app.Services, CancellationToken.None);
         var result = await cpanmRequiredCommand.ValidationCallback!(context);
 
-        Assert.True(result.IsValid);
+        Assert.False(result.IsValid);
+        Assert.Contains("perlbrew install-cpanm", result.ValidationMessage);
     }
 
     [LinuxOnlyFact]
-    public void WithPerlbrewEnvironment_WithInstallVersion_AddsVersionInstallerResource()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root", installVersion: true);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var installer = Assert.Single(appModel.Resources.OfType<PerlVersionInstallerResource>());
-
-        Assert.Equal("perl-app-perl-5-38-0-perlbrew-installer", installer.Name);
-    }
-
-    [LinuxOnlyFact]
-    public void WithPerlbrewEnvironment_WithoutInstallVersion_DoesNotAddVersionInstallerResource()
+    public void WithPerlbrewEnvironment_DoesNotAddVersionInstallerResource()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -519,7 +504,9 @@ public class PerlbrewEnvironmentTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Empty(appModel.Resources.OfType<PerlVersionInstallerResource>());
+        Assert.DoesNotContain(
+            appModel.Resources.OfType<ExecutableResource>(),
+            resource => resource.Name == "perl-app-perl-5-38-0-perlbrew-installer");
     }
 
     #endregion

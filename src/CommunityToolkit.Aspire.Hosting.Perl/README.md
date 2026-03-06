@@ -30,6 +30,10 @@ print "Hello world!\r\n";
 
 https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-perl
 
+## Roadmap
+
+See `docs/roadmap.md` for notes on planned work for the Perl integration.
+
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
