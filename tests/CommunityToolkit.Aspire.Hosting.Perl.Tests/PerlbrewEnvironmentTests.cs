@@ -12,7 +12,7 @@ public class PerlbrewEnvironmentTests
 {
     #region PerlbrewEnvironment Utility Class
 
-    [Fact]
+    [LinuxOnlyFact]
     public void NormalizeVersion_PrefixesPerlWhenMissing()
     {
         var result = PerlbrewEnvironment.NormalizeVersion("5.38.0");
@@ -20,7 +20,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal("perl-5.38.0", result);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void NormalizeVersion_KeepsExistingPrefix()
     {
         var result = PerlbrewEnvironment.NormalizeVersion("perl-5.38.0");
@@ -28,15 +28,17 @@ public class PerlbrewEnvironmentTests
         Assert.Equal("perl-5.38.0", result);
     }
 
-    [Fact]
-    public void NormalizeVersion_IsCaseInsensitive()
+    [LinuxOnlyFact]
+    public void NormalizeVersion_NormalizesUpperCasePrefixToLower()
     {
+        // Perlbrew installs under a lowercase directory name regardless of input casing.
+        // NormalizeVersion must always emit a lowercase "perl-" prefix.
         var result = PerlbrewEnvironment.NormalizeVersion("Perl-5.38.0");
 
-        Assert.Equal("Perl-5.38.0", result);
+        Assert.Equal("perl-5.38.0", result);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void ResolvePerlbrewRoot_UsesExplicitValue()
     {
         var result = PerlbrewEnvironment.ResolvePerlbrewRoot("/custom/perlbrew");
@@ -44,7 +46,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal("/custom/perlbrew", result);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void ResolvePerlbrewRoot_FallsBackToDefault()
     {
         // When no explicit root and no env var, falls back to ~/perl5/perlbrew
@@ -54,7 +56,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, result);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void GetExecutable_ReturnsCorrectPath()
     {
         var env = new PerlbrewEnvironment("/home/user/perl5/perlbrew", "perl-5.38.0");
@@ -65,7 +67,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, perlPath);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void GetExecutable_ResolveCpanm()
     {
         var env = new PerlbrewEnvironment("/home/user/perl5/perlbrew", "perl-5.38.0");
@@ -76,7 +78,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, cpanmPath);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void BinPath_IsCorrect()
     {
         var env = new PerlbrewEnvironment("/home/user/perl5/perlbrew", "perl-5.38.0");
@@ -85,7 +87,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, env.BinPath);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void VersionPath_IsCorrect()
     {
         var env = new PerlbrewEnvironment("/home/user/perl5/perlbrew", "perl-5.38.0");
@@ -94,7 +96,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, env.VersionPath);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void Properties_ReturnConstructorValues()
     {
         var env = new PerlbrewEnvironment("/opt/perlbrew", "perl-5.40.0");
@@ -107,7 +109,7 @@ public class PerlbrewEnvironmentTests
 
     #region WithPerlbrewEnvironment Extension
 
-    [Fact]
+    [LinuxOnlyFact]
     public void WithPerlbrewEnvironment_ChangesCommand()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -124,7 +126,24 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, resource.Command);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
+    public void WithPerlbrew_ChangesCommand()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrew("5.38.0", perlbrewRoot: "/home/user/perl5/perlbrew");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var expected = Path.Combine("/home/user/perl5/perlbrew", "perls", "perl-5.38.0", "bin", "perl");
+        Assert.Equal(expected, resource.Command);
+    }
+
+    [LinuxOnlyFact]
     public void WithPerlbrewEnvironment_AcceptsFullVersionName()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -141,7 +160,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, resource.Command);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void WithPerlbrewEnvironment_AttachesAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -160,7 +179,7 @@ public class PerlbrewEnvironmentTests
         Assert.NotNull(annotation.Environment);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void WithPerlbrewEnvironment_AnnotationHasResolvedEnvironment()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -182,7 +201,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expectedBinPath, env.BinPath);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void WithPerlbrewEnvironment_AddsPerlbrewRequiredCommand()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -204,7 +223,7 @@ public class PerlbrewEnvironmentTests
         Assert.Contains(annotations, a => a.Command == "perlbrew" && a.HelpLink == "https://perlbrew.pl/");
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public async Task WithPerlbrewEnvironment_SetsEnvironmentVariables()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -233,7 +252,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expectedHome, envVars["PERLBREW_HOME"]?.ToString());
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public async Task WithPerlbrewEnvironment_PrependsBinToPath()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -261,7 +280,7 @@ public class PerlbrewEnvironmentTests
         Assert.StartsWith(expectedBinPath, path);
     }
 
-    [Fact]
+    [LinuxOnlyFact]
     public void WithPerlbrewEnvironment_ReplacesAnnotationOnSecondCall()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -289,7 +308,7 @@ public class PerlbrewEnvironmentTests
 
     #region Installer Integration
 
-    [Fact]
+    [LinuxOnlyFact]
     public void WithPerlbrewEnvironmentAndCpanm_InstallerGetsPerlbrewAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -308,11 +327,54 @@ public class PerlbrewEnvironmentTests
         Assert.NotNull(annotation.Environment);
     }
 
+    [LinuxOnlyFact]
+    public void WithPerlbrewEnvironmentAndCpanm_AddsCpanmBootstrapInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root")
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var cpanmBootstrapInstaller = Assert.Single(appModel.Resources.OfType<PerlCpanmInstallerResource>());
+
+        Assert.Equal("perl-app-perlbrew-cpanm-installer", cpanmBootstrapInstaller.Name);
+    }
+
+    [LinuxOnlyFact]
+    public void WithPerlbrewEnvironmentAndCpanm_ModuleInstallerWaitsForBootstrapInstaller()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root")
+            .WithCpanm("OpenTelemetry::SDK");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var cpanmBootstrapInstaller = Assert.Single(appModel.Resources.OfType<PerlCpanmInstallerResource>());
+        var moduleInstaller = appModel.Resources
+            .OfType<PerlModuleInstallerResource>()
+            .Single(r => r.Name.Contains("OpenTelemetry", StringComparison.Ordinal));
+
+        var appResource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+        PerlAppResourceBuilderExtensions.SetupDependencies(builder, appResource);
+
+        Assert.Contains(
+            moduleInstaller.Annotations.OfType<WaitAnnotation>(),
+            wait => wait.Resource == cpanmBootstrapInstaller && wait.WaitType == WaitType.WaitForCompletion);
+    }
+
     #endregion
 
     #region Validation Messaging
 
-    [Fact]
+    [LinuxOnlyFact]
     public async Task WithPerlbrewEnvironment_OnWindows_ValidationWarnsAboutBerrybrew()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -346,6 +408,118 @@ public class PerlbrewEnvironmentTests
             Assert.False(result.IsValid);
             Assert.Contains("not installed", result.ValidationMessage);
         }
+    }
+
+    [LinuxOnlyFact]
+    public async Task WithPerlbrewEnvironment_WhenVersionMissing_ShowsInstallInstructions()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var perlbrewAnnotation = resource.Annotations
+            .OfType<RequiredCommandAnnotation>()
+            .Single(a => a.Command == "perlbrew");
+
+        var context = new RequiredCommandValidationContext("perlbrew", app.Services, CancellationToken.None);
+        var result = await perlbrewAnnotation.ValidationCallback!(context);
+
+        Assert.False(result.IsValid);
+        Assert.Contains("Install with: perlbrew install perl-5.38.0", result.ValidationMessage);
+        Assert.Contains("sudo apt install perlbrew", result.ValidationMessage);
+        Assert.Contains("perlbrew website", result.ValidationMessage);
+    }
+
+    [LinuxOnlyFact]
+    public async Task WithPerlbrewEnvironment_WithInstallVersion_ValidationSucceedsWhenVersionMissing()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root", installVersion: true);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var perlbrewAnnotation = resource.Annotations
+            .OfType<RequiredCommandAnnotation>()
+            .Single(a => a.Command == "perlbrew");
+
+        var context = new RequiredCommandValidationContext("perlbrew", app.Services, CancellationToken.None);
+        var result = await perlbrewAnnotation.ValidationCallback!(context);
+
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.False(result.IsValid);
+            Assert.Contains("not supported on Windows", result.ValidationMessage);
+        }
+        else
+        {
+            Assert.True(result.IsValid);
+        }
+    }
+
+    [LinuxOnlyFact]
+    public async Task WithPerlbrewEnvironmentAndCpanMinus_ValidationAllowsCpanmBootstrapFlow()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root")
+            .WithCpanMinus();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var cpanmRequiredCommand = resource.Annotations
+            .OfType<RequiredCommandAnnotation>()
+            .Single(a => a.Command == "cpanm");
+
+        var context = new RequiredCommandValidationContext("cpanm", app.Services, CancellationToken.None);
+        var result = await cpanmRequiredCommand.ValidationCallback!(context);
+
+        Assert.True(result.IsValid);
+    }
+
+    [LinuxOnlyFact]
+    public void WithPerlbrewEnvironment_WithInstallVersion_AddsVersionInstallerResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root", installVersion: true);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installer = Assert.Single(appModel.Resources.OfType<PerlVersionInstallerResource>());
+
+        Assert.Equal("perl-app-perl-5-38-0-perlbrew-installer", installer.Name);
+    }
+
+    [LinuxOnlyFact]
+    public void WithPerlbrewEnvironment_WithoutInstallVersion_DoesNotAddVersionInstallerResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        Assert.Empty(appModel.Resources.OfType<PerlVersionInstallerResource>());
     }
 
     #endregion

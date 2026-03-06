@@ -69,8 +69,14 @@ internal sealed class PerlbrewEnvironment(string perlbrewRoot, string version)
     /// <returns>The normalized version string (e.g., <c>perl-5.38.0</c>).</returns>
     public static string NormalizeVersion(string version)
     {
-        return version.StartsWith("perl-", StringComparison.OrdinalIgnoreCase)
-            ? version
-            : $"perl-{version}";
+        // Always emit a canonical lowercase "perl-" prefix so the path resolves to
+        // the correct directory under $PERLBREW_ROOT/perls/.  Perlbrew installs every
+        // version under the lowercase name regardless of what the user typed.
+        if (version.StartsWith("perl-", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"perl-{version["perl-".Length..]}";
+        }
+
+        return $"perl-{version}";
     }
 }
