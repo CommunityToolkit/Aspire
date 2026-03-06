@@ -15,3 +15,17 @@ public sealed class LinuxOnlyFactAttribute : FactAttribute
         }
     }
 }
+
+/// <summary>
+/// Runs a test only on Windows and skips it on other operating systems.
+/// </summary>
+public sealed class WindowsOnlyFactAttribute : FactAttribute
+{
+    public WindowsOnlyFactAttribute()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Skip = "Test requires Windows.";
+        }
+    }
+}

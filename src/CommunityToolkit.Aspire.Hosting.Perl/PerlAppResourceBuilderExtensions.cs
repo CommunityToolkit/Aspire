@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable ASPIREEXTENSION001
 #pragma warning disable ASPIRECOMMAND001
+#pragma warning disable ASPIREINTERACTION001
 #pragma warning disable ASPIREDOCKERFILEBUILDER001
 
 namespace Aspire.Hosting;
@@ -346,6 +347,39 @@ public static class PerlAppResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(version);
 
+        // Perlbrew is unsupported on Windows. Fail early with explicit guidance and avoid
+        // any perlbrew path or version checks in this code path.
+        if (OperatingSystem.IsWindows())
+        {
+            const string windowsMessage =
+                "Perlbrew is unsupported on Windows. " +
+                "The recommendation is to use Berrybrew. " +
+                "Support for Berrybrew is on the roadmap for a future release.";
+            const string berrybrewLink = "https://github.com/stevieb9/berrybrew";
+
+            builder.ApplicationBuilder.Eventing.Subscribe<BeforeResourceStartedEvent>(builder.Resource, async (evt, ct) =>
+            {
+                var interactionService = evt.Services.GetService<IInteractionService>();
+                if (interactionService is not null && interactionService.IsAvailable)
+                {
+                    await interactionService.PromptNotificationAsync(
+                        title: "Perlbrew on Windows",
+                        message: windowsMessage,
+                        options: new NotificationInteractionOptions
+                        {
+                            Intent = MessageIntent.Warning,
+                            LinkText = "Installation instructions",
+                            LinkUrl = berrybrewLink,
+                        },
+                        cancellationToken: ct).ConfigureAwait(false);
+                }
+
+                throw new InvalidOperationException(windowsMessage);
+            });
+
+            return builder;
+        }
+
         var normalizedVersion = PerlbrewEnvironment.NormalizeVersion(version);
         var resolvedRoot = PerlbrewEnvironment.ResolvePerlbrewRoot(perlbrewRoot);
         var environment = new PerlbrewEnvironment(resolvedRoot, normalizedVersion);
@@ -380,19 +414,15 @@ public static class PerlAppResourceBuilderExtensions
                 : binPath;
         });
 
-        // Validate that the perlbrew perl version is installed (perlbrew is not available on Windows)
+        // Validate that the perlbrew perl version is installed.
         builder.WithRequiredCommand("perlbrew", _ => Task.FromResult(
-            OperatingSystem.IsWindows()
-                ? RequiredCommandValidationResult.Failure(
-                    "Perlbrew is not supported on Windows. " +
-                    "Berrybrew (https://github.com/stevieb9/berrybrew) support is planned for a future release.")
-                : File.Exists(perlExecutable)
-                    ? RequiredCommandValidationResult.Success()
-                    : RequiredCommandValidationResult.Failure(
-                        $"Perlbrew Perl version '{normalizedVersion}' is not installed. " +
-                        $"Expected: '{perlExecutable}'. " +
-                        $"Install with: perlbrew install {normalizedVersion}. " +
-                        "You may install perlbrew on linux with 'sudo apt install perlbrew' or using the intructions at the perlbrew website.")),
+            File.Exists(perlExecutable)
+                ? RequiredCommandValidationResult.Success()
+                : RequiredCommandValidationResult.Failure(
+                    $"Perlbrew Perl version '{normalizedVersion}' is not installed. " +
+                    $"Expected: '{perlExecutable}'. " +
+                    $"Install with: perlbrew install {normalizedVersion}. " +
+                    "You may install perlbrew on linux with 'sudo apt install perlbrew' or using the intructions at the perlbrew website.")),
             "https://perlbrew.pl/");
 
         return builder;
