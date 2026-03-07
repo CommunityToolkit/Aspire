@@ -214,6 +214,8 @@ install_packages() {
 }
 
 configure_nuget_source() {
+    nuget_config=""
+
     if ! command -v dotnet &>/dev/null; then
         say_warn "dotnet CLI not found — configure NuGet source manually:"
         say "   ${DIM}dotnet nuget add source \"${hive_dir}\" --name \"${source_name}\"${RESET}"
@@ -227,10 +229,9 @@ configure_nuget_source() {
     fi
 
     local config_display=""
-    local config_path
-    config_path=$(dotnet nuget config paths 2>/dev/null | head -n 1)
-    if [[ -n "$config_path" ]]; then
-        config_display=" in $(display_path "$config_path")"
+    nuget_config=$(dotnet nuget config paths 2>/dev/null | head -n 1)
+    if [[ -n "$nuget_config" ]]; then
+        config_display=" in $(display_path "$nuget_config")"
     fi
     say "🔧 Configured source ${BOLD}${source_name}${RESET}${config_display}"
 }
@@ -243,7 +244,11 @@ print_summary() {
 
     say ""
     say "${DIM}To undo:${RESET}"
-    say "  ${DIM}dotnet nuget remove source \"${source_name}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
+    if [[ -n "${nuget_config:-}" ]]; then
+        say "  ${DIM}dotnet nuget remove source \"${source_name}\" --configfile \"${nuget_config}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
+    else
+        say "  ${DIM}dotnet nuget remove source \"${source_name}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
+    fi
 
     if [[ "$KEEP_ARCHIVE" == true ]]; then
         say ""

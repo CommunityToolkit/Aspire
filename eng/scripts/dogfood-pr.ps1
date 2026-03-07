@@ -209,21 +209,19 @@ function Register-NuGetSource {
         return
     }
 
-    $script:NuGetConfig = (& dotnet nuget config paths 2>$null | Select-Object -First 1)
-
-    if (-not $script:NuGetConfig) {
-        Write-Host "⚠ Could not determine NuGet config file — configure manually:" -ForegroundColor Yellow
-        Write-Host "   dotnet nuget add source `"$hiveDir`" --name `"$sourceName`"" -ForegroundColor DarkGray
-        return
-    }
-
-    $existingSources = & dotnet nuget list source --configfile $script:NuGetConfig 2>$null
+    $existingSources = & dotnet nuget list source 2>$null
     if ($existingSources -match [regex]::Escape($sourceName)) {
-        & dotnet nuget update source $sourceName --source $hiveDir --configfile $script:NuGetConfig 2>&1 | Out-Null
+        & dotnet nuget update source $sourceName --source $hiveDir 2>&1 | Out-Null
     } else {
-        & dotnet nuget add source $hiveDir --name $sourceName --configfile $script:NuGetConfig 2>&1 | Out-Null
+        & dotnet nuget add source $hiveDir --name $sourceName 2>&1 | Out-Null
     }
-    Write-Host "🔧 Configured source $sourceName in $(Get-DisplayPath $script:NuGetConfig)"
+
+    $script:NuGetConfig = (& dotnet nuget config paths 2>$null | Select-Object -First 1)
+    if ($script:NuGetConfig) {
+        Write-Host "🔧 Configured source $sourceName in $(Get-DisplayPath $script:NuGetConfig)"
+    } else {
+        Write-Host "🔧 Configured source $sourceName"
+    }
 }
 
 function Write-Summary {
