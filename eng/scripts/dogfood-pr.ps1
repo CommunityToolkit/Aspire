@@ -227,12 +227,11 @@ function Write-Summary {
 
     Write-Host ""
     Write-Host "To undo:" -ForegroundColor DarkGray
-    $hivePath = Get-DisplayPath (Join-Path $InstallPath "hives" "community-toolkit-pr-$PRNumber")
+    $hivePath = Join-Path $InstallPath "hives" "community-toolkit-pr-$PRNumber"
     if ($script:NuGetConfig) {
-        $configPath = Get-DisplayPath $script:NuGetConfig
-        Write-Host "  dotnet nuget remove source `"$sourceName`" --configfile $configPath > `$null && rm -rf $hivePath" -ForegroundColor DarkGray
+        Write-Host "  dotnet nuget remove source `"$sourceName`" --configfile `"$($script:NuGetConfig)`" > `$null && rm -rf `"$hivePath`"" -ForegroundColor DarkGray
     } else {
-        Write-Host "  dotnet nuget remove source `"$sourceName`" > `$null && rm -rf $hivePath" -ForegroundColor DarkGray
+        Write-Host "  dotnet nuget remove source `"$sourceName`" > `$null && rm -rf `"$hivePath`"" -ForegroundColor DarkGray
     }
 
     if ($KeepArchive) {

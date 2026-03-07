@@ -221,9 +221,9 @@ print_summary() {
     say ""
     say "${DIM}To undo:${RESET}"
     if [[ -n "${nuget_config:-}" ]]; then
-        say "  ${DIM}dotnet nuget remove source \"${source_name}\" --configfile $(display_path "$nuget_config") > /dev/null && rm -rf $(display_path "${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}")${RESET}"
+        say "  ${DIM}dotnet nuget remove source \"${source_name}\" --configfile \"${nuget_config}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
     else
-        say "  ${DIM}dotnet nuget remove source \"${source_name}\" > /dev/null && rm -rf $(display_path "${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}")${RESET}"
+        say "  ${DIM}dotnet nuget remove source \"${source_name}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
     fi
 
     if [[ "$KEEP_ARCHIVE" == true ]]; then
