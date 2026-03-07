@@ -124,25 +124,35 @@ check_prerequisites() {
         say_err "GitHub CLI is not authenticated. Run: gh auth login"
         exit 1
     fi
+
+    if ! command -v unzip &>/dev/null; then
+        say_err "unzip is required but not found"
+        exit 1
+    fi
 }
 
 resolve_pull_request() {
     local pr_url="https://github.com/${REPO}/pull/${PR_NUMBER}"
-    local pr_json
-    pr_json=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '{sha: .head.sha, title: .title, author: .user.login}' 2>/dev/null) || {
+    head_sha=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.head.sha' 2>/dev/null) || {
         say_err "PR #${PR_NUMBER} not found in ${REPO}"
         exit 1
     }
 
-    head_sha=$(echo "$pr_json" | jq -r '.sha')
     local pr_title pr_author
-    pr_title=$(echo "$pr_json" | jq -r '.title')
-    pr_author=$(echo "$pr_json" | jq -r '.author')
+    pr_title=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.title' 2>/dev/null)
+    pr_author=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.user.login' 2>/dev/null)
 
     local author_display
     author_display="$(link "https://github.com/${pr_author}" "@${pr_author}")"
 
     say ""
+    local cols=${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}
+    local prefix="PR #${PR_NUMBER} — "
+    local suffix=" by @${pr_author}"
+    local max_title=$((cols - ${#prefix} - ${#suffix} - 2))
+    if [[ ${#pr_title} -gt $max_title && $max_title -gt 3 ]]; then
+        pr_title="${pr_title:0:$((max_title - 1))}…"
+    fi
     say "$(link "$pr_url" "PR #${PR_NUMBER}") — ${BOLD}${pr_title}${RESET} ${DIM}by ${author_display}${RESET}"
     verbose "Head commit: $(link "https://github.com/${REPO}/commit/${head_sha}" "${head_sha:0:7}")"
     say ""
@@ -197,33 +207,32 @@ install_packages() {
     local first_pkg
     first_pkg=$(find "$download_dir" -name '*.nupkg' -print -quit)
     if [[ -n "$first_pkg" ]]; then
-        version=$(unzip -p "$first_pkg" "*.nuspec" 2>/dev/null | grep -oP '<version>\K[^<]+')
+        version=$(unzip -p "$first_pkg" "*.nuspec" 2>/dev/null \
+            | sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' \
+            | head -n 1)
     fi
 }
 
 configure_nuget_source() {
-    nuget_config=""
-
     if ! command -v dotnet &>/dev/null; then
         say_warn "dotnet CLI not found — configure NuGet source manually:"
         say "   ${DIM}dotnet nuget add source \"${hive_dir}\" --name \"${source_name}\"${RESET}"
         return
     fi
 
-    nuget_config=$(dotnet nuget config paths 2>/dev/null | sed -n '1p')
-
-    if [[ -z "$nuget_config" ]]; then
-        say_warn "Could not determine NuGet config file — configure manually:"
-        say "   ${DIM}dotnet nuget add source \"${hive_dir}\" --name \"${source_name}\"${RESET}"
-        return
-    fi
-
-    if dotnet nuget list source --configfile "$nuget_config" 2>/dev/null | grep -Fq "$source_name"; then
-        dotnet nuget update source "$source_name" --source "$hive_dir" --configfile "$nuget_config" &>/dev/null
+    if dotnet nuget list source 2>/dev/null | grep -Fq "$source_name"; then
+        dotnet nuget update source "$source_name" --source "$hive_dir" &>/dev/null
     else
-        dotnet nuget add source "$hive_dir" --name "$source_name" --configfile "$nuget_config" &>/dev/null
+        dotnet nuget add source "$hive_dir" --name "$source_name" &>/dev/null
     fi
-    say "⚙️  Configured source ${BOLD}${source_name}${RESET} in $(display_path "$nuget_config")"
+
+    local config_display=""
+    local config_path
+    config_path=$(dotnet nuget config paths 2>/dev/null | head -n 1)
+    if [[ -n "$config_path" ]]; then
+        config_display=" in $(display_path "$config_path")"
+    fi
+    say "🔧 Configured source ${BOLD}${source_name}${RESET}${config_display}"
 }
 
 print_summary() {
@@ -234,11 +243,7 @@ print_summary() {
 
     say ""
     say "${DIM}To undo:${RESET}"
-    if [[ -n "${nuget_config:-}" ]]; then
-        say "  ${DIM}dotnet nuget remove source \"${source_name}\" --configfile \"${nuget_config}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
-    else
-        say "  ${DIM}dotnet nuget remove source \"${source_name}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
-    fi
+    say "  ${DIM}dotnet nuget remove source \"${source_name}\" > /dev/null && rm -rf \"${INSTALL_PREFIX}/hives/community-toolkit-pr-${PR_NUMBER}\"${RESET}"
 
     if [[ "$KEEP_ARCHIVE" == true ]]; then
         say ""
@@ -248,7 +253,7 @@ print_summary() {
     if [[ "$VERBOSE" == true ]]; then
         say ""
         say "${DIM}Packages:${RESET}"
-        find "$hive_dir" -name '*.nupkg' -printf '  %f\n' | sort >&2
+        find "$hive_dir" -name '*.nupkg' -exec basename {} \; | sed 's/^/  /' | sort >&2
     fi
 }
 

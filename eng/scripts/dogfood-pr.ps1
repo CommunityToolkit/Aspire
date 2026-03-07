@@ -124,6 +124,13 @@ function Resolve-PullRequest {
     $authorDisplay = Write-Link "https://github.com/$prAuthor" "@$prAuthor"
 
     Write-Host ""
+    $cols = if ($Host.UI.RawUI.WindowSize.Width) { $Host.UI.RawUI.WindowSize.Width } else { 80 }
+    $prefix = "PR #$PRNumber — "
+    $suffix = " by @$prAuthor"
+    $maxTitle = $cols - $prefix.Length - $suffix.Length - 2
+    if ($prTitle.Length -gt $maxTitle -and $maxTitle -gt 3) {
+        $prTitle = $prTitle.Substring(0, $maxTitle - 1) + "…"
+    }
     Write-Host "$(Write-Link $prUrl "PR #$PRNumber") — $prTitle by $authorDisplay"
     if ($VerboseOutput) { Write-Host "  Head commit: $(Write-Link "https://github.com/$($Script:Repo)/commit/$($script:HeadSha)" $script:HeadSha.Substring(0,7))" -ForegroundColor DarkGray }
     Write-Host ""
@@ -216,7 +223,7 @@ function Register-NuGetSource {
     } else {
         & dotnet nuget add source $hiveDir --name $sourceName --configfile $script:NuGetConfig 2>&1 | Out-Null
     }
-    Write-Host "⚙️  Configured source $sourceName in $(Get-DisplayPath $script:NuGetConfig)"
+    Write-Host "🔧 Configured source $sourceName in $(Get-DisplayPath $script:NuGetConfig)"
 }
 
 function Write-Summary {
