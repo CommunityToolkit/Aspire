@@ -73,8 +73,22 @@ parse_arguments() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -h|--help)       show_help; exit 0 ;;
-            -r|--run-id)     RUN_ID="$2"; shift 2 ;;
-            --install-path)  INSTALL_PREFIX="$2"; shift 2 ;;
+            -r|--run-id)
+                if [[ $# -lt 2 || "$2" == -* ]]; then
+                    say_err "--run-id requires a value"
+                    show_help
+                    exit 1
+                fi
+                RUN_ID="$2"; shift 2
+                ;;
+            --install-path)
+                if [[ $# -lt 2 || "$2" == -* ]]; then
+                    say_err "--install-path requires a value"
+                    show_help
+                    exit 1
+                fi
+                INSTALL_PREFIX="$2"; shift 2
+                ;;
             -v|--verbose)    VERBOSE=true; shift ;;
             -k|--keep-archive) KEEP_ARCHIVE=true; shift ;;
             -*)              say_err "Unknown option: $1"; show_help; exit 1 ;;
