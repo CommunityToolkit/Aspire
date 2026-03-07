@@ -302,6 +302,34 @@ public class PackageManagementTests
             PerlAppResourceBuilderExtensions.BuildInstallArgs((PerlPackageManager)99, "SomeModule", force: false, skipTest: false));
     }
 
+    [Fact]
+    public void BuildInstallArgs_CpanmWithLocalLib()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(
+            PerlPackageManager.Cpanm, "Mojolicious", force: false, skipTest: false, localLibPath: "/app/local");
+
+        Assert.Equal(["--local-lib", "/app/local", "Mojolicious"], args);
+    }
+
+    [Fact]
+    public void BuildInstallArgs_CpanmWithLocalLibAndForceAndNoTest()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(
+            PerlPackageManager.Cpanm, "Mojolicious", force: true, skipTest: true, localLibPath: "/app/local");
+
+        Assert.Equal(["--local-lib", "/app/local", "--force", "--notest", "Mojolicious"], args);
+    }
+
+    [Fact]
+    public void BuildInstallArgs_CpanWithLocalLib_DoesNotAddFlag()
+    {
+        // cpan does not support --local-lib; it relies on env vars instead
+        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(
+            PerlPackageManager.Cpan, "DBI", force: false, skipTest: false, localLibPath: "/app/local");
+
+        Assert.Equal(["DBI"], args);
+    }
+
     #endregion
 
     #region AddPerlApi with Packages
@@ -475,7 +503,7 @@ public class PackageManagementTests
     }
 
     [Fact]
-    public void WithLocalLibWithoutCarton_ProjectInstallerDoesNotGetLocalLibEnvironment()
+    public void WithLocalLibWithoutCarton_ProjectInstallerStillGetsLocalLibEnvironment()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -489,7 +517,7 @@ public class PackageManagementTests
         var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
 
         var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.Empty(envCallbacks);
+        Assert.NotEmpty(envCallbacks);
     }
 
     #endregion
@@ -534,6 +562,25 @@ public class PackageManagementTests
     {
         Assert.Throws<NotSupportedException>(() =>
             PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpan, cartonDeployment: false));
+    }
+
+    [Fact]
+    public void BuildProjectInstallArgs_CpanmWithLocalLib()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(
+            PerlPackageManager.Cpanm, cartonDeployment: false, localLibPath: "/app/local");
+
+        Assert.Equal(["--local-lib", "/app/local", "--installdeps", "--notest", "."], args);
+    }
+
+    [Fact]
+    public void BuildProjectInstallArgs_CartonWithLocalLib_DoesNotAddFlag()
+    {
+        // Carton manages its own local directory; --local-lib is not used
+        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(
+            PerlPackageManager.Carton, cartonDeployment: false, localLibPath: "/app/local");
+
+        Assert.Equal(["install"], args);
     }
 
     #endregion
@@ -878,6 +925,25 @@ public class PackageManagementTests
 
         var envCallbacks = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
         Assert.True(envCallbacks.Count > 0);
+    }
+
+    [Fact]
+    public void WithPackageAndLocalLib_InstallerGetsLocalLibEnvironment()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage("Mojolicious")
+            .WithLocalLib("local");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+
+        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.NotEmpty(envCallbacks);
     }
 
     #endregion

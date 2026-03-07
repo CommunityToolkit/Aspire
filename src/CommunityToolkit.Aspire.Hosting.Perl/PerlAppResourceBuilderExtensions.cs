@@ -606,6 +606,7 @@ public static class PerlAppResourceBuilderExtensions
         });
 
         TryAttachLocalLibEnvironmentToProjectInstaller(builder);
+        TryAttachLocalLibToExistingInstallers(builder);
 
         return builder;
     }
@@ -702,6 +703,23 @@ public static class PerlAppResourceBuilderExtensions
         return "perl";
     }
 
+    /// <summary>
+    /// Resolves the local::lib path from the resource's <see cref="PerlLocalLibAnnotation"/>,
+    /// returning <c>null</c> when no local::lib is configured.
+    /// </summary>
+    private static string? ResolveLocalLibPath(PerlAppResource resource)
+    {
+        if (!resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
+        {
+            return null;
+        }
+
+        var appDir = resource.WorkingDirectory ?? ".";
+        return Path.IsPathRooted(localLibAnnotation.Path)
+            ? localLibAnnotation.Path
+            : Path.GetFullPath(Path.Combine(appDir, localLibAnnotation.Path));
+    }
+
     private static void AddInstaller<TResource>(IResourceBuilder<TResource> resource, string moduleName, bool install) where TResource : PerlAppResource
     {
         // Only install packages if in run mode
@@ -796,12 +814,25 @@ public static class PerlAppResourceBuilderExtensions
                     .WithCommand(command)
                     .WithWorkingDirectory(resource.Resource.WorkingDirectory)
                     .WithArgs(installCommand.Args);
+
+                // Propagate local::lib environment to the installer so it installs to the right location
+                var localLibPath = ResolveLocalLibPath(resource.Resource);
+                if (localLibPath is not null)
+                {
+                    installerBuilder.WithEnvironment(context =>
+                    {
+                        ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+                    });
+                }
             });
 
             // Make the parent resource wait for the installer to complete
             resource.WaitForCompletion(installerBuilder);
 
             resource.WithAnnotation(new PerlModuleInstallerAnnotation(installer));
+
+            // Eagerly propagate local::lib env vars if the annotation already exists
+            TryAttachLocalLibToInstallerResource(installer, resource.Resource);
         }
     }
 
@@ -863,7 +894,8 @@ public static class PerlAppResourceBuilderExtensions
             }
 
             var command = packageManager.ExecutableName;
-            var installArgs = BuildInstallArgs(packageManager.PackageManager, packageName, force, skipTest);
+            var localLibPath = ResolveLocalLibPath(resource.Resource);
+            var installArgs = BuildInstallArgs(packageManager.PackageManager, packageName, force, skipTest, localLibPath);
 
             // If a perlbrew environment is active, resolve the package manager from its bin directory
             // and propagate the perlbrew environment variables to the installer
@@ -893,12 +925,24 @@ public static class PerlAppResourceBuilderExtensions
                 .WithCommand(command)
                 .WithWorkingDirectory(resource.Resource.WorkingDirectory)
                 .WithArgs(installArgs);
+
+            // Propagate local::lib environment to the installer so it installs to the right location
+            if (localLibPath is not null)
+            {
+                installerBuilder.WithEnvironment(context =>
+                {
+                    ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+                });
+            }
         });
 
         // Make the parent resource wait for the installer to complete
         resource.WaitForCompletion(installerBuilder);
 
         resource.WithAnnotation(new PerlModuleInstallerAnnotation(installer));
+
+        // Eagerly propagate local::lib env vars if the annotation already exists
+        TryAttachLocalLibToInstallerResource(installer, resource.Resource);
     }
 
     /// <summary>
@@ -975,7 +1019,8 @@ public static class PerlAppResourceBuilderExtensions
             }
 
             var command = packageManager.ExecutableName;
-            var installArgs = BuildProjectInstallArgs(packageManager.PackageManager, cartonDeployment);
+            var localLibPath = ResolveLocalLibPath(resource.Resource);
+            var installArgs = BuildProjectInstallArgs(packageManager.PackageManager, cartonDeployment, localLibPath);
 
             if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
                 perlbrewAnnotation.Environment is { } perlbrewEnv)
@@ -1003,6 +1048,15 @@ public static class PerlAppResourceBuilderExtensions
                 .WithCommand(command)
                 .WithWorkingDirectory(resource.Resource.WorkingDirectory ?? string.Empty)
                 .WithArgs(installArgs);
+
+            // Propagate local::lib environment to the installer so it installs to the right location
+            if (localLibPath is not null)
+            {
+                installerBuilder.WithEnvironment(context =>
+                {
+                    ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+                });
+            }
         });
 
         resource.WaitForCompletion(installerBuilder);
@@ -1030,22 +1084,38 @@ public static class PerlAppResourceBuilderExtensions
             return;
         }
 
-        if (!resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation) ||
+        if (!resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out _) ||
             !resource.Resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectInstallerAnnotation))
         {
             return;
         }
 
-        if (projectInstallerAnnotation.Resource.Annotations.OfType<PerlLocalLibInstallerEnvironmentAnnotation>().Any())
+        TryAttachLocalLibToInstallerResource(projectInstallerAnnotation.Resource, resource.Resource);
+    }
+
+    /// <summary>
+    /// Attaches local::lib environment variables to a single installer resource.
+    /// Uses <see cref="PerlLocalLibInstallerEnvironmentAnnotation"/> as a guard to prevent duplicates.
+    /// </summary>
+    private static void TryAttachLocalLibToInstallerResource(
+        ExecutableResource installerResource,
+        PerlAppResource parentResource)
+    {
+        if (!parentResource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
         {
             return;
         }
 
-        projectInstallerAnnotation.Resource.Annotations.Add(new PerlLocalLibInstallerEnvironmentAnnotation());
-
-        projectInstallerAnnotation.Resource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+        if (installerResource.Annotations.OfType<PerlLocalLibInstallerEnvironmentAnnotation>().Any())
         {
-            var appDir = resource.Resource.WorkingDirectory ?? ".";
+            return;
+        }
+
+        installerResource.Annotations.Add(new PerlLocalLibInstallerEnvironmentAnnotation());
+
+        installerResource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+        {
+            var appDir = parentResource.WorkingDirectory ?? ".";
             var localLibPath = Path.IsPathRooted(localLibAnnotation.Path)
                 ? localLibAnnotation.Path
                 : Path.GetFullPath(Path.Combine(appDir, localLibAnnotation.Path));
@@ -1056,6 +1126,30 @@ public static class PerlAppResourceBuilderExtensions
     }
 
     /// <summary>
+    /// Eagerly propagates local::lib environment to all existing installer child resources.
+    /// Called from <see cref="WithLocalLib{TResource}"/> to handle the case where installers
+    /// were created before <c>WithLocalLib</c> in the fluent chain.
+    /// </summary>
+    private static void TryAttachLocalLibToExistingInstallers<TResource>(
+        IResourceBuilder<TResource> resource) where TResource : PerlAppResource
+    {
+        if (!resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out _))
+        {
+            return;
+        }
+
+        foreach (var moduleAnnotation in resource.Resource.Annotations.OfType<PerlModuleInstallerAnnotation>())
+        {
+            TryAttachLocalLibToInstallerResource(moduleAnnotation.Resource, resource.Resource);
+        }
+
+        if (resource.Resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectAnnotation))
+        {
+            TryAttachLocalLibToInstallerResource(projectAnnotation.Resource, resource.Resource);
+        }
+    }
+
+    /// <summary>
     /// Builds the correct CLI arguments for installing a package based on the package manager.
     /// </summary>
     /// <remarks>
@@ -1063,13 +1157,18 @@ public static class PerlAppResourceBuilderExtensions
     /// <para>cpan:  <c>cpan [-f] [-T] [-i] PackageName</c> (where <c>-i</c> is required when <c>-f</c> is used)</para>
     /// <para>carton: not supported for individual packages — throws.</para>
     /// </remarks>
-    internal static string[] BuildInstallArgs(PerlPackageManager packageManager, string packageName, bool force, bool skipTest)
+    internal static string[] BuildInstallArgs(PerlPackageManager packageManager, string packageName, bool force, bool skipTest, string? localLibPath = null)
     {
         var args = new List<string>();
 
         switch (packageManager)
         {
             case PerlPackageManager.Cpanm:
+                if (localLibPath is not null)
+                {
+                    args.Add("--local-lib");
+                    args.Add(localLibPath);
+                }
                 if (force) args.Add("--force");
                 if (skipTest) args.Add("--notest");
                 args.Add(packageName);
@@ -1103,11 +1202,13 @@ public static class PerlAppResourceBuilderExtensions
     /// <para>carton: <c>carton install [--deployment]</c></para>
     /// <para>cpan: not supported for project-level installs — throws.</para>
     /// </remarks>
-    internal static string[] BuildProjectInstallArgs(PerlPackageManager packageManager, bool cartonDeployment)
+    internal static string[] BuildProjectInstallArgs(PerlPackageManager packageManager, bool cartonDeployment, string? localLibPath = null)
     {
         return packageManager switch
         {
-            PerlPackageManager.Cpanm => ["--installdeps", "--notest", "."],
+            PerlPackageManager.Cpanm => localLibPath is not null
+                ? ["--local-lib", localLibPath, "--installdeps", "--notest", "."]
+                : ["--installdeps", "--notest", "."],
             PerlPackageManager.Carton => cartonDeployment
                 ? ["install", "--deployment"]
                 : ["install"],
