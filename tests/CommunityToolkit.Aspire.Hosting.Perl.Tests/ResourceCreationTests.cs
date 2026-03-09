@@ -1,6 +1,8 @@
 using Aspire.Hosting;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 
+#pragma warning disable CS0618
+
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class ResourceCreationTests
@@ -219,7 +221,7 @@ public class ResourceCreationTests
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
         Assert.True(resource.TryGetLastAnnotation<PerlModuleInstallCommandAnnotation>(out var annotation));
-        Assert.NotNull(annotation.Args);
+        Assert.Equal(["Mojolicious"], annotation.Args);
     }
 
     [Fact]

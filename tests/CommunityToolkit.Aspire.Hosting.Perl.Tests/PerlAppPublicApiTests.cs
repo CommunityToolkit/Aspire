@@ -1,6 +1,8 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
+#pragma warning disable CS0618
+
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlAppPublicApiTests

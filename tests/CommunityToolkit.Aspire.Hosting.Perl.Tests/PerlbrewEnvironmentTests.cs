@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable ASPIRECOMMAND001
 #pragma warning disable ASPIREINTERACTION001
+#pragma warning disable CS0618
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 

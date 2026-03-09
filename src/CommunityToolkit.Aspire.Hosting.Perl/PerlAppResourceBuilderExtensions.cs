@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable ASPIREEXTENSION001
@@ -399,19 +400,7 @@ public static class PerlAppResourceBuilderExtensions
         // Set perlbrew environment variables so child processes and libraries resolve correctly
         builder.WithEnvironment(context =>
         {
-            context.EnvironmentVariables["PERLBREW_ROOT"] = environment.PerlbrewRoot;
-            context.EnvironmentVariables["PERLBREW_PERL"] = environment.Version;
-            context.EnvironmentVariables["PERLBREW_HOME"] = Path.Combine(environment.PerlbrewRoot, ".perlbrew");
-
-            // Prepend the perlbrew bin to PATH so cpanm and other tools from this perl are found first
-            var binPath = environment.BinPath;
-            var existingPath = context.EnvironmentVariables.ContainsKey("PATH")
-                ? context.EnvironmentVariables["PATH"]
-                : null;
-
-            context.EnvironmentVariables["PATH"] = existingPath is not null
-                ? $"{binPath}{Path.PathSeparator}{existingPath}"
-                : binPath;
+            ApplyPerlbrewEnvironment(context.EnvironmentVariables, environment);
         });
 
         // Validate that the perlbrew perl version is installed.
@@ -440,22 +429,21 @@ public static class PerlAppResourceBuilderExtensions
     /// <param name="moduleName"></param>
     /// <param name="installArgs"></param>
     /// <returns></returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Obsolete("Use WithCpanMinus().WithPackage(moduleName) instead.")]
     public static IResourceBuilder<TResource> WithCpanm<TResource>(
         this IResourceBuilder<TResource> resource, string moduleName, string[]? installArgs = null) where TResource : PerlAppResource
     {
         ArgumentNullException.ThrowIfNull(resource);
         ArgumentException.ThrowIfNullOrEmpty(moduleName);
 
-        installArgs ??= GetDefaultCpanmInstallCommand(resource, moduleName, installArgs?.Contains("--force") ?? false);
-
-        // var foo = [moduleName, .. installArgs ?? []];
+        installArgs ??= BuildInstallArgs(PerlPackageManager.Cpanm, moduleName, force: false, skipTest: false);
 
         resource
             .WithCpanMinus()
-            .WithAnnotation(new PerlPackageManagerAnnotation(PerlPackageManager.Cpanm))
-            .WithAnnotation(new PerlModuleInstallCommandAnnotation(installArgs ?? []));
+            .WithAnnotation(new PerlModuleInstallCommandAnnotation(installArgs), ResourceAnnotationMutationBehavior.Replace);
 
-        AddInstaller(resource, moduleName, installArgs?.Any() ?? false);
+        AddInstaller(resource, moduleName, installArgs.Length > 0);
 
         return resource;
     }
@@ -597,11 +585,7 @@ public static class PerlAppResourceBuilderExtensions
 
         builder.WithEnvironment(context =>
         {
-            var appDir = builder.Resource.WorkingDirectory ?? ".";
-            var localLibPath = Path.IsPathRooted(path)
-                ? path
-                : Path.GetFullPath(Path.Combine(appDir, path));
-
+            var localLibPath = ResolveLocalLibPath(builder.Resource.WorkingDirectory, path);
             ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
         });
 
@@ -676,19 +660,6 @@ public static class PerlAppResourceBuilderExtensions
         return builder;
     }
 
-    private static string[]? GetDefaultCpanmInstallCommand(IResourceBuilder<PerlAppResource> resource, string moduleName, bool force = false)
-    {
-        if (resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                return ["cpanm install"];
-            }
-        }
-
-        return ["sudo", "cpanm", "install", moduleName, force ? "--force" : string.Empty];
-    }
-
     /// <summary>
     /// Resolves the perl executable path, accounting for perlbrew environments.
     /// </summary>
@@ -714,10 +685,52 @@ public static class PerlAppResourceBuilderExtensions
             return null;
         }
 
-        var appDir = resource.WorkingDirectory ?? ".";
-        return Path.IsPathRooted(localLibAnnotation.Path)
-            ? localLibAnnotation.Path
-            : Path.GetFullPath(Path.Combine(appDir, localLibAnnotation.Path));
+        return ResolveLocalLibPath(resource.WorkingDirectory, localLibAnnotation.Path);
+    }
+
+    private static string ResolveLocalLibPath(string? workingDirectory, string configuredPath)
+    {
+        var appDir = workingDirectory ?? ".";
+        return Path.IsPathRooted(configuredPath)
+            ? configuredPath
+            : Path.GetFullPath(Path.Combine(appDir, configuredPath));
+    }
+
+    private static void ApplyPerlbrewEnvironment(
+        IDictionary<string, object> environmentVariables,
+        PerlbrewEnvironment perlbrewEnvironment)
+    {
+        environmentVariables["PERLBREW_ROOT"] = perlbrewEnvironment.PerlbrewRoot;
+        environmentVariables["PERLBREW_PERL"] = perlbrewEnvironment.Version;
+        environmentVariables["PERLBREW_HOME"] = Path.Combine(perlbrewEnvironment.PerlbrewRoot, ".perlbrew");
+
+        var binPath = perlbrewEnvironment.BinPath;
+        var existingPath = environmentVariables.ContainsKey("PATH")
+            ? environmentVariables["PATH"]
+            : null;
+
+        environmentVariables["PATH"] = existingPath is not null
+            ? $"{binPath}{Path.PathSeparator}{existingPath}"
+            : binPath;
+    }
+
+    private static string ResolveInstallerCommand(
+        PerlAppResource parentResource,
+        PerlPackageManagerAnnotation packageManager,
+        IResourceBuilder<PerlModuleInstallerResource> installerBuilder)
+    {
+        if (!parentResource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) ||
+            perlbrewAnnotation.Environment is not { } perlbrewEnvironment)
+        {
+            return packageManager.ExecutableName;
+        }
+
+        installerBuilder.WithEnvironment(context =>
+        {
+            ApplyPerlbrewEnvironment(context.EnvironmentVariables, perlbrewEnvironment);
+        });
+
+        return perlbrewEnvironment.GetExecutable(packageManager.ExecutableName);
     }
 
     private static void AddInstaller<TResource>(IResourceBuilder<TResource> resource, string moduleName, bool install) where TResource : PerlAppResource
@@ -785,30 +798,7 @@ public static class PerlAppResourceBuilderExtensions
                     throw new InvalidOperationException("PerlPackageManagerAnnotation and PerlModuleInstallCommandAnnotation are required when installing packages.");
                 }
 
-                // If a perlbrew environment is active, resolve the package manager from its bin directory
-                // and propagate the perlbrew environment variables to the installer
-                var command = packageManager.ExecutableName;
-                if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
-                    perlbrewAnnotation.Environment is { } perlbrewEnv)
-                {
-                    command = perlbrewEnv.GetExecutable(packageManager.ExecutableName);
-
-                    installerBuilder.WithEnvironment(context =>
-                    {
-                        context.EnvironmentVariables["PERLBREW_ROOT"] = perlbrewEnv.PerlbrewRoot;
-                        context.EnvironmentVariables["PERLBREW_PERL"] = perlbrewEnv.Version;
-                        context.EnvironmentVariables["PERLBREW_HOME"] = Path.Combine(perlbrewEnv.PerlbrewRoot, ".perlbrew");
-
-                        var binPath = perlbrewEnv.BinPath;
-                        var existingPath = context.EnvironmentVariables.ContainsKey("PATH")
-                            ? context.EnvironmentVariables["PATH"]
-                            : null;
-
-                        context.EnvironmentVariables["PATH"] = existingPath is not null
-                            ? $"{binPath}{Path.PathSeparator}{existingPath}"
-                            : binPath;
-                    });
-                }
+                var command = ResolveInstallerCommand(resource.Resource, packageManager, installerBuilder);
 
                 installerBuilder
                     .WithCommand(command)
@@ -893,33 +883,9 @@ public static class PerlAppResourceBuilderExtensions
                     "Ensure the resource was created via AddPerlScript or AddPerlApi.");
             }
 
-            var command = packageManager.ExecutableName;
+            var command = ResolveInstallerCommand(resource.Resource, packageManager, installerBuilder);
             var localLibPath = ResolveLocalLibPath(resource.Resource);
             var installArgs = BuildInstallArgs(packageManager.PackageManager, packageName, force, skipTest, localLibPath);
-
-            // If a perlbrew environment is active, resolve the package manager from its bin directory
-            // and propagate the perlbrew environment variables to the installer
-            if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
-                perlbrewAnnotation.Environment is { } perlbrewEnv)
-            {
-                command = perlbrewEnv.GetExecutable(packageManager.ExecutableName);
-
-                installerBuilder.WithEnvironment(context =>
-                {
-                    context.EnvironmentVariables["PERLBREW_ROOT"] = perlbrewEnv.PerlbrewRoot;
-                    context.EnvironmentVariables["PERLBREW_PERL"] = perlbrewEnv.Version;
-                    context.EnvironmentVariables["PERLBREW_HOME"] = Path.Combine(perlbrewEnv.PerlbrewRoot, ".perlbrew");
-
-                    var binPath = perlbrewEnv.BinPath;
-                    var existingPath = context.EnvironmentVariables.ContainsKey("PATH")
-                        ? context.EnvironmentVariables["PATH"]
-                        : null;
-
-                    context.EnvironmentVariables["PATH"] = existingPath is not null
-                        ? $"{binPath}{Path.PathSeparator}{existingPath}"
-                        : binPath;
-                });
-            }
 
             installerBuilder
                 .WithCommand(command)
@@ -1018,31 +984,9 @@ public static class PerlAppResourceBuilderExtensions
                     "Ensure the resource was created via AddPerlScript or AddPerlApi.");
             }
 
-            var command = packageManager.ExecutableName;
+            var command = ResolveInstallerCommand(resource.Resource, packageManager, installerBuilder);
             var localLibPath = ResolveLocalLibPath(resource.Resource);
             var installArgs = BuildProjectInstallArgs(packageManager.PackageManager, cartonDeployment, localLibPath);
-
-            if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
-                perlbrewAnnotation.Environment is { } perlbrewEnv)
-            {
-                command = perlbrewEnv.GetExecutable(packageManager.ExecutableName);
-
-                installerBuilder.WithEnvironment(context =>
-                {
-                    context.EnvironmentVariables["PERLBREW_ROOT"] = perlbrewEnv.PerlbrewRoot;
-                    context.EnvironmentVariables["PERLBREW_PERL"] = perlbrewEnv.Version;
-                    context.EnvironmentVariables["PERLBREW_HOME"] = Path.Combine(perlbrewEnv.PerlbrewRoot, ".perlbrew");
-
-                    var binPath = perlbrewEnv.BinPath;
-                    var existingPath = context.EnvironmentVariables.ContainsKey("PATH")
-                        ? context.EnvironmentVariables["PATH"]
-                        : null;
-
-                    context.EnvironmentVariables["PATH"] = existingPath is not null
-                        ? $"{binPath}{Path.PathSeparator}{existingPath}"
-                        : binPath;
-                });
-            }
 
             installerBuilder
                 .WithCommand(command)
@@ -1115,11 +1059,7 @@ public static class PerlAppResourceBuilderExtensions
 
         installerResource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
         {
-            var appDir = parentResource.WorkingDirectory ?? ".";
-            var localLibPath = Path.IsPathRooted(localLibAnnotation.Path)
-                ? localLibAnnotation.Path
-                : Path.GetFullPath(Path.Combine(appDir, localLibAnnotation.Path));
-
+            var localLibPath = ResolveLocalLibPath(parentResource.WorkingDirectory, localLibAnnotation.Path);
             ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
             return Task.CompletedTask;
         }));
@@ -1294,8 +1234,9 @@ public static class PerlAppResourceBuilderExtensions
         builder.From(baseImage)
             .WorkDir("/app")
             .Run("cpanm App::cpanminus || true")
-            .Copy(".", ".")
+            .Copy("cpanfile", "./")
             .Run("cpanm --installdeps --notest .")
+            .Copy(".", ".")
             .Entrypoint(["perl", entrypoint]);
     }
 

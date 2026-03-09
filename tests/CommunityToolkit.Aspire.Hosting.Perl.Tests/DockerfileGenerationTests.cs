@@ -33,6 +33,49 @@ public class DockerfileGenerationTests
         Assert.NotEmpty(stage.Statements);
     }
 
+    [Fact]
+    public void BuildCpanmDockerfile_CopiesDependencyManifestBeforeSource()
+    {
+        var builder = new DockerfileBuilder();
+
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(builder, "app.pl", "perl:5-slim");
+
+        var statements = builder.Stages[0].Statements;
+        var copyIndexes = statements
+            .Select((statement, index) => (statement, index))
+            .Where(item => item.statement.GetType().Name == "DockerfileCopyStatement")
+            .Select(item => item.index)
+            .ToList();
+
+        Assert.Equal(2, copyIndexes.Count);
+        Assert.True(copyIndexes[0] < copyIndexes[1]);
+    }
+
+    [Fact]
+    public void BuildCpanmDockerfile_InstallsDependenciesAfterManifestCopy()
+    {
+        var builder = new DockerfileBuilder();
+
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(builder, "app.pl", "perl:5-slim");
+
+        var statements = builder.Stages[0].Statements;
+        var copyIndexes = statements
+            .Select((statement, index) => (statement, index))
+            .Where(item => item.statement.GetType().Name == "DockerfileCopyStatement")
+            .Select(item => item.index)
+            .ToList();
+        var runIndexes = statements
+            .Select((statement, index) => (statement, index))
+            .Where(item => item.statement.GetType().Name == "DockerfileRunStatement")
+            .Select(item => item.index)
+            .ToList();
+
+        Assert.Equal(2, copyIndexes.Count);
+        Assert.Equal(2, runIndexes.Count);
+        Assert.True(copyIndexes[0] < runIndexes[1]);
+        Assert.True(runIndexes[1] < copyIndexes[1]);
+    }
+
     #endregion
 
     #region BuildCartonDockerfile
