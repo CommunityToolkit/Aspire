@@ -306,6 +306,33 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expected, resource.Command);
     }
 
+    [LinuxOnlyFact]
+    public async Task WithPerlbrewEnvironment_CalledTwice_DoesNotDuplicateEnvironmentCallback()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/home/user/perl5/perlbrew")
+            .WithPerlbrewEnvironment("5.40.0", perlbrewRoot: "/home/user/perl5/perlbrew");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var envCallbacks = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.Single(resource.Annotations.OfType<PerlbrewResourceEnvironmentAnnotation>());
+
+        var envVars = new Dictionary<string, object>();
+        var context = new EnvironmentCallbackContext(builder.ExecutionContext, envVars);
+        foreach (var callback in envCallbacks)
+        {
+            await callback.Callback(context);
+        }
+
+        Assert.Equal("perl-5.40.0", envVars["PERLBREW_PERL"]?.ToString());
+    }
+
     #endregion
 
     #region Installer Integration

@@ -96,6 +96,21 @@ public class PackageManagementTests
     }
 
     [Fact]
+    public void WithPackage_ModuleNameWithColons_SanitizesInstallerResourceName()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPackage("OpenTelemetry::SDK");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+        Assert.Equal("OpenTelemetry88SDK-installer", installerResource.Name);
+    }
+
+    [Fact]
     public void WithPackageAddsRequiredModuleAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -1018,6 +1033,33 @@ public class PackageManagementTests
 
         var envCallbacks = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
         Assert.True(envCallbacks.Count > 0);
+    }
+
+    [Fact]
+    public async Task WithLocalLib_CalledTwice_DoesNotDuplicateResourceEnvironmentCallback()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithLocalLib("local")
+            .WithLocalLib("vendor");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var envCallbacks = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.Single(resource.Annotations.OfType<PerlLocalLibResourceEnvironmentAnnotation>());
+
+        var envVars = new Dictionary<string, object>();
+        var context = new EnvironmentCallbackContext(builder.ExecutionContext, envVars);
+        foreach (var callback in envCallbacks)
+        {
+            await callback.Callback(context);
+        }
+
+        Assert.Contains("vendor", envVars["PERL_LOCAL_LIB_ROOT"].ToString());
     }
 
     [Fact]

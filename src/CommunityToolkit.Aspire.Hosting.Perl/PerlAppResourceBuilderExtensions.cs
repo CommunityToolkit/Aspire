@@ -62,35 +62,33 @@ public static class PerlAppResourceBuilderExtensions
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName, DefaultPerlEnvironment);
 
     /// <summary>
-    /// Adds a Perl script to the application model using a few default assumptions.
+    /// Adds a Perl API script to the application model using sane defaults.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="resourceName">The name of the resource.</param>
     /// <param name="appDirectory">The path to the directory containing the Perl script.</param>
-    /// <param name="scriptName">The path to the script relative to the app directory to run.</param>
+    /// <param name="scriptName">The API script path, relative to the application directory.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <para>
-    /// This method executes a Perl script directly using the Command/Executable of <c>perl</c>.
-    /// It assumes you intend to use <c>WithArgs</c> to pass arguments to the script, including the script 
-    /// name itself.
+    /// This method configures a Perl API script and passes the default API subcommand
+    /// (<c>daemon</c>) so frameworks such as Mojolicious start an HTTP server.
     /// 
-    /// For example: 
+    /// For example:
     /// <example>
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
-    ///     .WithCommand("perl")
-    ///     .WithArgs("-s", $"{Path.GetFullPath(appDirectory, builder.AppHostDirectory)}/{scriptName}");
+    /// builder.AddPerlApi("api", "../api", "main.pl");
     /// </code>
     /// </example>
     /// </para>
     /// </remarks>
     /// <example>
-    /// For your AppHost / Application Model, you'd add a Perl script like this:
+    /// For your AppHost / Application Model, you'd add a Perl API like this:
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
-    /// builder.AddPerlScript("fastapi-app", "../api", "main.pl");
+    /// builder.AddPerlApi("fastapi-app", "../api", "main.pl");
     ///
     /// builder.Build().Run();
     /// </code>
@@ -119,7 +117,7 @@ public static class PerlAppResourceBuilderExtensions
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string moduleName)
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Module, moduleName, DefaultPerlEnvironment);
 
-    /// <summary>42, and 7 
+    /// <summary>
     /// Adds a Perl executable (compiled binary or PAR-packed application) to the application model.
     /// The executable is run directly rather than through the <c>perl</c> interpreter.
     /// </summary>
@@ -381,7 +379,8 @@ public static class PerlAppResourceBuilderExtensions
             return builder;
         }
 
-        var normalizedVersion = PerlbrewEnvironment.NormalizeVersion(version);
+        var normalizedVersion = PerlbrewEnvironment.NormalizeVersion(
+            PerlVersionDetector.NormalizeVersionString(version));
         var resolvedRoot = PerlbrewEnvironment.ResolvePerlbrewRoot(perlbrewRoot);
         var environment = new PerlbrewEnvironment(resolvedRoot, normalizedVersion);
 
@@ -398,10 +397,7 @@ public static class PerlAppResourceBuilderExtensions
         }, ResourceAnnotationMutationBehavior.Replace);
 
         // Set perlbrew environment variables so child processes and libraries resolve correctly
-        builder.WithEnvironment(context =>
-        {
-            ApplyPerlbrewEnvironment(context.EnvironmentVariables, environment);
-        });
+        EnsurePerlbrewEnvironmentCallback(builder);
 
         // Validate that the perlbrew perl version is installed.
         builder.WithRequiredCommand("perlbrew", _ => Task.FromResult(
@@ -642,11 +638,7 @@ public static class PerlAppResourceBuilderExtensions
         builder.WithAnnotation(new PerlLocalLibAnnotation(path),
             ResourceAnnotationMutationBehavior.Replace);
 
-        builder.WithEnvironment(context =>
-        {
-            var localLibPath = ResolveLocalLibPath(builder.Resource.WorkingDirectory, path);
-            ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
-        });
+        EnsureLocalLibEnvironmentCallback(builder);
 
         TryAttachLocalLibEnvironmentToProjectInstaller(builder);
         TryAttachLocalLibToExistingInstallers(builder);
@@ -874,7 +866,7 @@ public static class PerlAppResourceBuilderExtensions
             }
 
             var installer = new PerlModuleInstallerResource(
-                installerName.Replace(":", "8"), //limitation of aspire resource names not allowing colons, but perl module names often have colons, so replace with dashes for the installer resource name
+                SanitizeInstallerResourceName(installerName),
                 moduleName, 
                 resource?.Resource.WorkingDirectory ?? throw new ArgumentNullException());
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
@@ -1137,6 +1129,46 @@ public static class PerlAppResourceBuilderExtensions
         environmentVariables["PERL_MB_OPT"] = $"--install_base {localLibPath}";
     }
 
+    private static void EnsurePerlbrewEnvironmentCallback<TResource>(
+        IResourceBuilder<TResource> resource) where TResource : PerlAppResource
+    {
+        if (resource.Resource.Annotations.OfType<PerlbrewResourceEnvironmentAnnotation>().Any())
+        {
+            return;
+        }
+
+        resource.Resource.Annotations.Add(new PerlbrewResourceEnvironmentAnnotation());
+
+        resource.WithEnvironment(context =>
+        {
+            if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
+                perlbrewAnnotation.Environment is { } perlbrewEnvironment)
+            {
+                ApplyPerlbrewEnvironment(context.EnvironmentVariables, perlbrewEnvironment);
+            }
+        });
+    }
+
+    private static void EnsureLocalLibEnvironmentCallback<TResource>(
+        IResourceBuilder<TResource> resource) where TResource : PerlAppResource
+    {
+        if (resource.Resource.Annotations.OfType<PerlLocalLibResourceEnvironmentAnnotation>().Any())
+        {
+            return;
+        }
+
+        resource.Resource.Annotations.Add(new PerlLocalLibResourceEnvironmentAnnotation());
+
+        resource.WithEnvironment(context =>
+        {
+            if (resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
+            {
+                var localLibPath = ResolveLocalLibPath(resource.Resource.WorkingDirectory, localLibAnnotation.Path);
+                ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
+            }
+        });
+    }
+
     private static void TryAttachLocalLibEnvironmentToProjectInstaller<TResource>(
         IResourceBuilder<TResource> resource) where TResource : PerlAppResource
     {
@@ -1253,6 +1285,15 @@ public static class PerlAppResourceBuilderExtensions
 
         return args.ToArray();
     }
+
+    /// <summary>
+    /// Sanitizes installer resource names for Aspire model constraints.
+    /// Perl module names commonly include <c>::</c>; Aspire resource names cannot include
+    /// <c>:</c>, so this convention maps each colon to <c>8</c> to preserve readability
+    /// and stable name generation.
+    /// </summary>
+    private static string SanitizeInstallerResourceName(string installerName)
+        => installerName.Replace(":", "8", StringComparison.Ordinal);
 
     /// <summary>
     /// Builds the CLI arguments for project-level dependency installation.
