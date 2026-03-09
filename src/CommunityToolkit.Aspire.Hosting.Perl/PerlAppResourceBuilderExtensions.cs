@@ -790,7 +790,7 @@ public static class PerlAppResourceBuilderExtensions
         CancellationToken cancellationToken)
     {
         Dictionary<string, object> environmentVariables = new(StringComparer.Ordinal);
-        EnvironmentCallbackContext context = new(executionContext, environmentVariables);
+        EnvironmentCallbackContext context = new(executionContext, resource, environmentVariables, cancellationToken);
 
         foreach (var callback in resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
         {
