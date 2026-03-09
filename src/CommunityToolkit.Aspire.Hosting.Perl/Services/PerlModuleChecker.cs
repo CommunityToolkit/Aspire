@@ -17,6 +17,22 @@ internal static class PerlModuleChecker
     /// <returns><c>true</c> if the module loads successfully (exit code 0); otherwise <c>false</c>.</returns>
     public static async Task<bool> IsModuleInstalledAsync(
         string perlPath, string moduleName, CancellationToken cancellationToken = default)
+        => await IsModuleInstalledAsync(perlPath, moduleName, environmentVariables: null, cancellationToken).ConfigureAwait(false);
+
+    /// <summary>
+    /// Checks if a Perl module is installed and loadable, applying the provided
+    /// environment variables to the probe process.
+    /// </summary>
+    /// <param name="perlPath">The path to the perl executable.</param>
+    /// <param name="moduleName">The module name (e.g., <c>"Mojolicious"</c>, <c>"IO::Socket::SSL"</c>).</param>
+    /// <param name="environmentVariables">Environment variables to apply to the module probe process.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns><c>true</c> if the module loads successfully (exit code 0); otherwise <c>false</c>.</returns>
+    public static async Task<bool> IsModuleInstalledAsync(
+        string perlPath,
+        string moduleName,
+        IDictionary<string, object>? environmentVariables,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(perlPath);
         ArgumentException.ThrowIfNullOrEmpty(moduleName);
@@ -35,6 +51,17 @@ internal static class PerlModuleChecker
                     CreateNoWindow = true,
                 }
             };
+
+            if (environmentVariables is not null)
+            {
+                foreach (var (key, value) in environmentVariables)
+                {
+                    if (value is not null)
+                    {
+                        process.StartInfo.Environment[key] = value.ToString() ?? string.Empty;
+                    }
+                }
+            }
 
             process.Start();
             await process.WaitForExitAsync(cancellationToken);

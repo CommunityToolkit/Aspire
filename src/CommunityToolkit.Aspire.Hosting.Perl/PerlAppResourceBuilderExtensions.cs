@@ -265,7 +265,7 @@ public static class PerlAppResourceBuilderExtensions
 
         if (builder.ExecutionContext.IsPublishMode)
         {
-            ConfigurePublishMode(resourceBuilder, entrypoint);
+            ConfigurePublishMode(resourceBuilder, entrypointType, entrypoint, typeOfApi);
         }
 
         return resourceBuilder;
@@ -478,11 +478,6 @@ public static class PerlAppResourceBuilderExtensions
     private static bool IsCpanmAvailableForResource<TResource>(string resolvedPath, IResourceBuilder<TResource> builder)
         where TResource : PerlAppResource
     {
-        if (File.Exists(resolvedPath))
-        {
-            return true;
-        }
-
         if (builder.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
             perlbrewAnnotation.Environment is { } perlbrewEnv)
         {
@@ -490,7 +485,69 @@ public static class PerlAppResourceBuilderExtensions
             return File.Exists(perlbrewCpanmPath);
         }
 
-        return false;
+        return IsCommandAvailable(resolvedPath);
+    }
+
+    private static bool IsCommandAvailable(string resolvedPath)
+        => IsCommandAvailable(resolvedPath, Environment.GetEnvironmentVariable("PATH"), File.Exists);
+
+    internal static bool IsCommandAvailable(string resolvedPath, string? pathValue, Func<string, bool> fileExists)
+    {
+        if (string.IsNullOrWhiteSpace(resolvedPath))
+        {
+            return false;
+        }
+
+        if (fileExists(resolvedPath))
+        {
+            return true;
+        }
+
+        return TryResolveCommandFromPath(resolvedPath, pathValue, fileExists) is not null;
+    }
+
+    private static string? TryResolveCommandFromPath(string commandName)
+        => TryResolveCommandFromPath(commandName, Environment.GetEnvironmentVariable("PATH"), File.Exists);
+
+    internal static string? TryResolveCommandFromPath(string commandName, string? pathValue, Func<string, bool> fileExists)
+    {
+        var candidateName = Path.GetFileName(commandName);
+        if (string.IsNullOrWhiteSpace(candidateName))
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(pathValue))
+        {
+            return null;
+        }
+
+        var candidates = new List<string> { candidateName };
+        if (OperatingSystem.IsWindows())
+        {
+            var pathExt = Environment.GetEnvironmentVariable("PATHEXT") ?? ".EXE;.CMD;.BAT";
+            foreach (var extension in pathExt.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (!candidateName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+                {
+                    candidates.Add($"{candidateName}{extension}");
+                }
+            }
+        }
+
+        foreach (var directory in pathValue.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            foreach (var candidate in candidates)
+            {
+                var fullPath = Path.Combine(directory, candidate);
+                if (fileExists(fullPath))
+                {
+                    return fullPath;
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -512,12 +569,13 @@ public static class PerlAppResourceBuilderExtensions
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
         ArgumentNullException.ThrowIfNull(builder);
+        EnsureCartonCanBeEnabled(builder);
 
         builder.WithAnnotation(new PerlPackageManagerAnnotation(PerlPackageManager.Carton),
             ResourceAnnotationMutationBehavior.Replace);
 
         builder.WithRequiredCommand("carton", context => Task.FromResult(
-            File.Exists(context.ResolvedPath)
+            IsCommandAvailable(context.ResolvedPath)
                 ? RequiredCommandValidationResult.Success()
                 : RequiredCommandValidationResult.Failure(
                     "Carton is not installed or not available on PATH. " +
@@ -548,6 +606,7 @@ public static class PerlAppResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(packageName);
+        EnsurePackageInstallIsSupported(builder);
 
         builder.WithAnnotation(new PerlRequiredModuleAnnotation
         {
@@ -733,6 +792,51 @@ public static class PerlAppResourceBuilderExtensions
         return perlbrewEnvironment.GetExecutable(packageManager.ExecutableName);
     }
 
+    private static async Task<Dictionary<string, object>> BuildResourceEnvironmentVariablesAsync(
+        PerlAppResource resource,
+        DistributedApplicationExecutionContext executionContext,
+        CancellationToken cancellationToken)
+    {
+        Dictionary<string, object> environmentVariables = new(StringComparer.Ordinal);
+        EnvironmentCallbackContext context = new(executionContext, environmentVariables);
+
+        foreach (var callback in resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await callback.Callback(context).ConfigureAwait(false);
+        }
+
+        return environmentVariables;
+    }
+
+    private static void EnsurePackageInstallIsSupported<TResource>(IResourceBuilder<TResource> builder)
+        where TResource : PerlAppResource
+    {
+        if (builder.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager) &&
+            packageManager.PackageManager == PerlPackageManager.Carton)
+        {
+            throw new NotSupportedException(
+                "WithPackage() and WithCarton() cannot be combined. " +
+                "Carton manages all dependencies through your cpanfile. " +
+                "Add the module to your cpanfile and call WithProjectDependencies() " +
+                "to install all cpanfile dependencies at startup.");
+        }
+    }
+
+    private static void EnsureCartonCanBeEnabled<TResource>(IResourceBuilder<TResource> builder)
+        where TResource : PerlAppResource
+    {
+        if (builder.Resource.Annotations.OfType<PerlRequiredModuleAnnotation>().Any() ||
+            builder.Resource.Annotations.OfType<PerlModuleInstallerAnnotation>().Any())
+        {
+            throw new NotSupportedException(
+                "WithPackage() and WithCarton() cannot be combined. " +
+                "Carton manages all dependencies through your cpanfile. " +
+                "Add the module to your cpanfile and call WithProjectDependencies() " +
+                "to install all cpanfile dependencies at startup.");
+        }
+    }
+
     private static void AddInstaller<TResource>(IResourceBuilder<TResource> resource, string moduleName, bool install) where TResource : PerlAppResource
     {
         // Only install packages if in run mode
@@ -781,7 +885,12 @@ public static class PerlAppResourceBuilderExtensions
             {
                 // Preflight: skip installation if module is already available
                 var perlPath = ResolvePerlPath(resource.Resource);
-                if (await PerlModuleChecker.IsModuleInstalledAsync(perlPath, moduleName, ct))
+                var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
+                    resource.Resource,
+                    resource.ApplicationBuilder.ExecutionContext,
+                    ct).ConfigureAwait(false);
+
+                if (await PerlModuleChecker.IsModuleInstalledAsync(perlPath, moduleName, environmentVariables, ct).ConfigureAwait(false))
                 {
                     installerBuilder
                         .WithCommand(perlPath)
@@ -867,7 +976,12 @@ public static class PerlAppResourceBuilderExtensions
         {
             // Preflight: skip installation if module is already available
             var perlPath = ResolvePerlPath(resource.Resource);
-            if (await PerlModuleChecker.IsModuleInstalledAsync(perlPath, packageName, ct))
+            var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
+                resource.Resource,
+                resource.ApplicationBuilder.ExecutionContext,
+                ct).ConfigureAwait(false);
+
+            if (await PerlModuleChecker.IsModuleInstalledAsync(perlPath, packageName, environmentVariables, ct).ConfigureAwait(false))
             {
                 installerBuilder
                     .WithCommand(perlPath)
@@ -948,6 +1062,10 @@ public static class PerlAppResourceBuilderExtensions
         {
             // Preflight: if a cpanfile exists, check whether all required modules are already installed
             var perlPath = ResolvePerlPath(resource.Resource);
+            var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
+                resource.Resource,
+                resource.ApplicationBuilder.ExecutionContext,
+                ct).ConfigureAwait(false);
             var workingDir = resource.Resource.WorkingDirectory ?? ".";
             var cpanfilePath = Path.Combine(workingDir, "cpanfile");
 
@@ -959,7 +1077,7 @@ public static class PerlAppResourceBuilderExtensions
                     var allInstalled = true;
                     foreach (var module in requiredModules)
                     {
-                        if (!await PerlModuleChecker.IsModuleInstalledAsync(perlPath, module, ct))
+                        if (!await PerlModuleChecker.IsModuleInstalledAsync(perlPath, module, environmentVariables, ct).ConfigureAwait(false))
                         {
                             allInstalled = false;
                             break;
@@ -1123,8 +1241,10 @@ public static class PerlAppResourceBuilderExtensions
 
             case PerlPackageManager.Carton:
                 throw new NotSupportedException(
-                    "Carton does not support individual package installation. " +
-                    "Add dependencies to your cpanfile and use WithProjectDependencies() instead.");
+                    "WithPackage() and WithCarton() cannot be combined. " +
+                    "Carton manages all dependencies through your cpanfile. " +
+                    "Add the module to your cpanfile and call WithProjectDependencies() " +
+                    "to install all cpanfile dependencies at startup.");
 
             default:
                 throw new NotSupportedException(
@@ -1160,6 +1280,46 @@ public static class PerlAppResourceBuilderExtensions
         };
     }
 
+    internal static string[] BuildContainerEntrypointArguments(
+        EntrypointType entrypointType,
+        string entrypoint,
+        string? apiSubcommand,
+        bool useLocalLibPath)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(entrypoint);
+
+        if (entrypointType == EntrypointType.Executable)
+        {
+            return [entrypoint];
+        }
+
+        List<string> args = ["perl"];
+        if (useLocalLibPath)
+        {
+            args.Add("-Ilocal/lib/perl5");
+        }
+
+        switch (entrypointType)
+        {
+            case EntrypointType.Module:
+                args.Add($"-M{entrypoint}");
+                args.Add("-e");
+                args.Add($"{entrypoint}->run()");
+                break;
+
+            case EntrypointType.API:
+                args.Add(entrypoint);
+                args.Add(string.IsNullOrWhiteSpace(apiSubcommand) ? "daemon" : apiSubcommand);
+                break;
+
+            default:
+                args.Add(entrypoint);
+                break;
+        }
+
+        return [.. args];
+    }
+
     /// <summary>
     /// Checks whether the application directory contains standard Perl dependency files
     /// (<c>cpanfile</c>, <c>Makefile.PL</c>, or <c>Build.PL</c>).
@@ -1180,7 +1340,11 @@ public static class PerlAppResourceBuilderExtensions
     /// <c>PublishAsDockerFile</c> and a Dockerfile builder callback that generates
     /// a Dockerfile tailored to the active package manager.
     /// </summary>
-    private static void ConfigurePublishMode(IResourceBuilder<PerlAppResource> resourceBuilder, string entrypoint)
+    private static void ConfigurePublishMode(
+        IResourceBuilder<PerlAppResource> resourceBuilder,
+        EntrypointType entrypointType,
+        string entrypoint,
+        string? apiSubcommand)
     {
         resourceBuilder.PublishAsDockerFile();
 
@@ -1214,11 +1378,11 @@ public static class PerlAppResourceBuilderExtensions
             switch (packageManager)
             {
                 case PerlPackageManager.Carton:
-                    BuildCartonDockerfile(context.Builder, entrypoint, baseImage, buildImage);
+                    BuildCartonDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage, buildImage);
                     break;
 
                 default:
-                    BuildCpanmDockerfile(context.Builder, entrypoint, baseImage);
+                    BuildCpanmDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage);
                     break;
             }
 
@@ -1229,22 +1393,37 @@ public static class PerlAppResourceBuilderExtensions
     /// <summary>
     /// Builds a single-stage Dockerfile using cpanm for dependency installation.
     /// </summary>
-    internal static void BuildCpanmDockerfile(DockerfileBuilder builder, string entrypoint, string baseImage)
+    internal static void BuildCpanmDockerfile(
+        DockerfileBuilder builder,
+        EntrypointType entrypointType,
+        string entrypoint,
+        string? apiSubcommand,
+        string baseImage)
     {
+        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, useLocalLibPath: false);
+
         builder.From(baseImage)
             .WorkDir("/app")
             .Run("cpanm App::cpanminus || true")
             .Copy("cpanfile", "./")
             .Run("cpanm --installdeps --notest .")
             .Copy(".", ".")
-            .Entrypoint(["perl", entrypoint]);
+            .Entrypoint(entrypointArgs);
     }
 
     /// <summary>
     /// Builds a multi-stage Dockerfile using Carton for reproducible dependency resolution.
     /// </summary>
-    internal static void BuildCartonDockerfile(DockerfileBuilder builder, string entrypoint, string runtimeImage, string buildImage)
+    internal static void BuildCartonDockerfile(
+        DockerfileBuilder builder,
+        EntrypointType entrypointType,
+        string entrypoint,
+        string? apiSubcommand,
+        string runtimeImage,
+        string buildImage)
     {
+        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, useLocalLibPath: true);
+
         builder.From(buildImage, "build")
             .WorkDir("/app")
             .Run("cpanm Carton")
@@ -1256,6 +1435,6 @@ public static class PerlAppResourceBuilderExtensions
         builder.From(runtimeImage)
             .WorkDir("/app")
             .CopyFrom("build", "/app", "/app")
-            .Entrypoint(["perl", "-Ilocal/lib/perl5", entrypoint]);
+            .Entrypoint(entrypointArgs);
     }
 }

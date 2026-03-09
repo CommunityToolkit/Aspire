@@ -17,7 +17,12 @@ public class DockerfileGenerationTests
     {
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(builder, "app.pl", "perl:5-slim");
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim");
 
         Assert.Single(builder.Stages);
     }
@@ -27,7 +32,12 @@ public class DockerfileGenerationTests
     {
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(builder, "app.pl", "perl:5-slim");
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim");
 
         var stage = builder.Stages[0];
         Assert.NotEmpty(stage.Statements);
@@ -38,7 +48,12 @@ public class DockerfileGenerationTests
     {
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(builder, "app.pl", "perl:5-slim");
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim");
 
         var statements = builder.Stages[0].Statements;
         var copyIndexes = statements
@@ -56,7 +71,12 @@ public class DockerfileGenerationTests
     {
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(builder, "app.pl", "perl:5-slim");
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim");
 
         var statements = builder.Stages[0].Statements;
         var copyIndexes = statements
@@ -78,6 +98,70 @@ public class DockerfileGenerationTests
 
     #endregion
 
+    #region BuildContainerEntrypointArguments
+
+    [Fact]
+    public void BuildContainerEntrypointArguments_Script_UsesPerlEntrypoint()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildContainerEntrypointArguments(
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            useLocalLibPath: false);
+
+        Assert.Equal(["perl", "app.pl"], args);
+    }
+
+    [Fact]
+    public void BuildContainerEntrypointArguments_Api_IncludesDaemonSubcommand()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildContainerEntrypointArguments(
+            EntrypointType.API,
+            "app.pl",
+            apiSubcommand: "daemon",
+            useLocalLibPath: false);
+
+        Assert.Equal(["perl", "app.pl", "daemon"], args);
+    }
+
+    [Fact]
+    public void BuildContainerEntrypointArguments_Module_UsesModuleRunShape()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildContainerEntrypointArguments(
+            EntrypointType.Module,
+            "MyApp::Worker",
+            apiSubcommand: null,
+            useLocalLibPath: false);
+
+        Assert.Equal(["perl", "-MMyApp::Worker", "-e", "MyApp::Worker->run()"], args);
+    }
+
+    [Fact]
+    public void BuildContainerEntrypointArguments_Executable_RunsDirectly()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildContainerEntrypointArguments(
+            EntrypointType.Executable,
+            "myapp",
+            apiSubcommand: null,
+            useLocalLibPath: false);
+
+        Assert.Equal(["myapp"], args);
+    }
+
+    [Fact]
+    public void BuildContainerEntrypointArguments_ModuleWithLocalLib_IncludesIncludePath()
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildContainerEntrypointArguments(
+            EntrypointType.Module,
+            "MyApp::Worker",
+            apiSubcommand: null,
+            useLocalLibPath: true);
+
+        Assert.Equal(["perl", "-Ilocal/lib/perl5", "-MMyApp::Worker", "-e", "MyApp::Worker->run()"], args);
+    }
+
+    #endregion
+
     #region BuildCartonDockerfile
 
     [Fact]
@@ -85,7 +169,13 @@ public class DockerfileGenerationTests
     {
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(builder, "app.pl", "perl:5-slim", "perl:5");
+        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            "perl:5");
 
         Assert.Equal(2, builder.Stages.Count);
     }
@@ -95,7 +185,13 @@ public class DockerfileGenerationTests
     {
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(builder, "app.pl", "perl:5-slim", "perl:5");
+        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            "perl:5");
 
         Assert.Equal("build", builder.Stages[0].StageName);
     }
@@ -105,7 +201,13 @@ public class DockerfileGenerationTests
     {
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(builder, "app.pl", "perl:5-slim", "perl:5");
+        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            "perl:5");
 
         Assert.NotEmpty(builder.Stages[1].Statements);
     }
