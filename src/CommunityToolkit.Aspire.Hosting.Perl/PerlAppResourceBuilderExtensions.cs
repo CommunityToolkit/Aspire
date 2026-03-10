@@ -24,27 +24,26 @@ public static class PerlAppResourceBuilderExtensions
     private const PerlPackageManager DefaultPackageManager = PerlPackageManager.Cpan;
 
     /// <summary>
-    /// Adds a Perl script to the application model using a few default assumptions.
+    /// Adds a Perl script resource (worker, CLI tool, background service) to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="resourceName">The name of the resource.</param>
-    /// <param name="appDirectory">The path to the directory containing the Perl script.</param>
-    /// <param name="scriptName">The path to the script relative to the app directory to run.</param>
+    /// <param name="appDirectory">
+    /// The path to the directory containing the Perl script. Resolved relative to the AppHost
+    /// project directory; becomes the resource's working directory and the anchor for all relative
+    /// path resolution (script path, <c>WithLocalLib</c>, cpanfile discovery).
+    /// </param>
+    /// <param name="scriptName">
+    /// The path to the script relative to <paramref name="appDirectory"/>.
+    /// Do not include the <paramref name="appDirectory"/> prefix — the script is resolved
+    /// relative to <paramref name="appDirectory"/> automatically.
+    /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <para>
-    /// This method executes a Perl script directly using the Command/Executable of <c>perl</c>.
-    /// It assumes you intend to use <c>WithArgs</c> to pass arguments to the script, including the script 
-    /// name itself.
-    /// 
-    /// For example: 
-    /// <example>
-    /// <code lang="csharp">
-    /// var builder = DistributedApplication.CreateBuilder(args);
-    ///     .WithCommand("perl")
-    ///     .WithArgs("-s", $"{Path.GetFullPath(appDirectory, builder.AppHostDirectory)}/{scriptName}");
-    /// </code>
-    /// </example>
+    /// This method executes a Perl script directly using <c>perl -s scriptName</c>.
+    /// The working directory is set to <paramref name="appDirectory"/> and all relative paths
+    /// (including <c>WithLocalLib</c> and cpanfile discovery) resolve against it.
     /// </para>
     /// </remarks>
     /// <example>
@@ -52,7 +51,7 @@ public static class PerlAppResourceBuilderExtensions
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
-    /// builder.AddPerlScript("fastapi-app", "../api", "main.pl");
+    /// builder.AddPerlScript("my-worker", "../scripts", "Worker.pl");
     ///
     /// builder.Build().Run();
     /// </code>
@@ -62,25 +61,28 @@ public static class PerlAppResourceBuilderExtensions
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName, DefaultPerlEnvironment);
 
     /// <summary>
-    /// Adds a Perl API script to the application model using sane defaults.
+    /// Adds a Perl API server resource (e.g., Mojolicious, Dancer2) to the application model.
+    /// Passes the <c>daemon</c> subcommand so HTTP frameworks start a listener.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="resourceName">The name of the resource.</param>
-    /// <param name="appDirectory">The path to the directory containing the Perl script.</param>
-    /// <param name="scriptName">The API script path, relative to the application directory.</param>
+    /// <param name="appDirectory">
+    /// The path to the directory containing the Perl script. Resolved relative to the AppHost
+    /// project directory; becomes the resource's working directory and the anchor for all relative
+    /// path resolution (script path, <c>WithLocalLib</c>, cpanfile discovery).
+    /// </param>
+    /// <param name="scriptName">
+    /// The API script path, relative to <paramref name="appDirectory"/>.
+    /// Do not include the <paramref name="appDirectory"/> prefix — the script is resolved
+    /// relative to <paramref name="appDirectory"/> automatically.
+    /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <para>
     /// This method configures a Perl API script and passes the default API subcommand
     /// (<c>daemon</c>) so frameworks such as Mojolicious start an HTTP server.
-    /// 
-    /// For example:
-    /// <example>
-    /// <code lang="csharp">
-    /// var builder = DistributedApplication.CreateBuilder(args);
-    /// builder.AddPerlApi("api", "../api", "main.pl");
-    /// </code>
-    /// </example>
+    /// The working directory is set to <paramref name="appDirectory"/> and all relative paths
+    /// (including <c>WithLocalLib</c> and cpanfile discovery) resolve against it.
     /// </para>
     /// </remarks>
     /// <example>
@@ -88,7 +90,7 @@ public static class PerlAppResourceBuilderExtensions
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
-    /// builder.AddPerlApi("fastapi-app", "../api", "main.pl");
+    /// builder.AddPerlApi("perl-api", "../api", "API.pl");
     ///
     /// builder.Build().Run();
     /// </code>
@@ -351,6 +353,17 @@ public static class PerlAppResourceBuilderExtensions
     /// the <c>PERLBREW_ROOT</c> environment variable, or defaults to <c>~/perl5/perlbrew</c>.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// Perlbrew is Linux-only. On Windows, an <see cref="InvalidOperationException"/> is thrown
+    /// with a recommendation to use <see href="https://github.com/stevieb9/berrybrew">Berrybrew</see>.
+    /// </para>
+    /// <para>
+    /// When combined with <see cref="WithLocalLib{TResource}"/>, modules are installed into the
+    /// local directory rather than the perlbrew tree, keeping the perlbrew installation clean
+    /// and enabling per-project module isolation.
+    /// </para>
+    /// </remarks>
     public static IResourceBuilder<T> WithPerlbrewEnvironment<T>(
         this IResourceBuilder<T> builder, string version, string? perlbrewRoot = null) where T : PerlAppResource
     {
@@ -541,6 +554,7 @@ public static class PerlAppResourceBuilderExtensions
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    /// <seealso cref="WithProjectDependencies{TResource}"/>
     public static IResourceBuilder<TResource> WithCarton<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -574,6 +588,13 @@ public static class PerlAppResourceBuilderExtensions
     /// <param name="force">If <c>true</c>, force installation even if the module is already installed or tests fail.</param>
     /// <param name="skipTest">If <c>true</c>, skip running tests during installation.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    /// <remarks>
+    /// A child installer resource is created that runs before the main application starts.
+    /// If the module is already installed (verified via <c>perl -MModuleName -e 1</c>),
+    /// installation is skipped. The installer uses the active package manager —
+    /// <c>cpan</c> by default, or <c>cpanm</c> if <see cref="WithCpanMinus{TResource}"/>
+    /// was called.
+    /// </remarks>
     public static IResourceBuilder<TResource> WithPackage<TResource>(
         this IResourceBuilder<TResource> builder,
         string packageName,
@@ -604,10 +625,23 @@ public static class PerlAppResourceBuilderExtensions
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="path">
-    /// The path to the local::lib directory, relative to the application directory.
+    /// The path to the local::lib directory. Relative paths are resolved against
+    /// the resource's working directory (<c>appDirectory</c>), not the AppHost project.
+    /// Rooted paths (e.g., <c>/opt/perl-libs</c> or <c>C:\perl-libs</c>) are used as-is.
     /// Defaults to <c>"local"</c> (the Carton convention).
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    /// <remarks>
+    /// Sets the following environment variables:
+    /// <list type="bullet">
+    /// <item><c>PERL5LIB</c> — <c>&lt;resolved&gt;/lib/perl5</c> (module search path)</item>
+    /// <item><c>PERL_LOCAL_LIB_ROOT</c> — <c>&lt;resolved&gt;</c></item>
+    /// <item><c>PERL_MM_OPT</c> — <c>INSTALL_BASE=&lt;resolved&gt;</c></item>
+    /// <item><c>PERL_MB_OPT</c> — <c>--install_base &lt;resolved&gt;</c></item>
+    /// </list>
+    /// These ensure modules are resolved from and installed into the local directory
+    /// without requiring system-level permissions.
+    /// </remarks>
     public static IResourceBuilder<TResource> WithLocalLib<TResource>(
         this IResourceBuilder<TResource> builder,
         string path = "local") where TResource : PerlAppResource
@@ -702,6 +736,12 @@ public static class PerlAppResourceBuilderExtensions
     /// from <c>cpanfile.snapshot</c>. Ignored for other package managers.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    /// <remarks>
+    /// Expects a <c>cpanfile</c> in the resource's working directory (<c>appDirectory</c>).
+    /// If the cpanfile is in a different location, adjust <c>appDirectory</c> accordingly.
+    /// When using Carton with <paramref name="cartonDeployment"/> set to <c>true</c>,
+    /// a <c>cpanfile.snapshot</c> must also be present.
+    /// </remarks>
     public static IResourceBuilder<TResource> WithProjectDependencies<TResource>(
         this IResourceBuilder<TResource> builder,
         bool cartonDeployment = false) where TResource : PerlAppResource

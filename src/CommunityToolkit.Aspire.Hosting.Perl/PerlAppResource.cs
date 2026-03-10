@@ -31,7 +31,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <code lang="csharp">
 /// var builder = DistributedApplication.CreateBuilder(args);
 /// 
-/// var perl = builder.AddPerlApp("api", "../perl-api", "app.pl")
+/// var perl = builder.AddPerlApi("api", "../perl-api", "app.pl")
 ///     .WithHttpEndpoint(port: 5000)
 ///     .WithArgs("--host", "0.0.0.0");
 /// 
@@ -49,7 +49,8 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <item>A relative path: "./local/bin/perl"</item>
 /// <item>A command on the PATH: "perl" or "myperl"</item>
 /// </list>
-/// The executable is typically located in a virtual environment's bin (Linux/macOS) or Scripts (Windows) directory.
+/// The executable is typically <c>"perl"</c> (resolved from PATH), or a path to a
+/// perlbrew-managed Perl installation's bin directory.
 /// </param>
 /// <param name="appDirectory">
 /// The working directory for the Perl application. Perl scripts and modules

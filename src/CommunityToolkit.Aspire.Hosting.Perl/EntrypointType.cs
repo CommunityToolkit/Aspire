@@ -8,8 +8,7 @@ namespace CommunityToolkit.Aspire.Hosting.Perl;
 public enum EntrypointType
 {
     /// <summary>
-    /// A direct executable file to run (e.g., a compiled binary).  I believe
-    /// it is rare, but perl can compile to a binary executable...
+    /// A direct executable file to run (e.g., a PAR-packed binary or compiled Perl application).
     /// </summary>
     Executable,
 
