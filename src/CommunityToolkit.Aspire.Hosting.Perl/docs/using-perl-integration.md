@@ -271,9 +271,8 @@ my-example/
 resource to use a specific perlbrew-managed Perl version.
 
 ```csharp
-builder.AddPerlScript("worker", "../scripts", "Worker.pl")
-    .WithPerlbrewEnvironment("5.38.0")
-    .WithLocalLib("local");
+builder.AddPerlScript("perlbrew-worker", "../scripts", "Worker.pl")
+    .WithPerlbrewEnvironment("perl-5.42.0");
 ```
 
 **What it configures:**
@@ -281,8 +280,9 @@ builder.AddPerlScript("worker", "../scripts", "Worker.pl")
 - Sets `PERLBREW_ROOT`, `PERLBREW_PERL`, and `PERLBREW_HOME`
 - Prepends the perlbrew `bin/` to `PATH`
 
-**Interaction with WithLocalLib:** Modules are installed into the local directory, not the perlbrew
-tree. This keeps the perlbrew installation clean and allows per-project isolation.
+**Interaction with WithLocalLib:** If `.WithLocalLib("local")` is chained, modules are installed
+into the local directory, not the perlbrew tree. This keeps the perlbrew installation clean and
+allows per-project isolation. `WithLocalLib` is optional when using perlbrew.
 
 > **Note:** Perlbrew is Linux-only. On Windows, the integration will display a notification
 > recommending [Berrybrew](https://github.com/stevieb9/berrybrew). Windows support for Berrybrew

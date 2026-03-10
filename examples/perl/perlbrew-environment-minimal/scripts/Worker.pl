@@ -2,8 +2,9 @@ use strict;
 use warnings;
 
 my $actual_perl_version = "$^V";
-if ($actual_perl_version !~ /^v5\.38\./) {
-    die "Expected perl v5.38.x from perlbrew, but got $actual_perl_version\n";
+
+if ($actual_perl_version !~ /^v5\.42\./) {
+    die "Expected perl v5.42.x from perlbrew, but got $actual_perl_version\n";
 }
 
 $| = 1;

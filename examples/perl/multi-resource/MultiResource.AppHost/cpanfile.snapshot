@@ -73,8 +73,6 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Fcntl 0
       Test::More 0.45
-      Win32 0
-      Win32::API 0.62
       base 0
       constant 0
       perl 5.006002
@@ -101,20 +99,9 @@ DISTRIBUTIONS
       English 0
       Exporter 0
       ExtUtils::MakeMaker 0
-      Win32::API 0
+      FileHandle 0
       constant 0
       perl 5.006
-  Encode-compat-0.07
-    pathname: A/AU/AUTRIJUS/Encode-compat-0.07.tar.gz
-    provides:
-      Encode 0.05
-      Encode::Alias 0.05
-      Encode::compat 0.07
-      Encode::compat::5006001 0.05
-      Encode::compat::Alias 0.05
-      Encode::compat::common 0.06
-    requirements:
-      ExtUtils::MakeMaker 0
   Exporter-Tiny-1.006003
     pathname: T/TO/TOBYINK/Exporter-Tiny-1.006003.tar.gz
     provides:
@@ -154,7 +141,6 @@ DISTRIBUTIONS
       Carp 0
       Exporter 5.57
       ExtUtils::MakeMaker 0
-      ExtUtils::PL2Bat 0
       File::Basename 0
       File::Copy 0
       File::Spec::Functions 0
@@ -215,7 +201,7 @@ DISTRIBUTIONS
     requirements:
       Carp 0
       Exporter 0
-      ExtUtils::MakeMaker 7.3202
+      ExtUtils::MakeMaker 0
       File::Spec 0
       IO::Dir 0
       perl 5.006
@@ -303,7 +289,7 @@ DISTRIBUTIONS
       IO::Poll 0
       List::Util 0
       Module::Build 0.4004
-      Socket 2.029
+      Socket 2.007
       Storable 0
       Struct::Dumb 0
       Time::HiRes 0
@@ -360,23 +346,6 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       perl 5.008001
       utf8 0
-  Math-Int64-0.57
-    pathname: S/SA/SALVA/Math-Int64-0.57.tar.gz
-    provides:
-      Math::Int64 0.57
-      Math::Int64::die_on_overflow undef
-      Math::Int64::native_if_available undef
-      Math::UInt64 undef
-    requirements:
-      Exporter 0
-      ExtUtils::MakeMaker 0
-      XSLoader 0
-      constant 0
-      overload 0
-      perl 5.006
-      strict 0
-      warnings 0
-      warnings::register 0
   Math-Random-ISAAC-1.004
     pathname: J/JA/JAWNSY/Math-Random-ISAAC-1.004.tar.gz
     provides:
@@ -432,14 +401,13 @@ DISTRIBUTIONS
       ExtUtils::Install 0
       ExtUtils::Manifest 0
       ExtUtils::Mkbootstrap 0
-      ExtUtils::PL2Bat 0
       ExtUtils::ParseXS 2.21
       File::Basename 0
       File::Compare 0
       File::Copy 0
       File::Find 0
       File::Path 0
-      File::Spec 3.3
+      File::Spec 0.82
       Getopt::Long 0
       Module::Metadata 1.000002
       Perl::OSType 1
@@ -1000,28 +968,6 @@ DISTRIBUTIONS
       perl 5.008
       strict 0
       warnings 0
-  Win32-API-0.84
-    pathname: B/BU/BULKDD/Win32/Win32-API-0.84.tar.gz
-    provides:
-      Win32::API 0.84
-      Win32::API::Callback 0.84
-      Win32::API::More 0.84
-      Win32::API::Struct 0.67
-      Win32::API::Test undef
-      Win32::API::Type 0.70
-      Win32::kernel32 0.50
-    requirements:
-      Config::Perl::V 0
-      Encode::compat 0
-      ExtUtils::MakeMaker 0
-      File::Spec 0
-      IPC::Open3 0
-      Math::Int64 0
-      Scalar::Util 0
-      Test::More 0
-      Win32 0
-      Win32API::File 0
-      perl 5.000
   X-Tiny-0.22
     pathname: F/FE/FELIPE/X-Tiny-0.22.tar.gz
     provides:
@@ -1045,7 +991,7 @@ DISTRIBUTIONS
       ExtUtils::ParseXS 3.16
       File::ShareDir 1.00
       Module::Build 0.4004
-      perl 5.022
+      perl 5.014
   XS-Parse-Sublike-0.41
     pathname: P/PE/PEVANS/XS-Parse-Sublike-0.41.tar.gz
     provides:
