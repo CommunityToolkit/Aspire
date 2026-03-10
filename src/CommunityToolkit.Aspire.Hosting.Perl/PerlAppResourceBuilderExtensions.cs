@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable ASPIREEXTENSION001
@@ -414,37 +413,6 @@ public static class PerlAppResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a CPANM module installation step to the Perl application resource prior to running the application.
-    /// It will run a perl -M {moduleName} -e 1 command to check if the module is already installed,
-    /// and if not, it will use CPANM to install the specified module, with --force if you supply it in installArgs.
-    /// 
-    /// Currently there is no interactive way to handle module installation prompts, so using --force is recommended.
-    /// </summary>
-    /// <typeparam name="TResource"></typeparam>
-    /// <param name="resource"></param>
-    /// <param name="moduleName"></param>
-    /// <param name="installArgs"></param>
-    /// <returns></returns>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [Obsolete("Use WithCpanMinus().WithPackage(moduleName) instead.")]
-    public static IResourceBuilder<TResource> WithCpanm<TResource>(
-        this IResourceBuilder<TResource> resource, string moduleName, string[]? installArgs = null) where TResource : PerlAppResource
-    {
-        ArgumentNullException.ThrowIfNull(resource);
-        ArgumentException.ThrowIfNullOrEmpty(moduleName);
-
-        installArgs ??= BuildInstallArgs(PerlPackageManager.Cpanm, moduleName, force: false, skipTest: false);
-
-        resource
-            .WithCpanMinus()
-            .WithAnnotation(new PerlModuleInstallCommandAnnotation(installArgs), ResourceAnnotationMutationBehavior.Replace);
-
-        AddInstaller(resource, moduleName, installArgs.Length > 0);
-
-        return resource;
-    }
-
-    /// <summary>
     /// Configures the Perl application to use cpanm (App::cpanminus) as its package manager
     /// instead of the default cpan. Call this before <see cref="WithPackage{TResource}"/> to
     /// change how packages are installed.
@@ -661,7 +629,14 @@ public static class PerlAppResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.WithCertificateTrustConfiguration(async context =>
+        if (builder.Resource.Annotations.OfType<PerlCertificateTrustAnnotation>().Any())
+        {
+            return builder;
+        }
+
+        builder.Resource.Annotations.Add(new PerlCertificateTrustAnnotation());
+
+        builder.WithCertificateTrustConfiguration(context =>
         {
             if (context.CertificateBundlePath is { } bundlePath)
             {
@@ -670,8 +645,11 @@ public static class PerlAppResourceBuilderExtensions
                 context.EnvironmentVariables["MOJO_CA_FILE"] = bundlePath;
             }
 
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         });
+
+        // Propagate cert trust env vars to any existing installer child resources
+        TryAttachCertificateTrustToExistingInstallers(builder);
 
         return builder;
     }
@@ -706,7 +684,26 @@ public static class PerlAppResourceBuilderExtensions
             builder.WithCpanMinus();
         }
 
+        builder.WithAnnotation(new PerlCartonDeploymentAnnotation(cartonDeployment));
+
         AddProjectDependencyInstaller(builder, cartonDeployment);
+
+        // When using Carton with --deployment, validate that cpanfile.snapshot exists
+        if (cartonDeployment &&
+            builder.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var currentPm) &&
+            currentPm.PackageManager == PerlPackageManager.Carton)
+        {
+            var workingDir = builder.Resource.WorkingDirectory ?? ".";
+            var snapshotPath = Path.Combine(workingDir, "cpanfile.snapshot");
+            if (!File.Exists(snapshotPath))
+            {
+                builder.WithRequiredCommand("cpanfile.snapshot", _ => Task.FromResult(
+                    RequiredCommandValidationResult.Failure(
+                        "carton install --deployment requires a cpanfile.snapshot file. " +
+                        "Run 'carton install' first to generate the snapshot, then commit it to source control.")),
+                    "https://metacpan.org/pod/Carton");
+            }
+        }
 
         return builder;
     }
@@ -829,104 +826,6 @@ public static class PerlAppResourceBuilderExtensions
         }
     }
 
-    private static void AddInstaller<TResource>(IResourceBuilder<TResource> resource, string moduleName, bool install) where TResource : PerlAppResource
-    {
-        // Only install packages if in run mode
-        if (resource.ApplicationBuilder.ExecutionContext.IsRunMode)
-        {
-            // Check if the installer resource already exists
-            var installerName = $"{moduleName}-installer";
-            resource.ApplicationBuilder.TryCreateResourceBuilder<PerlModuleInstallerResource>(installerName, out var existingResource);
-
-            if (!install)
-            {
-                if (existingResource != null)
-                {
-                    // Remove existing installer resource if install is false
-                    resource.ApplicationBuilder.Resources.Remove(existingResource.Resource);
-                    resource.Resource.Annotations.OfType<WaitAnnotation>()
-                        .Where(w => w.Resource == existingResource.Resource)
-                        .ToList()
-                        .ForEach(w => resource.Resource.Annotations.Remove(w));
-                    resource.Resource.Annotations.OfType<PerlModuleInstallCommandAnnotation>()
-                        .ToList()
-                        .ForEach(a => resource.Resource.Annotations.Remove(a));
-                }
-                else
-                {
-                    // No installer needed
-                }
-                return;
-            }
-
-            if (existingResource is not null)
-            {
-                // Installer already exists
-                return;
-            }
-
-            var installer = new PerlModuleInstallerResource(
-                SanitizeInstallerResourceName(installerName),
-                moduleName, 
-                resource?.Resource.WorkingDirectory ?? throw new ArgumentNullException());
-            var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
-                .WithParentRelationship(resource.Resource)
-                .ExcludeFromManifest();
-
-            resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (_, ct) =>
-            {
-                // Preflight: skip installation if module is already available
-                var perlPath = ResolvePerlPath(resource.Resource);
-                var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
-                    resource.Resource,
-                    resource.ApplicationBuilder.ExecutionContext,
-                    ct).ConfigureAwait(false);
-
-                if (await PerlModuleChecker.IsModuleInstalledAsync(perlPath, moduleName, environmentVariables, ct).ConfigureAwait(false))
-                {
-                    installerBuilder
-                        .WithCommand(perlPath)
-                        .WithWorkingDirectory(resource.Resource.WorkingDirectory)
-                        .WithArgs("-e", "1");
-                    return;
-                }
-
-                // set the installer's working directory to match the resource's working directory
-                // and set the install command and args based on the resource's annotations
-                if (!resource.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager) ||
-                    !resource.Resource.TryGetLastAnnotation<PerlModuleInstallCommandAnnotation>(out var installCommand))
-                {
-                    throw new InvalidOperationException("PerlPackageManagerAnnotation and PerlModuleInstallCommandAnnotation are required when installing packages.");
-                }
-
-                var command = ResolveInstallerCommand(resource.Resource, packageManager, installerBuilder);
-
-                installerBuilder
-                    .WithCommand(command)
-                    .WithWorkingDirectory(resource.Resource.WorkingDirectory)
-                    .WithArgs(installCommand.Args);
-
-                // Propagate local::lib environment to the installer so it installs to the right location
-                var localLibPath = ResolveLocalLibPath(resource.Resource);
-                if (localLibPath is not null)
-                {
-                    installerBuilder.WithEnvironment(context =>
-                    {
-                        ApplyLocalLibEnvironment(context.EnvironmentVariables, localLibPath);
-                    });
-                }
-            });
-
-            // Make the parent resource wait for the installer to complete
-            resource.WaitForCompletion(installerBuilder);
-
-            resource.WithAnnotation(new PerlModuleInstallerAnnotation(installer));
-
-            // Eagerly propagate local::lib env vars if the annotation already exists
-            TryAttachLocalLibToInstallerResource(installer, resource.Resource);
-        }
-    }
-
     /// <summary>
     /// Creates an installer child resource for a single package, deferring argument
     /// construction to <see cref="BeforeStartEvent"/> so the final package manager
@@ -1015,6 +914,9 @@ public static class PerlAppResourceBuilderExtensions
 
         // Eagerly propagate local::lib env vars if the annotation already exists
         TryAttachLocalLibToInstallerResource(installer, resource.Resource);
+
+        // Eagerly propagate certificate trust env vars if configured
+        TryAttachCertificateTrustToInstallerResource(installer, resource.Resource);
     }
 
     /// <summary>
@@ -1117,6 +1019,9 @@ public static class PerlAppResourceBuilderExtensions
         resource.WithAnnotation(new PerlProjectInstallerAnnotation(installer));
 
         TryAttachLocalLibEnvironmentToProjectInstaller(resource);
+
+        // Eagerly propagate certificate trust env vars if configured
+        TryAttachCertificateTrustToInstallerResource(installer, resource.Resource);
     }
 
     private static void ApplyLocalLibEnvironment(IDictionary<string, object> environmentVariables, string localLibPath)
@@ -1240,6 +1145,62 @@ public static class PerlAppResourceBuilderExtensions
     }
 
     /// <summary>
+    /// Applies SSL/TLS certificate trust environment variables to a single installer resource.
+    /// Uses <see cref="PerlCertificateTrustAnnotation"/> on the parent as a guard —
+    /// only propagates when cert trust is enabled. Skips if already attached.
+    /// </summary>
+    private static void TryAttachCertificateTrustToInstallerResource(
+        ExecutableResource installerResource,
+        PerlAppResource parentResource)
+    {
+        if (!parentResource.Annotations.OfType<PerlCertificateTrustAnnotation>().Any())
+        {
+            return;
+        }
+
+        if (installerResource.Annotations.OfType<PerlCertificateTrustAnnotation>().Any())
+        {
+            return;
+        }
+
+        installerResource.Annotations.Add(new PerlCertificateTrustAnnotation());
+
+        installerResource.Annotations.Add(new EnvironmentCallbackAnnotation(context =>
+        {
+            // Propagate by reading from the process environment — Aspire sets these
+            // on the host process when certificate trust is configured.
+            var sslCertFile = Environment.GetEnvironmentVariable("SSL_CERT_FILE");
+            if (sslCertFile is not null)
+            {
+                context.EnvironmentVariables["SSL_CERT_FILE"] = sslCertFile;
+                context.EnvironmentVariables["PERL_LWP_SSL_CA_FILE"] = sslCertFile;
+                context.EnvironmentVariables["MOJO_CA_FILE"] = sslCertFile;
+            }
+
+            return Task.CompletedTask;
+        }));
+    }
+
+    /// <summary>
+    /// Propagates certificate trust to all existing installer child resources.
+    /// Called from <see cref="WithPerlCertificateTrust{TResource}"/> to handle the case
+    /// where installers were created before <c>WithPerlCertificateTrust</c> in the fluent chain.
+    /// </summary>
+    private static void TryAttachCertificateTrustToExistingInstallers<TResource>(
+        IResourceBuilder<TResource> resource) where TResource : PerlAppResource
+    {
+        foreach (var moduleAnnotation in resource.Resource.Annotations.OfType<PerlModuleInstallerAnnotation>())
+        {
+            TryAttachCertificateTrustToInstallerResource(moduleAnnotation.Resource, resource.Resource);
+        }
+
+        if (resource.Resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectAnnotation))
+        {
+            TryAttachCertificateTrustToInstallerResource(projectAnnotation.Resource, resource.Resource);
+        }
+    }
+
+    /// <summary>
     /// Builds the correct CLI arguments for installing a package based on the package manager.
     /// </summary>
     /// <remarks>
@@ -1267,7 +1228,7 @@ public static class PerlAppResourceBuilderExtensions
             case PerlPackageManager.Cpan:
                 if (force) args.Add("-f");
                 if (skipTest) args.Add("-T");
-                if (force) args.Add("-i");
+                args.Add("-i");
                 args.Add(packageName);
                 break;
 
@@ -1416,14 +1377,28 @@ public static class PerlAppResourceBuilderExtensions
                 }
             }
 
+            // Resolve local::lib path from annotation (if configured)
+            string? localLibPath = null;
+            if (resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
+            {
+                localLibPath = localLibAnnotation.Path;
+            }
+
+            // Resolve carton deployment flag from annotation (default: true for publish)
+            var cartonDeployment = true;
+            if (resource.TryGetLastAnnotation<PerlCartonDeploymentAnnotation>(out var cartonDeploymentAnnotation))
+            {
+                cartonDeployment = cartonDeploymentAnnotation.UseDeployment;
+            }
+
             switch (packageManager)
             {
                 case PerlPackageManager.Carton:
-                    BuildCartonDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage, buildImage);
+                    BuildCartonDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage, buildImage, localLibPath, cartonDeployment);
                     break;
 
                 default:
-                    BuildCpanmDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage);
+                    BuildCpanmDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage, localLibPath);
                     break;
             }
 
@@ -1439,17 +1414,29 @@ public static class PerlAppResourceBuilderExtensions
         EntrypointType entrypointType,
         string entrypoint,
         string? apiSubcommand,
-        string baseImage)
+        string baseImage,
+        string? localLibPath = null)
     {
-        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, useLocalLibPath: false);
+        var useLocalLib = localLibPath is not null;
+        var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, useLocalLibPath: useLocalLib);
 
-        builder.From(baseImage)
+        var stage = builder.From(baseImage)
             .WorkDir("/app")
             .Run("cpanm App::cpanminus || true")
             .Copy("cpanfile", "./")
-            .Run("cpanm --installdeps --notest .")
-            .Copy(".", ".")
-            .Entrypoint(entrypointArgs);
+            .Run(useLocalLib
+                ? $"cpanm --local-lib /app/{localLibPath} --installdeps --notest ."
+                : "cpanm --installdeps --notest .")
+            .Copy(".", ".");
+
+        if (useLocalLib)
+        {
+            var libPerl5 = $"/app/{localLibPath}/lib/perl5";
+            stage.Env("PERL5LIB", libPerl5)
+                .Env("PERL_LOCAL_LIB_ROOT", $"/app/{localLibPath}");
+        }
+
+        stage.Entrypoint(entrypointArgs);
     }
 
     /// <summary>
@@ -1461,21 +1448,36 @@ public static class PerlAppResourceBuilderExtensions
         string entrypoint,
         string? apiSubcommand,
         string runtimeImage,
-        string buildImage)
+        string buildImage,
+        string? localLibPath = null,
+        bool cartonDeployment = true)
     {
+        var useLocalLib = localLibPath is not null;
         var entrypointArgs = BuildContainerEntrypointArguments(entrypointType, entrypoint, apiSubcommand, useLocalLibPath: true);
+
+        var cartonInstallCommand = cartonDeployment
+            ? "carton install --deployment"
+            : "carton install";
 
         builder.From(buildImage, "build")
             .WorkDir("/app")
             .Run("cpanm Carton")
             .Copy("cpanfile", "./")
             .Copy("cpanfile.snapshot", "./")
-            .Run("carton install --deployment")
+            .Run(cartonInstallCommand)
             .Copy(".", ".");
 
-        builder.From(runtimeImage)
+        var runtimeStage = builder.From(runtimeImage)
             .WorkDir("/app")
-            .CopyFrom("build", "/app", "/app")
-            .Entrypoint(entrypointArgs);
+            .CopyFrom("build", "/app", "/app");
+
+        if (useLocalLib)
+        {
+            var libPerl5 = $"/app/{localLibPath}/lib/perl5";
+            runtimeStage.Env("PERL5LIB", libPerl5)
+                .Env("PERL_LOCAL_LIB_ROOT", $"/app/{localLibPath}");
+        }
+
+        runtimeStage.Entrypoint(entrypointArgs);
     }
 }

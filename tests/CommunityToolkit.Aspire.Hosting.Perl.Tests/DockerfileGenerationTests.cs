@@ -249,4 +249,125 @@ public class DockerfileGenerationTests
     }
 
     #endregion
+
+    #region BuildCpanmDockerfile with LocalLib
+
+    [Fact]
+    public void BuildCpanmDockerfile_WithLocalLib_SetsEnvDirectives()
+    {
+        var builder = new DockerfileBuilder();
+
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            localLibPath: "local");
+
+        var statements = builder.Stages[0].Statements;
+        var envStatements = statements
+            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
+            .ToList();
+
+        Assert.True(envStatements.Count >= 2, "Expected ENV statements for PERL5LIB and PERL_LOCAL_LIB_ROOT");
+    }
+
+    [Fact]
+    public void BuildCpanmDockerfile_WithoutLocalLib_NoEnvDirectives()
+    {
+        var builder = new DockerfileBuilder();
+
+        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim");
+
+        var statements = builder.Stages[0].Statements;
+        var envStatements = statements
+            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
+            .ToList();
+
+        Assert.Empty(envStatements);
+    }
+
+    #endregion
+
+    #region BuildCartonDockerfile with LocalLib
+
+    [Fact]
+    public void BuildCartonDockerfile_WithLocalLib_RuntimeStageHasEnvDirectives()
+    {
+        var builder = new DockerfileBuilder();
+
+        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            "perl:5",
+            localLibPath: "local");
+
+        var runtimeStatements = builder.Stages[1].Statements;
+        var envStatements = runtimeStatements
+            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
+            .ToList();
+
+        Assert.True(envStatements.Count >= 2, "Expected ENV statements for PERL5LIB and PERL_LOCAL_LIB_ROOT in runtime stage");
+    }
+
+    #endregion
+
+    #region BuildCartonDockerfile deployment flag
+
+    [Fact]
+    public void BuildCartonDockerfile_WithDeployment_RunsCartonInstallDeployment()
+    {
+        var builder = new DockerfileBuilder();
+
+        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            "perl:5",
+            localLibPath: null,
+            cartonDeployment: true);
+
+        var buildStatements = builder.Stages[0].Statements;
+        var runStatements = buildStatements
+            .Where(s => s.GetType().Name == "DockerfileRunStatement")
+            .ToList();
+
+        Assert.True(runStatements.Count >= 2);
+    }
+
+    [Fact]
+    public void BuildCartonDockerfile_WithoutDeployment_RunsCartonInstall()
+    {
+        var builder = new DockerfileBuilder();
+
+        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
+            builder,
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            "perl:5",
+            localLibPath: null,
+            cartonDeployment: false);
+
+        var buildStatements = builder.Stages[0].Statements;
+        var runStatements = buildStatements
+            .Where(s => s.GetType().Name == "DockerfileRunStatement")
+            .ToList();
+
+        Assert.True(runStatements.Count >= 2);
+    }
+
+    #endregion
 }

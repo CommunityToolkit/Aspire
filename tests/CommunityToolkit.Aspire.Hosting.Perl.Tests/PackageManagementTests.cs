@@ -282,7 +282,8 @@ public class PackageManagementTests
     {
         var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpan, "DBI", force: false, skipTest: false);
 
-        Assert.Equal(["DBI"], args);
+        // cpan always needs -i to prevent interactive shell hangs
+        Assert.Equal(["-i", "DBI"], args);
     }
 
     [Fact]
@@ -299,7 +300,7 @@ public class PackageManagementTests
     {
         var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpan, "DBI", force: false, skipTest: true);
 
-        Assert.Equal(["-T", "DBI"], args);
+        Assert.Equal(["-T", "-i", "DBI"], args);
     }
 
     [Fact]
@@ -343,7 +344,7 @@ public class PackageManagementTests
         var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(
             PerlPackageManager.Cpan, "DBI", force: false, skipTest: false, localLibPath: "/app/local");
 
-        Assert.Equal(["DBI"], args);
+        Assert.Equal(["-i", "DBI"], args);
     }
 
     #endregion
@@ -481,6 +482,75 @@ public class PackageManagementTests
         IResourceBuilder<PerlAppResource> builder = null!;
 
         Assert.Throws<ArgumentNullException>(() => builder.WithProjectDependencies());
+    }
+
+    [Fact]
+    public void WithProjectDependencies_CartonDeployment_WarnsMissingSnapshot()
+    {
+        var tempDir = Directory.CreateTempSubdirectory("perl-test-");
+        try
+        {
+            // Create a cpanfile but NO cpanfile.snapshot
+            File.WriteAllText(Path.Combine(tempDir.FullName, "cpanfile"), "requires 'Mojolicious';");
+
+            var builder = DistributedApplication.CreateBuilder();
+
+            builder.AddPerlScript("perl-app", tempDir.FullName, "app.pl")
+                .WithCarton()
+                .WithProjectDependencies(cartonDeployment: true);
+
+            using var app = builder.Build();
+
+            var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+            var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+            // The deployment annotation should be stored
+            Assert.True(resource.TryGetLastAnnotation<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCartonDeploymentAnnotation>(out var annotation));
+            Assert.True(annotation.UseDeployment);
+
+            // A RequiredCommandAnnotation for cpanfile.snapshot should be added since the snapshot is missing
+            var snapshotCheck = resource.Annotations
+                .OfType<RequiredCommandAnnotation>()
+                .SingleOrDefault(a => a.Command == "cpanfile.snapshot");
+            Assert.NotNull(snapshotCheck);
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void WithProjectDependencies_CartonDeployment_NoWarningWhenSnapshotExists()
+    {
+        var tempDir = Directory.CreateTempSubdirectory("perl-test-");
+        try
+        {
+            // Create both cpanfile AND cpanfile.snapshot
+            File.WriteAllText(Path.Combine(tempDir.FullName, "cpanfile"), "requires 'Mojolicious';");
+            File.WriteAllText(Path.Combine(tempDir.FullName, "cpanfile.snapshot"), "DISTRIBUTIONS\n");
+
+            var builder = DistributedApplication.CreateBuilder();
+
+            builder.AddPerlScript("perl-app", tempDir.FullName, "app.pl")
+                .WithCarton()
+                .WithProjectDependencies(cartonDeployment: true);
+
+            using var app = builder.Build();
+
+            var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+            var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+            // No cpanfile.snapshot RequiredCommandAnnotation should be present since the file exists
+            var snapshotCheck = resource.Annotations
+                .OfType<RequiredCommandAnnotation>()
+                .SingleOrDefault(a => a.Command == "cpanfile.snapshot");
+            Assert.Null(snapshotCheck);
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
     }
 
     [Fact]
@@ -1110,6 +1180,72 @@ public class PackageManagementTests
         IResourceBuilder<PerlAppResource> builder = null!;
 
         Assert.Throws<ArgumentNullException>(() => builder.WithPerlCertificateTrust());
+    }
+
+    [Fact]
+    public void WithPerlCertificateTrust_CalledTwice_DoesNotDuplicateAnnotation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlCertificateTrust()
+            .WithPerlCertificateTrust();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        // Verify the marker annotation is present and singular
+        Assert.Single(resource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
+
+        var annotations = resource.Annotations
+            .OfType<CertificateTrustConfigurationCallbackAnnotation>()
+            .ToList();
+        Assert.Single(annotations);
+    }
+
+    [Fact]
+    public void WithPerlCertificateTrust_PropagatesEnvVarsToInstallerChildResources()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage("Mojolicious")
+            .WithPerlCertificateTrust();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+
+        // Verify the cert trust marker annotation was propagated to the installer
+        Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
+
+        // Verify an env callback was added for cert trust
+        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
+        Assert.NotEmpty(envCallbacks);
+    }
+
+    [Fact]
+    public void WithPerlCertificateTrust_BeforeWithPackage_StillPropagates()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPerlCertificateTrust()
+            .WithCpanMinus()
+            .WithPackage("Mojolicious");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+
+        // Verify the cert trust marker annotation was propagated even though
+        // WithPerlCertificateTrust() was called before WithPackage()
+        Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
     }
 
     #endregion

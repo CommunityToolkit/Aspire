@@ -1,8 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
-#pragma warning disable CS0618
-
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlAppPublicApiTests
@@ -73,32 +71,6 @@ public class PerlAppPublicApiTests
 
         Assert.Throws<ArgumentException>(() =>
             builder.AddPerlApi("perl-api", "api", ""));
-    }
-
-    #endregion
-
-    #region WithCpanm Argument Validation
-
-    [Fact]
-    public void WithCpanmShouldThrowWhenResourceIsNull()
-    {
-        IResourceBuilder<PerlAppResource> resource = null!;
-
-        Assert.Throws<ArgumentNullException>(() =>
-            resource.WithCpanm("Mojolicious"));
-    }
-
-    [Fact]
-    public void WithCpanmShouldThrowWhenModuleNameIsNullOrEmpty()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var resource = builder.AddPerlScript("perl-app", "scripts", "app.pl");
-
-        Assert.Throws<ArgumentNullException>(() =>
-            resource.WithCpanm(null!));
-
-        Assert.Throws<ArgumentException>(() =>
-            resource.WithCpanm(""));
     }
 
     #endregion

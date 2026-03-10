@@ -4,8 +4,8 @@ using CommunityToolkit.Aspire.Hosting.Perl;
 namespace CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 
 /// <summary>
-/// An annotation that wires into a specific perlbrew environment to use for the given resource.
-/// See documentation on perlbrew here: https://perlbrew.pl/
+/// An annotation that stores the entrypoint type and path for a Perl application resource,
+/// used to determine how the application is launched (e.g., as a script or via a framework runner).
 /// </summary>
 /// <see cref="EntrypointType"/>
 internal class PerlEntrypointAnnotation : IResourceAnnotation

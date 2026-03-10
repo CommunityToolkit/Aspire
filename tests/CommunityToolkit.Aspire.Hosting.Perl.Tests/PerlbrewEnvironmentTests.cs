@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable ASPIRECOMMAND001
 #pragma warning disable ASPIREINTERACTION001
-#pragma warning disable CS0618
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
@@ -344,7 +343,8 @@ public class PerlbrewEnvironmentTests
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/home/user/perl5/perlbrew")
-            .WithCpanm("Mojolicious");
+            .WithCpanMinus()
+            .WithPackage("Mojolicious");
 
         using var app = builder.Build();
 
@@ -381,7 +381,8 @@ public class PerlbrewEnvironmentTests
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root")
-            .WithCpanm("OpenTelemetry::SDK");
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK");
 
         using var app = builder.Build();
 

@@ -1,8 +1,6 @@
 using Aspire.Hosting;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 
-#pragma warning disable CS0618
-
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class ResourceCreationTests
@@ -184,60 +182,6 @@ public class ResourceCreationTests
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
         Assert.IsAssignableFrom<ExecutableResource>(resource);
-    }
-
-    #endregion
-
-    #region WithCpanm
-
-    [Fact]
-    public void WithCpanmAddsPackageManagerAnnotation()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithCpanm("Mojolicious");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
-        Assert.Equal("cpanm", annotation.ExecutableName);
-    }
-
-    [Fact]
-    public void WithCpanmAddsInstallCommandAnnotation()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithCpanm("Mojolicious");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.True(resource.TryGetLastAnnotation<PerlModuleInstallCommandAnnotation>(out var annotation));
-        Assert.Equal(["Mojolicious"], annotation.Args);
-    }
-
-    [Fact]
-    public void WithCpanmCreatesInstallerResource()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithCpanm("Mojolicious");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
-        Assert.Contains("Mojolicious", installerResource.Name);
     }
 
     #endregion
