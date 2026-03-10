@@ -405,6 +405,30 @@ multi-resource/
 > - API resources (`appDirectory = "."`) → `MultiResource.AppHost/local/`
 > - Worker (`appDirectory = "../scripts"`) → `scripts/local/`
 
+> **Linux HTTPS note:** The multi-resource example uses HTTPS for service-to-service calls between
+> Perl API resources. On Windows, `dotnet dev-certs https --trust` adds the Aspire dev certificate
+> to the OS certificate store automatically. On Linux, OpenSSL does **not** trust the dev cert by
+> default, so `Mojo::UserAgent` HTTPS requests between resources will fail with
+> `certificate verify failed`.
+>
+> To fix this, export the dev cert and add it to your system CA store:
+>
+> ```bash
+> # Export the dev cert as PEM
+> dotnet dev-certs https --export-path /tmp/aspire-dev-cert.crt --format PEM --no-password
+>
+> # Ubuntu/Debian
+> sudo cp /tmp/aspire-dev-cert.crt /usr/local/share/ca-certificates/aspire-dev.crt
+> sudo update-ca-certificates
+>
+> # Fedora/RHEL
+> sudo cp /tmp/aspire-dev-cert.crt /etc/pki/ca-trust/source/anchors/aspire-dev.crt
+> sudo update-ca-trust
+> ```
+>
+> This is a one-time setup per machine. After this, HTTPS between Perl resources works identically
+> to Windows.
+
 ---
 
 ## Common Pitfalls
