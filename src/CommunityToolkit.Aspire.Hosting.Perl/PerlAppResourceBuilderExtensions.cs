@@ -2,6 +2,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.ApplicationModel.Docker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
@@ -156,6 +157,17 @@ public static class PerlAppResourceBuilderExtensions
         builder.Services.TryAddSingleton<PerlInstallationManager>();
 
         var resource = new PerlAppResource(resourceName, entrypoint, resolvedAppDirectory);
+
+        if (builder.ExecutionContext.IsRunMode)
+        {
+            builder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
+            {
+                var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource);
+                logger.LogInformation("Perl resource '{ResourceName}' configured: entrypoint={Entrypoint}, type={EntrypointType}, workingDirectory={WorkingDirectory}",
+                    resourceName, entrypoint, entrypointType, resolvedAppDirectory);
+                return Task.CompletedTask;
+            });
+        }
 
         // Use just the entrypoint filename — the working directory is already set to appDirectory,
         // so Path.Combine(appDirectory, entrypoint) would double-nest the path.
@@ -636,6 +648,25 @@ public static class PerlAppResourceBuilderExtensions
 
         builder.Resource.Annotations.Add(new PerlCertificateTrustAnnotation());
 
+        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            builder.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
+            {
+                var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(builder.Resource);
+                var sslCertFile = Environment.GetEnvironmentVariable("SSL_CERT_FILE");
+                if (sslCertFile is not null)
+                {
+                    logger.LogInformation("Certificate trust configured: SSL_CERT_FILE={CertBundlePath}", sslCertFile);
+                }
+                else
+                {
+                    logger.LogDebug("Certificate trust enabled but no SSL_CERT_FILE found in environment");
+                }
+
+                return Task.CompletedTask;
+            });
+        }
+
         builder.WithCertificateTrustConfiguration(context =>
         {
             if (context.CertificateBundlePath is { } bundlePath)
@@ -863,8 +894,10 @@ public static class PerlAppResourceBuilderExtensions
             .WithParentRelationship(resource.Resource)
             .ExcludeFromManifest();
 
-        resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (_, ct) =>
+        resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (evt, ct) =>
         {
+            var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
+
             // Preflight: skip installation if module is already available
             var perlPath = ResolvePerlPath(resource.Resource);
             var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
@@ -874,6 +907,7 @@ public static class PerlAppResourceBuilderExtensions
 
             if (await PerlModuleChecker.IsModuleInstalledAsync(perlPath, packageName, environmentVariables, ct).ConfigureAwait(false))
             {
+                logger.LogInformation("Module '{PackageName}' is already installed — skipping installation", packageName);
                 installerBuilder
                     .WithCommand(perlPath)
                     .WithWorkingDirectory(resource.Resource.WorkingDirectory)
@@ -891,6 +925,13 @@ public static class PerlAppResourceBuilderExtensions
             var command = ResolveInstallerCommand(resource.Resource, packageManager, installerBuilder);
             var localLibPath = ResolveLocalLibPath(resource.Resource);
             var installArgs = BuildInstallArgs(packageManager.PackageManager, packageName, force, skipTest, localLibPath);
+
+            logger.LogInformation("Installing module '{PackageName}' via {PackageManager}: {Command} {Args}",
+                packageName, packageManager.PackageManager, command, string.Join(" ", installArgs));
+            if (localLibPath is not null)
+            {
+                logger.LogInformation("Install target (local::lib): {LocalLibPath}", localLibPath);
+            }
 
             installerBuilder
                 .WithCommand(command)
@@ -952,8 +993,10 @@ public static class PerlAppResourceBuilderExtensions
             .WithParentRelationship(resource.Resource)
             .ExcludeFromManifest();
 
-        resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (_, ct) =>
+        resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (evt, ct) =>
         {
+            var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
+
             // Preflight: if a cpanfile exists, check whether all required modules are already installed
             var perlPath = ResolvePerlPath(resource.Resource);
             var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
@@ -965,6 +1008,7 @@ public static class PerlAppResourceBuilderExtensions
 
             if (File.Exists(cpanfilePath))
             {
+                logger.LogInformation("Found cpanfile at {CpanfilePath} — checking if all dependencies are satisfied", cpanfilePath);
                 var requiredModules = CpanfileParser.ParseRequiredModules(cpanfilePath);
                 if (requiredModules.Count > 0)
                 {
@@ -973,6 +1017,7 @@ public static class PerlAppResourceBuilderExtensions
                     {
                         if (!await PerlModuleChecker.IsModuleInstalledAsync(perlPath, module, environmentVariables, ct).ConfigureAwait(false))
                         {
+                            logger.LogDebug("Module '{Module}' is not installed — project dependencies need installation", module);
                             allInstalled = false;
                             break;
                         }
@@ -980,6 +1025,7 @@ public static class PerlAppResourceBuilderExtensions
 
                     if (allInstalled)
                     {
+                        logger.LogInformation("All {Count} cpanfile dependencies are already installed — skipping project dependency installation", requiredModules.Count);
                         installerBuilder
                             .WithCommand(perlPath)
                             .WithWorkingDirectory(workingDir)
@@ -987,6 +1033,10 @@ public static class PerlAppResourceBuilderExtensions
                         return;
                     }
                 }
+            }
+            else
+            {
+                logger.LogDebug("No cpanfile found at {CpanfilePath} — skipping preflight dependency check", cpanfilePath);
             }
 
             if (!resource.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager))
@@ -999,6 +1049,14 @@ public static class PerlAppResourceBuilderExtensions
             var command = ResolveInstallerCommand(resource.Resource, packageManager, installerBuilder);
             var localLibPath = ResolveLocalLibPath(resource.Resource);
             var installArgs = BuildProjectInstallArgs(packageManager.PackageManager, cartonDeployment, localLibPath);
+
+            logger.LogInformation("Installing project dependencies via {PackageManager}: {Command} {Args}",
+                packageManager.PackageManager, command, string.Join(" ", installArgs));
+            logger.LogInformation("Working directory: {WorkingDirectory}", resource.Resource.WorkingDirectory ?? string.Empty);
+            if (localLibPath is not null)
+            {
+                logger.LogInformation("Install target (local::lib): {LocalLibPath}", localLibPath);
+            }
 
             installerBuilder
                 .WithCommand(command)
@@ -1044,6 +1102,22 @@ public static class PerlAppResourceBuilderExtensions
 
         resource.Resource.Annotations.Add(new PerlbrewResourceEnvironmentAnnotation());
 
+        if (resource.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
+            {
+                if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var annotation) &&
+                    annotation.Environment is { } env)
+                {
+                    var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
+                    logger.LogInformation("Perlbrew environment: version={Version}, root={PerlbrewRoot}, perl={PerlPath}",
+                        env.Version, env.PerlbrewRoot, env.GetExecutable("perl"));
+                }
+
+                return Task.CompletedTask;
+            });
+        }
+
         resource.WithEnvironment(context =>
         {
             if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
@@ -1063,6 +1137,24 @@ public static class PerlAppResourceBuilderExtensions
         }
 
         resource.Resource.Annotations.Add(new PerlLocalLibResourceEnvironmentAnnotation());
+
+        if (resource.ApplicationBuilder.ExecutionContext.IsRunMode)
+        {
+            resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
+            {
+                if (resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var annotation))
+                {
+                    var resolvedPath = ResolveLocalLibPath(resource.Resource.WorkingDirectory, annotation.Path);
+                    var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
+                    logger.LogInformation("local::lib configured: path='{ConfiguredPath}' resolved to '{ResolvedPath}'",
+                        annotation.Path, resolvedPath);
+                    logger.LogDebug("local::lib environment: PERL5LIB={Perl5Lib}, PERL_LOCAL_LIB_ROOT={LocalLibRoot}",
+                        Path.Combine(resolvedPath, "lib", "perl5"), resolvedPath);
+                }
+
+                return Task.CompletedTask;
+            });
+        }
 
         resource.WithEnvironment(context =>
         {
