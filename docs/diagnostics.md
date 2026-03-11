@@ -1,10 +1,10 @@
 # Aspire Community Toolkit Diagnostics
 
-Some of the API's in the Aspire Community Toolkit are decorated with the [`ExperimentalAttrible`](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.experimentalattribute). This attribute is used to indicate that an API is not ready for production use and is subject to change in the future.
+Some of the API's in the Aspire Community Toolkit are decorated with the [`ExperimentalAttribute`](https://learn.microsoft.com/dotnet/api/system.diagnostics.codeanalysis.experimentalattribute). This attribute is used to indicate that an API is not ready for production use and is subject to change in the future.
 
 ## CTASPIRE001
 
-There are cases where there is an API provided by the Aspire Community Toolkit that is an intermidiary solution until a feature is added to Aspire itself. This could be a private API that is not yet ready for public consumption, or a workaround waiting for the completion of a feature in Aspire.
+There are cases where there is an API provided by the Aspire Community Toolkit that is an intermediary solution until a feature is added to Aspire itself. This could be a private API that is not yet ready for public consumption, or a workaround waiting for the completion of a feature in Aspire.
 
 In these cases, refer to the `<remarks>` docs section of the API for more information on the feature in Aspire and the issue(s) to track.
 

@@ -35,7 +35,7 @@ For a comprehensive walkthrough of the API — including `appDirectory` resoluti
 
 ## Additional Information
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-perl
+For more info visit <https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-perl>.
 
 ## Roadmap
 
@@ -43,20 +43,20 @@ See [Roadmap](docs/roadmap.md) for notes on planned work for the Perl integratio
 
 ## Feedback & contributing
 
-https://github.com/CommunityToolkit/Aspire
+Please see the main repo for contribution guidelines: <https://github.com/CommunityToolkit/Aspire>.
 
-# Credits
+## Credits
 
 There are many people to thank, but the work of JJAtria in making the OpenTelemetry::SDK module is what makes this integration feel great in Aspire and without it, I don't know that I would have even attempted to create it.  
 
 Thanks also to the Aspire Discord community at large for all the assistance when I had questions about the internals of Aspire.
 
-## Referenced Libraries
+### Referenced Libraries
 
 This integration references or interacts with the following Perl ecosystem libraries and tools, while the libraries themselves are only installed by individual developers for their projects, I do use them as examples and want to give credit and note their licensing for posterity:
 
 | Resource | Website / Repository | License |
-|----------|---------------------|---------|
+| ---------- | --------------------- | --------- |
 | Perl | [perl.org](https://www.perl.org) | [Artistic / GPL](https://github.com/Perl/perl5/blob/blead/Artistic) |
 | Strawberry Perl | [strawberryperl.com](https://strawberryperl.com) | [Artistic / GPL](https://github.com/Perl/perl5/blob/blead/Artistic) |
 | perlbrew | [perlbrew.pl](https://perlbrew.pl) | [MIT](https://github.com/gugod/App-perlbrew/blob/develop/LICENSE) |
