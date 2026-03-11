@@ -37,6 +37,10 @@ internal static partial class CpanfileParser
 
     // Matches: requires 'Module::Name' or requires "Module::Name"
     // With optional version: requires 'Module::Name', '>= 1.0';
+    /// <summary>
+    /// Builds the compiled regex used to match <c>requires</c> directives in a cpanfile.
+    /// </summary>
+    /// <returns>A regex that captures module names from <c>requires</c> statements.</returns>
     [GeneratedRegex(@"^\s*requires\s+['""]([^'""]+)['""]", RegexOptions.Multiline)]
     private static partial Regex RequiresPattern();
 }

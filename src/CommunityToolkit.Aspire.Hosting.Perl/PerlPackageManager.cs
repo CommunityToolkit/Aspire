@@ -31,6 +31,8 @@ public static class PerlPackageManagerExtensions
     /// <summary>
     /// Gets the executable name used to invoke this package manager on the command line.
     /// </summary>
+    /// <param name="packageManager">The package manager value to map to an executable name.</param>
+    /// <returns>The command-line executable name.</returns>
     public static string ToExecutableName(this PerlPackageManager packageManager) => packageManager switch
     {
         PerlPackageManager.Cpan => "cpan",

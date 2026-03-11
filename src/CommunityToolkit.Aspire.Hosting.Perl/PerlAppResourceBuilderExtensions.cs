@@ -140,6 +140,20 @@ public static class PerlAppResourceBuilderExtensions
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Executable, executablePath, DefaultPerlEnvironment);
 
 
+    /// <summary>
+    /// Core implementation used by all <c>AddPerl*</c> entrypoint helpers.
+    /// Resolves the working directory, wires command/arguments, configures
+    /// required command checks, telemetry environment variables, and mode-specific
+    /// startup/publish behavior.
+    /// </summary>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="resourceName">The resource name to register.</param>
+    /// <param name="appDirectory">The application working directory path.</param>
+    /// <param name="entrypointType">How the entrypoint should be invoked.</param>
+    /// <param name="entrypoint">The script/module/executable entrypoint.</param>
+    /// <param name="virtualEnvironmentPath">Reserved environment path argument for future compatibility.</param>
+    /// <param name="typeOfApi">Optional API subcommand such as <c>daemon</c>.</param>
+    /// <returns>The configured Perl application resource builder.</returns>
     private static IResourceBuilder<PerlAppResource> AddPerlAppCore(
         IDistributedApplicationBuilder builder, string resourceName, string appDirectory, EntrypointType entrypointType,
         string entrypoint, string virtualEnvironmentPath, string? typeOfApi = null)
@@ -288,6 +302,8 @@ public static class PerlAppResourceBuilderExtensions
     /// per-package installers are ordered to wait for the project installer,
     /// producing the DAG: project-deps-installer → per-package-installers → app.
     /// </summary>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="resource">The Perl resource whose installer dependencies are updated.</param>
     internal static void SetupDependencies(IDistributedApplicationBuilder builder, PerlAppResource resource)
     {
         var hasProjectInstaller = resource.TryGetLastAnnotation<PerlProjectInstallerAnnotation>(out var projectAnnotation);
@@ -307,6 +323,12 @@ public static class PerlAppResourceBuilderExtensions
         }
     }
 
+    /// <summary>
+    /// Adds a completion wait edge from <paramref name="targetResource"/> to
+    /// <paramref name="dependencyResource"/> when one does not already exist.
+    /// </summary>
+    /// <param name="targetResource">The resource that should wait.</param>
+    /// <param name="dependencyResource">The resource that must complete first.</param>
     private static void AddWaitIfMissing(IResource targetResource, IResource dependencyResource)
     {
         var hasExisting = targetResource.Annotations
@@ -464,6 +486,14 @@ public static class PerlAppResourceBuilderExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Determines whether <c>cpanm</c> is available for the target resource,
+    /// preferring the perlbrew-managed executable when perlbrew is configured.
+    /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="resolvedPath">The resolved command path passed by required-command validation.</param>
+    /// <param name="builder">The resource builder used to inspect annotations.</param>
+    /// <returns><c>true</c> when <c>cpanm</c> can be resolved; otherwise, <c>false</c>.</returns>
     private static bool IsCpanmAvailableForResource<TResource>(string resolvedPath, IResourceBuilder<TResource> builder)
         where TResource : PerlAppResource
     {
@@ -477,9 +507,23 @@ public static class PerlAppResourceBuilderExtensions
         return IsCommandAvailable(resolvedPath);
     }
 
+    /// <summary>
+    /// Checks whether a command path or command name can be resolved from the
+    /// current process <c>PATH</c>.
+    /// </summary>
+    /// <param name="resolvedPath">The command path or command name.</param>
+    /// <returns><c>true</c> when the command is available; otherwise, <c>false</c>.</returns>
     private static bool IsCommandAvailable(string resolvedPath)
         => IsCommandAvailable(resolvedPath, Environment.GetEnvironmentVariable("PATH"), File.Exists);
 
+    /// <summary>
+    /// Checks whether a command path or command name can be resolved using a
+    /// supplied PATH value and file existence probe.
+    /// </summary>
+    /// <param name="resolvedPath">The command path or command name.</param>
+    /// <param name="pathValue">The PATH value to search.</param>
+    /// <param name="fileExists">A file-existence predicate for testability.</param>
+    /// <returns><c>true</c> when the command is available; otherwise, <c>false</c>.</returns>
     internal static bool IsCommandAvailable(string resolvedPath, string? pathValue, Func<string, bool> fileExists)
     {
         if (string.IsNullOrWhiteSpace(resolvedPath))
@@ -495,9 +539,22 @@ public static class PerlAppResourceBuilderExtensions
         return TryResolveCommandFromPath(resolvedPath, pathValue, fileExists) is not null;
     }
 
+    /// <summary>
+    /// Attempts to resolve a command name from the current process <c>PATH</c>.
+    /// </summary>
+    /// <param name="commandName">The command name to resolve.</param>
+    /// <returns>The full resolved path when found; otherwise, <c>null</c>.</returns>
     private static string? TryResolveCommandFromPath(string commandName)
         => TryResolveCommandFromPath(commandName, Environment.GetEnvironmentVariable("PATH"), File.Exists);
 
+    /// <summary>
+    /// Attempts to resolve a command name from the specified PATH value.
+    /// On Windows, PATHEXT extensions are considered during resolution.
+    /// </summary>
+    /// <param name="commandName">The command name to resolve.</param>
+    /// <param name="pathValue">The PATH value to search.</param>
+    /// <param name="fileExists">A file-existence predicate for testability.</param>
+    /// <returns>The full resolved path when found; otherwise, <c>null</c>.</returns>
     internal static string? TryResolveCommandFromPath(string commandName, string? pathValue, Func<string, bool> fileExists)
     {
         var candidateName = Path.GetFileName(commandName);
@@ -782,6 +839,8 @@ public static class PerlAppResourceBuilderExtensions
     /// <summary>
     /// Resolves the perl executable path, accounting for perlbrew environments.
     /// </summary>
+    /// <param name="resource">The Perl resource to inspect for perlbrew annotations.</param>
+    /// <returns>The resolved perl executable path.</returns>
     private static string ResolvePerlPath(PerlAppResource resource)
     {
         if (resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
@@ -797,6 +856,8 @@ public static class PerlAppResourceBuilderExtensions
     /// Resolves the local::lib path from the resource's <see cref="PerlLocalLibAnnotation"/>,
     /// returning <c>null</c> when no local::lib is configured.
     /// </summary>
+    /// <param name="resource">The Perl resource to inspect for local::lib annotations.</param>
+    /// <returns>The resolved local::lib path, or <c>null</c> when not configured.</returns>
     private static string? ResolveLocalLibPath(PerlAppResource resource)
     {
         if (!resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var localLibAnnotation))
@@ -807,6 +868,12 @@ public static class PerlAppResourceBuilderExtensions
         return ResolveLocalLibPath(resource.WorkingDirectory, localLibAnnotation.Path);
     }
 
+    /// <summary>
+    /// Resolves a configured local::lib path against the resource working directory.
+    /// </summary>
+    /// <param name="workingDirectory">The base working directory.</param>
+    /// <param name="configuredPath">The configured local::lib path value.</param>
+    /// <returns>The absolute local::lib path.</returns>
     private static string ResolveLocalLibPath(string? workingDirectory, string configuredPath)
     {
         var appDir = workingDirectory ?? ".";
@@ -815,6 +882,11 @@ public static class PerlAppResourceBuilderExtensions
             : Path.GetFullPath(Path.Combine(appDir, configuredPath));
     }
 
+    /// <summary>
+    /// Applies perlbrew environment variables to an environment-variable dictionary.
+    /// </summary>
+    /// <param name="environmentVariables">The destination environment variable map.</param>
+    /// <param name="perlbrewEnvironment">The perlbrew environment metadata.</param>
     private static void ApplyPerlbrewEnvironment(
         IDictionary<string, object> environmentVariables,
         PerlbrewEnvironment perlbrewEnvironment)
@@ -833,6 +905,14 @@ public static class PerlAppResourceBuilderExtensions
             : binPath;
     }
 
+    /// <summary>
+    /// Resolves the installer command executable and applies perlbrew environment
+    /// variables to the installer when perlbrew is configured.
+    /// </summary>
+    /// <param name="parentResource">The parent Perl application resource.</param>
+    /// <param name="packageManager">The selected package manager annotation.</param>
+    /// <param name="installerBuilder">The installer resource builder to configure.</param>
+    /// <returns>The command executable path to use for installation.</returns>
     private static string ResolveInstallerCommand(
         PerlAppResource parentResource,
         PerlPackageManagerAnnotation packageManager,
@@ -852,6 +932,14 @@ public static class PerlAppResourceBuilderExtensions
         return perlbrewEnvironment.GetExecutable(packageManager.ExecutableName);
     }
 
+    /// <summary>
+    /// Builds the effective environment variable map for a resource by executing
+    /// all registered <see cref="EnvironmentCallbackAnnotation"/> callbacks.
+    /// </summary>
+    /// <param name="resource">The resource whose environment callbacks should run.</param>
+    /// <param name="executionContext">The current execution context.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A dictionary containing the composed environment variables.</returns>
     private static async Task<Dictionary<string, object>> BuildResourceEnvironmentVariablesAsync(
         PerlAppResource resource,
         DistributedApplicationExecutionContext executionContext,
@@ -869,6 +957,15 @@ public static class PerlAppResourceBuilderExtensions
         return environmentVariables;
     }
 
+    /// <summary>
+    /// Validates that per-package installation is compatible with the current
+    /// package-manager mode.
+    /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="builder">The resource builder to validate.</param>
+    /// <exception cref="NotSupportedException">
+    /// Thrown when Carton mode is enabled and package-level installation is requested.
+    /// </exception>
     private static void EnsurePackageInstallIsSupported<TResource>(IResourceBuilder<TResource> builder)
         where TResource : PerlAppResource
     {
@@ -883,6 +980,14 @@ public static class PerlAppResourceBuilderExtensions
         }
     }
 
+    /// <summary>
+    /// Validates that Carton can be enabled for the resource.
+    /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="builder">The resource builder to validate.</param>
+    /// <exception cref="NotSupportedException">
+    /// Thrown when package-level installers are already configured.
+    /// </exception>
     private static void EnsureCartonCanBeEnabled<TResource>(IResourceBuilder<TResource> builder)
         where TResource : PerlAppResource
     {
@@ -1122,6 +1227,11 @@ public static class PerlAppResourceBuilderExtensions
         TryAttachCertificateTrustToInstallerResource(installer, resource.Resource);
     }
 
+    /// <summary>
+    /// Applies local::lib environment variables to an environment-variable dictionary.
+    /// </summary>
+    /// <param name="environmentVariables">The destination environment variable map.</param>
+    /// <param name="localLibPath">The resolved local::lib directory path.</param>
     private static void ApplyLocalLibEnvironment(IDictionary<string, object> environmentVariables, string localLibPath)
     {
         var libPerl5 = Path.Combine(localLibPath, "lib", "perl5");
@@ -1132,6 +1242,12 @@ public static class PerlAppResourceBuilderExtensions
         environmentVariables["PERL_MB_OPT"] = $"--install_base {localLibPath}";
     }
 
+    /// <summary>
+    /// Ensures the resource has a single callback that applies perlbrew
+    /// environment variables at runtime.
+    /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="resource">The resource builder to configure.</param>
     private static void EnsurePerlbrewEnvironmentCallback<TResource>(
         IResourceBuilder<TResource> resource) where TResource : PerlAppResource
     {
@@ -1168,6 +1284,12 @@ public static class PerlAppResourceBuilderExtensions
         });
     }
 
+    /// <summary>
+    /// Ensures the resource has a single callback that applies local::lib
+    /// environment variables at runtime.
+    /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="resource">The resource builder to configure.</param>
     private static void EnsureLocalLibEnvironmentCallback<TResource>(
         IResourceBuilder<TResource> resource) where TResource : PerlAppResource
     {
@@ -1206,6 +1328,12 @@ public static class PerlAppResourceBuilderExtensions
         });
     }
 
+    /// <summary>
+    /// Applies local::lib environment propagation to the project dependency
+    /// installer when Carton mode and a project installer are both present.
+    /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="resource">The parent Perl resource builder.</param>
     private static void TryAttachLocalLibEnvironmentToProjectInstaller<TResource>(
         IResourceBuilder<TResource> resource) where TResource : PerlAppResource
     {
@@ -1228,6 +1356,8 @@ public static class PerlAppResourceBuilderExtensions
     /// Attaches local::lib environment variables to a single installer resource.
     /// Uses <see cref="PerlLocalLibInstallerEnvironmentAnnotation"/> as a guard to prevent duplicates.
     /// </summary>
+    /// <param name="installerResource">The installer resource that receives local::lib variables.</param>
+    /// <param name="parentResource">The parent Perl application resource containing local::lib configuration.</param>
     private static void TryAttachLocalLibToInstallerResource(
         ExecutableResource installerResource,
         PerlAppResource parentResource)
@@ -1257,6 +1387,8 @@ public static class PerlAppResourceBuilderExtensions
     /// Called from <see cref="WithLocalLib{TResource}"/> to handle the case where installers
     /// were created before <c>WithLocalLib</c> in the fluent chain.
     /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="resource">The parent Perl resource builder.</param>
     private static void TryAttachLocalLibToExistingInstallers<TResource>(
         IResourceBuilder<TResource> resource) where TResource : PerlAppResource
     {
@@ -1281,6 +1413,8 @@ public static class PerlAppResourceBuilderExtensions
     /// Uses <see cref="PerlCertificateTrustAnnotation"/> on the parent as a guard —
     /// only propagates when cert trust is enabled. Skips if already attached.
     /// </summary>
+    /// <param name="installerResource">The installer resource that receives certificate variables.</param>
+    /// <param name="parentResource">The parent Perl application resource with certificate trust configuration.</param>
     private static void TryAttachCertificateTrustToInstallerResource(
         ExecutableResource installerResource,
         PerlAppResource parentResource)
@@ -1318,6 +1452,8 @@ public static class PerlAppResourceBuilderExtensions
     /// Called from <see cref="WithPerlCertificateTrust{TResource}"/> to handle the case
     /// where installers were created before <c>WithPerlCertificateTrust</c> in the fluent chain.
     /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="resource">The parent Perl resource builder.</param>
     private static void TryAttachCertificateTrustToExistingInstallers<TResource>(
         IResourceBuilder<TResource> resource) where TResource : PerlAppResource
     {
@@ -1336,10 +1472,16 @@ public static class PerlAppResourceBuilderExtensions
     /// Builds the correct CLI arguments for installing a package based on the package manager.
     /// </summary>
     /// <remarks>
-    /// <para>cpanm: <c>cpanm [--force] [--notest] PackageName</c></para>
-    /// <para>cpan:  <c>cpan [-f] [-T] [-i] PackageName</c> (where <c>-i</c> is required when <c>-f</c> is used)</para>
-    /// <para>carton: not supported for individual packages — throws.</para>
+    /// <para> For cpanm: <c>cpanm [--force] [--notest] PackageName</c> </para>
+    /// <para> For cpan:  <c>cpan [-f] [-T] [-i] PackageName</c> (where <c>-i</c> is to dodge interactivity) </para>
+    /// <para> For carton: not supported for individual packages — throws. </para>
     /// </remarks>
+    /// <param name="packageManager">The package manager to build arguments for.</param>
+    /// <param name="packageName">The module/package name to install.</param>
+    /// <param name="force">Whether to force installation.</param>
+    /// <param name="skipTest">Whether to skip module tests during installation.</param>
+    /// <param name="localLibPath">Optional local::lib path used for cpanm installs.</param>
+    /// <returns>The argument list passed to the selected package manager.</returns>
     internal static string[] BuildInstallArgs(PerlPackageManager packageManager, string packageName, bool force, bool skipTest, string? localLibPath = null)
     {
         var args = new List<string>();
@@ -1385,6 +1527,8 @@ public static class PerlAppResourceBuilderExtensions
     /// <c>:</c>, so this convention maps each colon to <c>8</c> to preserve readability
     /// and stable name generation.
     /// </summary>
+    /// <param name="installerName">The original installer resource name.</param>
+    /// <returns>A sanitized installer resource name valid for Aspire resource constraints.</returns>
     private static string SanitizeInstallerResourceName(string installerName)
         => installerName.Replace(":", "8", StringComparison.Ordinal);
 
@@ -1396,6 +1540,10 @@ public static class PerlAppResourceBuilderExtensions
     /// <para>carton: <c>carton install [--deployment]</c></para>
     /// <para>cpan: not supported for project-level installs — throws.</para>
     /// </remarks>
+    /// <param name="packageManager">The package manager to build arguments for.</param>
+    /// <param name="cartonDeployment">Whether to use Carton deployment mode.</param>
+    /// <param name="localLibPath">Optional local::lib path used for cpanm installs.</param>
+    /// <returns>The argument list passed to the selected package manager.</returns>
     internal static string[] BuildProjectInstallArgs(PerlPackageManager packageManager, bool cartonDeployment, string? localLibPath = null)
     {
         return packageManager switch
@@ -1414,6 +1562,15 @@ public static class PerlAppResourceBuilderExtensions
         };
     }
 
+    /// <summary>
+    /// Builds the command arguments used as a container entrypoint based on
+    /// the configured Perl entrypoint type.
+    /// </summary>
+    /// <param name="entrypointType">The entrypoint invocation mode.</param>
+    /// <param name="entrypoint">The script/module/executable entrypoint.</param>
+    /// <param name="apiSubcommand">Optional API subcommand, defaults to <c>daemon</c> for API mode.</param>
+    /// <param name="useLocalLibPath">Whether to include local::lib include-path arguments.</param>
+    /// <returns>The argument vector for Docker <c>ENTRYPOINT</c>.</returns>
     [Experimental("CTASPIREPERL002")]
     internal static string[] BuildContainerEntrypointArguments(
         EntrypointType entrypointType,
@@ -1459,6 +1616,9 @@ public static class PerlAppResourceBuilderExtensions
     /// Checks whether the application directory contains standard Perl dependency files
     /// (<c>cpanfile</c>, <c>Makefile.PL</c>, or <c>Build.PL</c>).
     /// </summary>
+    /// <param name="appDirectory">The application directory path, absolute or AppHost-relative.</param>
+    /// <param name="appHostDirectory">The AppHost directory used to resolve relative paths.</param>
+    /// <returns><c>true</c> when any supported dependency file is present; otherwise, <c>false</c>.</returns>
     internal static bool HasDependencyFiles(string appDirectory, string appHostDirectory)
     {
         var resolvedDir = Path.IsPathRooted(appDirectory)
@@ -1475,6 +1635,10 @@ public static class PerlAppResourceBuilderExtensions
     /// <c>PublishAsDockerFile</c> and a Dockerfile builder callback that generates
     /// a Dockerfile tailored to the active package manager.
     /// </summary>
+    /// <param name="resourceBuilder">The Perl resource builder being configured for publish mode.</param>
+    /// <param name="entrypointType">The application entrypoint type.</param>
+    /// <param name="entrypoint">The script/module/executable entrypoint value.</param>
+    /// <param name="apiSubcommand">Optional API subcommand used for API entrypoints.</param>
     private static void ConfigurePublishMode(
         IResourceBuilder<PerlAppResource> resourceBuilder,
         EntrypointType entrypointType,
@@ -1546,6 +1710,12 @@ public static class PerlAppResourceBuilderExtensions
     /// <summary>
     /// Builds a single-stage Dockerfile using cpanm for dependency installation.
     /// </summary>
+    /// <param name="builder">The Dockerfile builder to append instructions to.</param>
+    /// <param name="entrypointType">The application entrypoint type.</param>
+    /// <param name="entrypoint">The script/module/executable entrypoint value.</param>
+    /// <param name="apiSubcommand">Optional API subcommand used for API entrypoints.</param>
+    /// <param name="baseImage">The base runtime image used for the generated Dockerfile.</param>
+    /// <param name="localLibPath">Optional local::lib path to install and resolve modules from.</param>
     [Experimental("CTASPIREPERL002")]
     internal static void BuildCpanmDockerfile(
         DockerfileBuilder builder,
@@ -1580,6 +1750,14 @@ public static class PerlAppResourceBuilderExtensions
     /// <summary>
     /// Builds a multi-stage Dockerfile using Carton for reproducible dependency resolution.
     /// </summary>
+    /// <param name="builder">The Dockerfile builder to append instructions to.</param>
+    /// <param name="entrypointType">The application entrypoint type.</param>
+    /// <param name="entrypoint">The script/module/executable entrypoint value.</param>
+    /// <param name="apiSubcommand">Optional API subcommand used for API entrypoints.</param>
+    /// <param name="runtimeImage">The runtime-stage image.</param>
+    /// <param name="buildImage">The build-stage image.</param>
+    /// <param name="localLibPath">Optional local::lib path to expose in the runtime stage.</param>
+    /// <param name="cartonDeployment">Whether to use <c>carton install --deployment</c>.</param>
     [Experimental("CTASPIREPERL002")]
     internal static void BuildCartonDockerfile(
         DockerfileBuilder builder,

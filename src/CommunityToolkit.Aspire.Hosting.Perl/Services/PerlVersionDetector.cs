@@ -89,6 +89,8 @@ internal static class PerlVersionDetector
     /// Strips the <c>v</c> prefix and <c>perl-</c> prefix from version strings to produce
     /// a clean numeric version like <c>5.38.0</c>.
     /// </summary>
+    /// <param name="version">The version string to normalize.</param>
+    /// <returns>The normalized numeric version string.</returns>
     internal static string NormalizeVersionString(string version)
     {
         var normalized = version.Trim();
