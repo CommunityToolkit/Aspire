@@ -27,3 +27,17 @@ Current usage:
 - `WithPerlCertificateTrust(...)`
 
 Suppress this diagnostic only when you intentionally opt into the experimental API surface.
+
+## CTASPIREPERL002
+
+Dockerfile generation for Perl resources is marked as experimental. The publish-mode Dockerfile
+builder (`BuildCpanmDockerfile`, `BuildCartonDockerfile`, `BuildContainerEntrypointArguments`)
+has not been fully validated across all deployment targets and may change in future releases.
+
+Current usage:
+
+- `BuildCpanmDockerfile(...)` — single-stage cpanm Dockerfile generation
+- `BuildCartonDockerfile(...)` — multi-stage Carton Dockerfile generation
+- `BuildContainerEntrypointArguments(...)` — container entrypoint argument construction
+
+Suppress this diagnostic only when you intentionally opt into the experimental Dockerfile generation.

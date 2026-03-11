@@ -1414,6 +1414,7 @@ public static class PerlAppResourceBuilderExtensions
         };
     }
 
+    [Experimental("CTASPIREPERL002")]
     internal static string[] BuildContainerEntrypointArguments(
         EntrypointType entrypointType,
         string entrypoint,
@@ -1526,11 +1527,15 @@ public static class PerlAppResourceBuilderExtensions
             switch (packageManager)
             {
                 case PerlPackageManager.Carton:
+#pragma warning disable CTASPIREPERL002 // Dockerfile generation is experimental
                     BuildCartonDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage, buildImage, localLibPath, cartonDeployment);
+#pragma warning restore CTASPIREPERL002
                     break;
 
                 default:
+#pragma warning disable CTASPIREPERL002 // Dockerfile generation is experimental
                     BuildCpanmDockerfile(context.Builder, entrypointType, entrypoint, apiSubcommand, baseImage, localLibPath);
+#pragma warning restore CTASPIREPERL002
                     break;
             }
 
@@ -1541,6 +1546,7 @@ public static class PerlAppResourceBuilderExtensions
     /// <summary>
     /// Builds a single-stage Dockerfile using cpanm for dependency installation.
     /// </summary>
+    [Experimental("CTASPIREPERL002")]
     internal static void BuildCpanmDockerfile(
         DockerfileBuilder builder,
         EntrypointType entrypointType,
@@ -1574,6 +1580,7 @@ public static class PerlAppResourceBuilderExtensions
     /// <summary>
     /// Builds a multi-stage Dockerfile using Carton for reproducible dependency resolution.
     /// </summary>
+    [Experimental("CTASPIREPERL002")]
     internal static void BuildCartonDockerfile(
         DockerfileBuilder builder,
         EntrypointType entrypointType,

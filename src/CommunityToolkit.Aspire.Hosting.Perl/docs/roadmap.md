@@ -27,9 +27,10 @@ Perlbrew is included already, because a lot of linux users will have a System Pe
 
 Add first-class debugging support for Perl applications launched through the integration.  Aspire team is currently working on this.  Keep an eye out for 13.3 or (hopefully) soon after.
 
-### Container support
+### Dockerfile Support [Experimental]
 
-Add the ability to make a ContainerResource with your perl app (like a perl worker service) or api.
+Dockerfile generation for publish mode is included but marked as `[Experimental]` (`CTASPIREPERL002`).
+It has not been fully validated across all deployment targets and may change in future releases.
 
 ### Incorporating Feedback
 

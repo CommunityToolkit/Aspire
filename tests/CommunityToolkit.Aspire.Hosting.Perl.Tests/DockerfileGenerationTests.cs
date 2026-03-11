@@ -5,6 +5,7 @@ using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable ASPIREDOCKERFILEBUILDER001
+#pragma warning disable CTASPIREPERL002
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
