@@ -6,7 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents a Umami instance resource.
 /// </summary>
-public class UmamiResource : ContainerResource
+public class UmamiResource : ContainerResource, IResourceWithServiceDiscovery
 {
     internal const string PrimaryEndpointName = "http";
     
