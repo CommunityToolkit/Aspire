@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
@@ -7,7 +8,10 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 /// </summary>
 public sealed class LinuxOnlyFactAttribute : FactAttribute
 {
-    public LinuxOnlyFactAttribute()
+    public LinuxOnlyFactAttribute(
+        [CallerFilePath] string? sourceFilePath = null,
+        [CallerLineNumber] int sourceLineNumber = -1) 
+            : base(sourceFilePath, sourceLineNumber)
     {
         if (!OperatingSystem.IsLinux())
         {
@@ -21,7 +25,10 @@ public sealed class LinuxOnlyFactAttribute : FactAttribute
 /// </summary>
 public sealed class WindowsOnlyFactAttribute : FactAttribute
 {
-    public WindowsOnlyFactAttribute()
+    public WindowsOnlyFactAttribute(
+        [CallerFilePath] string? sourceFilePath = null,
+        [CallerLineNumber] int sourceLineNumber = -1) 
+            : base(sourceFilePath, sourceLineNumber)
     {
         if (!OperatingSystem.IsWindows())
         {
