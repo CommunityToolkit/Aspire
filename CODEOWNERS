@@ -138,7 +138,7 @@
 /tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/ @oising
 /examples/powershell/ @oising
 
-# CommunityToolkit.Aspire.Hosting.PowerShell
+# CommunityToolkit.Aspire.Hosting.Perl
 
 /src/CommunityToolkit.Aspire.Hosting.Perl/ @Omnideth
 /tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/ @Omnideth

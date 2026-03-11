@@ -138,6 +138,7 @@
   <Folder Name="/examples/perl/">
     <Project Path="examples/perl/cpan-script-minimal/CpanScriptMinimal.AppHost/CpanScriptMinimal.AppHost.csproj" />
     <Project Path="examples/perl/cpan-script-minimal/CpanScriptMinimal.ServiceDefaults/CpanScriptMinimal.ServiceDefaults.csproj" />
+    <Project Path="examples/perl/cpanm-api-integration/CpanmApiIntegration.AppHost/CpanmApiIntegration.AppHost.csproj" />
     <Project Path="examples/perl/cpanm-script-minimal/CpanmScriptMinimal.AppHost/CpanmScriptMinimal.AppHost.csproj" />
     <Project Path="examples/perl/cpanm-script-minimal/CpanmScriptMinimal.ServiceDefaults/CpanmScriptMinimal.ServiceDefaults.csproj" />
     <Project Path="examples/perl/carton-api-minimal/CartonApiMinimal.AppHost/CartonApiMinimal.AppHost.csproj" />
@@ -302,6 +303,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/CommunityToolkit.Aspire.Hosting.Perl.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />

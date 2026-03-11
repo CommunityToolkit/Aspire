@@ -63,9 +63,12 @@ internal static class PerlModuleChecker
                 }
             }
 
-            process.Start();
-            await process.WaitForExitAsync(cancellationToken);
-            return process.ExitCode == 0;
+            using (process)
+            {
+                process.Start();
+                await process.WaitForExitAsync(cancellationToken);
+                return process.ExitCode == 0;
+            }
         }
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {

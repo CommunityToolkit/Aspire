@@ -33,14 +33,17 @@ internal class PerlInstallationManager
                 }
             };
 
-            process.Start();
+            using (process)
+            {
+                process.Start();
 
-            string output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
+                string output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+                await process.WaitForExitAsync(cancellationToken);
 
-            return output.TrimStart().StartsWith("This is perl", StringComparison.OrdinalIgnoreCase);
+                return output.TrimStart().StartsWith("This is perl", StringComparison.OrdinalIgnoreCase);
+            }
         }
-        catch (Exception)
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {
             return false;
         }
