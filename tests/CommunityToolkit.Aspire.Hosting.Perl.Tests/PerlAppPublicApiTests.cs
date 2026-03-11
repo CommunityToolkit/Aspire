@@ -1,0 +1,77 @@
+using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+
+namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
+
+public class PerlAppPublicApiTests
+{
+    #region AddPerlScript Argument Validation
+
+    [Fact]
+    public void AddPerlScriptShouldThrowWhenBuilderIsNull()
+    {
+        IDistributedApplicationBuilder builder = null!;
+
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            builder.AddPerlScript("perl-app", "scripts", "app.pl"));
+        Assert.Equal("builder", exception.ParamName);
+    }
+
+    [Fact]
+    public void AddPerlScriptShouldThrowWhenAppDirectoryIsNull()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentNullException>(() =>
+            builder.AddPerlScript("perl-app", null!, "app.pl"));
+    }
+
+    [Fact]
+    public void AddPerlScriptShouldThrowWhenScriptNameIsNullOrEmpty()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentNullException>(() =>
+            builder.AddPerlScript("perl-app", "scripts", null!));
+
+        Assert.Throws<ArgumentException>(() =>
+            builder.AddPerlScript("perl-app", "scripts", ""));
+    }
+
+    #endregion
+
+    #region AddPerlApi Argument Validation
+
+    [Fact]
+    public void AddPerlApiShouldThrowWhenBuilderIsNull()
+    {
+        IDistributedApplicationBuilder builder = null!;
+
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            builder.AddPerlApi("perl-api", "api", "server.pl"));
+        Assert.Equal("builder", exception.ParamName);
+    }
+
+    [Fact]
+    public void AddPerlApiShouldThrowWhenAppDirectoryIsNull()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentNullException>(() =>
+            builder.AddPerlApi("perl-api", null!, "server.pl"));
+    }
+
+    [Fact]
+    public void AddPerlApiShouldThrowWhenScriptNameIsNullOrEmpty()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        Assert.Throws<ArgumentNullException>(() =>
+            builder.AddPerlApi("perl-api", "api", null!));
+
+        Assert.Throws<ArgumentException>(() =>
+            builder.AddPerlApi("perl-api", "api", ""));
+    }
+
+    #endregion
+}

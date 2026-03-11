@@ -135,6 +135,19 @@
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi/CommunityToolkit.Aspire.Hosting.PapercutSmtp.SendMailApi.csproj" />
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/perl/">
+    <Project Path="examples/perl/cpan-script-minimal/CpanScriptMinimal.AppHost/CpanScriptMinimal.AppHost.csproj" />
+    <Project Path="examples/perl/cpan-script-minimal/CpanScriptMinimal.ServiceDefaults/CpanScriptMinimal.ServiceDefaults.csproj" />
+    <Project Path="examples/perl/cpanm-script-minimal/CpanmScriptMinimal.AppHost/CpanmScriptMinimal.AppHost.csproj" />
+    <Project Path="examples/perl/cpanm-script-minimal/CpanmScriptMinimal.ServiceDefaults/CpanmScriptMinimal.ServiceDefaults.csproj" />
+    <Project Path="examples/perl/carton-api-minimal/CartonApiMinimal.AppHost/CartonApiMinimal.AppHost.csproj" />
+    <Project Path="examples/perl/carton-api-minimal/CartonApiMinimal.ServiceDefaults/CartonApiMinimal.ServiceDefaults.csproj" />
+    <Project Path="examples/perl/multi-resource/MultiResource.Driver/MultiResource.Driver.csproj" />
+    <Project Path="examples/perl/multi-resource/MultiResource.ServiceDefaults/MultiResource.ServiceDefaults.csproj" />
+    <Project Path="examples/perl/multi-resource/MultiResource.AppHost/MultiResource.AppHost.csproj" />
+    <Project Path="examples/perl/perlbrew-environment-minimal/PerlbrewEnvironmentMinimal.AppHost/PerlbrewEnvironmentMinimal.AppHost.csproj" />
+    <Project Path="examples/perl/perlbrew-environment-minimal/PerlbrewEnvironmentMinimal.ServiceDefaults/PerlbrewEnvironmentMinimal.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/postgres-ext/">
     <Project Path="examples/postgres-ext/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost.csproj" />
   </Folder>
@@ -224,6 +237,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Ollama/CommunityToolkit.Aspire.Hosting.Ollama.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PowerShell/CommunityToolkit.Aspire.Hosting.PowerShell.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Python.Extensions/CommunityToolkit.Aspire.Hosting.Python.Extensions.csproj" />

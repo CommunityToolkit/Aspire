@@ -1,0 +1,139 @@
+# Default owner
+
+-   @aaronpowell
+
+# CommunityToolkit.Aspire.Hosting.Java
+
+/examples/java/ @justinyoo
+/src/CommunityToolkit.Aspire.Hosting.Java/ @justinyoo
+/tests/CommunityToolkit.Aspire.Hosting.Java/ @justinyoo
+
+# CommunityToolkit.Aspire.Hosting.Golang
+
+/examples/golang/ @tommasodotNET
+/src/CommunityToolkit.Aspire.Hosting.Golang/ @tommasodotNET
+/tests/CommunityToolkit.Aspire.Hosting.Golang/ @tommasodotNET
+
+# CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder
+
+/examples/data-api-builder/ @tommasodotNET @FBoucher
+/src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/ @tommasodotNET @FBoucher
+/tests/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.Tests/ @tommasodotNET @FBoucher
+
+# CommunityToolkit.Aspire.Meilisearch
+# CommunityToolkit.Aspire.Hosting.Meilisearch
+
+/examples/meilisearch/ @Alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Meilisearch/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Meilisearch/ @Alirexaa
+/src/CommunityToolkit.Aspire.Meilisearch/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Meilisearch/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects
+
+/examples/sql-database-projects/ @ErikEJ @jmezach
+/src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
+/tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/ @ErikEJ @jmezach
+
+# CommunityToolkit.Aspire.Hosting.Rust
+
+/examples/rust/ @Alirexaa
+/src/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Rust/ @Alirexaa
+
+# CommunityToolkit.Aspire.EventStore
+# CommunityToolkit.Aspire.Hosting.EventStore
+
+/examples/eventstore/ @fredimachado
+/src/CommunityToolkit.Aspire.Hosting.EventStore/ @fredimachado
+/tests/CommunityToolkit.Aspire.Hosting.EventStore.Tests/ @fredimachado
+/src/CommunityToolkit.Aspire.EventStore/ @fredimachado
+/tests/CommunityToolkit.Aspire.EventStore.Tests/ @fredimachado
+
+# CommunityToolkit.Aspire.MassTransit.RabbitMQ
+
+/examples/masstransit-rabbitmq/ @MichielBrys
+/src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/ @MichielBrys
+/tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/ @MichielBrys
+
+# CommunityToolkit.Aspire.Hosting.Ngrok
+
+/examples/ngrok/ @esskar
+/src/CommunityToolkit.Aspire.Hosting.Ngrok/ @esskar
+/tests/CommunityToolkit.Aspire.Hosting.Ngrok.Tests/ @esskar
+
+# CommunityToolkit.Aspire.Dapr.*
+
+/examples/dapr**/ @FullStackChef @WhitWaldo @Paule96
+/src/CommunityToolkit.Aspire.Hosting.Dapr**/ @FullStackChef @WhitWaldo @Paule96
+/tests/CommunityToolkit.Aspire.Hosting.Dapr**.Tests/ @FullStackChef @WhitWaldo @Paule96
+
+# CommunityToolkit.Aspire.RavenDB.Client
+# CommunityToolkit.Aspire.Hosting.RavenDB
+
+/examples/ravendb/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/src/CommunityToolkit.Aspire.RavenDB.Client/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/src/CommunityToolkit.Aspire.Hosting.RavenDB/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+/tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/ @shiranshalom @aviv86 @karmeli87 @ppekrol
+
+# CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions
+
+/src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/ @Alirexaa
+/examples/postgres-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.DbGate
+
+/src/CommunityToolkit.Aspire.Hosting.DbGate/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/ @Alirexaa
+/examples/dbgate/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.MongoDB.Extensions
+
+/src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests/ @Alirexaa
+/examples/mongodb-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.Redis.Extensions
+
+/src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/ @Alirexaa
+/examples/redis-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Hosting.SqlServer.Extensions
+
+/src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/ @Alirexaa
+/tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/ @Alirexaa
+/examples/sqlserver-ext/ @Alirexaa
+
+# CommunityToolkit.Aspire.Minio.Client
+# CommunityToolkit.Aspire.Hosting.Minio
+
+/examples/minio/ @Harold-Morgan
+/src/CommunityToolkit.Aspire.Hosting.Minio/ @Harold-Morgan
+/tests/CommunityToolkit.Aspire.Hosting.Minio.Tests/ @Harold-Morgan
+
+/src/CommunityToolkit.Aspire.Minio.Client/ @Harold-Morgan
+/tests/CommunityToolkit.Aspire.Minio.Client.Tests/ @Harold-Morgan
+
+# CommunityToolkit.Aspire.SurrealDb
+# CommunityToolkit.Aspire.Hosting.SurrealDb
+
+/examples/surrealdb/ @Odonno
+/src/CommunityToolkit.Aspire.Hosting.SurrealDb/ @Odonno
+/tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/ @Odonno
+/src/CommunityToolkit.Aspire.SurrealDb/ @Odonno
+/tests/CommunityToolkit.Aspire.SurrealDb.Tests/ @Odonno
+
+# CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector
+
+/examples/opentelemetry-collector/ @martinjt
+/src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/ @martinjt
+/tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/ @martinjt
+
+# CommunityToolkit.Aspire.Hosting.PowerShell
+
+/src/CommunityToolkit.Aspire.Hosting.PowerShell/ @oising
+/tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/ @oising
+/examples/powershell/ @oising
