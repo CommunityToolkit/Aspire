@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <AdditionalPackageTags>aspire integration hosting perl</AdditionalPackageTags>
     <Description>An aspire integration with support for Perl.</Description>
-    <Author>Omnideth</Author>
+    <Authors>Omnideth</Authors>
   </PropertyGroup>
 
   <ItemGroup>

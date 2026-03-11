@@ -36,8 +36,8 @@ has not been fully validated across all deployment targets and may change in fut
 
 Current usage:
 
-- `BuildCpanmDockerfile(...)` — single-stage cpanm Dockerfile generation
-- `BuildCartonDockerfile(...)` — multi-stage Carton Dockerfile generation
-- `BuildContainerEntrypointArguments(...)` — container entrypoint argument construction
+- `BuildCpanmDockerfile(...)` - single-stage cpanm Dockerfile generation
+- `BuildCartonDockerfile(...)` - multi-stage Carton Dockerfile generation
+- `BuildContainerEntrypointArguments(...)` - container entrypoint argument construction
 
 Suppress this diagnostic only when you intentionally opt into the experimental Dockerfile generation.

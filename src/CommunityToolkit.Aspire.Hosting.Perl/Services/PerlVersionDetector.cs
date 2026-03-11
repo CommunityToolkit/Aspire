@@ -54,16 +54,19 @@ internal static class PerlVersionDetector
                 }
             };
 
-            process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
-
-            if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
+            using (process)
             {
-                return null;
-            }
+                process.Start();
+                var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+                await process.WaitForExitAsync(cancellationToken);
 
-            return NormalizeVersionString(output.Trim());
+                if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
+                {
+                    return null;
+                }
+
+                return NormalizeVersionString(output.Trim());
+            }
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested is false)
         {
