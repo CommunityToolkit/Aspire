@@ -17,18 +17,11 @@ fi
 echo Install Aspire
 curl -sSL https://aspire.dev/install.sh | bash
 
-echo "Setting up Aspire CLI Staging channel..."
-curl -sSL https://aspire.dev/install.sh | bash -s -- -q staging
-
-~/.aspire/bin/aspire config set -g features:stagingChannelEnabled true
-~/.aspire/bin/aspire config set -g overrideStagingQuality Prerelease
-~/.aspire/bin/aspire config set -g stagingPinToCliVersion true
-
 echo Installing Bun
 curl -fsSL https://bun.sh/install | bash
 
-# echo Setting up dapr
-# dapr init
+echo Setting up dapr
+dapr init
 
 echo "Setting up perl dependencies for packages"
 # Note: CPAN module names are Pascal case (e.g. Carton), but installed binaries are lowercase (e.g. carton).
