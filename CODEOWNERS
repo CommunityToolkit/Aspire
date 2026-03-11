@@ -140,6 +140,6 @@
 
 # CommunityToolkit.Aspire.Hosting.PowerShell
 
-- /src/CommunityToolkit.Aspire.Hosting.Perl/ @Omnideth
-- /tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/ @Omnideth
-- /examples/perl/ @Omnideth
+/src/CommunityToolkit.Aspire.Hosting.Perl/ @Omnideth
+/tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/ @Omnideth
+/examples/perl/ @Omnideth

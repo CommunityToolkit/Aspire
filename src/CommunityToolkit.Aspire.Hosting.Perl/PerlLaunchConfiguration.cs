@@ -14,7 +14,7 @@ internal sealed class PerlLaunchConfiguration()
     public string Module { get; set; } = string.Empty;
 
     [JsonPropertyName("mode")]
-    public string Mode {get;set; } = "development";
+    public string Mode { get; set; } = "development";
 
     [JsonPropertyName("interpreter_path")]
     public string InterpreterPath { get; set; } = string.Empty;
