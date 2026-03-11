@@ -1,0 +1,67 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>Multi-Resource Perl Demo</PageTitle>
+
+<h1>Multi-Resource Perl Demo</h1>
+
+<p>This frontend consumes a Carton-managed Perl API while a cpanm-managed worker runs in the background.</p>
+
+<div class="d-flex gap-2">
+    <button class="btn btn-primary" @onclick="CallPerlApi">MP</button>
+    <button class="btn btn-secondary" @onclick="CallTwoLayerPerlApi">Peripheral</button>
+</div>
+
+@if (apiResponse is not null)
+{
+    <div class="mt-3 p-3 border rounded bg-light">
+        <h4>Response:</h4>
+        <pre>@apiResponse</pre>
+    </div>
+}
+
+@if (errorMessage is not null)
+{
+    <div class="mt-3 p-3 border rounded bg-danger text-white">
+        <h4>Error:</h4>
+        <pre>@errorMessage</pre>
+    </div>
+}
+
+@code {
+    private string? apiResponse;
+    private string? errorMessage;
+
+    private async Task CallPerlApi()
+    {
+        apiResponse = null;
+        errorMessage = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("perl-api");
+            apiResponse = await client.GetStringAsync("/pachinko");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task CallTwoLayerPerlApi()
+    {
+        apiResponse = null;
+        errorMessage = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient("perl-api");
+            apiResponse = await client.GetStringAsync("/omega");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}
