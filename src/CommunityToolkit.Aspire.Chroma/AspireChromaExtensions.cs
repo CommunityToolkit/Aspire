@@ -100,6 +100,13 @@ public static class AspireChromaExtensions
         }
 
         var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(connectionName);
-        return new ChromaClient(new ChromaConfigurationOptions(settings.Endpoint.ToString()), httpClient);
+        var endpoint = settings.Endpoint.ToString();
+
+        if (!endpoint.Contains("/api/v1", StringComparison.OrdinalIgnoreCase))
+        {
+            endpoint = endpoint.TrimEnd('/') + "/api/v1/";
+        }
+
+        return new ChromaClient(new ChromaConfigurationOptions(endpoint), httpClient);
     }
 }
