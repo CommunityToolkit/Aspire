@@ -30,15 +30,15 @@ public class ChromaResource(string name) : ContainerResource(name), IResourceWit
     /// Gets the connection string expression for the ChromaDB
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
-        ReferenceExpression.Create($"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+        ReferenceExpression.Create($"Endpoint=http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/api/v1/");
 
     /// <summary>
     /// Gets the connection URI expression for the ChromaDB server.
     /// </summary>
     /// <remarks>
-    /// Format: <c>http://{host}:{port}</c>.
+    /// Format: <c>http://{host}:{port}/api/v1/</c>.
     /// </remarks>
-    public ReferenceExpression UriExpression => ReferenceExpression.Create($"http://{Host}:{Port}");
+    public ReferenceExpression UriExpression => ReferenceExpression.Create($"http://{Host}:{Port}/api/v1/");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
