@@ -1,0 +1,14 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0-preview.1.26152.2">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>a1b2c3d4-e5f6-7890-abcd-ef1234567890</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm.Api\CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm\CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

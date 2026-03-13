@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>A .NET Aspire integration for hosting the Grafana OTel-LGTM observability stack (OpenTelemetry Collector, Prometheus, Loki, Tempo, Pyroscope, and Grafana).</Description>
+    <AdditionalPackageTags>hosting grafana opentelemetry observability loki tempo prometheus</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+</Project>
