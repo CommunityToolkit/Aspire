@@ -1,0 +1,4 @@
+{
+  "language": "csharp",
+  "appHostPath": "../CartonApiMinimal.AppHost/CartonApiMinimal.AppHost.csproj"
+}

@@ -1,0 +1,4 @@
+{
+  "language": "csharp",
+  "appHostPath": "../CpanScriptMinimal.AppHost/CpanScriptMinimal.AppHost.csproj"
+}

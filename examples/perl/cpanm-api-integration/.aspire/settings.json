@@ -1,0 +1,4 @@
+{
+  "language": "csharp",
+  "appHostPath": "../CpanmApiIntegration.AppHost/CpanmApiIntegration.AppHost.csproj"
+}
