@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
+    <ProjectReference Include="../../src/CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm/CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm.csproj" />
+    <ProjectReference Include="../../examples/grafana-otel-lgtm/CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm.AppHost/CommunityToolkit.Aspire.Hosting.Grafana.OtelLgtm.AppHost.csproj" />
+  </ItemGroup>
+
+</Project>
