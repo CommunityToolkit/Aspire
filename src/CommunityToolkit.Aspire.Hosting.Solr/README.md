@@ -37,6 +37,27 @@ var exampleProject = builder.AddProject<Projects.ExampleProject>()
 builder.Build().Run();
 ```
 
+## Using a Custom Config Set
+
+You can configure Solr to use a custom config set by calling `WithConfigset` on the Solr resource builder. This mounts a local config set directory into the container and creates the core using that config set.
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+// Add Solr with a custom config set
+var solr = builder.AddSolr("solr", coreName: "mycore")
+                  .WithConfigset("my-config", "/path/to/configsets/my-config");
+
+builder.Build().Run();
+```
+
+The `WithConfigset` method takes two parameters:
+
+- `configSetName` — the name of the config set as it will appear inside the container (under `/opt/solr/server/solr/configsets/`)
+- `configSetPath` — the absolute path on the host to the config set directory to mount
+
+When a config set is provided, the core is created with `solr-precreate -c <coreName> -d <configSetName>` instead of the default `solr-precreate <coreName>`.
+
 ## Feedback & contributing
 
 https://github.com/dotnet/aspire

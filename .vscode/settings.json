@@ -9,5 +9,12 @@
   ],
   "[aspnetcorerazor]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "dotnet pack": true,
+    "/^find /workspaces/Aspire -name \"VolumeNameGenerator\\.cs\" 2>/dev/null \\|\\| dotnet --version && grep -r \"class VolumeNameGenerator\" ~/\\.nuget 2>/dev/null \\| head -5$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
   }
 }
