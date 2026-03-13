@@ -99,6 +99,42 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
+    public void ResourceHasPrometheusEndpoint()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGrafanaOtelLgtm("grafana-lgtm");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
+        Assert.NotNull(resource);
+
+        var endpoints = resource.Annotations.OfType<EndpointAnnotation>().ToList();
+        var prometheus = endpoints.Single(e => e.Name == "prometheus");
+        Assert.Equal(9090, prometheus.TargetPort);
+        Assert.Equal("http", prometheus.UriScheme);
+    }
+
+    [Fact]
+    public void ResourceHasPyroscopeEndpoint()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGrafanaOtelLgtm("grafana-lgtm");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
+        Assert.NotNull(resource);
+
+        var endpoints = resource.Annotations.OfType<EndpointAnnotation>().ToList();
+        var pyroscope = endpoints.Single(e => e.Name == "pyroscope");
+        Assert.Equal(4040, pyroscope.TargetPort);
+        Assert.Equal("http", pyroscope.UriScheme);
+    }
+
+    [Fact]
     public void CanSetFixedGrafanaPort()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -114,6 +150,68 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         var grafana = endpoints.Single(e => e.Name == "http");
         Assert.Equal(3000, grafana.Port);
         Assert.Equal(3000, grafana.TargetPort);
+    }
+
+    [Fact]
+    public void CanDisableGrpcEndpoint()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGrafanaOtelLgtm("grafana-lgtm", configureSettings: settings =>
+        {
+            settings.EnableGrpcEndpoint = false;
+        });
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
+        Assert.NotNull(resource);
+
+        var endpoints = resource.Annotations.OfType<EndpointAnnotation>().ToList();
+        Assert.DoesNotContain(endpoints, e => e.Name == "otel-grpc");
+        Assert.Contains(endpoints, e => e.Name == "otel-http");
+    }
+
+    [Fact]
+    public void CanDisableHttpEndpoint()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGrafanaOtelLgtm("grafana-lgtm", configureSettings: settings =>
+        {
+            settings.EnableHttpEndpoint = false;
+        });
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
+        Assert.NotNull(resource);
+
+        var endpoints = resource.Annotations.OfType<EndpointAnnotation>().ToList();
+        Assert.Contains(endpoints, e => e.Name == "otel-grpc");
+        Assert.DoesNotContain(endpoints, e => e.Name == "otel-http");
+    }
+
+    [Fact]
+    public void CanCustomizeImageAndTag()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGrafanaOtelLgtm("grafana-lgtm", configureSettings: settings =>
+        {
+            settings.Image = "custom/otel-lgtm";
+            settings.Tag = "1.0.0";
+        });
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
+        Assert.NotNull(resource);
+
+        Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotation));
+        Assert.NotNull(imageAnnotation);
+        Assert.Equal("custom/otel-lgtm", imageAnnotation.Image);
+        Assert.Equal("1.0.0", imageAnnotation.Tag);
     }
 
     [Fact]
@@ -171,29 +269,12 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
     }
 
     [Fact]
-    public void CanSetEnvironmentVariable()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddGrafanaOtelLgtm("grafana-lgtm")
-            .WithEnvironmentVariable("ENABLE_LOGS_ALL", "true");
-
-        using var app = builder.Build();
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
-        Assert.NotNull(resource);
-
-        var envAnnotations = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.NotEmpty(envAnnotations);
-    }
-
-    [Fact]
     public void CanAddOtelCollectorConfig()
     {
         var builder = DistributedApplication.CreateBuilder();
 
         builder.AddGrafanaOtelLgtm("grafana-lgtm")
-            .WithConfig("./otelcol-config.yaml");
+            .WithCollectorConfig("./otelcol-config.yaml");
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -204,6 +285,44 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         Assert.NotNull(configMount);
         Assert.EndsWith("otelcol-config.yaml", configMount.Source);
         Assert.Equal("/otel-lgtm/otelcol-config.yaml", configMount.Target);
+    }
+
+    [Fact]
+    public void CanAddGrafanaConfig()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGrafanaOtelLgtm("grafana-lgtm")
+            .WithGrafanaConfig("./custom.ini");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
+        Assert.NotNull(resource);
+
+        var configMount = resource.Annotations.OfType<ContainerMountAnnotation>().SingleOrDefault();
+        Assert.NotNull(configMount);
+        Assert.EndsWith("custom.ini", configMount.Source);
+        Assert.Equal("/otel-lgtm/grafana/conf/custom.ini", configMount.Target);
+    }
+
+    [Fact]
+    public void CanAddPrometheusConfig()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddGrafanaOtelLgtm("grafana-lgtm")
+            .WithPrometheusConfig("./prometheus.yaml");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = appModel.Resources.OfType<GrafanaOtelLgtmResource>().SingleOrDefault();
+        Assert.NotNull(resource);
+
+        var configMount = resource.Annotations.OfType<ContainerMountAnnotation>().SingleOrDefault();
+        Assert.NotNull(configMount);
+        Assert.EndsWith("prometheus.yaml", configMount.Source);
+        Assert.Equal("/otel-lgtm/prometheus.yaml", configMount.Target);
     }
 
     [Fact]

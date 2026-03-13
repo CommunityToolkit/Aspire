@@ -22,7 +22,7 @@ All resources with OpenTelemetry exporters will automatically send telemetry to 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var lgtm = builder.AddGrafanaOtelLgtm("grafana-lgtm")
-    .WithConfig("./otelcol-config.yaml")
+    .WithCollectorConfig("./otelcol-config.yaml")
     .WithAppForwarding();
 
 builder.AddProject<Projects.MyApi>("api");
@@ -36,7 +36,7 @@ builder.Build().Run();
 var builder = DistributedApplication.CreateBuilder(args);
 
 var lgtm = builder.AddGrafanaOtelLgtm("grafana-lgtm", grafanaPort: 3000)
-    .WithConfig("./otelcol-config.yaml")
+    .WithCollectorConfig("./otelcol-config.yaml")
     .WithDataVolume()
     .WithAppForwarding();
 
@@ -45,14 +45,33 @@ builder.AddProject<Projects.MyApi>("api");
 builder.Build().Run();
 ```
 
-### Example 3: Customize container environment
+### Example 3: Custom Grafana and Prometheus configuration
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
 var lgtm = builder.AddGrafanaOtelLgtm("grafana-lgtm")
-    .WithEnvironmentVariable("ENABLE_LOGS_ALL", "true")
-    .WithEnvironmentVariable("GF_SECURITY_ADMIN_PASSWORD", "mysecret");
+    .WithCollectorConfig("./otelcol-config.yaml")
+    .WithGrafanaConfig("./custom.ini")
+    .WithPrometheusConfig("./prometheus.yaml")
+    .WithAppForwarding();
+
+builder.Build().Run();
+```
+
+### Example 4: Configure settings (image, endpoints)
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var lgtm = builder.AddGrafanaOtelLgtm("grafana-lgtm", configureSettings: settings =>
+{
+    settings.Tag = "0.21.0";
+    settings.EnableGrpcEndpoint = true;
+    settings.EnableHttpEndpoint = false;
+    settings.ForceNonSecureReceiver = true;
+})
+    .WithAppForwarding();
 
 builder.Build().Run();
 ```
@@ -64,6 +83,8 @@ builder.Build().Run();
 | Grafana UI | 3000 | Web interface for dashboards, explore, and alerting |
 | OTLP gRPC | 4317 | OpenTelemetry Collector gRPC receiver |
 | OTLP HTTP | 4318 | OpenTelemetry Collector HTTP receiver |
+| Prometheus | 9090 | Prometheus metrics query API |
+| Pyroscope | 4040 | Pyroscope continuous profiling API |
 
 ## Image Versioning
 

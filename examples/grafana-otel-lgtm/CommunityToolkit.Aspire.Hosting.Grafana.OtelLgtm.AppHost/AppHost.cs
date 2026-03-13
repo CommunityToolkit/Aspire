@@ -4,6 +4,6 @@ builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Grafana_OtelLgtm_Api
 
 var lgtm = builder.AddGrafanaOtelLgtm("grafana-lgtm")
     .WithAppForwarding()
-    .WithConfig("./otelcol-config.yaml");
+    .WithCollectorConfig("./otelcol-config.yaml");
 
 builder.Build().Run();

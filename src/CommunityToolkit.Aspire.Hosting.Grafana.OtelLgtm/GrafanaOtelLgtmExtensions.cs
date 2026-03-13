@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
@@ -8,11 +9,14 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class GrafanaOtelLgtmExtensions
 {
-    private const string DefaultImage = "grafana/otel-lgtm";
-    private const string DefaultTag = "0.21.0";
+    private const string DashboardOtlpUrlVariableNameLegacy = "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL";
+    private const string DashboardOtlpUrlVariableName = "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL";
+    private const string DashboardOtlpUrlDefaultValue = "http://localhost:18889";
     private const int GrafanaPort = 3000;
     private const int OtlpGrpcPort = 4317;
     private const int OtlpHttpPort = 4318;
+    private const int PrometheusPort = 9090;
+    private const int PyroscopePort = 4040;
 
     /// <summary>
     /// Adds the Grafana OTel-LGTM observability stack to the application builder.
@@ -25,26 +29,73 @@ public static class GrafanaOtelLgtmExtensions
     /// </remarks>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
+    /// <param name="configureSettings">Optional action to configure <see cref="GrafanaOtelLgtmSettings"/>.</param>
     /// <param name="grafanaPort">Optional host port for the Grafana web UI.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     public static IResourceBuilder<GrafanaOtelLgtmResource> AddGrafanaOtelLgtm(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
+        Action<GrafanaOtelLgtmSettings>? configureSettings = null,
         int? grafanaPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
 
+        var settings = new GrafanaOtelLgtmSettings();
+        configureSettings?.Invoke(settings);
+
+        var url = builder.Configuration[DashboardOtlpUrlVariableName] ??
+            builder.Configuration[DashboardOtlpUrlVariableNameLegacy] ??
+            DashboardOtlpUrlDefaultValue;
+
+        var useHttpsForReceivers = !settings.ForceNonSecureReceiver && url.StartsWith("https", StringComparison.OrdinalIgnoreCase);
+
         GrafanaOtelLgtmResource resource = new(name);
 
-        return builder.AddResource(resource)
-            .WithImage(DefaultImage, DefaultTag)
+        var resourceBuilder = builder.AddResource(resource)
+            .WithImage(settings.Image, settings.Tag)
             .WithEndpoint(targetPort: GrafanaPort, port: grafanaPort, name: GrafanaOtelLgtmResource.GrafanaEndpointName, scheme: "http")
-            .WithEndpoint(targetPort: OtlpGrpcPort, name: GrafanaOtelLgtmResource.OtlpGrpcEndpointName, scheme: "http", isProxied: false)
-            .WithEndpoint(targetPort: OtlpHttpPort, name: GrafanaOtelLgtmResource.OtlpHttpEndpointName, scheme: "http", isProxied: false)
+            .WithEndpoint(targetPort: PrometheusPort, name: GrafanaOtelLgtmResource.PrometheusEndpointName, scheme: "http")
+            .WithEndpoint(targetPort: PyroscopePort, name: GrafanaOtelLgtmResource.PyroscopeEndpointName, scheme: "http")
             .WithHttpHealthCheck("/api/health", endpointName: GrafanaOtelLgtmResource.GrafanaEndpointName)
             .WithUrlForEndpoint(GrafanaOtelLgtmResource.GrafanaEndpointName, url => url.DisplayText = "Grafana")
+            .WithUrlForEndpoint(GrafanaOtelLgtmResource.PrometheusEndpointName, url => url.DisplayText = "Prometheus")
+            .WithUrlForEndpoint(GrafanaOtelLgtmResource.PyroscopeEndpointName, url => url.DisplayText = "Pyroscope")
             .WithIconName("ChartMultiple");
+
+        if (settings.EnableGrpcEndpoint)
+        {
+            ConfigureReceiver(resourceBuilder, OtlpGrpcPort, GrafanaOtelLgtmResource.OtlpGrpcEndpointName, useHttpsForReceivers);
+        }
+
+        if (settings.EnableHttpEndpoint)
+        {
+            ConfigureReceiver(resourceBuilder, OtlpHttpPort, GrafanaOtelLgtmResource.OtlpHttpEndpointName, useHttpsForReceivers);
+        }
+
+        return resourceBuilder;
+    }
+
+    private static void ConfigureReceiver(IResourceBuilder<GrafanaOtelLgtmResource> resourceBuilder, int port, string endpointName, bool useHttpsForReceivers)
+    {
+        var scheme = useHttpsForReceivers ? "https" : "http";
+        resourceBuilder
+            .WithEndpoint(targetPort: port, name: endpointName, scheme: scheme)
+            .WithUrlForEndpoint(endpointName, url => url.DisplayLocation = UrlDisplayLocation.DetailsOnly);
+
+        if (!useHttpsForReceivers)
+        {
+            return;
+        }
+
+#pragma warning disable ASPIRECERTIFICATES001
+        //resourceBuilder.WithHttpsCertificateConfiguration(ctx =>
+        //{
+        //    ctx.Arguments.Add(ReferenceExpression.Create($@"--config=yaml:receivers::otlp::protocols::{endpointName}::tls::cert_file: ""{ctx.CertificatePath}"""));
+        //    ctx.Arguments.Add(ReferenceExpression.Create($@"--config=yaml:receivers::otlp::protocols::{endpointName}::tls::key_file: ""{ctx.KeyPath}"""));
+        //    return Task.CompletedTask;
+        //});
+#pragma warning restore ASPIRECERTIFICATES001
     }
 
     /// <summary>
@@ -67,7 +118,6 @@ public static class GrafanaOtelLgtmExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-#pragma warning disable HAA0301, HAA0302, HAA0401
     public static IResourceBuilder<GrafanaOtelLgtmResource> WithAppForwarding(
         this IResourceBuilder<GrafanaOtelLgtmResource> builder)
     {
@@ -90,7 +140,6 @@ public static class GrafanaOtelLgtmExtensions
 
         return builder;
     }
-#pragma warning restore HAA0301, HAA0302, HAA0401
 
     /// <summary>
     /// Routes the telemetry for the resource through the specified Grafana OTel-LGTM instance.
@@ -99,7 +148,6 @@ public static class GrafanaOtelLgtmExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="lgtmBuilder">The Grafana OTel-LGTM resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-#pragma warning disable HAA0301, HAA0302, HAA0303
     public static IResourceBuilder<T> WithGrafanaOtelLgtmRouting<T>(
         this IResourceBuilder<T> builder,
         IResourceBuilder<GrafanaOtelLgtmResource> lgtmBuilder) where T : IResourceWithEnvironment
@@ -124,7 +172,6 @@ public static class GrafanaOtelLgtmExtensions
 
         return builder;
     }
-#pragma warning restore HAA0301, HAA0302, HAA0303
 
     /// <summary>
     /// Adds a config file to the OpenTelemetry Collector inside the Grafana OTel-LGTM container.
@@ -136,7 +183,7 @@ public static class GrafanaOtelLgtmExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="configPath">The path to the OpenTelemetry Collector configuration YAML file.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<GrafanaOtelLgtmResource> WithConfig(
+    public static IResourceBuilder<GrafanaOtelLgtmResource> WithCollectorConfig(
         this IResourceBuilder<GrafanaOtelLgtmResource> builder,
         string configPath)
     {
@@ -147,24 +194,42 @@ public static class GrafanaOtelLgtmExtensions
     }
 
     /// <summary>
-    /// Sets an environment variable on the Grafana OTel-LGTM container.
+    /// Mounts a custom Grafana configuration file into the Grafana OTel-LGTM container.
     /// </summary>
     /// <remarks>
-    /// Use this to configure the container, for example <c>ENABLE_LOGS_ALL=true</c> for logging
-    /// or <c>GF_SECURITY_ADMIN_PASSWORD=secret</c> for custom Grafana credentials.
+    /// Grafana is also configurable via <c>GF_*</c> environment variables.
+    /// See the <a href="https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/">Grafana documentation</a> for details.
     /// </remarks>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="name">The environment variable name.</param>
-    /// <param name="value">The environment variable value.</param>
+    /// <param name="configPath">The path to the Grafana configuration file (<c>grafana.ini</c> or <c>custom.ini</c>).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<GrafanaOtelLgtmResource> WithEnvironmentVariable(
+    public static IResourceBuilder<GrafanaOtelLgtmResource> WithGrafanaConfig(
         this IResourceBuilder<GrafanaOtelLgtmResource> builder,
-        string name,
-        string value)
+        string configPath)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+        ArgumentException.ThrowIfNullOrEmpty(configPath, nameof(configPath));
 
-        return builder.WithEnvironment(name, value);
+        return builder.WithBindMount(configPath, "/otel-lgtm/grafana/conf/custom.ini", isReadOnly: true);
     }
+
+    /// <summary>
+    /// Mounts a custom Prometheus configuration file into the Grafana OTel-LGTM container.
+    /// </summary>
+    /// <remarks>
+    /// Prometheus also supports additional CLI flags via the <c>PROMETHEUS_EXTRA_ARGS</c> environment variable.
+    /// </remarks>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="configPath">The path to the Prometheus configuration YAML file.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<GrafanaOtelLgtmResource> WithPrometheusConfig(
+        this IResourceBuilder<GrafanaOtelLgtmResource> builder,
+        string configPath)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentException.ThrowIfNullOrEmpty(configPath, nameof(configPath));
+
+        return builder.WithBindMount(configPath, "/otel-lgtm/prometheus.yaml", isReadOnly: true);
+    }
+
 }
