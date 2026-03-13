@@ -131,7 +131,7 @@ public class SolrResourceTests
         Assert.NotNull(resource);
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotation));
         Assert.EndsWith("-data", mountAnnotation.Source);
-        Assert.Equal("/var/solr/data", mountAnnotation.Target);
+        Assert.Equal("/var/solr", mountAnnotation.Target);
         Assert.Equal(ContainerMountType.Volume, mountAnnotation.Type);
     }
 
@@ -148,7 +148,7 @@ public class SolrResourceTests
         Assert.NotNull(resource);
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotation));
         Assert.Equal("mysolrdata", mountAnnotation.Source);
-        Assert.Equal("/var/solr/data", mountAnnotation.Target);
+        Assert.Equal("/var/solr", mountAnnotation.Target);
         Assert.Equal(ContainerMountType.Volume, mountAnnotation.Type);
     }
 
@@ -165,7 +165,7 @@ public class SolrResourceTests
         Assert.NotNull(resource);
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotation));
         Assert.EndsWith("mysolrdata", mountAnnotation.Source);
-        Assert.Equal("/var/solr/data", mountAnnotation.Target);
+        Assert.Equal("/var/solr", mountAnnotation.Target);
         Assert.Equal(ContainerMountType.BindMount, mountAnnotation.Type);
     }
 }

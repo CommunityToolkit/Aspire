@@ -108,6 +108,6 @@ public static class SolrBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(source);
 
-        return builder.WithBindMount(source, "/var/solr/", isReadOnly);
+        return builder.WithBindMount(source, "/var/solr", isReadOnly);
     }
 }
