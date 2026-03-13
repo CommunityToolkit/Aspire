@@ -58,6 +58,41 @@ The `WithConfigset` method takes two parameters:
 
 When a config set is provided, the core is created with `solr-precreate -c <coreName> -d <configSetName>` instead of the default `solr-precreate <coreName>`.
 
+## Persisting Data
+
+### Using a Named Volume
+
+Use `WithDataVolume` to persist Solr data across container restarts with a Docker named volume:
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+// Use an auto-generated volume name
+var solr = builder.AddSolr("solr")
+                  .WithDataVolume();
+
+// Or specify a custom volume name
+var solrNamed = builder.AddSolr("solr")
+                       .WithDataVolume("my-solr-data");
+
+builder.Build().Run();
+```
+
+### Using a Bind Mount
+
+Use `WithDataBindMount` to mount a host directory into the container for data storage:
+
+```csharp
+var builder = DistributedApplication.CreateBuilder(args);
+
+var solr = builder.AddSolr("solr")
+                  .WithDataBindMount("/path/to/solr/data");
+
+builder.Build().Run();
+```
+
+The `WithDataBindMount` method mounts the specified host path to `/var/solr/data` inside the container. The directory must be writable by the Solr process (UID 8983).
+
 ## Feedback & contributing
 
 https://github.com/dotnet/aspire
