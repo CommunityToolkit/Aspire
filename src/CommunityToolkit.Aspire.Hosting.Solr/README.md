@@ -56,7 +56,7 @@ The `WithConfigset` method takes two parameters:
 - `configSetName` — the name of the config set as it will appear inside the container (under `/opt/solr/server/solr/configsets/`)
 - `configSetPath` — the absolute path on the host to the config set directory to mount
 
-When a config set is provided, the core is created with `solr-precreate -c <coreName> -d <configSetName>` instead of the default `solr-precreate <coreName>`.
+When a config set is provided, the core is created with `solr-create -c <coreName> -d <configSetName>` instead of the default `solr-precreate <coreName>`.
 
 ## Persisting Data
 
