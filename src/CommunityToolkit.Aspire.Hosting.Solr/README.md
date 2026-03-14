@@ -91,7 +91,7 @@ var solr = builder.AddSolr("solr")
 builder.Build().Run();
 ```
 
-The `WithDataBindMount` method mounts the specified host path to `/var/solr/data` inside the container. The directory must be writable by the Solr process (UID 8983).
+The `WithDataBindMount` method mounts the specified host path to `/var/solr` inside the container. The directory must be writable by the Solr process (UID 8983).
 
 ## Feedback & contributing
 

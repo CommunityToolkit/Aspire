@@ -62,7 +62,7 @@ public class SolrResourceTests
 
         var configSetsPath = Path.GetFullPath(Path.Combine(
                 builder.AppHostDirectory,
-                "/configsets/test"));
+                "./configsets/test"));
 
         var solr = builder.AddSolr("solr", coreName: "testcore")
             .WithConfigset("test", configSetsPath);

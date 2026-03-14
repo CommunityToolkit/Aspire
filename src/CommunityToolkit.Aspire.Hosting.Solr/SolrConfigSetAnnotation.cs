@@ -13,8 +13,8 @@ public sealed class SolrConfigSetAnnotation : IResourceAnnotation
     /// <param name="configSetPath">The path to the config set directory.</param>
     public SolrConfigSetAnnotation(string configSetName, string configSetPath)
     {
-        ArgumentNullException.ThrowIfNull(configSetName);
-        ArgumentNullException.ThrowIfNull(configSetPath);
+        ArgumentException.ThrowIfNullOrEmpty(configSetName);
+        ArgumentException.ThrowIfNullOrEmpty(configSetPath);
         ConfigSetName = configSetName;
         ConfigSetPath = configSetPath;
     }
