@@ -33,7 +33,7 @@ builder.Build().Run();
 
 ### Example 2: Multiple data sources
 
-The docs for multi-source configuration are at [MS Learn](https://learn.microsoft.com/en-us/azure/data-api-builder/concept/config/multi-data-source). 
+The docs for multi-source configuration are at [MS Learn](https://learn.microsoft.com/azure/data-api-builder/concept/config/multi-data-source). 
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
