@@ -8,7 +8,7 @@ This Aspire Integration runs [Data API builder](https://aka.ms/dab/docs) in a co
 
 ### Example 1: Single data source
 
-The docs for a basic configuration file are at [MS Learn](https://learn.microsoft.com/en-us/azure/data-api-builder/configuration/).
+The docs for a basic configuration file are at [MS Learn](https://learn.microsoft.com/azure/data-api-builder/configuration/).
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
