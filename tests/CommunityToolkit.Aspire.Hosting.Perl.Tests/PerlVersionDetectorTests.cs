@@ -1,5 +1,6 @@
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
@@ -89,7 +90,7 @@ public class PerlVersionDetectorTests : IDisposable
 
     #region DetectVersionFromCli
 
-    [LinuxOnlyFact]
+    [Fact, RequiresLinux]
     public async Task DetectVersionFromCli_ReturnsVersion_WhenPerlIsInstalled()
     {
         var result = await PerlVersionDetector.DetectVersionFromCliAsync("perl");

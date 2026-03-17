@@ -1,10 +1,11 @@
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlModuleCheckerTests
 {
-    [LinuxOnlyFact]
+    [Fact, RequiresLinux]
     public async Task IsModuleInstalledAsync_UsesProvidedEnvironmentVariables()
     {
         var tempDir = Directory.CreateTempSubdirectory("perl-module-check-");

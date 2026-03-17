@@ -1,6 +1,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 #pragma warning disable ASPIRECOMMAND001
@@ -83,7 +84,7 @@ public class PerlInstallationManagerTests
 
     #region Linux Positive Validation
 
-    [LinuxOnlyFact]
+    [Fact, RequiresLinux]
     public async Task IsPerlInstalledAsync_ReturnsTrue_WhenPerlIsInstalled()
     {
         var manager = new PerlInstallationManager();
@@ -93,7 +94,7 @@ public class PerlInstallationManagerTests
         Assert.True(result);
     }
 
-    [LinuxOnlyFact]
+    [Fact, RequiresLinux]
     public async Task ValidationCallback_ReturnsSuccess_WhenPerlIsInstalled()
     {
         var builder = DistributedApplication.CreateBuilder();

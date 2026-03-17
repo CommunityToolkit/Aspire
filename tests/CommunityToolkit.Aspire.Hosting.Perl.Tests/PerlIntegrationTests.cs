@@ -46,7 +46,7 @@ public class PerlIntegrationTests(AspireIntegrationTestFixture<Projects.CpanmApi
     #region Cpanm API Integration Endpoints
 
 
-    [Fact]
+    [Fact, RequiresLinux]
     public async Task CpanmApiIntegration_FleetingEndpoint_ReturnsExpectedText()
     {
         const string resourceName = "perl-api";

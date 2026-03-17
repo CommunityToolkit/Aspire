@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <AdditionalPackageTags>aspire integration hosting perl</AdditionalPackageTags>
     <Description>An aspire integration with support for Perl.</Description>
     <Authors>Omnideth</Authors>
