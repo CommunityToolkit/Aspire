@@ -8,11 +8,6 @@ using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
 using System.Diagnostics.CodeAnalysis;
 
-#pragma warning disable ASPIREEXTENSION001
-#pragma warning disable ASPIRECOMMAND001
-#pragma warning disable ASPIREINTERACTION001
-#pragma warning disable ASPIREDOCKERFILEBUILDER001
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -231,6 +226,7 @@ public static class PerlAppResourceBuilderExtensions
 
         resourceBuilder.WithOtlpExporter();
 
+#pragma warning disable ASPIRECOMMAND001
         resourceBuilder.WithRequiredCommand("perl", async context =>
         {
             var manager = context.Services.GetRequiredService<PerlInstallationManager>();
@@ -242,6 +238,7 @@ public static class PerlAppResourceBuilderExtensions
                     "Perl is not installed or not functional. " +
                     "Running 'perl -v' did not produce expected output starting with 'This is perl'.");
         }, "https://www.perl.org/get.html");
+#pragma warning restore ASPIRECOMMAND001
 
         resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
 
@@ -404,6 +401,7 @@ public static class PerlAppResourceBuilderExtensions
 
             builder.ApplicationBuilder.Eventing.Subscribe<BeforeResourceStartedEvent>(builder.Resource, async (evt, ct) =>
             {
+#pragma warning disable ASPIREINTERACTION001
                 var interactionService = evt.Services.GetService<IInteractionService>();
                 if (interactionService is not null && interactionService.IsAvailable)
                 {
@@ -418,6 +416,7 @@ public static class PerlAppResourceBuilderExtensions
                         },
                         cancellationToken: ct).ConfigureAwait(false);
                 }
+#pragma warning restore ASPIREINTERACTION001
 
                 throw new InvalidOperationException(windowsMessage);
             });
@@ -446,6 +445,7 @@ public static class PerlAppResourceBuilderExtensions
         EnsurePerlbrewEnvironmentCallback(builder);
 
         // Validate that the perlbrew perl version is installed.
+#pragma warning disable ASPIRECOMMAND001
         builder.WithRequiredCommand("perlbrew", _ => Task.FromResult(
             File.Exists(perlExecutable)
                 ? RequiredCommandValidationResult.Success()
@@ -455,6 +455,7 @@ public static class PerlAppResourceBuilderExtensions
                     $"Install with: perlbrew install {normalizedVersion}. " +
                     "You may install perlbrew on linux with 'sudo apt install perlbrew' or using the intructions at the perlbrew website.")),
             "https://perlbrew.pl/");
+#pragma warning restore ASPIRECOMMAND001
 
         return builder;
     }
@@ -475,6 +476,7 @@ public static class PerlAppResourceBuilderExtensions
         builder.WithAnnotation(new PerlPackageManagerAnnotation(PerlPackageManager.Cpanm),
             ResourceAnnotationMutationBehavior.Replace);
 
+#pragma warning disable ASPIRECOMMAND001
         builder.WithRequiredCommand("cpanm", context => Task.FromResult(
             IsCpanmAvailableForResource(context.ResolvedPath, builder)
                 ? RequiredCommandValidationResult.Success()
@@ -482,6 +484,7 @@ public static class PerlAppResourceBuilderExtensions
                     "cpanm is not installed or not available. " +
                     "If using perlbrew, run 'perlbrew install-cpanm'.")),
             "https://cpanmin.us/");
+#pragma warning restore ASPIRECOMMAND001
 
         return builder;
     }
@@ -621,6 +624,7 @@ public static class PerlAppResourceBuilderExtensions
         builder.WithAnnotation(new PerlPackageManagerAnnotation(PerlPackageManager.Carton),
             ResourceAnnotationMutationBehavior.Replace);
 
+#pragma warning disable ASPIRECOMMAND001
         builder.WithRequiredCommand("carton", context => Task.FromResult(
             IsCommandAvailable(context.ResolvedPath)
                 ? RequiredCommandValidationResult.Success()
@@ -628,6 +632,7 @@ public static class PerlAppResourceBuilderExtensions
                     "Carton is not installed or not available on PATH. " +
                     "To install Carton, you may use \"cpanm Carton\".")),
             "https://metacpan.org/pod/Carton");
+#pragma warning restore ASPIRECOMMAND001
 
         TryAttachLocalLibEnvironmentToProjectInstaller(builder);
 
@@ -825,11 +830,13 @@ public static class PerlAppResourceBuilderExtensions
             var snapshotPath = Path.Combine(workingDir, "cpanfile.snapshot");
             if (!File.Exists(snapshotPath))
             {
+#pragma warning disable ASPIRECOMMAND001
                 builder.WithRequiredCommand("cpanfile.snapshot", _ => Task.FromResult(
                     RequiredCommandValidationResult.Failure(
                         "carton install --deployment requires a cpanfile.snapshot file. " +
                         "Run 'carton install' first to generate the snapshot, then commit it to source control.")),
                     "https://metacpan.org/pod/Carton");
+#pragma warning restore ASPIRECOMMAND001
             }
         }
 
@@ -1647,6 +1654,7 @@ public static class PerlAppResourceBuilderExtensions
     {
         resourceBuilder.PublishAsDockerFile();
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         resourceBuilder.WithAnnotation(new DockerfileBuilderCallbackAnnotation(context =>
         {
             var resource = context.Resource;
@@ -1662,6 +1670,7 @@ public static class PerlAppResourceBuilderExtensions
             var baseImage = "perl:5-slim";
             var buildImage = "perl:5";
             if (resource.TryGetLastAnnotation<DockerfileBaseImageAnnotation>(out var baseImageAnnotation))
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
             {
                 if (baseImageAnnotation.RuntimeImage is { } runtimeImage)
                 {

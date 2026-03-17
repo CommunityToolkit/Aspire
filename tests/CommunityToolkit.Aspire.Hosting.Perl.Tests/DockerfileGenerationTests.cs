@@ -4,15 +4,13 @@ using Aspire.Hosting.ApplicationModel.Docker;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
-#pragma warning disable ASPIREDOCKERFILEBUILDER001
-#pragma warning disable CTASPIREPERL002
-
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class DockerfileGenerationTests
 {
     #region BuildCpanmDockerfile
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void BuildCpanmDockerfile_UsesSingleStage()
     {
@@ -97,10 +95,13 @@ public class DockerfileGenerationTests
         Assert.True(runIndexes[1] < copyIndexes[1]);
     }
 
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
     #endregion
 
     #region BuildContainerEntrypointArguments
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void BuildContainerEntrypointArguments_Script_UsesPerlEntrypoint()
     {
@@ -161,10 +162,13 @@ public class DockerfileGenerationTests
         Assert.Equal(["perl", "-Ilocal/lib/perl5", "-MMyApp::Worker", "-e", "MyApp::Worker->run()"], args);
     }
 
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
     #endregion
 
     #region BuildCartonDockerfile
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void BuildCartonDockerfile_ProducesMultiStage()
     {
@@ -213,10 +217,13 @@ public class DockerfileGenerationTests
         Assert.NotEmpty(builder.Stages[1].Statements);
     }
 
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
     #endregion
 
     #region PublishMode Wiring
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void PublishMode_ResourceExistsInModel()
     {
@@ -249,10 +256,13 @@ public class DockerfileGenerationTests
         Assert.Empty(dockerAnnotations);
     }
 
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
     #endregion
 
     #region BuildCpanmDockerfile with LocalLib
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void BuildCpanmDockerfile_WithLocalLib_SetsEnvDirectives()
     {
@@ -294,10 +304,13 @@ public class DockerfileGenerationTests
         Assert.Empty(envStatements);
     }
 
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
     #endregion
 
     #region BuildCartonDockerfile with LocalLib
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void BuildCartonDockerfile_WithLocalLib_RuntimeStageHasEnvDirectives()
     {
@@ -320,10 +333,13 @@ public class DockerfileGenerationTests
         Assert.True(envStatements.Count >= 2, "Expected ENV statements for PERL5LIB and PERL_LOCAL_LIB_ROOT in runtime stage");
     }
 
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
     #endregion
 
     #region BuildCartonDockerfile deployment flag
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void BuildCartonDockerfile_WithDeployment_RunsCartonInstallDeployment()
     {
@@ -369,6 +385,8 @@ public class DockerfileGenerationTests
 
         Assert.True(runStatements.Count >= 2);
     }
+
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
     #endregion
 }

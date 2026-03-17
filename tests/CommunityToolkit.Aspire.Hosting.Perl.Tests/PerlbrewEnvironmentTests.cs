@@ -5,9 +5,6 @@ using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-#pragma warning disable ASPIRECOMMAND001
-#pragma warning disable ASPIREINTERACTION001
-
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlbrewEnvironmentTests
@@ -203,6 +200,7 @@ public class PerlbrewEnvironmentTests
         Assert.Equal(expectedBinPath, env.BinPath);
     }
 
+#pragma warning disable ASPIRECOMMAND001
     [Fact, RequiresLinux]
     public void WithPerlbrewEnvironment_AddsPerlbrewRequiredCommand()
     {
@@ -224,6 +222,8 @@ public class PerlbrewEnvironmentTests
         Assert.Contains(annotations, a => a.Command == "cpan");
         Assert.Contains(annotations, a => a.Command == "perlbrew" && a.HelpLink == "https://perlbrew.pl/");
     }
+
+#pragma warning restore ASPIRECOMMAND001
 
     [Fact, RequiresLinux]
     public async Task WithPerlbrewEnvironment_SetsEnvironmentVariables()
@@ -404,6 +404,7 @@ public class PerlbrewEnvironmentTests
 
     #region Validation Messaging
 
+#pragma warning disable ASPIRECOMMAND001, ASPIREINTERACTION001
     [Fact, RequiresWindows]
     public void WithPerlbrewEnvironment_OnWindows_DoesNotRegisterPerlbrewRequiredCommand()
     {
@@ -553,8 +554,11 @@ public class PerlbrewEnvironmentTests
             resource => resource.Name == "perl-app-perl-5-38-0-perlbrew-installer");
     }
 
+#pragma warning restore ASPIRECOMMAND001, ASPIREINTERACTION001
+
     #endregion
 
+#pragma warning disable ASPIREINTERACTION001
     private sealed class RecordingInteractionService : IInteractionService
     {
         public bool IsAvailable => true;
@@ -620,4 +624,5 @@ public class PerlbrewEnvironmentTests
             return Task.FromResult<InteractionResult<bool>>(null!);
         }
     }
+#pragma warning restore ASPIREINTERACTION001
 }

@@ -4,8 +4,6 @@ using Aspire.Hosting.Eventing;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using Microsoft.Extensions.DependencyInjection;
 
-#pragma warning disable CTASPIREPERL001
-
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class LoggingBehaviorTests
@@ -104,6 +102,7 @@ public class LoggingBehaviorTests
 
     #region WithPerlCertificateTrust Logging
 
+#pragma warning disable CTASPIREPERL001
     [Fact]
     public async Task WithPerlCertificateTrust_InRunMode_LogsCertificateStatus()
     {
@@ -135,6 +134,8 @@ public class LoggingBehaviorTests
         Assert.DoesNotContain(logs, l => l.Contains("Certificate trust"));
         Assert.DoesNotContain(logs, l => l.Contains("SSL_CERT_FILE"));
     }
+
+#pragma warning restore CTASPIREPERL001
 
     #endregion
 

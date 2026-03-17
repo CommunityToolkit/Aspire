@@ -3,9 +3,6 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 
-#pragma warning disable CTASPIREPERL001
-#pragma warning disable ASPIRECOMMAND001
-
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PackageManagementTests
@@ -484,6 +481,7 @@ public class PackageManagementTests
         Assert.Throws<ArgumentNullException>(() => builder.WithProjectDependencies());
     }
 
+#pragma warning disable ASPIRECOMMAND001
     [Fact]
     public void WithProjectDependencies_CartonDeployment_WarnsMissingSnapshot()
     {
@@ -553,6 +551,7 @@ public class PackageManagementTests
         }
     }
 
+#pragma warning restore ASPIRECOMMAND001
     [Fact]
     public void WithProjectDependencies_CombinesWithPerPackageInstallers()
     {
@@ -1155,6 +1154,7 @@ public class PackageManagementTests
 
     #region WithPerlCertificateTrust
 
+#pragma warning disable CTASPIREPERL001
     [Fact]
     public void WithPerlCertificateTrust_AddsCertificateTrustAnnotation()
     {
@@ -1247,6 +1247,8 @@ public class PackageManagementTests
         // WithPerlCertificateTrust() was called before WithPackage()
         Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
     }
+
+#pragma warning restore CTASPIREPERL001
 
     #endregion
 }
