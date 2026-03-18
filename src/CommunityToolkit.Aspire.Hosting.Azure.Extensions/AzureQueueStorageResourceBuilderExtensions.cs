@@ -3,6 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
+using Aspire.Hosting.Publishing;
 
 namespace Aspire.Hosting;
 
@@ -39,6 +40,7 @@ public static class AzureQueueStorageResourceBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withQueueAzureStorageExplorer", MethodName = "withAzureStorageExplorer", Description = "Adds an Azure Storage Explorer instance to a Queue storage resource.")]
     public static IResourceBuilder<AzureQueueStorageResource> WithAzureStorageExplorer(
         this IResourceBuilder<AzureQueueStorageResource> queues,
         Action<IResourceBuilder<AzureStorageExplorerResource>>? configureContainer = null,
