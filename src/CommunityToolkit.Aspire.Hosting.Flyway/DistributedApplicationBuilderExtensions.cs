@@ -1,5 +1,7 @@
 using Aspire.Hosting.ApplicationModel;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -30,6 +32,7 @@ public static class DistributedApplicationBuilderExtensions
         /// </code>
         /// </example>
         /// </remarks>
+        [AspireExport("addFlyway", Description = "Adds a Flyway container resource")]
         public IResourceBuilder<FlywayResource> AddFlyway([ResourceName] string name, string migrationScriptsPath)
         {
             ArgumentNullException.ThrowIfNull(name);
