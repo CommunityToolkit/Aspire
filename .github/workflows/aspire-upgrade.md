@@ -75,30 +75,3 @@ Run `dotnet restore` at the repository root to verify the new version resolves c
 
 After all changes are made and validated, create a pull request with the title "Update Aspire version to X.Y.Z" where X.Y.Z is the full version you updated to.
 
-<!--
-## TODO: Customize this workflow
-
-The workflow has been generated based on your selections. Consider adding:
-
-- [ ] More specific instructions for the AI
-- [ ] Error handling requirements
-- [ ] Output format specifications
-- [ ] Integration with other workflows
-- [ ] Testing and validation steps
-
-## Configuration Summary
-
-- **Trigger**: Manual trigger
-- **AI Engine**: copilot
-- **Tools**: github, edit, bash
-- **Safe Outputs**: create-pull-request
-- **Network Access**: ecosystem
-
-## Next Steps
-
-1. Review and customize the workflow content above
-2. Remove TODO sections when ready
-3. Run `gh aw compile` to generate the GitHub Actions workflow
-4. Test the workflow with a manual trigger or appropriate event
--->
-
