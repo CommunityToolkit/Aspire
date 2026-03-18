@@ -1,9 +1,12 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Resource for the Papercut SMTP server.
 /// </summary>
-/// <param name="name"></param>
+/// <param name="name">The name of the resource.</param>
+[AspireExport(ExposeProperties = true)]
 public class PapercutSmtpContainerResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const int HttpEndpointPort = 8080;
