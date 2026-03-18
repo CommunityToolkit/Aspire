@@ -5,6 +5,8 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.k6;
 using System.Globalization;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -37,9 +39,10 @@ public static class K6BuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("addK6", Description = "Adds a Grafana k6 container resource")]
     public static IResourceBuilder<K6Resource> AddK6(
         this IDistributedApplicationBuilder builder,
-        string name,
+        [ResourceName] string name,
         bool enableBrowserExtensions = false,
         int? port = null)
     {
@@ -87,6 +90,7 @@ public static class K6BuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withScript", Description = "Runs a k6 script when starting the Grafana k6 container resource")]
     public static IResourceBuilder<K6Resource> WithScript(
         this IResourceBuilder<K6Resource> builder,
         string scriptPath,
@@ -115,6 +119,7 @@ public static class K6BuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withK6OtlpEnvironment", Description = "Sets K6 OTEL environment variables from the existing OTEL environment for this resource")]
     public static IResourceBuilder<K6Resource> WithK6OtlpEnvironment(
         this IResourceBuilder<K6Resource> builder)
     {
