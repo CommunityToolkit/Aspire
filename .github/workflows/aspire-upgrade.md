@@ -1,22 +1,25 @@
 ---
-description: Updates Aspire SDK to the latest nightly build
 on:
     workflow_dispatch:
-concurrency: aspire-upgrade
 permissions:
     contents: read
+    issues: read
+    pull-requests: read
+engine: copilot
 network:
     allowed:
         - defaults
+        - dotnet
 tools:
     github:
-        toolsets: [repos, context]
+        toolsets: [default]
     edit:
     bash: true
-    web-fetch:
 safe-outputs:
     create-pull-request:
 ---
+
+# aspire-upgrade
 
 The target version prefix is **13.2**.
 
@@ -26,7 +29,15 @@ You are responsible for updating the Aspire version in our repo to the latest ni
 
 You are to use the NuGet feed https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json
 
-Look for the latest nightly version that starts with the target version prefix above.
+Look for the latest nightly version that starts with the target version prefix above. To do this, you will need to use the .NET CLI package search feature with the `--prerelease` and `--exact-match` flags (and probably best to specify the feed with `--source` to avoid confusion with any stable versions from nuget.org). Query for the `Aspire.AppHost.Sdk` package as it is a dependency of all our AppHost projects and will be the most reliable way to find the correct version string.
+
+Here is an example command to find the latest version:
+
+```bash
+dotnet package search Aspire.AppHost.Sdk --prerelease --exact-match --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json --format json
+```
+
+Parse the result for the latest version that matches the target version prefix. This will be the version you update to in the next steps.
 
 ## Step 1: Update `Directory.Build.props`
 
@@ -63,3 +74,31 @@ Run `dotnet restore` at the repository root to verify the new version resolves c
 ## Step 4: Create a pull request
 
 After all changes are made and validated, create a pull request with the title "Update Aspire version to X.Y.Z" where X.Y.Z is the full version you updated to.
+
+<!--
+## TODO: Customize this workflow
+
+The workflow has been generated based on your selections. Consider adding:
+
+- [ ] More specific instructions for the AI
+- [ ] Error handling requirements
+- [ ] Output format specifications
+- [ ] Integration with other workflows
+- [ ] Testing and validation steps
+
+## Configuration Summary
+
+- **Trigger**: Manual trigger
+- **AI Engine**: copilot
+- **Tools**: github, edit, bash
+- **Safe Outputs**: create-pull-request
+- **Network Access**: ecosystem
+
+## Next Steps
+
+1. Review and customize the workflow content above
+2. Remove TODO sections when ready
+3. Run `gh aw compile` to generate the GitHub Actions workflow
+4. Test the workflow with a manual trigger or appropriate event
+-->
+
