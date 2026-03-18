@@ -4,10 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Extension methods to add the collector resource
+/// Provides extension methods for adding and configuring OpenTelemetry Collector resources.
 /// </summary>
 public static class OpenTelemetryCollectorExtensions
 {
@@ -17,38 +19,47 @@ public static class OpenTelemetryCollectorExtensions
     private const string DashboardOtlpUrlDefaultValue = "http://localhost:18889";
 
     /// <summary>
-    /// Adds an OpenTelemetry Collector into the Aspire AppHost
+    /// Adds an OpenTelemetry Collector container resource to the application model.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <param name="configureSettings"></param>
-    /// <returns></returns>
-    public static IResourceBuilder<OpenTelemetryCollectorResource> AddOpenTelemetryCollector(this IDistributedApplicationBuilder builder,
-        string name,
+    /// <param name="builder">The application builder.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="configureSettings">An optional callback that configures the collector settings.</param>
+    /// <returns>A reference to the resource builder.</returns>
+    [AspireExport("addOpenTelemetryCollector", Description = "Adds an OpenTelemetry Collector container resource")]
+    public static IResourceBuilder<OpenTelemetryCollectorResource> AddOpenTelemetryCollector(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
         Action<OpenTelemetryCollectorSettings>? configureSettings = null)
     {
-        var url = builder.Configuration[DashboardOtlpUrlVariableName] ??
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(name);
+
+        string url = builder.Configuration[DashboardOtlpUrlVariableName] ??
             builder.Configuration[DashboardOtlpUrlVariableNameLegacy] ??
             DashboardOtlpUrlDefaultValue;
 
-        var settings = new OpenTelemetryCollectorSettings();
+        OpenTelemetryCollectorSettings settings = new();
         configureSettings?.Invoke(settings);
 
-        var resource = new OpenTelemetryCollectorResource(name);
-        var resourceBuilder = builder.AddResource(resource)
+        OpenTelemetryCollectorResource resource = new(name);
+        IResourceBuilder<OpenTelemetryCollectorResource> resourceBuilder = builder.AddResource(resource)
             .WithImage(settings.Image, settings.CollectorTag)
             .WithImageRegistry(settings.Registry)
             .WithEnvironment("ASPIRE_ENDPOINT", new HostUrl(url))
             .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName])
             .WithIconName("DesktopPulse");
 
-        var useHttpsForReceivers = !settings.ForceNonSecureReceiver && url.StartsWith("https", StringComparison.OrdinalIgnoreCase);
+        bool useHttpsForReceivers = !settings.ForceNonSecureReceiver && url.StartsWith("https", StringComparison.OrdinalIgnoreCase);
 
         if (settings.EnableGrpcEndpoint)
+        {
             ConfigureReceiver(4317, OpenTelemetryCollectorResource.GrpcEndpointName);
+        }
 
         if (settings.EnableHttpEndpoint)
+        {
             ConfigureReceiver(4318, OpenTelemetryCollectorResource.HttpEndpointName);
+        }
 
         if (!settings.DisableHealthcheck)
         {
@@ -65,7 +76,7 @@ public static class OpenTelemetryCollectorExtensions
 
         void ConfigureReceiver(int port, string protocol)
         {
-            var scheme = useHttpsForReceivers ? "https" : "http";
+            string scheme = useHttpsForReceivers ? "https" : "http";
             resourceBuilder.WithEndpoint(targetPort: port, name: protocol, scheme: scheme);
 
             if (!useHttpsForReceivers)
@@ -85,10 +96,11 @@ public static class OpenTelemetryCollectorExtensions
     }
 
     /// <summary>
-    /// Force all apps to forward to the collector instead of the dashboard directly
+    /// Configures all compatible resources in the application to forward telemetry to this collector.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
+    /// <param name="builder">The collector resource builder.</param>
+    /// <returns>A reference to the resource builder.</returns>
+    [AspireExport("withAppForwarding", Description = "Configures all compatible resources to forward telemetry to this collector")]
     public static IResourceBuilder<OpenTelemetryCollectorResource> WithAppForwarding(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
         builder.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
@@ -111,14 +123,15 @@ public static class OpenTelemetryCollectorExtensions
     }
 
     /// <summary>
-    /// Adds a config file to the collector
+    /// Adds a configuration file to the collector resource.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="configPath"></param>
-    /// <returns></returns>
+    /// <param name="builder">The collector resource builder.</param>
+    /// <param name="configPath">The path to the collector configuration file.</param>
+    /// <returns>A reference to the resource builder.</returns>
+    [AspireExport("withConfig", Description = "Adds a configuration file to the collector resource")]
     public static IResourceBuilder<OpenTelemetryCollectorResource> WithConfig(this IResourceBuilder<OpenTelemetryCollectorResource> builder, string configPath)
     {
-        var configFileInfo = new FileInfo(configPath);
+        FileInfo configFileInfo = new(configPath);
         return builder.WithBindMount(configPath, $"/config/{configFileInfo.Name}")
             .WithArgs($"--config=/config/{configFileInfo.Name}");
     }
