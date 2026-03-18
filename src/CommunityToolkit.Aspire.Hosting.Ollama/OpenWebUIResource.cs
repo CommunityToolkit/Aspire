@@ -1,8 +1,11 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents an Open WebUI resource
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class OpenWebUIResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";

@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -9,6 +11,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The name for the resource.</param>
 /// <param name="modelName">The name of the LLM model, can include a tag.</param>
 /// <param name="parent">The <see cref="OllamaResource"/> parent.</param>
+[AspireExport(ExposeProperties = true)]
 public class OllamaModelResource(string name, string modelName, IOllamaResource parent) : Resource(name), IResourceWithParent<IOllamaResource>, IResourceWithConnectionString
 {
     /// <summary>

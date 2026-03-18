@@ -6,6 +6,8 @@ using OllamaSharp;
 using System.Data.Common;
 using System.Globalization;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 public static partial class OllamaResourceBuilderExtensions
@@ -13,9 +15,13 @@ public static partial class OllamaResourceBuilderExtensions
     /// <summary>
     /// Adds a model to the Ollama resource.
     /// </summary>
+    /// <remarks>
+    /// The resource name is generated from <paramref name="modelName"/> when you do not specify one explicitly.
+    /// </remarks>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addModel", Description = "Adds an Ollama model resource")]
     public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<IOllamaResource> builder, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -30,10 +36,14 @@ public static partial class OllamaResourceBuilderExtensions
     /// <summary>
     /// Adds a model to the Ollama resource.
     /// </summary>
+    /// <remarks>
+    /// Use this overload when you need to control the generated resource name.
+    /// </remarks>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addNamedModel", Description = "Adds a named Ollama model resource")]
     public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<IOllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -61,6 +71,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addHuggingFaceModel", Description = "Adds a Hugging Face model to the Ollama resource")]
     public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<IOllamaResource> builder, [ResourceName] string name, string modelName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
