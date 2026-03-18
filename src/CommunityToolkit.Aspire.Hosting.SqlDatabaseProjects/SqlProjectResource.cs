@@ -8,8 +8,28 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Represents a SQL Server Database project resource.
 /// </summary>
 /// <param name="name">Name of the resource.</param>
+[AspireExport(ExposeProperties = true)]
 public sealed class SqlProjectResource(string name) : Resource(name), IResourceWithWaitSupport, IResourceWithDacpac
 {
+    /// <summary>
+    /// Gets the configured path to the .dacpac file.
+    /// </summary>
+    public string? DacpacPath => this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var dacpacMetadata)
+        ? dacpacMetadata.DacpacPath
+        : null;
+
+    /// <summary>
+    /// Gets the configured path to the deployment options publish profile.
+    /// </summary>
+    public string? DacDeployOptionsPath => this.TryGetLastAnnotation<DacDeployOptionsAnnotation>(out var optionsAnnotation)
+        ? optionsAnnotation.OptionsPath
+        : null;
+
+    /// <summary>
+    /// Gets a value indicating whether deployment should be skipped when the dacpac has already been deployed.
+    /// </summary>
+    public bool SkipWhenDeployed => this.HasAnnotationOfType<DacpacSkipWhenDeployedAnnotation>();
+
     string IResourceWithDacpac.GetDacpacPath()
     {
         if (this.TryGetLastAnnotation<IProjectMetadata>(out var projectMetadata))
