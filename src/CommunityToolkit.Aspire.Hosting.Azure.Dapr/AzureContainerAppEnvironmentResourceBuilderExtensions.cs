@@ -5,6 +5,8 @@ using Azure.Provisioning.AppContainers;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -15,8 +17,9 @@ public static class AzureContainerAppEnvironmentResourceBuilderExtensions
     /// <summary>
     /// Configures the Azure Container App Environment resource to use Dapr.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <returns></returns>
+    /// <param name="builder">The Azure Container App Environment resource builder.</param>
+    /// <returns>The updated Azure Container App Environment resource builder.</returns>
+    [AspireExport("withDaprComponents", Description = "Configures an Azure Container App environment to publish Dapr components")]
     public static IResourceBuilder<AzureContainerAppEnvironmentResource> WithDaprComponents(
         this IResourceBuilder<AzureContainerAppEnvironmentResource> builder)
     {
