@@ -1,5 +1,7 @@
 using Aspire.Hosting.ApplicationModel;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -15,6 +17,7 @@ public static class SqliteResourceBuilderExtensions
     /// <param name="databasePath">The optional path to the database file. If no path is provided the database is stored in a temporary location.</param>
     /// <param name="databaseFileName">The filename of the database file. Must include extension. If no file name is provided, a randomly generated file name is used.</param>
     /// <returns>A resource builder for the Sqlite resource.</returns>
+    [AspireExport("addSqlite", Description = "Adds a Sqlite database resource")]
     public static IResourceBuilder<SqliteResource> AddSqlite(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? databasePath = null, string? databaseFileName = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -64,6 +67,8 @@ public static class SqliteResourceBuilderExtensions
     /// <param name="configureContainer">Callback to configure SqliteWeb container resource.</param>
     /// <param name="containerName">The optional name of the container.</param>
     /// <returns>A resource builder for the Sqlite resource.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithSqliteWebForPolyglot(IResourceBuilder{SqliteResource}, string)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "Action<IResourceBuilder<SqliteWebResource>> is not ATS-compatible. Use the overload without the callback instead.")]
     public static IResourceBuilder<SqliteResource> WithSqliteWeb(this IResourceBuilder<SqliteResource> builder, Action<IResourceBuilder<SqliteWebResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -87,5 +92,7 @@ public static class SqliteResourceBuilderExtensions
         return builder;
     }
 
-
+    [AspireExport("withSqliteWeb", MethodName = "withSqliteWeb", Description = "Adds a Sqlite Web resource for browsing the database")]
+    internal static IResourceBuilder<SqliteResource> WithSqliteWebForPolyglot(this IResourceBuilder<SqliteResource> builder, string? containerName = null)
+        => builder.WithSqliteWeb(configureContainer: null, containerName: containerName);
 }
