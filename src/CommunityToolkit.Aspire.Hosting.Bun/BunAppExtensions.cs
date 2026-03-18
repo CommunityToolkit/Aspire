@@ -1,4 +1,6 @@
-﻿using Aspire.Hosting.ApplicationModel;
+﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental.
+
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
 
@@ -18,6 +20,7 @@ public static class BunAppExtensions
     /// <param name="entryPoint">The entry point, either a file or package.json script name.</param>
     /// <param name="watch">Whether to watch for changes.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addBunApp", Description = "Adds a Bun app")]
     public static IResourceBuilder<BunAppResource> AddBunApp(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -46,12 +49,20 @@ public static class BunAppExtensions
     /// <param name="resource">The Bun app resource.</param>
     /// <param name="configureInstaller">Configure the Bun installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withBunPackageInstallation", Description = "Installs Bun packages before the app starts")]
     public static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource, Action<IResourceBuilder<BunInstallerResource>>? configureInstaller = null)
     {
         // Only install packages during development, not in publish mode
         if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
         {
             var installerName = $"{resource.Resource.Name}-bun-install";
+
+            if (resource.ApplicationBuilder.TryCreateResourceBuilder<BunInstallerResource>(installerName, out var existingInstaller))
+            {
+                configureInstaller?.Invoke(existingInstaller);
+                return resource;
+            }
+
             var installer = new BunInstallerResource(installerName, resource.Resource.WorkingDirectory);
 
             var installerBuilder = resource.ApplicationBuilder.AddResource(installer)
