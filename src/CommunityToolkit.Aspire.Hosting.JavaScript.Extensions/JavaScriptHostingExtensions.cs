@@ -1,7 +1,9 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.JavaScript;
 using CommunityToolkit.Aspire.Utils;
 using Microsoft.Extensions.Hosting;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -17,6 +19,7 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="name">The name of the Nx workspace resource.</param>
     /// <param name="workingDirectory">The working directory of the Nx workspace. If not specified, it will be set to a path that is a sibling of the AppHost directory using the <paramref name="name"/> as the folder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addNxApp", Description = "Adds an Nx monorepo workspace to the distributed application builder")]
     public static IResourceBuilder<NxResource> AddNxApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? workingDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -38,6 +41,7 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="name">The name of the Turborepo workspace resource.</param>
     /// <param name="workingDirectory">The working directory of the Turborepo workspace. If not specified, it will be set to a path that is a sibling of the AppHost directory using the <paramref name="name"/> as the folder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addTurborepoApp", Description = "Adds a Turborepo monorepo workspace to the distributed application builder")]
     public static IResourceBuilder<TurborepoResource> AddTurborepoApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? workingDirectory = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -60,6 +64,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="appName">The Nx app name to run. If not specified, uses the <paramref name="name"/>.</param>
     /// <param name="configure">A function to configure the app resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="AddNxWorkspaceApp(IResourceBuilder{NxResource}, string, string?)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The configure callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<NxAppResource> AddApp(this IResourceBuilder<NxResource> builder, [ResourceName] string name, string? appName = null, Func<IResourceBuilder<NxAppResource>, IResourceBuilder<NxAppResource>>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -102,6 +108,10 @@ public static partial class JavaScriptHostingExtensions
         return rb;
     }
 
+    [AspireExport("addNxWorkspaceApp", MethodName = "addApp", Description = "Adds an individual app to an Nx workspace")]
+    internal static IResourceBuilder<NxAppResource> AddNxWorkspaceApp(this IResourceBuilder<NxResource> builder, [ResourceName] string name, string? appName = null) =>
+        builder.AddApp(name, appName, configure: null);
+
     /// <summary>
     /// Adds an individual app to a Turborepo workspace.
     /// </summary>
@@ -110,6 +120,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="filter">The Turborepo filter to use. If not specified, uses the <paramref name="name"/>.</param>
     /// <param name="configure">A function to configure the app resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="AddTurborepoWorkspaceApp(IResourceBuilder{TurborepoResource}, string, string?)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The configure callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<TurborepoAppResource> AddApp(this IResourceBuilder<TurborepoResource> builder, [ResourceName] string name, string? filter = null, Func<IResourceBuilder<TurborepoAppResource>, IResourceBuilder<TurborepoAppResource>>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -152,6 +164,10 @@ public static partial class JavaScriptHostingExtensions
         return rb;
     }
 
+    [AspireExport("addTurborepoWorkspaceApp", MethodName = "addApp", Description = "Adds an individual app to a Turborepo workspace")]
+    internal static IResourceBuilder<TurborepoAppResource> AddTurborepoWorkspaceApp(this IResourceBuilder<TurborepoResource> builder, [ResourceName] string name, string? filter = null) =>
+        builder.AddApp(name, filter, configure: null);
+
     /// <summary>
     /// Configures the Nx workspace to use the specified JavaScript package manager when starting apps.
     /// </summary>
@@ -159,6 +175,7 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="packageManager">The package manager to use. If none is provided it will attempt to use the installer annotation's resource command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the Nx workspace is already configured to use a different package manager.</exception>
+    [AspireExport("withNxPackageManagerLaunch", MethodName = "withPackageManagerLaunch", Description = "Configures the Nx workspace to use the specified JavaScript package manager when starting apps")]
     public static IResourceBuilder<NxResource> WithPackageManagerLaunch(this IResourceBuilder<NxResource> builder, string? packageManager = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -196,6 +213,7 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="packageManager">The package manager to use. If none is provided it will attempt to use the installer annotation's resource command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the Turborepo workspace is already configured to use a different package manager.</exception>
+    [AspireExport("withTurborepoPackageManagerLaunch", MethodName = "withPackageManagerLaunch", Description = "Configures the Turborepo workspace to use the specified JavaScript package manager when starting apps")]
     public static IResourceBuilder<TurborepoResource> WithPackageManagerLaunch(this IResourceBuilder<TurborepoResource> builder, string? packageManager = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -232,6 +250,7 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="builder">The Node.js app resource.</param>
     /// <param name="endpointName">The name of the endpoint to map. If not specified, it will use the first HTTP or HTTPS endpoint found.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withMappedEndpointPort", Description = "Maps the endpoint port for the JavaScript app resource to the appropriate command line argument")]
     public static IResourceBuilder<TResource> WithMappedEndpointPort<TResource>(this IResourceBuilder<TResource> builder, string? endpointName = null) where TResource : JavaScriptAppResource
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -263,6 +282,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithNxNpm(IResourceBuilder{NxResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<NxResource> WithNpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -271,6 +292,10 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
+    [AspireExport("withNxNpm", MethodName = "withNpm", Description = "Configures the Nx workspace to use npm as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<NxResource> WithNxNpm(this IResourceBuilder<NxResource> builder, bool install = false) =>
+        builder.WithNpm(install, configureInstaller: null);
+
     /// <summary>
     /// Configures the Nx workspace to use yarn as the package manager and optionally installs packages before apps start.
     /// </summary>
@@ -278,6 +303,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithNxYarn(IResourceBuilder{NxResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<NxResource> WithYarn(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -286,6 +313,10 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
+    [AspireExport("withNxYarn", MethodName = "withYarn", Description = "Configures the Nx workspace to use yarn as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<NxResource> WithNxYarn(this IResourceBuilder<NxResource> builder, bool install = false) =>
+        builder.WithYarn(install, configureInstaller: null);
+
     /// <summary>
     /// Configures the Nx workspace to use pnpm as the package manager and optionally installs packages before apps start.
     /// </summary>
@@ -293,6 +324,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithNxPnpm(IResourceBuilder{NxResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<NxResource> WithPnpm(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -301,6 +334,10 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
+    [AspireExport("withNxPnpm", MethodName = "withPnpm", Description = "Configures the Nx workspace to use pnpm as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<NxResource> WithNxPnpm(this IResourceBuilder<NxResource> builder, bool install = false) =>
+        builder.WithPnpm(install, configureInstaller: null);
+
     /// <summary>
     /// Configures the Turborepo workspace to use npm as the package manager and optionally installs packages before apps start.
     /// </summary>
@@ -308,6 +345,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithTurborepoNpm(IResourceBuilder{TurborepoResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<TurborepoResource> WithNpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -316,6 +355,10 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
+    [AspireExport("withTurborepoNpm", MethodName = "withNpm", Description = "Configures the Turborepo workspace to use npm as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<TurborepoResource> WithTurborepoNpm(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
+        builder.WithNpm(install, configureInstaller: null);
+
     /// <summary>
     /// Configures the Turborepo workspace to use yarn as the package manager and optionally installs packages before apps start.
     /// </summary>
@@ -323,6 +366,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithTurborepoYarn(IResourceBuilder{TurborepoResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<TurborepoResource> WithYarn(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -331,6 +376,10 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
+    [AspireExport("withTurborepoYarn", MethodName = "withYarn", Description = "Configures the Turborepo workspace to use yarn as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<TurborepoResource> WithTurborepoYarn(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
+        builder.WithYarn(install, configureInstaller: null);
+
     /// <summary>
     /// Configures the Turborepo workspace to use pnpm as the package manager and optionally installs packages before apps start.
     /// </summary>
@@ -338,6 +387,8 @@ public static partial class JavaScriptHostingExtensions
     /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
     /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithTurborepoPnpm(IResourceBuilder{TurborepoResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
     public static IResourceBuilder<TurborepoResource> WithPnpm(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -345,6 +396,10 @@ public static partial class JavaScriptHostingExtensions
         AddMonorepoInstaller(builder, "pnpm", install, configureInstaller);
         return builder;
     }
+
+    [AspireExport("withTurborepoPnpm", MethodName = "withPnpm", Description = "Configures the Turborepo workspace to use pnpm as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<TurborepoResource> WithTurborepoPnpm(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
+        builder.WithPnpm(install, configureInstaller: null);
 
     private static void AddMonorepoInstaller<TResource>(
         IResourceBuilder<TResource> builder,
