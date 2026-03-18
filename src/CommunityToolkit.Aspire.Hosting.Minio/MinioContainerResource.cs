@@ -1,4 +1,6 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a MinIO storage
@@ -6,6 +8,7 @@
 /// <param name="name">The name of the resource.</param>
 /// <param name="rootUser">A parameter that contains the MinIO server root username.</param>
 /// <param name="passwordParameter">A parameter that contains the MinIO server root password.</param>
+[AspireExport(ExposeProperties = true)]
 public sealed class MinioContainerResource(string name, ParameterResource rootUser, ParameterResource passwordParameter) : ContainerResource(name),
     IResourceWithConnectionString
 {
