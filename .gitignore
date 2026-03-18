@@ -19,3 +19,10 @@ nuget
 target
 
 node_modules
+
+# Playground
+playground/**/dist/
+playground/**/.gitignore
+playground/**/azure.yaml
+playground/**/next-steps.md
+!playground/polyglot/**/.aspire/

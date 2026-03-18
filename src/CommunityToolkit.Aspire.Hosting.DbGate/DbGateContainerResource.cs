@@ -1,9 +1,12 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a container resource for DbGate.
 /// </summary>
 /// <param name="name">The name of the container resource.</param>
+[AspireExport(ExposeProperties = true)]
 public sealed class DbGateContainerResource(string name) : ContainerResource(name)
 {
     internal const string PrimaryEndpointName = "http";
