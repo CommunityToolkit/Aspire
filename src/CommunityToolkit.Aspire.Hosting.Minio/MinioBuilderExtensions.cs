@@ -3,6 +3,8 @@ using CommunityToolkit.Aspire.Hosting.Minio;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -22,6 +24,7 @@ public static class MinioBuilderExtensions
     /// <param name="rootUser">The parameter used to provide the root user name for the MinIO resource. If <see langword="null"/> a default value will be used.</param>
     /// <param name="rootPassword">The parameter used to provide the administrator password for the MinIO resource. If <see langword="null"/> a random password will be generated.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{MinioContainerResource}"/>.</returns>
+    [AspireExport("addMinioContainer", Description = "Adds a MinIO container resource")]
     public static IResourceBuilder<MinioContainerResource> AddMinioContainer(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -74,6 +77,7 @@ public static class MinioBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="userName">The parameter used to provide the user name for the MinIO resource.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withUserName", Description = "Configures the user name that the MinIO resource uses")]
     public static IResourceBuilder<MinioContainerResource> WithUserName(this IResourceBuilder<MinioContainerResource> builder, IResourceBuilder<ParameterResource> userName)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -84,11 +88,12 @@ public static class MinioBuilderExtensions
     }
     
     /// <summary>
-    /// Configures the password that the MinIO resource is used.
+    /// Configures the password that the MinIO resource uses.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="password">The parameter used to provide the password for the MinIO resource. If <see langword="null"/>, no password will be configured.</param>
+    /// <param name="password">The parameter used to provide the password for the MinIO resource.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withPassword", Description = "Configures the password that the MinIO resource uses")]
     public static IResourceBuilder<MinioContainerResource> WithPassword(this IResourceBuilder<MinioContainerResource> builder, IResourceBuilder<ParameterResource> password)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -103,6 +108,7 @@ public static class MinioBuilderExtensions
     /// <param name="builder">The resource builder for MinIO.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used, a random port will be assigned.</param>
     /// <returns>The resource builder for MinIO.</returns>
+    [AspireExport("withHostPort", Description = "Configures the host port that the MinIO resource is exposed on")]
     public static IResourceBuilder<MinioContainerResource> WithHostPort(this IResourceBuilder<MinioContainerResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -135,6 +141,7 @@ public static class MinioBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a MinIO container resource")]
     public static IResourceBuilder<MinioContainerResource> WithDataVolume(this IResourceBuilder<MinioContainerResource> builder, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -164,6 +171,7 @@ public static class MinioBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a MinIO container resource")]
     public static IResourceBuilder<MinioContainerResource> WithDataBindMount(this IResourceBuilder<MinioContainerResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
