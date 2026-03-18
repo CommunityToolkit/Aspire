@@ -1,4 +1,8 @@
-﻿namespace Aspire.Hosting;
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+[assembly: Aspire.Hosting.AspireExport(typeof(Aspire.Hosting.KeyType))]
+
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Specifies the types of cryptographic keys supported for digital signatures.
