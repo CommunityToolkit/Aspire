@@ -1,0 +1,8 @@
+{
+  "appHostPath": "../apphost.ts",
+  "language": "typescript/nodejs",
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Umami": "1.0.0-polyglot.20260318170313",
+    "Aspire.Hosting.PostgreSQL": ""
+  }
+}

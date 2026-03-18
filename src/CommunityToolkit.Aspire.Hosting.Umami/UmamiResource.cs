@@ -1,11 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a Umami instance resource.
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class UmamiResource : ContainerResource, IResourceWithServiceDiscovery
 {
     internal const string PrimaryEndpointName = "http";
