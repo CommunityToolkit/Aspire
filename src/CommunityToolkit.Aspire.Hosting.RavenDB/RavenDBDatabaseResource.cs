@@ -1,11 +1,14 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a RavenDB database. This is a child resource of a <see cref="RavenDBServerResource"/>.
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class RavenDBDatabaseResource(string name, string databaseName, RavenDBServerResource parent) : Resource(ThrowIfNull(name)), IResourceWithParent<RavenDBServerResource>, IResourceWithConnectionString
 {
     /// <summary>
