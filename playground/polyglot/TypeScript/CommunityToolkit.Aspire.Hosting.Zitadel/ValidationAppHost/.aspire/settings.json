@@ -1,0 +1,8 @@
+{
+  "appHostPath": "../apphost.ts",
+  "language": "typescript/nodejs",
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Zitadel": "",
+    "Aspire.Hosting.PostgreSQL": ""
+  }
+}
