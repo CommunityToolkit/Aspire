@@ -9,12 +9,13 @@ namespace Aspire.Hosting;
 public static class DaprMetadataResourceBuilderExtensions
 {
     /// <summary>
-    /// Adds static value metadata to the Dapr component
+    /// Adds static metadata to the Dapr component.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <param name="value"></param>
-    /// <returns></returns>
+    /// <param name="builder">The resource builder for the Dapr component being configured.</param>
+    /// <param name="name">The name of the metadata property to add to the Dapr component configuration.</param>
+    /// <param name="value">The static metadata value to assign.</param>
+    /// <returns>The resource builder instance.</returns>
+    [AspireExport("withMetadata", Description = "Adds static metadata to a Dapr component")]
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, string value) =>
         builder.WithAnnotation(new DaprComponentConfigurationAnnotation((schema, ct) =>
         {
@@ -55,6 +56,8 @@ public static class DaprMetadataResourceBuilderExtensions
     ///     .WithMetadata("redisHost", redis.GetEndpoint("tcp"));
     /// </code>
     /// </example>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the generated <c>withMetadataEndpoint</c>, <c>withMetadataReferenceExpression</c>, or <c>withMetadataParameter</c> overloads instead.</remarks>
+    [AspireExportIgnore(Reason = "IValueProvider is too broad for stable polyglot code generation. Use the endpoint, reference expression, or parameter overloads instead.")]
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, IValueProvider valueProvider)
     {
         // Create a unique environment variable name for this value provider
@@ -87,14 +90,27 @@ public static class DaprMetadataResourceBuilderExtensions
         }));
     }
 
+    [AspireExport("withMetadataEndpoint", MethodName = "withMetadataEndpoint", Description = "Adds endpoint-backed metadata to a Dapr component")]
+    internal static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, EndpointReference endpointReference)
+    {
+        return builder.WithMetadata(name, (IValueProvider)endpointReference);
+    }
+
+    [AspireExport("withMetadataReferenceExpression", MethodName = "withMetadataReferenceExpression", Description = "Adds reference-expression-backed metadata to a Dapr component")]
+    internal static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, ReferenceExpression referenceExpression)
+    {
+        return builder.WithMetadata(name, (IValueProvider)referenceExpression);
+    }
+
 
     /// <summary>
-    /// Adds a parameter resource as metadata to the Dapr component
+    /// Adds a parameter resource as metadata to the Dapr component.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <param name="parameterResource"></param>
-    /// <returns></returns>
+    /// <param name="builder">The resource builder for the Dapr component being configured.</param>
+    /// <param name="name">The name of the metadata property to add to the Dapr component configuration.</param>
+    /// <param name="parameterResource">The parameter resource whose value should back the metadata entry.</param>
+    /// <returns>The resource builder instance.</returns>
+    [AspireExport("withMetadataParameter", MethodName = "withMetadataParameter", Description = "Adds parameter-backed metadata to a Dapr component")]
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, ParameterResource parameterResource)
     {
         if (parameterResource.Secret)

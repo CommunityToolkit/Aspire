@@ -23,6 +23,7 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <param name="builder">The distributed application builder instance.</param>
     /// <param name="configure">Callback to configure dapr options.</param>
     /// <returns>The distributed application builder instance.</returns>
+    [AspireExport("addDapr", Description = "Adds Dapr support to the distributed application builder")]
     public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null)
     {
         if (configure is not null)
@@ -43,6 +44,8 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <param name="type">The type of the component. This can be a generic "state" or "pubsub" string, to have Aspire choose an appropriate type when running or deploying.</param>
     /// <param name="options">Options for configuring the component, if any.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the generated <c>addDaprComponent</c> overload that accepts a Dapr component options object instead.</remarks>
+    [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
     public static IResourceBuilder<IDaprComponentResource> AddDaprComponent(this IDistributedApplicationBuilder builder, [ResourceName] string name, string type, DaprComponentOptions? options = null)
     {
         var resource = new DaprComponentResource(name, type) { Options = options };
@@ -61,6 +64,12 @@ public static partial class IDistributedApplicationBuilderExtensions
         SetupComponentLifecycle(resourceBuilder);
 
         return resourceBuilder;
+    }
+
+    [AspireExport("addDaprComponent", MethodName = "addDaprComponent", Description = "Adds a Dapr component resource to the distributed application model")]
+    internal static IResourceBuilder<IDaprComponentResource> AddDaprComponentExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, string type, DaprComponentExportOptions? componentOptions = null)
+    {
+        return builder.AddDaprComponent(name, type, componentOptions?.ToDaprComponentOptions());
     }
 
     private static void SetupComponentLifecycle(IResourceBuilder<IDaprComponentResource> componentBuilder)
@@ -108,9 +117,17 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <param name="name">The name of the component.</param>
     /// <param name="options">Options for configuring the component, if any.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the generated <c>addDaprPubSub</c> overload that accepts a Dapr component options object instead.</remarks>
+    [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
     public static IResourceBuilder<IDaprComponentResource> AddDaprPubSub(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentOptions? options = null)
     {
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.PubSub, options);
+    }
+
+    [AspireExport("addDaprPubSub", MethodName = "addDaprPubSub", Description = "Adds a generic Dapr pub-sub component resource")]
+    internal static IResourceBuilder<IDaprComponentResource> AddDaprPubSubExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentExportOptions? componentOptions = null)
+    {
+        return builder.AddDaprPubSub(name, componentOptions?.ToDaprComponentOptions());
     }
 
     /// <summary>
@@ -120,9 +137,17 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <param name="name">The name of the component.</param>
     /// <param name="options">Options for configuring the component, if any.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the generated <c>addDaprStateStore</c> overload that accepts a Dapr component options object instead.</remarks>
+    [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
     public static IResourceBuilder<IDaprComponentResource> AddDaprStateStore(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentOptions? options = null)
     {
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.StateStore, options);
+    }
+
+    [AspireExport("addDaprStateStore", MethodName = "addDaprStateStore", Description = "Adds a generic Dapr state store component resource")]
+    internal static IResourceBuilder<IDaprComponentResource> AddDaprStateStoreExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentExportOptions? componentOptions = null)
+    {
+        return builder.AddDaprStateStore(name, componentOptions?.ToDaprComponentOptions());
     }
 
     private static void WriteDaprComponentResourceToManifest(ManifestPublishingContext context, DaprComponentResource resource)
