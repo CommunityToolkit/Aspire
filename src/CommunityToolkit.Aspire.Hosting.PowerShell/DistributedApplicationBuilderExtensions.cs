@@ -1,4 +1,6 @@
-﻿using Aspire.Hosting;
+﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,8 +24,10 @@ public static class DistributedApplicationBuilderExtensions
     /// <param name="minRunspaces"></param>
     /// <param name="maxRunspaces"></param>
     /// <returns></returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the string-based overload instead.</remarks>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="DistributedApplicationException"></exception>
+    [AspireExportIgnore(Reason = "PSLanguageMode is not ATS-compatible. Use the string-based overload instead.")]
     public static IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -81,5 +85,31 @@ public static class DistributedApplicationBuilderExtensions
         });
 
         return poolBuilder;
+    }
+
+    [AspireExport("addPowerShell", Description = "Adds a PowerShell runspace pool resource")]
+    internal static IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        string languageMode = nameof(PSLanguageMode.ConstrainedLanguage),
+        int minRunspaces = 1,
+        int maxRunspaces = 5)
+    {
+        return AddPowerShell(builder, name, ParseLanguageMode(languageMode), minRunspaces, maxRunspaces);
+    }
+
+    private static PSLanguageMode ParseLanguageMode(string languageMode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(languageMode);
+
+        if (Enum.TryParse(languageMode, ignoreCase: true, out PSLanguageMode parsedLanguageMode)
+            && Enum.IsDefined(parsedLanguageMode))
+        {
+            return parsedLanguageMode;
+        }
+
+        throw new ArgumentException(
+            $"Unsupported PowerShell language mode '{languageMode}'. Valid values are: {string.Join(", ", Enum.GetNames<PSLanguageMode>())}.",
+            nameof(languageMode));
     }
 }
