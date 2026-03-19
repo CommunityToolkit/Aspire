@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using Microsoft.AspNetCore.Mvc;
 using Minio;
 using Minio.DataModel.Args;
 
