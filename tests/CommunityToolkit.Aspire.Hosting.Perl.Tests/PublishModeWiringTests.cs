@@ -7,7 +7,6 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PublishModeWiringTests
 {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void PublishMode_ResourceExistsInModel()
     {
@@ -34,11 +33,11 @@ public class PublishModeWiringTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+#pragma warning disable ASPIREDOCKERFILEBUILDER001
         var dockerAnnotations = resource.Annotations
             .OfType<DockerfileBuilderCallbackAnnotation>()
             .ToList();
+#pragma warning restore ASPIREDOCKERFILEBUILDER001
         Assert.Empty(dockerAnnotations);
     }
-
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 }

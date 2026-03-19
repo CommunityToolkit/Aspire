@@ -2,12 +2,13 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class EntrypointTypeCoverageTests
 {
-    [Fact]
-    public void EntrypointTypeHasExpectedValues()
+    [Theory]
+    [InlineData(EntrypointType.Script)]
+    [InlineData(EntrypointType.API)]
+    [InlineData(EntrypointType.Module)]
+    [InlineData(EntrypointType.Executable)]
+    public void EntrypointTypeHasExpectedValue(EntrypointType value)
     {
-        Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.Script));
-        Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.API));
-        Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.Module));
-        Assert.True(Enum.IsDefined(typeof(EntrypointType), EntrypointType.Executable));
+        Assert.Contains(value, Enum.GetValues<EntrypointType>());
     }
 }

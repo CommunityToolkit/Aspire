@@ -7,88 +7,43 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class WithPackageTests
 {
-    [Fact]
-    public void WithPackageCreatesInstallerResource()
+    [Theory]
+    [InlineData("Mojolicious", "Mojolicious-installer")]
+    [InlineData("OpenTelemetry::SDK", "OpenTelemetry88SDK-installer")]
+    public void WithPackage_CreatesInstallerWithCorrectName(string moduleName, string expectedInstallerName)
     {
         var builder = DistributedApplication.CreateBuilder();
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPackage("Mojolicious");
+            .WithPackage(moduleName);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
-        Assert.Contains("Mojolicious", installerResource.Name);
+        Assert.Equal(expectedInstallerName, installerResource.Name);
     }
 
-    [Fact]
-    public void WithPackage_ModuleNameWithColons_SanitizesInstallerResourceName()
+    [Theory]
+    [InlineData("DBI", false, false)]
+    [InlineData("DBI", true, false)]
+    [InlineData("DBI", false, true)]
+    public void WithPackage_AddsRequiredModuleAnnotationWithCorrectFlags(string moduleName, bool force, bool skipTest)
     {
         var builder = DistributedApplication.CreateBuilder();
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPackage("OpenTelemetry::SDK");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
-        Assert.Equal("OpenTelemetry88SDK-installer", installerResource.Name);
-    }
-
-    [Fact]
-    public void WithPackageAddsRequiredModuleAnnotation()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPackage("DBI");
+            .WithPackage(moduleName, force: force, skipTest: skipTest);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        var annotations = resource.Annotations.OfType<PerlRequiredModuleAnnotation>().ToList();
-        Assert.Single(annotations);
-        Assert.Equal("DBI", annotations[0].Name);
-        Assert.False(annotations[0].Force);
-        Assert.False(annotations[0].SkipTest);
-    }
-
-    [Fact]
-    public void WithPackageWithForceAnnotation()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPackage("DBI", force: true);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        var annotation = resource.Annotations.OfType<PerlRequiredModuleAnnotation>().Single();
-        Assert.True(annotation.Force);
-    }
-
-    [Fact]
-    public void WithPackageWithSkipTestAnnotation()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPackage("DBI", skipTest: true);
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        var annotation = resource.Annotations.OfType<PerlRequiredModuleAnnotation>().Single();
-        Assert.True(annotation.SkipTest);
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlRequiredModuleAnnotation>());
+        Assert.Equal(moduleName, annotation.Name);
+        Assert.Equal(force, annotation.Force);
+        Assert.Equal(skipTest, annotation.SkipTest);
     }
 
     [Fact]
@@ -138,7 +93,7 @@ public class WithPackageTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlPackageManagerAnnotation>());
         Assert.Equal("cpan", annotation.ExecutableName);
     }
 
@@ -156,7 +111,7 @@ public class WithPackageTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlPackageManagerAnnotation>());
         Assert.Equal("cpanm", annotation.ExecutableName);
 
         var moduleAnnotation = resource.Annotations.OfType<PerlRequiredModuleAnnotation>().Single();

@@ -18,7 +18,7 @@ public class DefaultPackageManagerTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlPackageManagerAnnotation>());
         Assert.Equal("cpan", annotation.ExecutableName);
     }
 }

@@ -30,7 +30,7 @@ public class SetupDependencyTests
             .Where(w => w.Resource == projectAnnotation.Resource)
             .ToList();
 
-        Assert.NotEmpty(waitAnnotations);
+        Assert.Single(waitAnnotations);
     }
 
     [Fact]

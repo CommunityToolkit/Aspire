@@ -20,7 +20,7 @@ public class WithCpanMinusTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlPackageManagerAnnotation>());
         Assert.Equal("cpanm", annotation.ExecutableName);
     }
 
@@ -51,41 +51,28 @@ public class WithCpanMinusTests
         Assert.Throws<ArgumentNullException>(() => builder.WithCpanMinus());
     }
 
-    [Fact]
-    public void WithCpanMinusThenWithPackageUsesCpanm()
+    [Theory]
+    [InlineData(true, "cpanm")]
+    [InlineData(false, "cpan")]
+    public void WithPackage_UsesExpectedPackageManager(bool useCpanMinus, string expectedExecutable)
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithCpanMinus()
-            .WithPackage("Mojolicious");
+        var resource = builder.AddPerlScript("perl-app", "scripts", "app.pl");
+        if (useCpanMinus)
+        {
+            resource.WithCpanMinus();
+        }
+        resource.WithPackage("Mojolicious");
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+        var perlResource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
-        Assert.Equal("cpanm", annotation.ExecutableName);
+        var annotation = Assert.Single(perlResource.Annotations.OfType<PerlPackageManagerAnnotation>());
+        Assert.Equal(expectedExecutable, annotation.ExecutableName);
 
-        // Installer should exist
         Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
-    }
-
-    [Fact]
-    public void WithPackageDefaultUsesCpan()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithPackage("Mojolicious");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
-        Assert.Equal("cpan", annotation.ExecutableName);
     }
 }

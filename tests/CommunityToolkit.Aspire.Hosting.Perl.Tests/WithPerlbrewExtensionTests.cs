@@ -73,7 +73,7 @@ public class WithPerlbrewExtensionTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlbrewEnvironmentAnnotation>());
         Assert.Equal("perl-5.38.0", annotation.Name);
         Assert.Equal("perlbrew", annotation.PerlbrewPath);
         Assert.NotNull(annotation.Environment);
@@ -92,7 +92,7 @@ public class WithPerlbrewExtensionTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlbrewEnvironmentAnnotation>());
 
         var env = annotation.Environment!;
         Assert.Equal("/opt/perlbrew", env.PerlbrewRoot);
@@ -101,7 +101,6 @@ public class WithPerlbrewExtensionTests
         Assert.Equal(expectedBinPath, env.BinPath);
     }
 
-#pragma warning disable ASPIRECOMMAND001
     [Fact, RequiresLinux]
     public void WithPerlbrewEnvironment_AddsPerlbrewRequiredCommand()
     {
@@ -115,7 +114,9 @@ public class WithPerlbrewExtensionTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+#pragma warning disable ASPIRECOMMAND001
         var annotations = resource.Annotations.OfType<RequiredCommandAnnotation>().ToList();
+#pragma warning restore ASPIRECOMMAND001
 
         // Should have "perl" (from AddPerlAppCore), "cpan" (from AddPerlAppCore), and "perlbrew" (from WithPerlbrewEnvironment)
         Assert.Equal(3, annotations.Count);
@@ -123,8 +124,6 @@ public class WithPerlbrewExtensionTests
         Assert.Contains(annotations, a => a.Command == "cpan");
         Assert.Contains(annotations, a => a.Command == "perlbrew" && a.HelpLink == "https://perlbrew.pl/");
     }
-
-#pragma warning restore ASPIRECOMMAND001
 
     [Fact, RequiresLinux]
     public async Task WithPerlbrewEnvironment_SetsEnvironmentVariables()

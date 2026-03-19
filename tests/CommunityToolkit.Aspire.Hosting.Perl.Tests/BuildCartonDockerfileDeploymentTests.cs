@@ -6,10 +6,12 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class BuildCartonDockerfileDeploymentTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void BuildCartonDockerfile_DeploymentFlag_ProducesRunStatements(bool cartonDeployment)
+    {
 #pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
-    [Fact]
-    public void BuildCartonDockerfile_WithDeployment_RunsCartonInstallDeployment()
-    {
         var builder = new DockerfileBuilder();
 
         PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
@@ -20,38 +22,14 @@ public class BuildCartonDockerfileDeploymentTests
             "perl:5-slim",
             "perl:5",
             localLibPath: null,
-            cartonDeployment: true);
-
-        var buildStatements = builder.Stages[0].Statements;
-        var runStatements = buildStatements
-            .Where(s => s.GetType().Name == "DockerfileRunStatement")
-            .ToList();
-
-        Assert.True(runStatements.Count >= 2);
-    }
-
-    [Fact]
-    public void BuildCartonDockerfile_WithoutDeployment_RunsCartonInstall()
-    {
-        var builder = new DockerfileBuilder();
-
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
-            builder,
-            EntrypointType.Script,
-            "app.pl",
-            apiSubcommand: null,
-            "perl:5-slim",
-            "perl:5",
-            localLibPath: null,
-            cartonDeployment: false);
-
-        var buildStatements = builder.Stages[0].Statements;
-        var runStatements = buildStatements
-            .Where(s => s.GetType().Name == "DockerfileRunStatement")
-            .ToList();
-
-        Assert.True(runStatements.Count >= 2);
-    }
-
+            cartonDeployment: cartonDeployment);
 #pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
+        var buildStatements = builder.Stages[0].Statements;
+        var runStatements = buildStatements
+            .Where(s => s.GetType().Name == "DockerfileRunStatement")
+            .ToList();
+
+        Assert.Equal(2, runStatements.Count);
+    }
 }

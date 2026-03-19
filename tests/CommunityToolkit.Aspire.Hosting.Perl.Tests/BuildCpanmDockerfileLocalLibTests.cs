@@ -6,10 +6,12 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class BuildCpanmDockerfileLocalLibTests
 {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
-    [Fact]
-    public void BuildCpanmDockerfile_WithLocalLib_SetsEnvDirectives()
+    [Theory]
+    [InlineData("local", 2)]
+    [InlineData(null, 0)]
+    public void BuildCpanmDockerfile_LocalLibControlsEnvDirectives(string? localLibPath, int minimumExpectedEnvCount)
     {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
         PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
@@ -18,35 +20,22 @@ public class BuildCpanmDockerfileLocalLibTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
-            localLibPath: "local");
-
-        var statements = builder.Stages[0].Statements;
-        var envStatements = statements
-            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
-            .ToList();
-
-        Assert.True(envStatements.Count >= 2, "Expected ENV statements for PERL5LIB and PERL_LOCAL_LIB_ROOT");
-    }
-
-    [Fact]
-    public void BuildCpanmDockerfile_WithoutLocalLib_NoEnvDirectives()
-    {
-        var builder = new DockerfileBuilder();
-
-        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
-            builder,
-            EntrypointType.Script,
-            "app.pl",
-            apiSubcommand: null,
-            "perl:5-slim");
-
-        var statements = builder.Stages[0].Statements;
-        var envStatements = statements
-            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
-            .ToList();
-
-        Assert.Empty(envStatements);
-    }
-
+            localLibPath: localLibPath);
 #pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
+        var statements = builder.Stages[0].Statements;
+        var envStatements = statements
+            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
+            .ToList();
+
+        if (minimumExpectedEnvCount == 0)
+        {
+            Assert.Empty(envStatements);
+        }
+        else
+        {
+            Assert.InRange(envStatements.Count, minimumExpectedEnvCount, int.MaxValue);
+        }
+    }
+
 }

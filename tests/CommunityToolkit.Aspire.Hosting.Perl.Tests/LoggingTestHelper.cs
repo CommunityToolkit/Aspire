@@ -2,6 +2,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Eventing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
@@ -26,6 +27,9 @@ internal static class LoggingTestHelper
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var eventing = (DistributedApplicationEventing)builder.Eventing;
 
+        // Aspire DCP infrastructure handlers throw in unit test environments
+        // that lack the Aspire CLI / dashboard binaries. We catch only that
+        // expected failure class — anything else should propagate.
         try
         {
             await eventing.PublishAsync(
@@ -33,15 +37,15 @@ internal static class LoggingTestHelper
                 EventDispatchBehavior.BlockingConcurrent,
                 CancellationToken.None);
         }
-        catch (Exception)
+        catch (OptionsValidationException)
         {
-            // Expected: Aspire DCP infrastructure handlers throw in unit test
-            // environments that lack the Aspire CLI / dashboard binaries.
+            // Expected: DCP CLI / dashboard paths not configured in unit tests.
         }
 
         var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
-        var logs = new List<string>();
+        List<string> logs = [];
         using var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(3));
+
         try
         {
             await foreach (var batch in loggerService.WatchAsync(resourceName).WithCancellation(cts.Token))
@@ -50,9 +54,10 @@ internal static class LoggingTestHelper
                 break;
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
-            // Expected when no logs are produced (e.g. publish mode).
+            // Timeout elapsed with no log batches — return empty list so callers
+            // can assert explicitly (e.g. Assert.Empty(logs) in publish-mode tests).
         }
 
         return logs;

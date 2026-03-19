@@ -5,37 +5,26 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class AddPerlApiTests
 {
-    [Fact]
-    public void AddPerlApiCreatesCorrectResourceType()
+    [Theory]
+    [InlineData("perl-api", "api", "server.pl")]
+    [InlineData("rest-service", "src/api", "app.pl")]
+    public void AddPerlApi_ConfiguresResourceCorrectly(string name, string workingDir, string entrypoint)
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddPerlApi("perl-api", "api", "server.pl");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.Equal("perl-api", resource.Name);
-    }
-
-    [Fact]
-    public void AddPerlApiHasApiEntrypointType()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlApi("perl-api", "api", "server.pl");
+        builder.AddPerlApi(name, workingDir, entrypoint);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlEntrypointAnnotation>(out var annotation));
+        Assert.Equal(name, resource.Name);
+        Assert.Equal("perl", resource.Command);
+
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlEntrypointAnnotation>());
         Assert.Equal(EntrypointType.API, annotation.Type);
-        Assert.Equal("server.pl", annotation.Entrypoint);
+        Assert.Equal(entrypoint, annotation.Entrypoint);
     }
 
     [Fact]
@@ -50,7 +39,7 @@ public class AddPerlApiTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<CommandLineArgsCallbackAnnotation>(out var argsAnnotation));
+        var argsAnnotation = Assert.Single(resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>());
         CommandLineArgsCallbackContext context = new([]);
         await argsAnnotation.Callback(context);
 

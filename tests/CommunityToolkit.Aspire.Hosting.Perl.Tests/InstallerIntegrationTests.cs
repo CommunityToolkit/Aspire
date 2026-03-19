@@ -24,8 +24,7 @@ public class InstallerIntegrationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        // The parent resource should have the perlbrew annotation
-        Assert.True(resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlbrewEnvironmentAnnotation>());
         Assert.NotNull(annotation.Environment);
     }
 

@@ -34,10 +34,7 @@ internal sealed class PerlbrewEnvironment(string perlbrewRoot, string version)
     /// </summary>
     /// <param name="name">The name of the executable (e.g., <c>perl</c>, <c>cpanm</c>).</param>
     /// <returns>The full path to the executable.</returns>
-    public string GetExecutable(string name)
-    {
-        return Path.Combine(BinPath, name);
-    }
+    public string GetExecutable(string name) => Path.Combine(BinPath, name);
 
     /// <summary>
     /// Resolves the perlbrew root directory from an explicit value, the <c>PERLBREW_ROOT</c>

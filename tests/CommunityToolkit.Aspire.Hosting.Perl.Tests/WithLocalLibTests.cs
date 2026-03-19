@@ -20,8 +20,9 @@ public class WithLocalLibTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        var envCallbacks = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.True(envCallbacks.Count > 0);
+        var localLibResources = resource.Annotations.OfType<PerlLocalLibAnnotation>().ToList();
+        Assert.Single(localLibResources);
+        Assert.Equal("local", localLibResources[0].Path);
     }
 
     [Fact]
@@ -54,8 +55,8 @@ public class WithLocalLibTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        var envCallbacks = resource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.True(envCallbacks.Count > 0);
+        var envCallbacks = resource.Annotations.OfType<PerlLocalLibResourceEnvironmentAnnotation>().ToList();
+        Assert.Single(envCallbacks);
     }
 
     [Fact]
@@ -85,22 +86,32 @@ public class WithLocalLibTests
         Assert.Contains("vendor", envVars["PERL_LOCAL_LIB_ROOT"].ToString());
     }
 
-    [Fact]
-    public void WithPackageAndLocalLib_InstallerGetsLocalLibEnvironment()
+    [Theory]
+    [InlineData("specificLocal", "packageName", "packageName-installer")]
+    public void WithPackageAndLocalLib_InstallerAndPackageAndLocalLibCorrectlyConfigured(
+        string expectedLocalLibPath, 
+        string packageName, 
+        string installerName)
     {
         var builder = DistributedApplication.CreateBuilder();
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithCpanMinus()
-            .WithPackage("Mojolicious")
-            .WithLocalLib("local");
+            .WithPackage(packageName)
+            .WithLocalLib(expectedLocalLibPath);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var perlResource = Assert.Single(builder.Resources.OfType<PerlAppResource>());
+        var packageManager = Assert.Single(perlResource.Annotations.OfType<PerlPackageManagerAnnotation>());
+        var perlRequiredModule = Assert.Single(perlResource.Annotations.OfType<PerlRequiredModuleAnnotation>());
         var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+        var perlLocalLib = Assert.Single(perlResource.Annotations.OfType<PerlLocalLibAnnotation>());
 
-        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.NotEmpty(envCallbacks);
+        Assert.Equal(packageName, perlRequiredModule.Name);
+        Assert.Equal(PerlPackageManager.Cpanm, packageManager.PackageManager);
+        Assert.Equal(installerName, installerResource.Name);        
+        Assert.Equal(expectedLocalLibPath, perlLocalLib.Path);
     }
 }

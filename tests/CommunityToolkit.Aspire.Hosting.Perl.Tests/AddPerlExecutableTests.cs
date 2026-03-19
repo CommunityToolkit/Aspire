@@ -5,51 +5,27 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class AddPerlExecutableTests
 {
-    [Fact]
-    public void AddPerlExecutableCreatesCorrectResourceType()
+    [Theory]
+    [InlineData("perl-bin", "bin", "my-compiled-perl")]
+    [InlineData("cli-tool", "dist", "run-tool")]
+    [InlineData("daemon", "sbin", "perl-daemon")]
+    public void AddPerlExecutable_ConfiguresResourceCorrectly(string name, string workingDir, string executable)
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddPerlExecutable("perl-bin", "bin", "my-compiled-perl");
+        builder.AddPerlExecutable(name, workingDir, executable);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.Equal("perl-bin", resource.Name);
-    }
+        Assert.Equal(name, resource.Name);
+        Assert.Equal(executable, resource.Command);
 
-    [Fact]
-    public void AddPerlExecutableHasExecutableEntrypointType()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlExecutable("perl-bin", "bin", "my-compiled-perl");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.True(resource.TryGetLastAnnotation<PerlEntrypointAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlEntrypointAnnotation>());
         Assert.Equal(EntrypointType.Executable, annotation.Type);
-        Assert.Equal("my-compiled-perl", annotation.Entrypoint);
-    }
-
-    [Fact]
-    public void AddPerlExecutableSetsCommandToExecutable()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlExecutable("perl-bin", "bin", "my-compiled-perl");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.Equal("my-compiled-perl", resource.Command);
+        Assert.Equal(executable, annotation.Entrypoint);
     }
 
     [Fact]

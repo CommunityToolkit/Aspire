@@ -1,27 +1,13 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Hosting.Perl.Services;
-using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.DependencyInjection;
-
-#pragma warning disable ASPIRECOMMAND001
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class LinuxPositiveValidationTests
 {
-    [Fact, RequiresLinux]
-    public async Task IsPerlInstalledAsync_ReturnsTrue_WhenPerlIsInstalled()
-    {
-        var manager = new PerlInstallationManager();
-
-        var result = await manager.IsPerlInstalledAsync("perl");
-
-        Assert.True(result);
-    }
-
-    [Fact, RequiresLinux]
-    public async Task ValidationCallback_ReturnsSuccess_WhenPerlIsInstalled()
+    [Fact]
+    public void RequiredCommandAnnotation_HasCorrectShape()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -32,12 +18,11 @@ public class LinuxPositiveValidationTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+#pragma warning disable ASPIRECOMMAND001
         var annotation = resource.Annotations.OfType<RequiredCommandAnnotation>().Single(a => a.Command == "perl");
-        Assert.NotNull(annotation.ValidationCallback);
-
-        var context = new RequiredCommandValidationContext("perl", app.Services, CancellationToken.None);
-        var result = await annotation.ValidationCallback(context);
-
-        Assert.True(result.IsValid);
+#pragma warning restore ASPIRECOMMAND001
+        Assert.Equal("perl", annotation.Command);
+        Assert.Equal("https://www.perl.org/get.html", annotation.HelpLink);
+        Assert.Null(annotation.ValidationCallback);
     }
 }

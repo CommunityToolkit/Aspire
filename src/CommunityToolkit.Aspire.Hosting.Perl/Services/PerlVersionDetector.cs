@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace CommunityToolkit.Aspire.Hosting.Perl.Services;
 
 /// <summary>
@@ -26,53 +24,6 @@ internal static class PerlVersionDetector
 
         var content = File.ReadAllText(versionFile).Trim();
         return string.IsNullOrEmpty(content) ? null : NormalizeVersionString(content);
-    }
-
-    /// <summary>
-    /// Detects the Perl version by running <c>perl -e "print $^V"</c> which outputs the
-    /// version in the form <c>v5.38.0</c>.
-    /// </summary>
-    /// <param name="perlPath">The path to the perl executable.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>The version string (e.g., <c>5.38.0</c>) or <c>null</c> if detection failed.</returns>
-    public static async Task<string?> DetectVersionFromCliAsync(string perlPath, CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(perlPath);
-
-        try
-        {
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = perlPath,
-                    Arguments = "-e \"print $^V\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-
-            using (process)
-            {
-                process.Start();
-                var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-                await process.WaitForExitAsync(cancellationToken);
-
-                if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
-                {
-                    return null;
-                }
-
-                return NormalizeVersionString(output.Trim());
-            }
-        }
-        catch (Exception) when (cancellationToken.IsCancellationRequested is false)
-        {
-            // perl executable not found or other process error
-            return null;
-        }
     }
 
     /// <summary>

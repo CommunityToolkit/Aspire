@@ -5,35 +5,30 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class AddPerlScriptTests
 {
-    [Fact]
-    public void AddPerlScriptCreatesCorrectResourceType()
+    [Theory]
+    [InlineData("perl-app", "scripts", "app.pl")]
+    [InlineData("my-worker", "src", "worker.pl")]
+    [InlineData("batch-job", "lib/tasks", "run.pl")]
+    [InlineData("web-cgi", "cgi-bin", "handler.pl")]
+    public void AddPerlScript_ConfiguresResourceCorrectly(string name, string workingDir, string entrypoint)
     {
         var builder = DistributedApplication.CreateBuilder();
+        var expectedWorkingDirectory = Path.GetFullPath(workingDir, builder.AppHostDirectory);
 
-        builder.AddPerlScript("perl-app", "scripts", "app.pl");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.Equal("perl-app", resource.Name);
-    }
-
-    [Fact]
-    public void AddPerlScriptSetsCommandToPerl()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl");
+        builder.AddPerlScript(name, workingDir, entrypoint);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+        Assert.Equal(name, resource.Name);
         Assert.Equal("perl", resource.Command);
+        Assert.Equal(expectedWorkingDirectory, resource.WorkingDirectory);
+
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlEntrypointAnnotation>());
+        Assert.Equal(EntrypointType.Script, annotation.Type);
+        Assert.Equal(entrypoint, annotation.Entrypoint);
     }
 
     [Fact]
@@ -48,43 +43,10 @@ public class AddPerlScriptTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<CommandLineArgsCallbackAnnotation>(out var argsAnnotation));
+        var argsAnnotation = Assert.Single(resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>());
         CommandLineArgsCallbackContext context = new([]);
         await argsAnnotation.Callback(context);
 
         Assert.Contains("-s", context.Args);
-    }
-
-    [Fact]
-    public void AddPerlScriptSetsWorkingDirectory()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var expectedWorkingDirectory = Path.GetFullPath("scripts", builder.AppHostDirectory);
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.Equal(expectedWorkingDirectory, resource.WorkingDirectory);
-    }
-
-    [Fact]
-    public void AddPerlScriptHasEntrypointAnnotation()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.True(resource.TryGetLastAnnotation<PerlEntrypointAnnotation>(out var annotation));
-        Assert.Equal(EntrypointType.Script, annotation.Type);
-        Assert.Equal("app.pl", annotation.Entrypoint);
     }
 }

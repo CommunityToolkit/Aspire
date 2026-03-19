@@ -9,7 +9,6 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class ValidationMessagingTests
 {
-#pragma warning disable ASPIRECOMMAND001, ASPIREINTERACTION001
     [Fact, RequiresWindows]
     public void WithPerlbrewEnvironment_OnWindows_DoesNotRegisterPerlbrewRequiredCommand()
     {
@@ -23,7 +22,9 @@ public class ValidationMessagingTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+#pragma warning disable ASPIRECOMMAND001
         var requiredCommands = resource.Annotations.OfType<RequiredCommandAnnotation>().ToList();
+#pragma warning restore ASPIRECOMMAND001
 
         // Windows pathway uses direct interaction service in startup events, not command validation.
         Assert.Equal(2, requiredCommands.Count);
@@ -44,7 +45,9 @@ public class ValidationMessagingTests
 
         var builder = DistributedApplication.CreateBuilder();
         var interactionService = new RecordingInteractionService();
+#pragma warning disable ASPIREINTERACTION001
         builder.Services.AddSingleton<IInteractionService>(interactionService);
+#pragma warning restore ASPIREINTERACTION001
 
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/home/user/perl5/perlbrew");
@@ -61,7 +64,9 @@ public class ValidationMessagingTests
         Assert.True(interactionService.PromptNotificationCalled);
         Assert.Equal("Perlbrew on Windows", interactionService.LastTitle);
         Assert.Equal(expectedMessage, interactionService.LastMessage);
+#pragma warning disable ASPIREINTERACTION001
         Assert.Equal(MessageIntent.Warning, interactionService.LastOptions?.Intent);
+#pragma warning restore ASPIREINTERACTION001
         Assert.Equal("Installation instructions", interactionService.LastOptions?.LinkText);
         Assert.Equal(expectedLink, interactionService.LastOptions?.LinkUrl);
     }
@@ -79,11 +84,13 @@ public class ValidationMessagingTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+#pragma warning disable ASPIRECOMMAND001
         var perlbrewAnnotation = resource.Annotations
             .OfType<RequiredCommandAnnotation>()
             .Single(a => a.Command == "perlbrew");
 
         var context = new RequiredCommandValidationContext("perlbrew", app.Services, CancellationToken.None);
+#pragma warning restore ASPIRECOMMAND001
         var result = await perlbrewAnnotation.ValidationCallback!(context);
 
         Assert.False(result.IsValid);
@@ -106,11 +113,13 @@ public class ValidationMessagingTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+#pragma warning disable ASPIRECOMMAND001
         var perlbrewAnnotation = resource.Annotations
             .OfType<RequiredCommandAnnotation>()
             .Single(a => a.Command == "perlbrew");
 
         var context = new RequiredCommandValidationContext("perlbrew", app.Services, CancellationToken.None);
+#pragma warning restore ASPIRECOMMAND001
         var result = await perlbrewAnnotation.ValidationCallback!(context);
 
         Assert.False(result.IsValid);
@@ -131,11 +140,13 @@ public class ValidationMessagingTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
+#pragma warning disable ASPIRECOMMAND001
         var cpanmRequiredCommand = resource.Annotations
             .OfType<RequiredCommandAnnotation>()
             .Single(a => a.Command == "cpanm");
 
         var context = new RequiredCommandValidationContext("cpanm", app.Services, CancellationToken.None);
+#pragma warning restore ASPIRECOMMAND001
         var result = await cpanmRequiredCommand.ValidationCallback!(context);
 
         Assert.False(result.IsValid);
@@ -158,8 +169,6 @@ public class ValidationMessagingTests
             appModel.Resources.OfType<ExecutableResource>(),
             resource => resource.Name == "perl-app-perl-5-38-0-perlbrew-installer");
     }
-
-#pragma warning restore ASPIRECOMMAND001, ASPIREINTERACTION001
 
 #pragma warning disable ASPIREINTERACTION001
     private sealed class RecordingInteractionService : IInteractionService

@@ -5,36 +5,27 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class AddPerlModuleTests
 {
-    [Fact]
-    public void AddPerlModuleCreatesCorrectResourceType()
+    [Theory]
+    [InlineData("perl-worker", "lib", "MyApp::Worker")]
+    [InlineData("queue-processor", "src", "Queue::Handler")]
+    [InlineData("batch-runner", "modules", "Batch::Main")]
+    public void AddPerlModule_ConfiguresResourceCorrectly(string name, string workingDir, string moduleName)
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddPerlModule("perl-worker", "lib", "MyApp::Worker");
+        builder.AddPerlModule(name, workingDir, moduleName);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.Equal("perl-worker", resource.Name);
-    }
+        Assert.Equal(name, resource.Name);
+        Assert.Equal("perl", resource.Command);
 
-    [Fact]
-    public void AddPerlModuleHasModuleEntrypointType()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlModule("perl-worker", "lib", "MyApp::Worker");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.True(resource.TryGetLastAnnotation<PerlEntrypointAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlEntrypointAnnotation>());
         Assert.Equal(EntrypointType.Module, annotation.Type);
-        Assert.Equal("MyApp::Worker", annotation.Entrypoint);
+        Assert.Equal(moduleName, annotation.Entrypoint);
     }
 
     [Fact]
@@ -49,27 +40,12 @@ public class AddPerlModuleTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<CommandLineArgsCallbackAnnotation>(out var argsAnnotation));
+        var argsAnnotation = Assert.Single(resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>());
         CommandLineArgsCallbackContext context = new([]);
         await argsAnnotation.Callback(context);
 
         Assert.Contains("-MMyApp::Worker", context.Args);
         Assert.Contains("-e", context.Args);
-    }
-
-    [Fact]
-    public void AddPerlModuleSetsCommandToPerl()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlModule("perl-worker", "lib", "MyApp::Worker");
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        Assert.Equal("perl", resource.Command);
     }
 
     [Fact]

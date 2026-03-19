@@ -20,46 +20,33 @@ public class WithCartonTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlPackageManagerAnnotation>());
         Assert.Equal(PerlPackageManager.Carton, annotation.PackageManager);
         Assert.Equal("carton", annotation.ExecutableName);
     }
 
-    [Fact]
-    public void WithCartonReplacesDefaultAnnotation()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void WithCarton_ReplacesExistingPackageManagerAnnotation(bool withPriorCpanMinus)
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithCarton();
+        var resource = builder.AddPerlScript("perl-app", "scripts", "app.pl");
+        if (withPriorCpanMinus)
+        {
+            resource.WithCpanMinus();
+        }
+        resource.WithCarton();
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+        var perlResource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
-        var annotations = resource.Annotations.OfType<PerlPackageManagerAnnotation>().ToList();
-        Assert.Single(annotations);
-        Assert.Equal("carton", annotations[0].ExecutableName);
-    }
-
-    [Fact]
-    public void WithCartonReplacesCpanmAnnotation()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithCpanMinus()
-            .WithCarton();
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
-
-        var annotations = resource.Annotations.OfType<PerlPackageManagerAnnotation>().ToList();
-        Assert.Single(annotations);
-        Assert.Equal(PerlPackageManager.Carton, annotations[0].PackageManager);
+        var annotation = Assert.Single(perlResource.Annotations.OfType<PerlPackageManagerAnnotation>());
+        Assert.Equal(PerlPackageManager.Carton, annotation.PackageManager);
+        Assert.Equal("carton", annotation.ExecutableName);
     }
 
     [Fact]
@@ -85,7 +72,7 @@ public class WithCartonTests
         var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
         // Carton should NOT be auto-switched to cpanm
-        Assert.True(resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var annotation));
+        var annotation = Assert.Single(resource.Annotations.OfType<PerlPackageManagerAnnotation>());
         Assert.Equal(PerlPackageManager.Carton, annotation.PackageManager);
 
         // Project installer should still be created
@@ -93,29 +80,25 @@ public class WithCartonTests
         Assert.Single(installers);
     }
 
-    [Fact]
-    public void WithCartonThenWithPackage_ThrowsAtConfigurationTime()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void WithCartonAndWithPackage_ThrowsRegardlessOfOrder(bool cartonFirst)
     {
         var builder = DistributedApplication.CreateBuilder();
 
         var ex = Assert.Throws<NotSupportedException>(() =>
-            builder.AddPerlScript("perl-app", "scripts", "app.pl")
-                .WithCarton()
-                .WithPackage("Mojolicious"));
-
-        Assert.Contains("WithPackage() and WithCarton() cannot be combined", ex.Message);
-        Assert.Contains("WithProjectDependencies()", ex.Message);
-    }
-
-    [Fact]
-    public void WithPackageThenWithCarton_ThrowsAtConfigurationTime()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-        var ex = Assert.Throws<NotSupportedException>(() =>
-            builder.AddPerlScript("perl-app", "scripts", "app.pl")
-                .WithPackage("Mojolicious")
-                .WithCarton());
+        {
+            var resource = builder.AddPerlScript("perl-app", "scripts", "app.pl");
+            if (cartonFirst)
+            {
+                resource.WithCarton().WithPackage("Mojolicious");
+            }
+            else
+            {
+                resource.WithPackage("Mojolicious").WithCarton();
+            }
+        });
 
         Assert.Contains("WithPackage() and WithCarton() cannot be combined", ex.Message);
         Assert.Contains("WithProjectDependencies()", ex.Message);

@@ -7,14 +7,15 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class WithCertificateTrustTests
 {
-#pragma warning disable CTASPIREPERL001
     [Fact]
     public void WithPerlCertificateTrust_AddsCertificateTrustAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
 
+#pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithPerlCertificateTrust();
+#pragma warning restore CTASPIREPERL001
 
         using var app = builder.Build();
 
@@ -32,7 +33,9 @@ public class WithCertificateTrustTests
     {
         IResourceBuilder<PerlAppResource> builder = null!;
 
+#pragma warning disable CTASPIREPERL001
         Assert.Throws<ArgumentNullException>(() => builder.WithPerlCertificateTrust());
+#pragma warning restore CTASPIREPERL001
     }
 
     [Fact]
@@ -40,9 +43,11 @@ public class WithCertificateTrustTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
+#pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithPerlCertificateTrust()
             .WithPerlCertificateTrust();
+#pragma warning restore CTASPIREPERL001
 
         using var app = builder.Build();
 
@@ -63,10 +68,12 @@ public class WithCertificateTrustTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
+#pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithCpanMinus()
             .WithPackage("Mojolicious")
             .WithPerlCertificateTrust();
+#pragma warning restore CTASPIREPERL001
 
         using var app = builder.Build();
 
@@ -86,8 +93,10 @@ public class WithCertificateTrustTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
+#pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("perl-app", "scripts", "app.pl")
             .WithPerlCertificateTrust()
+#pragma warning restore CTASPIREPERL001
             .WithCpanMinus()
             .WithPackage("Mojolicious");
 
@@ -100,6 +109,4 @@ public class WithCertificateTrustTests
         // WithPerlCertificateTrust() was called before WithPackage()
         Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
     }
-
-#pragma warning restore CTASPIREPERL001
 }

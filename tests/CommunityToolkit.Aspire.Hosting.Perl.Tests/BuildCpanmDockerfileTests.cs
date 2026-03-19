@@ -6,10 +6,10 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class BuildCpanmDockerfileTests
 {
-#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
     [Fact]
     public void BuildCpanmDockerfile_UsesSingleStage()
     {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
         PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
@@ -18,6 +18,7 @@ public class BuildCpanmDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim");
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
         Assert.Single(builder.Stages);
     }
@@ -25,6 +26,7 @@ public class BuildCpanmDockerfileTests
     [Fact]
     public void BuildCpanmDockerfile_StageHasStatements()
     {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
         PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
@@ -33,6 +35,7 @@ public class BuildCpanmDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim");
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
         var stage = builder.Stages[0];
         Assert.NotEmpty(stage.Statements);
@@ -41,6 +44,7 @@ public class BuildCpanmDockerfileTests
     [Fact]
     public void BuildCpanmDockerfile_CopiesDependencyManifestBeforeSource()
     {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
         PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
@@ -49,6 +53,7 @@ public class BuildCpanmDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim");
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
         var statements = builder.Stages[0].Statements;
         var copyIndexes = statements
@@ -58,12 +63,14 @@ public class BuildCpanmDockerfileTests
             .ToList();
 
         Assert.Equal(2, copyIndexes.Count);
-        Assert.True(copyIndexes[0] < copyIndexes[1]);
+        Assert.True(copyIndexes[0] < copyIndexes[1],
+            $"Dependency manifest COPY (index {copyIndexes[0]}) should precede source COPY (index {copyIndexes[1]})");
     }
 
     [Fact]
     public void BuildCpanmDockerfile_InstallsDependenciesAfterManifestCopy()
     {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
         PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
@@ -72,6 +79,7 @@ public class BuildCpanmDockerfileTests
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim");
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
         var statements = builder.Stages[0].Statements;
         var copyIndexes = statements
@@ -87,9 +95,10 @@ public class BuildCpanmDockerfileTests
 
         Assert.Equal(2, copyIndexes.Count);
         Assert.Equal(2, runIndexes.Count);
-        Assert.True(copyIndexes[0] < runIndexes[1]);
-        Assert.True(runIndexes[1] < copyIndexes[1]);
+        Assert.True(copyIndexes[0] < runIndexes[1],
+            $"Manifest COPY (index {copyIndexes[0]}) should precede install RUN (index {runIndexes[1]})");
+        Assert.True(runIndexes[1] < copyIndexes[1],
+            $"Install RUN (index {runIndexes[1]}) should precede source COPY (index {copyIndexes[1]})");
     }
 
-#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 }

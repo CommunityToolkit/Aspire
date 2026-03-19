@@ -4,21 +4,20 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class CertificateTrustLoggingTests
 {
-#pragma warning disable CTASPIREPERL001
     [Fact]
     public async Task WithPerlCertificateTrust_InRunMode_LogsCertificateStatus()
     {
         var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("test-cert", "scripts", "app.pl")
             .WithPerlCertificateTrust();
+#pragma warning restore CTASPIREPERL001
         using var app = builder.Build();
 
         var logs = await LoggingTestHelper.PublishBeforeStartAndCollectLogsAsync(builder, app, "test-cert");
 
-        Assert.True(
-            logs.Any(l => l.Contains("Certificate trust configured")) ||
-            logs.Any(l => l.Contains("no SSL_CERT_FILE found")),
-            "Expected certificate trust logging in run mode");
+        Assert.Contains(logs, l =>
+            l.Contains("Certificate trust configured") || l.Contains("no SSL_CERT_FILE found"));
     }
 
     [Fact]
@@ -26,16 +25,15 @@ public class CertificateTrustLoggingTests
     {
         var builder = DistributedApplication.CreateBuilder(
             ["--publisher", "manifest", "--output-path", Path.Combine(Path.GetTempPath(), "aspire-manifest")]);
+#pragma warning disable CTASPIREPERL001
         builder.AddPerlScript("test-cert", "scripts", "app.pl")
             .WithPerlCertificateTrust();
+#pragma warning restore CTASPIREPERL001
         using var app = builder.Build();
 
         var logs = await LoggingTestHelper.PublishBeforeStartAndCollectLogsAsync(
             builder, app, "test-cert", TimeSpan.FromMilliseconds(500));
 
-        Assert.DoesNotContain(logs, l => l.Contains("Certificate trust"));
-        Assert.DoesNotContain(logs, l => l.Contains("SSL_CERT_FILE"));
+        Assert.Empty(logs);
     }
-
-#pragma warning restore CTASPIREPERL001
 }

@@ -1,7 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.ApplicationModel.Docker;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
@@ -165,8 +164,6 @@ public static class PerlAppResourceBuilderExtensions
             ? appDirectory
             : Path.GetFullPath(appDirectory, builder.AppHostDirectory);
 
-        builder.Services.TryAddSingleton<PerlInstallationManager>();
-
         var resource = new PerlAppResource(resourceName, entrypoint, resolvedAppDirectory);
 
         if (builder.ExecutionContext.IsRunMode)
@@ -226,20 +223,7 @@ public static class PerlAppResourceBuilderExtensions
 
         resourceBuilder.WithOtlpExporter();
 
-#pragma warning disable ASPIRECOMMAND001
-        resourceBuilder.WithRequiredCommand("perl", async context =>
-        {
-            var manager = context.Services.GetRequiredService<PerlInstallationManager>();
-            var isInstalled = await manager.IsPerlInstalledAsync(context.ResolvedPath, context.CancellationToken);
-
-            return isInstalled
-                ? RequiredCommandValidationResult.Success()
-                : RequiredCommandValidationResult.Failure(
-                    "Perl is not installed or not functional. " +
-                    "Running 'perl -v' did not produce expected output starting with 'This is perl'.");
-        }, "https://www.perl.org/get.html");
-#pragma warning restore ASPIRECOMMAND001
-
+        resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
         resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
 
         // Configure OpenTelemetry exporters using environment variables
@@ -844,22 +828,6 @@ public static class PerlAppResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Resolves the perl executable path, accounting for perlbrew environments.
-    /// </summary>
-    /// <param name="resource">The Perl resource to inspect for perlbrew annotations.</param>
-    /// <returns>The resolved perl executable path.</returns>
-    private static string ResolvePerlPath(PerlAppResource resource)
-    {
-        if (resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
-            perlbrewAnnotation.Environment is { } perlbrewEnv)
-        {
-            return perlbrewEnv.GetExecutable("perl");
-        }
-
-        return "perl";
-    }
-
-    /// <summary>
     /// Resolves the local::lib path from the resource's <see cref="PerlLocalLibAnnotation"/>,
     /// returning <c>null</c> when no local::lib is configured.
     /// </summary>
@@ -940,31 +908,6 @@ public static class PerlAppResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Builds the effective environment variable map for a resource by executing
-    /// all registered <see cref="EnvironmentCallbackAnnotation"/> callbacks.
-    /// </summary>
-    /// <param name="resource">The resource whose environment callbacks should run.</param>
-    /// <param name="executionContext">The current execution context.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A dictionary containing the composed environment variables.</returns>
-    private static async Task<Dictionary<string, object>> BuildResourceEnvironmentVariablesAsync(
-        PerlAppResource resource,
-        DistributedApplicationExecutionContext executionContext,
-        CancellationToken cancellationToken)
-    {
-        Dictionary<string, object> environmentVariables = new(StringComparer.Ordinal);
-        EnvironmentCallbackContext context = new(executionContext, resource, environmentVariables, cancellationToken);
-
-        foreach (var callback in resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await callback.Callback(context).ConfigureAwait(false);
-        }
-
-        return environmentVariables;
-    }
-
-    /// <summary>
     /// Validates that per-package installation is compatible with the current
     /// package-manager mode.
     /// </summary>
@@ -1037,7 +980,7 @@ public static class PerlAppResourceBuilderExtensions
         }
 
         var installer = new PerlModuleInstallerResource(
-            installerName.Replace(":", "8"), //limitation of aspire resource names not allowing colons, but perl module names often have colons, so replace with dashes for the installer resource name
+            installerName.Replace(":", "8"), // replace colons with '8' for the installer resource name (Aspire resource names cannot contain ':')
             packageName,
             resource.Resource.WorkingDirectory ?? throw new ArgumentNullException());
 
@@ -1049,23 +992,6 @@ public static class PerlAppResourceBuilderExtensions
         resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (evt, ct) =>
         {
             var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
-
-            // Preflight: skip installation if module is already available
-            var perlPath = ResolvePerlPath(resource.Resource);
-            var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
-                resource.Resource,
-                resource.ApplicationBuilder.ExecutionContext,
-                ct).ConfigureAwait(false);
-
-            if (await PerlModuleChecker.IsModuleInstalledAsync(perlPath, packageName, environmentVariables, ct).ConfigureAwait(false))
-            {
-                logger.LogInformation("Module '{PackageName}' is already installed — skipping installation", packageName);
-                installerBuilder
-                    .WithCommand(perlPath)
-                    .WithWorkingDirectory(resource.Resource.WorkingDirectory)
-                    .WithArgs("-e", "1");
-                return;
-            }
 
             if (!resource.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager))
             {
@@ -1148,48 +1074,6 @@ public static class PerlAppResourceBuilderExtensions
         resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>(async (evt, ct) =>
         {
             var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
-
-            // Preflight: if a cpanfile exists, check whether all required modules are already installed
-            var perlPath = ResolvePerlPath(resource.Resource);
-            var environmentVariables = await BuildResourceEnvironmentVariablesAsync(
-                resource.Resource,
-                resource.ApplicationBuilder.ExecutionContext,
-                ct).ConfigureAwait(false);
-            var workingDir = resource.Resource.WorkingDirectory ?? ".";
-            var cpanfilePath = Path.Combine(workingDir, "cpanfile");
-
-            if (File.Exists(cpanfilePath))
-            {
-                logger.LogInformation("Found cpanfile at {CpanfilePath} — checking if all dependencies are satisfied", cpanfilePath);
-                var requiredModules = CpanfileParser.ParseRequiredModules(cpanfilePath);
-                if (requiredModules.Count > 0)
-                {
-                    var allInstalled = true;
-                    foreach (var module in requiredModules)
-                    {
-                        if (!await PerlModuleChecker.IsModuleInstalledAsync(perlPath, module, environmentVariables, ct).ConfigureAwait(false))
-                        {
-                            logger.LogDebug("Module '{Module}' is not installed — project dependencies need installation", module);
-                            allInstalled = false;
-                            break;
-                        }
-                    }
-
-                    if (allInstalled)
-                    {
-                        logger.LogInformation("All {Count} cpanfile dependencies are already installed — skipping project dependency installation", requiredModules.Count);
-                        installerBuilder
-                            .WithCommand(perlPath)
-                            .WithWorkingDirectory(workingDir)
-                            .WithArgs("-e", "1");
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                logger.LogDebug("No cpanfile found at {CpanfilePath} — skipping preflight dependency check", cpanfilePath);
-            }
 
             if (!resource.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var packageManager))
             {
