@@ -57,7 +57,7 @@ public class ResourceCreationTests(ITestOutputHelper testOutputHelper)
         Assert.NotNull(resource);
 
         var endpoints = resource.Annotations.OfType<EndpointAnnotation>().ToList();
-        var grafana = endpoints.Single(e => e.Name == "http");
+        var grafana = endpoints.Single(e => e.Name == GrafanaOtelLgtmResource.GrafanaEndpointName);
         Assert.Equal(3000, grafana.TargetPort);
         Assert.Equal("http", grafana.UriScheme);
     }

@@ -1,6 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting;
 
@@ -158,10 +156,41 @@ public static class GrafanaOtelLgtmExtensions
         builder.WithEnvironment(callback =>
         {
             var otlpProtocol = callback.EnvironmentVariables.GetValueOrDefault("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc");
-            var endpointName = string.Equals(otlpProtocol.ToString(), "http/protobuf", StringComparison.Ordinal)
-                ? GrafanaOtelLgtmResource.OtlpHttpEndpointName
-                : GrafanaOtelLgtmResource.OtlpGrpcEndpointName;
-            var endpoint = lgtmBuilder.Resource.GetEndpoint(endpointName);
+            var otlpProtocolValue = otlpProtocol?.ToString();
+
+            string endpointName;
+            if (!string.IsNullOrWhiteSpace(otlpProtocolValue) &&
+                otlpProtocolValue.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                endpointName = GrafanaOtelLgtmResource.OtlpHttpEndpointName;
+            }
+            else
+            {
+                endpointName = GrafanaOtelLgtmResource.OtlpGrpcEndpointName;
+            }
+
+            string endpoint;
+            try
+            {
+                endpoint = lgtmBuilder.Resource.GetEndpoint(endpointName);
+            }
+            catch (System.Exception ex) when (ex is System.InvalidOperationException || ex is System.ArgumentException)
+            {
+                string fallbackEndpointName = endpointName == GrafanaOtelLgtmResource.OtlpHttpEndpointName
+                    ? GrafanaOtelLgtmResource.OtlpGrpcEndpointName
+                    : GrafanaOtelLgtmResource.OtlpHttpEndpointName;
+
+                try
+                {
+                    endpoint = lgtmBuilder.Resource.GetEndpoint(fallbackEndpointName);
+                }
+                catch (System.Exception)
+                {
+                    throw new System.InvalidOperationException(
+                        $"The requested OTLP protocol '{otlpProtocolValue}' maps to endpoint '{endpointName}', but no corresponding endpoint is configured on the Grafana OTel-LGTM resource, and no fallback endpoint '{fallbackEndpointName}' is available.",
+                        ex);
+                }
+            }
 
             if (!callback.EnvironmentVariables.TryAdd("OTEL_EXPORTER_OTLP_ENDPOINT", endpoint))
             {
