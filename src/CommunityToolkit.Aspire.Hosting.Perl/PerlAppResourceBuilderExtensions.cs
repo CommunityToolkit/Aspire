@@ -165,17 +165,6 @@ public static partial class PerlAppResourceBuilderExtensions
 
         var resource = new PerlAppResource(resourceName, entrypoint, resolvedAppDirectory);
 
-        if (builder.ExecutionContext.IsRunMode)
-        {
-            builder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
-            {
-                var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource);
-                logger.LogInformation("Perl resource '{ResourceName}' configured: entrypoint={Entrypoint}, type={EntrypointType}, workingDirectory={WorkingDirectory}",
-                    resourceName, entrypoint, entrypointType, resolvedAppDirectory);
-                return Task.CompletedTask;
-            });
-        }
-
         // Use just the entrypoint filename — the working directory is already set to appDirectory,
         // so Path.Combine(appDirectory, entrypoint) would double-nest the path.
         string scriptPath = entrypoint;
@@ -245,9 +234,6 @@ public static partial class PerlAppResourceBuilderExtensions
 
         if (builder.ExecutionContext.IsRunMode)
         {
-            // Auto-detect project-level dependency files (GAP-11)
-            //FEEDBACK: I don't know that I like this behavior.  Please explain why I should do this during runtime, 
-            //is this because it happens automatically on publish?
             if (HasDependencyFiles(resolvedAppDirectory, builder.AppHostDirectory))
             {
                 resourceBuilder.WithProjectDependencies();
@@ -521,25 +507,6 @@ public static partial class PerlAppResourceBuilderExtensions
 
         builder.Resource.Annotations.Add(new PerlCertificateTrustAnnotation());
 
-        if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
-        {
-            builder.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
-            {
-                var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(builder.Resource);
-                var sslCertFile = Environment.GetEnvironmentVariable("SSL_CERT_FILE");
-                if (sslCertFile is not null)
-                {
-                    logger.LogInformation("Certificate trust configured: SSL_CERT_FILE={CertBundlePath}", sslCertFile);
-                }
-                else
-                {
-                    logger.LogDebug("Certificate trust enabled but no SSL_CERT_FILE found in environment");
-                }
-
-                return Task.CompletedTask;
-            });
-        }
-
         builder.WithCertificateTrustConfiguration(context =>
         {
             if (context.CertificateBundlePath is { } bundlePath)
@@ -642,22 +609,6 @@ public static partial class PerlAppResourceBuilderExtensions
 
         resource.Resource.Annotations.Add(new PerlbrewResourceEnvironmentAnnotation());
 
-        if (resource.ApplicationBuilder.ExecutionContext.IsRunMode)
-        {
-            resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
-            {
-                if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var annotation) &&
-                    annotation.Environment is { } env)
-                {
-                    var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
-                    logger.LogInformation("Perlbrew environment: version={Version}, root={PerlbrewRoot}, perl={PerlPath}",
-                        env.Version, env.PerlbrewRoot, env.GetExecutable("perl"));
-                }
-
-                return Task.CompletedTask;
-            });
-        }
-
         resource.WithEnvironment(context =>
         {
             if (resource.Resource.TryGetLastAnnotation<PerlbrewEnvironmentAnnotation>(out var perlbrewAnnotation) &&
@@ -683,24 +634,6 @@ public static partial class PerlAppResourceBuilderExtensions
         }
 
         resource.Resource.Annotations.Add(new PerlLocalLibResourceEnvironmentAnnotation());
-
-        if (resource.ApplicationBuilder.ExecutionContext.IsRunMode)
-        {
-            resource.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, _) =>
-            {
-                if (resource.Resource.TryGetLastAnnotation<PerlLocalLibAnnotation>(out var annotation))
-                {
-                    var resolvedPath = ResolveLocalLibPath(resource.Resource.WorkingDirectory, annotation.Path);
-                    var logger = evt.Services.GetRequiredService<ResourceLoggerService>().GetLogger(resource.Resource);
-                    logger.LogInformation("local::lib configured: path='{ConfiguredPath}' resolved to '{ResolvedPath}'",
-                        annotation.Path, resolvedPath);
-                    logger.LogDebug("local::lib environment: PERL5LIB={Perl5Lib}, PERL_LOCAL_LIB_ROOT={LocalLibRoot}",
-                        Path.Combine(resolvedPath, "lib", "perl5"), resolvedPath);
-                }
-
-                return Task.CompletedTask;
-            });
-        }
 
         resource.WithEnvironment(context =>
         {
