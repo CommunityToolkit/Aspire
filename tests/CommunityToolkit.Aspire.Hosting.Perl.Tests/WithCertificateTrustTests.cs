@@ -83,9 +83,8 @@ public class WithCertificateTrustTests
         // Verify the cert trust marker annotation was propagated to the installer
         Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
 
-        // Verify an env callback was added for cert trust
-        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.NotEmpty(envCallbacks);
+        // Verify exactly one env callback was added for cert trust
+        Assert.Single(installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>());
     }
 
     [Fact]

@@ -7,13 +7,12 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 public class BuildCartonDockerfileLocalLibTests
 {
     [Fact]
-    public void BuildCartonDockerfile_WithLocalLib_RuntimeStageHasEnvDirectives()
+    public void BuildCartonDockerfile_WithLocalLib_RuntimeStageProducesExpectedStatementSequence()
     {
 #pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
-            builder,
+        builder.BuildCartonDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
@@ -22,12 +21,21 @@ public class BuildCartonDockerfileLocalLibTests
             localLibPath: "local");
 #pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
-        var runtimeStatements = builder.Stages[1].Statements;
-        var envStatements = runtimeStatements
-            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
-            .ToList();
+        string[] expected =
+        [
+            "DockerfileFromStatement",
+            "DockerfileWorkDirStatement",
+            "DockerfileCopyFromStatement",   // copy from build stage
+            "DockerfileEnvStatement",        // PERL5LIB
+            "DockerfileEnvStatement",        // PERL_LOCAL_LIB_ROOT
+            "DockerfileEntrypointStatement",
+        ];
 
-        Assert.Equal(2, envStatements.Count);
+        var actual = builder.Stages[1].Statements
+            .Select(s => s.GetType().Name)
+            .ToArray();
+
+        Assert.Equal(expected, actual);
     }
 
 }

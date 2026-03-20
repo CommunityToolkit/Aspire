@@ -6,36 +6,59 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class BuildCpanmDockerfileLocalLibTests
 {
-    [Theory]
-    [InlineData("local", 2)]
-    [InlineData(null, 0)]
-    public void BuildCpanmDockerfile_LocalLibControlsEnvDirectives(string? localLibPath, int minimumExpectedEnvCount)
+    [Fact]
+    public void BuildCpanmDockerfile_WithLocalLib_ProducesExpectedStatementSequence()
     {
 #pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCpanmDockerfile(
-            builder,
+        builder.BuildCpanmDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
             "perl:5-slim",
-            localLibPath: localLibPath);
+            localLibPath: "local");
 #pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
-        var statements = builder.Stages[0].Statements;
-        var envStatements = statements
-            .Where(s => s.GetType().Name == "DockerfileEnvStatement")
-            .ToList();
+        string[] expected =
+        [
+            "DockerfileFromStatement",
+            "DockerfileWorkDirStatement",
+            "DockerfileRunStatement",        // install cpanm
+            "DockerfileCopyStatement",       // cpanfile
+            "DockerfileRunStatement",        // cpanm --local-lib --installdeps
+            "DockerfileCopyStatement",       // application source
+            "DockerfileEnvStatement",        // PERL5LIB
+            "DockerfileEnvStatement",        // PERL_LOCAL_LIB_ROOT
+            "DockerfileEntrypointStatement",
+        ];
 
-        if (minimumExpectedEnvCount == 0)
-        {
-            Assert.Empty(envStatements);
-        }
-        else
-        {
-            Assert.InRange(envStatements.Count, minimumExpectedEnvCount, int.MaxValue);
-        }
+        var actual = builder.Stages[0].Statements
+            .Select(s => s.GetType().Name)
+            .ToArray();
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void BuildCpanmDockerfile_WithoutLocalLib_HasNoEnvStatements()
+    {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+        var builder = new DockerfileBuilder();
+
+        builder.BuildCpanmDockerfile(
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            localLibPath: null);
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
+        var actual = builder.Stages[0].Statements
+            .Select(s => s.GetType().Name)
+            .ToArray();
+
+        Assert.DoesNotContain("DockerfileEnvStatement", actual);
     }
 
 }

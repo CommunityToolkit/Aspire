@@ -12,8 +12,7 @@ public class BuildCartonDockerfileTests
 #pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
-            builder,
+        builder.BuildCartonDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
@@ -30,8 +29,7 @@ public class BuildCartonDockerfileTests
 #pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
-            builder,
+        builder.BuildCartonDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
@@ -43,13 +41,12 @@ public class BuildCartonDockerfileTests
     }
 
     [Fact]
-    public void BuildCartonDockerfile_RuntimeStageHasStatements()
+    public void BuildCartonDockerfile_BuildStageProducesExpectedStatementSequence()
     {
 #pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
-            builder,
+        builder.BuildCartonDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
@@ -57,7 +54,51 @@ public class BuildCartonDockerfileTests
             "perl:5");
 #pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
 
-        Assert.NotEmpty(builder.Stages[1].Statements);
+        string[] expected =
+        [
+            "DockerfileFromStatement",
+            "DockerfileWorkDirStatement",
+            "DockerfileRunStatement",        // cpanm Carton
+            "DockerfileCopyStatement",       // cpanfile
+            "DockerfileCopyStatement",       // cpanfile.snapshot
+            "DockerfileRunStatement",        // carton install
+            "DockerfileCopyStatement",       // application source
+        ];
+
+        var actual = builder.Stages[0].Statements
+            .Select(s => s.GetType().Name)
+            .ToArray();
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void BuildCartonDockerfile_RuntimeStageProducesExpectedStatementSequence()
+    {
+#pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+        var builder = new DockerfileBuilder();
+
+        builder.BuildCartonDockerfile(
+            EntrypointType.Script,
+            "app.pl",
+            apiSubcommand: null,
+            "perl:5-slim",
+            "perl:5");
+#pragma warning restore ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
+
+        string[] expected =
+        [
+            "DockerfileFromStatement",
+            "DockerfileWorkDirStatement",
+            "DockerfileCopyFromStatement",   // copy from build stage
+            "DockerfileEntrypointStatement",
+        ];
+
+        var actual = builder.Stages[1].Statements
+            .Select(s => s.GetType().Name)
+            .ToArray();
+
+        Assert.Equal(expected, actual);
     }
 
 }

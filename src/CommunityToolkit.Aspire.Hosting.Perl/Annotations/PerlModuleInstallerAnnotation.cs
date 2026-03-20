@@ -9,6 +9,5 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 /// <param name="installerResource">The child executable resource that runs the install command.</param>
 internal sealed class PerlModuleInstallerAnnotation(ExecutableResource installerResource) : IResourceAnnotation
 {
-
     public ExecutableResource Resource { get; } = installerResource;
 }

@@ -73,14 +73,14 @@ public class SetupDependencyTests
         PerlAppResourceBuilderExtensions.SetupDependencies(builder, perlApp);
 
         var projectAnnotation = perlApp.Annotations.OfType<PerlProjectInstallerAnnotation>().Single();
+        var moduleAnnotations = perlApp.Annotations.OfType<PerlModuleInstallerAnnotation>().ToList();
 
-        foreach (var moduleAnnotation in perlApp.Annotations.OfType<PerlModuleInstallerAnnotation>())
-        {
-            var hasWaitForProject = moduleAnnotation.Resource.Annotations
-                .OfType<WaitAnnotation>()
-                .Any(w => w.Resource == projectAnnotation.Resource);
+        Assert.Equal(2, moduleAnnotations.Count);
 
-            Assert.True(hasWaitForProject, $"Installer '{moduleAnnotation.Resource.Name}' should wait for project deps installer");
-        }
+        var waitCount = moduleAnnotations
+            .SelectMany(m => m.Resource.Annotations.OfType<WaitAnnotation>())
+            .Count(w => w.Resource == projectAnnotation.Resource);
+
+        Assert.Equal(moduleAnnotations.Count, waitCount);
     }
 }

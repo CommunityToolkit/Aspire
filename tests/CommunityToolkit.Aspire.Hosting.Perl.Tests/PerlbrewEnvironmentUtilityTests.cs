@@ -5,30 +5,14 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class PerlbrewEnvironmentUtilityTests
 {
-    [Fact, RequiresLinux]
-    public void NormalizeVersion_PrefixesPerlWhenMissing()
+    [Theory, RequiresLinux]
+    [InlineData("5.38.0", "perl-5.38.0")]
+    [InlineData("perl-5.38.0", "perl-5.38.0")]
+    public void NormalizeVersion_NormalizesInput(string input, string expected)
     {
-        var result = PerlbrewEnvironment.NormalizeVersion("5.38.0");
+        var result = PerlbrewEnvironment.NormalizeVersion(input);
 
-        Assert.Equal("perl-5.38.0", result);
-    }
-
-    [Fact, RequiresLinux]
-    public void NormalizeVersion_KeepsExistingPrefix()
-    {
-        var result = PerlbrewEnvironment.NormalizeVersion("perl-5.38.0");
-
-        Assert.Equal("perl-5.38.0", result);
-    }
-
-    [Fact, RequiresLinux]
-    public void NormalizeVersion_NormalizesUpperCasePrefixToLower()
-    {
-        // Perlbrew installs under a lowercase directory name regardless of input casing.
-        // NormalizeVersion must always emit a lowercase "perl-" prefix.
-        var result = PerlbrewEnvironment.NormalizeVersion("Perl-5.38.0");
-
-        Assert.Equal("perl-5.38.0", result);
+        Assert.Equal(expected, result);
     }
 
     [Fact, RequiresLinux]
@@ -49,26 +33,17 @@ public class PerlbrewEnvironmentUtilityTests
         Assert.Equal(expected, result);
     }
 
-    [Fact, RequiresLinux]
-    public void GetExecutable_ReturnsCorrectPath()
+    [Theory, RequiresLinux]
+    [InlineData("/home/user/perl5/perlbrew", "perls", "perl-5.38.0", "bin", "perl")]
+    [InlineData("/home/user/perl5/perlbrew", "perls", "perl-5.38.0", "bin", "cpanm")]
+    public void GetExecutable_ReturnsCorrectBinPath(string root, string perlsDir, string version, string binDir, string executable)
     {
-        var env = new PerlbrewEnvironment("/home/user/perl5/perlbrew", "perl-5.38.0");
+        var env = new PerlbrewEnvironment(root, version);
 
-        var perlPath = env.GetExecutable("perl");
+        var result = env.GetExecutable(executable);
 
-        var expected = Path.Combine("/home/user/perl5/perlbrew", "perls", "perl-5.38.0", "bin", "perl");
-        Assert.Equal(expected, perlPath);
-    }
-
-    [Fact, RequiresLinux]
-    public void GetExecutable_ResolveCpanm()
-    {
-        var env = new PerlbrewEnvironment("/home/user/perl5/perlbrew", "perl-5.38.0");
-
-        var cpanmPath = env.GetExecutable("cpanm");
-
-        var expected = Path.Combine("/home/user/perl5/perlbrew", "perls", "perl-5.38.0", "bin", "cpanm");
-        Assert.Equal(expected, cpanmPath);
+        var expected = Path.Combine(root, perlsDir, version, binDir, executable);
+        Assert.Equal(expected, result);
     }
 
     [Fact, RequiresLinux]

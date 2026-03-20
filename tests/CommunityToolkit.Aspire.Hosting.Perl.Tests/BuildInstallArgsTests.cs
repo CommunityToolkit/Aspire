@@ -4,96 +4,41 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class BuildInstallArgsTests
 {
-    [Fact]
-    public void BuildInstallArgs_CpanmBasic()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpanm, "Mojolicious", force: false, skipTest: false);
-
-        Assert.Equal(["Mojolicious"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanmWithForce()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpanm, "Mojolicious", force: true, skipTest: false);
-
-        Assert.Equal(["--force", "Mojolicious"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanmWithNoTest()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpanm, "Mojolicious", force: false, skipTest: true);
-
-        Assert.Equal(["--notest", "Mojolicious"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanmWithForceAndNoTest()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpanm, "Mojolicious", force: true, skipTest: true);
-
-        Assert.Equal(["--force", "--notest", "Mojolicious"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanBasic()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpan, "DBI", force: false, skipTest: false);
-
-        // cpan always needs -i to prevent interactive shell hangs
-        Assert.Equal(["-i", "DBI"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanWithForce()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpan, "DBI", force: true, skipTest: false);
-
-        // cpan requires -i when -f is used
-        Assert.Equal(["-f", "-i", "DBI"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanWithNoTest()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpan, "DBI", force: false, skipTest: true);
-
-        Assert.Equal(["-T", "-i", "DBI"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanWithForceAndNoTest()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(PerlPackageManager.Cpan, "DBI", force: true, skipTest: true);
-
-        // cpan requires -i when -f is used
-        Assert.Equal(["-f", "-T", "-i", "DBI"], args);
-    }
-
-    [Fact]
-    public void BuildInstallArgs_UndefinedEnumValueThrows()
-    {
-        Assert.Throws<NotSupportedException>(() =>
-            PerlAppResourceBuilderExtensions.BuildInstallArgs((PerlPackageManager)99, "SomeModule", force: false, skipTest: false));
-    }
-
-    [Fact]
-    public void BuildInstallArgs_CpanmWithLocalLib()
+    [Theory]
+    [InlineData(false, false, new [] {"Mojolicious"})]
+    [InlineData(true, false, new [] {"--force","Mojolicious"})]
+    [InlineData(false, true, new [] {"--notest","Mojolicious"})]
+    [InlineData(true, true, new [] {"--force","--notest","Mojolicious"})]
+    public void BuildInstallArgs_CpanmFlags(bool force, bool skipTest, string[] expectedCsv)
     {
         var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(
-            PerlPackageManager.Cpanm, "Mojolicious", force: false, skipTest: false, localLibPath: "/app/local");
+            PerlPackageManager.Cpanm, "Mojolicious", force, skipTest);
 
-        Assert.Equal(["--local-lib", "/app/local", "Mojolicious"], args);
+        Assert.Equal(expectedCsv, args);
     }
 
-    [Fact]
-    public void BuildInstallArgs_CpanmWithLocalLibAndForceAndNoTest()
+    [Theory]
+    [InlineData(false, false, new[] { "-i", "DBI" })]
+    [InlineData(true, false, new[] { "-f", "-i", "DBI" })]
+    [InlineData(false, true, new[] { "-T", "-i", "DBI" })]
+    [InlineData(true, true, new[] { "-f", "-T", "-i", "DBI" })]
+    public void BuildInstallArgs_CpanFlags(bool force, bool skipTest, string[] expected)
     {
         var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(
-            PerlPackageManager.Cpanm, "Mojolicious", force: true, skipTest: true, localLibPath: "/app/local");
+            PerlPackageManager.Cpan, "DBI", force, skipTest);
 
-        Assert.Equal(["--local-lib", "/app/local", "--force", "--notest", "Mojolicious"], args);
+        Assert.Equal(expected, args);
+    }
+
+    [Theory]
+    [InlineData(false, false, new[] { "--local-lib", "/app/local", "Mojolicious" })]
+    [InlineData(true, true, new[] { "--local-lib", "/app/local", "--force", "--notest", "Mojolicious" })]
+    public void BuildInstallArgs_CpanmWithLocalLib(bool force, bool skipTest, string[] expected)
+    {
+        var args = PerlAppResourceBuilderExtensions.BuildInstallArgs(
+            PerlPackageManager.Cpanm, "Mojolicious", force, skipTest, localLibPath: "/app/local");
+
+        Assert.Equal(expected, args);
     }
 
     [Fact]
@@ -104,6 +49,13 @@ public class BuildInstallArgsTests
             PerlPackageManager.Cpan, "DBI", force: false, skipTest: false, localLibPath: "/app/local");
 
         Assert.Equal(["-i", "DBI"], args);
+    }
+
+    [Fact]
+    public void BuildInstallArgs_UndefinedEnumValueThrows()
+    {
+        Assert.Throws<NotSupportedException>(() =>
+            PerlAppResourceBuilderExtensions.BuildInstallArgs((PerlPackageManager)99, "SomeModule", force: false, skipTest: false));
     }
 
     [Fact]

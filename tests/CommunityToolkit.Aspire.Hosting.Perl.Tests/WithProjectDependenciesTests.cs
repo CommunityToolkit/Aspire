@@ -188,8 +188,7 @@ public class WithProjectDependenciesTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
 
-        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.NotEmpty(envCallbacks);
+        Assert.Single(installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>());
     }
 
     [Fact]
@@ -206,7 +205,6 @@ public class WithProjectDependenciesTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
 
-        var envCallbacks = installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>().ToList();
-        Assert.NotEmpty(envCallbacks);
+        Assert.Single(installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>());
     }
 }

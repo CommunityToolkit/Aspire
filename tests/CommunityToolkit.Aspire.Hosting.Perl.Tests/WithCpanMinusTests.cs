@@ -51,19 +51,14 @@ public class WithCpanMinusTests
         Assert.Throws<ArgumentNullException>(() => builder.WithCpanMinus());
     }
 
-    [Theory]
-    [InlineData(true, "cpanm")]
-    [InlineData(false, "cpan")]
-    public void WithPackage_UsesExpectedPackageManager(bool useCpanMinus, string expectedExecutable)
+    [Fact]
+    public void WithCpanMinus_ThenWithPackage_UsesCpanm()
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        var resource = builder.AddPerlScript("perl-app", "scripts", "app.pl");
-        if (useCpanMinus)
-        {
-            resource.WithCpanMinus();
-        }
-        resource.WithPackage("Mojolicious");
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithCpanMinus()
+            .WithPackage("Mojolicious");
 
         using var app = builder.Build();
 
@@ -71,7 +66,26 @@ public class WithCpanMinusTests
         var perlResource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
 
         var annotation = Assert.Single(perlResource.Annotations.OfType<PerlPackageManagerAnnotation>());
-        Assert.Equal(expectedExecutable, annotation.ExecutableName);
+        Assert.Equal("cpanm", annotation.ExecutableName);
+
+        Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
+    }
+
+    [Fact]
+    public void WithPackage_WithoutCpanMinus_UsesCpan()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("perl-app", "scripts", "app.pl")
+            .WithPackage("Mojolicious");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var perlResource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var annotation = Assert.Single(perlResource.Annotations.OfType<PerlPackageManagerAnnotation>());
+        Assert.Equal("cpan", annotation.ExecutableName);
 
         Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
     }

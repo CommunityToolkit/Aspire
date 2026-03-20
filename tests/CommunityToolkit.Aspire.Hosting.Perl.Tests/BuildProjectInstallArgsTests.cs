@@ -4,37 +4,16 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 
 public class BuildProjectInstallArgsTests
 {
-    [Fact]
-    public void BuildProjectInstallArgs_Cpanm_ReturnsInstalldeps()
+    [Theory]
+    [InlineData(PerlPackageManager.Cpanm, false, new[] { "--installdeps", "--notest", "." })]
+    [InlineData(PerlPackageManager.Cpanm, true, new[] { "--installdeps", "--notest", "." })]
+    [InlineData(PerlPackageManager.Carton, false, new[] { "install" })]
+    [InlineData(PerlPackageManager.Carton, true, new[] { "install", "--deployment" })]
+    public void BuildProjectInstallArgs_ValidManagers(PerlPackageManager manager, bool cartonDeployment, string[] expected)
     {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpanm, cartonDeployment: false);
+        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(manager, cartonDeployment);
 
-        Assert.Equal(["--installdeps", "--notest", "."], args);
-    }
-
-    [Fact]
-    public void BuildProjectInstallArgs_Cpanm_IgnoresDeploymentFlag()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Cpanm, cartonDeployment: true);
-
-        // Deployment flag is only for Carton; cpanm ignores it
-        Assert.Equal(["--installdeps", "--notest", "."], args);
-    }
-
-    [Fact]
-    public void BuildProjectInstallArgs_Carton_ReturnsInstall()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Carton, cartonDeployment: false);
-
-        Assert.Equal(["install"], args);
-    }
-
-    [Fact]
-    public void BuildProjectInstallArgs_Carton_WithDeployment()
-    {
-        var args = PerlAppResourceBuilderExtensions.BuildProjectInstallArgs(PerlPackageManager.Carton, cartonDeployment: true);
-
-        Assert.Equal(["install", "--deployment"], args);
+        Assert.Equal(expected, args);
     }
 
     [Fact]

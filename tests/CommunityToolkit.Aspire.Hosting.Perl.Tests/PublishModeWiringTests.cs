@@ -17,8 +17,7 @@ public class PublishModeWiringTests
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var allResources = appModel.Resources.ToList();
-        Assert.NotEmpty(allResources);
+        Assert.Contains(appModel.Resources, r => r.Name == "perl-app");
     }
 
     [Fact]

@@ -14,8 +14,7 @@ public class BuildCartonDockerfileDeploymentTests
 #pragma warning disable ASPIREDOCKERFILEBUILDER001, CTASPIREPERL002
         var builder = new DockerfileBuilder();
 
-        PerlAppResourceBuilderExtensions.BuildCartonDockerfile(
-            builder,
+        builder.BuildCartonDockerfile(
             EntrypointType.Script,
             "app.pl",
             apiSubcommand: null,
