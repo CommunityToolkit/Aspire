@@ -8,24 +8,6 @@ A guide for developers using `CommunityToolkit.Aspire.Hosting.Perl` for the firs
 reference when revisiting the API. This document explains how key hosting API calls map to on-disk
 directory layout, environment variable configuration, and runtime behavior.
 
----
-
-## Table of Contents
-
-1. [Quick Start](#quick-start)
-2. [Core Concepts](#core-concepts)
-3. [The `appDirectory` Parameter](#the-appdirectory-parameter)
-4. [WithLocalLib](#withlocallib)
-5. [Package Management](#package-management)
-   - [WithCpanMinus + WithPackage](#withcpanminus--withpackage)
-   - [WithCpanMinus + WithProjectDependencies](#withcpanminus--withprojectdependencies)
-   - [WithCarton + WithProjectDependencies](#withcarton--withprojectdependencies)
-6. [WithPerlbrewEnvironment](#withperlbrewenvironment)
-7. [Example Layouts](#example-layouts)
-8. [Common Pitfalls](#common-pitfalls)
-
----
-
 ## Quick Start
 
 Install the package in your AppHost project:
@@ -46,6 +28,10 @@ builder.AddPerlScript("my-worker", "scripts", "Worker.pl")
 
 builder.Build().Run();
 ```
+
+If there are things to install, it should warn you in the dashboard.  You should see links to installation instructions.
+
+See notes about the appDirectory parameter below.
 
 ---
 
@@ -109,7 +95,7 @@ scripts/                   ← working directory
     └── lib/perl5/...
 ```
 
-> **Key insight:** The script path in `AddPerlScript` / `AddPerlApi` is relative to `appDirectory`,
+> **Key insight:** The script path in `AddPerlScript` / `AddPerlApi` is relative to `AppHost.cs`,
 > and so is everything else — `WithLocalLib`, cpanfile discovery, and the process working directory.
 
 ---
@@ -130,19 +116,6 @@ Implementation note: `WithLocalLib` path resolution uses `Path.IsPathRooted(conf
 If `true`, the value is used directly. If `false`, it is combined with the resource working
 directory and converted to an absolute path.
 
-### What it sets
-
-| Environment Variable | Value |
-|---------------------|-------|
-| `PERL5LIB` | `<resolved>/lib/perl5` |
-| `PERL_LOCAL_LIB_ROOT` | `<resolved>` |
-| `PERL_MM_OPT` | `INSTALL_BASE=<resolved>` |
-| `PERL_MB_OPT` | `--install_base <resolved>` |
-
-These ensure that:
-- Perl finds modules in the local directory at runtime (`@INC`)
-- Package managers install modules into the local directory
-- No `sudo` or system-level permissions required
 
 ### Resolution examples
 
@@ -157,7 +130,7 @@ These ensure that:
 
 ## Package Management
 
-The integration supports three package managers and two installation strategies:
+While I highly recommend you use cpanm or Carton, the integration aims to support three package managers and two installation strategies:
 
 | Package Manager | Individual Packages | Project Dependencies |
 |----------------|-------------------|---------------------|
@@ -167,349 +140,9 @@ The integration supports three package managers and two installation strategies:
 
 > The default package manager is `cpan`, but it is automatically switched to `cpanm` when
 > `WithProjectDependencies()` is called, since `cpan` does not support `--installdeps`.
-
-### WithCpanMinus + WithPackage
-
-Installs individual modules by name before the application starts.
-
-```csharp
-builder.AddPerlScript("worker", "../scripts", "Worker.pl")
-    .WithCpanMinus()
-    .WithPackage("OpenTelemetry::SDK", skipTest: true)
-    .WithLocalLib("local");
-```
-
-**What happens at startup:**
-1. A child installer resource runs `cpanm --notest --local-lib <resolved>/local OpenTelemetry::SDK`
-2. The module is installed into `scripts/local/lib/perl5/`
-3. After installation, the main script starts with `PERL5LIB` pointing to the local directory
-
-**Resulting directory structure:**
-
-```
-my-example/
-├── MyExample.AppHost/
-│   ├── AppHost.cs
-│   └── MyExample.AppHost.csproj
-└── scripts/                       ← working directory (appDirectory = "../scripts")
-    ├── Worker.pl
-    └── local/
-        └── lib/
-            └── perl5/
-                └── OpenTelemetry/
-                    └── SDK.pm
-```
-
-**Options:**
-
-| Parameter | Effect |
-|-----------|--------|
-| `force: true` | Passes `--force` — reinstalls even if already present |
-| `skipTest: true` | Passes `--notest` — skips running the module's test suite |
-
-### WithCpanMinus + WithProjectDependencies
-
-Installs all modules listed in a `cpanfile` in the working directory.
-
-```csharp
-builder.AddPerlApi("api", ".", "../scripts/API.pl")
-    .WithCpanMinus()
-    .WithProjectDependencies()
-    .WithLocalLib("local");
-```
-
-**What happens at startup:**
-1. The integration looks for `cpanfile` in the working directory
-2. Runs `cpanm --installdeps --notest .` (with `--local-lib` if configured)
-3. All dependencies from the cpanfile are installed
-
-**Expected cpanfile location:** `<appDirectory>/cpanfile`
-
-### WithCarton + WithProjectDependencies
-
-[Carton](https://metacpan.org/pod/Carton) is a dependency manager for Perl that provides
-reproducible builds via a lock file (`cpanfile.snapshot`).
-
-```csharp
-builder.AddPerlApi("api", ".", "../scripts/API.pl")
-    .WithCarton()
-    .WithProjectDependencies(cartonDeployment: false)
-    .WithLocalLib("local");
-```
-
-**What happens at startup:**
-1. The integration looks for `cpanfile` and optionally `cpanfile.snapshot` in the working directory
-2. Runs `carton install` (or `carton install --deployment` if `cartonDeployment: true`)
-3. Carton creates `local/` adjacent to the `cpanfile`
-
-**Deployment mode (`cartonDeployment: true`):** Installs exact versions from `cpanfile.snapshot`,
-ensuring production builds match development. Fails if the snapshot is missing or out of date.
-
-**Resulting directory structure (appDirectory = "."):**
-
-```
-my-example/
-├── MyApp.AppHost/                ← working directory (appDirectory = ".")
-│   ├── AppHost.cs
-│   ├── MyApp.AppHost.csproj
-│   ├── cpanfile
-│   ├── cpanfile.snapshot
-│   └── local/
-│       └── lib/
-│           └── perl5/
-│               ├── Mojolicious/
-│               └── ...
-└── scripts/
-    └── API.pl                    ← script path "../scripts/API.pl"
-```
-
-> **Important:** Carton only supports project-level dependency installation. Calling `.WithPackage()`
-> after `.WithCarton()` will throw an `InvalidOperationException`. If you need to install individual
-> modules alongside Carton-managed dependencies, use `.WithCpanMinus()` on a separate resource.
+> `WithLocalLib()` will also currently swap to `cpanm` because it wasn't clear to me at time of release how to integrate it with cpan.
 
 ---
-
-## WithPerlbrewEnvironment
-
-[Perlbrew](https://perlbrew.pl/) manages multiple Perl installations. This method configures the
-resource to use a specific perlbrew-managed Perl version.
-
-```csharp
-builder.AddPerlScript("perlbrew-worker", "../scripts", "Worker.pl")
-    .WithPerlbrewEnvironment("perl-5.42.0");
-```
-
-**What it configures:**
-- Resolves the Perl binary from the perlbrew installation
-- Sets `PERLBREW_ROOT`, `PERLBREW_PERL`, and `PERLBREW_HOME`
-- Prepends the perlbrew `bin/` to `PATH`
-
-**Interaction with WithLocalLib:** If `.WithLocalLib("local")` is chained, modules are installed
-into the local directory, not the perlbrew tree. This keeps the perlbrew installation clean and
-allows per-project isolation. `WithLocalLib` is optional when using perlbrew.
-
-> **Note:** Perlbrew is Linux-only. On Windows, the integration will display a notification
-> recommending [Berrybrew](https://github.com/stevieb9/berrybrew). Windows support for Berrybrew
-> is on the roadmap.
-
----
-
-## Example Layouts
-
-Below you can find a directory structure with hints for how to visualize the project structure from the apphost entries.
-
-### cpan-script-minimal
-
-**Pattern:** cpanm + WithPackage + WithLocalLib, `appDirectory = "../scripts"`
-
-```csharp
-builder.AddPerlScript("cpan-worker", "../scripts", "Worker.pl")
-    .WithPackage("OpenTelemetry::SDK", skipTest: true)
-    .WithLocalLib("local");
-```
-
-```
-cpan-script-minimal/
-├── CpanScriptMinimal.AppHost/
-│   ├── AppHost.cs
-│   └── CpanScriptMinimal.AppHost.csproj
-└── scripts/                        ← working directory
-    ├── Worker.pl
-    └── local/                      ← WithLocalLib("local") resolves here
-        └── lib/perl5/
-            └── OpenTelemetry/...
-```
-
-### cpanm-api-integration
-
-**Pattern:** cpanm + WithPackage + WithLocalLib + HTTP endpoint, `appDirectory = "."`
-
-```csharp
-builder.AddPerlApi("perl-api", ".", "../scripts/API.pl")
-    .WithCpanMinus()
-    .WithPackage("Mojolicious::Lite", force: true, skipTest: true)
-    .WithLocalLib("local")
-    .WithHttpEndpoint(name: "http", env: "PORT");
-```
-
-```
-cpanm-api-integration/
-├── CpanmApiIntegration.AppHost/    ← working directory (appDirectory = ".")
-│   ├── AppHost.cs
-│   ├── CpanmApiIntegration.AppHost.csproj
-│   └── local/                      ← WithLocalLib("local") resolves here
-│       └── lib/perl5/
-│           └── Mojolicious/...
-└── scripts/
-    └── API.pl                      ← script path "../scripts/API.pl"
-```
-
-### carton-api-minimal
-
-**Pattern:** Carton + WithProjectDependencies + WithLocalLib, `appDirectory = "."`
-
-```csharp
-builder.AddPerlApi("carton-api", ".", "../scripts/API.pl")
-    .WithCarton()
-    .WithProjectDependencies(cartonDeployment: false)
-    .WithLocalLib("local");
-```
-
-```
-carton-api-minimal/
-├── CartonApiMinimal.AppHost/       ← working directory (appDirectory = ".")
-│   ├── AppHost.cs
-│   ├── CartonApiMinimal.AppHost.csproj
-│   ├── cpanfile                    ← Carton reads dependencies from here
-│   ├── cpanfile.snapshot           ← lock file for reproducible installs
-│   └── local/                      ← carton install creates this
-│       └── lib/perl5/...
-└── scripts/
-    └── API.pl
-```
-
-### multi-resource
-
-**Pattern:** Multiple Perl resources with different package managers, plus a .NET frontend
-
-```csharp
-// Carton-managed API (appDirectory = ".")
-builder.AddPerlApi("perl-api", ".", "../scripts/API.pl")
-    .WithCarton()
-    .WithProjectDependencies(cartonDeployment: false)
-    .WithLocalLib("local");
-
-// cpanm-managed worker (appDirectory = "../scripts")
-builder.AddPerlScript("perl-worker", "../scripts", "Worker.pl")
-    .WithCpanMinus()
-    .WithPackage("OpenTelemetry::SDK", force: true, skipTest: true)
-    .WithLocalLib("local");
-```
-
-```
-multi-resource/
-├── MultiResource.AppHost/         ← working directory for the APIs
-│   ├── AppHost.cs
-│   ├── cpanfile                   ← shared by Carton-managed resources
-│   ├── cpanfile.snapshot
-│   └── local/                     ← Carton's "local" for the APIs
-│       └── lib/perl5/...
-├── scripts/                       ← working directory for the worker
-│   ├── API.pl
-│   ├── secondLayerApi.pl
-│   ├── Worker.pl
-│   └── local/                     ← cpanm's "local" for the worker
-│       └── lib/perl5/
-│           └── OpenTelemetry/...
-└── MultiResource.Driver/          ← .NET Blazor frontend
-```
-
-> Note how the same `WithLocalLib("local")` call produces *different* absolute paths depending
-> on `appDirectory`:
-> - API resources (`appDirectory = "."`) → `MultiResource.AppHost/local/`
-> - Worker (`appDirectory = "../scripts"`) → `scripts/local/`
-
-> **Linux HTTPS note:** The multi-resource example uses HTTPS for service-to-service calls between
-> Perl API resources. On Windows, `dotnet dev-certs https --trust` adds the Aspire dev certificate
-> to the OS certificate store automatically. On Linux, OpenSSL does **not** trust the dev cert by
-> default, so `Mojo::UserAgent` HTTPS requests between resources will fail with
-> `certificate verify failed`.
->
-> To fix this, export the dev cert and add it to your system CA store:
->
-> ```bash
-> # Export the dev cert as PEM
-> dotnet dev-certs https --export-path /tmp/aspire-dev-cert.crt --format PEM --no-password
->
-> # Ubuntu/Debian
-> sudo cp /tmp/aspire-dev-cert.crt /usr/local/share/ca-certificates/aspire-dev.crt
-> sudo update-ca-certificates
->
-> # Fedora/RHEL
-> sudo cp /tmp/aspire-dev-cert.crt /etc/pki/ca-trust/source/anchors/aspire-dev.crt
-> sudo update-ca-trust
-> ```
->
-> This is a one-time setup per machine. After this, HTTPS between Perl resources works identically
-> to Windows.
-
----
-
-## Common Pitfalls
-
-### WithLocalLib resolves relative to `appDirectory`, not the AppHost
-
-```csharp
-// appDirectory = "../scripts", WithLocalLib("local")
-// ✅ Resolves to: scripts/local/
-// ❌ Does NOT resolve to: MyApp.AppHost/local/
-```
-
-If you expect the `local/` folder next to your `.csproj`, set `appDirectory` to `"."`.
-
-### Choosing to skip WithLocalLib modifies shared Perl installs
-
-It is valid to skip `WithLocalLib` if you intentionally want a shared/global module install.
-That can be useful for common libraries on dev machines.
-
-The tradeoff is that installs target your platform Perl distribution instead of a project-local
-folder. In practice this often means:
-
-- Linux (especially OS-managed Perl): writes to system or user Perl paths and may require elevated permissions
-- Windows: writes into the active Strawberry Perl or ActiveState Perl environment
-
-This can be convenient, but it can also create drift across machines and affect unrelated projects.
-Proceed with caution.
-
-### Mixing WithCarton and WithPackage
-
-Carton manages all dependencies through `cpanfile`. Calling `.WithPackage()` after `.WithCarton()`
-will throw an `InvalidOperationException`:
-
-```csharp
-// ❌ This throws — Carton does not support individual module installation
-builder.AddPerlApi("api", ".", "api.pl")
-    .WithCarton()
-    .WithPackage("Some::Module");
-
-// ✅ Instead, add the module to your cpanfile:
-//    requires 'Some::Module';
-```
-
-### Script path is relative to `appDirectory`
-
-The `scriptName` parameter is resolved relative to `appDirectory`. Don't include the `appDirectory`
-in the script path:
-
-```csharp
-// ❌ Double-nests the path
-builder.AddPerlScript("worker", "../scripts", "../scripts/Worker.pl");
-
-// ✅ Correct — script path is relative to appDirectory
-builder.AddPerlScript("worker", "../scripts", "Worker.pl");
-```
-
-### cpanfile must be in the working directory
-
-`WithProjectDependencies` looks for `cpanfile` in the resource's working directory (`appDirectory`).
-If your cpanfile is in a different location, adjust `appDirectory` accordingly.
-
-### cpanfile example
-
-Use a `cpanfile` to declare project dependencies for `WithProjectDependencies()`.
-
-```perl
-requires 'Mojolicious', '>= 9.0';
-requires 'OpenTelemetry::SDK';
-
-on 'test' => sub {
-    requires 'Test::More', '>= 1.302190';
-};
-```
-
-Further reading:
-- CPAN::cpanfile reference: https://github.com/miyagawa/cpanfile/blob/master/README.md
-
 
 ## Additional Information
 

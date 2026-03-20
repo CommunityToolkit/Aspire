@@ -49,4 +49,22 @@ public class AddPerlScriptTests
 
         Assert.Contains("-s", context.Args);
     }
+
+    [Fact]
+    public void WithPackageAndLocalLib_SwitchesPackageManagerToCpanm()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("cpan-worker", "../scripts", "Worker.pl")
+            .WithPackage("OpenTelemetry::SDK", skipTest: true, force: true)
+            .WithLocalLib("local");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+        var pmAnnotation = Assert.Single(resource.Annotations.OfType<PerlPackageManagerAnnotation>());
+        Assert.Equal(PerlPackageManager.Cpanm, pmAnnotation.PackageManager);
+    }
 }

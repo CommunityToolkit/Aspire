@@ -467,6 +467,12 @@ public static partial class PerlAppResourceBuilderExtensions
     /// </list>
     /// These ensure modules are resolved from and installed into the local directory
     /// without requiring system-level permissions.
+    /// <para>
+    /// If the active package manager is <c>cpan</c> (the default), it is automatically
+    /// switched to <c>cpanm</c> since <c>cpan</c> does not support the <c>--local-lib</c> flag.
+    /// 
+    /// While it is possible to use <c>cpan</c> with Local::Lib it is complicated to model in Aspire.
+    /// </para>
     /// </remarks>
     public static IResourceBuilder<TResource> WithLocalLib<TResource>(
         this IResourceBuilder<TResource> builder,
@@ -474,6 +480,13 @@ public static partial class PerlAppResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(path);
+
+        // cpan does not support --local-lib; auto-switch to cpanm
+        if (builder.Resource.TryGetLastAnnotation<PerlPackageManagerAnnotation>(out var pm) &&
+            pm.PackageManager == PerlPackageManager.Cpan)
+        {
+            builder.WithCpanMinus();
+        }
 
         builder.WithAnnotation(new PerlLocalLibAnnotation(path),
             ResourceAnnotationMutationBehavior.Replace);
