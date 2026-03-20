@@ -79,7 +79,8 @@ public static partial class JavaAppHostingExtension
                               context.Args.Add("-jar");
                               context.Args.Add(resource.JarPath);
                           }
-                      });
+                      })
+                      .PublishAsJavaDockerfile();
 
         return resourceBuilder;
     }
@@ -111,11 +112,13 @@ public static partial class JavaAppHostingExtension
 
         workingDirectory = PathNormalizer.NormalizePathForCurrentPlatform(Path.Combine(builder.AppHostDirectory, workingDirectory));
         var resource = new JavaAppExecutableResource(name, "java", workingDirectory);
+        resource.JarPath = options.ApplicationName;
 
         return builder.AddResource(resource)
                       .WithJavaDefaults(options)
                       .WithHttpEndpoint(port: options.Port, name: JavaAppContainerResource.HttpEndpointName, isProxied: false)
-                      .WithArgs(allArgs);
+                      .WithArgs(allArgs)
+                      .PublishAsJavaDockerfile();
     }
 
     /// <summary>
@@ -172,11 +175,14 @@ public static partial class JavaAppHostingExtension
             ? wrapper.WrapperPath
             : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultMavenWrapper));
 
-        return builder.WithJavaBuildStep(
-            buildResourceName: $"{builder.Resource.Name}-maven-build",
-            createResource: (name, wrapperScript, workingDirectory) => new MavenBuildResource(name, wrapperScript, workingDirectory),
-            wrapperPath: resolvedWrapper,
-            buildArgs: args.Length > 0 ? args : ["clean", "package"]);
+        string[] resolvedBuildArgs = args.Length > 0 ? args : ["clean", "package"];
+
+        return builder.WithPublishBuildAnnotation(JavaBuildTool.Maven, resolvedBuildArgs)
+                      .WithJavaBuildStep(
+                          buildResourceName: $"{builder.Resource.Name}-maven-build",
+                          createResource: (name, wrapperScript, workingDirectory) => new MavenBuildResource(name, wrapperScript, workingDirectory),
+                          wrapperPath: resolvedWrapper,
+                          buildArgs: resolvedBuildArgs);
     }
 
     /// <summary>
@@ -197,11 +203,14 @@ public static partial class JavaAppHostingExtension
             ? wrapper.WrapperPath
             : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultGradleWrapper));
 
-        return builder.WithJavaBuildStep(
-            buildResourceName: $"{builder.Resource.Name}-gradle-build",
-            createResource: (name, wrapperScript, workingDirectory) => new GradleBuildResource(name, wrapperScript, workingDirectory),
-            wrapperPath: resolvedWrapper,
-            buildArgs: args.Length > 0 ? args : ["clean", "build"]);
+        string[] resolvedBuildArgs = args.Length > 0 ? args : ["clean", "build"];
+
+        return builder.WithPublishBuildAnnotation(JavaBuildTool.Gradle, resolvedBuildArgs)
+                      .WithJavaBuildStep(
+                          buildResourceName: $"{builder.Resource.Name}-gradle-build",
+                          createResource: (name, wrapperScript, workingDirectory) => new GradleBuildResource(name, wrapperScript, workingDirectory),
+                          wrapperPath: resolvedWrapper,
+                          buildArgs: resolvedBuildArgs);
     }
 
     private static IResourceBuilder<JavaAppExecutableResource> WithJavaBuildStep<TBuildResource>(
@@ -222,6 +231,20 @@ public static partial class JavaAppHostingExtension
 
             builder.WaitForCompletion(buildBuilder);
         }
+
+        return builder;
+    }
+
+    private static IResourceBuilder<JavaAppExecutableResource> WithPublishBuildAnnotation(
+        this IResourceBuilder<JavaAppExecutableResource> builder,
+        JavaBuildTool tool,
+        string[] buildArgs)
+    {
+        string? wrapperPath = builder.Resource.TryGetLastAnnotation<WrapperAnnotation>(out var wrapper)
+            ? wrapper.WrapperPath
+            : null;
+
+        builder.Resource.Annotations.Add(new JavaPublishBuildAnnotation(tool, wrapperPath, buildArgs));
 
         return builder;
     }
@@ -254,7 +277,8 @@ public static partial class JavaAppHostingExtension
             : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultMavenWrapper));
 
         builder.Resource.Annotations.Add(
-            new JavaBuildToolAnnotation(resolvedWrapper, args is { Length: > 0 } ? [goal, .. args] : [goal]));
+            new JavaBuildToolAnnotation(JavaBuildTool.Maven, resolvedWrapper, args is { Length: > 0 } ? [goal, .. args] : [goal]));
+        builder.WithPublishBuildAnnotation(JavaBuildTool.Maven, ["package"]);
 
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {
@@ -292,7 +316,8 @@ public static partial class JavaAppHostingExtension
             : Path.GetFullPath(Path.Combine(builder.Resource.WorkingDirectory, DefaultGradleWrapper));
 
         builder.Resource.Annotations.Add(
-            new JavaBuildToolAnnotation(resolvedWrapper, args is { Length: > 0 } ? [task, .. args] : [task]));
+            new JavaBuildToolAnnotation(JavaBuildTool.Gradle, resolvedWrapper, args is { Length: > 0 } ? [task, .. args] : [task]));
+        builder.WithPublishBuildAnnotation(JavaBuildTool.Gradle, ["build"]);
 
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)
         {

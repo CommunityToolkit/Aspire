@@ -15,4 +15,8 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Java\CommunityToolkit.Aspire.Hosting.Java.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Docker" />
+  </ItemGroup>
+
 </Project>
