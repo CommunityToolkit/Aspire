@@ -1,9 +1,0 @@
-# Carton-managed dependencies for carton-api-minimal
-requires 'Log::Any';
-requires 'Mojolicious';
-requires 'Mojolicious::Plugin::OpenTelemetry';
-requires 'Log::Any::Adapter::MojoLog';
-requires 'OpenTelemetry::SDK';
-requires 'Sentinel';
-requires 'Object::Pad';
-requires 'Syntax::Keyword::Dynamically';
