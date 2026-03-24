@@ -18,7 +18,50 @@ internal readonly record struct ProcessResult(int ExitCode, string Output, strin
 internal static class ProcessHelper
 {
     /// <summary>
-    /// Runs a process and returns its exit code, stdout, and stderr.
+    /// Runs a process synchronously and returns its exit code, stdout, and stderr.
+    /// </summary>
+    internal static ProcessResult Run(string fileName, string arguments)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var process = new Process { StartInfo = psi };
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
+
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+            {
+                stdout.AppendLine(e.Data);
+            }
+        };
+
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+            {
+                stderr.AppendLine(e.Data);
+            }
+        };
+
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        process.WaitForExit();
+
+        return new ProcessResult(process.ExitCode, stdout.ToString().TrimEnd(), stderr.ToString().TrimEnd());
+    }
+
+    /// <summary>
+    /// Runs a process asynchronously and returns its exit code, stdout, and stderr.
     /// </summary>
     internal static async Task<ProcessResult> RunAsync(
         ILogger logger,

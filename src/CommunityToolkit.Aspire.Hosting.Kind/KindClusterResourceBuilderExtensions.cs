@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.ComponentModel;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Kind;
@@ -27,6 +28,8 @@ public static class KindClusterResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
+
+        EnsureKindCliIsAvailable();
 
         var resource = new KindClusterResource(name);
 
@@ -176,6 +179,28 @@ public static class KindClusterResourceBuilderExtensions
             context.EnvironmentVariables["KUBECONFIG"] = kind.Resource.KubeconfigPath;
             context.EnvironmentVariables["K8S_CLUSTER_NAME"] = kind.Resource.Name;
         });
+    }
+
+    /// <summary>
+    /// Verifies that the Kind CLI is installed and available on PATH.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when the Kind CLI is not found.</exception>
+    private static void EnsureKindCliIsAvailable()
+    {
+        try
+        {
+            var result = ProcessHelper.Run("kind", "version");
+            if (result.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    "Kind CLI not found. Install it from https://kind.sigs.k8s.io/docs/user/quick-start/#installation");
+            }
+        }
+        catch (Win32Exception)
+        {
+            throw new InvalidOperationException(
+                "Kind CLI not found. Install it from https://kind.sigs.k8s.io/docs/user/quick-start/#installation");
+        }
     }
 
     /// <summary>
