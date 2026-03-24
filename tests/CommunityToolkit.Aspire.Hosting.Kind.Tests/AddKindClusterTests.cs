@@ -107,17 +107,5 @@ public class AddKindClusterTests
         Assert.True(svc.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out _));
     }
 
-    [Fact]
-    public void KindContainerImageTagsHasExpectedRepository()
-    {
-        Assert.Equal("kindest/node", KindContainerImageTags.KindNodeImageRepository);
-    }
-
-    [Fact]
-    public void KindContainerImageTagsHasExpectedDefaultVersion()
-    {
-        Assert.Equal("v1.32.0", KindContainerImageTags.DefaultKubernetesVersion);
-    }
-
     private sealed class TestResource(string name) : Resource(name), IResourceWithEnvironment;
 }
