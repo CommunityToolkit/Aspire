@@ -47,7 +47,7 @@ runs:
         cache-dependency-path: |
           ./examples/golang/gin-api/go.sum
 
-    - uses: actions/setup-java@v4
+    - uses: actions/setup-java@v5
       name: Set up Java
       with:
         distribution: "microsoft"
