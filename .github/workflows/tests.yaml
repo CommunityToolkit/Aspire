@@ -39,6 +39,7 @@ jobs:
             Hosting.Java.Tests,
             Hosting.k6.Tests,
             Hosting.Keycloak.Extensions.Tests,
+            Hosting.Kind.Tests,
             Hosting.KurrentDB.Tests,
             Hosting.LavinMQ.Tests,
             Hosting.MailPit.Tests,
