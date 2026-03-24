@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
+using Aspire.Hosting.Lifecycle;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
@@ -127,6 +128,52 @@ public class AddKindClusterTests
 
         var svc = Assert.Single(appModel.Resources.OfType<TestResource>());
         Assert.True(svc.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out _));
+    }
+
+    [Fact]
+    public void DefaultClusterLifetimeIsSession()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddKindCluster("test-cluster");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
+        // No annotation means default Session lifetime
+        Assert.False(resource.TryGetLastAnnotation<ClusterLifetimeAnnotation>(out _));
+    }
+
+    [Fact]
+    public void WithClusterLifetimeSetsAnnotation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddKindCluster("test-cluster")
+            .WithClusterLifetime(ClusterLifetime.Persistent);
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
+        Assert.True(resource.TryGetLastAnnotation<ClusterLifetimeAnnotation>(out var annotation));
+        Assert.Equal(ClusterLifetime.Persistent, annotation.Lifetime);
+    }
+
+    [Fact]
+    public void AddKindClusterRegistersLifecycleHook()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddKindCluster("test-cluster");
+
+        // Verify the eventing subscriber is registered in DI
+        var descriptor = builder.Services.FirstOrDefault(
+            d => d.ServiceType == typeof(IDistributedApplicationEventingSubscriber) &&
+                 d.ImplementationType == typeof(KindClusterLifecycleHook));
+
+        Assert.NotNull(descriptor);
     }
 
     private sealed class TestResource(string name) : Resource(name), IResourceWithEnvironment;

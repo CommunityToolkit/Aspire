@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -28,6 +29,8 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(name);
 
         var resource = new KindClusterResource(name);
+
+        builder.Services.TryAddEventingSubscriber<KindClusterLifecycleHook>();
 
         var healthCheckKey = $"kind_{name}";
         builder.Services.AddHealthChecks()
@@ -74,6 +77,10 @@ public static class KindClusterResourceBuilderExtensions
                 await manager.CreateClusterAsync(ct);
                 await GenerateContainerKubeconfigAsync(resource, ct);
 
+                var lifetime = resource.TryGetLastAnnotation<ClusterLifetimeAnnotation>(out var lifetimeAnnotation)
+                    ? lifetimeAnnotation.Lifetime
+                    : ClusterLifetime.Session;
+
                 await notifications.PublishUpdateAsync(resource,
                     state => state with
                     {
@@ -83,6 +90,7 @@ public static class KindClusterResourceBuilderExtensions
                             new("KubernetesVersion", resource.KubernetesVersion ?? "default"),
                             new("WorkerNodes", resource.WorkerNodes.ToString()),
                             new("KubeConfigPath", resource.KubeconfigPath),
+                            new("Lifetime", lifetime.ToString()),
                         ]
                     });
             }
@@ -129,6 +137,23 @@ public static class KindClusterResourceBuilderExtensions
 
         builder.Resource.WorkerNodes = count;
         return builder;
+    }
+
+    /// <summary>
+    /// Sets the cluster lifetime. When <see cref="ClusterLifetime.Session"/> (the default),
+    /// the cluster is deleted when the AppHost shuts down. When <see cref="ClusterLifetime.Persistent"/>,
+    /// the cluster survives AppHost restarts and is reused on next startup.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="lifetime">The desired cluster lifetime.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{KindClusterResource}"/>.</returns>
+    public static IResourceBuilder<KindClusterResource> WithClusterLifetime(
+        this IResourceBuilder<KindClusterResource> builder,
+        ClusterLifetime lifetime)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithAnnotation(new ClusterLifetimeAnnotation { Lifetime = lifetime }, ResourceAnnotationMutationBehavior.Replace);
     }
 
     /// <summary>
@@ -181,4 +206,5 @@ public static class KindClusterResourceBuilderExtensions
         Directory.CreateDirectory(Path.GetDirectoryName(resource.ContainerKubeconfigPath)!);
         await File.WriteAllTextAsync(resource.ContainerKubeconfigPath, content, ct).ConfigureAwait(false);
     }
+
 }
