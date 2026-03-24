@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire hosting integration for Kind (Kubernetes in Docker) that manages local Kind clusters for development.</Description>
+    <AdditionalPackageTags>hosting kind kubernetes k8s docker</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Kind.Tests" />
+  </ItemGroup>
+
+</Project>
