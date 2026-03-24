@@ -92,6 +92,28 @@ public class AddKindClusterTests
     }
 
     [Fact]
+    public void GeneratedConfigContainsImageFromKindContainerImageTags()
+    {
+        var resource = new KindClusterResource("test-cluster")
+        {
+            KubernetesVersion = KindContainerImageTags.DefaultKubernetesVersion,
+        };
+
+        var configPath = KindConfigGenerator.GenerateConfig(resource);
+
+        try
+        {
+            var yaml = File.ReadAllText(configPath);
+            var expectedImage = $"{KindContainerImageTags.KindNodeImageRepository}:{KindContainerImageTags.DefaultKubernetesVersion}";
+            Assert.Contains(expectedImage, yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
     public void WithReferenceInjectsEnvironmentAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
