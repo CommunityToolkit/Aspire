@@ -11,8 +11,6 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 /// </summary>
 internal static class KindConfigGenerator
 {
-    private const string KindNodeImageRepository = "kindest/node";
-
     /// <summary>
     /// Generates a Kind configuration file and returns its path.
     /// The caller is responsible for deleting the file when no longer needed.
@@ -46,7 +44,7 @@ internal static class KindConfigGenerator
 
         if (!string.IsNullOrEmpty(kubernetesVersion))
         {
-            yaml.AppendLine($"  image: {KindNodeImageRepository}:{kubernetesVersion}");
+            yaml.AppendLine($"  image: {KindContainerImageTags.KindNodeImageRepository}:{kubernetesVersion}");
         }
     }
 }
