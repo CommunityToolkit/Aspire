@@ -117,3 +117,5 @@ public static class LavinMQHostingExtension
         return builder.WithBindMount(source, "/var/lib/lavinmq", isReadOnly);
     }
 }
+
+#pragma warning restore ASPIREATS001

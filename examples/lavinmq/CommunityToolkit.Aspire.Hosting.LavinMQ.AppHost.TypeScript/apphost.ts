@@ -1,12 +1,10 @@
-import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import { createBuilder } from './.modules/aspire.js';
 
-const currentDirectory = dirname(fileURLToPath(import.meta.url));
-const bindMountPath = join(currentDirectory, 'lavinmq-data');
-mkdirSync(bindMountPath, { recursive: true });
+const bindMountPath = mkdtempSync(join(tmpdir(), 'lavinmq-'));
 
 const builder = await createBuilder();
 
@@ -25,7 +23,7 @@ const bindBroker = await builder.addLavinMQ("bind-broker", {
 await bindBroker.withDataBindMount(bindMountPath);
 
 // ---- Property access on LavinMQContainerResource (ExposeProperties = true) ----
-const volumeBrokerResource = await volumeBroker;
+const volumeBrokerResource = volumeBroker;
 const _primaryEndpoint = await volumeBrokerResource.primaryEndpoint.get();
 const _host = await volumeBrokerResource.host.get();
 const _port = await volumeBrokerResource.port.get();

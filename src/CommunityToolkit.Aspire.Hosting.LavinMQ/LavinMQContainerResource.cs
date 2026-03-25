@@ -64,3 +64,5 @@ public class LavinMQContainerResource(string name)
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001
