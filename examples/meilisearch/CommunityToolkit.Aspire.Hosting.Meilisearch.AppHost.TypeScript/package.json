@@ -1,10 +1,12 @@
 {
-  "name": "validationapphost",
+  "name": "communitytoolkit-aspire-hosting-meilisearch-apphost-typescript",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "aspire run",
     "build": "tsc",
+    "start": "aspire start --apphost apphost.ts",
+    "stop": "aspire stop --apphost apphost.ts",
+    "validate": "npm ci && npx tsc --noEmit",
     "dev": "tsc --watch"
   },
   "dependencies": {

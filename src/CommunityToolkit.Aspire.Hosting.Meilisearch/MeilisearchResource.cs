@@ -62,3 +62,5 @@ public class MeilisearchResource : ContainerResource, IResourceWithConnectionStr
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
