@@ -70,10 +70,10 @@ $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
 $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
-$settingsPath = Join-Path $appHostDirectory ".aspire\\settings.json"
+$configPath = Join-Path $appHostDirectory "aspire.config.json"
 $nugetConfigPath = Join-Path $appHostDirectory "nuget.config"
 $localSource = Join-Path ([System.IO.Path]::GetTempPath()) ("ct-polyglot-" + [Guid]::NewGuid().ToString("N"))
-$originalSettings = $null
+$originalConfig = $null
 $appStarted = $false
 $primaryError = $null
 $cleanupFailures = [System.Collections.Generic.List[string]]::new()
@@ -104,7 +104,7 @@ foreach ($commandName in $RequiredCommands) {
 }
 
 try {
-    $originalSettings = Get-Content -Path $settingsPath -Raw
+    $originalConfig = Get-Content -Path $configPath -Raw
     New-Item -ItemType Directory -Path $localSource -Force | Out-Null
 
     Invoke-ExternalCommand "dotnet" @(
@@ -115,9 +115,13 @@ try {
         "-o", $localSource
     )
 
-    $settings = $originalSettings | ConvertFrom-Json
-    $settings.packages.$PackageName = $PackageVersion
-    $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath -NoNewline
+    $config = $originalConfig | ConvertFrom-Json
+    if ($null -eq $config.packages) {
+        $config | Add-Member -NotePropertyName "packages" -NotePropertyValue ([pscustomobject]@{})
+    }
+
+    $config.packages | Add-Member -NotePropertyName $PackageName -NotePropertyValue $PackageVersion -Force
+    $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath -NoNewline
 
     @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -171,9 +175,9 @@ catch {
     $primaryError = $_
 }
 finally {
-    if ($null -ne $originalSettings) {
-        Invoke-CleanupStep -Name "restore Aspire settings" -Failures $cleanupFailures -Action {
-            Set-Content -Path $settingsPath -Value $originalSettings -NoNewline
+    if ($null -ne $originalConfig) {
+        Invoke-CleanupStep -Name "restore Aspire config" -Failures $cleanupFailures -Action {
+            Set-Content -Path $configPath -Value $originalConfig -NoNewline
         }
     }
 
