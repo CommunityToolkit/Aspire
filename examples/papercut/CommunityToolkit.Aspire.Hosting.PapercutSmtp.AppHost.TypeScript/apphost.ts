@@ -12,13 +12,13 @@ const papercut = await builder.addPapercutSmtp("papercut", {
 const papercutDefault = await builder.addPapercutSmtp("papercut-default");
 
 // ---- Property access on PapercutSmtpContainerResource (ExposeProperties = true) ----
-const papercutResource = await papercut;
+const papercutResource = papercut;
 const _papercutHost = await papercutResource.host.get();
 const _papercutPort = await papercutResource.port.get();
 const _papercutUri = await papercutResource.uriExpression.get();
 const _papercutConnectionString = await papercutResource.connectionStringExpression.get();
 
-const papercutDefaultResource = await papercutDefault;
+const papercutDefaultResource = papercutDefault;
 const _papercutDefaultHost = await papercutDefaultResource.host.get();
 const _papercutDefaultPort = await papercutDefaultResource.port.get();
 const _papercutDefaultUri = await papercutDefaultResource.uriExpression.get();

@@ -1,4 +1,4 @@
-﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -13,7 +13,9 @@ public class PapercutSmtpContainerResource(string name) : ContainerResource(name
     internal const int SmtpEndpointPort = 2525;
     internal const string HttpEndpointName = "http";
     internal const string SmtpEndpointName = "smtp";
+
     private EndpointReference? _smtpEndpoint;
+
     private EndpointReference SmtpEndpoint => _smtpEndpoint ??= new EndpointReference(this, SmtpEndpointName);
 
     /// <summary>
@@ -47,3 +49,5 @@ public class PapercutSmtpContainerResource(string name) : ContainerResource(name
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

@@ -5,10 +5,9 @@
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
     "strict": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "."
+    "skipLibCheck": true
   },
   "include": ["apphost.ts", ".modules/**/*.ts", ".modules/**/*.d.ts"],
   "exclude": ["node_modules"]

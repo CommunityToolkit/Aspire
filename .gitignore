@@ -19,3 +19,6 @@ nuget
 target
 
 node_modules
+**/.modules/
+**/aspire.config.json
+**/*.AppHost.TypeScript/nuget.config
