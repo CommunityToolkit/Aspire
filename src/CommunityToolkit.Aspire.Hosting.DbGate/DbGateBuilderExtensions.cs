@@ -116,3 +116,5 @@ public static class DbGateBuilderExtensions
         return resourceName.Replace('-', '_');
     }
 }
+
+#pragma warning restore ASPIREATS001

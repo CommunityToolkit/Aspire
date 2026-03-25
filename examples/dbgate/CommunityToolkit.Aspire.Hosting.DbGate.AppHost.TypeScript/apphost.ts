@@ -1,12 +1,10 @@
-import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import { createBuilder } from './.modules/aspire.js';
 
-const currentDirectory = dirname(fileURLToPath(import.meta.url));
-const bindMountPath = join(currentDirectory, 'dbgate-data');
-mkdirSync(bindMountPath, { recursive: true });
+const bindMountPath = mkdtempSync(join(tmpdir(), 'dbgate-'));
 
 const builder = await createBuilder();
 
@@ -19,8 +17,8 @@ await dbgate.withHostPort({ port: 3310 });
 // withDataBindMount — bind mount the data directory
 await dbgate.withDataBindMount(bindMountPath, { isReadOnly: false });
 
-// withDataVolume — keep compile-time coverage without overlapping runtime mounts
-if (process.env.ASPIRE_RUNTIME_SMOKE !== '1') {
+// Keep this compile-only: runtime bind+volume mounts would overlap on the same target path.
+if (process.env.ASPIRE_COMPILE_ONLY === '1') {
     await dbgate.withDataVolume({ name: "dbgate-data" });
 }
 
