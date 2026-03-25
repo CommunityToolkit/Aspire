@@ -70,3 +70,5 @@ public class FlagdResource(string name) : ContainerResource(name), IResourceWith
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001

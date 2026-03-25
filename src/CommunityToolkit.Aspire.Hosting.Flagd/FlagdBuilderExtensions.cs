@@ -77,7 +77,7 @@ public static class FlagdBuilderExtensions
     /// Configures flagd to use a bind mount as the source of flags.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="fileSource">The path to the flag configuration file on the host.</param>
+    /// <param name="fileSource">The path to the host directory that contains the flag configuration file.</param>
     /// <param name="filename">The name of the flag configuration file. Defaults to "flagd.json".</param>
     /// <returns>The <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
     [AspireExport("withBindFileSync", Description = "Configures flagd to use a bind-mounted flag configuration file")]
@@ -94,3 +94,5 @@ public static class FlagdBuilderExtensions
             .WithArgs("--uri", $"file:./flags/{filename}");
     }
 }
+
+#pragma warning restore ASPIREATS001
