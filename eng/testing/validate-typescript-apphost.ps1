@@ -69,10 +69,10 @@ $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
 $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
-$settingsPath = Join-Path $appHostDirectory ".aspire\\settings.json"
+$configPath = Join-Path $appHostDirectory "aspire.config.json"
 $nugetConfigPath = Join-Path $appHostDirectory "nuget.config"
 $localSource = Join-Path ([System.IO.Path]::GetTempPath()) ("ct-polyglot-" + [Guid]::NewGuid().ToString("N"))
-$originalSettings = $null
+$originalConfig = $null
 $appStarted = $false
 $primaryFailure = $null
 $cleanupFailures = [System.Collections.Generic.List[string]]::new()
@@ -103,7 +103,7 @@ foreach ($commandName in $RequiredCommands) {
 }
 
 try {
-    $originalSettings = Get-Content -Path $settingsPath -Raw
+    $originalConfig = Get-Content -Path $configPath -Raw
     New-Item -ItemType Directory -Path $localSource -Force | Out-Null
 
     Invoke-ExternalCommand "dotnet" @(
@@ -114,9 +114,13 @@ try {
         "-o", $localSource
     )
 
-    $settings = $originalSettings | ConvertFrom-Json
-    $settings.packages.$PackageName = $PackageVersion
-    $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath -NoNewline
+    $config = $originalConfig | ConvertFrom-Json
+    if ($null -eq $config.packages) {
+        $config | Add-Member -MemberType NoteProperty -Name "packages" -Value ([pscustomobject]@{})
+    }
+
+    $config.packages | Add-Member -MemberType NoteProperty -Name $PackageName -Value $PackageVersion -Force
+    $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath -NoNewline
 
     @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -170,9 +174,9 @@ catch {
     $primaryFailure = $_
 }
 finally {
-    Invoke-CleanupStep -Description "Restore original apphost settings" -Action {
-        if ($null -ne $originalSettings) {
-            Set-Content -Path $settingsPath -Value $originalSettings -NoNewline
+    Invoke-CleanupStep -Description "Restore original apphost config" -Action {
+        if ($null -ne $originalConfig) {
+            Set-Content -Path $configPath -Value $originalConfig -NoNewline
         }
     } -Failures $cleanupFailures
 

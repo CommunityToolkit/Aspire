@@ -1,7 +1,0 @@
-{
-  "appHostPath": "../apphost.ts",
-  "language": "typescript/nodejs",
-  "packages": {
-    "CommunityToolkit.Aspire.Hosting.Flagd": "13.2.1-polyglot.local"
-  }
-}
