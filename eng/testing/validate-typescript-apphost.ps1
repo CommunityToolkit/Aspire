@@ -84,10 +84,10 @@ $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
 $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
-$settingsPath = Join-Path $appHostDirectory ".aspire\\settings.json"
+$configPath = Join-Path $appHostDirectory "aspire.config.json"
 $nugetConfigPath = Join-Path $appHostDirectory "nuget.config"
 $localSource = Join-Path ([System.IO.Path]::GetTempPath()) ("ct-polyglot-" + [Guid]::NewGuid().ToString("N"))
-$originalSettings = $null
+$originalConfig = $null
 $appStarted = $false
 $cleanupFailures = [System.Collections.Generic.List[object]]::new()
 
@@ -118,7 +118,7 @@ foreach ($commandName in $RequiredCommands) {
 
 try {
     try {
-        $originalSettings = Get-Content -Path $settingsPath -Raw
+        $originalConfig = Get-Content -Path $configPath -Raw
         New-Item -ItemType Directory -Path $localSource -Force | Out-Null
 
         Invoke-ExternalCommand "dotnet" @(
@@ -129,9 +129,9 @@ try {
             "-o", $localSource
         )
 
-        $settings = $originalSettings | ConvertFrom-Json
-        $settings.packages.$PackageName = $PackageVersion
-        $settings | ConvertTo-Json -Depth 10 | Set-Content -Path $settingsPath -NoNewline
+        $config = $originalConfig | ConvertFrom-Json
+        $config.packages.$PackageName = $PackageVersion
+        $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath -NoNewline
 
         @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -184,9 +184,9 @@ try {
         )
     }
     finally {
-        Invoke-CleanupStep -Step "Restore Aspire settings" -Action {
-            if ($null -ne $originalSettings) {
-                Set-Content -Path $settingsPath -Value $originalSettings -NoNewline
+        Invoke-CleanupStep -Step "Restore Aspire config" -Action {
+            if ($null -ne $originalConfig) {
+                Set-Content -Path $configPath -Value $originalConfig -NoNewline
             }
         } -Failures $cleanupFailures
 
