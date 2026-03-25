@@ -5,7 +5,6 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
@@ -75,6 +74,7 @@ public static class ActiveMQBuilderExtensions
         string scheme = "tcp",
         int? webPort = null)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         ArgumentNullException.ThrowIfNull(scheme, nameof(scheme));
 
@@ -223,3 +223,5 @@ public static class ActiveMQBuilderExtensions
         return builder;
     }
 }
+
+#pragma warning restore ASPIREATS001

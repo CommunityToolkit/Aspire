@@ -85,3 +85,5 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);
 }
+
+#pragma warning restore ASPIREATS001
