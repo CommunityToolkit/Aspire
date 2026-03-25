@@ -1,4 +1,10 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { createBuilder } from './.modules/aspire.js';
+
+const bindMountPath = mkdtempSync(join(tmpdir(), 'mailpit-'));
 
 const builder = await createBuilder();
 
@@ -14,8 +20,8 @@ const mailpitDefault = await builder.addMailPit("mailpit-default");
 // withDataVolume — add a named volume for MailPit persistence
 await mailpit.withDataVolume("mailpit-data");
 
-// withDataBindMount — bind mount a relative host directory
-await mailpitDefault.withDataBindMount("./mailpit-data");
+// withDataBindMount — bind mount a temporary host directory
+await mailpitDefault.withDataBindMount(bindMountPath);
 
 // ---- Property access on MailPitContainerResource (ExposeProperties = true) ----
 const mailpitResource = await mailpit;

@@ -53,3 +53,5 @@ public class MailPitContainerResource(string name) : ContainerResource(name), IR
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001

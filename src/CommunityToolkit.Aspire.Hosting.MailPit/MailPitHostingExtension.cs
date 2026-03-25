@@ -24,6 +24,7 @@ public static class MailPitHostingExtension
         int? httpPort = null,
         int? smtpPort = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
         MailPitContainerResource resource = new(name);
 
@@ -91,3 +92,5 @@ public static class MailPitHostingExtension
         }).WithBindMount(source, "/data", isReadOnly);
     }
 }
+
+#pragma warning restore ASPIREATS001
