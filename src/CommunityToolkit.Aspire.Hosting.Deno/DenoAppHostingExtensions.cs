@@ -128,3 +128,5 @@ public static class DenoAppHostingExtensions
     builder.WithOtlpExporter()
         .WithEnvironment("DENO_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production");
 }
+
+#pragma warning restore ASPIREATS001
