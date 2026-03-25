@@ -24,3 +24,5 @@ public static class FlywayResourceBuilderExtensions
         }
     }
 }
+
+#pragma warning restore ASPIREATS001

@@ -53,3 +53,5 @@ public static class DistributedApplicationBuilderExtensions
         }
     }
 }
+
+#pragma warning restore ASPIREATS001
