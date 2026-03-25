@@ -36,6 +36,31 @@ function Invoke-ExternalCommand {
     }
 }
 
+function Invoke-CleanupStep {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Description,
+
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$Action,
+
+        [System.Collections.Generic.List[string]]$Failures
+    )
+
+    try {
+        & $Action
+    }
+    catch {
+        $message = "Cleanup step '$Description' failed: $($_.Exception.Message)"
+        if ($null -ne $Failures) {
+            $Failures.Add($message)
+            return
+        }
+
+        throw $message
+    }
+}
+
 $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
 $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
@@ -45,6 +70,8 @@ $nugetConfigPath = Join-Path $appHostDirectory "nuget.config"
 $localSource = Join-Path ([System.IO.Path]::GetTempPath()) ("ct-polyglot-" + [Guid]::NewGuid().ToString("N"))
 $originalSettings = $null
 $appStarted = $false
+$cleanupFailures = [System.Collections.Generic.List[string]]::new()
+$primaryError = $null
 
 if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
     $versionPrefix = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getProperty:VersionPrefix).Trim()
@@ -123,23 +150,48 @@ try {
         "--format", "Json"
     )
 }
+catch {
+    $primaryError = $_
+}
 finally {
     if ($null -ne $originalSettings) {
-        Set-Content -Path $settingsPath -Value $originalSettings -NoNewline
+        Invoke-CleanupStep -Description "Restore .aspire\\settings.json" -Failures $cleanupFailures -Action {
+            Set-Content -Path $settingsPath -Value $originalSettings -NoNewline
+        }
     }
 
-    if (Test-Path $nugetConfigPath) {
-        Remove-Item $nugetConfigPath -Force
+    Invoke-CleanupStep -Description "Remove generated nuget.config" -Failures $cleanupFailures -Action {
+        if (Test-Path $nugetConfigPath) {
+            Remove-Item $nugetConfigPath -Force
+        }
     }
 
-    if (Test-Path $localSource) {
-        Remove-Item $localSource -Recurse -Force
+    Invoke-CleanupStep -Description "Remove local package source" -Failures $cleanupFailures -Action {
+        if (Test-Path $localSource) {
+            Remove-Item $localSource -Recurse -Force
+        }
     }
 
     if ($appStarted) {
-        Invoke-ExternalCommand "aspire" @(
-            "stop",
-            "--apphost", $resolvedAppHostPath
-        )
+        Invoke-CleanupStep -Description "Stop Aspire app" -Failures $cleanupFailures -Action {
+            Invoke-ExternalCommand "aspire" @(
+                "stop",
+                "--apphost", $resolvedAppHostPath
+            )
+        }
     }
+}
+
+if ($cleanupFailures.Count -gt 0) {
+    $cleanupFailureMessage = "Cleanup encountered the following issues:`n - " + ($cleanupFailures -join "`n - ")
+    if ($null -ne $primaryError) {
+        Write-Warning $cleanupFailureMessage
+    }
+    else {
+        throw $cleanupFailureMessage
+    }
+}
+
+if ($null -ne $primaryError) {
+    throw $primaryError
 }

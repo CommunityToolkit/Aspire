@@ -51,6 +51,7 @@ public static class ProcessTestUtilities
         process.BeginErrorReadLine();
 
         await process.WaitForExitAsync(cancellationToken);
+        process.WaitForExit();
 
         if (process.ExitCode != 0)
         {
