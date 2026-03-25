@@ -49,8 +49,21 @@ public static class BunAppExtensions
     /// <param name="resource">The Bun app resource.</param>
     /// <param name="configureInstaller">Configure the Bun installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withBunPackageInstallation", Description = "Installs Bun packages before the app starts")]
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithBunPackageInstallation(IResourceBuilder{BunAppResource})"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "Action<IResourceBuilder<BunInstallerResource>> is not ATS-compatible. Use the overload without configureInstaller instead.")]
     public static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource, Action<IResourceBuilder<BunInstallerResource>>? configureInstaller = null)
+        => WithBunPackageInstallationCore(resource, configureInstaller);
+
+    /// <summary>
+    /// Ensures the Bun packages are installed before the application starts using Bun as the package manager.
+    /// </summary>
+    [AspireExport("withBunPackageInstallation", Description = "Installs Bun packages before the app starts")]
+    internal static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource)
+        => WithBunPackageInstallationCore(resource, configureInstaller: null);
+
+    private static IResourceBuilder<BunAppResource> WithBunPackageInstallationCore(
+        this IResourceBuilder<BunAppResource> resource,
+        Action<IResourceBuilder<BunInstallerResource>>? configureInstaller)
     {
         // Only install packages during development, not in publish mode
         if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
@@ -84,3 +97,5 @@ public static class BunAppExtensions
             .WithEnvironment("NODE_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production")
             .WithOtlpExporter();
 }
+
+#pragma warning restore ASPIREATS001

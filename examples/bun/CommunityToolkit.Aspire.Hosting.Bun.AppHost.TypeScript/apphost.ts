@@ -11,13 +11,7 @@ const bunApp = await builder.addBunApp("bun-app", {
 
 // withBunPackageInstallation — default invocation
 await bunApp.withBunPackageInstallation();
-
-// withBunPackageInstallation — configure the generated installer resource
-await bunApp.withBunPackageInstallation({
-    configureInstaller: async (installer) => {
-        await installer.withEnvironment("BUN_INSTALL_CACHE_DIR", "./.bun-cache");
-    }
-});
+await bunApp.withBunPackageInstallation();
 
 // addBunApp — exercise default entry point and watch values
 const bunDefaults = await builder.addBunApp("bun-defaults", {
