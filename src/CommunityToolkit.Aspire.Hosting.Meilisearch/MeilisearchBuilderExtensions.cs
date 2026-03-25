@@ -181,3 +181,5 @@ public static class MeilisearchBuilderExtensions
         return new MeilisearchClient(endpoint!.ToString(), apiKey: masterKey!);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
