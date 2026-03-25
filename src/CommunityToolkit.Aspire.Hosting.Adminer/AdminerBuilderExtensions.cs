@@ -83,3 +83,5 @@ public static class AdminerBuilderExtensions
         }
     }
 }
+
+#pragma warning restore ASPIREATS001
