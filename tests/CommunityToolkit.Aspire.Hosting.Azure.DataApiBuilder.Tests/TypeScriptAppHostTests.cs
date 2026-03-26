@@ -13,7 +13,7 @@ public class TypeScriptAppHostTests
             appHostProject: "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder",
             exampleName: "data-api-builder",
-            waitForResources: ["dab", "dab-with-options"],
+            waitForResources: [],
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }

@@ -145,30 +145,36 @@ try {
         Pop-Location
     }
 
-    Invoke-ExternalCommand "aspire" @(
-        "start",
-        "--apphost", $resolvedAppHostPath,
-        "--isolated",
-        "--format", "Json",
-        "--non-interactive"
-    )
-    $appStarted = $true
-
-    foreach ($resource in $WaitForResources) {
+    Push-Location $appHostDirectory
+    try {
         Invoke-ExternalCommand "aspire" @(
-            "wait",
-            $resource,
-            "--status", $WaitStatus,
+            "start",
             "--apphost", $resolvedAppHostPath,
-            "--timeout", $WaitTimeoutSeconds
+            "--isolated",
+            "--format", "Json",
+            "--non-interactive"
+        )
+        $appStarted = $true
+
+        foreach ($resource in $WaitForResources) {
+            Invoke-ExternalCommand "aspire" @(
+                "wait",
+                $resource,
+                "--status", $WaitStatus,
+                "--apphost", $resolvedAppHostPath,
+                "--timeout", $WaitTimeoutSeconds
+            )
+        }
+
+        Invoke-ExternalCommand "aspire" @(
+            "describe",
+            "--apphost", $resolvedAppHostPath,
+            "--format", "Json"
         )
     }
-
-    Invoke-ExternalCommand "aspire" @(
-        "describe",
-        "--apphost", $resolvedAppHostPath,
-        "--format", "Json"
-    )
+    finally {
+        Pop-Location
+    }
 }
 catch {
     $primaryError = $_
@@ -194,10 +200,16 @@ finally {
 
     Invoke-CleanupStep -Description "stop Aspire app" -Action {
         if ($appStarted) {
-            Invoke-ExternalCommand "aspire" @(
-                "stop",
-                "--apphost", $resolvedAppHostPath
-            )
+            Push-Location $appHostDirectory
+            try {
+                Invoke-ExternalCommand "aspire" @(
+                    "stop",
+                    "--apphost", $resolvedAppHostPath
+                )
+            }
+            finally {
+                Pop-Location
+            }
         }
     } -Failures $cleanupFailures
 }
