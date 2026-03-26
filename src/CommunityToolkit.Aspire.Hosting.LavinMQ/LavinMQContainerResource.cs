@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -5,6 +7,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// and connection endpoint details, implementing the IResourceWithConnectionString interface.
 /// </summary>
 /// <param name="name">The name of the LavinMQ resource instance.</param>
+[AspireExport(ExposeProperties = true)]
 public class LavinMQContainerResource(string name)
     : ContainerResource(name), IResourceWithConnectionString
 {
@@ -18,7 +21,11 @@ public class LavinMQContainerResource(string name)
     internal const int DefaultManagementPort = 15672;
 
     private EndpointReference? _primaryEndpoint;
-    private EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, PrimaryEndpointName);
+
+    /// <summary>
+    /// Gets the primary AMQP endpoint for the LavinMQ resource.
+    /// </summary>
+    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, PrimaryEndpointName);
 
     /// <summary>
     /// Gets the host endpoint reference for this resource.
@@ -57,3 +64,5 @@ public class LavinMQContainerResource(string name)
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001
