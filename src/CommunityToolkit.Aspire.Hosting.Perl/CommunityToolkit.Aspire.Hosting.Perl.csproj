@@ -3,7 +3,6 @@
   <PropertyGroup>
     <AdditionalPackageTags>aspire integration hosting perl</AdditionalPackageTags>
     <Description>An aspire integration with support for Perl.</Description>
-    <Authors>Omnideth</Authors>
   </PropertyGroup>
 
   <ItemGroup>
