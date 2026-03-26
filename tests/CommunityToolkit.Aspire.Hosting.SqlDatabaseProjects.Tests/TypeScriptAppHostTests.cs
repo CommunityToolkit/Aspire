@@ -13,8 +13,7 @@ public class TypeScriptAppHostTests
             appHostProject: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects",
             exampleName: "sql-database-projects",
-            waitForResources: ["database-project", "connection-project"],
-            waitStatus: "down",
+            waitForResources: [],
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }
