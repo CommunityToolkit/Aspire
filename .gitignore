@@ -19,3 +19,6 @@ nuget
 target
 
 node_modules
+**/.modules/
+**/*.AppHost.TypeScript/nuget.config
+
