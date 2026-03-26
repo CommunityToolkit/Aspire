@@ -4,9 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { createBuilder, KeyType } from './.modules/aspire.js';
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
-const usersFile = join(currentDirectory, 'users.conf');
-const hostKeyFile = join(currentDirectory, 'ssh_host_ed25519_key');
-const userKeyFile = join(currentDirectory, 'id_ed25519.pub');
+const appHostFixtureDirectory = join(currentDirectory, '..', 'CommunityToolkit.Aspire.Hosting.Sftp.AppHost');
+const usersFile = join(appHostFixtureDirectory, 'etc', 'sftp', 'users.conf');
+const hostKeyFile = join(appHostFixtureDirectory, 'etc', 'ssh', 'ssh_host_ed25519_key');
+const userKeyFile = join(appHostFixtureDirectory, 'home', 'foo', '.ssh', 'keys', 'id_ed25519.pub');
 
 const builder = await createBuilder();
 
@@ -32,14 +33,14 @@ if (process.env.ASPIRE_RUNTIME_SMOKE !== '1') {
     const sftpResource = await sftp;
     const _host = await sftpResource.host.get();
     const _port = await sftpResource.port.get();
-    const _uri = await sftpResource.uriExpression.get();
-    const _connectionString = await sftpResource.connectionStringExpression.get();
+    const _uri = sftpResource.uriExpression;
+    const _connectionString = sftpResource.connectionStringExpression;
 
     const sftpDefaultsResource = await sftpDefaults;
     const _defaultHost = await sftpDefaultsResource.host.get();
     const _defaultPort = await sftpDefaultsResource.port.get();
-    const _defaultUri = await sftpDefaultsResource.uriExpression.get();
-    const _defaultConnectionString = await sftpDefaultsResource.connectionStringExpression.get();
+    const _defaultUri = sftpDefaultsResource.uriExpression;
+    const _defaultConnectionString = sftpDefaultsResource.connectionStringExpression;
 }
 
 await builder.build().run();
