@@ -8,7 +8,8 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The name of the resource.</param>
 /// <param name="rootUser">A parameter that contains the MinIO server root username.</param>
 /// <param name="passwordParameter">A parameter that contains the MinIO server root password.</param>
-[Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]`r`n[AspireExport(ExposeProperties = true)]
+[Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
+[AspireExport(ExposeProperties = true)]
 public sealed class MinioContainerResource(string name, ParameterResource rootUser, ParameterResource passwordParameter) : ContainerResource(name),
     IResourceWithConnectionString
 {
