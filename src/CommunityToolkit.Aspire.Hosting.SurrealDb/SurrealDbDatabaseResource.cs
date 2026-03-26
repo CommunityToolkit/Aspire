@@ -6,6 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents a SurrealDB database that is a child of a SurrealDB namespace resource.
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class SurrealDbDatabaseResource : Resource, IResourceWithParent<SurrealDbNamespaceResource>, IResourceWithConnectionString
 {
     /// <summary>
