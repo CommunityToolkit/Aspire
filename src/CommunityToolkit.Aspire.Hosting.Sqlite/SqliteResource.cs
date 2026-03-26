@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -6,6 +8,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The name of the resource.</param>
 /// <param name="databasePath">The path to the database directory.</param>
 /// <param name="databaseFileName">The filename of the database file. Must include extension.</param>
+[AspireExport(ExposeProperties = true)]
 public class SqliteResource(string name, string databasePath, string databaseFileName) : Resource(name), IResourceWithConnectionString
 {
     internal string DatabasePath { get; set; } = databasePath;
@@ -22,4 +25,3 @@ public class SqliteResource(string name, string databasePath, string databaseFil
         yield return new("DataSource", ReferenceExpression.Create($"{DatabaseFilePath}"));
     }
 }
-
