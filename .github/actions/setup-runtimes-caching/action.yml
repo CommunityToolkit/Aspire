@@ -68,6 +68,11 @@ runs:
       with:
         bun-version: latest
 
+    - name: Install cpanminus
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo apt-get install -y cpanminus
+
     - uses: actions/cache@v4
       name: Cache NuGet packages
       with:
