@@ -1,5 +1,7 @@
 using Aspire.Hosting.ApplicationModel;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -7,6 +9,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="coreName">The name of the Solr core.</param>
+[AspireExport(ExposeProperties = true)]
 public class SolrResource(string name, string coreName) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
@@ -36,7 +39,7 @@ public class SolrResource(string name, string coreName) : ContainerResource(name
     /// <summary>
     /// Gets the connection string expression for the Solr server.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression =>  ReferenceExpression.Create(
+    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create(
             $"http://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}/solr/{CoreName}");
 
     /// <summary>
