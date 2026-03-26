@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -15,12 +17,12 @@ public static class DataApiBuilderHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>"
+    /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>
     /// <remarks>
-    /// At this time, this Aspire DAB integration only supports HTTPS ports. 
-    /// You can <see href="https://learn.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-8.0#running-pre-built-container-images-with-https">deploy DAB with HTTPS and custom certs</see> in production.
+    /// This overload is not available in polyglot app hosts. Use <see cref="AddDataAPIBuilder(IDistributedApplicationBuilder, string, string[], int?)"/> instead.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "Polyglot app hosts use the overload that makes both configFilePaths and httpPort optional.")]
     public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         params string[] configFilePaths)
@@ -33,13 +35,13 @@ public static class DataApiBuilderHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="httpPort">The HTTP port number for the Data API Builder container.</param>"
-    /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>"
+    /// <param name="httpPort">The HTTP port number for the Data API Builder container.</param>
+    /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>
     /// <remarks>
-    /// At this time, this Aspire DAB integration only supports HTTPS ports. 
-    /// You can <see href="https://learn.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-8.0#running-pre-built-container-images-with-https">deploy DAB with HTTPS and custom certs</see> in production.
+    /// This overload is not available in polyglot app hosts. Use <see cref="AddDataAPIBuilder(IDistributedApplicationBuilder, string, string[], int?)"/> instead.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "Polyglot app hosts use the overload that makes both configFilePaths and httpPort optional to avoid optional parameter ordering issues.")]
     public static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? httpPort = null,
@@ -75,6 +77,22 @@ public static class DataApiBuilderHostingExtension
 
         return rb;
     }
+
+    /// <summary>
+    /// Adds a DataAPIBuilder application to the application model. Executes the pre-built containerized DataAPIBuilder engine.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource.</param>
+    /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>
+    /// <param name="httpPort">The HTTP port number for the Data API Builder container.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addDataAPIBuilder", Description = "Adds a Data API Builder container resource")]
+    internal static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        string[]? configFilePaths = null,
+        int? httpPort = null) =>
+        builder.AddDataAPIBuilder(name, httpPort, configFilePaths ?? []);
 
     private static IResourceBuilder<DataApiBuilderContainerResource> WithDataApiBuilderDefaults(
         this IResourceBuilder<DataApiBuilderContainerResource> builder) =>
