@@ -33,6 +33,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="AddSqlProject(IDistributedApplicationBuilder, string)"/> and then call <c>WithDacpac</c> instead.</remarks>
+    [AspireExportIgnore(Reason = "Polyglot app hosts cannot supply IProjectMetadata types.")]
     public static IResourceBuilder<SqlProjectResource> AddSqlProject<TProject>(this IDistributedApplicationBuilder builder, [ResourceName] string name)
         where TProject : IProjectMetadata, new()
     {
@@ -51,6 +53,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport("addSqlProject", Description = "Adds a SQL Server database project resource.")]
     public static IResourceBuilder<SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -66,6 +69,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>Am <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This method is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Polyglot app hosts cannot supply IPackageMetadata types.")]
     public static IResourceBuilder<SqlPackageResource<TPackage>> AddSqlPackage<TPackage>(this IDistributedApplicationBuilder builder, [ResourceName] string name)
         where TPackage : IPackageMetadata, new()
     {
@@ -104,6 +109,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="dacpacPath">Path to the .dacpac file.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport("withDacpac", Description = "Sets the path to the .dacpac file to deploy.")]
     public static IResourceBuilder<SqlProjectResource> WithDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath)
         => InternalWithDacpac(builder, dacpacPath);
 
@@ -113,6 +119,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="dacpacPath">Path to the .dacpac file.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
     public static IResourceBuilder<SqlPackageResource<TPackage>> WithDacpac<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder, string dacpacPath)
         where TPackage : IPackageMetadata => InternalWithDacpac(builder, dacpacPath);
 
@@ -128,6 +136,7 @@ public static class SqlProjectBuilderExtensions
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport("withSkipWhenDeployed", Description = "Skips deployment when the target database already matches the dacpac.")]
     public static IResourceBuilder<SqlProjectResource> WithSkipWhenDeployed(this IResourceBuilder<SqlProjectResource> builder)
         => InternalWithSkipWhenDeployed(builder);
 
@@ -136,6 +145,8 @@ public static class SqlProjectBuilderExtensions
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
     public static IResourceBuilder<SqlPackageResource<TPackage>> WithSkipWhenDeployed<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder)
         where TPackage : IPackageMetadata => InternalWithSkipWhenDeployed(builder);
 
@@ -152,6 +163,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="configureDeploymentOptions">The delegate for configuring dacpac deployment options</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This method is not available in polyglot app hosts. Use <see cref="WithDacDeployOptions(IResourceBuilder{SqlProjectResource}, string)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "Action<DacDeployOptions> is not ATS-compatible. Use the publish profile path overload instead.")]
     public static IResourceBuilder<SqlProjectResource> WithConfigureDacDeployOptions(this IResourceBuilder<SqlProjectResource> builder, Action<DacDeployOptions> configureDeploymentOptions)
         => InternalWithConfigureDacDeployOptions(builder, configureDeploymentOptions);
 
@@ -161,6 +174,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="configureDeploymentOptions">The delegate for configuring dacpac deployment options</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This method is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Action<DacDeployOptions> is not ATS-compatible, and polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
     public static IResourceBuilder<SqlPackageResource<TPackage>> WithConfigureDacDeployOptions<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder, Action<DacDeployOptions> configureDeploymentOptions)
         where TPackage : IPackageMetadata => InternalWithConfigureDacDeployOptions(builder, configureDeploymentOptions);
 
@@ -180,6 +195,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="optionsPath">Path to the publish profile xml file</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport("withDacDeployOptions", Description = "Sets the publish profile path used for DAC deployment options.")]
     public static IResourceBuilder<SqlProjectResource> WithDacDeployOptions(this IResourceBuilder<SqlProjectResource> builder, string optionsPath)
         => InternalWithDacDeployOptions(builder, optionsPath);
 
@@ -189,6 +205,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="optionsPath">Path to the publish profile xml file</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
     public static IResourceBuilder<SqlPackageResource<TPackage>> WithDacDeployOptions<TPackage>(this IResourceBuilder<SqlPackageResource<TPackage>> builder, string optionsPath)
         where TPackage : IPackageMetadata => InternalWithDacDeployOptions(builder, optionsPath);
 
@@ -208,6 +226,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="SqlServerDatabaseResource"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport("withSqlServerDatabaseReference", MethodName = "withReference", Description = "Publishes the SQL Server database project to a SQL Server database resource.")]
     public static IResourceBuilder<SqlProjectResource> WithReference(
         this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<SqlServerDatabaseResource> target) => InternalWithReference(builder, target, target.Resource.DatabaseName);
 
@@ -217,6 +236,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="IResourceWithConnectionString"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    [AspireExport("withConnectionStringReference", MethodName = "withConnectionReference", Description = "Publishes the SQL Server database project to a connection string resource.")]
     public static IResourceBuilder<SqlProjectResource> WithReference(
         this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<IResourceWithConnectionString> target) => InternalWithReference(builder, target);
 
@@ -226,6 +246,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="SqlServerDatabaseResource"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
     public static IResourceBuilder<SqlPackageResource<TPackage>> WithReference<TPackage>(
         this IResourceBuilder<SqlPackageResource<TPackage>> builder, IResourceBuilder<SqlServerDatabaseResource> target)
         where TPackage : IPackageMetadata
@@ -239,6 +261,8 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="IResourceWithConnectionString"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
     public static IResourceBuilder<SqlPackageResource<TPackage>> WithReference<TPackage>(
         this IResourceBuilder<SqlPackageResource<TPackage>> builder, IResourceBuilder<IResourceWithConnectionString> target)
         where TPackage : IPackageMetadata

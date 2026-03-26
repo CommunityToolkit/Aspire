@@ -1,0 +1,8 @@
+{
+  "appHostPath": "../apphost.ts",
+  "language": "typescript/nodejs",
+  "packages": {
+    "Aspire.Hosting.SqlServer": "",
+    "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects": "1.0.0-polyglot.20260318184623"
+  }
+}

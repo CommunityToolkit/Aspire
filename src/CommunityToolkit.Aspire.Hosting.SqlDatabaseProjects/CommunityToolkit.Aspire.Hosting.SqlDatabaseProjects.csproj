@@ -4,7 +4,7 @@
     <Description>An Aspire hosting integration capable of deploying SQL Server Database Projects as part of your AppHost.</Description>
     <AdditionalPackageTags>hosting sql sqlproj</AdditionalPackageTags>
     <!--Microsoft.SqlServer.DacFx package have vulnerable dependency-->
-    <NoWarn>NU1903</NoWarn>
+    <NoWarn>$(NoWarn);NU1903;ASPIREATS001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

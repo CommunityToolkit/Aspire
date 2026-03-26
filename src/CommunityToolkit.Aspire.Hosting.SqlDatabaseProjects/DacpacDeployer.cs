@@ -1,6 +1,6 @@
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.SqlServer.Dac;
+using System.Data.Common;
 
 namespace CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects;
 
@@ -24,9 +24,35 @@ internal class DacpacDeployer : IDacpacDeployer
         dacServices.Deploy(dacPackage, targetDatabaseName, true, options, cancellationToken);
     }
 
-    private static string GetDatabaseName(string connectionString)
+    internal static string GetDatabaseName(string connectionString)
     {
-        var builder = new SqlConnectionStringBuilder(connectionString);
-        return builder.InitialCatalog;
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+
+        DbConnectionStringBuilder builder = new()
+        {
+            ConnectionString = connectionString
+        };
+
+        foreach (object keyObject in builder.Keys)
+        {
+            if (keyObject is not string key)
+            {
+                continue;
+            }
+
+            var normalizedKey = key.Replace(" ", string.Empty, StringComparison.Ordinal);
+            if (!string.Equals(normalizedKey, "Database", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(normalizedKey, "InitialCatalog", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (builder[key] is string databaseName && !string.IsNullOrWhiteSpace(databaseName))
+            {
+                return databaseName;
+            }
+        }
+
+        throw new InvalidOperationException("The target connection string must include a Database or Initial Catalog value when no target database name is provided.");
     }
 }

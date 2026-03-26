@@ -66,6 +66,8 @@ builder.AddSqlProject<Projects.SdkProject>("mysqlproj")
 builder.Build().Run();
 ```
 
+The referenced connection string should include the target database name using either the `Database` or `Initial Catalog` setting so the deployment target can be inferred.
+
 ## Deployment options support
 
 Define options that affect the behavior of package deployment.
