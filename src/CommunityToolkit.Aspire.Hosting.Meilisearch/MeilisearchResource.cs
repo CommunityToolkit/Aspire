@@ -1,8 +1,11 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a Meilisearch
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class MeilisearchResource : ContainerResource, IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
@@ -60,3 +63,4 @@ public class MeilisearchResource : ContainerResource, IResourceWithConnectionStr
     }
 }
 
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
