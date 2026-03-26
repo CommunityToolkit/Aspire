@@ -1,5 +1,7 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Sftp;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -22,11 +24,12 @@ public static class SftpHostingExtensions
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
     /// builder.AddSftp("sftp");
-    ///  
+    ///
     /// builder.Build().Run(); 
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("addSftp", Description = "Adds an SFTP container resource")]
     public static IResourceBuilder<SftpContainerResource> AddSftp(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? port = null)
@@ -61,11 +64,12 @@ public static class SftpHostingExtensions
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
     /// builder.AddSftp("sftp").WithUsersFile("./etc/sftp/users.conf");
-    ///  
+    ///
     /// builder.Build().Run(); 
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withUsersFile", Description = "Adds a bind mount for the users.conf file to an SFTP container resource")]
     public static IResourceBuilder<SftpContainerResource> WithUsersFile(this IResourceBuilder<SftpContainerResource> builder, string usersFile)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(usersFile, nameof(usersFile));
@@ -94,11 +98,12 @@ public static class SftpHostingExtensions
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
     /// builder.AddSftp("sftp").WithHostKeyFile("./etc/ssh/ssh_host_ed25519_key", KeyType.Ed25519);
-    ///  
+    ///
     /// builder.Build().Run(); 
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withHostKeyFile", Description = "Adds a bind mount for a host key file to an SFTP container resource")]
     public static IResourceBuilder<SftpContainerResource> WithHostKeyFile(this IResourceBuilder<SftpContainerResource> builder, string keyFile, KeyType keyType)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(keyFile, nameof(keyFile));
@@ -139,11 +144,12 @@ public static class SftpHostingExtensions
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
     /// builder.AddSftp("sftp").WithUserKeyFile("foo", "./home/foo/.ssh/keys/id_rsa.pub", KeyType.Rsa);
-    ///  
+    ///
     /// builder.Build().Run(); 
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withUserKeyFile", Description = "Adds a bind mount for a user's public key file to an SFTP container resource")]
     public static IResourceBuilder<SftpContainerResource> WithUserKeyFile(this IResourceBuilder<SftpContainerResource> builder, string username, string keyFile, KeyType keyType)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(username, nameof(username));
