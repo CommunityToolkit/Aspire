@@ -10,8 +10,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$PackageName,
 
-    [Parameter(Mandatory = $true)]
-    [string[]]$WaitForResources,
+    [string[]]$WaitForResources = @(),
 
     [string[]]$RequiredCommands = @(),
 
