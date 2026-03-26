@@ -10,8 +10,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$PackageName,
 
-    [Parameter(Mandatory = $true)]
-    [string[]]$WaitForResources,
+    [string[]]$WaitForResources = @(),
 
     [string[]]$RequiredCommands = @(),
 
@@ -87,7 +86,7 @@ if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
     $PackageVersion = "$versionPrefix-polyglot.local"
 }
 
-if ($WaitForResources.Count -eq 1) {
+if ($WaitForResources.Count -eq 1 -and -not [string]::IsNullOrWhiteSpace($WaitForResources[0])) {
     $splitOptions = [System.StringSplitOptions]::RemoveEmptyEntries -bor [System.StringSplitOptions]::TrimEntries
     $WaitForResources = $WaitForResources[0].Split(",", $splitOptions)
 }
