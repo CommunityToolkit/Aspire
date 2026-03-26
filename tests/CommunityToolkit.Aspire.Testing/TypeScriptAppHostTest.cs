@@ -13,6 +13,7 @@ public static class TypeScriptAppHostTest
     /// <param name="exampleName">The example folder name.</param>
     /// <param name="waitForResources">The resources that must reach the expected Aspire state.</param>
     /// <param name="requiredCommands">Optional commands that must exist on <c>PATH</c> before validation runs.</param>
+    /// <param name="waitStatus">Optional Aspire resource status to wait for.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public static async Task Run(
         string appHostProject,
@@ -20,6 +21,7 @@ public static class TypeScriptAppHostTest
         string exampleName,
         IEnumerable<string> waitForResources,
         IEnumerable<string>? requiredCommands = null,
+        string? waitStatus = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appHostProject);
@@ -56,6 +58,12 @@ public static class TypeScriptAppHostTest
             "-PackageName", packageName,
             "-WaitForResources", string.Join(',', resources)
         ];
+
+        if (!string.IsNullOrWhiteSpace(waitStatus))
+        {
+            arguments.Add("-WaitStatus");
+            arguments.Add(waitStatus);
+        }
 
         if (commands.Count > 0)
         {
