@@ -24,6 +24,11 @@ runs:
           9.0.x
           10.0.x
 
+    - name: Install Aspire CLI
+      uses: timheuer/setup-aspire@v0.1.0
+      with:
+            quality: release # temp workaround until url is fixed
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -129,4 +134,3 @@ runs:
       if: ${{ inputs.name == 'Full' || contains(inputs.name, 'Hosting.Ollama') }}
       with:
         version: 0.11.8
-
