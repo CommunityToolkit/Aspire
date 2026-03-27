@@ -176,5 +176,131 @@ public class AddKindClusterTests
         Assert.NotNull(descriptor);
     }
 
+    // ── KindConfigGenerator tests ────────────────────────────────────────
+
+    [Fact]
+    public async Task GenerateConfig_ZeroWorkers_OnlyControlPlane()
+    {
+        var resource = new KindClusterResource("cfg-zero") { WorkerNodes = 0 };
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("- role: control-plane", yaml);
+            Assert.DoesNotContain("- role: worker", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task GenerateConfig_ThreeWorkers_HasControlPlaneAndThreeWorkers()
+    {
+        var resource = new KindClusterResource("cfg-three") { WorkerNodes = 3 };
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("- role: control-plane", yaml);
+
+            var workerCount = yaml.Split("- role: worker").Length - 1;
+            Assert.Equal(3, workerCount);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task GenerateConfig_NoK8sVersion_OmitsImageLine()
+    {
+        var resource = new KindClusterResource("cfg-noversion") { KubernetesVersion = null };
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.DoesNotContain("image:", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task GenerateConfig_WithK8sVersion_IncludesImageLine()
+    {
+        var resource = new KindClusterResource("cfg-version") { KubernetesVersion = "v1.31.0" };
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains($"image: {KindContainerImageTags.KindNodeImageRepository}:v1.31.0", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    // ── ProcessHelper.Run tests ──────────────────────────────────────────
+
+    [Fact]
+    public void ProcessHelper_Run_CapturesStdout()
+    {
+        var result = ProcessHelper.Run("cmd", "/c echo hello");
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("hello", result.Output);
+    }
+
+    [Fact]
+    public void ProcessHelper_Run_InvalidCommand_NonZeroExitCode()
+    {
+        var result = ProcessHelper.Run("cmd", "/c exit 1");
+
+        Assert.NotEqual(0, result.ExitCode);
+    }
+
+    // ── Edge-case tests ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task WithWorkerNodes_Zero_IsValid()
+    {
+        var resource = new KindClusterResource("edge-zero") { WorkerNodes = 0 };
+
+        Assert.Equal(0, resource.WorkerNodes);
+
+        // Also verify config generation works with 0 workers
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("- role: control-plane", yaml);
+            Assert.DoesNotContain("- role: worker", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public void KindClusterResource_Constructor_SetsPathsCorrectly()
+    {
+        var resource = new KindClusterResource("path-check");
+
+        var expectedDir = Path.Combine(Path.GetTempPath(), "aspire-kind", "path-check");
+        Assert.Equal(Path.Combine(expectedDir, "kubeconfig.yaml"), resource.KubeconfigPath);
+        Assert.Equal(Path.Combine(expectedDir, "container-kubeconfig.yaml"), resource.ContainerKubeconfigPath);
+    }
+
     private sealed class TestResource(string name) : Resource(name), IResourceWithEnvironment;
 }
