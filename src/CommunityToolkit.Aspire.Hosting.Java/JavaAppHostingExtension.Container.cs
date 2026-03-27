@@ -27,6 +27,7 @@ public static partial class JavaAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithImage(image, imageTag)
+                      .WithIconName("DrinkCoffee")
                       .WithOtlpExporter();
     }
 
@@ -49,6 +50,7 @@ public static partial class JavaAppHostingExtension
 
         var rb = builder.AddResource(resource)
           .WithAnnotation(new ContainerImageAnnotation { Image = options.ContainerImageName, Tag = options.ContainerImageTag, Registry = options.ContainerRegistry })
+          .WithIconName("DrinkCoffee")
           .WithHttpEndpoint(port: options.Port, targetPort: options.TargetPort, name: JavaAppContainerResource.HttpEndpointName)
           .WithJavaDefaults(options);
 

@@ -65,6 +65,7 @@ public static partial class JavaAppHostingExtension
 
         var resourceBuilder = builder.AddResource(resource)
                       .WithOtlpExporter()
+                      .WithIconName("DrinkCoffee")
                       .WithArgs(context =>
                       {
                           if (resource.TryGetLastAnnotation<JavaBuildToolAnnotation>(out var buildTool))
@@ -114,6 +115,7 @@ public static partial class JavaAppHostingExtension
 
         return builder.AddResource(resource)
                       .WithJavaDefaults(options)
+                      .WithIconName("DrinkCoffee")
                       .WithHttpEndpoint(port: options.Port, name: JavaAppContainerResource.HttpEndpointName, isProxied: false)
                       .WithArgs(allArgs);
     }
@@ -217,6 +219,7 @@ public static partial class JavaAppHostingExtension
 
             var buildBuilder = builder.ApplicationBuilder.AddResource(buildResource)
                 .WithArgs(buildArgs)
+                .WithIconName("DrinkCoffee")
                 .WithParentRelationship(builder.Resource)
                 .ExcludeFromManifest();
 
