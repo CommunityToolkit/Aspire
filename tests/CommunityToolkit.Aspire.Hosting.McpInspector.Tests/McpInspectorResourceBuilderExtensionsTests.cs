@@ -1,5 +1,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.McpInspector.Tests;
 
@@ -415,8 +417,7 @@ public class McpInspectorResourceBuilderExtensionsTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         // Create a mock MCP server resource with https endpoint (uses name "https")
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer")
-            .WithHttpsEndpoint(name: "https");
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -448,8 +449,7 @@ public class McpInspectorResourceBuilderExtensionsTests
 
         // Create a mock MCP server resource with both https and http endpoints
         // AddProject creates "http" by default, we add "https" with explicit name
-        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer")
-            .WithHttpsEndpoint(name: "https");
+        var mockServer = appBuilder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_McpInspector_McpServer>("mcpServer");
 
         // Act
         var inspector = appBuilder.AddMcpInspector("inspector")
@@ -490,5 +490,217 @@ public class McpInspectorResourceBuilderExtensionsTests
 
         // Verify the endpoint is the https one (preferred when both exist)
         Assert.Equal("https", serverMetadata.Endpoint.EndpointName);
+    }
+
+    [Fact]
+    public void AddMcpInspectorDefaultsToNpx()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector");
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        // Default command is npx (set in constructor)
+        Assert.Equal("npx", inspectorResource.Command);
+    }
+
+    [Fact]
+    public void WithYarnSetsCommand()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        appBuilder.AddMcpInspector("inspector", new McpInspectorOptions())
+            .WithYarn();
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        Assert.Equal("yarn", inspectorResource.Command);
+    }
+
+    [Fact]
+    public void WithPnpmSetsCommand()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        appBuilder.AddMcpInspector("inspector", new McpInspectorOptions())
+            .WithPnpm();
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        Assert.Equal("pnpm", inspectorResource.Command);
+    }
+
+    [Fact]
+    public void WithBunSetsCommand()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        appBuilder.AddMcpInspector("inspector", new McpInspectorOptions())
+            .WithBun();
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        Assert.Equal("bunx", inspectorResource.Command);
+    }
+
+    [Fact]
+    public async Task WithYarnSetsCorrectArguments()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", options =>
+        {
+            options.InspectorVersion = "0.15.0";
+        })
+            .WithYarn();
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
+
+        Assert.Equal(new[] { "dlx", "@modelcontextprotocol/inspector@0.15.0" }, args);
+    }
+
+    [Fact]
+    public async Task WithPnpmSetsCorrectArguments()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", options =>
+        {
+            options.InspectorVersion = "0.15.0";
+        })
+            .WithPnpm();
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
+
+        Assert.Equal(new[] { "dlx", "@modelcontextprotocol/inspector@0.15.0" }, args);
+    }
+
+    [Fact]
+    public async Task WithBunSetsCorrectArguments()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", options =>
+        {
+            options.InspectorVersion = "0.15.0";
+        })
+            .WithBun();
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        var args = await GetArgsAsync(inspectorResource);
+
+        Assert.Equal(new[] { "@modelcontextprotocol/inspector@0.15.0" }, args);
+    }
+
+    [Fact]
+    public async Task DefaultNpxUsesCorrectArguments()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", options =>
+        {
+            options.InspectorVersion = "0.15.0";
+        });
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
+
+        Assert.Equal(new[] { "-y", "@modelcontextprotocol/inspector@0.15.0" }, args);
+    }
+
+    [Fact]
+    public async Task AddMcpInspectorWithOptionsRespectsInspectorVersion()
+    {
+        // Arrange
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var options = new McpInspectorOptions
+        {
+            InspectorVersion = "1.2.3"
+        };
+
+        // Act
+        var inspector = appBuilder.AddMcpInspector("inspector", options);
+
+        using var app = appBuilder.Build();
+
+        // Assert
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var inspectorResource = Assert.Single(appModel.Resources.OfType<McpInspectorResource>());
+
+        var args = await inspectorResource.GetArgumentListAsync();
+        var argsList = args.ToList();
+
+        Assert.Equal("@modelcontextprotocol/inspector@1.2.3", args[1]);
+    }
+
+    private static async Task<IReadOnlyList<string>> GetArgsAsync(McpInspectorResource resource)
+    {
+        CommandLineArgsCallbackContext context = new([]);
+
+        foreach (var annotation in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+        {
+            await annotation.Callback(context);
+        }
+
+        return context.Args.Select(arg => arg?.ToString() ?? string.Empty).ToArray();
     }
 }

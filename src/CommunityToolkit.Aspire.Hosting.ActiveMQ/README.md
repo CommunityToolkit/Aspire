@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration can be used to [Active MQ Classic](https://activemq.apache.org/components/classic/) and [Active MQ Artemis](https://activemq.apache.org/components/artemis/) in a container.
+This Aspire Integration can be used to [Active MQ Classic](https://activemq.apache.org/components/classic/) and [Active MQ Artemis](https://activemq.apache.org/components/artemis/) in a container.
 
 ## Usage
 

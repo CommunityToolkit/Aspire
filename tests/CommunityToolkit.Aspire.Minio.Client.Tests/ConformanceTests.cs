@@ -1,5 +1,7 @@
+#pragma warning disable CS0618 // Type or member is obsolete
 using Aspire.Components.Common.Tests;
 using Aspire.Components.ConformanceTests;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Minio;

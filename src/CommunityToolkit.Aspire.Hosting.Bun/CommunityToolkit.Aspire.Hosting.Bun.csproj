@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting bun javascript</AdditionalPackageTags>
-    <Description>A .NET Aspire integration for hosting Bun apps.</Description>
+    <Description>An Aspire integration for hosting Bun apps.</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,7 @@
 ﻿using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests;
 
@@ -72,12 +73,22 @@ public class KeycloakWithPostgresIntegrationTest
             .WaitForResourceHealthyAsync(kc.Resource.Name)
             .WaitAsync(TimeSpan.FromMinutes(5));
 
-        var env = await kc.Resource.GetEnvironmentVariableValuesAsync();
+        Assert.True(kc.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var context = new EnvironmentCallbackContext(new DistributedApplicationExecutionContext(new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+
+        foreach (var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        var env = context.EnvironmentVariables;
 
         Assert.Equal("postgres", env["KC_DB"]);
-        Assert.True(env.ContainsKey("KC_DB_URL"));
-        Assert.StartsWith("jdbc:postgresql://", env["KC_DB_URL"]);
-        Assert.EndsWith("/keycloakdb", env["KC_DB_URL"]);
+        Assert.True(env.TryGetValue("KC_DB_URL", out var v));
+        var exp = Assert.IsType<ReferenceExpression>(v);
+        Assert.StartsWith("jdbc:postgresql://", exp.Format);
+        Assert.EndsWith("/keycloakdb", exp.Format);
 
         await app.StopAsync();
     }

@@ -35,6 +35,7 @@ public static class FlagdBuilderExtensions
 
         return builder.AddResource(resource)
             .WithImage(FlagdContainerImageTags.Image, FlagdContainerImageTags.Tag)
+            .WithOtlpExporter()
             .WithImageRegistry(FlagdContainerImageTags.Registry)
             .WithHttpEndpoint(port: port, targetPort: FlagdPort, name: FlagdResource.HttpEndpointName)
             .WithHttpEndpoint(null, HealthCheckPort, FlagdResource.HealthCheckEndpointName)

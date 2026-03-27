@@ -2,7 +2,7 @@
 
 ### Project Overview
 
--   This repo is a collection of community-driven integrations and extensions for [.NET Aspire](https://aka.ms/dotnet/aspire), supporting a wide range of runtimes and cloud-native patterns.
+-   This repo is a collection of community-driven integrations and extensions for [Aspire](https://aka.ms/dotnet/aspire), supporting a wide range of runtimes and cloud-native patterns.
 -   Major components are organized by integration in `src/`, with tests in `tests/` and usage examples in `examples/`.
 -   Each integration is a NuGet package, following naming: `CommunityToolkit.Aspire.Hosting.*` (hosting) or `CommunityToolkit.Aspire.*` (client).
 

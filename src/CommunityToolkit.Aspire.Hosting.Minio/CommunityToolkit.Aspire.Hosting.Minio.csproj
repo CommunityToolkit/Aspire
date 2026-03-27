@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AdditionalPackageTags>minio hosting cloud storage</AdditionalPackageTags>
-    <Description>A .NET Aspire hosting integration for MinIO</Description>
+    <AdditionalPackageTags>minio hosting cloud storage deprecated</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for MinIO. DEPRECATED: The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.</Description>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>

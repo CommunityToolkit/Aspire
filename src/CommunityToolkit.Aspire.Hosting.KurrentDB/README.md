@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.KurrentDB library
 
-Provides extension methods and resource definitions for the .NET Aspire app host to support running [KurrentDB](https://www.kurrent.io) containers.
+Provides extension methods and resource definitions for the Aspire app host to support running [KurrentDB](https://www.kurrent.io) containers.
 
 ## Getting Started
 

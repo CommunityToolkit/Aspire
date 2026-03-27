@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -28,6 +30,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="scheme">The scheme of the endpoint, e.g. tcp or activemq (for masstransit). Defaults to tcp.</param>
     /// <param name="webPort">The host port that the underlying webconsole is bound to when running locally.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addActiveMQ", Description = "Adds an ActiveMQ Classic container resource")]
     public static IResourceBuilder<ActiveMQServerResource> AddActiveMQ(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         IResourceBuilder<ParameterResource>? userName = null,
@@ -62,6 +65,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="scheme">The scheme of the endpoint, e.g. tcp or activemq (for masstransit). Defaults to tcp.</param>
     /// <param name="webPort">The host port that the underlying webconsole is bound to when running locally.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addActiveMQArtemis", Description = "Adds an ActiveMQ Artemis container resource")]
     public static IResourceBuilder<ActiveMQArtemisServerResource> AddActiveMQArtemis(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         IResourceBuilder<ParameterResource>? userName = null,
@@ -70,6 +74,7 @@ public static class ActiveMQBuilderExtensions
         string scheme = "tcp",
         int? webPort = null)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         ArgumentNullException.ThrowIfNull(scheme, nameof(scheme));
 
@@ -104,6 +109,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to an ActiveMQ container resource")]
     public static IResourceBuilder<T> WithDataVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder
@@ -118,6 +124,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withConfVolume", Description = "Adds a named volume for the config folder to an ActiveMQ container resource")]
     public static IResourceBuilder<T> WithConfVolume<T>(this IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder
@@ -132,6 +139,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to an ActiveMQ container resource")]
     public static IResourceBuilder<T> WithDataBindMount<T>(this IResourceBuilder<T> builder, string source, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder.WithBindMount(source, builder.Resource.ActiveMqSettings.DataPath, isReadOnly);
@@ -143,6 +151,7 @@ public static class ActiveMQBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withConfBindMount", Description = "Adds a bind mount for the conf folder to an ActiveMQ container resource")]
     public static IResourceBuilder<T> WithConfBindMount<T>(this IResourceBuilder<T> builder, string source, bool isReadOnly = false)
         where T : ActiveMQServerResourceBase =>
         builder.WithBindMount(source, builder.Resource.ActiveMqSettings.ConfPath, isReadOnly);
@@ -214,3 +223,5 @@ public static class ActiveMQBuilderExtensions
         return builder;
     }
 }
+
+#pragma warning restore ASPIREATS001

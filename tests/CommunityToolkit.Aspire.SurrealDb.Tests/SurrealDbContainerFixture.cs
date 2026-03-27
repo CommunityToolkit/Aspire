@@ -4,6 +4,7 @@
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
@@ -28,7 +29,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
         return $"Endpoint={endpoint};Username={_username};Password={_password}";
     }
     
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (RequiresDockerAttribute.IsSupported)
         {
@@ -50,7 +51,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
             Container = new ContainerBuilder()
                 .WithImage($"{SurrealDbContainerImageTags.Registry}/{SurrealDbContainerImageTags.Image}:{SurrealDbContainerImageTags.Tag}")
                 .WithPortBinding(_port, true)
-                .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(_port)))
+                .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(_port).ForPath("/health")))
                 .WithEnvironment("SURREAL_USER", _username)
                 .WithEnvironment("SURREAL_PASS", _password)
                 .WithCommand("start", "memory")
@@ -60,7 +61,7 @@ public sealed class SurrealDbContainerFixture : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (Container is not null)
         {

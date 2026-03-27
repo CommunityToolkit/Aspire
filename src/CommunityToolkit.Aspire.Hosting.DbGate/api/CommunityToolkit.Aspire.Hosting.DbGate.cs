@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class DbGateBuilderExtensions
     {
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, string name, int? port = null) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, string name = "dbgate", int? port = null) { throw null; }
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 

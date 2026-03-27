@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Flagd
 
-A .NET Aspire hosting integration for [flagd](https://flagd.dev), a feature flag evaluation engine that provides a ready-made, open source, OpenFeature-compliant feature flag backend system.
+An Aspire hosting integration for [flagd](https://flagd.dev), a feature flag evaluation engine that provides a ready-made, open source, OpenFeature-compliant feature flag backend system.
 
 ## Getting started
 

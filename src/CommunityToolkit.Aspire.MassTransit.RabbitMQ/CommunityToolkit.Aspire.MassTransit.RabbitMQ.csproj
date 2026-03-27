@@ -2,7 +2,7 @@
 
     <PropertyGroup>
       <AdditionalPackageTags>Client MassTransit RabbitMQ</AdditionalPackageTags>
-      <Description>A .NET Aspire client integration for MassTransit RabbitMQ.</Description>
+      <Description>An Aspire client integration for MassTransit RabbitMQ.</Description>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <RootNamespace>CommunityToolkit.Aspire.MassTransit.RabbitMQ</RootNamespace>

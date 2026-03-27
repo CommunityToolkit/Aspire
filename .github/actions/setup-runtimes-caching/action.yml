@@ -24,6 +24,11 @@ runs:
           9.0.x
           10.0.x
 
+    - name: Install Aspire CLI
+      uses: timheuer/setup-aspire@v0.1.0
+      with:
+            quality: release # temp workaround until url is fixed
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -47,7 +52,7 @@ runs:
         cache-dependency-path: |
           ./examples/golang/gin-api/go.sum
 
-    - uses: actions/setup-java@v4
+    - uses: actions/setup-java@v5
       name: Set up Java
       with:
         distribution: "microsoft"
@@ -85,7 +90,13 @@ runs:
       shell: bash
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        dotnet dev-certs https --trust
+        EXIT_CODE=0
+        dotnet dev-certs https --trust || EXIT_CODE=$?
+        PARTIAL_TRUST_EXIT_CODE=4 # See aspnetcore#65391: exit code 4 indicates partial trust
+        if [ "$EXIT_CODE" -ne 0 ] && [ "$EXIT_CODE" -ne "$PARTIAL_TRUST_EXIT_CODE" ]; then
+          echo "dotnet dev-certs https --trust failed with exit code $EXIT_CODE"
+          exit "$EXIT_CODE"
+        fi
 
     - name: Setup Node globals
       shell: bash

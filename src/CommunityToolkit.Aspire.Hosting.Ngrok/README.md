@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Ngrok library
 
-Provides extension methods and resource definitions for a .NET Aspire AppHost to configure a ngrok container.
+Provides extension methods and resource definitions for an Aspire AppHost to configure a ngrok container.
 
 ## Getting Started
 

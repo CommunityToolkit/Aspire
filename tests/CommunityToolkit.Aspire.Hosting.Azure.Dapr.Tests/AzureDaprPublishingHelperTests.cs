@@ -15,7 +15,7 @@ public class AzureDaprPublishingHelperTests
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
 
-        var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
+        var redisState = builder.AddAzureManagedRedis("redisState").RunAsContainer();
 
         var daprState = builder.AddDaprStateStore("daprState");
 
@@ -50,24 +50,24 @@ public class AzureDaprPublishingHelperTests
         // Arrange
         using var builder = TestDistributedApplicationBuilder.Create();
 
-        var redisState = builder.AddAzureRedis("redisState").RunAsContainer();
+        var redisState = builder.AddAzureManagedRedis("redisState").RunAsContainer();
         var daprState = builder.AddDaprStateStore("daprState");
         var pubSub = builder.AddDaprPubSub("pubsub");
 
         // Act - Reference Dapr components through the sidecar (preferred approach)
         builder.AddContainer("myapp", "image")
-            .WithDaprSidecar(sidecar => 
+            .WithDaprSidecar(sidecar =>
             {
                 sidecar.WithReference(daprState);
                 sidecar.WithReference(pubSub);
             });
 
         using var app = builder.Build();
-        
+
         // Assert
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
         var sidecarResource = Assert.Single(appModel.Resources.OfType<IDaprSidecarResource>());
-        
+
         // Verify the sidecar has reference annotations to both components
         var referenceAnnotations = sidecarResource.Annotations.OfType<DaprComponentReferenceAnnotation>().ToList();
         Assert.Equal(2, referenceAnnotations.Count);

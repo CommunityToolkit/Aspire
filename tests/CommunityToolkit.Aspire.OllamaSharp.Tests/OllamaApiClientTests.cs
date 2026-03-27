@@ -247,4 +247,78 @@ public class OllamaApiClientTests
 
         Assert.Equal(2, ollamaApiClients.Count());
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CanSetJsonSerializerContext(bool useKeyed)
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        builder.Configuration.AddInMemoryCollection([
+            new KeyValuePair<string, string?>("ConnectionStrings:Ollama", $"Endpoint={Endpoint}")
+        ]);
+
+        // Create a test JsonSerializerContext
+        var testContext = TestJsonContext.Default;
+
+        if (useKeyed)
+        {
+            builder.AddKeyedOllamaApiClient("Ollama", settings =>
+            {
+                settings.JsonSerializerContext = testContext;
+            });
+        }
+        else
+        {
+            builder.AddOllamaApiClient("Ollama", settings =>
+            {
+                settings.JsonSerializerContext = testContext;
+            });
+        }
+
+        using var host = builder.Build();
+
+        var client = useKeyed ?
+            host.Services.GetRequiredKeyedService<IOllamaApiClient>("Ollama") :
+            host.Services.GetRequiredService<IOllamaApiClient>();
+
+        // Verify the JsonSerializerContext was set on the client's Config
+        // Cast to OllamaApiClient to access Config property
+        var concreteClient = Assert.IsType<OllamaApiClient>(client);
+        Assert.NotNull(concreteClient.Config.JsonSerializerContext);
+        Assert.Equal(testContext, concreteClient.Config.JsonSerializerContext);
+    }
+
+    [Fact]
+    public void CanSetJsonSerializerContextWithSettingsOverload()
+    {
+        var builder = Host.CreateEmptyApplicationBuilder(null);
+        
+        var testContext = TestJsonContext.Default;
+        var settings = new OllamaSharpSettings
+        {
+            Endpoint = Endpoint,
+            SelectedModel = "testmodel",
+            JsonSerializerContext = testContext
+        };
+
+        builder.AddKeyedOllamaApiClient("TestService", settings);
+
+        using var host = builder.Build();
+        var client = host.Services.GetRequiredKeyedService<IOllamaApiClient>("TestService");
+
+        Assert.Equal(Endpoint, client.Uri);
+        Assert.Equal("testmodel", client.SelectedModel);
+        
+        // Cast to OllamaApiClient to access Config property
+        var concreteClient = Assert.IsType<OllamaApiClient>(client);
+        Assert.NotNull(concreteClient.Config.JsonSerializerContext);
+        Assert.Equal(testContext, concreteClient.Config.JsonSerializerContext);
+    }
+}
+
+// Test JsonSerializerContext for testing purposes
+[System.Text.Json.Serialization.JsonSerializable(typeof(string))]
+internal partial class TestJsonContext : System.Text.Json.Serialization.JsonSerializerContext
+{
 }

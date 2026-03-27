@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting adminer</AdditionalPackageTags>
-    <Description>A .NET Aspire integration for adminer hosting.</Description>
+    <Description>An Aspire integration for adminer hosting.</Description>
   </PropertyGroup>
 
   <ItemGroup>

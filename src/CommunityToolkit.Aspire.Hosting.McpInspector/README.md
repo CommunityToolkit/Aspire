@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.McpInspector library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support adding an MCP Inspector resource. The MCP Inspector enables inspection and debugging of MCP (Model Context Protocol) servers, with support for multiple server configurations and transport types.
+Provides extension methods and resource definitions for the Aspire AppHost to support adding an MCP Inspector resource. The MCP Inspector enables inspection and debugging of MCP (Model Context Protocol) servers, with support for multiple server configurations and transport types.
 
 ## Getting Started
 
@@ -24,6 +24,29 @@ var inspector = builder.AddMcpInspector("inspector")
 ```
 
 You can specify the transport type (`StreamableHttp`) and set which server is the default for the inspector.
+
+#### Using alternative package managers
+
+By default, the MCP Inspector uses npm/npx. You can configure it to use yarn, pnpm, or bun instead by chaining the appropriate method:
+
+```csharp
+// Using yarn
+var inspector = builder.AddMcpInspector("inspector")
+    .WithYarn()
+    .WithMcpServer(mcpServer);
+
+// Using pnpm
+var inspector = builder.AddMcpInspector("inspector")
+    .WithPnpm()
+    .WithMcpServer(mcpServer);
+
+// Using bun
+var inspector = builder.AddMcpInspector("inspector")
+    .WithBun()
+    .WithMcpServer(mcpServer);
+```
+
+When using yarn, pnpm, or bun, the inspector will use `yarn dlx`, `pnpm dlx`, or `bunx` respectively to run the MCP Inspector package.
 
 #### Using options for complex configurations
 
@@ -60,7 +83,7 @@ var inspector = builder.AddMcpInspector("inspector", options =>
 
 The `McpInspectorOptions` class provides the following configuration properties:
 
--   `ClientPort`: Port for the client application (default: 6274
+-   `ClientPort`: Port for the client application (default: 6274)
 -   `ServerPort`: Port for the server proxy application (default: 6277)
 -   `InspectorVersion`: Version of the Inspector app to use (default: latest supported version)
 -   `ProxyToken`: Custom authentication token parameter (default: auto-generated)

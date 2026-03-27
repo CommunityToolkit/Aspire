@@ -17,4 +17,8 @@ public class ConfigurationTests
     [Fact]
     public void ModelsIsEmptyByDefault() =>
         Assert.Empty(new OllamaSharpSettings().Models);
+
+    [Fact]
+    public void JsonSerializerContextIsNullByDefault() =>
+        Assert.Null(new OllamaSharpSettings().JsonSerializerContext);
 }

@@ -3,6 +3,7 @@ using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.DbGate.Tests;
 
@@ -13,7 +14,7 @@ public class AddDbGateTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        var dbgate = appBuilder.AddDbGate("dbgate");
+        var dbgate = appBuilder.AddDbGate();
 
         using var app = appBuilder.Build();
 
@@ -49,7 +50,7 @@ public class AddDbGateTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        var dbgate = appBuilder.AddDbGate("dbgate", 9090);
+        var dbgate = appBuilder.AddDbGate(port: 9090);
 
         using var app = appBuilder.Build();
 
@@ -85,15 +86,15 @@ public class AddDbGateTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        appBuilder.AddDbGate("dbgate1");
-        appBuilder.AddDbGate("dbgate2");
+        appBuilder.AddDbGate();
+        appBuilder.AddDbGate();
 
         using var app = appBuilder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var containerResource = Assert.Single(appModel.Resources.OfType<DbGateContainerResource>());
-        Assert.Equal("dbgate1", containerResource.Name);
+        Assert.Equal("dbgate", containerResource.Name);
     }
 
     [Fact]
@@ -101,7 +102,7 @@ public class AddDbGateTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        var dbgate = appBuilder.AddDbGate("dbgate").WithHostPort(9090);
+        var dbgate = appBuilder.AddDbGate().WithHostPort(9090);
 
         using var app = appBuilder.Build();
 
@@ -139,7 +140,7 @@ public class AddDbGateTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        var dbgate = appBuilder.AddDbGate("dbgate");
+        var dbgate = appBuilder.AddDbGate();
 
         if (useVolume)
         {
@@ -180,13 +181,11 @@ public class AddDbGateTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder1 = builder.AddMongoDB("mongodb1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource1 = mongodbResourceBuilder1.Resource;
 
         var mongodbResourceBuilder2 = builder.AddMongoDB("mongodb2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
             .WithDbGate();
 
         var mongodbResource2 = mongodbResourceBuilder2.Resource;
@@ -202,13 +201,11 @@ public class AddDbGateTests
         var postgresResource2 = postgresResourceBuilder2.Resource;
 
         var redisResourceBuilder1 = builder.AddRedis("redis1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28017))
             .WithDbGate();
 
         var redisResource1 = redisResourceBuilder1.Resource;
 
         var redisResourceBuilder2 = builder.AddRedis("redis2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28018))
             .WithDbGate();
 
         var redisResource2 = redisResourceBuilder2.Resource;
@@ -241,11 +238,28 @@ public class AddDbGateTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mongodb1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        UpdateResourceEndpoint(mongodbResourceBuilder1.Resource);
+        UpdateResourceEndpoint(mongodbResourceBuilder2.Resource);
+        UpdateResourceEndpoint(postgresResourceBuilder1.Resource);
+        UpdateResourceEndpoint(postgresResourceBuilder2.Resource);
+        UpdateResourceEndpoint(redisResourceBuilder1.Resource);
+        UpdateResourceEndpoint(redisResourceBuilder2.Resource);
+        UpdateResourceEndpoint(sqlserverResourceBuilder1.Resource);
+        UpdateResourceEndpoint(sqlserverResourceBuilder2.Resource);
+        UpdateResourceEndpoint(mysqlResourceBuilder1.Resource);
+        UpdateResourceEndpoint(mysqlResourceBuilder2.Resource);
+
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2,mysql1,mysql2", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
@@ -276,11 +290,6 @@ public class AddDbGateTests
             {
                 Assert.Equal("ENGINE_mongodb2", item.Key);
                 Assert.Equal("mongo@dbgate-plugin-mongo", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1,mongodb2,postgres1,postgres2,redis1,redis2,sqlserver1,sqlserver2,mysql1,mysql2", item.Value);
             },
             item =>
             {
@@ -394,21 +403,23 @@ public class AddDbGateTests
                 Assert.Equal("SERVER_sqlserver1", item.Key);
                 Assert.Equal(sqlserverResource1.Name, item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("USER_sqlserver1", item.Key);
-                Assert.Equal("sa", item.Value);
+                var username = await ((IValueProvider)sqlserverResource1.UserNameReference).GetValueAsync(default)!;
+                Assert.Equal(username, item.Value);
             },
             async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver1", item.Key);
-                var expectedPassword = await sqlserverResource1.PasswordParameter.GetValueAsync(default);
-                Assert.Equal(expectedPassword, item.Value);
+                var password = await ((IValueProvider)sqlserverResource1.PasswordParameter).GetValueAsync(default)!;
+                Assert.Equal(password, item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PORT_sqlserver1", item.Key);
-                Assert.Equal(sqlserverResource1.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+                var port = await ((IValueProvider)sqlserverResource1.Port).GetValueAsync(default)!;
+                Assert.Equal(port, item.Value);
             },
             item =>
             {
@@ -425,21 +436,23 @@ public class AddDbGateTests
                 Assert.Equal("SERVER_sqlserver2", item.Key);
                 Assert.Equal(sqlserverResource2.Name, item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("USER_sqlserver2", item.Key);
-                Assert.Equal("sa", item.Value);
+                var username = await ((IValueProvider)sqlserverResource2.UserNameReference).GetValueAsync(default)!;
+                Assert.Equal(username, item.Value);
             },
             async item =>
             {
                 Assert.Equal("PASSWORD_sqlserver2", item.Key);
-                var expectedPassword = await sqlserverResource2.PasswordParameter.GetValueAsync(default);
-                Assert.Equal(expectedPassword, item.Value);
+                var password = await ((IValueProvider)sqlserverResource2.PasswordParameter).GetValueAsync(default)!;
+                Assert.Equal(password, item.Value);
             },
-            item =>
+            async item =>
             {
                 Assert.Equal("PORT_sqlserver2", item.Key);
-                Assert.Equal(sqlserverResource2.PrimaryEndpoint.TargetPort.ToString(), item.Value);
+                var port = await ((IValueProvider)sqlserverResource2.Port).GetValueAsync(default);
+                Assert.Equal(port!, item.Value);
             },
             item =>
             {
@@ -508,6 +521,13 @@ public class AddDbGateTests
                 Assert.Equal("ENGINE_mysql2", item.Key);
                 Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
             });
+
+        static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+        {
+            var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+            var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+            endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
+        }
     }
 
     [Fact]
@@ -552,7 +572,7 @@ public class AddDbGateTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
 
         var containerResource = Assert.Single(appModel.Resources.OfType<DbGateContainerResource>());
-        Assert.Equal("mongodb1-dbgate", containerResource.Name);
+        Assert.Equal("dbgate", containerResource.Name);
     }
 
     [Fact]

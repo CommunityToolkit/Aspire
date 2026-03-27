@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration runs [Papercut SMTP](https://github.com/ChangemakerStudios/Papercut-SMTP) in a container.
+This Aspire Integration runs [Papercut SMTP](https://github.com/ChangemakerStudios/Papercut-SMTP) in a container.
 
 
 ## Usage

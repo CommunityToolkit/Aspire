@@ -1,6 +1,9 @@
 # CommunityToolkit.Aspire.Hosting.MinIO library
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running [MinIO](https://min.io/) containers.
+> [!WARNING]
+> **This integration is deprecated.** The [MinIO OSS project has been archived](https://github.com/minio/minio) and is no longer maintained. This package will be removed in a future version. Please migrate to an alternative S3-compatible storage solution.
+
+Provides extension methods and resource definitions for the Aspire AppHost to support running [MinIO](https://min.io/) containers.
 
 ## Getting Started
 

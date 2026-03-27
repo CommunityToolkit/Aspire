@@ -5,6 +5,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Logging;
 using System.Net.Sockets;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
 
@@ -58,7 +59,9 @@ public class AddSurrealServerTests
         Assert.Equal(SurrealDbContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(SurrealDbContainerImageTags.Registry, containerAnnotation.Registry);
 
-        var config = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
+        UpdateResourceEndpoint(containerResource);
+
+        var config = await surrealServer.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Collection(config,
             env =>
@@ -202,11 +205,43 @@ public class AddSurrealServerTests
 
         using var app = appBuilder.Build();
 
-        var config = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
+        UpdateResourceEndpoint(surrealServer.Resource);
+
+        var config = await surrealServer.Resource.GetEnvironmentVariablesAsync();
 
         bool hasValue = config.TryGetValue("SURREAL_LOG", out var value);
 
         Assert.True(hasValue);
         Assert.Equal(expected, value);
+    }
+
+    [Fact]
+    public async Task AddSurrealServerContainerWithOtlpExporter()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        var surrealServer = appBuilder
+            .AddSurrealServer("surreal")
+            .WithOtlpExporter();
+
+        using var app = appBuilder.Build();
+
+        // Verify that OtlpExporterAnnotation is present (added by WithOtlpExporter)
+        // This annotation marks the resource as an OTEL exporter
+        Assert.True(surrealServer.Resource.HasAnnotationOfType<OtlpExporterAnnotation>());
+
+        var variables = await surrealServer.Resource.GetEnvironmentVariablesAsync(applicationOperation: DistributedApplicationOperation.Publish);
+        
+        bool hasValue = variables.TryGetValue("SURREAL_TELEMETRY_PROVIDER", out var value);
+        
+        Assert.True(hasValue);
+        Assert.Equal("otlp", value);
+    }
+
+    static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+    {
+        var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
     }
 }

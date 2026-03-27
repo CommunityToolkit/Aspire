@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Golang library
 
-Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Golang applications.
+Provides extensions methods and resource definitions for the Aspire AppHost to support running Golang applications.
 
 ## Getting Started
 
@@ -21,13 +21,68 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
     .WithHttpEndpoint(env: "PORT");
 ```
 
-The `PORT` environment variable is used to determine the port the Golang application should listen on. It is randomly assigned by the .NET Aspire. The name of the environment variable can be changed by passing a different value to the `WithHttpEndpoint` method.
+The `PORT` environment variable is used to determine the port the Golang application should listen on. It is randomly assigned by the Aspire. The name of the environment variable can be changed by passing a different value to the `WithHttpEndpoint` method.
 
 To have the Golang application listen on the correct port, you can use the following code in your Golang application:
 
 ```go
 r.Run(":"+os.Getenv("PORT"))
 ```
+
+## Dependency Management
+
+The integration provides support for Go module dependency management using `go mod tidy` or `go mod download`.
+
+### Using `go mod tidy`
+
+To run `go mod tidy` before your application starts (to clean up and verify dependencies):
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy()
+    .WithHttpEndpoint(env: "PORT");
+```
+
+By default, `WithGoModTidy()` runs `go mod tidy` before the application starts (equivalent to `install: true`). You can set `install: false` to create the installer resource but require explicit start:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy(install: false)  // Installer created but requires explicit start
+    .WithHttpEndpoint(env: "PORT");
+```
+
+### Using `go mod download`
+
+To run `go mod download` before your application starts (to download dependencies without verification):
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModDownload()
+    .WithHttpEndpoint(env: "PORT");
+```
+
+Similarly, you can control the installer behavior:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModDownload(install: false)  // Installer created but requires explicit start
+    .WithHttpEndpoint(env: "PORT");
+```
+
+When `install` is `true` (default), the installer resource is created and the Go application waits for it to complete before starting. When `install` is `false`, the installer resource is still created but is set to require explicit start, appearing in the Aspire dashboard but not automatically executing.
+
+You can also customize the installer resource using the optional `configureInstaller` parameter:
+
+```csharp
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithGoModTidy(configureInstaller: installer =>
+    {
+        installer.WithEnvironment("GOPROXY", "https://proxy.golang.org,direct");
+    })
+    .WithHttpEndpoint(env: "PORT");
+```
+
+> **Note:** The `WithGoModTidy` and `WithGoModDownload` methods only create installer resources in run mode (when the application is started locally). They do not run when publishing, as the generated Dockerfile handles dependency management automatically.
 
 ## Publishing
 
@@ -51,6 +106,22 @@ var golang = builder.AddGolangApp("golang", "../gin-api")
         buildImage: "golang:1.22-alpine",
         runtimeImage: "alpine:3.20");
 ```
+
+### Container Files Support
+
+The Golang resource supports copying files from other resources into the container during publishing. This is useful for serving static frontend files from your Go application. The resource implements `IContainerFilesDestinationResource` with a default destination of `/app/static`.
+
+To copy files from another resource (such as a frontend build) into your Golang container, use the `WithContainerFiles` method:
+
+```csharp
+var frontend = builder.AddViteApp("frontend", "./frontend");
+
+var golang = builder.AddGolangApp("golang", "../gin-api")
+    .WithHttpEndpoint(env: "PORT")
+    .WithContainerFiles("/app/static", frontend.Resource);
+```
+
+This will copy the output files from the `frontend` resource into the `/app/static` directory in the Golang container when publishing. Note: `WithContainerFiles` is provided by the Aspire framework when the resource implements `IContainerFilesDestinationResource` and may require additional using directives (for example, `using Aspire.Hosting;`).
 
 ### Generated Dockerfile
 

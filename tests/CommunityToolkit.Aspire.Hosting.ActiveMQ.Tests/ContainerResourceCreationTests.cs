@@ -50,7 +50,7 @@ public class ContainerResourceCreationTests
         Assert.Equal("ACTIVEMQ_CONNECTION_USER", resource.ActiveMqSettings.EnvironmentVariableUsername);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal("6.1.8", imageAnnotations.Tag);
+        Assert.Equal("6.2.0", imageAnnotations.Tag);
         Assert.Equal("apache/activemq-classic", imageAnnotations.Image);
         Assert.Equal("docker.io", imageAnnotations.Registry);
 

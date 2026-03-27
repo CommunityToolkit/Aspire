@@ -44,7 +44,7 @@ public class MyService
 
 ## Configuration
 
-The .NET Aspire RavenDB Client component provides multiple options to configure the server connection based on the requirements and conventions of your project.
+The Aspire RavenDB Client component provides multiple options to configure the server connection based on the requirements and conventions of your project.
 
 ### Use a connection string
 
@@ -66,7 +66,7 @@ And then the connection string will be retrieved from the `ConnectionStrings` co
 
 ### Use configuration providers
 
-The .NET Aspire RavenDB Client component supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `RavenDBClientSettings` from configuration by using the `Aspire:RavenDB:Client` key.
+The Aspire RavenDB Client component supports [Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration). It loads the `RavenDBClientSettings` from configuration by using the `Aspire:RavenDB:Client` key.
 
 ### Use inline delegates
 

@@ -17,7 +17,7 @@ public static class DataApiBuilderHostingExtension
     /// <param name="name">The name of the resource.</param>
     /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>"
     /// <remarks>
-    /// At this time, this .NET Aspire DAB integration only supports HTTPS ports. 
+    /// At this time, this Aspire DAB integration only supports HTTPS ports. 
     /// You can <see href="https://learn.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-8.0#running-pre-built-container-images-with-https">deploy DAB with HTTPS and custom certs</see> in production.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
@@ -36,7 +36,7 @@ public static class DataApiBuilderHostingExtension
     /// <param name="httpPort">The HTTP port number for the Data API Builder container.</param>"
     /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>"
     /// <remarks>
-    /// At this time, this .NET Aspire DAB integration only supports HTTPS ports. 
+    /// At this time, this Aspire DAB integration only supports HTTPS ports. 
     /// You can <see href="https://learn.microsoft.com/en-us/aspnet/core/security/docker-https?view=aspnetcore-8.0#running-pre-built-container-images-with-https">deploy DAB with HTTPS and custom certs</see> in production.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>

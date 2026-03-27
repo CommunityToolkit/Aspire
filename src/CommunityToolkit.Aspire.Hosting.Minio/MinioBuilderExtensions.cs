@@ -8,6 +8,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for adding MinIO resources to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
+[Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
 public static class MinioBuilderExtensions
 {
     private const string RootUserEnvVarName = "MINIO_ROOT_USER";

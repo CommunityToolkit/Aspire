@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AdditionalPackageTags>hosting java</AdditionalPackageTags>
-    <Description>A .NET Aspire for hosting Java apps using either the Java executable or container image.</Description>
+    <Description>An Aspire integration for hosting Java apps using either the Java executable or container image.</Description>
   </PropertyGroup>
 
   <ItemGroup>

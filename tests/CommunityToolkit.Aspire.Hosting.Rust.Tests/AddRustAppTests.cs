@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using CommunityToolkit.Aspire.Utils;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Rust.Tests;
 public class AddRustAppTests
@@ -24,10 +25,9 @@ public class AddRustAppTests
         Assert.Equal("rust-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
         Assert.Equal("cargo", resource.Command);
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
         Assert.Collection(args,
-            arg => Assert.Equal("run", arg),
-            arg => Assert.Equal(".", arg));
+            arg => Assert.Equal("run", arg));
     }
 
     [Fact]
@@ -47,10 +47,9 @@ public class AddRustAppTests
         Assert.Equal("rust-app", resource.Name);
         Assert.Equal(workingDirectory, resource.WorkingDirectory);
         Assert.Equal("cargo", resource.Command);
-        var args = await resource.GetArgumentValuesAsync();
+        var args = await resource.GetArgumentListAsync();
         Assert.Collection(args,
             arg => Assert.Equal("run", arg),
-            arg => Assert.Equal(".", arg),
             arg => Assert.Equal("--verbose", arg));
     }
 }

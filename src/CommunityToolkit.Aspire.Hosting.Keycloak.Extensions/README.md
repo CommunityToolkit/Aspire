@@ -1,8 +1,8 @@
-﻿# Keycloak Hosting Extensions for .NET Aspire
+﻿# Keycloak Hosting Extensions for Aspire
 
 ## Overview
 
-This package provides **.NET Aspire hosting extensions** for integrating **Keycloak** with your AppHost.
+This package provides **Aspire hosting extensions** for integrating **Keycloak** with your AppHost.
 It includes a PostgreSQL integration that works with resources created via `Aspire.Hosting.Postgres.AddPostgres()` and `Aspire.Hosting.Keycloak.AddKeycloak()`, and automatically configures the required environment variables for Keycloak database connectivity.
 
 ---

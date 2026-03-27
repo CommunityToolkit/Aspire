@@ -7,7 +7,7 @@ obj
 appsettings.*.json
 *.orig
 test-results
-TestResults
+[Tt]est[Rr]esults
 nuget
 .pnpm-store
 .DS_Store
@@ -19,3 +19,5 @@ nuget
 target
 
 node_modules
+**/.modules/
+**/*.AppHost.TypeScript/nuget.config

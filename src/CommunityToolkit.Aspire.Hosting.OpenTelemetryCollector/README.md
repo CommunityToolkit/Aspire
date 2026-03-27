@@ -2,7 +2,7 @@
 
 ## Overview
 
-This .NET Aspire Integration can be used to include [OpenTelemetry Collector](https://github.com/open-telemetry/opentelemetry-collector) in a container.
+This Aspire Integration can be used to include [OpenTelemetry Collector](https://github.com/open-telemetry/opentelemetry-collector) in a container.
 
 ## Usage
 

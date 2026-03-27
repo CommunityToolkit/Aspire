@@ -1,6 +1,6 @@
 ﻿# CommunityToolkit.Aspire.Hosting.Rust library
 
-Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Rust applications.
+Provides extensions methods and resource definitions for the Aspire AppHost to support running Rust applications.
 
 ## Getting Started
 

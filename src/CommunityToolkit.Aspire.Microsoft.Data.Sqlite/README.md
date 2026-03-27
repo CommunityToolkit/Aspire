@@ -10,7 +10,7 @@ Register a `SqliteConnection` in the DI container to interact with a SQLite data
 
 ### Install the package
 
-Install the .NET Aspire EF Core Sqlite library using the following command:
+Install the Aspire EF Core Sqlite library using the following command:
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Microsoft.Data.Sqlite

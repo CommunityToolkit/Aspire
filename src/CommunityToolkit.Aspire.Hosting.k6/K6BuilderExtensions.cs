@@ -3,6 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.k6;
+using System.Globalization;
 
 namespace Aspire.Hosting;
 
@@ -102,7 +103,7 @@ public static class K6BuilderExtensions
             "--address",
             $"0.0.0.0:{K6Port}",
             "--vus", 
-            virtualUsers, 
+            virtualUsers.ToString(CultureInfo.InvariantCulture), 
             "--duration", 
             duration, 
             scriptPath);

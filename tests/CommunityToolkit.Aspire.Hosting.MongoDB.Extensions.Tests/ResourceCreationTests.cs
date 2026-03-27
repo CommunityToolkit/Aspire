@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.Tests;
 
@@ -10,7 +11,6 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder = builder.AddMongoDB("mongodb")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource = mongodbResourceBuilder.Resource;
@@ -23,31 +23,34 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mongodb-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        UpdateResourceEndpoint(mongodbResource);
+
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("mongodb", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
-                Assert.Equal("LABEL_mongodb1", item.Key);
+                Assert.Equal("LABEL_mongodb", item.Key);
                 Assert.Equal(mongodbResource.Name, item.Value);
             },
             async item =>
             {
-                Assert.Equal("URL_mongodb1", item.Key);
+                Assert.Equal("URL_mongodb", item.Key);
                 Assert.Equal(await mongodbResource.ConnectionStringExpression.GetValueAsync(default), item.Value);
             },
             item =>
             {
-                Assert.Equal("ENGINE_mongodb1", item.Key);
+                Assert.Equal("ENGINE_mongodb", item.Key);
                 Assert.Equal("mongo@dbgate-plugin-mongo", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1", item.Value);
             });
     }
 
@@ -65,7 +68,7 @@ public class ResourceCreationTests
         var dbGateResource = appModel.Resources.OfType<DbGateContainerResource>().SingleOrDefault();
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mongodb1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
     }
 
     [Fact]
@@ -109,13 +112,11 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder1 = builder.AddMongoDB("mongodb1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource1 = mongodbResourceBuilder1.Resource;
 
         var mongodbResourceBuilder2 = builder.AddMongoDB("mongodb2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
             .WithDbGate();
 
         var mongodbResource2 = mongodbResourceBuilder2.Resource;
@@ -128,11 +129,20 @@ public class ResourceCreationTests
 
         Assert.NotNull(dbGateResource);
 
-        Assert.Equal("mongodb1-dbgate", dbGateResource.Name);
+        Assert.Equal("dbgate", dbGateResource.Name);
 
-        var envs = await dbGateResource.GetEnvironmentVariableValuesAsync();
+        UpdateResourceEndpoint(mongodbResource1);
+        UpdateResourceEndpoint(mongodbResource2);
+
+        var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
         Assert.NotEmpty(envs);
+
+        var CONNECTIONS = envs["CONNECTIONS"];
+        envs.Remove("CONNECTIONS");
+
+        Assert.Equal("mongodb1,mongodb2", CONNECTIONS);
+
         Assert.Collection(envs,
             item =>
             {
@@ -163,11 +173,13 @@ public class ResourceCreationTests
             {
                 Assert.Equal("ENGINE_mongodb2", item.Key);
                 Assert.Equal("mongo@dbgate-plugin-mongo", item.Value);
-            },
-            item =>
-            {
-                Assert.Equal("CONNECTIONS", item.Key);
-                Assert.Equal("mongodb1,mongodb2", item.Value);
             });
+    }
+
+    static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+    {
+        var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
     }
 }

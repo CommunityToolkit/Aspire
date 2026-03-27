@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting kurrentdb</AdditionalPackageTags>
-    <Description>KurrentDB support for .NET Aspire.</Description>
+    <Description>KurrentDB support for Aspire.</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -23,8 +23,8 @@ public static class RustAppHostingExtension
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory, nameof(workingDirectory));
 
         string[] allArgs = args is { Length: > 0 }
-            ? ["run", ".", .. args]
-            : ["run", ".",];
+            ? ["run", .. args]
+            : ["run"];
 
         workingDirectory = Path.Combine(builder.AppHostDirectory, workingDirectory).NormalizePathForCurrentPlatform();
         var resource = new RustAppExecutableResource(name, workingDirectory);

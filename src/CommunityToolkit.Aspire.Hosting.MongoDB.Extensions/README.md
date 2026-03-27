@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.MongoDB.Extensions library
 
-This integration contains extensions for the [MongoDB hosting package](https://nuget.org/packages/Aspire.Hosting.MongoDB) for .NET Aspire.
+This integration contains extensions for the [MongoDB hosting package](https://nuget.org/packages/Aspire.Hosting.MongoDB) for Aspire.
 
 The integration provides support for running [DbGate](https://github.com/dbgate/dbgate) to interact with the MongoDB database.
 

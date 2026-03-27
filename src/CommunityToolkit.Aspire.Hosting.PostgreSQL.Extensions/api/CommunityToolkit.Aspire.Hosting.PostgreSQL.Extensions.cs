@@ -14,4 +14,28 @@ namespace Aspire.Hosting
 
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
+
+    public static partial class PostgresDatabaseResourceBuilderExtensions
+    {
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayMigration(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
+
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayRepair(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
+
+        public sealed partial class <G>$AA8667B1135AA5AD8A3F1D9C715BEAB5
+        {
+            internal <G>$AA8667B1135AA5AD8A3F1D9C715BEAB5() { }
+
+            [System.Runtime.CompilerServices.ExtensionMarker("<M>$FAAD81E80F530CA95E6E899142B58B46")]
+            public ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayMigration(ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
+
+            [System.Runtime.CompilerServices.ExtensionMarker("<M>$FAAD81E80F530CA95E6E899142B58B46")]
+            public ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayRepair(ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
+
+            public static partial class <M>$FAAD81E80F530CA95E6E899142B58B46
+            {
+                [System.Runtime.CompilerServices.CompilerGenerated]
+                public static void <Extension>$(ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> builder) { }
+            }
+        }
+    }
 }

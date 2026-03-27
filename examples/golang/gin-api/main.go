@@ -39,6 +39,12 @@ func setupRouter() *gin.Engine {
         c.String(http.StatusOK, "ok")
     })
 
+	// Serve static files from the /app/static directory inside the container.
+	// When using the container files feature, these files are copied from
+	// a frontend resource into the container at /app/static (see AddContainerFiles and WORKDIR /app).
+	// If you change the working directory or copy location, update this path accordingly.
+	r.Static("/static", "/app/static")
+
 	// Ping test
 	r.GET("/ping", func(c *gin.Context) {
 		// _, span := tracer.Start(c.Request.Context(), "ping")

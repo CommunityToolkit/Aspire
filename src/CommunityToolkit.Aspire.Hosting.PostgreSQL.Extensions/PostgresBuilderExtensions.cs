@@ -39,12 +39,13 @@ public static class PostgresBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        containerName ??= $"{builder.Resource.Name}-dbgate";
+        containerName ??= "dbgate";
 
         var dbGateBuilder = DbGateBuilderExtensions.AddDbGate(builder.ApplicationBuilder, containerName);
 
         dbGateBuilder
-            .WithEnvironment(context => ConfigureDbGateContainer(context, builder.ApplicationBuilder));
+            .WithEnvironment(context => ConfigureDbGateContainer(context, builder))
+            .WaitFor(builder);
 
         configureContainer?.Invoke(dbGateBuilder);
 
@@ -91,52 +92,40 @@ public static class PostgresBuilderExtensions
         return builder;
     }
 
-    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IDistributedApplicationBuilder applicationBuilder)
+    private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<PostgresServerResource> builder)
     {
-        var postgresInstances = applicationBuilder.Resources.OfType<PostgresServerResource>();
+        var postgresServer = builder.Resource;
 
-        var counter = 1;
+        var name = postgresServer.Name;
+        var connectionId = DbGateBuilderExtensions.SanitizeConnectionId(name);
+        var label = $"LABEL_{connectionId}";
 
         // Multiple WithDbGate calls will be ignored
-        if (context.EnvironmentVariables.ContainsKey($"LABEL_postgres{counter}"))
+        if (context.EnvironmentVariables.ContainsKey(label))
         {
             return;
         }
 
-        foreach (var postgresServer in postgresInstances)
+        var userParameter = postgresServer.UserNameParameter is null
+         ? ReferenceExpression.Create($"postgres")
+         : ReferenceExpression.Create($"{postgresServer.UserNameParameter}");
+
+        // DbGate assumes Postgres is being accessed over a default Aspire container network and hardcodes the resource address
+        // This will need to be refactored once updated service discovery APIs are available
+        context.EnvironmentVariables.Add($"LABEL_{connectionId}", postgresServer.Name);
+        context.EnvironmentVariables.Add($"SERVER_{connectionId}", postgresServer.Name);
+        context.EnvironmentVariables.Add($"USER_{connectionId}", userParameter);
+        context.EnvironmentVariables.Add($"PASSWORD_{connectionId}", postgresServer.PasswordParameter);
+        context.EnvironmentVariables.Add($"PORT_{connectionId}", postgresServer.PrimaryEndpoint.TargetPort!.ToString()!);
+        context.EnvironmentVariables.Add($"ENGINE_{connectionId}", "postgres@dbgate-plugin-postgres");
+
+        if (context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS") is string { Length: > 0 } connections)
         {
-            var userParameter = postgresServer.UserNameParameter is null
-             ? ReferenceExpression.Create($"postgres")
-             : ReferenceExpression.Create($"{postgresServer.UserNameParameter}");
-
-            // DbGate assumes Postgres is being accessed over a default Aspire container network and hardcodes the resource address
-            // This will need to be refactored once updated service discovery APIs are available
-            context.EnvironmentVariables.Add($"LABEL_postgres{counter}", postgresServer.Name);
-            context.EnvironmentVariables.Add($"SERVER_postgres{counter}", postgresServer.Name);
-            context.EnvironmentVariables.Add($"USER_postgres{counter}", userParameter);
-            context.EnvironmentVariables.Add($"PASSWORD_postgres{counter}", postgresServer.PasswordParameter);
-            context.EnvironmentVariables.Add($"PORT_postgres{counter}", postgresServer.PrimaryEndpoint.TargetPort!.ToString()!);
-            context.EnvironmentVariables.Add($"ENGINE_postgres{counter}", "postgres@dbgate-plugin-postgres");
-
-            counter++;
+            context.EnvironmentVariables["CONNECTIONS"] = $"{connections},{connectionId}";
         }
-
-        var instancesCount = postgresInstances.Count();
-        if (instancesCount > 0)
+        else
         {
-            var strBuilder = new StringBuilder();
-            strBuilder.AppendJoin(',', Enumerable.Range(1, instancesCount).Select(i => $"postgres{i}"));
-            var connections = strBuilder.ToString();
-
-            string CONNECTIONS = context.EnvironmentVariables.GetValueOrDefault("CONNECTIONS")?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(CONNECTIONS))
-            {
-                context.EnvironmentVariables["CONNECTIONS"] = connections;
-            }
-            else
-            {
-                context.EnvironmentVariables["CONNECTIONS"] += $",{connections}";
-            }
+            context.EnvironmentVariables["CONNECTIONS"] = connectionId;
         }
     }
 

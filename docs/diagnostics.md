@@ -4,11 +4,11 @@ Some of the API's in the Aspire Community Toolkit are decorated with the [`Exper
 
 ## CTASPIRE001
 
-There are cases where there is an API provided by the Aspire Community Toolkit that is an intermidiary solution until a feature is added to .NET Aspire itself. This could be a private API that is not yet ready for public consumption, or a workaround waiting for the completion of a feature in .NET Aspire.
+There are cases where there is an API provided by the Aspire Community Toolkit that is an intermidiary solution until a feature is added to Aspire itself. This could be a private API that is not yet ready for public consumption, or a workaround waiting for the completion of a feature in Aspire.
 
-In these cases, refer to the `<remarks>` docs section of the API for more information on the feature in .NET Aspire and the issue(s) to track.
+In these cases, refer to the `<remarks>` docs section of the API for more information on the feature in Aspire and the issue(s) to track.
 
-Once a release of .NET Aspire with that API is available, the API in the Aspire Community Toolkit will be marked as obsolete and will be removed in a future release.
+Once a release of Aspire with that API is available, the API in the Aspire Community Toolkit will be marked as obsolete and will be removed in a future release.
 
 ## CTASPIRE002
 

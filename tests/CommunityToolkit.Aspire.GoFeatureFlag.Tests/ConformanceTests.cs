@@ -3,14 +3,15 @@
 
 using Aspire.Components.Common.Tests;
 using Aspire.Components.ConformanceTests;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using OpenFeature.Contrib.Providers.GOFeatureFlag;
+using OpenFeature.Providers.GOFeatureFlag;
 using OpenFeature.Model;
 
 namespace CommunityToolkit.Aspire.GoFeatureFlag.Tests;
 
-public class ConformanceTests : ConformanceTests<GoFeatureFlagProvider, GoFeatureFlagClientSettings>, IClassFixture<GoFeatureFlagContainerFixture>
+public class ConformanceTests : ConformanceTests<GOFeatureFlagProvider, GoFeatureFlagClientSettings>, IClassFixture<GoFeatureFlagContainerFixture>
 {
     private readonly GoFeatureFlagContainerFixture _containerFixture;
 
@@ -102,7 +103,7 @@ public class ConformanceTests : ConformanceTests<GoFeatureFlagProvider, GoFeatur
         throw new NotImplementedException();
     }
 
-    protected override void TriggerActivity(GoFeatureFlagProvider service)
+    protected override void TriggerActivity(GOFeatureFlagProvider service)
     {
         using var source = new CancellationTokenSource(100);
 

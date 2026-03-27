@@ -2,7 +2,7 @@
   
   <PropertyGroup>
     <AdditionalPackageTags>hosting ActiveMQ</AdditionalPackageTags>
-    <Description>A .NET Aspire hosting package for hosting ActiveMQ.</Description>
+    <Description>An Aspire hosting package for hosting ActiveMQ.</Description>
   </PropertyGroup>
 
   <ItemGroup>
