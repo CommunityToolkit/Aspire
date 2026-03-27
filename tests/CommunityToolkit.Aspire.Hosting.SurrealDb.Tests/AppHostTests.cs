@@ -14,9 +14,23 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task SurrealResourceStartsAndRespondsOk()
     {
         const string resourceName = "surreal";
-        var evt = await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
 
-        Assert.Equal(KnownResourceStates.Running, evt.Snapshot.State);
+        var tcpUri = fixture.GetEndpoint(resourceName, "tcp");
+        var baseUri = new Uri(tcpUri.AbsoluteUri.Replace("tcp://", "http://"));
+        var handler = new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        };
+        var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = baseUri
+        };
+
+        var response = await httpClient.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.RedirectKeepVerb, response.StatusCode);
+        Assert.Equal("https://surrealdb.com/surrealist", response.Headers.Location?.AbsoluteUri);
     }
 
     [Fact]
