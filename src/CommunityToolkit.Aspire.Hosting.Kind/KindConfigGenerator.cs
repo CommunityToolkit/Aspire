@@ -15,7 +15,7 @@ internal static class KindConfigGenerator
     /// Generates a Kind configuration file and returns its path.
     /// The caller is responsible for deleting the file when no longer needed.
     /// </summary>
-    internal static string GenerateConfig(KindClusterResource resource)
+    internal static async Task<string> GenerateConfigAsync(KindClusterResource resource, CancellationToken cancellationToken)
     {
         var configDir = Path.Combine(Path.GetTempPath(), "aspire-kind", resource.Name);
         Directory.CreateDirectory(configDir);
@@ -34,7 +34,7 @@ internal static class KindConfigGenerator
             AppendNode(yaml, "worker", resource.KubernetesVersion);
         }
 
-        File.WriteAllText(configPath, yaml.ToString());
+        await File.WriteAllTextAsync(configPath, yaml.ToString(), cancellationToken).ConfigureAwait(false);
         return configPath;
     }
 

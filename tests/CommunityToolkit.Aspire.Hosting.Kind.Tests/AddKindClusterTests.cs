@@ -93,18 +93,18 @@ public class AddKindClusterTests
     }
 
     [Fact]
-    public void GeneratedConfigContainsImageFromKindContainerImageTags()
+    public async Task GeneratedConfigContainsImageFromKindContainerImageTags()
     {
         var resource = new KindClusterResource("test-cluster")
         {
             KubernetesVersion = KindContainerImageTags.DefaultKubernetesVersion,
         };
 
-        var configPath = KindConfigGenerator.GenerateConfig(resource);
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
 
         try
         {
-            var yaml = File.ReadAllText(configPath);
+            var yaml = await File.ReadAllTextAsync(configPath);
             var expectedImage = $"{KindContainerImageTags.KindNodeImageRepository}:{KindContainerImageTags.DefaultKubernetesVersion}";
             Assert.Contains(expectedImage, yaml);
         }

@@ -39,7 +39,7 @@ internal sealed class KindClusterManager
             await DeleteClusterAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        var configPath = KindConfigGenerator.GenerateConfig(_resource);
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(_resource, cancellationToken).ConfigureAwait(false);
 
         try
         {
