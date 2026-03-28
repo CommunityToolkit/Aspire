@@ -8,6 +8,7 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
+    [System.Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
     public static partial class MinioBuilderExtensions
     {
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MinioContainerResource> AddMinioContainer(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? rootUser = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? rootPassword = null, int? port = null) { throw null; }
@@ -26,6 +27,7 @@ namespace Aspire.Hosting
 
 namespace Aspire.Hosting.ApplicationModel
 {
+    [System.Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
     public sealed partial class MinioContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
     {
         public MinioContainerResource(string name, ParameterResource rootUser, ParameterResource passwordParameter) : base(default!, default) { }

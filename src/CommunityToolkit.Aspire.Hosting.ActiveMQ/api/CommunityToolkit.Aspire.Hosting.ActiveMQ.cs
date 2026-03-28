@@ -10,19 +10,25 @@ namespace Aspire.Hosting
 {
     public static partial class ActiveMQBuilderExtensions
     {
+        [AspireExport("addActiveMQ", Description = "Adds an ActiveMQ Classic container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ActiveMQServerResource> AddActiveMQ(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? userName = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, int? port = null, string scheme = "tcp", int? webPort = null) { throw null; }
 
+        [AspireExport("addActiveMQArtemis", Description = "Adds an ActiveMQ Artemis container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ActiveMQArtemisServerResource> AddActiveMQArtemis(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? userName = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, int? port = null, string scheme = "tcp", int? webPort = null) { throw null; }
 
+        [AspireExport("withConfBindMount", Description = "Adds a bind mount for the conf folder to an ActiveMQ container resource")]
         public static ApplicationModel.IResourceBuilder<T> WithConfBindMount<T>(this ApplicationModel.IResourceBuilder<T> builder, string source, bool isReadOnly = false)
             where T : ApplicationModel.ActiveMQServerResourceBase { throw null; }
 
+        [AspireExport("withConfVolume", Description = "Adds a named volume for the config folder to an ActiveMQ container resource")]
         public static ApplicationModel.IResourceBuilder<T> WithConfVolume<T>(this ApplicationModel.IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
             where T : ApplicationModel.ActiveMQServerResourceBase { throw null; }
 
+        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to an ActiveMQ container resource")]
         public static ApplicationModel.IResourceBuilder<T> WithDataBindMount<T>(this ApplicationModel.IResourceBuilder<T> builder, string source, bool isReadOnly = false)
             where T : ApplicationModel.ActiveMQServerResourceBase { throw null; }
 
+        [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to an ActiveMQ container resource")]
         public static ApplicationModel.IResourceBuilder<T> WithDataVolume<T>(this ApplicationModel.IResourceBuilder<T> builder, string? name = null, bool isReadOnly = false)
             where T : ApplicationModel.ActiveMQServerResourceBase { throw null; }
     }
@@ -40,10 +46,12 @@ namespace Aspire.Hosting.ApplicationModel
         public ActiveMQServerResource(string name, ParameterResource? userName, ParameterResource password, string scheme) : base(default!, default, default!, default!, default!) { }
     }
 
+    [AspireExport(ExposeProperties = true)]
     public abstract partial class ActiveMQServerResourceBase : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences, IResourceWithEnvironment
     {
         protected ActiveMQServerResourceBase(string name, ParameterResource? userName, ParameterResource password, string scheme, CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings settings) : base(default!, default) { }
 
+        [AspireExportIgnore(Reason = "IActiveMQSettings is an internal configuration type not compatible with ATS.")]
         public CommunityToolkit.Aspire.Hosting.ActiveMQ.IActiveMQSettings ActiveMqSettings { get { throw null; } }
 
         public ReferenceExpression ConnectionStringExpression { get { throw null; } }
