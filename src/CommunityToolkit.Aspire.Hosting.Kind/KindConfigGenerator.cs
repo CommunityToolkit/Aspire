@@ -1,8 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System.Text;
 using Aspire.Hosting.ApplicationModel;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind;
 
@@ -11,6 +12,11 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 /// </summary>
 internal static class KindConfigGenerator
 {
+    private static readonly ISerializer s_serializer = new SerializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitNull)
+        .Build();
+
     /// <summary>
     /// Generates a Kind configuration file and returns its path.
     /// The caller is responsible for deleting the file when no longer needed.
@@ -22,29 +28,67 @@ internal static class KindConfigGenerator
 
         var configPath = Path.Combine(configDir, "kind-config.yaml");
 
-        var yaml = new StringBuilder();
-        yaml.AppendLine("kind: Cluster");
-        yaml.AppendLine("apiVersion: kind.x-k8s.io/v1alpha4");
-        yaml.AppendLine("nodes:");
+        var config = new KindConfigModel();
 
-        AppendNode(yaml, "control-plane", resource.KubernetesVersion);
+        var controlPlane = new KindNodeModel { Role = "control-plane" };
+        if (!string.IsNullOrEmpty(resource.KubernetesVersion))
+        {
+            controlPlane.Image = $"{KindContainerImageTags.KindNodeImageRepository}:{resource.KubernetesVersion}";
+        }
+
+        config.Nodes.Add(controlPlane);
 
         for (int i = 0; i < resource.WorkerNodes; i++)
         {
-            AppendNode(yaml, "worker", resource.KubernetesVersion);
+            var worker = new KindNodeModel { Role = "worker" };
+            if (!string.IsNullOrEmpty(resource.KubernetesVersion))
+            {
+                worker.Image = $"{KindContainerImageTags.KindNodeImageRepository}:{resource.KubernetesVersion}";
+            }
+
+            config.Nodes.Add(worker);
         }
 
-        await File.WriteAllTextAsync(configPath, yaml.ToString(), cancellationToken).ConfigureAwait(false);
+        var yaml = s_serializer.Serialize(config);
+        await File.WriteAllTextAsync(configPath, yaml, cancellationToken).ConfigureAwait(false);
         return configPath;
     }
+}
 
-    private static void AppendNode(StringBuilder yaml, string role, string? kubernetesVersion)
-    {
-        yaml.AppendLine($"- role: {role}");
+/// <summary>
+/// Represents a Kind cluster configuration document.
+/// </summary>
+internal sealed class KindConfigModel
+{
+    /// <summary>
+    /// Gets or sets the API version for the Kind configuration.
+    /// </summary>
+    public string ApiVersion { get; set; } = "kind.x-k8s.io/v1alpha4";
 
-        if (!string.IsNullOrEmpty(kubernetesVersion))
-        {
-            yaml.AppendLine($"  image: {KindContainerImageTags.KindNodeImageRepository}:{kubernetesVersion}");
-        }
-    }
+    /// <summary>
+    /// Gets or sets the resource kind.
+    /// </summary>
+    public string Kind { get; set; } = "Cluster";
+
+    /// <summary>
+    /// Gets the list of nodes in the cluster.
+    /// </summary>
+    public List<KindNodeModel> Nodes { get; } = [];
+}
+
+/// <summary>
+/// Represents a node in a Kind cluster configuration.
+/// </summary>
+internal sealed class KindNodeModel
+{
+    /// <summary>
+    /// Gets or sets the role of the node (e.g., "control-plane" or "worker").
+    /// </summary>
+    public string Role { get; set; } = "control-plane";
+
+    /// <summary>
+    /// Gets or sets the container image for the node.
+    /// When <see langword="null"/>, Kind uses its default image.
+    /// </summary>
+    public string? Image { get; set; }
 }
