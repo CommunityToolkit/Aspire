@@ -255,7 +255,7 @@ public class AddKindClusterTests
     [Fact]
     public void ProcessHelper_Run_CapturesStdout()
     {
-        var result = ProcessHelper.Run("cmd", "/c echo hello");
+        var result = ProcessHelper.Run("cmd", ["/c", "echo", "hello"]);
 
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("hello", result.Output);
@@ -264,7 +264,7 @@ public class AddKindClusterTests
     [Fact]
     public void ProcessHelper_Run_InvalidCommand_NonZeroExitCode()
     {
-        var result = ProcessHelper.Run("cmd", "/c exit 1");
+        var result = ProcessHelper.Run("cmd", ["/c", "exit", "1"]);
 
         Assert.NotEqual(0, result.ExitCode);
     }

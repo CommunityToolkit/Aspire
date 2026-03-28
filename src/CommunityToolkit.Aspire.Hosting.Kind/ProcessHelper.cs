@@ -20,17 +20,21 @@ internal static class ProcessHelper
     /// <summary>
     /// Runs a process synchronously and returns its exit code, stdout, and stderr.
     /// </summary>
-    internal static ProcessResult Run(string fileName, string arguments)
+    internal static ProcessResult Run(string fileName, IReadOnlyList<string> arguments)
     {
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+
+        foreach (string argument in arguments)
+        {
+            psi.ArgumentList.Add(argument);
+        }
 
         using var process = new Process { StartInfo = psi };
         var stdout = new StringBuilder();
@@ -66,21 +70,25 @@ internal static class ProcessHelper
     internal static async Task<ProcessResult> RunAsync(
         ILogger logger,
         string fileName,
-        string arguments,
+        IReadOnlyList<string> arguments,
         string? workingDirectory = null,
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Executing: {FileName} {Arguments}", fileName, arguments);
+        logger.LogDebug("Executing: {FileName} {Arguments}", fileName, string.Join(' ', arguments));
 
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+
+        foreach (string argument in arguments)
+        {
+            psi.ArgumentList.Add(argument);
+        }
 
         if (workingDirectory is not null)
         {

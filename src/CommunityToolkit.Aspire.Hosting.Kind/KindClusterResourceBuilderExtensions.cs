@@ -189,7 +189,7 @@ public static class KindClusterResourceBuilderExtensions
     {
         try
         {
-            var result = ProcessHelper.Run("kind", "version");
+            var result = ProcessHelper.Run("kind", ["version"]);
             if (result.ExitCode != 0)
             {
                 throw new InvalidOperationException(

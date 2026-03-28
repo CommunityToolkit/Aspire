@@ -47,7 +47,13 @@ internal sealed class KindClusterManager
             var result = await ProcessHelper.RunAsync(
                 _logger,
                 "kind",
-                $"create cluster --name={_resource.Name} --config=\"{configPath}\" --kubeconfig=\"{_resource.KubeconfigPath}\"",
+                [
+                    "create",
+                    "cluster",
+                    $"--name={_resource.Name}",
+                    $"--config={configPath}",
+                    $"--kubeconfig={_resource.KubeconfigPath}",
+                ],
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (result.ExitCode != 0)
@@ -72,7 +78,11 @@ internal sealed class KindClusterManager
         var result = await ProcessHelper.RunAsync(
             _logger,
             "kind",
-            $"delete cluster --name={_resource.Name}",
+            [
+                "delete",
+                "cluster",
+                $"--name={_resource.Name}",
+            ],
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.ExitCode != 0)
@@ -90,7 +100,15 @@ internal sealed class KindClusterManager
         var result = await ProcessHelper.RunAsync(
             _logger,
             "docker",
-            $"ps --filter \"name={containerName}\" --filter \"status=running\" --format \"{{{{.Names}}}}\"",
+            [
+                "ps",
+                "--filter",
+                $"name={containerName}",
+                "--filter",
+                "status=running",
+                "--format",
+                "{{.Names}}",
+            ],
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.ExitCode != 0)
@@ -106,7 +124,10 @@ internal sealed class KindClusterManager
         var result = await ProcessHelper.RunAsync(
             _logger,
             "kind",
-            "get clusters",
+            [
+                "get",
+                "clusters",
+            ],
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.ExitCode != 0)
@@ -124,7 +145,12 @@ internal sealed class KindClusterManager
         var result = await ProcessHelper.RunAsync(
             _logger,
             "kind",
-            $"export kubeconfig --name={_resource.Name} --kubeconfig=\"{_resource.KubeconfigPath}\"",
+            [
+                "export",
+                "kubeconfig",
+                $"--name={_resource.Name}",
+                $"--kubeconfig={_resource.KubeconfigPath}",
+            ],
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.ExitCode != 0)

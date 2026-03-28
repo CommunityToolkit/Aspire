@@ -60,7 +60,12 @@ public static class KindNetworkResourceBuilderExtensions
                 var connectResult = await ProcessHelper.RunAsync(
                     logger,
                     "docker",
-                    $"network connect kind {containerName}",
+                    [
+                        "network",
+                        "connect",
+                        "kind",
+                        containerName,
+                    ],
                     cancellationToken: ct).ConfigureAwait(false);
 
                 if (connectResult.ExitCode != 0)
@@ -74,7 +79,10 @@ public static class KindNetworkResourceBuilderExtensions
                 var startResult = await ProcessHelper.RunAsync(
                     logger,
                     "docker",
-                    $"start {containerName}",
+                    [
+                        "start",
+                        containerName,
+                    ],
                     cancellationToken: ct).ConfigureAwait(false);
 
                 if (startResult.ExitCode != 0)
