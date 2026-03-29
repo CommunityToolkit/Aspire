@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Runtime.InteropServices;
 using Aspire.Hosting;
 using Aspire.Hosting.Lifecycle;
 
@@ -255,7 +256,9 @@ public class AddKindClusterTests
     [Fact]
     public void ProcessHelper_Run_CapturesStdout()
     {
-        var result = ProcessHelper.Run("cmd", ["/c", "echo", "hello"]);
+        var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? ProcessHelper.Run("cmd", ["/c", "echo", "hello"])
+            : ProcessHelper.Run("sh", ["-c", "echo hello"]);
 
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("hello", result.Output);
@@ -264,7 +267,9 @@ public class AddKindClusterTests
     [Fact]
     public void ProcessHelper_Run_InvalidCommand_NonZeroExitCode()
     {
-        var result = ProcessHelper.Run("cmd", ["/c", "exit", "1"]);
+        var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? ProcessHelper.Run("cmd", ["/c", "exit", "1"])
+            : ProcessHelper.Run("sh", ["-c", "exit 1"]);
 
         Assert.NotEqual(0, result.ExitCode);
     }
