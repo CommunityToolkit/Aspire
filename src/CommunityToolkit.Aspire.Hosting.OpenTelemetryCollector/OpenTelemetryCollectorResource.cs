@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -24,3 +24,5 @@ public class OpenTelemetryCollectorResource(string name) : ContainerResource(nam
     /// </summary>
     public EndpointReference HttpEndpoint => new(this, HttpEndpointName);
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

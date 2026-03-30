@@ -39,3 +39,5 @@ public static class OpenTelemetryCollectorRoutingExtensions
         return builder;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

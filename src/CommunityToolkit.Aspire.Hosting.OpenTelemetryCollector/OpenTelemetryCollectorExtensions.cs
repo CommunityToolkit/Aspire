@@ -136,3 +136,5 @@ public static class OpenTelemetryCollectorExtensions
             .WithArgs($"--config=/config/{configFileInfo.Name}");
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

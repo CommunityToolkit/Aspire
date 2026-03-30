@@ -54,3 +54,5 @@ public class OpenTelemetryCollectorSettings
     /// </summary>
     public bool DisableHealthcheck { get; set; } = false;
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
