@@ -10,6 +10,11 @@
     "outDir": "./dist",
     "rootDir": "."
   },
-  "include": ["apphost.ts", ".modules/**/*.ts", ".modules/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "apphost.ts",
+    ".modules/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

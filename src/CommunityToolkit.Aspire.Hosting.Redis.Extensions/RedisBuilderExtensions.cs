@@ -79,3 +79,5 @@ public static class RedisBuilderExtensions
         }
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
