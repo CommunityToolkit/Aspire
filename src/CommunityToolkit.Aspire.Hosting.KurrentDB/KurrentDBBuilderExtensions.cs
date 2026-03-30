@@ -146,3 +146,5 @@ public static class KurrentDBBuilderExtensions
         context.EnvironmentVariables.Add("KURRENTDB_INSECURE", "true");
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
