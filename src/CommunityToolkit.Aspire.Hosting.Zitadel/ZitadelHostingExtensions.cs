@@ -197,3 +197,5 @@ public static class ZitadelHostingExtensions
         return builder.WithEnvironment("ZITADEL_EXTERNALDOMAIN", externalDomain);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
