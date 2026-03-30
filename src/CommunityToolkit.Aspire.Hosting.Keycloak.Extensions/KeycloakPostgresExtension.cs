@@ -75,3 +75,5 @@ public static class KeycloakPostgresExtension
                                                      database.Resource.Parent.PasswordParameter));
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
