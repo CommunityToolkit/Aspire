@@ -33,6 +33,11 @@
   <Folder Name="/examples/deno/">
     <Project Path="examples/deno/CommunityToolkit.Aspire.Hosting.Deno.AppHost/CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/duckdb/">
+    <Project Path="examples/duckdb/CommunityToolkit.Aspire.DuckDB.Api/CommunityToolkit.Aspire.DuckDB.Api.csproj" />
+    <Project Path="examples/duckdb/CommunityToolkit.Aspire.DuckDB.AppHost/CommunityToolkit.Aspire.DuckDB.AppHost.csproj" />
+    <Project Path="examples/duckdb/CommunityToolkit.Aspire.DuckDB.ServiceDefaults/CommunityToolkit.Aspire.DuckDB.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/elasticsearch-ext/">
     <Project Path="examples/elasticsearch-ext/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost.csproj" />
   </Folder>
@@ -204,6 +209,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.DuckDB/CommunityToolkit.Aspire.Hosting.DuckDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flyway/CommunityToolkit.Aspire.Hosting.Flyway.csproj" />
@@ -238,6 +244,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.DuckDB.NET.Data/CommunityToolkit.Aspire.DuckDB.NET.Data.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.KurrentDB/CommunityToolkit.Aspire.KurrentDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Meilisearch/CommunityToolkit.Aspire.Meilisearch.csproj" />
@@ -265,6 +272,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.DuckDB.Tests/CommunityToolkit.Aspire.Hosting.DuckDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests.csproj" />
@@ -299,6 +307,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj" />

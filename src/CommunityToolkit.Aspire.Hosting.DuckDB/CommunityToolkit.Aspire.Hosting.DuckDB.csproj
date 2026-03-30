@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>An Aspire hosting integration for providing a DuckDB database connection.</Description>
+    <AdditionalPackageTags>hosting duckdb analytics olap</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.DuckDB.Tests"></InternalsVisibleTo>
+  </ItemGroup>
+</Project>

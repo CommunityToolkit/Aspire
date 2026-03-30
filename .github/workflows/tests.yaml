@@ -30,6 +30,7 @@ jobs:
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
             Hosting.Deno.Tests,
+            Hosting.DuckDB.Tests,
             Hosting.Elasticsearch.Extensions.Tests,
             Hosting.Flagd.Tests,
             Hosting.Flyway.Tests,
@@ -68,6 +69,7 @@ jobs:
             Hosting.Zitadel.Tests,
 
             # Client integration tests
+            DuckDB.NET.Data.Tests,
             GoFeatureFlag.Tests,
             KurrentDB.Tests,
             MassTransit.RabbitMQ.Tests,
