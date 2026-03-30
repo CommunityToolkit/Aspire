@@ -182,3 +182,5 @@ internal enum GoFeatureFlagLogLevel
     Warning,
     Error
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

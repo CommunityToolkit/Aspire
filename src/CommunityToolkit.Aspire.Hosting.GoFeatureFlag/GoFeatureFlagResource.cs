@@ -52,3 +52,5 @@ public class GoFeatureFlagResource(string name) : ContainerResource(name), IReso
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
