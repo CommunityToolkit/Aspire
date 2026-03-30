@@ -308,3 +308,5 @@ public static class StripeExtensions
         return null;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
