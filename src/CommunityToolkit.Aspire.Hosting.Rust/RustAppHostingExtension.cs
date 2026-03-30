@@ -42,3 +42,5 @@ public static class RustAppHostingExtension
         this IResourceBuilder<RustAppExecutableResource> builder) =>
         builder.WithOtlpExporter();
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
