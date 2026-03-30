@@ -25,16 +25,9 @@ runs:
           10.0.x
 
     - name: Install Aspire CLI
-      shell: pwsh
-      run: |
-        $aspireVersion = '13.2.0'
-        Invoke-Expression "& { $(Invoke-RestMethod 'https://aspire.dev/install.ps1') } -Version '$aspireVersion'"
-
-        $aspireToolPath = Join-Path (Join-Path $HOME '.aspire') 'bin'
-        Add-Content -Path $env:GITHUB_PATH -Value $aspireToolPath
-        $env:PATH = "$aspireToolPath$([IO.Path]::PathSeparator)$env:PATH"
-
-        aspire --version
+      uses: timheuer/setup-aspire@v0.1.0
+      with:
+        quality: release
 
     - name: Set up Python
       uses: actions/setup-python@v5

@@ -465,3 +465,5 @@ public static partial class JavaScriptHostingExtensions
                 return Task.CompletedTask;
             });
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
