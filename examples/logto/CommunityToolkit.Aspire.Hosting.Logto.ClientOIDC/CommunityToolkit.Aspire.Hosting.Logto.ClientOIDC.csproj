@@ -7,8 +7,6 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect"/>
   </ItemGroup>
 </Project>
