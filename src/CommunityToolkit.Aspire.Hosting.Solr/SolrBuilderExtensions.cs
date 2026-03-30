@@ -117,3 +117,5 @@ public static class SolrBuilderExtensions
         return builder.WithBindMount(source, "/var/solr", isReadOnly);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
