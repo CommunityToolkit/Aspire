@@ -105,3 +105,5 @@ public static class StreamlitAppHostingExtension
         return streamlitBuilder;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
