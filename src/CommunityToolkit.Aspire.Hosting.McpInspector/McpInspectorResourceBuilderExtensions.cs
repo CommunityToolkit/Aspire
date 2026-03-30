@@ -416,3 +416,5 @@ public static class McpInspectorResourceBuilderExtensions
         return builder.WithCommand("bunx");
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental.
