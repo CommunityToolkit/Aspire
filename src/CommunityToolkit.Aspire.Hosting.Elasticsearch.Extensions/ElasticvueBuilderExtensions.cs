@@ -139,3 +139,5 @@ public static class ElasticvueBuilderExtensions
         return clusters ?? [];
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
