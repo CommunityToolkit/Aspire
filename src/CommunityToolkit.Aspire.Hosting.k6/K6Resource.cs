@@ -21,3 +21,5 @@ public class K6Resource(string name) : ContainerResource(name)
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
