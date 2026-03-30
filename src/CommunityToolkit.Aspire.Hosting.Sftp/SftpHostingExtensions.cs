@@ -165,3 +165,5 @@ public static class SftpHostingExtensions
         return builder.WithBindMount(fileInfo.FullName, $"/home/{username}/.ssh/keys/{fileInfo.Name}");
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

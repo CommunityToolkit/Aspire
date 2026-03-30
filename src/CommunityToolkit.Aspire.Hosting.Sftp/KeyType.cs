@@ -19,3 +19,5 @@ public enum KeyType
     /// </summary>
     Rsa
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
