@@ -109,3 +109,5 @@ public static class UmamiBuilderExtensions
         return builder;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

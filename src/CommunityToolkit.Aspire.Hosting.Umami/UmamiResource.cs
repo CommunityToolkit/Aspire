@@ -36,3 +36,5 @@ public class UmamiResource : ContainerResource, IResourceWithServiceDiscovery
     /// </summary>
     public ParameterResource SecretParameter { get; }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
