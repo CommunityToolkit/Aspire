@@ -1,0 +1,6 @@
+@CommunityToolkit.Aspire.Hosting.Logto.ClientJWT_HostAddress = http://localhost:5072
+
+GET {{CommunityToolkit.Aspire.Hosting.Logto.ClientJWT_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,21 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Logto\CommunityToolkit.Aspire.Hosting.Logto.csproj" 
+                        IsAspireProjectResource="false"  />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Logto.ClientJWT\CommunityToolkit.Aspire.Hosting.Logto.ClientJWT.csproj" />
+      <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Logto.ClientOIDC\CommunityToolkit.Aspire.Hosting.Logto.ClientOIDC.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+      <PackageReference Include="Aspire.Hosting.Redis" />
+    </ItemGroup>
+
+</Project>

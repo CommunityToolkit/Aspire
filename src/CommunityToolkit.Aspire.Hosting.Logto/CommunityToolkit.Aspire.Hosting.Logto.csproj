@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  
+  <PropertyGroup>
+    <Description>.NET Aspire hosting extensions for Logto (includes PostgreSQL and Redis integration).</Description>
+    <AdditionalPackageTags>logto redis postgres hosting extensions</AdditionalPackageTags>
+    <IsPreview>true</IsPreview>
+  </PropertyGroup>
+  
+    <ItemGroup>
+      <PackageReference Include="Aspire.Hosting" />
+      <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+      <PackageReference Include="Aspire.Hosting.Redis" />
+    </ItemGroup>
+
+</Project>
