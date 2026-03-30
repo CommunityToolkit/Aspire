@@ -204,3 +204,5 @@ public static class SqlServerBuilderExtensions
         context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
