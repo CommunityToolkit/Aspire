@@ -16,8 +16,10 @@ public class ConfigurationTests
 
         builder.AddDuckDBConnection("duckdb");
 
-        // Verify it doesn't throw - connection string should be resolved
         using var host = builder.Build();
+        var connection = host.Services.GetRequiredService<DuckDBConnection>();
+
+        Assert.Equal("DataSource=:memory:", connection.ConnectionString);
     }
 
     [Fact]
