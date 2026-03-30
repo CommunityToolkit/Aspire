@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
-
+const string apiAudience = "http://localhost:5072/";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddLogtoJwtBearer("logto", "http://localhost:5072/",
+    .AddLogtoJwtBearer("logto", appIdentification: apiAudience,
         configureOptions: opt =>
         {
             opt.RequireHttpsMetadata = false;
