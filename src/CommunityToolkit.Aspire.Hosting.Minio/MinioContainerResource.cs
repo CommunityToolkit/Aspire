@@ -102,3 +102,5 @@ public sealed class MinioContainerResource(string name, ParameterResource rootUs
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

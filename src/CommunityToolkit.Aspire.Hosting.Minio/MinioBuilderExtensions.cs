@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Minio;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -181,3 +181,5 @@ public static class MinioBuilderExtensions
         return builder.WithBindMount(source, "/data");
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
