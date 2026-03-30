@@ -96,3 +96,5 @@ public static class SqliteResourceBuilderExtensions
     internal static IResourceBuilder<SqliteResource> WithSqliteWebForPolyglot(this IResourceBuilder<SqliteResource> builder, string? containerName = null)
         => builder.WithSqliteWeb(configureContainer: null, containerName: containerName);
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
