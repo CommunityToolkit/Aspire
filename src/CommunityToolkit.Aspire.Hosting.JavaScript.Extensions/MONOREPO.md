@@ -46,10 +46,11 @@ var app3 = turbo.AddApp("app3");
 
 ## Package Managers
 
-Both Nx and Turborepo support yarn and pnpm package managers:
+Both Nx and Turborepo support yarn, pnpm, and bun package managers:
 
--   `.WithYarnPackageInstaller()` - uses yarn
--   `.WithPnpmPackageInstaller()` - uses pnpm
+- `.WithYarn(install: true)` - uses yarn
+- `.WithPnpm(install: true)` - uses pnpm
+- `.WithBun(install: true)` - uses bun
 
 > **Note**: npm support (`AddNpmApp`, `WithNpmPackageInstallation`) is now provided by [Aspire.Hosting.JavaScript](https://www.nuget.org/packages/Aspire.Hosting.JavaScript) starting with Aspire 13.
 
@@ -144,4 +145,3 @@ var nx = builder.AddNxApp("nx", workingDirectory: "../frontend")
 
 // This is valid - you can install with pnpm but run apps with yarn
 ```
-
