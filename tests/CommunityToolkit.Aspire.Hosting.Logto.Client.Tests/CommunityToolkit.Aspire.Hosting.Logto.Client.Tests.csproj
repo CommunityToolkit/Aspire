@@ -1,8 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  
-  
-    <ItemGroup>
-      <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Logto.Client\CommunityToolkit.Aspire.Hosting.Logto.Client.csproj" />
-    </ItemGroup>
-
-</Project>

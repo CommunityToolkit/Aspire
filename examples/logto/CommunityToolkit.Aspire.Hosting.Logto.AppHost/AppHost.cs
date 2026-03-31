@@ -12,10 +12,10 @@ var logto = builder.AddLogtoContainer("logto", postgres)
     .WithRedis(cache);
 
 
-var clientOIDC = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Logto_ClientOIDC>("clientOIDC")
+var clientOIDC = builder.AddProject<Projects.CommunityToolkit_Aspire_Logto_ClientOIDC>("clientOIDC")
     .WithReference(logto)
     .WaitFor(logto);
-var clientJWT = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Logto_ClientJWT>("clientJWT")
+var clientJWT = builder.AddProject<Projects.CommunityToolkit_Aspire_Logto_ClientJWT>("clientJWT")
     .WithReference(logto)
     .WaitFor(logto);
 

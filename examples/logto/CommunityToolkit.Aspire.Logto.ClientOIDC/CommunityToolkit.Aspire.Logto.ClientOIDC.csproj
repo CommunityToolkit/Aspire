@@ -3,7 +3,7 @@
     <RootNamespace>CommunityToolkit.Aspire.Hosting.Logto.Client</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Logto.Client\CommunityToolkit.Aspire.Hosting.Logto.Client.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Logto.Client\CommunityToolkit.Aspire.Logto.Client.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,4 @@
-using CommunityToolkit.Aspire.Hosting.Logto.Client;
+using CommunityToolkit.Aspire.Logto.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 

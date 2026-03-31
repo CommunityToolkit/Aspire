@@ -1,6 +1,6 @@
 ﻿using System.Data.Common;
 
-namespace CommunityToolkit.Aspire.Hosting.Logto.Client;
+namespace CommunityToolkit.Aspire.Logto.Client;
 
 /// <summary>
 /// Provides utility methods for extracting and validating endpoint information

@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
-namespace CommunityToolkit.Aspire.Hosting.Logto.Client;
+namespace CommunityToolkit.Aspire.Logto.Client;
 
 /// <summary>
 /// Provides methods to configure and add Logto client services to an application builder.

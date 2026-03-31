@@ -1,4 +1,4 @@
-﻿namespace CommunityToolkit.Aspire.Hosting.Logto.Client.Tests;
+﻿namespace CommunityToolkit.Aspire.Logto.Client.Tests;
 
 public class LogtoConnectionStringHelperTests
 {

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
-namespace CommunityToolkit.Aspire.Hosting.Logto.Client.Tests;
+namespace CommunityToolkit.Aspire.Logto.Client.Tests;
 
 public class LogtoClientBuilderIntegrationTests
 {

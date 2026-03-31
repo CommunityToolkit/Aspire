@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace CommunityToolkit.Aspire.Hosting.Logto.Client.Tests;
+namespace CommunityToolkit.Aspire.Logto.Client.Tests;
 
 public class LogtoClientBuilderTests
 {
