@@ -68,6 +68,7 @@
     <!-- External packages -->
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.1.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
+    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
     <PackageVersion Include="Minio" Version="6.0.5" />

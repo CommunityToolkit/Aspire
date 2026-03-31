@@ -4,6 +4,8 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
@@ -34,9 +36,28 @@ public static class KindHelmChartResourceBuilderExtensions
 
         var resource = new KindHelmChartResource(name, chartRef, builder.Resource);
 
+        var healthCheckKey = $"helm_{name}";
+        builder.ApplicationBuilder.Services.AddHealthChecks()
+            .Add(new HealthCheckRegistration(
+                healthCheckKey,
+                sp =>
+                {
+                    var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+                    var logger = loggerFactory.CreateLogger<KubernetesWorkloadHealthCheck>();
+                    return new KubernetesWorkloadHealthCheck(
+                        resource.Parent.KubeconfigPath,
+                        $"app.kubernetes.io/instance={resource.ReleaseName}",
+                        resource.Namespace,
+                        logger);
+                },
+                failureStatus: null,
+                tags: null,
+                timeout: null));
+
         var resourceBuilder = builder.ApplicationBuilder
             .AddResource(resource)
             .ExcludeFromManifest()
+            .WithHealthCheck(healthCheckKey)
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "Helm Chart",
@@ -52,10 +73,14 @@ public static class KindHelmChartResourceBuilderExtensions
             var notifications = e.Notifications;
             var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
             var logger = loggerService.GetLogger(resource);
-            await notifications.PublishUpdateAsync(resource,
-                state => state with { State = KnownResourceStates.Starting });
+
+            // Wait for the parent Kind cluster to be running before installing the chart.
+            await notifications.WaitForResourceAsync(resource.Parent.Name, KnownResourceStates.Running, ct);
 
             await e.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, e.Services), ct);
+            
+            await notifications.PublishUpdateAsync(resource,
+                state => state with { State = KnownResourceStates.Starting });
 
             try
             {

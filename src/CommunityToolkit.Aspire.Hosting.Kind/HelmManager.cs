@@ -13,7 +13,7 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 internal static class HelmManager
 {
     /// <summary>
-    /// Installs or upgrades the Helm release. Uses <c>helm upgrade --install --wait</c> for idempotency.
+    /// Installs or upgrades the Helm release.
     /// </summary>
     public static async Task InstallAsync(KindHelmChartResource resource, ILogger logger, CancellationToken cancellationToken)
     {
@@ -50,7 +50,6 @@ internal static class HelmManager
             resource.ReleaseName,
             resource.ChartRef,
             $"--kubeconfig={resource.Parent.KubeconfigPath}",
-            "--wait",
         ];
 
         if (!string.IsNullOrEmpty(resource.Version))

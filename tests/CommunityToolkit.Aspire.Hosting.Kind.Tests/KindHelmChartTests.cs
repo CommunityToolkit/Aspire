@@ -208,7 +208,6 @@ public class KindHelmChartTests
             "redis",
             "./charts/my chart",
             $"--kubeconfig={cluster.KubeconfigPath}",
-            "--wait",
             "--version",
             "20.0.0",
             "--namespace",
@@ -326,5 +325,43 @@ public class KindHelmChartTests
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(chartRef), exception.ParamName);
+    }
+
+    [Fact]
+    public void AddHelmChartRegistersHealthCheck()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var helmResource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
+        var healthCheckAnnotations = helmResource.Annotations.OfType<HealthCheckAnnotation>();
+        Assert.NotEmpty(healthCheckAnnotations);
+    }
+
+    [Fact]
+    public void AddHelmChartRegistersUniqueHealthCheckPerResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis");
+        cluster.AddHelmChart("prometheus", "prometheus-community/kube-prometheus-stack");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var helmResources = appModel.Resources.OfType<KindHelmChartResource>().ToList();
+        Assert.Equal(2, helmResources.Count);
+
+        foreach (KindHelmChartResource resource in helmResources)
+        {
+            var healthCheckAnnotations = resource.Annotations.OfType<HealthCheckAnnotation>();
+            Assert.NotEmpty(healthCheckAnnotations);
+        }
     }
 }
