@@ -4,6 +4,7 @@
 using System.Runtime.InteropServices;
 using Aspire.Hosting;
 using Aspire.Hosting.Lifecycle;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
@@ -251,25 +252,29 @@ public class AddKindClusterTests
         }
     }
 
-    // ── ProcessHelper.Run tests ──────────────────────────────────────────
+    // ── DefaultProcessRunner tests ──────────────────────────────────────
 
     [Fact]
-    public void ProcessHelper_Run_CapturesStdout()
+    public async Task DefaultProcessRunner_CapturesStdout()
     {
+        var runner = new DefaultProcessRunner();
+
         var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? ProcessHelper.Run("cmd", ["/c", "echo", "hello"])
-            : ProcessHelper.Run("sh", ["-c", "echo hello"]);
+            ? await runner.RunAsync(NullLogger.Instance, "cmd", ["/c", "echo", "hello"])
+            : await runner.RunAsync(NullLogger.Instance, "sh", ["-c", "echo hello"]);
 
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("hello", result.Output);
     }
 
     [Fact]
-    public void ProcessHelper_Run_InvalidCommand_NonZeroExitCode()
+    public async Task DefaultProcessRunner_InvalidCommand_NonZeroExitCode()
     {
+        var runner = new DefaultProcessRunner();
+
         var result = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? ProcessHelper.Run("cmd", ["/c", "exit", "1"])
-            : ProcessHelper.Run("sh", ["-c", "exit 1"]);
+            ? await runner.RunAsync(NullLogger.Instance, "cmd", ["/c", "exit", "1"])
+            : await runner.RunAsync(NullLogger.Instance, "sh", ["-c", "exit 1"]);
 
         Assert.NotEqual(0, result.ExitCode);
     }

@@ -16,7 +16,8 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 /// </summary>
 internal sealed class KindClusterLifecycleHook(
     DistributedApplicationModel appModel,
-    ResourceLoggerService loggerService) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
+    ResourceLoggerService loggerService,
+    IProcessRunner processRunner) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
 {
     /// <inheritdoc />
     public Task SubscribeAsync(
@@ -43,7 +44,7 @@ internal sealed class KindClusterLifecycleHook(
             }
 
             var logger = loggerService.GetLogger(resource);
-            var manager = new KindClusterManager(resource, logger);
+            var manager = new KindClusterManager(resource, logger, processRunner);
 
             try
             {

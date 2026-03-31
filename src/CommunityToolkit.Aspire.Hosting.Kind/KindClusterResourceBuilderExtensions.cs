@@ -29,10 +29,9 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        EnsureKindCliIsAvailable();
-
         var resource = new KindClusterResource(name);
 
+        builder.Services.AddKindInfrastructure();
         builder.Services.TryAddEventingSubscriber<KindClusterLifecycleHook>();
 
         var healthCheckKey = $"kind_{name}";
@@ -43,7 +42,8 @@ public static class KindClusterResourceBuilderExtensions
                 {
                     var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                     var logger = loggerFactory.CreateLogger<KindClusterManager>();
-                    var manager = new KindClusterManager(resource, logger);
+                    var processRunner = sp.GetRequiredService<IProcessRunner>();
+                    var manager = new KindClusterManager(resource, logger, processRunner);
                     return new KindHealthCheck(manager);
                 },
                 failureStatus: null,
@@ -68,7 +68,11 @@ public static class KindClusterResourceBuilderExtensions
             var notifications = e.Notifications;
             var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
             var logger = loggerService.GetLogger(resource);
-            var manager = new KindClusterManager(resource, logger);
+            var processRunner = e.Services.GetRequiredService<IProcessRunner>();
+
+            await EnsureKindCliIsAvailableAsync(processRunner, logger, ct);
+
+            var manager = new KindClusterManager(resource, logger, processRunner);
 
             await notifications.PublishUpdateAsync(resource,
                 state => state with { State = KnownResourceStates.Starting });
@@ -185,11 +189,14 @@ public static class KindClusterResourceBuilderExtensions
     /// Verifies that the Kind CLI is installed and available on PATH.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when the Kind CLI is not found.</exception>
-    private static void EnsureKindCliIsAvailable()
+    private static async Task EnsureKindCliIsAvailableAsync(
+        IProcessRunner processRunner,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         try
         {
-            var result = ProcessHelper.Run("kind", ["version"]);
+            var result = await processRunner.RunAsync(logger, "kind", ["version"], cancellationToken: cancellationToken);
             if (result.ExitCode != 0)
             {
                 throw new InvalidOperationException(

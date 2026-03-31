@@ -13,11 +13,13 @@ internal sealed class KindClusterManager
 {
     private readonly KindClusterResource _resource;
     private readonly ILogger _logger;
+    private readonly IProcessRunner _processRunner;
 
-    public KindClusterManager(KindClusterResource resource, ILogger logger)
+    public KindClusterManager(KindClusterResource resource, ILogger logger, IProcessRunner processRunner)
     {
         _resource = resource;
         _logger = logger;
+        _processRunner = processRunner;
     }
 
     /// <summary>
@@ -44,7 +46,7 @@ internal sealed class KindClusterManager
         try
         {
             _logger.LogInformation("Creating Kind cluster '{ClusterName}'...", _resource.Name);
-            var result = await ProcessHelper.RunAsync(
+            var result = await _processRunner.RunAsync(
                 _logger,
                 "kind",
                 [
@@ -75,7 +77,7 @@ internal sealed class KindClusterManager
     /// </summary>
     public async Task DeleteClusterAsync(CancellationToken cancellationToken)
     {
-        var result = await ProcessHelper.RunAsync(
+        var result = await _processRunner.RunAsync(
             _logger,
             "kind",
             [
@@ -97,7 +99,7 @@ internal sealed class KindClusterManager
     public async Task<bool> IsControlPlaneRunningAsync(CancellationToken cancellationToken)
     {
         var containerName = $"{_resource.Name}-control-plane";
-        var result = await ProcessHelper.RunAsync(
+        var result = await _processRunner.RunAsync(
             _logger,
             "docker",
             [
@@ -121,7 +123,7 @@ internal sealed class KindClusterManager
 
     private async Task<bool> ClusterExistsAsync(CancellationToken cancellationToken)
     {
-        var result = await ProcessHelper.RunAsync(
+        var result = await _processRunner.RunAsync(
             _logger,
             "kind",
             [
@@ -142,7 +144,7 @@ internal sealed class KindClusterManager
 
     private async Task ExportKubeconfigAsync(CancellationToken cancellationToken)
     {
-        var result = await ProcessHelper.RunAsync(
+        var result = await _processRunner.RunAsync(
             _logger,
             "kind",
             [
@@ -159,3 +161,4 @@ internal sealed class KindClusterManager
         }
     }
 }
+

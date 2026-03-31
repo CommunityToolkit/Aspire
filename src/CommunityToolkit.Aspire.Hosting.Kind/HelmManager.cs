@@ -10,12 +10,12 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 /// <summary>
 /// Manages Helm chart deployments to a Kind cluster by orchestrating Helm CLI calls.
 /// </summary>
-internal static class HelmManager
+internal sealed class HelmManager(IProcessRunner processRunner)
 {
     /// <summary>
     /// Installs or upgrades the Helm release.
     /// </summary>
-    public static async Task InstallAsync(KindHelmChartResource resource, ILogger logger, CancellationToken cancellationToken)
+    public async Task InstallAsync(KindHelmChartResource resource, ILogger logger, CancellationToken cancellationToken)
     {
         var args = CreateInstallArguments(resource);
 
@@ -23,7 +23,7 @@ internal static class HelmManager
             "Installing Helm chart '{ChartRef}' as release '{ReleaseName}' in cluster '{ClusterName}'...",
             resource.ChartRef, resource.ReleaseName, resource.Parent.Name);
 
-        var result = await ProcessHelper.RunAsync(
+        var result = await processRunner.RunAsync(
             logger,
             "helm",
             args,

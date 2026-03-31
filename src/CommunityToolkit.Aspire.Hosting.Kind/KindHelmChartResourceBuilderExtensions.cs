@@ -84,7 +84,9 @@ public static class KindHelmChartResourceBuilderExtensions
 
             try
             {
-                await HelmManager.InstallAsync(resource, logger, ct);
+                var processRunner = e.Services.GetRequiredService<IProcessRunner>();
+                var helmManager = new HelmManager(processRunner);
+                await helmManager.InstallAsync(resource, logger, ct);
 
                 await notifications.PublishUpdateAsync(resource,
                     state => state with

@@ -56,8 +56,9 @@ public static class KindNetworkResourceBuilderExtensions
 
                 var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
                 var logger = loggerService.GetLogger(containerName);
+                var processRunner = e.Services.GetRequiredService<IProcessRunner>();
 
-                var connectResult = await ProcessHelper.RunAsync(
+                var connectResult = await processRunner.RunAsync(
                     logger,
                     "docker",
                     [
@@ -76,7 +77,7 @@ public static class KindNetworkResourceBuilderExtensions
                     return;
                 }
 
-                var startResult = await ProcessHelper.RunAsync(
+                var startResult = await processRunner.RunAsync(
                     logger,
                     "docker",
                     [
