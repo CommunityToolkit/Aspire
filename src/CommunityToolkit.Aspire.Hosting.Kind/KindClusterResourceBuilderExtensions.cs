@@ -94,8 +94,6 @@ public static class KindClusterResourceBuilderExtensions
                         State = KnownResourceStates.Running,
                         Properties = [
                             new("ClusterName", resource.Name),
-                            new("KubernetesVersion", resource.KubernetesVersion ?? "default"),
-                            new("WorkerNodes", resource.WorkerNodes.ToString()),
                             new("KubeConfigPath", resource.KubeconfigPath),
                             new("Lifetime", lifetime.ToString()),
                         ]
@@ -125,7 +123,8 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(version);
 
-        builder.Resource.KubernetesVersion = version;
+        var annotation = GetOrCreateNodeImageAnnotation(builder.Resource);
+        annotation.Version = version;
         return builder;
     }
 
@@ -142,8 +141,7 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
 
-        builder.Resource.WorkerNodes = count;
-        return builder;
+        return builder.WithAnnotation(new WorkerNodesAnnotation(count), ResourceAnnotationMutationBehavior.Replace);
     }
 
     /// <summary>
@@ -161,6 +159,28 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder.WithAnnotation(new ClusterLifetimeAnnotation { Lifetime = lifetime }, ResourceAnnotationMutationBehavior.Replace);
+    }
+
+    /// <summary>
+    /// Customizes the Kind cluster configuration. The callback receives the <see cref="KindConfigModel"/>
+    /// after default nodes have been populated, allowing arbitrary modifications before serialization to YAML.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="configure">A callback to customize the Kind configuration model.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{KindClusterResource}"/>.</returns>
+    /// <remarks>
+    /// Multiple calls to this method compose: each callback is applied in order during config generation.
+    /// </remarks>
+    public static IResourceBuilder<KindClusterResource> WithKindConfig(
+        this IResourceBuilder<KindClusterResource> builder,
+        Action<KindConfigModel> configure)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        builder.WithAnnotation(new KindConfigAnnotation(configure));
+
+        return builder;
     }
 
     /// <summary>
@@ -183,6 +203,18 @@ public static class KindClusterResourceBuilderExtensions
             context.EnvironmentVariables["KUBECONFIG"] = kind.Resource.KubeconfigPath;
             context.EnvironmentVariables["K8S_CLUSTER_NAME"] = kind.Resource.Name;
         });
+    }
+
+    private static KindNodeImageAnnotation GetOrCreateNodeImageAnnotation(KindClusterResource resource)
+    {
+        if (resource.TryGetLastAnnotation<KindNodeImageAnnotation>(out var existing))
+        {
+            return existing;
+        }
+
+        var annotation = new KindNodeImageAnnotation();
+        resource.Annotations.Add(annotation);
+        return annotation;
     }
 
     /// <summary>

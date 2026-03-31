@@ -25,7 +25,7 @@ public class AddKindClusterTests
     }
 
     [Fact]
-    public void WithKubernetesVersionSetsVersion()
+    public async Task WithKubernetesVersionSetsVersion()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -36,11 +36,20 @@ public class AddKindClusterTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
-        Assert.Equal("v1.32.2", resource.KubernetesVersion);
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains($"image: {"kindest/node"}:v1.32.2", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
     }
 
     [Fact]
-    public void WithWorkerNodesSetsCount()
+    public async Task WithWorkerNodesSetsCount()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -51,11 +60,21 @@ public class AddKindClusterTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
-        Assert.Equal(3, resource.WorkerNodes);
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            var workerCount = yaml.Split("- role: worker").Length - 1;
+            Assert.Equal(3, workerCount);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
     }
 
     [Fact]
-    public void DefaultsAreCorrect()
+    public async Task DefaultsAreCorrect()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -65,8 +84,18 @@ public class AddKindClusterTests
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
-        Assert.Equal(0, resource.WorkerNodes);
-        Assert.Null(resource.KubernetesVersion);
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("- role: control-plane", yaml);
+            Assert.DoesNotContain("- role: worker", yaml);
+            Assert.DoesNotContain("image:", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
     }
 
     [Fact]
@@ -97,17 +126,21 @@ public class AddKindClusterTests
     [Fact]
     public async Task GeneratedConfigContainsImageFromKindContainerImageTags()
     {
-        var resource = new KindClusterResource("test-cluster")
+        var resource = new KindClusterResource("test-cluster");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
         {
-            KubernetesVersion = KindContainerImageTags.DefaultKubernetesVersion,
-        };
+            foreach (var node in config.Nodes)
+            {
+                node.Image = $"{"kindest/node"}:v1.32.0";
+            }
+        }));
 
         var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
 
         try
         {
             var yaml = await File.ReadAllTextAsync(configPath);
-            var expectedImage = $"{KindContainerImageTags.KindNodeImageRepository}:{KindContainerImageTags.DefaultKubernetesVersion}";
+            var expectedImage = $"{"kindest/node"}:v1.32.0";
             Assert.Contains(expectedImage, yaml);
         }
         finally
@@ -183,7 +216,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task GenerateConfig_ZeroWorkers_OnlyControlPlane()
     {
-        var resource = new KindClusterResource("cfg-zero") { WorkerNodes = 0 };
+        var resource = new KindClusterResource("cfg-zero");
 
         var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
         try
@@ -201,7 +234,14 @@ public class AddKindClusterTests
     [Fact]
     public async Task GenerateConfig_ThreeWorkers_HasControlPlaneAndThreeWorkers()
     {
-        var resource = new KindClusterResource("cfg-three") { WorkerNodes = 3 };
+        var resource = new KindClusterResource("cfg-three");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                config.Nodes.Add(new KindNodeModel { Role = "worker" });
+            }
+        }));
 
         var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
         try
@@ -221,7 +261,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task GenerateConfig_NoK8sVersion_OmitsImageLine()
     {
-        var resource = new KindClusterResource("cfg-noversion") { KubernetesVersion = null };
+        var resource = new KindClusterResource("cfg-noversion");
 
         var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
         try
@@ -238,18 +278,215 @@ public class AddKindClusterTests
     [Fact]
     public async Task GenerateConfig_WithK8sVersion_IncludesImageLine()
     {
-        var resource = new KindClusterResource("cfg-version") { KubernetesVersion = "v1.31.0" };
+        var resource = new KindClusterResource("cfg-version");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            foreach (var node in config.Nodes)
+            {
+                node.Image = $"{"kindest/node"}:v1.31.0";
+            }
+        }));
 
         var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
         try
         {
             var yaml = await File.ReadAllTextAsync(configPath);
-            Assert.Contains($"image: {KindContainerImageTags.KindNodeImageRepository}:v1.31.0", yaml);
+            Assert.Contains($"image: {"kindest/node"}:v1.31.0", yaml);
         }
         finally
         {
             File.Delete(configPath);
         }
+    }
+
+    // ── DefaultProcessRunner tests ──────────────────────────────────────
+    // ── WithKindConfig / KindConfigAnnotation tests ────────────────────
+
+    [Fact]
+    public async Task WithKindConfig_AddsExtraPortMapping_AppearsInYaml()
+    {
+        var resource = new KindClusterResource("cfg-port");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            config.Nodes[0].ExtraPortMappings =
+            [
+                new KindPortMappingModel { ContainerPort = 80, HostPort = 8080, Protocol = "TCP" }
+            ];
+        }));
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("containerPort: 80", yaml);
+            Assert.Contains("hostPort: 8080", yaml);
+            Assert.Contains("protocol: TCP", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task WithKindConfig_SetsFeatureGate_AppearsInYaml()
+    {
+        var resource = new KindClusterResource("cfg-fg");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            config.FeatureGates = new Dictionary<string, bool> { ["SomeAlphaFeature"] = true };
+        }));
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("featureGates:", yaml);
+            Assert.Contains("SomeAlphaFeature: true", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task WithKindConfig_DisableDefaultCNI_AppearsInYaml()
+    {
+        var resource = new KindClusterResource("cfg-cni");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            config.Networking = new KindNetworkingModel { DisableDefaultCNI = true };
+        }));
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("networking:", yaml);
+            Assert.Contains("disableDefaultCNI: true", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task WithKindConfig_AddsExtraMount_AppearsInYaml()
+    {
+        var resource = new KindClusterResource("cfg-mount");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            config.Nodes[0].ExtraMounts =
+            [
+                new KindMountModel { HostPath = "/tmp/data", ContainerPath = "/data" }
+            ];
+        }));
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("hostPath: /tmp/data", yaml);
+            Assert.Contains("containerPath: /data", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task WithKindConfig_AddsNodeLabels_AppearsInYaml()
+    {
+        var resource = new KindClusterResource("cfg-labels");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            config.Nodes[0].Labels = new Dictionary<string, string> { ["my-label"] = "my-value" };
+        }));
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("labels:", yaml);
+            Assert.Contains("my-label: my-value", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
+    public async Task WithKindConfig_MultipleCalls_AllAppliedInOrder()
+    {
+        var resource = new KindClusterResource("cfg-multi");
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            config.FeatureGates = new Dictionary<string, bool> { ["FeatureA"] = true };
+        }));
+        resource.Annotations.Add(new KindConfigAnnotation(config =>
+        {
+            config.Networking = new KindNetworkingModel { PodSubnet = "10.244.0.0/16" };
+        }));
+
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains("FeatureA: true", yaml);
+            Assert.Contains("podSubnet: 10.244.0.0/16", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    // ── WithKubernetesVersion + WithWorkerNodes interaction test ────────
+
+    [Fact]
+    public async Task WithKubernetesVersionAndWorkerNodes_BothOrders_AllNodesHaveImage()
+    {
+        var expectedImage = $"{"kindest/node"}:v1.31.0";
+
+        // Order 1: workers first, then version
+        var builder1 = DistributedApplication.CreateBuilder();
+        builder1.AddKindCluster("order1")
+            .WithWorkerNodes(2)
+            .WithKubernetesVersion("v1.31.0");
+
+        using var app1 = builder1.Build();
+        var resource1 = Assert.Single(app1.Services.GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<KindClusterResource>());
+
+        var path1 = await KindConfigGenerator.GenerateConfigAsync(resource1, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(path1);
+            Assert.Equal(3, yaml.Split(expectedImage).Length - 1); // control-plane + 2 workers
+        }
+        finally { File.Delete(path1); }
+
+        // Order 2: version first, then workers
+        var builder2 = DistributedApplication.CreateBuilder();
+        builder2.AddKindCluster("order2")
+            .WithKubernetesVersion("v1.31.0")
+            .WithWorkerNodes(2);
+
+        using var app2 = builder2.Build();
+        var resource2 = Assert.Single(app2.Services.GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<KindClusterResource>());
+
+        var path2 = await KindConfigGenerator.GenerateConfigAsync(resource2, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(path2);
+            Assert.Equal(3, yaml.Split(expectedImage).Length - 1); // control-plane + 2 workers
+        }
+        finally { File.Delete(path2); }
     }
 
     // ── DefaultProcessRunner tests ──────────────────────────────────────
@@ -284,11 +521,14 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithWorkerNodes_Zero_IsValid()
     {
-        var resource = new KindClusterResource("edge-zero") { WorkerNodes = 0 };
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddKindCluster("edge-zero")
+            .WithWorkerNodes(0);
 
-        Assert.Equal(0, resource.WorkerNodes);
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
 
-        // Also verify config generation works with 0 workers
         var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
         try
         {

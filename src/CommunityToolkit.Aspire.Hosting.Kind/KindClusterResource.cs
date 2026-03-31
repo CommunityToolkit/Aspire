@@ -31,14 +31,4 @@ public sealed class KindClusterResource : Resource, IResourceWithWaitSupport
     /// </summary>
     public string ContainerKubeconfigPath { get; }
 
-    /// <summary>
-    /// Gets or sets the number of worker nodes in the Kind cluster.
-    /// </summary>
-    public int WorkerNodes { get; set; }
-
-    /// <summary>
-    /// Gets or sets the Kubernetes version to use for the Kind cluster (e.g., "v1.32.2").
-    /// When <see langword="null"/>, the Kind default version is used.
-    /// </summary>
-    public string? KubernetesVersion { get; set; }
 }

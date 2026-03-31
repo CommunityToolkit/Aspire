@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using CommunityToolkit.Aspire.Hosting.Kind;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
@@ -85,6 +86,30 @@ public class KindPublicApiTests
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithKindConfigShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<KindClusterResource> builder = null!;
+
+        var action = () => builder.WithKindConfig(_ => { });
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithKindConfigShouldThrowWhenConfigureIsNull()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test");
+        Action<KindConfigModel> configure = null!;
+
+        var action = () => cluster.WithKindConfig(configure);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(configure), exception.ParamName);
     }
 
     [Fact]
