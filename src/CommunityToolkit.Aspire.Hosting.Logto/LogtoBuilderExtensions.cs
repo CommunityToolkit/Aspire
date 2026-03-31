@@ -47,7 +47,17 @@ public static class LogtoBuilderExtensions
         return builderWithResource;
     }
 
-
+    /// <summary>
+    /// Enables Node.js deprecation tracing for the Logto container by setting the
+    /// NODE_OPTIONS environment variable to '--trace-deprecation'.
+    /// This allows stack traces to be printed for deprecated API usage.
+    /// </summary>
+    /// <param name="builderWithResource">The resource builder for the Logto container resource that will be configured for stack trace logging.</param>
+    public static void WithDeprecationTracing(this IResourceBuilder<LogtoContainerResource> builderWithResource)
+    {
+        builderWithResource.WithEnvironment("NODE_OPTIONS", "--trace-deprecation");
+    }
+    
     private static void SetHealthCheck(IDistributedApplicationBuilder builder,
         IResourceBuilder<LogtoContainerResource> builderWithResource, string name)
     {
