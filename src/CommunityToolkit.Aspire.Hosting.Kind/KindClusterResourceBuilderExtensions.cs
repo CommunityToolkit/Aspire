@@ -6,7 +6,6 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
@@ -83,7 +82,7 @@ public static class KindClusterResourceBuilderExtensions
             try
             {
                 await manager.CreateClusterAsync(ct);
-                await GenerateContainerKubeconfigAsync(resource, ct);
+                await KindContainerHelper.GenerateContainerKubeconfigAsync(resource, ct);
 
                 var lifetime = resource.TryGetLastAnnotation<ClusterLifetimeAnnotation>(out var lifetimeAnnotation)
                     ? lifetimeAnnotation.Lifetime
@@ -100,8 +99,9 @@ public static class KindClusterResourceBuilderExtensions
                         ]
                     });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                logger.LogError(ex, "Kind cluster '{ClusterName}' failed to start.", resource.Name);
                 await notifications.PublishUpdateAsync(resource,
                     state => state with { State = KnownResourceStates.FailedToStart });
                 throw;
@@ -190,28 +190,6 @@ public static class KindClusterResourceBuilderExtensions
         return builder;
     }
 
-    /// <summary>
-    /// Configures a resource to reference the Kind cluster by injecting kubeconfig environment variables.
-    /// </summary>
-    /// <typeparam name="T">The resource type.</typeparam>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="kind">The Kind cluster resource builder.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<T> WithReference<T>(
-        this IResourceBuilder<T> builder,
-        IResourceBuilder<KindClusterResource> kind)
-        where T : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(kind);
-
-        return builder.WithEnvironment(context =>
-        {
-            context.EnvironmentVariables["KUBECONFIG"] = kind.Resource.KubeconfigPath;
-            context.EnvironmentVariables["K8S_CLUSTER_NAME"] = kind.Resource.Name;
-        });
-    }
-
     private static KindNodeImageAnnotation GetOrCreateNodeImageAnnotation(IResource resource)
     {
         if (resource.TryGetLastAnnotation<KindNodeImageAnnotation>(out var existing))
@@ -250,32 +228,34 @@ public static class KindClusterResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Generates a modified kubeconfig file suitable for container-to-container access
-    /// over the Kind Docker network.
+    /// Configures a non-container resource to reference the Kind cluster by injecting kubeconfig environment variables.
     /// </summary>
+    /// <typeparam name="T">The resource type.</typeparam>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="kind">The Kind cluster resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
-    /// Kind clusters bind the API server to 127.0.0.1, which is unreachable from other
-    /// Docker containers. This method creates a copy of the kubeconfig that:
-    /// 1. Replaces 127.0.0.1:{port} with the control-plane container name on port 6443.
-    /// 2. Disables TLS verification (the cert is issued for 127.0.0.1, not the container name).
+    /// <para>
+    /// This overload sets <c>KUBECONFIG</c> to the host kubeconfig path, which is appropriate for 
+    /// resources that execute on the host (e.g., executables, projects).
+    /// </para>
+    /// <para>
+    /// For container resources, use the <see cref="KindContainerExtensions.WithReference"/> 
+    /// overload instead, which handles container-specific requirements like bind-mounting and network connectivity.
+    /// </para>
     /// </remarks>
-    private static async Task GenerateContainerKubeconfigAsync(KindClusterResource resource, CancellationToken ct)
+    public static IResourceBuilder<T> WithReference<T>(
+        this IResourceBuilder<T> builder,
+        IResourceBuilder<KindClusterResource> kind)
+        where T : IResourceWithEnvironment
     {
-        var content = await File.ReadAllTextAsync(resource.KubeconfigPath, ct).ConfigureAwait(false);
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(kind);
 
-        var controlPlane = $"{resource.Name}-control-plane";
-
-        content = System.Text.RegularExpressions.Regex.Replace(
-            content,
-            @"https://127\.0\.0\.1:\d+",
-            $"https://{controlPlane}:6443");
-
-        content = content.Replace(
-            "certificate-authority-data:",
-            "insecure-skip-tls-verify: true\n    #certificate-authority-data:");
-
-        Directory.CreateDirectory(Path.GetDirectoryName(resource.ContainerKubeconfigPath)!);
-        await File.WriteAllTextAsync(resource.ContainerKubeconfigPath, content, ct).ConfigureAwait(false);
+        return builder.WithEnvironment(context =>
+        {
+            context.EnvironmentVariables["KUBECONFIG"] = kind.Resource.KubeconfigPath;
+            context.EnvironmentVariables["K8S_CLUSTER_NAME"] = kind.Resource.Name;
+        });
     }
-
 }

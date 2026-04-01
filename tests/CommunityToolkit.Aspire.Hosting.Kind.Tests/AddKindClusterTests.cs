@@ -4,6 +4,7 @@
 using System.Runtime.InteropServices;
 using Aspire.Hosting;
 using Aspire.Hosting.Lifecycle;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -163,6 +164,22 @@ public class AddKindClusterTests
 
         var svc = Assert.Single(appModel.Resources.OfType<TestResource>());
         Assert.True(svc.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out _));
+    }
+
+    [Fact]
+    public async Task WithReference_NonContainer_SetsHostKubeconfigEnvironmentValue()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var kind = builder.AddKindCluster("test-cluster");
+        var service = builder.AddResource(new TestResource("svc"))
+            .WithReference(kind);
+
+        using var app = builder.Build();
+
+        var environment = await service.Resource.GetEnvironmentVariablesAsync(DistributedApplicationOperation.Run);
+        Assert.Equal(kind.Resource.KubeconfigPath, environment["KUBECONFIG"]);
+        Assert.Equal("test-cluster", environment["K8S_CLUSTER_NAME"]);
     }
 
     [Fact]

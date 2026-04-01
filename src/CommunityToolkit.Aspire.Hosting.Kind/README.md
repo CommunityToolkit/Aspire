@@ -66,9 +66,50 @@ var cluster = builder.AddKindCluster("mycluster")
 | `ClusterLifetime.Session` | Cluster is deleted on AppHost shutdown (default). |
 | `ClusterLifetime.Persistent` | Cluster survives AppHost restarts and is reused on next startup. |
 
+## Networking model
+
+Kind adds an extra network boundary compared to a typical Aspire app, so it helps to think about four separate buckets:
+
+- **Process / executable resources** run on the host machine.
+- **Aspire-managed containers** are regular containers created by Aspire on its application Docker network.
+- **Kind cluster** means the Kind control-plane and worker node containers on Docker's `kind` network.
+- **Kind-managed workloads** are Kubernetes workloads running in the Kind cluster, such as Redis installed with `cluster.AddHelmChart(...)`. They run inside the Kind node containers in an isolated network namespace managed by the kindnet CNI, rather than on the host Docker network. They are reached through Kubernetes networking and exposure mechanisms (NodePort, HostPort, etc.), not as peer Aspire `AddContainer(...)` resources.
+
+In the matrix below, **Yes** means there is a usable network path. **No** means there is no direct path by default.
+
+| From \\ To | Host Process | Aspire-managed container | Kind control plane | Kind-managed workload |
+|---|---|---|---|---|
+| **Host Process** | Yes | Yes | Yes — Kind publishes the API to host `127.0.0.1:<port>`; `WithReference(kind)` injects kubeconfig | Yes, via `kubectl port-forward` or NodePort on localhost |
+| **Aspire-managed container** | Yes | Yes | Yes — `WithReference(kind)` rewrites the kubeconfig and `WithKindNetwork()` joins the Docker `kind` network | Yes — requires `WithKindNetwork()` plus a Kubernetes exposure mechanism (NodePort, HostPort) |
+| **Kind control plane** | No by default | No by default — the control plane has no route to Aspire's Docker network | Yes | Yes |
+| **Kind-managed workload** | No by default | No by default — pods run in an isolated network namespace inside the Kind node container | Yes | Yes |
+
+> `WithKindNetwork()` connects the Aspire container to the Docker `kind` network, giving it L3 connectivity to the Kind node containers. It does **not** grant access to the Kubernetes pod or service networks — workloads inside the cluster must be exposed via NodePort, HostPort, or a similar mechanism.
+
 ### Connecting services to the cluster
 
-Use `WithReference` to inject Kubernetes connection details into any resource that supports environment variables (`IResourceWithEnvironment`):
+#### Container integration
+
+For container resources, `WithReference` provides first-class support that automatically handles all Kind-specific requirements:
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster");
+
+var worker = builder.AddContainer("my-worker", "myregistry/my-worker")
+    .WithReference(cluster);
+```
+
+The container-specific `WithReference` overload automatically:
+- Bind-mounts the Kind kubeconfig into the container at `/etc/kubeconfig/config`
+- Sets `KUBECONFIG` to the in-container mount path
+- Sets `K8S_CLUSTER_NAME` to the Kind cluster name
+- Connects the container to the Kind Docker network
+
+> **Note:** The kubeconfig mounted into containers uses the Kind control-plane container name (e.g., `mycluster-control-plane:6443`) instead of `127.0.0.1`, enabling container-to-container communication over the Kind Docker network.
+
+### Non-container resources
+
+For non-container resources (e.g., projects, executables), `WithReference` injects environment variables pointing to the host kubeconfig:
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster");
@@ -77,12 +118,12 @@ var api = builder.AddProject<Projects.MyApi>("api")
     .WithReference(cluster);
 ```
 
-This sets the following environment variables on the target resource:
+`WithReference` sets the following environment variables on the target resource:
 
-| Variable | Description |
-|---|---|
-| `KUBECONFIG` | Path to the kubeconfig file for the Kind cluster. |
-| `K8S_CLUSTER_NAME` | The name of the Kind cluster. |
+| Variable | Container resources | Non-container resources |
+|---|---|---|
+| `KUBECONFIG` | `/etc/kubeconfig/config` inside the container, backed by a bind mount of the container-compatible kubeconfig file. | Path to the host kubeconfig file for the Kind cluster. |
+| `K8S_CLUSTER_NAME` | The name of the Kind cluster. | The name of the Kind cluster. |
 
 ### Docker networking
 
@@ -122,12 +163,13 @@ var cluster = builder.AddKindCluster("dev-cluster")
     .WithWorkerNodes(2)
     .WithClusterLifetime(ClusterLifetime.Persistent);
 
-var api = builder.AddProject<Projects.MyApi>("api")
+// Container automatically gets Kind network + kubeconfig mount
+var deployer = builder.AddContainer("deployer", "bitnami/kubectl")
     .WithReference(cluster);
 
-var deployer = builder.AddContainer("deployer", "bitnami/kubectl")
-    .WithReference(cluster)
-    .WithKindNetwork();
+// Non-container resource gets host kubeconfig path
+var api = builder.AddProject<Projects.MyApi>("api")
+    .WithReference(cluster);
 
 builder.Build().Run();
 ```
@@ -171,6 +213,17 @@ When you run `aspire deploy`, the pipeline executes these steps in order:
 4. **kind-load-images** - Loads all container images into Kind (`kind load docker-image`)
 5. **kind-helm-install** - Installs the generated Helm chart (`helm install`)
 
+## Advanced usage
+
+### Manual Kind network connection
+
+The container-specific `WithReference` automatically connects containers to the Kind network. If you need to manually control network connectivity (e.g., for containers that don't reference the cluster), you can use `WithKindNetwork` explicitly:
+
+```csharp
+builder.AddContainer("my-container", "my-image")
+    .WithKindNetwork();
+```
+
 ## API reference
 
 | Method | Description |
@@ -183,7 +236,6 @@ When you run `aspire deploy`, the pipeline executes these steps in order:
 | `WithKindNetwork()` | Connects a container to the Kind Docker network |
 | `AddHelmChart(name, chartRef)` | Deploys a Helm chart to the Kind cluster during F5 |
 | `WithKind()` | Configures a `KubernetesEnvironmentResource` to deploy to a local Kind cluster (scenario 2) |
-
 ## Additional information
 
 - [Kind documentation](https://kind.sigs.k8s.io/)

@@ -1,24 +1,30 @@
-#pragma warning disable ASPIREPIPELINES001
-
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Scenario 1: Kind cluster as a managed dependency (F5 mode)
+// Kind cluster as a managed dependency (F5 mode).
 // The cluster appears in the Aspire dashboard, your apps get KUBECONFIG injected.
 var cluster = builder.AddKindCluster("kind-cluster")
     .WithKubernetesVersion("v1.32.2");
 
-// Deploy a Helm chart to the Kind cluster during F5.
+// Run Headlamp (a lightweight Kubernetes web UI) as an Aspire-managed container
+// connected to the Kind cluster.
+var dashboard = builder.AddContainer("headlamp", "ghcr.io/headlamp-k8s/headlamp:latest")
+    .WithHttpEndpoint(targetPort: 4466)
+    .WithReference(cluster);
+
+// Deploy a Helm chart to the Kind cluster, exposed via NodePort so containers
+// on the Kind Docker network can reach it.
 var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
     .WithHelmValue("replica.replicaCount", "0")
+    .WithHelmValue("master.service.type", "NodePort")
+    .WithHelmValue("master.service.nodePorts.redis", "30379")
     .WithNamespace("cache");
 
-// Scenario 2: Kind as a compute environment (aspire publish / aspire deploy)
-// Generates Helm charts and deploys to a local Kind cluster.
-builder.AddKubernetesEnvironment("kind-deploy")
-    .WithKind()
-    .WithKubernetesVersion("v1.32.2")
-    .WithWorkerNodes(1);
-
-builder.AddContainer("redis-container", "redis", "7");
+// Test Aspire-container → Kind-workload connectivity by pinging Redis
+// through the Kind Docker network on the NodePort.
+builder.AddContainer("redis-ping", "nicolaka/netshoot")
+    .WithKindNetwork()
+    .WaitFor(cluster)
+    .WithEntrypoint("sh")
+    .WithArgs("-c", "while true; do nc -zv kind-cluster-control-plane 30379; sleep 5; done");
 
 builder.Build().Run();
