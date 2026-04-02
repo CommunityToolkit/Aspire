@@ -3,7 +3,14 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Verify.XunitV3 brings in newer xunit.v3.common/extensibility.core transitively.
+         When upstreaming, update the xunit package versions instead of suppressing. -->
+    <NoWarn>$(NoWarn);NU1608</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Verify.XunitV3" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\examples\kind\CommunityToolkit.Aspire.Hosting.Kind.AppHost\CommunityToolkit.Aspire.Hosting.Kind.AppHost.csproj" />

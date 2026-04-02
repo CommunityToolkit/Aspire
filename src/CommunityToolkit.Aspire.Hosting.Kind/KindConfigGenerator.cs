@@ -21,7 +21,7 @@ internal static class KindConfigGenerator
     /// Generates a Kind configuration file and returns its path.
     /// The caller is responsible for deleting the file when no longer needed.
     /// </summary>
-    internal static async Task<string> GenerateConfigAsync(KindClusterResource resource, CancellationToken cancellationToken)
+    internal static async Task<string> GenerateConfigAsync(IKindResource resource, CancellationToken cancellationToken)
     {
         var configDir = Path.Combine(Path.GetTempPath(), "aspire-kind", resource.Name);
         Directory.CreateDirectory(configDir);

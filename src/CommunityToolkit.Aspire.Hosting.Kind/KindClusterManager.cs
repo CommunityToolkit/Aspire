@@ -11,11 +11,11 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 /// </summary>
 internal sealed class KindClusterManager
 {
-    private readonly KindClusterResource _resource;
+    private readonly IKindResource _resource;
     private readonly ILogger _logger;
     private readonly IProcessRunner _processRunner;
 
-    public KindClusterManager(KindClusterResource resource, ILogger logger, IProcessRunner processRunner)
+    public KindClusterManager(IKindResource resource, ILogger logger, IProcessRunner processRunner)
     {
         _resource = resource;
         _logger = logger;

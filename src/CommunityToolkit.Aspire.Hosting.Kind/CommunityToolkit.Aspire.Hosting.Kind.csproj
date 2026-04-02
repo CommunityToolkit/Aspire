@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Aspire.Hosting.Kubernetes" />
     <PackageReference Include="KubernetesClient" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>

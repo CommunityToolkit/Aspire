@@ -6,6 +6,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
@@ -113,12 +114,14 @@ public static class KindClusterResourceBuilderExtensions
     /// <summary>
     /// Sets the Kubernetes version for the Kind cluster.
     /// </summary>
+    /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="version">The Kubernetes version (e.g., "v1.32.2").</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{KindClusterResource}"/>.</returns>
-    public static IResourceBuilder<KindClusterResource> WithKubernetesVersion(
-        this IResourceBuilder<KindClusterResource> builder,
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<T> WithKubernetesVersion<T>(
+        this IResourceBuilder<T> builder,
         string version)
+        where T : IKindResource
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(version);
@@ -131,12 +134,14 @@ public static class KindClusterResourceBuilderExtensions
     /// <summary>
     /// Sets the number of worker nodes for the Kind cluster.
     /// </summary>
+    /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="count">The number of worker nodes. Must be zero or greater.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{KindClusterResource}"/>.</returns>
-    public static IResourceBuilder<KindClusterResource> WithWorkerNodes(
-        this IResourceBuilder<KindClusterResource> builder,
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<T> WithWorkerNodes<T>(
+        this IResourceBuilder<T> builder,
         int count)
+        where T : IKindResource
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
@@ -149,12 +154,14 @@ public static class KindClusterResourceBuilderExtensions
     /// the cluster is deleted when the AppHost shuts down. When <see cref="ClusterLifetime.Persistent"/>,
     /// the cluster survives AppHost restarts and is reused on next startup.
     /// </summary>
+    /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="lifetime">The desired cluster lifetime.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{KindClusterResource}"/>.</returns>
-    public static IResourceBuilder<KindClusterResource> WithClusterLifetime(
-        this IResourceBuilder<KindClusterResource> builder,
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    public static IResourceBuilder<T> WithClusterLifetime<T>(
+        this IResourceBuilder<T> builder,
         ClusterLifetime lifetime)
+        where T : IKindResource
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -205,7 +212,7 @@ public static class KindClusterResourceBuilderExtensions
         });
     }
 
-    private static KindNodeImageAnnotation GetOrCreateNodeImageAnnotation(KindClusterResource resource)
+    private static KindNodeImageAnnotation GetOrCreateNodeImageAnnotation(IResource resource)
     {
         if (resource.TryGetLastAnnotation<KindNodeImageAnnotation>(out var existing))
         {

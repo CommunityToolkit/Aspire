@@ -6,7 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// Represents a resource that manages a local Kind (Kubernetes in Docker) cluster for development.
 /// </summary>
-public sealed class KindClusterResource : Resource, IResourceWithWaitSupport
+public sealed class KindClusterResource : Resource, IKindResource, IResourceWithWaitSupport
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="KindClusterResource"/> class.

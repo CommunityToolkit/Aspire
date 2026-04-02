@@ -1,11 +1,12 @@
 # CommunityToolkit.Aspire.Hosting.Kind
 
-An [Aspire](https://learn.microsoft.com/dotnet/aspire) hosting integration that manages local [Kind](https://kind.sigs.k8s.io/) (Kubernetes in Docker) clusters for development.
+An [Aspire](https://learn.microsoft.com/dotnet/aspire) hosting integration that manages local [Kind](https://kind.sigs.k8s.io/) (Kubernetes in Docker) clusters for development, and provides a compute environment for `aspire publish` and `aspire deploy`.
 
 ## Prerequisites
 
-- **Docker** — Kind runs Kubernetes nodes as Docker containers. Install from [docker.com](https://docs.docker.com/get-docker/).
-- **Kind CLI** — The `kind` command must be available on your `PATH`. Install from [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
+- **Docker** - Kind runs Kubernetes nodes as Docker containers. Install from [docker.com](https://docs.docker.com/get-docker/).
+- **Kind CLI** - The `kind` command must be available on your `PATH`. Install from [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
+- **Helm CLI** - Required for deploy scenarios and Helm chart resources. Install from [helm.sh](https://helm.sh/docs/intro/install/).
 
 ## Getting started
 
@@ -17,8 +18,6 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Kind
 
 ### 2. Add a Kind cluster to your AppHost
 
-In your AppHost project (typically `Program.cs`), call `AddKindCluster` on the distributed application builder:
-
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -29,9 +28,13 @@ builder.Build().Run();
 
 This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and deleted when it shuts down.
 
-## Configuration
+## Scenario 1: Kind cluster as a managed dependency (F5 mode)
 
-### Worker nodes
+Use `AddKindCluster` to create a Kind cluster that appears in the Aspire dashboard. Your apps get `KUBECONFIG` and `K8S_CLUSTER_NAME` injected via `WithReference`. Intended for K8s developers building operators, controllers, or admission webhooks.
+
+### Configuration
+
+#### Worker nodes
 
 By default the cluster has a single control-plane node. Add worker nodes with `WithWorkerNodes`:
 
@@ -40,7 +43,7 @@ var cluster = builder.AddKindCluster("mycluster")
     .WithWorkerNodes(2);
 ```
 
-### Kubernetes version
+#### Kubernetes version
 
 Pin the cluster to a specific Kubernetes version with `WithKubernetesVersion`. When omitted, Kind uses its built-in default.
 
@@ -49,7 +52,7 @@ var cluster = builder.AddKindCluster("mycluster")
     .WithKubernetesVersion("v1.32.2");
 ```
 
-### Cluster lifetime
+#### Cluster lifetime
 
 By default the cluster is deleted when the AppHost shuts down (`ClusterLifetime.Session`). To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
 
@@ -63,21 +66,7 @@ var cluster = builder.AddKindCluster("mycluster")
 | `ClusterLifetime.Session` | Cluster is deleted on AppHost shutdown (default). |
 | `ClusterLifetime.Persistent` | Cluster survives AppHost restarts and is reused on next startup. |
 
-### Docker networking
-
-Aspire containers run on a separate Docker network from Kind nodes. If you have a container resource that needs to reach the Kind cluster's API server, call `WithKindNetwork` to bridge the two networks:
-
-```csharp
-var cluster = builder.AddKindCluster("mycluster");
-
-var worker = builder.AddContainer("my-worker", "myregistry/my-worker")
-    .WithReference(cluster)
-    .WithKindNetwork();
-```
-
-> **Note:** `WithKindNetwork` is available on `IResourceBuilder<ContainerResource>`. It connects the container to the `kind` Docker network automatically when the container starts.
-
-## Connecting services to the cluster
+### Connecting services to the cluster
 
 Use `WithReference` to inject Kubernetes connection details into any resource that supports environment variables (`IResourceWithEnvironment`):
 
@@ -95,7 +84,35 @@ This sets the following environment variables on the target resource:
 | `KUBECONFIG` | Path to the kubeconfig file for the Kind cluster. |
 | `K8S_CLUSTER_NAME` | The name of the Kind cluster. |
 
-## Full example
+### Docker networking
+
+Aspire containers run on a separate Docker network from Kind nodes. If you have a container resource that needs to reach the Kind cluster's API server, call `WithKindNetwork` to bridge the two networks:
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster");
+
+var worker = builder.AddContainer("my-worker", "myregistry/my-worker")
+    .WithReference(cluster)
+    .WithKindNetwork();
+```
+
+> **Note:** `WithKindNetwork` is available on `IResourceBuilder<ContainerResource>`. It connects the container to the `kind` Docker network automatically when the container starts.
+
+### Deploying Helm charts to the cluster
+
+Use `AddHelmChart` to deploy pre-built Helm charts to the Kind cluster during F5. Charts are installed when the cluster becomes healthy. They persist with the cluster - deleted with session clusters, retained with persistent clusters.
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster")
+    .WithKubernetesVersion("v1.32.2");
+
+var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+    .WithChartVersion("20.0.0")
+    .WithHelmValue("replica.replicaCount", "0")
+    .WithNamespace("cache");
+```
+
+### Full F5 example
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
@@ -114,6 +131,58 @@ var deployer = builder.AddContainer("deployer", "bitnami/kubectl")
 
 builder.Build().Run();
 ```
+
+## Scenario 2: Kind as a compute environment (aspire publish / aspire deploy)
+
+Use `AddKubernetesEnvironment().WithKind()` to enable `aspire publish` (generates Helm charts) and `aspire deploy` (creates cluster + deploys). Designed for K8s consumers who want to test their Helm charts locally before deploying to a real cluster like AKS.
+
+```csharp
+#pragma warning disable ASPIREPIPELINES001
+
+var builder = DistributedApplication.CreateBuilder(args);
+
+builder.AddKubernetesEnvironment("k8s")
+    .WithKind()
+    .WithKubernetesVersion("v1.32.2");
+
+builder.AddContainer("redis", "redis", "7");
+builder.AddProject<Projects.MyApi>("api");
+
+builder.Build().Run();
+```
+
+Then from the command line:
+
+```bash
+# Generate Helm chart
+aspire publish --output-path ./charts
+
+# Or deploy directly to Kind
+aspire deploy
+```
+
+### How deploy works
+
+When you run `aspire deploy`, the pipeline executes these steps in order:
+
+1. **publish** - Generates Kubernetes manifests as a Helm chart via `Aspire.Hosting.Kubernetes`
+2. **kind-create-cluster** - Creates the Kind cluster (reuses existing if persistent)
+3. **build** - Builds container images for project resources (`dotnet publish /t:PublishContainer`)
+4. **kind-load-images** - Loads all container images into Kind (`kind load docker-image`)
+5. **kind-helm-install** - Installs the generated Helm chart (`helm install`)
+
+## API reference
+
+| Method | Description |
+|--------|-------------|
+| `AddKindCluster(name)` | Adds a Kind cluster resource visible in the dashboard (scenario 1) |
+| `WithKubernetesVersion(string)` | Sets the Kubernetes version (e.g., `"v1.32.2"`) |
+| `WithWorkerNodes(int)` | Sets the number of worker nodes (default: 0, control-plane only) |
+| `WithClusterLifetime(ClusterLifetime)` | `Session` (default) or `Persistent` |
+| `WithReference(kind)` | Injects `KUBECONFIG` and `K8S_CLUSTER_NAME` into another resource |
+| `WithKindNetwork()` | Connects a container to the Kind Docker network |
+| `AddHelmChart(name, chartRef)` | Deploys a Helm chart to the Kind cluster during F5 |
+| `WithKind()` | Configures a `KubernetesEnvironmentResource` to deploy to a local Kind cluster (scenario 2) |
 
 ## Additional information
 
