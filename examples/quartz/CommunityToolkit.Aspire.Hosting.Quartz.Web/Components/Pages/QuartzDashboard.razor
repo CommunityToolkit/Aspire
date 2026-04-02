@@ -1,0 +1,627 @@
+@page "/quartz"
+@using QuartzSample.Web.Services
+@inject QuartzApiClient ApiClient
+@inject ILogger<QuartzDashboard> Logger
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<PageTitle>Quartz.NET Dashboard</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-calendar-check"></i> Quartz.NET Dashboard
+            </h1>
+            <p class="lead text-muted">Manage and monitor your scheduled jobs</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary btn-lg" @onclick="RefreshJobs">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading jobs...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-briefcase-fill text-primary" style="font-size: 2rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Total Jobs</h6>
+                                <h2 class="mb-0">@jobs.Count</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-clock-fill text-success" style="font-size: 2rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Scheduled</h6>
+                                <h2 class="mb-0">@jobs.Count(j => j.NextFireTime.HasValue)</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-check-circle-fill text-info" style="font-size: 2rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Completed</h6>
+                                <h2 class="mb-0">@jobs.Count(j => j.PreviousFireTime.HasValue)</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="bi bi-lightning-fill text-warning" style="font-size: 2rem;"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="text-muted mb-1">Job Types</h6>
+                                <h2 class="mb-0">@jobs.Select(j => j.JobType).Distinct().Count()</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-outline-primary" @onclick="() => ShowScheduleModal(ScheduleType.Once)">
+                        <i class="bi bi-plus-circle"></i> Schedule Once
+                    </button>
+                    <button class="btn btn-outline-success" @onclick="() => ShowScheduleModal(ScheduleType.Cron)">
+                        <i class="bi bi-calendar-event"></i> Schedule Cron
+                    </button>
+                    <button class="btn btn-outline-info" @onclick="() => ShowScheduleModal(ScheduleType.Repeat)">
+                        <i class="bi bi-arrow-repeat"></i> Schedule Repeat
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jobs Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-task"></i> Scheduled Jobs
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                @if (jobs.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Job ID</th>
+                                    <th>Type</th>
+                                    <th>Group</th>
+                                    <th>Next Run</th>
+                                    <th>Last Run</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var job in jobs)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@job.JobId</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">@job.JobType</span>
+                                        </td>
+                                        <td>@job.JobGroup</td>
+                                        <td>
+                                            @if (job.NextFireTime.HasValue)
+                                            {
+                                                <span class="text-success">
+                                                    <i class="bi bi-clock"></i>
+                                                    @job.NextFireTime.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (job.PreviousFireTime.HasValue)
+                                            {
+                                                <span class="text-info">
+                                                    @job.PreviousFireTime.Value.ToString("yyyy-MM-dd HH:mm:ss")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Never</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (job.NextFireTime.HasValue)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Completed</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => CancelJob(job)">
+                                                <i class="bi bi-trash"></i> Cancel
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                        <p class="text-muted mt-3">No jobs scheduled yet</p>
+                        <button class="btn btn-primary" @onclick="() => ShowScheduleModal(ScheduleType.Once)">
+                            Schedule Your First Job
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Schedule Modal -->
+    @if (showModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            @if (currentScheduleType == ScheduleType.Once)
+                            {
+                                <i class="bi bi-plus-circle"></i> <text>Schedule One-Time Job</text>
+                            }
+                            else if (currentScheduleType == ScheduleType.Cron)
+                            {
+                                <i class="bi bi-calendar-event"></i> <text>Schedule Cron Job</text>
+                            }
+                            else
+                            {
+                                <i class="bi bi-arrow-repeat"></i> <text>Schedule Repeating Job</text>
+                            }
+                        </h5>
+                        <button type="button" class="btn-close" @onclick="HideScheduleModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (currentScheduleType == ScheduleType.Once)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Job Type</label>
+                                <select class="form-select" @bind="selectedJobType">
+                                    <option value="HealthCheckJob">Health Check</option>
+                                    <option value="EmailNotificationJob">Email Notification</option>
+                                    <option value="CacheWarmupJob">Cache Warmup</option>
+                                    <option value="ApiHealthMonitorJob">API Health Monitor</option>
+                                    <option value="WebhookNotificationJob">Webhook Notification</option>
+                                </select>
+                            </div>
+
+                            @if (selectedJobType == "HealthCheckJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Endpoint</label>
+                                    <input type="text" class="form-control" @bind="scheduleOnceEndpoint" placeholder="https://api.example.com/health" />
+                                </div>
+                            }
+                            else if (selectedJobType == "EmailNotificationJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Recipient</label>
+                                    <input type="email" class="form-control" @bind="emailRecipient" placeholder="user@example.com" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Subject</label>
+                                    <input type="text" class="form-control" @bind="emailSubject" placeholder="Notification" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Body</label>
+                                    <textarea class="form-control" @bind="emailBody" rows="3" placeholder="Email content"></textarea>
+                                </div>
+                            }
+                            else if (selectedJobType == "CacheWarmupJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Cache Keys (comma-separated)</label>
+                                    <input type="text" class="form-control" @bind="cacheKeys" placeholder="users,products,categories" />
+                                </div>
+                            }
+                            else if (selectedJobType == "ApiHealthMonitorJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">API URL</label>
+                                    <input type="text" class="form-control" @bind="apiUrl" placeholder="https://api.example.com/health" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Timeout (seconds)</label>
+                                    <input type="number" class="form-control" @bind="apiTimeout" />
+                                </div>
+                            }
+                            else if (selectedJobType == "WebhookNotificationJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Webhook URL</label>
+                                    <input type="text" class="form-control" @bind="webhookUrl" placeholder="https://webhook.site/test" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Payload (JSON)</label>
+                                    <textarea class="form-control" @bind="webhookPayload" rows="3" placeholder='{"event": "test"}'></textarea>
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label">Start Time</label>
+                                <input type="datetime-local" class="form-control" @bind="scheduleOnceTime" />
+                            </div>
+                        }
+                        else if (currentScheduleType == ScheduleType.Cron)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Job Type</label>
+                                <select class="form-select" @bind="selectedCronJobType">
+                                    <option value="DataCleanupJob">Data Cleanup</option>
+                                    <option value="DatabaseBackupJob">Database Backup</option>
+                                    <option value="DataSyncJob">Data Sync</option>
+                                    <option value="MetricsAggregationJob">Metrics Aggregation</option>
+                                    <option value="FileCleanupJob">File Cleanup</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Cron Expression</label>
+                                <input type="text" class="form-control" @bind="scheduleCronExpression" placeholder="0 0 3 ? * SUN" />
+                                <div class="form-text">
+                                    Examples: <code>0 */5 * * * ?</code> (every 5 min), <code>0 0 2 * * ?</code> (daily 2 AM), <code>0 0 3 ? * SUN</code> (Sunday 3 AM)
+                                </div>
+                            </div>
+
+                            @if (selectedCronJobType == "DataCleanupJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Days to Keep</label>
+                                    <input type="number" class="form-control" @bind="scheduleCronDaysToKeep" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Table Name</label>
+                                    <input type="text" class="form-control" @bind="scheduleCronTableName" placeholder="logs" />
+                                </div>
+                            }
+                            else if (selectedCronJobType == "DatabaseBackupJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Database Name</label>
+                                    <input type="text" class="form-control" @bind="databaseName" placeholder="production_db" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Backup Path</label>
+                                    <input type="text" class="form-control" @bind="backupPath" placeholder="/backups" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Compression Level (0-9)</label>
+                                    <input type="number" class="form-control" @bind="compressionLevel" min="0" max="9" />
+                                </div>
+                            }
+                            else if (selectedCronJobType == "DataSyncJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Source</label>
+                                    <input type="text" class="form-control" @bind="syncSource" placeholder="SourceDB" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Destination</label>
+                                    <input type="text" class="form-control" @bind="syncDestination" placeholder="DestinationDB" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Batch Size</label>
+                                    <input type="number" class="form-control" @bind="syncBatchSize" />
+                                </div>
+                            }
+                            else if (selectedCronJobType == "MetricsAggregationJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Metric Type</label>
+                                    <select class="form-select" @bind="metricType">
+                                        <option value="requests">Requests</option>
+                                        <option value="errors">Errors</option>
+                                        <option value="performance">Performance</option>
+                                        <option value="users">Users</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Aggregation Period</label>
+                                    <select class="form-select" @bind="aggregationPeriod">
+                                        <option value="hourly">Hourly</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </div>
+                            }
+                            else if (selectedCronJobType == "FileCleanupJob")
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">Directory</label>
+                                    <input type="text" class="form-control" @bind="cleanupDirectory" placeholder="/temp" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Days Old</label>
+                                    <input type="number" class="form-control" @bind="cleanupDaysOld" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">File Pattern</label>
+                                    <input type="text" class="form-control" @bind="cleanupFilePattern" placeholder="*.*" />
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Report Type</label>
+                                <input type="text" class="form-control" @bind="scheduleRepeatReportType" placeholder="daily" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Recipients</label>
+                                <input type="text" class="form-control" @bind="scheduleRepeatRecipients" placeholder="admin@example.com" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Interval (Minutes)</label>
+                                <input type="number" class="form-control" @bind="scheduleRepeatInterval" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Repeat Count (optional)</label>
+                                <input type="number" class="form-control" @bind="scheduleRepeatCount" placeholder="Leave empty for infinite" />
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(successMessage))
+                        {
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> @successMessage
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="HideScheduleModal">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="ScheduleJob" disabled="@isScheduling">
+                            @if (isScheduling)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Schedule Job
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<JobInfo> jobs = new();
+    private bool isLoading = true;
+    private bool showModal = false;
+    private bool isScheduling = false;
+    private ScheduleType currentScheduleType;
+    private string? errorMessage;
+    private string? successMessage;
+
+    // Job type selection
+    private string selectedJobType = "HealthCheckJob";
+    private string selectedCronJobType = "DataCleanupJob";
+
+    // Schedule Once fields
+    private string scheduleOnceEndpoint = "https://api.example.com/health";
+    private DateTime scheduleOnceTime = DateTime.Now.AddMinutes(5);
+
+    // Email fields
+    private string emailRecipient = "user@example.com";
+    private string emailSubject = "Test Notification";
+    private string emailBody = "This is a test email";
+
+    // Cache fields
+    private string cacheKeys = "users,products,categories";
+
+    // API Monitor fields
+    private string apiUrl = "https://api.example.com/health";
+    private int apiTimeout = 30;
+
+    // Webhook fields
+    private string webhookUrl = "https://webhook.site/test";
+    private string webhookPayload = "{\"event\": \"test\"}";
+
+    // Schedule Cron fields
+    private string scheduleCronExpression = "0 0 3 ? * SUN";
+    private int scheduleCronDaysToKeep = 30;
+    private string scheduleCronTableName = "logs";
+
+    // Database Backup fields
+    private string databaseName = "production_db";
+    private string backupPath = "/backups";
+    private int compressionLevel = 5;
+
+    // Data Sync fields
+    private string syncSource = "SourceDB";
+    private string syncDestination = "DestinationDB";
+    private int syncBatchSize = 1000;
+
+    // Metrics fields
+    private string metricType = "requests";
+    private string aggregationPeriod = "hourly";
+
+    // File Cleanup fields
+    private string cleanupDirectory = "/temp";
+    private int cleanupDaysOld = 7;
+    private string cleanupFilePattern = "*.*";
+
+    // Schedule Repeat fields
+    private string scheduleRepeatReportType = "daily";
+    private string scheduleRepeatRecipients = "admin@example.com";
+    private int scheduleRepeatInterval = 60;
+    private int? scheduleRepeatCount = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshJobs();
+    }
+
+    private async Task RefreshJobs()
+    {
+        isLoading = true;
+        try
+        {
+            jobs = await ApiClient.GetAllJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load jobs");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowScheduleModal(ScheduleType type)
+    {
+        currentScheduleType = type;
+        errorMessage = null;
+        successMessage = null;
+        showModal = true;
+    }
+
+    private void HideScheduleModal()
+    {
+        showModal = false;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private async Task ScheduleJob()
+    {
+        isScheduling = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            ScheduleResponse? response = null;
+
+            if (currentScheduleType == ScheduleType.Once)
+            {
+                response = await ApiClient.ScheduleOnceAsync(new ScheduleOnceRequest(
+                    scheduleOnceEndpoint,
+                    new DateTimeOffset(scheduleOnceTime)));
+            }
+            else if (currentScheduleType == ScheduleType.Cron)
+            {
+                response = await ApiClient.ScheduleCronAsync(new ScheduleCronRequest(
+                    scheduleCronExpression,
+                    scheduleCronDaysToKeep,
+                    scheduleCronTableName));
+            }
+            else
+            {
+                response = await ApiClient.ScheduleRepeatAsync(new ScheduleRepeatRequest(
+                    scheduleRepeatReportType,
+                    scheduleRepeatRecipients,
+                    scheduleRepeatInterval,
+                    scheduleRepeatCount));
+            }
+
+            successMessage = response?.Message ?? "Job scheduled successfully!";
+            await Task.Delay(1500);
+            HideScheduleModal();
+            await RefreshJobs();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to schedule job: {ex.Message}";
+            Logger.LogError(ex, "Failed to schedule job");
+        }
+        finally
+        {
+            isScheduling = false;
+        }
+    }
+
+    private async Task CancelJob(JobInfo job)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to cancel job '{job.JobId}'?"))
+            return;
+
+        try
+        {
+            var success = await ApiClient.CancelJobAsync(job.JobId, job.JobGroup);
+            if (success)
+            {
+                await RefreshJobs();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to cancel job");
+        }
+    }
+
+    private enum ScheduleType
+    {
+        Once,
+        Cron,
+        Repeat
+    }
+}
