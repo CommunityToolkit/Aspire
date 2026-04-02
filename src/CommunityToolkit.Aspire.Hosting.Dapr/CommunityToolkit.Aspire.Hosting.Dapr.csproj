@@ -4,6 +4,7 @@
     <AdditionalPackageTags>aspire integration hosting dapr</AdditionalPackageTags>
     <Description>Dapr support for Aspire.</Description>
     <IsPreview>true</IsPreview>
+    <NoWarn>$(NoWarn);ASPIREATS001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

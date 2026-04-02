@@ -1,23 +1,28 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
 /// <summary>
-/// The collector resource
+/// Represents an OpenTelemetry Collector container resource.
 /// </summary>
-/// <param name="name">Name of the resource</param>
+/// <param name="name">The name of the resource.</param>
+[AspireExport(ExposeProperties = true)]
 public class OpenTelemetryCollectorResource(string name) : ContainerResource(name)
 {
     internal static string GrpcEndpointName = "grpc";
     internal static string HttpEndpointName = "http";
 
     /// <summary>
-    /// gRPC Endpoint
+    /// Gets the gRPC endpoint for the collector.
     /// </summary>
     public EndpointReference GrpcEndpoint => new(this, GrpcEndpointName);
 
     /// <summary>
-    /// HTTP Endpoint
+    /// Gets the HTTP endpoint for the collector.
     /// </summary>
     public EndpointReference HttpEndpoint => new(this, HttpEndpointName);
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

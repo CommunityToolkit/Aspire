@@ -50,6 +50,7 @@ jobs:
             Hosting.Ngrok.Tests,
             Hosting.Ollama.Tests,
             Hosting.OpenTelemetryCollector.Tests,
+            Hosting.Perl.Tests,
             Hosting.PapercutSmtp.Tests,
             Hosting.PostgreSQL.Extensions.Tests,
             Hosting.PowerShell.Tests,
@@ -79,7 +80,7 @@ jobs:
             RavenDB.Client.Tests,
             Sftp.Tests,
             SurrealDb.Tests,
-        ]
+          ]
 
     steps:
       - name: Checkout code
@@ -150,3 +151,10 @@ jobs:
         with:
           name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
           path: ${{ runner.os == 'Windows' && 'C:\\npm\\cache\\_logs\\**' || '~/.npm/cache/_logs/**' }}
+
+      - name: Upload TypeScript app host logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ts-app-host-logs-${{ matrix.name }}-${{ matrix.os }}
+          path: ${{ runner.os == 'Windows' && 'C:\\Users\\runneradmin\\.aspire\\logs\\**' || '/home/runner/.aspire/logs/**' }}

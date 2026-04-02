@@ -1,5 +1,7 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using System.Reflection;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -14,6 +16,7 @@ public static class AdminerBuilderExtensions
     /// <param name="builder">The resource builder for Adminer.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for Adminer.</returns>
+    [AspireExport("withHostPort", Description = "Configures the host port for the Adminer resource")]
     public static IResourceBuilder<AdminerContainerResource> WithHostPort(this IResourceBuilder<AdminerContainerResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -34,6 +37,7 @@ public static class AdminerBuilderExtensions
     /// Multiple <see cref="AddAdminer(IDistributedApplicationBuilder, string, int?)"/> calls will return the same resource builder instance.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addAdminer", Description = "Adds an Adminer container resource")]
     public static IResourceBuilder<AdminerContainerResource> AddAdminer(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -79,3 +83,5 @@ public static class AdminerBuilderExtensions
         }
     }
 }
+
+#pragma warning restore ASPIREATS001

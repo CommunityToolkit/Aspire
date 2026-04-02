@@ -10,8 +10,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$PackageName,
 
-    [Parameter(Mandatory = $true)]
-    [string[]]$WaitForResources,
+    [string[]]$WaitForResources = @(),
 
     [string[]]$RequiredCommands = @(),
 
@@ -87,7 +86,7 @@ if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
     $PackageVersion = "$versionPrefix-polyglot.local"
 }
 
-if ($WaitForResources.Count -eq 1) {
+if ($WaitForResources.Count -eq 1 -and -not [string]::IsNullOrWhiteSpace($WaitForResources[0])) {
     $splitOptions = [System.StringSplitOptions]::RemoveEmptyEntries -bor [System.StringSplitOptions]::TrimEntries
     $WaitForResources = $WaitForResources[0].Split(",", $splitOptions)
 }
@@ -146,30 +145,36 @@ try {
         Pop-Location
     }
 
-    Invoke-ExternalCommand "aspire" @(
-        "start",
-        "--apphost", $resolvedAppHostPath,
-        "--isolated",
-        "--format", "Json",
-        "--non-interactive"
-    )
-    $appStarted = $true
-
-    foreach ($resource in $WaitForResources) {
+    Push-Location $appHostDirectory
+    try {
         Invoke-ExternalCommand "aspire" @(
-            "wait",
-            $resource,
-            "--status", $WaitStatus,
+            "start",
             "--apphost", $resolvedAppHostPath,
-            "--timeout", $WaitTimeoutSeconds
+            "--isolated",
+            "--format", "Json",
+            "--non-interactive"
+        )
+        $appStarted = $true
+
+        foreach ($resource in $WaitForResources) {
+            Invoke-ExternalCommand "aspire" @(
+                "wait",
+                $resource,
+                "--status", $WaitStatus,
+                "--apphost", $resolvedAppHostPath,
+                "--timeout", $WaitTimeoutSeconds
+            )
+        }
+
+        Invoke-ExternalCommand "aspire" @(
+            "describe",
+            "--apphost", $resolvedAppHostPath,
+            "--format", "Json"
         )
     }
-
-    Invoke-ExternalCommand "aspire" @(
-        "describe",
-        "--apphost", $resolvedAppHostPath,
-        "--format", "Json"
-    )
+    finally {
+        Pop-Location
+    }
 }
 catch {
     $primaryError = $_
@@ -195,10 +200,16 @@ finally {
 
     Invoke-CleanupStep -Description "stop Aspire app" -Action {
         if ($appStarted) {
-            Invoke-ExternalCommand "aspire" @(
-                "stop",
-                "--apphost", $resolvedAppHostPath
-            )
+            Push-Location $appHostDirectory
+            try {
+                Invoke-ExternalCommand "aspire" @(
+                    "stop",
+                    "--apphost", $resolvedAppHostPath
+                )
+            }
+            finally {
+                Pop-Location
+            }
         }
     } -Failures $cleanupFailures
 }

@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREATS001
+
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Aspire.Hosting.ApplicationModel;
@@ -23,6 +25,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="jarPath">The path to the jar file, relative to the resource working directory.</param>
     /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addJavaAppWithJar", Description = "Adds a Java application resource that runs a JAR file")]
     public static IResourceBuilder<JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory,
         string jarPath, string[]? args = null)
     {
@@ -53,6 +56,7 @@ public static partial class JavaAppHostingExtension
     /// Use <see cref="WithMavenGoal"/> or <see cref="WithGradleTask"/> to run the application via a build tool,
     /// or use the overload that accepts a <c>jarPath</c> parameter to run with <c>java -jar</c>.
     /// </remarks>
+    [AspireExport("addJavaApp", Description = "Adds a Java application resource")]
     public static IResourceBuilder<JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -164,6 +168,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Maven build step to.</param>
     /// <param name="args">Arguments to pass to the Maven wrapper. If not provided, defaults to <c>clean package</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withMavenBuild", Description = "Adds a Maven build step to the Java application")]
     public static IResourceBuilder<JavaAppExecutableResource> WithMavenBuild(
         this IResourceBuilder<JavaAppExecutableResource> builder,
         params string[] args)
@@ -189,6 +194,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Gradle build step to.</param>
     /// <param name="args">Arguments to pass to the Gradle wrapper. If not provided, defaults to <c>clean build</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withGradleBuild", Description = "Adds a Gradle build step to the Java application")]
     public static IResourceBuilder<JavaAppExecutableResource> WithGradleBuild(
         this IResourceBuilder<JavaAppExecutableResource> builder,
         params string[] args)
@@ -239,6 +245,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="goal">The Maven goal to execute (e.g., <c>spring-boot:run</c>).</param>
     /// <param name="args">Additional arguments to pass to the Maven wrapper.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withMavenGoal", Description = "Configures the Java application to run using a Maven goal")]
     public static IResourceBuilder<JavaAppExecutableResource> WithMavenGoal(
         this IResourceBuilder<JavaAppExecutableResource> builder,
         string goal,
@@ -277,6 +284,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="task">The Gradle task to execute (e.g., <c>bootRun</c>).</param>
     /// <param name="args">Additional arguments to pass to the Gradle wrapper.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withGradleTask", Description = "Configures the Java application to run using a Gradle task")]
     public static IResourceBuilder<JavaAppExecutableResource> WithGradleTask(
         this IResourceBuilder<JavaAppExecutableResource> builder,
         string task,
@@ -314,6 +322,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The resource builder.</param>
     /// <param name="args">The JVM arguments.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withJvmArgs", Description = "Configures Java Virtual Machine arguments for the resource")]
     public static IResourceBuilder<T> WithJvmArgs<T>(
         this IResourceBuilder<T> builder,
         string[] args) where T : IResourceWithEnvironment
@@ -338,6 +347,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The resource builder.</param>
     /// <param name="agentPath">The path to the OpenTelemetry Java Agent jar file.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withOtelAgent", Description = "Configures the OpenTelemetry Java agent for the resource")]
     public static IResourceBuilder<T> WithOtelAgent<T>(
         this IResourceBuilder<T> builder,
         string? agentPath = null) where T : IResourceWithEnvironment
@@ -387,6 +397,7 @@ public static partial class JavaAppHostingExtension
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to configure.</param>
     /// <param name="wrapperScript">The path to the wrapper script, relative to the resource working directory or an absolute path.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withWrapperPath", Description = "Configures a custom build tool wrapper script path")]
     public static IResourceBuilder<JavaAppExecutableResource> WithWrapperPath(
         this IResourceBuilder<JavaAppExecutableResource> builder,
         string wrapperScript)
@@ -411,3 +422,5 @@ public static partial class JavaAppHostingExtension
                .WithEnvironment(JavaToolOptions, $"-javaagent:{options.OtelAgentPath?.TrimEnd('/')}/opentelemetry-javaagent.jar")
                .WithEnvironment("SERVER_PORT", options.Port.ToString(CultureInfo.InvariantCulture));
 }
+
+#pragma warning restore ASPIREATS001

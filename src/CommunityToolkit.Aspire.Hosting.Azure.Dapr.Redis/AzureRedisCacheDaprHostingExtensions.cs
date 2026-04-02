@@ -9,6 +9,8 @@ using Azure.Provisioning.Roles;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -22,11 +24,12 @@ public static class AzureRedisCacheDaprHostingExtensions
     private const string daprConnectionStringKey = "daprConnectionString";
 
     /// <summary>
-    /// Configures a Dapr component resource to use an Azure Redis cache resource.
+    /// Configures a Dapr component resource to use an Azure Managed Redis resource.
     /// </summary>
     /// <param name="builder">The Dapr component resource builder.</param>
-    /// <param name="source">The Azure Redis cache resource builder.</param>
+    /// <param name="source">The Azure Managed Redis resource builder.</param>
     /// <returns>The updated Dapr component resource builder.</returns>
+    [AspireExport("withReference", Description = "Configures a Dapr component resource to use Azure Managed Redis")]
     public static IResourceBuilder<IDaprComponentResource> WithReference(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureManagedRedisResource> source)
     {
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)

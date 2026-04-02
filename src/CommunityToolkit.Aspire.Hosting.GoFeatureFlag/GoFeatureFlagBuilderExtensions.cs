@@ -6,6 +6,8 @@ using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.GoFeatureFlag;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -38,9 +40,10 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("addGoFeatureFlag", Description = "Adds a GO Feature Flag container resource")]
     public static IResourceBuilder<GoFeatureFlagResource> AddGoFeatureFlag(
         this IDistributedApplicationBuilder builder,
-        string name,
+        [ResourceName] string name,
         string? pathToConfigFile = null,
         int? port = null)
     {
@@ -86,6 +89,7 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a GO Feature Flag container resource")]
     public static IResourceBuilder<GoFeatureFlagResource> WithDataVolume(this IResourceBuilder<GoFeatureFlagResource> builder, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -115,6 +119,7 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withGoffBindMount", Description = "Adds a bind mount for the GO Feature Flag configuration folder to a GO Feature Flag container resource")]
     public static IResourceBuilder<GoFeatureFlagResource> WithGoffBindMount(this IResourceBuilder<GoFeatureFlagResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -132,7 +137,9 @@ public static class GoFeatureFlagBuilderExtensions
     /// <remarks>
     /// The only supported <see cref="LogLevel"/> by GO Feature Flag are <see cref="LogLevel.Error"/>,
     /// <see cref="LogLevel.Warning"/>, <see cref="LogLevel.Information"/> and <see cref="LogLevel.Debug"/>.
+    /// This overload is not available in polyglot app hosts. Use the enum-based overload instead.
     /// </remarks>
+    [AspireExportIgnore(Reason = "LogLevel is defined in Microsoft.Extensions.Logging and is not ATS-compatible. Use the enum-based overload instead.")]
     public static IResourceBuilder<GoFeatureFlagResource> WithLogLevel(
         this IResourceBuilder<GoFeatureFlagResource> builder,
         LogLevel logLevel
@@ -151,4 +158,29 @@ public static class GoFeatureFlagBuilderExtensions
 
         return builder.WithEnvironment("LOGLEVEL", value);
     }
+
+    [AspireExport("withLogLevel", Description = "Configures the logging level for the GO Feature Flag container resource")]
+    internal static IResourceBuilder<GoFeatureFlagResource> WithLogLevel(
+        this IResourceBuilder<GoFeatureFlagResource> builder,
+        GoFeatureFlagLogLevel logLevel)
+        => builder.WithLogLevel(MapLogLevel(logLevel));
+
+    private static LogLevel MapLogLevel(GoFeatureFlagLogLevel logLevel) => logLevel switch
+    {
+        GoFeatureFlagLogLevel.Error => LogLevel.Error,
+        GoFeatureFlagLogLevel.Warning => LogLevel.Warning,
+        GoFeatureFlagLogLevel.Information => LogLevel.Information,
+        GoFeatureFlagLogLevel.Debug => LogLevel.Debug,
+        _ => throw new ArgumentOutOfRangeException(nameof(logLevel))
+    };
 }
+
+internal enum GoFeatureFlagLogLevel
+{
+    Debug,
+    Information,
+    Warning,
+    Error
+}
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

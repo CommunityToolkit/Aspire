@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -7,6 +9,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// Constructs a <see cref="FlagdResource"/>.
 /// </remarks>
 /// <param name="name">The name of the resource.</param>
+[AspireExport(ExposeProperties = true)]
 public class FlagdResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string HttpEndpointName = "http";
@@ -40,7 +43,7 @@ public class FlagdResource(string name) : ContainerResource(name), IResourceWith
     public EndpointReference HealthCheckEndpoint => _healthCheckEndpointReference ??= new(this, HealthCheckEndpointName);
 
     /// <summary>
-    /// Gets the connection string for the flagd server.
+    /// Gets the OFREP endpoint for the flagd server.
     /// </summary>
     public EndpointReference OfrepEndpoint => _ofrepEndpointReference ??= new(this, OfrepEndpointName);
 
@@ -67,3 +70,5 @@ public class FlagdResource(string name) : ContainerResource(name), IResourceWith
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001

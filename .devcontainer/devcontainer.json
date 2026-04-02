@@ -40,7 +40,9 @@
         "esbenp.prettier-vscode",
         "redhat.vscode-yaml",
         "rust-lang.rust-analyzer",
-        "oven.bun-vscode"
+        "oven.bun-vscode",
+        "nihilus118.perl-debugger",
+        "bscan.perlnavigator"
       ]
     }
   },

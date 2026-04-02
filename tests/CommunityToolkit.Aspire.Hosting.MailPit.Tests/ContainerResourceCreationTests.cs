@@ -8,7 +8,7 @@ public class ContainerResourceCreationTests
     public void AddMailPitBuilderShouldNotBeNull()
     {
         IDistributedApplicationBuilder builder = null!;
-        Assert.Throws<NullReferenceException>(() => builder.AddMailPit("mailpit"));
+        Assert.Throws<ArgumentNullException>(() => builder.AddMailPit("mailpit"));
     }
 
     [Fact]

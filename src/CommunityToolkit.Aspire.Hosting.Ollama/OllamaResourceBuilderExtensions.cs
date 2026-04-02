@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using OllamaSharp;
 using System.Text.Json;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -20,6 +22,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="port">An optional fixed port to bind to the Ollama container. This will be provided randomly by Aspire if not set.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addOllama", Description = "Adds an Ollama container resource")]
     public static IResourceBuilder<OllamaResource> AddOllama(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -40,6 +43,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="port">An optional fixed port to bind to the Ollama process. This will be provided randomly by Aspire if not set.</param>
     /// <param name="targetPort">An optional fixed port to run the Ollama process. This will default to 11434 if not set.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addOllamaLocal", Description = "Adds an Ollama executable resource")]
     public static IResourceBuilder<OllamaExecutableResource> AddOllamaLocal(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null, int? targetPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -68,6 +72,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withOllamaDataVolume", MethodName = "withDataVolume", Description = "Adds a data volume to the Ollama container")]
     public static IResourceBuilder<OllamaResource> WithDataVolume(this IResourceBuilder<OllamaResource> builder, string? name = null, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -85,6 +90,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <remarks>
     /// This will add the right arguments to the container to enable GPU support as per <see href="https://github.com/ollama/ollama/blob/main/docs/docker.md" />.
     /// </remarks>
+    [AspireExport("withGPUSupport", Description = "Adds GPU support to the Ollama container")]
     public static IResourceBuilder<OllamaResource> WithGPUSupport(this IResourceBuilder<OllamaResource> builder, OllamaGpuVendor vendor = OllamaGpuVendor.Nvidia)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));

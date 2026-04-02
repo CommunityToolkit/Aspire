@@ -19,5 +19,7 @@ nuget
 target
 
 node_modules
+examples/perl/**/local/*
+**cpanfile.snapshot
 **/.modules/
 **/*.AppHost.TypeScript/nuget.config

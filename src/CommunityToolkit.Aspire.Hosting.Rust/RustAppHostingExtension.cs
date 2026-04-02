@@ -1,5 +1,7 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -16,6 +18,7 @@ public static class RustAppHostingExtension
     /// <param name="workingDirectory">The working directory to use for the command.</param>
     /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addRustApp", Description = "Adds a Rust application to the application model")]
     public static IResourceBuilder<RustAppExecutableResource> AddRustApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[]? args = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -39,3 +42,5 @@ public static class RustAppHostingExtension
         this IResourceBuilder<RustAppExecutableResource> builder) =>
         builder.WithOtlpExporter();
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

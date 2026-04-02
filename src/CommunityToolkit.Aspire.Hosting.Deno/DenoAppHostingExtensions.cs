@@ -1,6 +1,8 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Hosting;
 using CommunityToolkit.Aspire.Utils;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 /// <summary>
@@ -18,7 +20,14 @@ public static class DenoAppHostingExtensions
     /// <param name="permissionFlags">The permissions to grant to the program run.</param>
     /// <param name="args">The arguments to pass to the command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DenoAppResource> AddDenoApp(this IDistributedApplicationBuilder builder, string name, string scriptPath, string? workingDirectory = null, string[]? permissionFlags = null, string[]? args = null)
+    [AspireExport("addDenoApp", Description = "Adds a Deno app resource")]
+    public static IResourceBuilder<DenoAppResource> AddDenoApp(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        string scriptPath,
+        string? workingDirectory = null,
+        string[]? permissionFlags = null,
+        string[]? args = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -47,7 +56,13 @@ public static class DenoAppHostingExtensions
     /// <param name="taskName">The deno task to execute. Defaults to "start".</param>
     /// <param name="args">The arguments to pass to the command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<DenoAppResource> AddDenoTask(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string taskName = "start", string[]? args = null)
+    [AspireExport("addDenoTask", Description = "Adds a Deno task resource")]
+    public static IResourceBuilder<DenoAppResource> AddDenoTask(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        string? workingDirectory = null,
+        string taskName = "start",
+        string[]? args = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -73,7 +88,21 @@ public static class DenoAppHostingExtensions
     /// <param name="resource">The Deno app resource.</param>
     /// <param name="configureInstaller">Configure the Deno installer resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithDenoPackageInstallation(IResourceBuilder{DenoAppResource})"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "Action<IResourceBuilder<DenoInstallerResource>> is not ATS-compatible. Use the overload without configureInstaller instead.")]
     public static IResourceBuilder<DenoAppResource> WithDenoPackageInstallation(this IResourceBuilder<DenoAppResource> resource, Action<IResourceBuilder<DenoInstallerResource>>? configureInstaller = null)
+        => WithDenoPackageInstallationCore(resource, configureInstaller);
+
+    /// <summary>
+    /// Ensures the Deno packages are installed before the application starts using Deno as the package manager.
+    /// </summary>
+    [AspireExport("withDenoPackageInstallation", Description = "Ensures Deno packages are installed before the application starts.")]
+    internal static IResourceBuilder<DenoAppResource> WithDenoPackageInstallation(this IResourceBuilder<DenoAppResource> resource)
+        => WithDenoPackageInstallationCore(resource, configureInstaller: null);
+
+    private static IResourceBuilder<DenoAppResource> WithDenoPackageInstallationCore(
+        this IResourceBuilder<DenoAppResource> resource,
+        Action<IResourceBuilder<DenoInstallerResource>>? configureInstaller)
     {
         // Only install packages during development, not in publish mode
         if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
@@ -99,3 +128,5 @@ public static class DenoAppHostingExtensions
     builder.WithOtlpExporter()
         .WithEnvironment("DENO_ENV", builder.ApplicationBuilder.Environment.IsDevelopment() ? "development" : "production");
 }
+
+#pragma warning restore ASPIREATS001

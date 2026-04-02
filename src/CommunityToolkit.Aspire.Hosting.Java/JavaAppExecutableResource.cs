@@ -1,8 +1,11 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+﻿#pragma warning disable ASPIREATS001
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a Java application.
 /// </summary>
+[global::Aspire.Hosting.AspireExport(ExposeProperties = true)]
 public class JavaAppExecutableResource
     : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithWaitSupport
 {
@@ -35,3 +38,5 @@ public class JavaAppExecutableResource
     /// </summary>
     public string? JarPath { get; set; }
 }
+
+#pragma warning restore ASPIREATS001

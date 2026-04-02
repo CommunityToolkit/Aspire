@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental.
+
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Hosting.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,45 @@ public static class McpInspectorResourceBuilderExtensions
     }
 
     /// <summary>
+    /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/>.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
+    /// <param name="name">The name of the MCP Inspector container resource.</param>
+    /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>
+    /// <param name="serverPort">The port for the server proxy application. Defaults to 6277.</param>
+    /// <param name="inspectorVersion">The version of the Inspector app to use. Defaults to <see cref="McpInspectorResource.InspectorVersion"/>.</param>
+    /// <param name="proxyToken">The parameter used to provide the proxy authentication token. If <see langword="null"/> a random token will be generated.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    /// <remarks>
+    /// By default, the MCP Inspector uses npm/npx. To use a different package manager, chain the appropriate method:
+    /// <code>
+    /// builder.AddMcpInspector("inspector")
+    ///     .WithYarn();
+    /// </code>
+    /// </remarks>
+    [AspireExport("addMcpInspectorPolyglot", MethodName = "addMcpInspector", Description = "Adds a MCP Inspector container resource")]
+    internal static IResourceBuilder<McpInspectorResource> AddMcpInspectorPolyglot(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        int clientPort = 6274,
+        int serverPort = 6277,
+        string inspectorVersion = McpInspectorResource.InspectorVersion,
+        IResourceBuilder<ParameterResource>? proxyToken = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        McpInspectorOptions options = new()
+        {
+            ClientPort = clientPort,
+            ServerPort = serverPort,
+            InspectorVersion = inspectorVersion,
+            ProxyToken = proxyToken,
+        };
+
+        return AddMcpInspector(builder, name, options);
+    }
+
+    /// <summary>
     /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/> using an options object.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
@@ -43,7 +84,9 @@ public static class McpInspectorResourceBuilderExtensions
     /// builder.AddMcpInspector("inspector")
     ///     .WithYarn();
     /// </code>
+    /// This overload is not available in polyglot app hosts. Use <see cref="AddMcpInspectorPolyglot"/> instead.
     /// </remarks>
+    [AspireExportIgnore(Reason = "McpInspectorOptions is not ATS-compatible. Use the parameter-based overload instead.")]
     public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, McpInspectorOptions options)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -191,6 +234,8 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="name">The name of the MCP Inspector container resource.</param>
     /// <param name="configureOptions">A delegate to configure the <see cref="McpInspectorOptions"/>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="AddMcpInspectorPolyglot"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "Action<McpInspectorOptions> is not ATS-compatible. Use the parameter-based overload instead.")]
     public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name, Action<McpInspectorOptions> configureOptions)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -208,6 +253,8 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
     /// <param name="name">The name of the MCP Inspector container resource.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="AddMcpInspectorPolyglot"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "Use the parameter-based overload so polyglot app hosts expose a single addMcpInspector capability.")]
     public static IResourceBuilder<McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -227,6 +274,7 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="transportType">The transport type to use for the MCP server. Defaults to <see cref="McpTransportType.StreamableHttp"/>.</param>
     /// <param name="path">The path to use for MCP communication. Defaults to "/mcp".</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
+    [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer", Description = "Configures the MCP Inspector to use a specified MCP server resource")]
     public static IResourceBuilder<McpInspectorResource> WithMcpServer<TResource>(
         this IResourceBuilder<McpInspectorResource> builder,
         IResourceBuilder<TResource> mcpServer,
@@ -334,6 +382,7 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withYarn", Description = "Configures the MCP Inspector to use yarn as the package manager")]
     public static IResourceBuilder<McpInspectorResource> WithYarn(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -346,6 +395,7 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withPnpm", Description = "Configures the MCP Inspector to use pnpm as the package manager")]
     public static IResourceBuilder<McpInspectorResource> WithPnpm(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -358,6 +408,7 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withBun", Description = "Configures the MCP Inspector to use bun as the package manager")]
     public static IResourceBuilder<McpInspectorResource> WithBun(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -365,3 +416,5 @@ public static class McpInspectorResourceBuilderExtensions
         return builder.WithCommand("bunx");
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental.
