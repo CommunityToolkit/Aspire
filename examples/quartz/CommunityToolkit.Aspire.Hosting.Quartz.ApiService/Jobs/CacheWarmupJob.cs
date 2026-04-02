@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace QuartzSample.ApiService.Jobs;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Jobs;
 
 /// <summary>
 /// Cache warmup job - demonstrates startup job

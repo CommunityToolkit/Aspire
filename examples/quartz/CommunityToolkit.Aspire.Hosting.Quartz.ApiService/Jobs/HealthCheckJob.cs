@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace QuartzSample.ApiService.Jobs;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Jobs;
 
 /// <summary>
 /// Health check job - runs every 5 minutes

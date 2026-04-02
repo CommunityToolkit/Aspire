@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
 using Quartz;
-using QuartzSample.ApiService.Hubs;
+using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Hubs;
 
-namespace QuartzSample.ApiService.Listeners;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Listeners;
 
 /// <summary>
 /// Quartz job listener that broadcasts events via SignalR

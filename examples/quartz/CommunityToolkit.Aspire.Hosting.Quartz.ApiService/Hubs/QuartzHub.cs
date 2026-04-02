@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 
-namespace QuartzSample.ApiService.Hubs;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Hubs;
 
 /// <summary>
 /// SignalR Hub for real-time Quartz job updates

@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace QuartzSample.ApiService.Jobs;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Jobs;
 
 /// <summary>
 /// Data cleanup job - runs every Sunday at 3:00 AM

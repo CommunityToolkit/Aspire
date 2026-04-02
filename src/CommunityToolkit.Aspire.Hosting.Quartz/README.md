@@ -30,8 +30,19 @@ builder.Build().Run();
 - Automatic connection string injection
 - Health checks
 - OpenTelemetry metrics
-- Multi-database support (PostgreSQL, SQL Server, MySQL, SQLite)
-- Automatic schema migrations using EF Core
+- Multi-database support (PostgreSQL, SQL Server)
+- Automatic schema migrations on startup
+
+## Database Schema
+
+The integration automatically creates Quartz.NET database tables on first run using the built-in `QuartzMigrationService`. No manual migrations or EF Core required - just reference the database and the tables will be created automatically:
+
+- QRTZ_JOB_DETAILS
+- QRTZ_TRIGGERS
+- QRTZ_SIMPLE_TRIGGERS
+- QRTZ_CRON_TRIGGERS
+- QRTZ_FIRED_TRIGGERS
+- And more...
 
 ## Documentation
 

@@ -1,7 +1,7 @@
 using Quartz;
-using QuartzSample.ApiService.Jobs;
+using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Jobs;
 
-namespace QuartzSample.ApiService.Services;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Services;
 
 /// <summary>
 /// Service for scheduling Quartz jobs with proper configuration
@@ -154,7 +154,7 @@ public class QuartzJobScheduler
 
         foreach (var group in jobGroups)
         {
-            var jobKeys = await scheduler.GetJobKeys(Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupEquals(group));
+            var jobKeys = await scheduler.GetJobKeys(global::Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupEquals(group));
 
             foreach (var jobKey in jobKeys)
             {

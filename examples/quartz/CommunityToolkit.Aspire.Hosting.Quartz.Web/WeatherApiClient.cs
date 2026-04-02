@@ -1,4 +1,4 @@
-namespace QuartzSample.Web;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.Web;
 
 public class WeatherApiClient(HttpClient httpClient)
 {

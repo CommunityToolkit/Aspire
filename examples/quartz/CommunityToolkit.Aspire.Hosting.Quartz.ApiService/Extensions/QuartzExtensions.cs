@@ -1,6 +1,6 @@
 using Quartz;
 
-namespace QuartzSample.ApiService.Extensions;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Extensions;
 
 public static class QuartzExtensions
 {

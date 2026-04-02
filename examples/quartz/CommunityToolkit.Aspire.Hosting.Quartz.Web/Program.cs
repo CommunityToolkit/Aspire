@@ -1,6 +1,6 @@
-using QuartzSample.Web;
-using QuartzSample.Web.Components;
-using QuartzSample.Web.Services;
+using CommunityToolkit.Aspire.Hosting.Quartz.Web;
+using CommunityToolkit.Aspire.Hosting.Quartz.Web.Components;
+using CommunityToolkit.Aspire.Hosting.Quartz.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

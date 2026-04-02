@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 
-namespace QuartzSample.Web.Services;
+namespace CommunityToolkit.Aspire.Hosting.Quartz.Web.Services;
 
 public class QuartzApiClient
 {

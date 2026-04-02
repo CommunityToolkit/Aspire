@@ -46,7 +46,8 @@ await jobClient.ScheduleAsync<SendEmailJob>(
 - Idempotency support
 - Retry policies with exponential/linear backoff
 - OpenTelemetry distributed tracing
-- Multi-database support (PostgreSQL, SQL Server, MySQL, SQLite)
+- Multi-database support (PostgreSQL, SQL Server)
+- Automatic database schema creation on first run
 
 ## Documentation
 

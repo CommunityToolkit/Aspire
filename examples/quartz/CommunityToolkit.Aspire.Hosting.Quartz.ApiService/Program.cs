@@ -1,8 +1,6 @@
 using Aspire.Quartz;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Quartz;
-using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Data;
 using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Extensions;
 using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Hubs;
 using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Jobs;
@@ -16,26 +14,6 @@ builder.AddServiceDefaults();
 
 // Add SignalR
 builder.Services.AddSignalR();
-
-// Add Quartz DbContext for automatic table creation
-// 💡 Choose your database provider:
-
-// ✅ PostgreSQL (Active)
-builder.Services.AddDbContext<QuartzDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("quartzdb")));
-
-// 💡 SQL Server (Commented - uncomment to use)
-// builder.Services.AddDbContext<QuartzDbContext>(options =>
-//     options.UseSqlServer(builder.Configuration.GetConnectionString("quartzdb")));
-
-// 💡 MySQL (Commented - uncomment to use)
-// builder.Services.AddDbContext<QuartzDbContext>(options =>
-//     options.UseMySql(builder.Configuration.GetConnectionString("quartzdb"),
-//         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("quartzdb"))));
-
-// 💡 SQLite (Commented - uncomment to use)
-// builder.Services.AddDbContext<QuartzDbContext>(options =>
-//     options.UseSqlite(builder.Configuration.GetConnectionString("quartzdb")));
 
 // Add Quartz.NET with full scheduling power (MUST be called before AddQuartzClient)
 builder.Services.AddQuartz(q =>
@@ -118,7 +96,6 @@ builder.Services.AddSingleton<QuartzJobScheduler>();
 
 // Add services to the container
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
 
 // Add CORS for SignalR
@@ -134,20 +111,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Run database migrations on startup
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<QuartzDbContext>();
-    await dbContext.Database.MigrateAsync();
-}
-
 // Configure the HTTP request pipeline
 app.UseExceptionHandler();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 app.UseCors();
 
