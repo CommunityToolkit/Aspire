@@ -41,6 +41,7 @@ jobs:
             Hosting.Keycloak.Extensions.Tests,
             Hosting.KurrentDB.Tests,
             Hosting.LavinMQ.Tests,
+            Hosting.Logto.Tests,
             Hosting.MailPit.Tests,
             Hosting.McpInspector.Tests,
             Hosting.Meilisearch.Tests,
@@ -71,6 +72,7 @@ jobs:
             # Client integration tests
             GoFeatureFlag.Tests,
             KurrentDB.Tests,
+            Logto.Client.Tests,
             MassTransit.RabbitMQ.Tests,
             Meilisearch.Tests,
             Microsoft.Data.Sqlite.Tests,
