@@ -144,6 +144,12 @@
   <Folder Name="/examples/powershell/">
     <Project Path="examples/powershell/CommunityToolkit.Aspire.PowerShell.AppHost/CommunityToolkit.Aspire.PowerShell.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/quartz/">
+    <Project Path="examples/quartz/CommunityToolkit.Aspire.Hosting.Quartz.ApiService/CommunityToolkit.Aspire.Hosting.Quartz.ApiService.csproj" />
+    <Project Path="examples/quartz/CommunityToolkit.Aspire.Hosting.Quartz.AppHost/CommunityToolkit.Aspire.Hosting.Quartz.AppHost.csproj" />
+    <Project Path="examples/quartz/CommunityToolkit.Aspire.Hosting.Quartz.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Quartz.ServiceDefaults.csproj" />
+    <Project Path="examples/quartz/CommunityToolkit.Aspire.Hosting.Quartz.Web/CommunityToolkit.Aspire.Hosting.Quartz.Web.csproj" />
+  </Folder>
   <Folder Name="/examples/ravendb/">
     <Project Path="examples/ravendb/CommunityToolkit.Aspire.Hosting.RavenDB.ApiService/CommunityToolkit.Aspire.Hosting.RavenDB.ApiService.csproj" />
     <Project Path="examples/ravendb/CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults/CommunityToolkit.Aspire.Hosting.RavenDB.ServiceDefaults.csproj" />
@@ -231,6 +237,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.PowerShell/CommunityToolkit.Aspire.Hosting.PowerShell.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Python.Extensions/CommunityToolkit.Aspire.Hosting.Python.Extensions.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Quartz/CommunityToolkit.Aspire.Hosting.Quartz.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj" />
@@ -249,6 +256,8 @@
     <Project Path="src/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Minio.Client/CommunityToolkit.Aspire.Minio.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Quartz/CommunityToolkit.Aspire.Quartz.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Quartz.Abstractions/CommunityToolkit.Aspire.Quartz.Abstractions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Sftp/CommunityToolkit.Aspire.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
@@ -293,6 +302,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/CommunityToolkit.Aspire.Hosting.Perl.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Quartz.Tests/CommunityToolkit.Aspire.Hosting.Quartz.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />
@@ -311,6 +321,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Minio.Client.Tests/CommunityToolkit.Aspire.Minio.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.OllamaSharp.Tests/CommunityToolkit.Aspire.OllamaSharp.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Quartz.Tests/CommunityToolkit.Aspire.Quartz.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Sftp.Tests/CommunityToolkit.Aspire.Sftp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
