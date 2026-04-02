@@ -19,7 +19,9 @@ param(
     [ValidateSet("healthy", "up", "down")]
     [string]$WaitStatus = "healthy",
 
-    [int]$WaitTimeoutSeconds = 180
+    [int]$WaitTimeoutSeconds = 180,
+
+    [string[]]$Secrets = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -102,6 +104,27 @@ foreach ($commandName in $RequiredCommands) {
     }
 }
 
+if ($Secrets.Count -eq 1 -and -not [string]::IsNullOrWhiteSpace($Secrets[0])) {
+    $splitOptions = [System.StringSplitOptions]::RemoveEmptyEntries -bor [System.StringSplitOptions]::TrimEntries
+    $Secrets = $Secrets[0].Split(",", $splitOptions)
+}
+
+$parsedSecrets = [System.Collections.Generic.List[string[]]]::new()
+foreach ($secret in $Secrets) {
+    if ([string]::IsNullOrWhiteSpace($secret)) {
+        continue
+    }
+
+    $eqIndex = $secret.IndexOf('=')
+    if ($eqIndex -le 0) {
+        throw "Invalid secret format '$secret'. Expected 'key=value'."
+    }
+
+    $key = $secret.Substring(0, $eqIndex)
+    $value = $secret.Substring($eqIndex + 1)
+    $parsedSecrets.Add(@($key, $value))
+}
+
 try {
     $originalConfig = Get-Content -Path $configPath -Raw
     New-Item -ItemType Directory -Path $localSource -Force | Out-Null
@@ -143,6 +166,15 @@ try {
     }
     finally {
         Pop-Location
+    }
+
+    foreach ($secretPair in $parsedSecrets) {
+        Invoke-ExternalCommand "aspire" @(
+            "secret", "set",
+            $secretPair[0], $secretPair[1],
+            "--apphost", $resolvedAppHostPath,
+            "--non-interactive"
+        )
     }
 
     Push-Location $appHostDirectory
@@ -210,6 +242,17 @@ finally {
             finally {
                 Pop-Location
             }
+        }
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "remove secrets" -Action {
+        foreach ($secretPair in $parsedSecrets) {
+            Invoke-ExternalCommand "aspire" @(
+                "secret", "delete",
+                $secretPair[0],
+                "--apphost", $resolvedAppHostPath,
+                "--non-interactive"
+            )
         }
     } -Failures $cleanupFailures
 }
