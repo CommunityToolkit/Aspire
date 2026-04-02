@@ -76,6 +76,7 @@
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
     <PackageVersion Include="MeiliSearch" Version="0.18.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.SqlServer.DacFx" Version="170.2.70" />
@@ -83,7 +84,11 @@
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.11.48" />
     <PackageVersion Include="Microsoft.NET.StringTools" Version="17.11.48" />
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.10.12" />
+    <PackageVersion Include="Npgsql" Version="10.0.2" />
     <PackageVersion Include="ErikEJ.Dacpac.Chinook" Version="1.0.0" />
+    <PackageVersion Include="Quartz" Version="3.16.1" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.16.1" />
+    <PackageVersion Include="Quartz.Serialization.Json" Version="3.16.1" />
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />

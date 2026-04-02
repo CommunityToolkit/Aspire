@@ -1,7 +1,13 @@
 namespace CommunityToolkit.Aspire.Hosting.Quartz;
 
+/// <summary>
+/// Contains the PostgreSQL database migration script for Quartz.NET tables.
+/// </summary>
 public static class PostgreSqlMigrationScript
 {
+    /// <summary>
+    /// Gets the PostgreSQL schema creation script for Quartz.NET.
+    /// </summary>
     public const string Script = @"
 -- Quartz.NET PostgreSQL Schema
 

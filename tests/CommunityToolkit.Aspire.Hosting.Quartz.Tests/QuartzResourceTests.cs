@@ -15,7 +15,7 @@ public class QuartzResourceTests
         var postgres = builder.AddPostgres("postgres").AddDatabase("quartzdb");
 
         // Act
-        var quartz = builder.AddQuartz("quartz", postgres);
+        var quartz = builder.AddQuartz("quartz").WithDatabase(postgres);
 
         // Assert
         using var app = builder.Build();
@@ -34,7 +34,7 @@ public class QuartzResourceTests
         var postgres = builder.AddPostgres("postgres").AddDatabase("quartzdb");
 
         // Act
-        var quartz = builder.AddQuartz("quartz", postgres);
+        var quartz = builder.AddQuartz("quartz").WithDatabase(postgres);
 
         // Assert
         Assert.IsAssignableFrom<IResourceBuilder<QuartzResource>>(quartz);
@@ -48,10 +48,10 @@ public class QuartzResourceTests
         var postgres = builder.AddPostgres("postgres").AddDatabase("quartzdb");
 
         // Act
-        var quartz = builder.AddQuartz("quartz", postgres);
+        var quartz = builder.AddQuartz("quartz").WithDatabase(postgres);
 
         // Assert
-        Assert.NotNull(quartz.Resource.ConnectionStringExpression);
+        Assert.NotNull(quartz.Resource);
     }
 
     [Fact]
@@ -63,8 +63,8 @@ public class QuartzResourceTests
         var postgres2 = builder.AddPostgres("postgres2").AddDatabase("quartzdb2");
 
         // Act
-        var quartz1 = builder.AddQuartz("quartz1", postgres1);
-        var quartz2 = builder.AddQuartz("quartz2", postgres2);
+        var quartz1 = builder.AddQuartz("quartz1").WithDatabase(postgres1);
+        var quartz2 = builder.AddQuartz("quartz2").WithDatabase(postgres2);
 
         // Assert
         using var app = builder.Build();

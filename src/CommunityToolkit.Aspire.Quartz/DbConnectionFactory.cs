@@ -14,8 +14,16 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
     private readonly DatabaseProvider _provider;
     private readonly ILogger<DbConnectionFactory> _logger;
 
+    /// <summary>
+    /// Gets the detected database provider type.
+    /// </summary>
     public DatabaseProvider Provider => _provider;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DbConnectionFactory"/> class.
+    /// </summary>
+    /// <param name="connectionString">The database connection string.</param>
+    /// <param name="logger">The logger instance.</param>
     public DbConnectionFactory(
         string connectionString,
         ILogger<DbConnectionFactory> logger)
@@ -30,6 +38,10 @@ public sealed class DbConnectionFactory : IDbConnectionFactory
         _logger.LogInformation("Using {Provider} database provider", _provider);
     }
 
+    /// <summary>
+    /// Creates a new database connection based on the detected provider.
+    /// </summary>
+    /// <returns>A new database connection instance.</returns>
     public IDbConnection CreateConnection()
     {
         _logger.LogDebug("Creating new {Provider} connection", _provider);

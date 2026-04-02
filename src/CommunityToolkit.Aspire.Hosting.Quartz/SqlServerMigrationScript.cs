@@ -1,7 +1,13 @@
 namespace CommunityToolkit.Aspire.Hosting.Quartz;
 
+/// <summary>
+/// Contains the SQL Server database migration script for Quartz.NET tables.
+/// </summary>
 public static class SqlServerMigrationScript
 {
+    /// <summary>
+    /// Gets the SQL Server schema creation script for Quartz.NET.
+    /// </summary>
     public const string Script = @"
 -- Quartz.NET SQL Server Schema
 

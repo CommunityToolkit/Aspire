@@ -10,11 +10,21 @@ public sealed class QuartzHealthCheck : IHealthCheck
 {
     private readonly IScheduler _scheduler;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="QuartzHealthCheck"/> class.
+    /// </summary>
+    /// <param name="scheduler">The Quartz scheduler instance.</param>
     public QuartzHealthCheck(IScheduler scheduler)
     {
         _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
     }
 
+    /// <summary>
+    /// Checks the health of the Quartz scheduler.
+    /// </summary>
+    /// <param name="context">The health check context.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task representing the health check result.</returns>
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
