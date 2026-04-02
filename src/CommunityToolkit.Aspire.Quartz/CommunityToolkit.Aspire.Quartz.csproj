@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>AspireQuartz</PackageId>
+    <Title>AspireQuartz - Background Jobs for .NET Aspire</Title>
+    <Description>The standard way to do background jobs in .NET Aspire. Production-ready job scheduling with Quartz.NET, featuring idempotency, OpenTelemetry, health checks, and multi-database support (PostgreSQL, SQL Server, MySQL, SQLite).</Description>
+    <RootNamespace>Aspire.Quartz</RootNamespace>
+    <PackageTags>aspire;quartz;background-jobs;scheduling;jobs;cron;dotnet;aspire-integration</PackageTags>
+    <PackageProjectUrl>https://github.com/alnuaimicoder/aspire-hosting-quartz</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alnuaimicoder/aspire-hosting-quartz</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <Authors>AlNuaimi</Authors>
+    <Company>AlNuaimi</Company>
+    <Copyright>Copyright © 2026 AlNuaimi</Copyright>
+    <IsAspireClientIntegration>true</IsAspireClientIntegration>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aspire.Quartz.Abstractions\Aspire.Quartz.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Quartz.NET packages - needed for the client implementation -->
+    <PackageReference Include="Quartz" />
+    <PackageReference Include="Quartz.Extensions.Hosting" />
+    <PackageReference Include="Quartz.Serialization.Json" />
+
+    <!-- Database providers -->
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="Npgsql" />
+
+    <!-- OpenTelemetry for Aspire integration -->
+    <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+
+    <!-- Health Checks -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+  </ItemGroup>
+
+</Project>

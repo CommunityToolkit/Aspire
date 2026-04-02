@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>AspireQuartz.Abstractions</PackageId>
+    <Title>AspireQuartz.Abstractions - Core Abstractions</Title>
+    <Description>Core abstractions and contracts for AspireQuartz background job scheduling. Defines IBackgroundJobClient, IJob, JobOptions, and RetryPolicy interfaces.</Description>
+    <RootNamespace>Aspire.Quartz</RootNamespace>
+    <PackageTags>aspire;quartz;abstractions;background-jobs</PackageTags>
+    <PackageProjectUrl>https://github.com/alnuaimicoder/aspire-hosting-quartz</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alnuaimicoder/aspire-hosting-quartz</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <Authors>AlNuaimi</Authors>
+    <Company>AlNuaimi</Company>
+    <Copyright>Copyright © 2026 AlNuaimi</Copyright>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
