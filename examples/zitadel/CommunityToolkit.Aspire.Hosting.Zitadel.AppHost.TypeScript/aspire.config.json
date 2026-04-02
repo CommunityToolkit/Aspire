@@ -13,7 +13,7 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Zitadel": "13.2.1-polyglot.local",
+    "CommunityToolkit.Aspire.Hosting.Zitadel": "../../../src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj",
     "Aspire.Hosting.PostgreSQL": ""
   }
 }

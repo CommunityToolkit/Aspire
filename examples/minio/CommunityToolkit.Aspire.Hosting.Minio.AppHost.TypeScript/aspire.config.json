@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Minio": ""
+    "CommunityToolkit.Aspire.Hosting.Minio": "../../../src/CommunityToolkit.Aspire.Hosting.Minio/CommunityToolkit.Aspire.Hosting.Minio.csproj"
   }
 }

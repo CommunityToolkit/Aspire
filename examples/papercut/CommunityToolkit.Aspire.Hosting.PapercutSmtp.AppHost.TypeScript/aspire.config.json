@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.PapercutSmtp": ""
+    "CommunityToolkit.Aspire.Hosting.PapercutSmtp": "../../../src/CommunityToolkit.Aspire.Hosting.PapercutSmtp/CommunityToolkit.Aspire.Hosting.PapercutSmtp.csproj"
   }
 }

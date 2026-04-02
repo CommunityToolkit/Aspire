@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.DbGate": ""
+    "CommunityToolkit.Aspire.Hosting.DbGate": "../../../src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj"
   }
 }

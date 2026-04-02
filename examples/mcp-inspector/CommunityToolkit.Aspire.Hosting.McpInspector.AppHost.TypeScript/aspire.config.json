@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.McpInspector": ""
+    "CommunityToolkit.Aspire.Hosting.McpInspector": "../../../src/CommunityToolkit.Aspire.Hosting.McpInspector/CommunityToolkit.Aspire.Hosting.McpInspector.csproj"
   }
 }

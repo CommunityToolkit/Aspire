@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder": ""
+    "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder": "../../../src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj"
   }
 }

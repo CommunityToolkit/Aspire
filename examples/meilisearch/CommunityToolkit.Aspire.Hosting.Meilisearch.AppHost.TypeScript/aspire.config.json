@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Meilisearch": ""
+    "CommunityToolkit.Aspire.Hosting.Meilisearch": "../../../src/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.csproj"
   }
 }

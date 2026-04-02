@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.KurrentDB": ""
+    "CommunityToolkit.Aspire.Hosting.KurrentDB": "../../../src/CommunityToolkit.Aspire.Hosting.KurrentDB/CommunityToolkit.Aspire.Hosting.KurrentDB.csproj"
   }
 }

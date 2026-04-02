@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.SurrealDb": ""
+    "CommunityToolkit.Aspire.Hosting.SurrealDb": "../../../src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj"
   }
 }

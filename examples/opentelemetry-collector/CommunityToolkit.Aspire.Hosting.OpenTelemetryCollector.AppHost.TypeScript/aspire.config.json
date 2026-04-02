@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector": ""
+    "CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector": "../../../src/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj"
   }
 }

@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.MailPit": ""
+    "CommunityToolkit.Aspire.Hosting.MailPit": "../../../src/CommunityToolkit.Aspire.Hosting.MailPit/CommunityToolkit.Aspire.Hosting.MailPit.csproj"
   }
 }

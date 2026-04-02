@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Python.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.Python.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.Python.Extensions/CommunityToolkit.Aspire.Hosting.Python.Extensions.csproj"
   }
 }

@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.csproj"
   }
 }

@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj"
   }
 }

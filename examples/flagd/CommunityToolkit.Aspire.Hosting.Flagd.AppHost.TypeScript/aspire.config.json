@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Flagd": ""
+    "CommunityToolkit.Aspire.Hosting.Flagd": "../../../src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj"
   }
 }

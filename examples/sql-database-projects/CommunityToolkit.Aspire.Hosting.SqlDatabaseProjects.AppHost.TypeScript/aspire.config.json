@@ -14,6 +14,6 @@
   },
   "packages": {
     "Aspire.Hosting.SqlServer": "",
-    "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects": "13.2.1-polyglot.local"
+    "CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects": "../../../src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj"
   }
 }

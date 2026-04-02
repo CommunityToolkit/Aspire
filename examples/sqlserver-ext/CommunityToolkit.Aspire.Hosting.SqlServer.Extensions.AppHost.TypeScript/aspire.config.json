@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.SqlServer.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.SqlServer.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj"
   }
 }

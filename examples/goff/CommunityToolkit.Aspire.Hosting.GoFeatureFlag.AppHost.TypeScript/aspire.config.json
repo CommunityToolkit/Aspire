@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.GoFeatureFlag": ""
+    "CommunityToolkit.Aspire.Hosting.GoFeatureFlag": "../../../src/CommunityToolkit.Aspire.Hosting.GoFeatureFlag/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.csproj"
   }
 }

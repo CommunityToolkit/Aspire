@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Sftp": ""
+    "CommunityToolkit.Aspire.Hosting.Sftp": "../../../src/CommunityToolkit.Aspire.Hosting.Sftp/CommunityToolkit.Aspire.Hosting.Sftp.csproj"
   }
 }

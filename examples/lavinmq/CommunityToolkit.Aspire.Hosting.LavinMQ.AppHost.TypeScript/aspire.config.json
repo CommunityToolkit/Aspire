@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.LavinMQ": ""
+    "CommunityToolkit.Aspire.Hosting.LavinMQ": "../../../src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj"
   }
 }

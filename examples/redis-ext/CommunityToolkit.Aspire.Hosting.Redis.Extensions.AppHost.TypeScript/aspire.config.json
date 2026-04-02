@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Redis.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.Redis.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj"
   }
 }

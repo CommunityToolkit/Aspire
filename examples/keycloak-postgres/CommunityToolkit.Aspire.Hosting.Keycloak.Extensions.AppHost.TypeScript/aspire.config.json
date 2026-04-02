@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Keycloak.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.Keycloak.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj"
   }
 }

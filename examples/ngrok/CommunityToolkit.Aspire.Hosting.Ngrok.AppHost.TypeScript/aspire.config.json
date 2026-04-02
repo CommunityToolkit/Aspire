@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Ngrok": ""
+    "CommunityToolkit.Aspire.Hosting.Ngrok": "../../../src/CommunityToolkit.Aspire.Hosting.Ngrok/CommunityToolkit.Aspire.Hosting.Ngrok.csproj"
   }
 }

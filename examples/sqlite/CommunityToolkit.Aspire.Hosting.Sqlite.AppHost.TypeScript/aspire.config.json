@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Sqlite": ""
+    "CommunityToolkit.Aspire.Hosting.Sqlite": "../../../src/CommunityToolkit.Aspire.Hosting.Sqlite/CommunityToolkit.Aspire.Hosting.Sqlite.csproj"
   }
 }

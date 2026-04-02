@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.JavaScript.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.JavaScript.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj"
   }
 }

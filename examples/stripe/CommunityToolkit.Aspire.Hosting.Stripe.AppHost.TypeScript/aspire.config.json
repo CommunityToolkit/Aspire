@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Stripe": ""
+    "CommunityToolkit.Aspire.Hosting.Stripe": "../../../src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj"
   }
 }

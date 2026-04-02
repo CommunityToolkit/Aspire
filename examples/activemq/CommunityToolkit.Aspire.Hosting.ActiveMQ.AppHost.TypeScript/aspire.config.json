@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.ActiveMQ": ""
+    "CommunityToolkit.Aspire.Hosting.ActiveMQ": "../../../src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj"
   }
 }

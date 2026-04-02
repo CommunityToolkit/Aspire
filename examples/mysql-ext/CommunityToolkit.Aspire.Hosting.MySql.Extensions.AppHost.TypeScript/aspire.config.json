@@ -14,6 +14,6 @@
   },
   "packages": {
     "Aspire.Hosting.MySql": "",
-    "CommunityToolkit.Aspire.Hosting.MySql.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.MySql.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj"
   }
 }

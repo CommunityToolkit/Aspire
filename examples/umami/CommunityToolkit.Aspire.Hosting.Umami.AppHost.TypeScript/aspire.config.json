@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Umami": ""
+    "CommunityToolkit.Aspire.Hosting.Umami": "../../../src/CommunityToolkit.Aspire.Hosting.Umami/CommunityToolkit.Aspire.Hosting.Umami.csproj"
   }
 }

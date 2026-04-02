@@ -13,6 +13,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Flyway": ""
+    "CommunityToolkit.Aspire.Hosting.Flyway": "../../../src/CommunityToolkit.Aspire.Hosting.Flyway/CommunityToolkit.Aspire.Hosting.Flyway.csproj"
   }
 }
