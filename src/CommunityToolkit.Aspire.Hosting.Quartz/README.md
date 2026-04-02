@@ -1,21 +1,21 @@
-# AspireQuartz.Hosting
+# CommunityToolkit.Aspire.Hosting.Quartz
 
-Hosting library for background job scheduling in .NET Aspire using Quartz.NET.
+An Aspire hosting integration for Quartz.NET background job scheduling with persistent storage, automatic migrations, health checks, and OpenTelemetry metrics.
 
 ## Installation
 
 ```bash
-dotnet add package AspireQuartz.Hosting
+dotnet add package CommunityToolkit.Aspire.Hosting.Quartz
 ```
 
-## Quick Start
+## Usage
+
+### AppHost Configuration
 
 ```csharp
-// In your AppHost
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
-    .WithPgAdmin()
     .AddDatabase("quartzdb");
 
 builder.AddProject<Projects.ApiService>("api")
@@ -31,10 +31,11 @@ builder.Build().Run();
 - Health checks
 - OpenTelemetry metrics
 - Multi-database support (PostgreSQL, SQL Server, MySQL, SQLite)
+- Automatic schema migrations using EF Core
 
 ## Documentation
 
-Visit [GitHub Repository](https://github.com/alnuaimicoder/aspire-hosting-quartz) for full documentation.
+Visit [aspire.dev](https://aspire.dev) for complete documentation.
 
 ## License
 

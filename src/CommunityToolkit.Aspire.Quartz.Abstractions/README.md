@@ -1,17 +1,17 @@
-# AspireQuartz.Abstractions
+# CommunityToolkit.Aspire.Quartz.Abstractions
 
-Core abstractions for background job scheduling in .NET Aspire using Quartz.NET.
+Core abstractions and contracts for Quartz.NET background job scheduling in .NET Aspire.
 
 ## Installation
 
 ```bash
-dotnet add package AspireQuartz.Abstractions
+dotnet add package CommunityToolkit.Aspire.Quartz.Abstractions
 ```
 
 ## What's Included
 
 - `IBackgroundJobClient` - Interface for job scheduling
-- `IJob` - Base interface for jobs
+- `IJob` - Base interface for jobs (from Quartz.NET)
 - `JobOptions` - Configuration for job execution
 - `RetryPolicy` - Retry configuration
 - `JobContext` - Execution context
@@ -19,18 +19,22 @@ dotnet add package AspireQuartz.Abstractions
 ## Usage
 
 ```csharp
+using Quartz;
+
 public class SendEmailJob : IJob
 {
     public async Task Execute(IJobExecutionContext context)
     {
+        var email = context.JobDetail.JobDataMap.GetString("email");
         // Your job logic here
+        await Task.CompletedTask;
     }
 }
 ```
 
 ## Documentation
 
-Visit [GitHub Repository](https://github.com/alnuaimicoder/aspire-hosting-quartz) for full documentation.
+Visit [aspire.dev](https://aspire.dev) for complete documentation.
 
 ## License
 

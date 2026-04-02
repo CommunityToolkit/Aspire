@@ -1,17 +1,26 @@
-# AspireQuartz
+# CommunityToolkit.Aspire.Quartz
 
-Client library for background job scheduling in .NET Aspire using Quartz.NET.
+An Aspire client integration for Quartz.NET background job scheduling with idempotency, OpenTelemetry, health checks, and multi-database support.
 
 ## Installation
 
 ```bash
-dotnet add package AspireQuartz
+dotnet add package CommunityToolkit.Aspire.Quartz
 ```
 
-## Quick Start
+## Usage
 
 ```csharp
-// In your API/Service
+// Configure Quartz.NET
+builder.Services.AddQuartz(q =>
+{
+    q.UsePersistentStore(store =>
+        store.UsePostgres(builder.Configuration.GetConnectionString("quartzdb")!));
+});
+
+builder.Services.AddQuartzHostedService();
+
+// Add Quartz client
 builder.Services.AddQuartzClient(builder.Configuration.GetConnectionString("quartzdb"));
 
 // Enqueue a job
@@ -37,11 +46,11 @@ await jobClient.ScheduleAsync<SendEmailJob>(
 - Idempotency support
 - Retry policies with exponential/linear backoff
 - OpenTelemetry distributed tracing
-- SQL Server & PostgreSQL support
+- Multi-database support (PostgreSQL, SQL Server, MySQL, SQLite)
 
 ## Documentation
 
-Visit [GitHub Repository](https://github.com/alnuaimicoder/aspire-hosting-quartz) for full documentation.
+Visit [aspire.dev](https://aspire.dev) for complete documentation.
 
 ## License
 
