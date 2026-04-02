@@ -1,0 +1,11 @@
+#nullable enable
+Aspire.Quartz.IBackgroundJobClient
+Aspire.Quartz.IJob
+Aspire.Quartz.JobContext
+Aspire.Quartz.JobContext.JobContext() -> void
+Aspire.Quartz.JobContext.JobId.get -> string?
+Aspire.Quartz.JobContext.JobId.set -> void
+Aspire.Quartz.JobContext.Parameters.get -> System.Collections.Generic.Dictionary<string!, object!>?
+Aspire.Quartz.JobContext.Parameters.set -> void
+Aspire.Quartz.JobOptions
+Aspire.Quartz.RetryPolicy

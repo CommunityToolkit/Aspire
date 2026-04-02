@@ -1,0 +1,5 @@
+#nullable enable
+Aspire.Hosting.QuartzResourceExtensions
+static Aspire.Hosting.QuartzResourceExtensions.AddQuartz(this Aspire.Hosting.IDistributedApplicationBuilder builder, string name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource>!
+Aspire.Hosting.ApplicationModel.QuartzResource
+Aspire.Hosting.ApplicationModel.QuartzResource.QuartzResource(string! name) -> void

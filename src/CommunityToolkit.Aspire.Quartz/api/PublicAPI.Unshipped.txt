@@ -1,0 +1,29 @@
+#nullable enable
+Aspire.Quartz.IBackgroundJobClient
+Aspire.Quartz.IBackgroundJobClient.CancelAsync(string! jobId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<bool>!
+Aspire.Quartz.IBackgroundJobClient.EnqueueAsync<TJob>(object? parameters = null, Aspire.Quartz.JobOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Aspire.Quartz.IBackgroundJobClient.ScheduleAsync<TJob>(object? parameters, System.TimeSpan delay, Aspire.Quartz.JobOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Aspire.Quartz.IBackgroundJobClient.ScheduleAsync<TJob>(object? parameters, string! cronExpression, Aspire.Quartz.JobOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string!>!
+Aspire.Quartz.JobOptions
+Aspire.Quartz.JobOptions.IdempotencyKey.get -> string?
+Aspire.Quartz.JobOptions.IdempotencyKey.set -> void
+Aspire.Quartz.JobOptions.JobOptions() -> void
+Aspire.Quartz.JobOptions.RetryPolicy.get -> Aspire.Quartz.RetryPolicy?
+Aspire.Quartz.JobOptions.RetryPolicy.set -> void
+Aspire.Quartz.QuartzClientExtensions
+static Aspire.Quartz.QuartzClientExtensions.AddQuartzClient(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! connectionString) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Aspire.Quartz.RetryPolicy
+Aspire.Quartz.RetryPolicy.InitialDelay.get -> System.TimeSpan
+Aspire.Quartz.RetryPolicy.InitialDelay.set -> void
+Aspire.Quartz.RetryPolicy.MaxAttempts.get -> int
+Aspire.Quartz.RetryPolicy.MaxAttempts.set -> void
+Aspire.Quartz.RetryPolicy.MaxDelay.get -> System.TimeSpan?
+Aspire.Quartz.RetryPolicy.MaxDelay.set -> void
+Aspire.Quartz.RetryPolicy.Multiplier.get -> double
+Aspire.Quartz.RetryPolicy.Multiplier.set -> void
+Aspire.Quartz.RetryPolicy.RetryPolicy() -> void
+Aspire.Quartz.RetryPolicy.Strategy.get -> Aspire.Quartz.BackoffStrategy
+Aspire.Quartz.RetryPolicy.Strategy.set -> void
+Aspire.Quartz.BackoffStrategy
+Aspire.Quartz.BackoffStrategy.Exponential = 1 -> Aspire.Quartz.BackoffStrategy
+Aspire.Quartz.BackoffStrategy.Linear = 0 -> Aspire.Quartz.BackoffStrategy
