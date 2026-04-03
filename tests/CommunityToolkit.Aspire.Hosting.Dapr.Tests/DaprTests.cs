@@ -4,6 +4,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Testing;
+using Microsoft.AspNetCore.Http;
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr.Tests;
 
@@ -164,5 +165,25 @@ public class DaprTests
         Assert.Contains($"--app-channel-address {expectedChannelAddress}", commandline);
         Assert.Contains($"--app-protocol {expectedSchema}", commandline);
         Assert.NotNull(container.Annotations.OfType<DaprSidecarAnnotation>());
+    }
+
+    [Theory]
+    [InlineData("MyName", "MyName")]
+    [InlineData(null, "name-dapr")]
+    public void WithDaprSidecarName(string? sidecarName, string expectedSidecarName)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+
+        var containerResource = builder.AddContainer("name", "image");
+
+        containerResource.WithDaprSidecar(new DaprSidecarOptions
+        {
+            SidecarName = sidecarName
+        }); 
+
+        var annotation = Assert.Single(
+            containerResource.Resource.Annotations.OfType<DaprSidecarAnnotation>());
+
+        Assert.Equal(expectedSidecarName, annotation.Sidecar.Name);
     }
 }

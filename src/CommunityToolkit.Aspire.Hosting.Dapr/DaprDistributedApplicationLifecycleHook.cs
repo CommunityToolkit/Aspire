@@ -210,7 +210,7 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         ModelNamedArg("--unix-domain-socket", sidecarOptions?.UnixDomainSocket),
                         PostOptionsArgs(Args(sidecarOptions?.Command)));
 
-            var daprCliResourceName = $"{daprSidecar.Name}-cli";
+            var daprCliResourceName = sidecarOptions?.SidecarName ?? $"{daprSidecar.Name}-cli";
             var daprCli = new ExecutableResource(daprCliResourceName, fileName, appHostDirectory);
 
             // Propagate WaitAnnotations from the original resource to the Dapr CLI executable

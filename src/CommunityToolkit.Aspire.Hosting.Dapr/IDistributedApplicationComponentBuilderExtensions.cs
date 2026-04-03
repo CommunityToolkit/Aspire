@@ -36,7 +36,12 @@ public static class IDistributedApplicationResourceBuilderExtensions
     [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, DaprSidecarOptions? options = null) where T : IResource
     {
-        return builder.WithDaprSidecar(
+        var sidecarName = string.IsNullOrWhiteSpace(options?.SidecarName)
+            ? $"{builder.Resource.Name}-dapr"
+            : options.SidecarName;
+
+        return builder.WithDaprSidecarCore(
+            sidecarName,
             sidecarBuilder =>
             {
                 if (options is not null)
@@ -62,10 +67,36 @@ public static class IDistributedApplicationResourceBuilderExtensions
     [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", Description = "Adds a Dapr sidecar to the resource and exposes it for callback configuration")]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
     {
+        return builder.WithDaprSidecarCore($"{builder.Resource.Name}-dapr", configureSidecar);
+    }
+
+    /// <summary>
+    /// Ensures that a Dapr sidecar is started for the resource with a custom sidecar name.
+    /// </summary>
+    /// <typeparam name="T">The type of the resource.</typeparam>
+    /// <param name="builder">The resource builder instance.</param>
+    /// <param name="sidecarName">The Aspire resource name for the Dapr sidecar.</param>
+    /// <param name="configureSidecar">A callback that can be use to configure the Dapr sidecar.</param>
+    /// <returns>The resource builder instance.</returns>
+    public static IResourceBuilder<T> WithDaprSidecar<T>(
+        this IResourceBuilder<T> builder,
+        string sidecarName,
+        Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
+    {
+        return builder.WithDaprSidecarCore(
+            string.IsNullOrWhiteSpace(sidecarName) ? $"{builder.Resource.Name}-dapr" : sidecarName,
+            configureSidecar);
+    }
+
+    private static IResourceBuilder<T> WithDaprSidecarCore<T>(
+        this IResourceBuilder<T> builder,
+        string sidecarName,
+        Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
+    {
         // Add Dapr is idempotent, so we can call it multiple times.
         builder.ApplicationBuilder.AddDapr();
 
-        var sidecarBuilder = builder.ApplicationBuilder.AddResource(new DaprSidecarResource($"{builder.Resource.Name}-dapr"))
+        var sidecarBuilder = builder.ApplicationBuilder.AddResource(new DaprSidecarResource(sidecarName))
                                                        .WithInitialState(new()
                                                        {
                                                            Properties = [],

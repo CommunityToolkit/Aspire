@@ -241,4 +241,13 @@ public sealed record DaprSidecarOptions
     /// If specified, the Dapr sidecar will use Unix Domain Sockets for API calls.
     /// </remarks>
     public string? UnixDomainSocket { get; init; }
+
+
+    /// <summary>
+    /// Gets or sets the name of the Dapr sidecar.
+    /// </summary>
+    /// <remarks>
+    /// If specified, the Dapr sidecar name will be used.
+    /// </remarks>
+    public string? SidecarName { get; init; }
 }
