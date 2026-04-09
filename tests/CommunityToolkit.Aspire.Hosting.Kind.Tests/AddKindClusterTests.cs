@@ -3,6 +3,7 @@
 
 using System.Runtime.InteropServices;
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
