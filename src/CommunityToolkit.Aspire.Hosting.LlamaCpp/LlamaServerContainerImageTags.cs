@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CommunityToolkit.Aspire.Hosting.LlamaCpp;
+namespace Aspire.Hosting.ApplicationModel.LlamaCpp;
 
 internal class LlamaCppServerContainerImageTags
 {
+    // Tag constants for the different specialized builds of the server image.
     const string ServerDefaultTag = "server";
     const string ServerCudaTag = "server-cuda";
     const string ServerCuda13Tag = "server-cuda13";
@@ -26,6 +27,11 @@ internal class LlamaCppServerContainerImageTags
     /// </summary>
     public const string Image = "ggml-org/llama.cpp";
 
+    /// <summary>
+    /// Returns the image tag corresponding to the requested <see cref="LlamaCppServerPlatformOptimization"/>.
+    /// </summary>
+    /// <param name="opt">The optimization flavor to select.</param>
+    /// <returns>A tag string to append to the image name.</returns>
     public static string GetTag(LlamaCppServerPlatformOptimization opt)
     {
         return opt switch
@@ -41,9 +47,5 @@ internal class LlamaCppServerContainerImageTags
             _ => ServerDefaultTag
         };
     }
-
-
-
-
 }
 
