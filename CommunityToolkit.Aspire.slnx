@@ -199,6 +199,7 @@
     <Project Path="examples\zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="CommunityToolkit.Aspire.Hosting.LlamaCpp/CommunityToolkit.Aspire.Hosting.LlamaCpp.csproj" Id="ceddb4cd-4e47-4f9a-a3ff-2c20bba1a77b" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
@@ -290,9 +291,9 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/CommunityToolkit.Aspire.Hosting.Perl.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/CommunityToolkit.Aspire.Hosting.Perl.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />
