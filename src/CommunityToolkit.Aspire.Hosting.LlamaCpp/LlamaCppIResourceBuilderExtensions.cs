@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.ApplicationModel.LlamaCpp;
 
 namespace Aspire.Hosting;
 
-internal static class LlamaCppIResourceBuilderExtensions
+/// <summary>
+/// Provides extension methods for registering and configuring <see cref="LlamaCppServerResource"/>
+/// instances on an <see cref="IDistributedApplicationBuilder"/> and for configuring
+/// `LlamaCppServerResource` instances via an `IResourceBuilder{LlamaCppServerResource}`.
+/// </summary>
+public static class LlamaCppIResourceBuilderExtensions
 {
     private const string ReasoningArgument = "LLAMA_ARG_REASONING";
     private const string ContextSizeArgument = "LLAMA_ARG_CTX_SIZE";
