@@ -8,6 +8,7 @@ However, some scenarios may need more lightweight alternatives that still allow 
 You can choose the CommunityToolkit.Aspire.Hosting.LlamaCpp library when:
 
 - You want to run inference in small, lightweight containers.
+- You'll run inference in IOT and EDGE devices with limited resources.
 - You want to segregate your models in different small containers rather than in one larger one.
 - You don't need the extra features of an Ollama-based server.
 - You want to have more control over the configuration of your LlamaCpp containers.*
