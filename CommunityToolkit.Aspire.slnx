@@ -80,6 +80,10 @@
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit.csproj" />
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.ServiceDefaults/CommunityToolkit.Aspire.Hosting.LavinMQ.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/LlamaCpp/">
+    <Project Path="examples/LlamaCpp/CommunityToolkit.Aspire.Hosting.LlamaCpp.AppHost/CommunityToolkit.Aspire.Hosting.LlamaCpp.AppHost.csproj" />
+    <Project Path="examples/LlamaCpp/CommunityToolkit.Aspire.Hosting.LlamaCpp.ServiceDefaults/CommunityToolkit.Aspire.Hosting.LlamaCpp.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/mailpit/">
     <Project Path="examples/mailpit/CommunityToolkit.Aspire.Hosting.MailPit.AppHost/CommunityToolkit.Aspire.Hosting.MailPit.AppHost.csproj" />
     <Project Path="examples/mailpit/CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi/CommunityToolkit.Aspire.Hosting.MailPit.SendMailApi.csproj" />
@@ -199,7 +203,6 @@
     <Project Path="examples\zitadel\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost\CommunityToolkit.Aspire.Hosting.Zitadel.AppHost.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/CommunityToolkit.Aspire.Hosting.LlamaCpp/CommunityToolkit.Aspire.Hosting.LlamaCpp.csproj" Id="ceddb4cd-4e47-4f9a-a3ff-2c20bba1a77b" />
     <Project Path="src/CommunityToolkit.Aspire.GoFeatureFlag/CommunityToolkit.Aspire.GoFeatureFlag.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Adminer/CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
@@ -218,6 +221,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.k6/CommunityToolkit.Aspire.Hosting.k6.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.KurrentDB/CommunityToolkit.Aspire.Hosting.KurrentDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.LlamaCpp/CommunityToolkit.Aspire.Hosting.LlamaCpp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MailPit/CommunityToolkit.Aspire.Hosting.MailPit.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.McpInspector/CommunityToolkit.Aspire.Hosting.McpInspector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.csproj" />
@@ -262,7 +266,6 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Dapr/CommunityToolkit.Aspire.Hosting.Dapr.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.LlamaCpp.Tests/CommunityToolkit.Aspire.Hosting.LlamaCpp.Tests.csproj" Id="2e22c68c-9ccc-48e9-944b-6c86258a4d23" />
     <Project Path="tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests/CommunityToolkit.Aspire.GoFeatureFlag.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests/CommunityToolkit.Aspire.Hosting.ActiveMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests/CommunityToolkit.Aspire.Hosting.Adminer.Tests.csproj" />
@@ -282,6 +285,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.LlamaCpp.Tests/CommunityToolkit.Aspire.Hosting.LlamaCpp.Tests.csproj"/>
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj" />

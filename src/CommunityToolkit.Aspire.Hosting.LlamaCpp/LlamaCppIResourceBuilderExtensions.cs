@@ -47,25 +47,19 @@ public static class LlamaCppIResourceBuilderExtensions
                   Tag = LlamaCppServerContainerImageTags.GetTag(optimization),
                   Registry = LlamaCppServerContainerImageTags.Registry
               })
-              .WithEnvironment(ModelUrlArgument, modelUrl)
+              .WithEnvironmentVar(ModelUrlArgument, modelUrl)
               .WithHttpEndpoint(port, targetPort: 8080, LlamaCppServerResource.LlamaServerEndpointName)
               .WithHttpHealthCheck("/health");
     }
-    /// <summary>
-    /// Adds an environment variable to the llama server resource and records the variable name on the resource.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="name">Environment variable name.</param>
-    /// <param name="value">Environment variable value.</param>
-    /// <returns>The same resource builder for chaining.</returns>
-    public static IResourceBuilder<LlamaCppServerResource> WithEnvironment(this IResourceBuilder<LlamaCppServerResource> builder, string name, string value)
+   
+    private static IResourceBuilder<LlamaCppServerResource> WithEnvironmentVar(this IResourceBuilder<LlamaCppServerResource> builder, string name, string value)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         ArgumentNullException.ThrowIfNull(value, nameof(value));
 
         builder.Resource.EnvironmentArgs.Add(name);
-        ((IResourceBuilder<ContainerResource>)builder).WithEnvironment(name, value);
+        builder.WithEnvironment(name, value);
         return builder;
     }
     /// <summary>
@@ -82,7 +76,7 @@ public static class LlamaCppIResourceBuilderExtensions
         {
             throw new InvalidOperationException("Reasoning was already defined and cannot be set again. Make sure that WithReasoning is called at most once.");
         }
-        return builder.WithEnvironment(ReasoningArgument, useReasoning ? "on" : "off");
+        return builder.WithEnvironmentVar(ReasoningArgument, useReasoning ? "on" : "off");
     }
     /// <summary>
     /// Configures API keys that the llama server will accept. Keys are supplied as a comma separated
@@ -101,7 +95,7 @@ public static class LlamaCppIResourceBuilderExtensions
             throw new InvalidOperationException("The instance already defined Api keys. Make sure that WithApikeys is called at most once.");
         }
         var values = string.Join(",", keys);
-        return builder.WithEnvironment(ApiKeyArgument, values);
+        return builder.WithEnvironmentVar(ApiKeyArgument, values);
     }
     /// <summary>
     /// Sets the model context size used by the llama server via an environment variable.
@@ -118,7 +112,7 @@ public static class LlamaCppIResourceBuilderExtensions
         {
             throw new InvalidOperationException("Context size was already defined and cannot be set again. Make sure that WithContextSize is called at most once.");
         }
-        return builder.WithEnvironment(ContextSizeArgument, size.ToString());
+        return builder.WithEnvironmentVar(ContextSizeArgument, size.ToString());
     }
     /// <summary>
     /// Sets a human-friendly alias for the model exposed by this resource. The alias is passed
@@ -130,7 +124,7 @@ public static class LlamaCppIResourceBuilderExtensions
     public static IResourceBuilder<LlamaCppServerResource> WithModelAlias(this IResourceBuilder<LlamaCppServerResource> builder, string alias)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-       
+
         if (string.IsNullOrWhiteSpace(alias))
         {
             throw new InvalidOperationException("Alias cannot be empty. Make sure that WithModelAlias is called with a valid alias.");
@@ -139,7 +133,7 @@ public static class LlamaCppIResourceBuilderExtensions
         {
             throw new InvalidOperationException("Model alias was already defined and cannot be set again. Make sure that WithModelAlias is called at most once.");
         }
-        return builder.WithEnvironment(ModelAliasArgument, alias);
+        return builder.WithEnvironmentVar(ModelAliasArgument, alias);
     }
     /// <summary>
     /// Configures a multimodal projection file for the server. The projection file URL is stored
@@ -153,13 +147,14 @@ public static class LlamaCppIResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(projectionFileUrl, nameof(projectionFileUrl));
 
-        if (builder.Resource.EnvironmentArgs.Contains(MultimodalProjectionFileArgument))
+        if (builder.Resource.EnvironmentArgs.Contains(MultimodalProjectionUrlArgument) ||
+            builder.Resource.EnvironmentArgs.Contains(MultimodalProjectionFileArgument))
         {
             throw new InvalidOperationException("Projection file url was already defined and cannot be set again. Make sure that WithMultimodalProjection is called at most once.");
         }
-        return builder.WithEnvironment(MultimodalProjectionUrlArgument, projectionFileUrl)
-                      .WithEnvironment(MultimodalProjectionFileArgument,
-                              $"/models/mmproj/{Path.GetFileName(projectionFileUrl)}");
+        var projName = Path.GetFileName(projectionFileUrl);
+        return builder.WithEnvironmentVar(MultimodalProjectionUrlArgument, projectionFileUrl)
+            .WithEnvironmentVar(MultimodalProjectionFileArgument, $"/models/mmproj/{projName}");
     }
 
     /// <summary>
@@ -182,7 +177,7 @@ public static class LlamaCppIResourceBuilderExtensions
         var volumeName = name ?? VolumeNameGenerator.Generate(builder, builder.Resource.Name);
         builder.Resource.VolumeName = volumeName;
         return builder.WithVolume(volumeName, "/models", isReadOnly)
-            .WithEnvironment(ModelArgument, $"/models/{builder.Resource.ModelName}");
+            .WithEnvironmentVar(ModelArgument, $"/models/{builder.Resource.ModelName}");
     }
     /// <summary>
     /// Shares an existing data volume from another llama server resource. If both resources reference
