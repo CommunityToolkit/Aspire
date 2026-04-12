@@ -56,6 +56,7 @@ This repository contains the source code for the Aspire Community Toolkit, a col
 | - **Learn More**: [`Hosting.Elasticsearch.Extensions`][elasticsearch-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields]][elasticsearch-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields-preview]][elasticsearch-ext-nuget-preview]      | An integration that contains some additional extensions for hosting Elasticsearch container.                                                                                |
 | - **Learn More**: [`Hosting.Umami`][umami-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields]][umami-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields-preview]][umami-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [Umami](https://umami.is/) container.                                                                                 |
 | - **Learn More**: [`Hosting.Azure.Extensions`][azure-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Azure.Extensions][azure-ext-shields]][azure-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Azure.Extensions][azure-ext-shields-preview]][azure-ext-nuget-preview]                                              | An integration that contains some additional extensions for hosting Azure container.                                                                                    |
+| - **Learn More**: [`Hosting.LlamaCpp`][llamacpp-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.LlamaCpp][llamacpp-shields]][llamacpp-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.LlamaCpp][llamacpp-shields-preview]][llamacpp-nuget-preview]                                                                                                                   | An Aspire hosting integration leveraging the [Ollama](https://ollama.com) container with support for downloading a model on startup.                                        |
 
 ## 🙌 Getting Started
 
@@ -298,3 +299,8 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [azure-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Extensions/
 [azure-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.Extensions?label=nuget%20(preview)
 [azure-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Extensions/absoluteLatest
+[llamacpp-integration-docs]: TBD
+[llamacpp-shields]: TBD
+[llamacpp-nuget]: TBD
+[llamacpp-shields-preview]: TBD
+[llamacpp-nuget-preview]: TBD
