@@ -39,11 +39,21 @@ var llamaServer = builder.AddLlamaServer("llamaserver", modelUrl);
 This will add a LlamaCpp server to your distributed application. The LlamaCpp server already provides a lightweight chat Web UI to interact with the model.
 
 The library also provides the ability to load multimodal models, define a data volume for the model and mmproj files, have that volume shared between llamaserver containers, and more.
+
+Useful extension methods include:
+- .WithReasoning(bool useReasoning = true) // Explicitly enables or disables the output of thinking (cot), if supported by the model.
+- .WithApikeys(params string[] keys) // Defines one or more valid Api keys that will be set as requirement to make requests to the REST api.
+- .WithContextSize(int size = 0) // Sets a limit to the context size for the model.
+- .WithModelAlias(string alias) //Defines the alias that will be used by OpenAI-compatible clients to make requests to the model.
+- .WithMultimodalProjection(string projectionFileUrl) // Adds a multimodal projection file for multimodal (image/text) models.
+- .WithDataVolume(string? name = null, bool isReadOnly = false) // Adds a volume and sets it as the storage for the downloaded model/s.
+- .WithDataVolume(IResourceBuilder<LlamaCppServerResource> volumeOwner, bool isReadOnly = false) // Explicitly uses the same volume that is used by another LlamaCppServer resource. Useful for having several server instances that use the same model files, so they are downloaded once and shared among them.
+
 Please see the additional documentation to learn about all the features available in the library.
 
 ## Additional Information
 
-TBD
+Please refer to the official CommunityToolkit documentation for more details on how to use the library and its features.
 
 ## Feedback & contributing
 
