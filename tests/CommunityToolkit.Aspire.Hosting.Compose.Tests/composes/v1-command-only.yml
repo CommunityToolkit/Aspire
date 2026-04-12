@@ -1,0 +1,4 @@
+worker:
+  command: echo hello
+redis:
+  image: redis:7

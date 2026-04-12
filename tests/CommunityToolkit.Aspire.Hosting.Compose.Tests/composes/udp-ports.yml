@@ -1,0 +1,6 @@
+services:
+  dns:
+    image: coredns/coredns:1.11
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"

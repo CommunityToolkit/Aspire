@@ -1,0 +1,9 @@
+services:
+  app:
+    image: myapp:latest
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DEBUG=
+    ports:
+      - "3000:3000"

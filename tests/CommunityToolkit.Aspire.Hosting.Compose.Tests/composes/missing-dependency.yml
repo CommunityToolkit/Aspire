@@ -1,0 +1,5 @@
+services:
+  api:
+    image: myapi:latest
+    depends_on:
+      - nonexistent

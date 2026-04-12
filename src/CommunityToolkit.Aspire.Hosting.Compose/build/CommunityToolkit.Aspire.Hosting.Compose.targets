@@ -1,0 +1,8 @@
+<Project>
+  <Target Name="_MapComposeReferences" BeforeTargets="CoreCompile;GenerateMSBuildEditorConfigFileShouldRun;_GenerateCompileDependencyCache"
+          Condition="'@(ComposeReference)' != ''">
+    <ItemGroup>
+      <AdditionalFiles Include="%(ComposeReference.Identity)" ComposeReferenceName="%(ComposeReference.Name)" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -1,0 +1,13 @@
+postgres:
+  image: postgres:14
+  ports:
+    - "5432:5432"
+  environment:
+    POSTGRES_PASSWORD: secret
+
+redis:
+  image: redis:6
+  ports:
+    - "6379:6379"
+  links:
+    - postgres

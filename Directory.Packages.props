@@ -117,6 +117,7 @@
     <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.0" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
     <!-- Testcontainers packages -->
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />

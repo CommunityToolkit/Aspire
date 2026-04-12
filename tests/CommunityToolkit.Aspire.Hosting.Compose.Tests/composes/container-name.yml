@@ -1,0 +1,6 @@
+services:
+  db:
+    image: postgres:16
+    container_name: my-custom-postgres
+    ports:
+      - "5432:5432"

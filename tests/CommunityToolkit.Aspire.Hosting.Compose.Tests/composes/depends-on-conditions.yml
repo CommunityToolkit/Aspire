@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrations:
+    image: flyway/flyway:10
+    depends_on:
+      db:
+        condition: service_healthy
+    command: migrate
+
+  api:
+    image: myapi:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully

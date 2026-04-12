@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ComposeReferenceName" />
+  </ItemGroup>
+</Project>

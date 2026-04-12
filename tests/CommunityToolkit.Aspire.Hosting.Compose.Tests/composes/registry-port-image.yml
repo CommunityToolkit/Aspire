@@ -1,0 +1,9 @@
+services:
+  app:
+    image: registry.example.com:5000/myapp
+    ports:
+      - "8080:80"
+  tagged:
+    image: registry.example.com:5000/myapp:v2
+    ports:
+      - "8081:80"

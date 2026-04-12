@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  web:
+    image: nginx:1.25
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  api:
+    image: myapi:latest
+    ports:
+      - "8080:80"
+    environment:
+      DATABASE_URL: postgres://admin:secret@db:5432/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+volumes:
+  dbdata:
+    driver: local

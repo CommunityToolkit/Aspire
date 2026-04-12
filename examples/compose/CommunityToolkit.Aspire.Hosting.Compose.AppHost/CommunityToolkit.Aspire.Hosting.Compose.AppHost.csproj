@@ -1,0 +1,27 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Compose\CommunityToolkit.Aspire.Hosting.Compose.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Compose.Generator\CommunityToolkit.Aspire.Hosting.Compose.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\src\CommunityToolkit.Aspire.Hosting.Compose\build\CommunityToolkit.Aspire.Hosting.Compose.props" />
+
+  <ItemGroup>
+    <ComposeReference Include=".infra/compose.yml" Name="Infra" />
+    <ComposeReference Include=".infra/compose.monitoring.yml" Name="Monitoring" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\src\CommunityToolkit.Aspire.Hosting.Compose\build\CommunityToolkit.Aspire.Hosting.Compose.targets" />
+
+</Project>

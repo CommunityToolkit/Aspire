@@ -5,6 +5,9 @@
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit/CommunityToolkit.Aspire.Hosting.ActiveMQ.MassTransit.csproj" />
     <Project Path="examples/activemq/CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults/CommunityToolkit.Aspire.Hosting.ActiveMQ.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/compose/">
+    <Project Path="examples/compose/CommunityToolkit.Aspire.Hosting.Compose.AppHost/CommunityToolkit.Aspire.Hosting.Compose.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/adminer/">
     <Project Path="examples/adminer/CommunityToolkit.Aspire.Hosting.Adminer.AppHost/CommunityToolkit.Aspire.Hosting.Adminer.AppHost.csproj" />
   </Folder>
@@ -254,6 +257,8 @@
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Umami\CommunityToolkit.Aspire.Hosting.Umami.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Compose/CommunityToolkit.Aspire.Hosting.Compose.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Compose.Generator/CommunityToolkit.Aspire.Hosting.Compose.Generator.csproj" />
   </Folder>
   <Folder Name="/src/Dapr/">
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.csproj" />
@@ -316,6 +321,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
     <Project Path="tests\CommunityToolkit.Aspire.Hosting.Umami.Tests\CommunityToolkit.Aspire.Hosting.Umami.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Compose.Tests/CommunityToolkit.Aspire.Hosting.Compose.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Dapr/">
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests/CommunityToolkit.Aspire.Hosting.Azure.Dapr.Redis.Tests.csproj" />

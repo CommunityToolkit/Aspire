@@ -1,0 +1,8 @@
+services:
+  app:
+    image: myapp:latest
+    volumes:
+      - ./data:/app/data
+      - /tmp/cache:/cache:ro
+      - named-vol:/var/lib/data
+      - /var/run/docker.sock

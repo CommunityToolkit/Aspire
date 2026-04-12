@@ -1,0 +1,14 @@
+services:
+  worker-string:
+    image: python:3.12
+    entrypoint: python
+    command: -c "print('hello')"
+
+  worker-list:
+    image: python:3.12
+    entrypoint:
+      - python
+      - -u
+    command:
+      - script.py
+      - --verbose
