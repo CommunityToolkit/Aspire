@@ -88,6 +88,25 @@ if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
     $PackageVersion = "$versionPrefix-polyglot.local"
 }
 
+# Discover local CommunityToolkit project references that also need packing
+$localDependencies = @()
+$projRefJson = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getItem:ProjectReference) | Out-String
+$projRefData = $projRefJson | ConvertFrom-Json
+$projRefs = @($projRefData.Items.ProjectReference)
+foreach ($ref in $projRefs) {
+    if ($ref.Filename -like "CommunityToolkit.*") {
+        $localDependencies += @{
+            Name = $ref.Filename
+            FullPath = $ref.FullPath
+        }
+    }
+}
+
+if ($localDependencies.Count -gt 0) {
+    $depNames = ($localDependencies | ForEach-Object { $_.Name }) -join ", "
+    Write-Host "Discovered local dependencies to pack: $depNames"
+}
+
 if ($WaitForResources.Count -eq 1 -and -not [string]::IsNullOrWhiteSpace($WaitForResources[0])) {
     $splitOptions = [System.StringSplitOptions]::RemoveEmptyEntries -bor [System.StringSplitOptions]::TrimEntries
     $WaitForResources = $WaitForResources[0].Split(",", $splitOptions)
@@ -137,12 +156,25 @@ try {
         "-o", $localSource
     )
 
+    foreach ($dep in $localDependencies) {
+        Invoke-ExternalCommand "dotnet" @(
+            "pack",
+            $dep.FullPath,
+            "-c", "Debug",
+            "-p:PackageVersion=$PackageVersion",
+            "-o", $localSource
+        )
+    }
+
     $config = $originalConfig | ConvertFrom-Json -AsHashtable
     if ($null -eq $config["packages"]) {
         $config["packages"] = [ordered]@{}
     }
 
     $config["packages"][$PackageName] = $PackageVersion
+    foreach ($dep in $localDependencies) {
+        $config["packages"][$dep.Name] = $PackageVersion
+    }
     $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath -NoNewline
 
     @"
