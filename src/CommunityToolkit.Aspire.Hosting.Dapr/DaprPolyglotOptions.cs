@@ -56,6 +56,7 @@ internal sealed record DaprSidecarExportOptions
     public string? RuntimePath { get; init; }
     public string? SchedulerHostAddress { get; init; }
     public string? UnixDomainSocket { get; init; }
+    public string? SidecarName { get; init; }
 
     public DaprSidecarOptions ToDaprSidecarOptions()
     {
@@ -93,7 +94,8 @@ internal sealed record DaprSidecarExportOptions
             RunFile = RunFile,
             RuntimePath = RuntimePath,
             SchedulerHostAddress = SchedulerHostAddress,
-            UnixDomainSocket = UnixDomainSocket
+            UnixDomainSocket = UnixDomainSocket,
+            SidecarName = SidecarName
         };
 #pragma warning restore CS0618
     }
