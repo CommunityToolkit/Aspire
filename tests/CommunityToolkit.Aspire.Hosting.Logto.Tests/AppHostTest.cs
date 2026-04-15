@@ -1,28 +1,23 @@
 ﻿using Aspire.Components.Common.Tests;
-using Aspire.Hosting;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Logto.Tests;
 
 [RequiresDocker]
-public class AppHostTest
+public class AppHostTest(
+    AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Logto_AppHost> fixture
+) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Logto_AppHost>>
 {
     [Fact]
     public async Task LogtoResourceStartsAndRespondsOk()
     {
-        var builder = DistributedApplication.CreateBuilder();
-        var postgres = builder.AddPostgres("postgres");
-        var logto = builder.AddLogtoContainer("logto", postgres);
+        const string resourceName = "logto";
 
-        using var app = builder.Build();
-        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+        await fixture.ResourceNotificationService
+            .WaitForResourceHealthyAsync(resourceName)
+            .WaitAsync(TimeSpan.FromMinutes(5));
 
-        await app.StartAsync();
-
-        // Wait for the resource to be healthy
-        await rns.WaitForResourceHealthyAsync(logto.Resource.Name).WaitAsync(TimeSpan.FromMinutes(5));
-
-        var httpClient = app.CreateHttpClient(logto.Resource.Name);
+        var httpClient = fixture.CreateHttpClient(resourceName);
         var response = await httpClient.GetAsync("/");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
