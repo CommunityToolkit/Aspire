@@ -57,7 +57,7 @@ public static class LogtoBuilderExtensions
     {
         builderWithResource.WithEnvironment("NODE_OPTIONS", "--trace-deprecation");
     }
-    
+
     private static void SetHealthCheck(IDistributedApplicationBuilder builder,
         IResourceBuilder<LogtoContainerResource> builderWithResource, string name)
     {
@@ -225,6 +225,7 @@ public static class LogtoBuilderExtensions
 
 
             builder.WithEnvironment("DB_URL", dbUrl)
+                .WithDataVolume("logto-data")
                 .WaitFor(postgres);
             return builder;
         }

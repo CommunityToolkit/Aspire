@@ -52,7 +52,7 @@ public static class LogtoClientBuilder
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var options = GetEndpoint(builder.Configuration, configurationSectionName, connectionName);
+        var options = GetValidatedOptions(builder.Configuration, configurationSectionName, connectionName, logtoOptions);
 
         builder.Services.AddLogtoAuthentication(authenticationScheme, cookieScheme, opt =>
         {
@@ -155,7 +155,29 @@ public static class LogtoClientBuilder
         return builder;
     }
 
-    private static LogtoOptions GetEndpoint(IConfiguration configuration, string? configurationSectionName,
+    private static LogtoOptions GetValidatedOptions(
+        IConfiguration configuration,
+        string? configurationSectionName,
+        string? connectionName,
+        Action<LogtoOptions>? configureOptions = null)
+    {
+        var options = GetConfiguredOptions(configuration, configurationSectionName, connectionName);
+        configureOptions?.Invoke(options);
+
+        if (string.IsNullOrWhiteSpace(options.Endpoint))
+        {
+            throw new InvalidOperationException("Logto Endpoint must be configured.");
+        }
+
+        if (string.IsNullOrWhiteSpace(options.AppId))
+        {
+            throw new InvalidOperationException("Logto AppId must be configured.");
+        }
+
+        return options;
+    }
+
+    private static LogtoOptions GetConfiguredOptions(IConfiguration configuration, string? configurationSectionName,
         string? connectionName)
     {
         var options = new LogtoOptions();
@@ -175,9 +197,19 @@ public static class LogtoClientBuilder
             }
         }
 
+        return options;
+    }
+
+    private static LogtoOptions GetEndpoint(IConfiguration configuration, string? configurationSectionName,
+        string? connectionName)
+    {
+        var options = GetConfiguredOptions(configuration, configurationSectionName, connectionName);
+
         if (string.IsNullOrWhiteSpace(options.Endpoint))
+        {
             throw new InvalidOperationException(
-                $"Logto Endpoint must be configured in configuration section '{sectionName}' or via configureOptions.");
+                $"Logto Endpoint must be configured in configuration section '{configurationSectionName ?? DefaultConfigSectionName}' or via configureOptions.");
+        }
 
         return options;
     }
