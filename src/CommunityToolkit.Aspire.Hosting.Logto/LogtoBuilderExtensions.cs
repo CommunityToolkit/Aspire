@@ -103,16 +103,20 @@ public static class LogtoBuilderExtensions
         /// <summary>
         /// Configures HTTP endpoints for the given Logto container resource builder with specified port settings.
         /// </summary>
-        /// <param name="port">The HTTP port to be configured for the primary endpoint. Defaults to the Logto container's default HTTP port.</param>
-        /// <param name="adminPort">The HTTP port to be configured for the administrative endpoint. Defaults to the Logto container's default HTTP admin port.</param>
+        /// <param name="port">The host port to be configured for the primary endpoint. If <see langword="null"/>, Aspire will assign a random host port.</param>
+        /// <param name="adminPort">The host port to be configured for the administrative endpoint. If <see langword="null"/>, Aspire will assign a random host port.</param>
         /// <returns>The updated resource builder with the configured HTTP endpoints.</returns>
         public IResourceBuilder<LogtoContainerResource> WithResourcePort(
-            int port = LogtoContainerResource.DefaultHttpPort,
-            int adminPort = LogtoContainerResource.DefaultHttpAdminPort)
+            int? port = null,
+            int? adminPort = null)
         {
-            return builder.WithHttpEndpoint(port, port,
+            return builder.WithHttpEndpoint(
+                    port: port,
+                    targetPort: LogtoContainerResource.DefaultHttpPort,
                     name: LogtoContainerResource.PrimaryEndpointName)
-                .WithHttpEndpoint(adminPort, adminPort,
+                .WithHttpEndpoint(
+                    port: adminPort,
+                    targetPort: LogtoContainerResource.DefaultHttpAdminPort,
                     name: LogtoContainerResource.AdminEndpointName);
         }
 
