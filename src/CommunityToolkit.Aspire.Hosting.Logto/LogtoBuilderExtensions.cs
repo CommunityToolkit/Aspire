@@ -107,8 +107,8 @@ public static class LogtoBuilderExtensions
         /// <param name="adminPort">The host port to be configured for the administrative endpoint. If <see langword="null"/>, Aspire will assign a random host port.</param>
         /// <returns>The updated resource builder with the configured HTTP endpoints.</returns>
         public IResourceBuilder<LogtoResource> WithResourcePort(
-            int? port = null,
-            int? adminPort = null)
+            int? port = LogtoResource.DefaultHttpPort,
+            int? adminPort = LogtoResource.DefaultHttpAdminPort)
         {
             return builder.WithHttpEndpoint(
                     port: port,
