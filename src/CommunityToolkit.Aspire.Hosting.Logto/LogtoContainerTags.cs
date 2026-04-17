@@ -11,6 +11,6 @@ public class LogtoContainerTags
     /// <summary>svhd/logto</summary>
     public const string Image = "svhd/logto";
 
-    /// <summary>1.34</summary>
-    public const string Tag = "1.34";
+    /// <summary>1.38</summary>
+    public const string Tag = "1.38";
 }
