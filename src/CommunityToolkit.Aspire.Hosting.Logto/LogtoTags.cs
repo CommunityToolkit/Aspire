@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a collection of constants for container tags related to the Logto application.
 /// </summary>
-public class LogtoContainerTags
+public class LogtoTags
 {
     /// <summary>docker.io</summary>
     public const string Registry = "docker.io";

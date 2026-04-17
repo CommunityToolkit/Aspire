@@ -11,13 +11,13 @@ public class ResourceCreationTests
 
         var postgres = builder.AddPostgres("postgres");
 
-        builder.AddLogtoContainer("logto", postgres);
+        builder.AddLogto("logto", postgres);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<LogtoContainerResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<LogtoResource>());
 
         Assert.Equal("logto", resource.Name);
     }
@@ -29,13 +29,13 @@ public class ResourceCreationTests
 
         var postgres = builder.AddPostgres("postgres");
 
-        builder.AddLogtoContainer("logto", postgres);
+        builder.AddLogto("logto", postgres);
 
         using var app = builder.Build();
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(appModel.Resources.OfType<LogtoContainerResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<LogtoResource>());
 
         var result = resource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations);
         Assert.True(result);

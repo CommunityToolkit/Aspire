@@ -8,7 +8,7 @@ var postgres = builder.AddPostgres("postgres")
 var cache = builder.AddRedis("redis")
     .WithDataVolume();
 
-var logto = builder.AddLogtoContainer("logto", postgres)
+var logto = builder.AddLogto("logto", postgres)
     .WithRedis(cache);
 
 

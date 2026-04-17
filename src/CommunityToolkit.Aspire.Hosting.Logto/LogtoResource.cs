@@ -10,7 +10,7 @@ namespace CommunityToolkit.Aspire.Hosting.Logto;
 /// This class is designed for use in an application hosting environment and incorporates
 /// a primary HTTP endpoint with predefined default port configurations.
 /// </remarks>
-public sealed class LogtoContainerResource(string name)
+public sealed class LogtoResource(string name)
     : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
