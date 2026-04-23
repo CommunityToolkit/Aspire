@@ -141,6 +141,9 @@ When a user interacts with you:
 ## Quick Reference
 
 ```bash
+# Install gh-aw (requires GitHub CLI v2.90.0+)
+gh skills install github/gh-aw
+
 # Initialize repository for agentic workflows
 gh aw init
 
