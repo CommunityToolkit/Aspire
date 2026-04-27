@@ -176,7 +176,7 @@ public abstract class ConformanceTests<TService, TOptions>
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void ServiceLifetimeIsAsExpected(bool useKey)
+    public async Task ServiceLifetimeIsAsExpected(bool useKey)
     {
         SkipIfRequiredServerConnectionCanNotBeEstablished();
         SkipIfKeyedRegistrationIsNotSupported(useKey);
@@ -186,18 +186,31 @@ public abstract class ConformanceTests<TService, TOptions>
 
         using IHost host = CreateHostWithComponent(key: key);
 
-        using (IServiceScope scope1 = host.Services.CreateScope())
+        if (typeof(IAsyncDisposable).IsAssignableFrom(typeof(TService)))
         {
-            serviceFromFirstScope = Resolve(scope1.ServiceProvider, key);
+            await using (AsyncServiceScope scope1 = host.Services.CreateAsyncScope())
+            {
+                serviceFromFirstScope = Resolve(scope1.ServiceProvider, key);
+            }
+            await using (AsyncServiceScope scope2 = host.Services.CreateAsyncScope())
+            {
+                serviceFromSecondScope = Resolve(scope2.ServiceProvider, key);
+                secondServiceFromSecondScope = Resolve(scope2.ServiceProvider, key);
+            }
         }
-
-        using (IServiceScope scope2 = host.Services.CreateScope())
+        else
         {
-            serviceFromSecondScope = Resolve(scope2.ServiceProvider, key);
-
-            secondServiceFromSecondScope = Resolve(scope2.ServiceProvider, key);
+            using (IServiceScope scope1 = host.Services.CreateScope())
+            {
+                serviceFromFirstScope = Resolve(scope1.ServiceProvider, key);
+            }
+            using (IServiceScope scope2 = host.Services.CreateScope())
+            {
+                serviceFromSecondScope = Resolve(scope2.ServiceProvider, key);
+                secondServiceFromSecondScope = Resolve(scope2.ServiceProvider, key);
+            }
         }
-
+   
         Assert.NotNull(serviceFromFirstScope);
         Assert.NotNull(serviceFromSecondScope);
         Assert.NotNull(secondServiceFromSecondScope);
@@ -285,7 +298,7 @@ public abstract class ConformanceTests<TService, TOptions>
             builder.Services.AddSingleton<ILoggerFactory, TestLoggerFactory>();
         }
 
-        using IHost host = builder.Build();
+        IHost host = builder.Build();
 
         TService service = key is null
             ? host.Services.GetRequiredService<TService>()
@@ -306,6 +319,15 @@ public abstract class ConformanceTests<TService, TOptions>
         foreach (string logCategory in NotAcceptableLogCategories)
         {
             Assert.DoesNotContain(logCategory, loggerFactory.Categories);
+        }
+        
+        try
+        {
+            host.Dispose();
+        }
+        catch
+        {
+            // ignored
         }
     }
 

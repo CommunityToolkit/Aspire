@@ -63,7 +63,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await host.StartAsync(ct);
 
-        var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
+        var surrealDbClient = host.Services.GetRequiredService<SurrealDbSession>();
 
         await CreateTestData(surrealDbClient, ct);
         await AssertTestData(surrealDbClient, ct);
@@ -131,9 +131,9 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                     using var host = hb.Build();
                     await host.StartAsync(ct);
 
-                    await using var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
-                    await CreateTestData(surrealDbClient, ct);
-                    await AssertTestData(surrealDbClient, ct);
+                    await using var client = host.Services.GetRequiredService<SurrealDbSession>();
+                    await CreateTestData(client, ct);
+                    await AssertTestData(client, ct);
                 }
                 finally
                 {
@@ -179,8 +179,8 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
                     using var host = hb.Build();
                     await host.StartAsync(ct);
-                    await using var surrealDbClient = host.Services.GetRequiredService<SurrealDbClient>();
-                    await AssertTestData(surrealDbClient, ct);
+                    await using var client = host.Services.GetRequiredService<SurrealDbSession>();
+                    await AssertTestData(client, ct);
                 }
                 finally
                 {
@@ -381,23 +381,23 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await app.ResourceNotifications.WaitForResourceHealthyAsync(db.Resource.Name, cts.Token);
 
-        await using var client = host.Services.GetRequiredService<SurrealDbClient>();
+        await using var client = host.Services.GetRequiredService<SurrealDbSession>();
 
         await CreateTestData(client, cts.Token);
         await AssertTestData(client, cts.Token);
     }
 
-    private static async Task CreateTestData(SurrealDbClient surrealDbClient, CancellationToken ct)
+    private static async Task CreateTestData(SurrealDbSession client, CancellationToken ct)
     {
-        await surrealDbClient.Insert(Todo.Table, _todoList, ct);
+        await client.Insert(Todo.Table, _todoList, ct);
     }
 
-    private static async Task AssertTestData(SurrealDbClient surrealDbClient, CancellationToken ct)
+    private static async Task AssertTestData(SurrealDbSession client, CancellationToken ct)
     {
-        var records = await surrealDbClient.Select<Todo>(Todo.Table, ct);
+        var records = await client.Select<Todo>(Todo.Table, ct);
         Assert.Equal(_generatedTodoCount, records.Count());
 
-        var firstRecord = await surrealDbClient.Select<Todo>((Todo.Table, "1"), ct);
+        var firstRecord = await client.Select<Todo>((Todo.Table, "1"), ct);
         Assert.NotNull(firstRecord);
         Assert.Equivalent(firstRecord, _todoList[0]);
     }
