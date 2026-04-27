@@ -57,6 +57,7 @@ jobs:
             Hosting.RavenDB.Tests,
             Hosting.Redis.Extensions.Tests,
             Hosting.Rust.Tests,
+            Hosting.RustFs.Tests,
             Hosting.Sftp.Tests,
             Hosting.Solr.Tests,
             Hosting.SqlDatabaseProjects.Tests,

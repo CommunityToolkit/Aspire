@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <Compile Include="..\..\src\CommunityToolkit.Aspire.Hosting.RustFs\RustFsContainerImageTags.cs" Link="RustFsContainerImageTags.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\rustfs\CommunityToolkit.Aspire.Hosting.RustFs.AppHost\CommunityToolkit.Aspire.Hosting.RustFs.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.RustFs\CommunityToolkit.Aspire.Hosting.RustFs.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
