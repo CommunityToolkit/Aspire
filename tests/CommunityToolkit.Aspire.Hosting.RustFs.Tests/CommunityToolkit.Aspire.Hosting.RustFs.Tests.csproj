@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Compile Include="..\..\src\CommunityToolkit.Aspire.Hosting.RustFs\RustFsContainerImageTags.cs" Link="RustFsContainerImageTags.cs" />
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.RustFs\RustFsContainerImageTags.cs" />
   </ItemGroup>
 
   <ItemGroup>
