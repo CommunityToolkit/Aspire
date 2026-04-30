@@ -60,8 +60,8 @@ public static class RustFsBuilderExtensions
             .WithEnvironment("STORAGE_TYPE", "rustfs")
             .WithEnvironment("RUSTFS_ADDRESS", ":" + RustFsResource.PrimaryTargetPort.ToString())
             .WithEnvironment("RUSTFS_CONSOLE_ADDRESS", ":" + RustFsResource.ConsoleTargetPort.ToString())
-            .WithEnvironment(AccessKeyEnvVarName, resource.AccessKey)
-            .WithEnvironment(SecretKeyEnvVarName, resource.SecretKey)
+            .WithEnvironment(AccessKeyEnvVarName, $"{resource.AccessKey}")
+            .WithEnvironment(SecretKeyEnvVarName, $"{resource.SecretKey}")
             .WithHttpHealthCheck("/health", 200, RustFsResource.PrimaryEndpointName);
 
         return resourceBuilder;
@@ -142,7 +142,7 @@ public static class RustFsBuilderExtensions
         }
 
         return builder.AddBucket(
-            name: $"{builder.Resource.Name}-create-bucket-{bucketName}",
+            name: $"{builder.Resource.Name}-create-bucket-{SanitizeForResourceName(bucketName)}",
             bucketNames: [bucketName]);
     }
 
@@ -162,7 +162,7 @@ public static class RustFsBuilderExtensions
         }
 
         return builder.AddBucket(
-            name: $"{builder.Resource.Name}-create-buckets-{bucketNames[0]}",
+            name: $"{builder.Resource.Name}-create-buckets",
             bucketNames: bucketNames);
     }
 
@@ -208,4 +208,7 @@ public static class RustFsBuilderExtensions
             return $"{endpoint.Scheme}://{rustFs.Name}:{endpoint.TargetPort}";
         }
     }
+
+    private static string SanitizeForResourceName(string name) =>
+        new(name.Select(static c => char.IsLetterOrDigit(c) || c == '-' ? c : '-').ToArray());
 }
