@@ -1,7 +1,6 @@
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
-using Microsoft.Extensions.Hosting;
 using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.RustFs.Tests;
