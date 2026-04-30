@@ -107,4 +107,62 @@ public class AddRustFsTests
         var consoleEndpoint = Assert.Single(resource.Annotations.OfType<EndpointAnnotation>(), e => e.Name == "console");
         Assert.Equal(3001, consoleEndpoint.Port);
     }
+
+    [Fact]
+    public void AddBucketAddsBucketCreationContainer()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var rustfs = builder.AddRustFs("rustfs");
+        rustfs.AddBucket("mybucket");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var bucketContainer = Assert.Single(appModel.Resources.OfType<ContainerResource>(), r => r.Name.Contains("create-bucket"));
+
+        Assert.True(bucketContainer.TryGetLastAnnotation<ContainerImageAnnotation>(out var imageAnnotation));
+        Assert.Equal(RustFsContainerImageTags.McImage, imageAnnotation.Image);
+
+        var parentAnnotation = bucketContainer.Annotations.OfType<ResourceRelationshipAnnotation>()
+            .SingleOrDefault(a => a.Type == "Parent");
+        Assert.NotNull(parentAnnotation);
+        Assert.Same(rustfs.Resource, parentAnnotation.Resource);
+    }
+
+    [Fact]
+    public void AddBucketWithDotInNameUsesValidResourceName()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var rustfs = builder.AddRustFs("rustfs");
+        rustfs.AddBucket("my.bucket");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var bucketContainer = Assert.Single(appModel.Resources.OfType<ContainerResource>(), r => r.Name.Contains("create-bucket"));
+
+        Assert.DoesNotContain(".", bucketContainer.Name);
+    }
+
+    [Fact]
+    public void AddBucketListAddsBucketCreationContainer()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var rustfs = builder.AddRustFs("rustfs");
+        rustfs.AddBucket(["bucket1", "bucket2"]);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var bucketContainer = Assert.Single(appModel.Resources.OfType<ContainerResource>(), r => r.Name.Contains("create-buckets"));
+
+        Assert.True(bucketContainer.TryGetLastAnnotation<ContainerImageAnnotation>(out var imageAnnotation));
+        Assert.Equal(RustFsContainerImageTags.McImage, imageAnnotation.Image);
+    }
 }
