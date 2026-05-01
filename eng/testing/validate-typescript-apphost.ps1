@@ -26,6 +26,30 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Resolve-ExternalCommandPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath
+    )
+
+    if ([System.IO.Path]::IsPathRooted($FilePath) -or
+        $FilePath.Contains([System.IO.Path]::DirectorySeparatorChar) -or
+        $FilePath.Contains([System.IO.Path]::AltDirectorySeparatorChar)) {
+        return $FilePath
+    }
+
+    $commandCandidates = @(Get-Command $FilePath -All -ErrorAction Stop)
+    $preferredCandidate = $commandCandidates |
+        Where-Object { $_.CommandType -eq [System.Management.Automation.CommandTypes]::Application } |
+        Select-Object -First 1
+
+    if ($null -ne $preferredCandidate) {
+        return $preferredCandidate.Source
+    }
+
+    return $commandCandidates[0].Source
+}
+
 function Invoke-ExternalCommand {
     param(
         [Parameter(Mandatory = $true)]
@@ -35,7 +59,9 @@ function Invoke-ExternalCommand {
         [string[]]$Arguments
     )
 
-    & $FilePath @Arguments
+    $resolvedFilePath = Resolve-ExternalCommandPath $FilePath
+
+    & $resolvedFilePath @Arguments
     if ($LASTEXITCODE -ne 0) {
         $joinedArguments = [string]::Join(" ", $Arguments)
         throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $joinedArguments"
