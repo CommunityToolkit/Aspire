@@ -242,7 +242,8 @@ try {
             "--apphost", $resolvedAppHostPath,
             "--isolated",
             "--format", "Json",
-            "--non-interactive"
+            "--non-interactive",
+            "--debug"
         )
         $appStarted = $true
 
@@ -252,14 +253,16 @@ try {
                 $resource,
                 "--status", $WaitStatus,
                 "--apphost", $resolvedAppHostPath,
-                "--timeout", $WaitTimeoutSeconds
+                "--timeout", $WaitTimeoutSeconds,
+                "--debug"
             )
         }
 
         Invoke-ExternalCommand "aspire" @(
             "describe",
             "--apphost", $resolvedAppHostPath,
-            "--format", "Json"
+            "--format", "Json",
+            "--debug"
         )
     }
     finally {
