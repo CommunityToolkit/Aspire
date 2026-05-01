@@ -27,3 +27,4 @@ bun.lock
 pnpm-lock.yaml
 yarn.lock
 solr-data
+*.lscache
