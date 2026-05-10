@@ -5,8 +5,5 @@
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="workingDirectory">The working directory to use for the command.</param>
-public class RustAppExecutableResource(string name, string workingDirectory)
-    : ExecutableResource(name, "cargo", workingDirectory), IResourceWithServiceDiscovery
-{
-
-}
+public class RustAppExecutableResource(string name, string workingDirectory, string command = "cargo")
+    : ExecutableResource(name, command, workingDirectory), IResourceWithServiceDiscovery;
