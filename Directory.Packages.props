@@ -99,7 +99,7 @@
   <ItemGroup Label="Testing">
     <!-- Testing packages -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
-    <PackageVersion Include="Bogus" Version="35.6.3" />
+    <PackageVersion Include="Bogus" Version="35.6.5" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="OpenFeature.Contrib.Providers.Flagd" Version="0.3.3" />
     <PackageVersion Include="OpenFeature.Providers.Ofrep" Version="0.1.2" />
