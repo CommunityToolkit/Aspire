@@ -1,14 +1,19 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createBuilder } from './.modules/aspire.js';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createBuilder } from "./.modules/aspire.js";
 
 const builder = await createBuilder();
 const appHostDirectory = path.dirname(fileURLToPath(import.meta.url));
-const primaryConfigPath = path.join(appHostDirectory, 'dab-config.json');
-const secondaryConfigPath = path.join(appHostDirectory, 'dab-config-2.json');
+const primaryConfigPath = path.join(appHostDirectory, "dab-config.json");
+const secondaryConfigPath = path.join(appHostDirectory, "dab-config-2.json");
 
-const dab = await builder._addDataAPIBuilderInternal('dab', [primaryConfigPath]);
-const dabWithOptions = await builder._addDataAPIBuilderInternal('dab-with-options', [primaryConfigPath, secondaryConfigPath], 5001);
+const dab = await builder.addDataAPIBuilder("dab", {
+    configFilePaths: [primaryConfigPath],
+});
+const dabWithOptions = await builder.addDataAPIBuilder("dab-with-options", {
+    configFilePaths: [primaryConfigPath, secondaryConfigPath],
+    httpPort: 5001,
+});
 
 const _primaryEndpoint = await dab.primaryEndpoint.get();
 const _host = await dab.host.get();
