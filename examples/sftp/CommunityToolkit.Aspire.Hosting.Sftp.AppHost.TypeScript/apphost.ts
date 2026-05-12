@@ -31,15 +31,17 @@ await sftpDefaults.withEnvironment('SFTP_USERS', 'bar:pass:::upload');
 if (process.env.ASPIRE_RUNTIME_SMOKE !== '1') {
     // ---- Property access on SftpContainerResource (ExposeProperties = true) ----
     const sftpResource = await sftp;
-    const _host = await sftpResource.host.get();
-    const _port = await sftpResource.port.get();
-    const _uri = sftpResource.uriExpression;
+    const _endpoint = await sftpResource.getEndpoint('sftp');
+    const _host = await _endpoint.host.get();
+    const _port = await _endpoint.port.get();
+    const _uri = await _endpoint.url.get();
     const _connectionString = sftpResource.connectionStringExpression;
 
     const sftpDefaultsResource = await sftpDefaults;
-    const _defaultHost = await sftpDefaultsResource.host.get();
-    const _defaultPort = await sftpDefaultsResource.port.get();
-    const _defaultUri = sftpDefaultsResource.uriExpression;
+    const _defaultEndpoint = await sftpDefaultsResource.getEndpoint('sftp');
+    const _defaultHost = await _defaultEndpoint.host.get();
+    const _defaultPort = await _defaultEndpoint.port.get();
+    const _defaultUri = await _defaultEndpoint.url.get();
     const _defaultConnectionString = sftpDefaultsResource.connectionStringExpression;
 }
 

@@ -26,26 +26,26 @@ await bindMountBacked.withDataBindMount(bindMountRoot);
 // withDataVolume — default overload
 await defaultVolumeBacked.withDataVolume();
 
-// ---- Property access on KurrentDBResource (ExposeProperties = true) ----
+// ---- Endpoint access on KurrentDBResource ----
 const volumeBackedResource = await volumeBacked;
-const _volumeEndpoint = await volumeBackedResource.primaryEndpoint.get();
-const _volumeHost = await volumeBackedResource.host.get();
-const _volumePort = await volumeBackedResource.port.get();
-const _volumeUri = await volumeBackedResource.uriExpression.get();
+const _volumeEndpoint = await volumeBackedResource.getEndpoint("http");
+const _volumeHost = await _volumeEndpoint.host.get();
+const _volumePort = await _volumeEndpoint.port.get();
+const _volumeUri = await _volumeEndpoint.url.get();
 const _volumeConnectionString = await volumeBackedResource.connectionStringExpression.get();
 
 const bindMountBackedResource = await bindMountBacked;
-const _bindEndpoint = await bindMountBackedResource.primaryEndpoint.get();
-const _bindHost = await bindMountBackedResource.host.get();
-const _bindPort = await bindMountBackedResource.port.get();
-const _bindUri = await bindMountBackedResource.uriExpression.get();
+const _bindEndpoint = await bindMountBackedResource.getEndpoint("http");
+const _bindHost = await _bindEndpoint.host.get();
+const _bindPort = await _bindEndpoint.port.get();
+const _bindUri = await _bindEndpoint.url.get();
 const _bindConnectionString = await bindMountBackedResource.connectionStringExpression.get();
 
 const defaultVolumeBackedResource = await defaultVolumeBacked;
-const _defaultVolumeEndpoint = await defaultVolumeBackedResource.primaryEndpoint.get();
-const _defaultVolumeHost = await defaultVolumeBackedResource.host.get();
-const _defaultVolumePort = await defaultVolumeBackedResource.port.get();
-const _defaultVolumeUri = await defaultVolumeBackedResource.uriExpression.get();
+const _defaultVolumeEndpoint = await defaultVolumeBackedResource.getEndpoint("http");
+const _defaultVolumeHost = await _defaultVolumeEndpoint.host.get();
+const _defaultVolumePort = await _defaultVolumeEndpoint.port.get();
+const _defaultVolumeUri = await _defaultVolumeEndpoint.url.get();
 const _defaultVolumeConnectionString = await defaultVolumeBackedResource.connectionStringExpression.get();
 
 await builder.build().run();

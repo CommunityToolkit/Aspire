@@ -11,17 +11,19 @@ const papercut = await builder.addPapercutSmtp("papercut", {
 // addPapercutSmtp — minimal overload (defaults)
 const papercutDefault = await builder.addPapercutSmtp("papercut-default");
 
-// ---- Property access on PapercutSmtpContainerResource (ExposeProperties = true) ----
+// ---- Endpoint access on PapercutSmtpContainerResource ----
 const papercutResource = papercut;
-const _papercutHost = await papercutResource.host.get();
-const _papercutPort = await papercutResource.port.get();
-const _papercutUri = await papercutResource.uriExpression.get();
+const _papercutEndpoint = await papercutResource.getEndpoint("smtp");
+const _papercutHost = await _papercutEndpoint.host.get();
+const _papercutPort = await _papercutEndpoint.port.get();
+const _papercutUri = await _papercutEndpoint.url.get();
 const _papercutConnectionString = await papercutResource.connectionStringExpression.get();
 
 const papercutDefaultResource = papercutDefault;
-const _papercutDefaultHost = await papercutDefaultResource.host.get();
-const _papercutDefaultPort = await papercutDefaultResource.port.get();
-const _papercutDefaultUri = await papercutDefaultResource.uriExpression.get();
+const _papercutDefaultEndpoint = await papercutDefaultResource.getEndpoint("smtp");
+const _papercutDefaultHost = await _papercutDefaultEndpoint.host.get();
+const _papercutDefaultPort = await _papercutDefaultEndpoint.port.get();
+const _papercutDefaultUri = await _papercutDefaultEndpoint.url.get();
 const _papercutDefaultConnectionString = await papercutDefaultResource.connectionStringExpression.get();
 
 await builder.build().run();

@@ -22,12 +22,12 @@ const bindBroker = await builder.addLavinMQ("bind-broker", {
 });
 await bindBroker.withDataBindMount(bindMountPath);
 
-// ---- Property access on LavinMQContainerResource (ExposeProperties = true) ----
+// ---- Endpoint access on LavinMQContainerResource ----
 const volumeBrokerResource = volumeBroker;
-const _primaryEndpoint = await volumeBrokerResource.primaryEndpoint.get();
-const _host = await volumeBrokerResource.host.get();
-const _port = await volumeBrokerResource.port.get();
-const _uriExpression = await volumeBrokerResource.uriExpression.get();
+const _primaryEndpoint = await volumeBrokerResource.getEndpoint("amqp");
+const _host = await _primaryEndpoint.host.get();
+const _port = await _primaryEndpoint.port.get();
+const _uriExpression = await _primaryEndpoint.url.get();
 const _connectionStringExpression = await volumeBrokerResource.connectionStringExpression.get();
 
 await builder.build().run();

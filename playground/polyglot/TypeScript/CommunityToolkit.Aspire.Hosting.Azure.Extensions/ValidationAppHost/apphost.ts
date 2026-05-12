@@ -17,9 +17,9 @@ await blobs.withAzureStorageExplorer({
     configureContainer: async (explorer) => {
         await explorer.withHostPort({ port: 8068 });
 
-        const _endpoint = await explorer.primaryEndpoint.get();
-        const _host = await explorer.host.get();
-        const _port = await explorer.port.get();
+        const _endpoint = await explorer.getEndpoint('http');
+        const _host = await _endpoint.host();
+        const _port = await _endpoint.port();
     }
 });
 
@@ -31,9 +31,9 @@ await queues.withAzureStorageExplorer({
 const tables = await storage.addTables("tables");
 await tables.withAzureStorageExplorer({
     configureContainer: async (explorer) => {
-        const _endpoint = await explorer.primaryEndpoint.get();
-        const _host = await explorer.host.get();
-        const _port = await explorer.port.get();
+        const _endpoint = await explorer.getEndpoint('http');
+        const _host = await _endpoint.host();
+        const _port = await _endpoint.port();
     },
     name: "tables-explorer"
 });

@@ -64,27 +64,29 @@ await artemis.withConfBindMount(artemisConfPath);
 await artemis2.withDataVolume();
 await artemis2.withConfVolume();
 
-// ---- Property access on ActiveMQServerResourceBase (ExposeProperties = true) ----
+// ---- Endpoint access on ActiveMQServerResourceBase ----
 const classicResource = await classic;
-const _classicEndpoint = await classicResource.primaryEndpoint.get();
-const _classicHost = await classicResource.host.get();
-const _classicPort = await classicResource.port.get();
-const _classicUri = await classicResource.uriExpression.get();
+const _classicEndpoint = await classicResource.getEndpoint("tcp");
+const _classicHost = await _classicEndpoint.host();
+const _classicPort = await _classicEndpoint.port();
+const _classicUri = await _classicEndpoint.url();
 const _classicCstr = await classicResource.connectionStringExpression.get();
 
 const classic2Resource = await classic2;
-const _classic2Host = await classic2Resource.host.get();
-const _classic2Port = await classic2Resource.port.get();
+const _classic2Endpoint = await classic2Resource.getEndpoint("tcp");
+const _classic2Host = await _classic2Endpoint.host();
+const _classic2Port = await _classic2Endpoint.port();
 
 const artemisResource = await artemis;
-const _artemisEndpoint = await artemisResource.primaryEndpoint.get();
-const _artemisHost = await artemisResource.host.get();
-const _artemisPort = await artemisResource.port.get();
-const _artemisUri = await artemisResource.uriExpression.get();
+const _artemisEndpoint = await artemisResource.getEndpoint("tcp");
+const _artemisHost = await _artemisEndpoint.host();
+const _artemisPort = await _artemisEndpoint.port();
+const _artemisUri = await _artemisEndpoint.url();
 const _artemisCstr = await artemisResource.connectionStringExpression.get();
 
 const artemis2Resource = await artemis2;
-const _artemis2Host = await artemis2Resource.host.get();
-const _artemis2Port = await artemis2Resource.port.get();
+const _artemis2Endpoint = await artemis2Resource.getEndpoint("tcp");
+const _artemis2Host = await _artemis2Endpoint.host();
+const _artemis2Port = await _artemis2Endpoint.port();
 
 await builder.build().run();

@@ -27,11 +27,11 @@ mounted = await mounted.withDataBindMount('./data');
 mounted = await mounted.withInitFiles('./seed.surql');
 
 const primaryResource = await primary;
-const _primaryEndpoint = await primaryResource.primaryEndpoint.get();
-const _primaryHost = await primaryResource.host.get();
-const _primaryPort = await primaryResource.port.get();
+const _primaryEndpoint = await primaryResource.getEndpoint('tcp');
+const _primaryHost = await _primaryEndpoint.host.get();
+const _primaryPort = await _primaryEndpoint.port.get();
 const _primaryPasswordParameter = await primaryResource.passwordParameter.get();
-const _primaryUri = await primaryResource.uriExpression.get();
+const _primaryUri = await _primaryEndpoint.url.get();
 const _primaryConnectionString = await primaryResource.connectionStringExpression.get();
 
 const namespaceResource = await appNamespace;
@@ -53,10 +53,10 @@ const _databaseParentName = await _databaseParent.name.get();
 const _databaseServerName = await (await _databaseParent.parent.get()).name.get();
 
 const mountedResource = await mounted;
-const _mountedEndpoint = await mountedResource.primaryEndpoint.get();
-const _mountedHost = await mountedResource.host.get();
-const _mountedPort = await mountedResource.port.get();
-const _mountedUri = await mountedResource.uriExpression.get();
+const _mountedEndpoint = await mountedResource.getEndpoint('tcp');
+const _mountedHost = await _mountedEndpoint.host.get();
+const _mountedPort = await _mountedEndpoint.port.get();
+const _mountedUri = await _mountedEndpoint.url.get();
 const _mountedConnectionString = await mountedResource.connectionStringExpression.get();
 
 await builder.build().run();

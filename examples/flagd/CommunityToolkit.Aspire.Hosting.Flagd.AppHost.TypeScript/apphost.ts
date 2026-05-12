@@ -13,21 +13,21 @@ await flagd.withBindFileSync('./flags');
 await flagdDefault.withBindFileSync('./flags', { filename: 'custom-flagd.json' });
 
 const flagdResource = await flagd;
-const _primaryEndpoint = await flagdResource.primaryEndpoint.get();
-const _host = await flagdResource.host.get();
-const _port = await flagdResource.port.get();
-const _healthCheckEndpoint = await flagdResource.healthCheckEndpoint.get();
-const _ofrepEndpoint = await flagdResource.ofrepEndpoint.get();
-const _uriExpression = await flagdResource.uriExpression.get();
+const _primaryEndpoint = await flagdResource.getEndpoint("http");
+const _host = await _primaryEndpoint.host.get();
+const _port = await _primaryEndpoint.port.get();
+const _healthCheckEndpoint = await flagdResource.getEndpoint("health");
+const _ofrepEndpoint = await flagdResource.getEndpoint("ofrep");
+const _uriExpression = await _primaryEndpoint.url.get();
 const _connectionStringExpression = await flagdResource.connectionStringExpression.get();
 
 const flagdDefaultResource = await flagdDefault;
-const _defaultPrimaryEndpoint = await flagdDefaultResource.primaryEndpoint.get();
-const _defaultHost = await flagdDefaultResource.host.get();
-const _defaultPort = await flagdDefaultResource.port.get();
-const _defaultHealthCheckEndpoint = await flagdDefaultResource.healthCheckEndpoint.get();
-const _defaultOfrepEndpoint = await flagdDefaultResource.ofrepEndpoint.get();
-const _defaultUriExpression = await flagdDefaultResource.uriExpression.get();
+const _defaultPrimaryEndpoint = await flagdDefaultResource.getEndpoint("http");
+const _defaultHost = await _defaultPrimaryEndpoint.host.get();
+const _defaultPort = await _defaultPrimaryEndpoint.port.get();
+const _defaultHealthCheckEndpoint = await flagdDefaultResource.getEndpoint("health");
+const _defaultOfrepEndpoint = await flagdDefaultResource.getEndpoint("ofrep");
+const _defaultUriExpression = await _defaultPrimaryEndpoint.url.get();
 const _defaultConnectionStringExpression = await flagdDefaultResource.connectionStringExpression.get();
 
 await builder.build().run();

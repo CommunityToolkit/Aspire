@@ -15,9 +15,9 @@ await mysql
     });
 
 const resolvedMySql = await mysql;
-const _primaryEndpoint = await resolvedMySql.primaryEndpoint.get();
-const _host = await resolvedMySql.host.get();
-const _port = await resolvedMySql.port.get();
+const _primaryEndpoint = await resolvedMySql.getEndpoint("tcp");
+const _host = await _primaryEndpoint.host.get();
+const _port = await _primaryEndpoint.port.get();
 const _connectionString = await resolvedMySql.connectionStringExpression.get();
 
 await builder.build().run();

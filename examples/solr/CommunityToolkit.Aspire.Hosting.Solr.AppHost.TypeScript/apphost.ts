@@ -19,12 +19,12 @@ await solr.coreName.set(builderCoreName);
 await solr.withDataVolume({ name: "solr-data" });
 
 const resolvedSolr = await solr;
-const _primaryEndpoint = await resolvedSolr.primaryEndpoint.get();
-const _host = await resolvedSolr.host.get();
-const _port = await resolvedSolr.port.get();
+const _primaryEndpoint = await resolvedSolr.getEndpoint("http");
+const _host = await _primaryEndpoint.host.get();
+const _port = await _primaryEndpoint.port.get();
 const _coreName: string = await resolvedSolr.coreName.get();
 const _connectionString = await resolvedSolr.connectionStringExpression.get();
-const _uriExpression = await resolvedSolr.uriExpression.get();
+const _uriExpression = await _primaryEndpoint.url.get();
 
 const bindMountedSolr = await builder.addSolr("solr-bind", {
     port: 8984,

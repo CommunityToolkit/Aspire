@@ -7,10 +7,10 @@ const runtimeOllama = builder.addOllama('ollama-runtime');
 
 const runtimeOllamaResource = await runtimeOllama;
 const _runtimeModels = await runtimeOllamaResource.models.get();
-const _runtimePrimaryEndpoint = await runtimeOllamaResource.primaryEndpoint.get();
-const _runtimeHost = await runtimeOllamaResource.host.get();
-const _runtimePort = await runtimeOllamaResource.port.get();
-const _runtimeUri = await runtimeOllamaResource.uriExpression.get();
+const _runtimePrimaryEndpoint = await runtimeOllamaResource.getEndpoint('http');
+const _runtimeHost = await _runtimePrimaryEndpoint.host();
+const _runtimePort = await _runtimePrimaryEndpoint.port();
+const _runtimeUri = await _runtimePrimaryEndpoint.url();
 const _runtimeConnectionString = await runtimeOllamaResource.connectionStringExpression.get();
 
 // Compile-time coverage for the broader exported surface, including variants that are not
@@ -32,10 +32,10 @@ if (includeCompileOnlyScenarios) {
             await openWebUI.withDataVolume({ name: 'openwebui-data' });
             await openWebUI.withHostPort({ port: 3001 });
 
-            const _openWebUiPrimaryEndpoint = await openWebUI.primaryEndpoint.get();
-            const _openWebUiHost = await openWebUI.host.get();
-            const _openWebUiPort = await openWebUI.port.get();
-            const _openWebUiUri = await openWebUI.uriExpression.get();
+            const _openWebUiPrimaryEndpoint = await openWebUI.getEndpoint('http');
+            const _openWebUiHost = await _openWebUiPrimaryEndpoint.host();
+            const _openWebUiPort = await _openWebUiPrimaryEndpoint.port();
+            const _openWebUiUri = await _openWebUiPrimaryEndpoint.url();
             const _openWebUiConnectionString = await openWebUI.connectionStringExpression.get();
             const _openWebUiOllamas = await openWebUI.ollamaResources.get();
         }
@@ -43,10 +43,10 @@ if (includeCompileOnlyScenarios) {
 
     const resolvedContainerOllama = await containerOllama;
     const _containerModels = await resolvedContainerOllama.models.get();
-    const _containerPrimaryEndpoint = await resolvedContainerOllama.primaryEndpoint.get();
-    const _containerHost = await resolvedContainerOllama.host.get();
-    const _containerPort = await resolvedContainerOllama.port.get();
-    const _containerUri = await resolvedContainerOllama.uriExpression.get();
+    const _containerPrimaryEndpoint = await resolvedContainerOllama.getEndpoint('http');
+    const _containerHost = await _containerPrimaryEndpoint.host();
+    const _containerPort = await _containerPrimaryEndpoint.port();
+    const _containerUri = await _containerPrimaryEndpoint.url();
     const _containerConnectionString = await resolvedContainerOllama.connectionStringExpression.get();
 
     const resolvedAutoNamedModel = await autoNamedModel;
@@ -76,10 +76,10 @@ if (includeCompileOnlyScenarios) {
 
     const resolvedLocalOllama = await localOllama;
     const _localModels = await resolvedLocalOllama.models.get();
-    const _localPrimaryEndpoint = await resolvedLocalOllama.primaryEndpoint.get();
-    const _localHost = await resolvedLocalOllama.host.get();
-    const _localPort = await resolvedLocalOllama.port.get();
-    const _localUri = await resolvedLocalOllama.uriExpression.get();
+    const _localPrimaryEndpoint = await resolvedLocalOllama.getEndpoint('http');
+    const _localHost = await _localPrimaryEndpoint.host();
+    const _localPort = await _localPrimaryEndpoint.port();
+    const _localUri = await _localPrimaryEndpoint.url();
     const _localConnectionString = await resolvedLocalOllama.connectionStringExpression.get();
 
     const resolvedLocalAutoNamedModel = await localAutoNamedModel;
