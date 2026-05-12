@@ -209,6 +209,12 @@ try {
   <packageSources>
     <add key="local-polyglot" value="$localSource" />
   </packageSources>
+
+  <packageSourceMapping>
+    <packageSource key="local-polyglot">
+      <package pattern="CommunityToolkit.Aspire.*" />
+    </packageSource>
+  </packageSourceMapping>
 </configuration>
 "@ | Set-Content -Path $nugetConfigPath -NoNewline
 
@@ -218,7 +224,8 @@ try {
         Invoke-ExternalCommand "aspire" @(
             "restore",
             "--apphost", $resolvedAppHostPath,
-            "--non-interactive"
+            "--non-interactive",
+            "--log-level", "debug"
         )
         Invoke-ExternalCommand "npx" @("tsc", "--noEmit")
     }
@@ -231,7 +238,8 @@ try {
             "secret", "set",
             $secretPair[0], $secretPair[1],
             "--apphost", $resolvedAppHostPath,
-            "--non-interactive"
+            "--non-interactive",
+            "--log-level", "debug"
         )
     }
 
@@ -243,7 +251,7 @@ try {
             "--isolated",
             "--format", "Json",
             "--non-interactive",
-            "--debug"
+            "--log-level", "debug"
         )
         $appStarted = $true
 
@@ -254,7 +262,7 @@ try {
                 "--status", $WaitStatus,
                 "--apphost", $resolvedAppHostPath,
                 "--timeout", $WaitTimeoutSeconds,
-                "--debug"
+                "--log-level", "debug"
             )
         }
 
@@ -262,7 +270,7 @@ try {
             "describe",
             "--apphost", $resolvedAppHostPath,
             "--format", "Json",
-            "--debug"
+            "--log-level", "debug"
         )
     }
     finally {
