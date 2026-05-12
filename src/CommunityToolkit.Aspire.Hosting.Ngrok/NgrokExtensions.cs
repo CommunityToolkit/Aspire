@@ -72,7 +72,7 @@ public static class NgrokExtensions
         {
             var endpointTuples = resource.Annotations
                 .OfType<NgrokEndpointAnnotation>()
-                .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointRefernce: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
+                .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointReference: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
                 .ToList();
             await CreateNgrokConfigurationFileAsync(configurationFolder, name, endpointTuples, configurationVersion ?? 3);
         });
