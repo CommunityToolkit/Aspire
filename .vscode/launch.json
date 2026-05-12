@@ -12,7 +12,7 @@
       "cwd": "${cwd}",
       "args": [
         "-AppHostPath",
-        "./examples/activemq/CommunityToolkit.Aspire.Hosting.${input:project}.AppHost.TypeScript/apphost.ts",
+        "./examples/${input:example-folder}/CommunityToolkit.Aspire.Hosting.${input:project}.AppHost.TypeScript/apphost.ts",
         "-PackageProjectPath",
         "./src/CommunityToolkit.Aspire.Hosting.${input:project}/CommunityToolkit.Aspire.Hosting.${input:project}.csproj",
         "-PackageName",
@@ -27,6 +27,11 @@
       "id": "project",
       "type": "promptString",
       "description": "The project to run the TypeScript app host tests for (sans `CommunityToolkit.Aspire.Hosting.`)."
+    },
+    {
+      "id": "example-folder",
+      "type": "promptString",
+      "description": "The example folder to use for the TypeScript app host tests (e.g. `activemq`)."
     },
     {
       "id": "waitForResources",
