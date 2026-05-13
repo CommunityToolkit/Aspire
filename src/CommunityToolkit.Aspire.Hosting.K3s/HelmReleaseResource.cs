@@ -33,4 +33,11 @@ public sealed class HelmReleaseResource(
     internal string? RepoUrl { get; set; }
     internal string? Version { get; set; }
     internal Dictionary<string, string> HelmValues { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Absolute host paths of values files to inject into the helm container via
+    /// <c>--values /helm-values/{filename}</c>.
+    /// Populated by <c>WithHelmValuesFile</c>.
+    /// </summary>
+    internal List<string> ValuesFiles { get; } = [];
 }

@@ -82,6 +82,18 @@ public static class K3sHelmBuilderExtensions
                 }];
             })
             .WithArgs("/helm-install.sh")
+            // Inject host-side values files declared via WithHelmValuesFile using
+            // Aspire's built-in WithContainerFiles(destinationPath, hostSourcePath).
+            // One call per file; each copies the file into /helm-values/ in the container.
+            // The callback wraps all files so it fires after all WithHelmValuesFile() calls.
+            .WithContainerFiles("/helm-values", async (ctx, ct) =>
+                release.ValuesFiles
+                    .Select(hostPath => (ContainerFileSystemItem)new ContainerFile
+                    {
+                        Name = System.IO.Path.GetFileName(hostPath),
+                        SourcePath = hostPath,
+                    })
+                    .ToList())
             .WithBindMount(containerKubeconfigDir, "/root/.kube")
             .WithEnvironment("KUBECONFIG", "/root/.kube/kubeconfig.yaml")
             .WithIconName("Rocket")
@@ -98,6 +110,33 @@ public static class K3sHelmBuilderExtensions
                     new ResourcePropertySnapshot("Version", version ?? "latest"),
                 ],
             });
+    }
+
+    /// <summary>
+    /// Injects a host-side YAML values file into the Helm installer container and
+    /// passes it as <c>--values /helm-values/{filename}</c> to <c>helm upgrade --install</c>.
+    /// Multiple files are applied in the order they are declared (last wins for overlapping keys).
+    /// </summary>
+    /// <param name="builder">The Helm release resource builder.</param>
+    /// <param name="path">
+    /// Path to the values YAML file on the host. Relative paths are resolved against
+    /// <c>AppHostDirectory</c>.
+    /// </param>
+    public static IResourceBuilder<HelmReleaseResource> WithHelmValuesFile(
+        this IResourceBuilder<HelmReleaseResource> builder,
+        string path)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        var absolutePath = System.IO.Path.IsPathRooted(path)
+            ? path
+            : System.IO.Path.GetFullPath(
+                System.IO.Path.Combine(
+                    builder.ApplicationBuilder.AppHostDirectory, path));
+
+        builder.Resource.ValuesFiles.Add(absolutePath);
+        return builder;
     }
 
     /// <summary>
@@ -148,6 +187,10 @@ public static class K3sHelmBuilderExtensions
 
         if (release.Version is not null)
             sb.Append($" --version \"{release.Version}\"");
+
+        // Values files are injected into /helm-values/ by WithContainerFiles.
+        foreach (var hostPath in release.ValuesFiles)
+            sb.Append($" --values \"/helm-values/{System.IO.Path.GetFileName(hostPath)}\"");
 
         foreach (var (key, value) in release.HelmValues)
             sb.Append($" --set \"{key}={value}\"");

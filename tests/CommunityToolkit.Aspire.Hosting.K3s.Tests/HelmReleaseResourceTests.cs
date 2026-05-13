@@ -349,4 +349,56 @@ public class HelmReleaseResourceTests
         var action = () => builder.AddServiceEndpoint("ui", "svc", 443);
         Assert.Throws<ArgumentNullException>(action);
     }
+
+    // ── WithHelmValuesFile tests ──────────────────────────────────────────────
+
+    [Fact]
+    public void BuildHelmScriptIncludesValuesFiles()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("argocd", "argocd", "argocd", cluster)
+        {
+            Chart = "argo-cd",
+        };
+        release.ValuesFiles.Add("/tmp/values.yaml");
+        release.ValuesFiles.Add("/tmp/values-prod.yaml");
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        Assert.Contains("--values \"/helm-values/values.yaml\"", script);
+        Assert.Contains("--values \"/helm-values/values-prod.yaml\"", script);
+        // Values files are applied before --set overrides (last wins).
+        var valuesIndex = script.IndexOf("--values", StringComparison.Ordinal);
+        var setIndex = script.IndexOf("--set", StringComparison.Ordinal);
+        Assert.True(valuesIndex < setIndex || setIndex == -1,
+            "--values flags should appear before --set flags");
+    }
+
+    [Fact]
+    public void WithHelmValuesFileAccumulatesAbsolutePaths()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        // Use a temp file so the path resolution succeeds.
+        var tempFile = Path.Combine(appBuilder.AppHostDirectory, "values.yaml");
+
+        cluster.AddHelmRelease("argocd", "argo-cd")
+            .WithHelmValuesFile("values.yaml");  // relative to AppHostDirectory
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
+        Assert.Single(resource.ValuesFiles);
+        Assert.Equal(tempFile, resource.ValuesFiles[0]);
+    }
+
+    [Fact]
+    public void WithHelmValuesFileShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<HelmReleaseResource> builder = null!;
+        var action = () => builder.WithHelmValuesFile("values.yaml");
+        Assert.Throws<ArgumentNullException>(action);
+    }
 }

@@ -184,4 +184,64 @@ public class K8sManifestResourceTests
             Directory.Delete(dir, recursive: true);
         }
     }
+
+    // ── Script generation ─────────────────────────────────────────────────────
+
+    [Fact]
+    public void BuildManifestScriptIncludesKubectlApply()
+    {
+        var script = K3sManifestBuilderExtensions.BuildManifestScript();
+        Assert.Contains("kubectl apply -f /k8s-manifests", script);
+        Assert.Contains("--server-side", script);
+    }
+
+    [Fact]
+    public void BuildManifestScriptAutoDetectsKustomize()
+    {
+        // The script checks for kustomization.yaml at runtime — no path argument needed.
+        var script = K3sManifestBuilderExtensions.BuildManifestScript();
+        Assert.Contains("kustomization.yaml", script);
+        Assert.Contains("kubectl apply -k /k8s-manifests", script);
+    }
+
+    [Fact]
+    public void BuildManifestScriptWaitsForKubeconfigBeforeApplying()
+    {
+        var script = K3sManifestBuilderExtensions.BuildManifestScript();
+        var kubeconfigWaitIndex = script.IndexOf("/root/.kube/kubeconfig.yaml", StringComparison.Ordinal);
+        var applyIndex = script.IndexOf("kubectl apply", StringComparison.Ordinal);
+        Assert.True(kubeconfigWaitIndex < applyIndex, "Kubeconfig wait must precede kubectl apply");
+    }
+
+    // ── Kustomize detection ───────────────────────────────────────────────────
+
+    [Fact]
+    public void AddK8sManifestKustomizeDirectoryShowsKustomizeResourceType()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"kustomize-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "kustomization.yaml"), "resources: []");
+
+        try
+        {
+            var appBuilder = DistributedApplication.CreateBuilder();
+            var cluster = appBuilder.AddK3sCluster("k8s");
+            cluster.AddK8sManifest("kustom", dir);
+
+            using var app = appBuilder.Build();
+            var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+            var resource = Assert.Single(model.Resources.OfType<K8sManifestResource>());
+            var typeSnapshot = resource.Annotations
+                .OfType<ResourceSnapshotAnnotation>()
+                .Select(a => a.InitialSnapshot.ResourceType)
+                .FirstOrDefault();
+
+            Assert.Equal("K8s Kustomize", typeSnapshot);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
 }
