@@ -13,7 +13,6 @@ using Polly;
 using SurrealDb.Net;
 using SurrealDb.Net.Exceptions;
 using System.Data;
-using Xunit.Abstractions;
 using SurrealRecord = SurrealDb.Net.Models.Record;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;

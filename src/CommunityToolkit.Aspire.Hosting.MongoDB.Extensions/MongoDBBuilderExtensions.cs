@@ -14,6 +14,7 @@ public static class MongoDBBuilderExtensions
     /// </summary>
     /// <remarks>
     /// This version of the package defaults to the <inheritdoc cref="DbGateContainerImageTags.Tag"/> tag of the <inheritdoc cref="DbGateContainerImageTags.Image"/> container image.
+    /// This overload is not available in polyglot app hosts. Use the overload without the configuration callback instead.
     /// </remarks>
     /// <param name="builder">The MongoDB server resource builder.</param>
     /// <param name="configureContainer">Configuration callback for DbGate container resource.</param>
@@ -34,6 +35,8 @@ public static class MongoDBBuilderExtensions
     /// </code>
     /// </example>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+#pragma warning disable ASPIREATS001
+    [AspireExportIgnore(Reason = "The configuration callback depends on DbGate container APIs that are not exported to polyglot app hosts. Use the overload without a configuration callback instead.")]
     public static IResourceBuilder<MongoDBServerResource> WithDbGate(this IResourceBuilder<MongoDBServerResource> builder, Action<IResourceBuilder<DbGateContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -50,6 +53,22 @@ public static class MongoDBBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Adds an administration and development platform for MongoDB to the application model using DbGate.
+    /// </summary>
+    /// <remarks>
+    /// This version of the package defaults to the <inheritdoc cref="DbGateContainerImageTags.Tag"/> tag of the <inheritdoc cref="DbGateContainerImageTags.Image"/> container image.
+    /// </remarks>
+    /// <param name="builder">The MongoDB server resource builder.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withDbGate", Description = "Adds a DbGate administration and development platform for MongoDB.")]
+    internal static IResourceBuilder<MongoDBServerResource> WithDbGateForPolyglot(this IResourceBuilder<MongoDBServerResource> builder, string? containerName = null)
+    {
+        return builder.WithDbGate(configureContainer: null, containerName);
+    }
+#pragma warning restore ASPIREATS001
 
     private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<MongoDBServerResource> builder)
     {

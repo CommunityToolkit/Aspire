@@ -7,6 +7,8 @@ using Azure.Provisioning.KeyVault;
 using CommunityToolkit.Aspire.Hosting.Azure.Dapr;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -20,9 +22,11 @@ public static class AzureKeyVaultDaprHostingExtensions
     /// <summary>
     /// Configures the Key Vault secret store component for the Dapr component resource.
     /// </summary>
+    /// <remarks>This method is not available in polyglot app hosts.</remarks>
     /// <param name="builder">The Dapr component resource builder.</param>
     /// <param name="kvNameParam">The Key Vault name parameter.</param>
     /// <returns>The original Dapr component resource builder (not a new Azure Dapr resource).</returns>
+    [AspireExportIgnore(Reason = "ProvisioningParameter is an Azure.Provisioning type not compatible with ATS.")]
     public static IResourceBuilder<IDaprComponentResource> ConfigureKeyVaultSecretsComponent(this IResourceBuilder<IDaprComponentResource> builder, ProvisioningParameter kvNameParam)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));

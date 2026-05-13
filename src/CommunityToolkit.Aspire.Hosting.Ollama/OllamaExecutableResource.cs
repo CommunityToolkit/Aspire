@@ -1,4 +1,6 @@
-﻿namespace Aspire.Hosting.ApplicationModel;
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents an Ollama executable resource.
@@ -7,6 +9,7 @@
 /// Constructs an <see cref="OllamaExecutableResource"/>.
 /// </remarks>
 /// <param name="name">The name of the resource.</param>
+[AspireExport(ExposeProperties = true)]
 public class OllamaExecutableResource(string name) : ExecutableResource(name, "ollama", string.Empty), IOllamaResource
 {
     internal const string OllamaEndpointName = "http";

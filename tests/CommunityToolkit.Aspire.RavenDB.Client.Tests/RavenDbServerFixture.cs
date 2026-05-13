@@ -9,7 +9,7 @@ public sealed class RavenDbServerFixture : IAsyncLifetime, IDisposable
     public IDocumentStore? Store { get; private set; }
     public string? ConnectionString { get; private set; }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         Server.StartServer();
 
@@ -28,10 +28,10 @@ public sealed class RavenDbServerFixture : IAsyncLifetime, IDisposable
         Store = Server.GetDocumentStore(options);
     }
 
-    public Task DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         Dispose();
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     public void Dispose()

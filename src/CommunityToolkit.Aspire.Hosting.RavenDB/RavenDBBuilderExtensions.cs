@@ -6,6 +6,8 @@ using Raven.Client.ServerWide;
 using Raven.Client.ServerWide.Operations;
 using System.Data.Common;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -31,6 +33,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="name">The name of the RavenDB server resource.</param>
     /// <returns>A resource builder for the newly added RavenDB server resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
+    [AspireExport("addRavenDB", Description = "Adds a RavenDB server resource")]
     public static IResourceBuilder<RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -50,6 +53,8 @@ public static class RavenDBBuilderExtensions
     /// <returns>A resource builder for the newly added RavenDB server resource.</returns>
     /// <exception cref="DistributedApplicationException">Thrown when the connection string cannot be retrieved during configuration.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the connection string is unavailable.</exception>
+    /// <remarks>This overload is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "RavenDBServerSettings includes secured certificate and licensing configuration that is not fully compatible with ATS.")]
     public static IResourceBuilder<RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         RavenDBServerSettings serverSettings)
@@ -65,7 +70,8 @@ public static class RavenDBBuilderExtensions
             ClientCertificate = securedSettings?.ClientCertificate
         };
 
-        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port, serverSettings.TcpPort);
+        return AddRavenDbInternal(builder, name, serverResource, environmentVariables, serverSettings.Port,
+            serverSettings.TcpPort, serverSettings.ForceTcpScheme);
     }
 
     /// <summary>
@@ -80,6 +86,8 @@ public static class RavenDBBuilderExtensions
     /// <returns>A resource builder for the newly added RavenDB server resource.</returns>
     /// <exception cref="DistributedApplicationException">Thrown when the connection string cannot be retrieved during configuration.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the connection string is unavailable.</exception>
+    /// <remarks>This overload is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "Dictionary<string, object> environment variables and manual secured configuration are not supported by ATS for this overload.")]
     public static IResourceBuilder<RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder,
     [ResourceName] string name,
     bool secured,
@@ -100,7 +108,8 @@ public static class RavenDBBuilderExtensions
     RavenDBServerResource serverResource,
     Dictionary<string, object> environmentVariables,
     int? port,
-    int? tcpPort)
+    int? tcpPort,
+    bool? forceTcpScheme = false)
     {
         string? connectionString = null;
         builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(serverResource, async (_, ct) =>
@@ -120,12 +129,13 @@ public static class RavenDBBuilderExtensions
                 certificate: serverResource.ClientCertificate);
 
         var effectiveTcpPort = tcpPort ?? 38888;
+        var useTcpScheme = forceTcpScheme ?? false;
         
         return builder.AddResource(serverResource)
             .WithEndpoint(
                 port: port,
                 targetPort: serverResource.IsSecured ? 443 : 8080,
-                scheme: serverResource.PrimaryEndpointName,
+                scheme: useTcpScheme? "tcp" : serverResource.PrimaryEndpointName,
                 name: serverResource.PrimaryEndpointName,
                 isProxied: false)
             .WithEndpoint(
@@ -172,7 +182,8 @@ public static class RavenDBBuilderExtensions
 
     private static void ConfigureEnvironmentVariables(EnvironmentCallbackContext context, RavenDBServerResource serverResource, Dictionary<string, object>? environmentVariables = null)
     {
-        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{serverResource.TcpEndpoint.Port}");
+        var tcpPort = serverResource.TcpEndpoint.IsAllocated ? serverResource.TcpEndpoint.Port : serverResource.TcpEndpoint.TargetPort;
+        context.EnvironmentVariables.TryAdd("RAVEN_ServerUrl_Tcp", $"{serverResource.TcpEndpoint.Scheme}://0.0.0.0:{tcpPort}");
 
         if (environmentVariables is null)
         {
@@ -185,7 +196,19 @@ public static class RavenDBBuilderExtensions
                 context.EnvironmentVariables.TryAdd(environmentVariable.Key, environmentVariable.Value);
         }
 
-        context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
+        if (serverResource.TcpEndpoint.IsAllocated)
+        {
+            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", serverResource.TcpEndpoint.Url);
+        }
+        // Tcp endpoint is not allocated yet when we're generating manifest (e.g. aspire plugins)
+        // In such a case, just check if the public server url isn't set manually by the user
+        // If it is, use it with the container target port explicitly to generate the correct manifest
+        else if (serverResource.PublicServerUrl is not null) 
+        {
+            string publicHost = new Uri(serverResource.PublicServerUrl).Host;
+            string publicServerUrlTcp = $"tcp://{publicHost}:{serverResource.TcpEndpoint.TargetPort}";
+            context.EnvironmentVariables.TryAdd("RAVEN_PublicServerUrl_Tcp", publicServerUrlTcp);
+        }
     }
 
     /// <summary>
@@ -198,6 +221,7 @@ public static class RavenDBBuilderExtensions
     /// <returns>A resource builder for the newly added RavenDB database resource.</returns>
     /// <exception cref="DistributedApplicationException">Thrown when the connection string cannot be retrieved during configuration.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the connection string is unavailable.</exception>
+    [AspireExport("addDatabase", Description = "Adds a RavenDB database resource")]
     public static IResourceBuilder<RavenDBDatabaseResource> AddDatabase(this IResourceBuilder<RavenDBServerResource> builder,
         [ResourceName] string name,
         string? databaseName = null,
@@ -269,6 +293,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">Indicates whether the bind mount should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
+    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the RavenDB data directory")]
     public static IResourceBuilder<RavenDBServerResource> WithDataBindMount(this IResourceBuilder<RavenDBServerResource> builder, string source, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -284,6 +309,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="name">Optional name for the volume. Defaults to a generated name if not provided.</param>
     /// <param name="isReadOnly">Indicates whether the volume should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
+    [AspireExport("withDataVolume", Description = "Adds a named volume for the RavenDB data directory")]
     public static IResourceBuilder<RavenDBServerResource> WithDataVolume(this IResourceBuilder<RavenDBServerResource> builder, string? name = null, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -298,6 +324,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">Indicates whether the bind mount should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
+    [AspireExport("withLogBindMount", Description = "Adds a bind mount for the RavenDB logs directory")]
     public static IResourceBuilder<RavenDBServerResource> WithLogBindMount(
         this IResourceBuilder<RavenDBServerResource> builder,
         string source,
@@ -318,6 +345,7 @@ public static class RavenDBBuilderExtensions
     /// </param>
     /// <param name="isReadOnly">Indicates whether the volume should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
+    [AspireExport("withLogVolume", Description = "Adds a named volume for the RavenDB logs directory")]
     public static IResourceBuilder<RavenDBServerResource> WithLogVolume(
         this IResourceBuilder<RavenDBServerResource> builder,
         string? name = null,

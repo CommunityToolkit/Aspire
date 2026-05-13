@@ -1,4 +1,6 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -55,6 +57,7 @@ public static class KeycloakPostgresExtension
     /// <returns>
     /// An updated resource builder with Postgres integration configured for the Keycloak resource.
     /// </returns>
+    [AspireExport("withPostgres", Description = "Configures a Keycloak resource to use a PostgreSQL database")]
     public static IResourceBuilder<KeycloakResource> WithPostgres(
         this IResourceBuilder<KeycloakResource> builder,
         IResourceBuilder<PostgresDatabaseResource> database,
@@ -72,3 +75,5 @@ public static class KeycloakPostgresExtension
                                                      database.Resource.Parent.PasswordParameter));
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

@@ -1,44 +1,100 @@
-# CommunityToolkit.Aspire.Hosting.Java library
+# CommunityToolkit.Aspire.Hosting.Java
 
-Provides extensions methods and resource definitions for the Aspire AppHost to support running Java/Spring applications either using either the JDK or a container and configuring the OpenTelemetry agent for Java.
+Provides extension methods and resource definitions for the .NET Aspire AppHost to support running Java applications. The integration supports Maven, Gradle, and standalone JAR-based applications.
 
-## Getting Started
+## Install the package
 
-### Install the package
-
-In your AppHost project, install the package using the following command:
+In your AppHost project, install the package:
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Hosting.Java
 ```
 
-### Example usage
+## Add a Java application resource
 
-Then, in the _Program.cs_ file of `AppHost`, define a Java resource, then call `AddJavaApp` or `AddSpringApp`:
+### Run with Maven
+
+Use `WithMavenGoal` to run the application using a Maven goal:
 
 ```csharp
-// Define the Java container app resource
-var containerapp = builder.AddSpringApp("containerapp",
-                           new JavaAppContainerResourceOptions()
-                           {
-                               ContainerImageName = "<repository>/<image>",
-                               OtelAgentPath = "<agent-path>"
-                           });
-
-// Define the Java executable app resource
-var executableapp = builder.AddSpringApp("executableapp",
-                           new JavaAppExecutableResourceOptions()
-                           {
-                               ApplicationName = "target/app.jar",
-                               OtelAgentPath = "../../../agents"
-                           });
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithMavenGoal("spring-boot:run")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
 ```
 
-## Additional Information
+Pass additional arguments:
 
-https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-java
+```csharp
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithMavenGoal("spring-boot:run", "-Dspring-boot.run.profiles=dev")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
 
-## Feedback & contributing
+### Run with Gradle
 
-https://github.com/CommunityToolkit/Aspire
+Use `WithGradleTask` to run the application using a Gradle task:
 
+```csharp
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithGradleTask("bootRun")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+### Run with a JAR file
+
+To run an existing JAR file, pass the `jarPath` parameter:
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+## Build before run
+
+Use `WithMavenBuild` or `WithGradleBuild` to compile the application before it starts. This is typically not needed when using `WithMavenGoal` or `WithGradleTask`, as those goals usually handle building automatically.
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
+    .WithMavenBuild()
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+## Add a containerized Java application
+
+To run a Java application from a container image, use `AddJavaContainerApp`:
+
+```csharp
+var app = builder.AddJavaContainerApp("app", "my-java-image", "latest")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+## JVM configuration
+
+### JVM arguments
+
+Use `WithJvmArgs` to configure JVM arguments:
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project")
+    .WithMavenGoal("spring-boot:run")
+    .WithJvmArgs(["-Xmx512m", "-Xms256m"])
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+### OpenTelemetry agent
+
+Use `WithOtelAgent` to configure the OpenTelemetry Java Agent:
+
+```csharp
+var app = builder.AddJavaApp("app", "../java-project", "target/app.jar")
+    .WithOtelAgent("../agents/opentelemetry-javaagent.jar")
+    .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+```
+
+## Additional information
+
+- [Aspire Community Toolkit: Java hosting](https://aspire.dev/integrations/frameworks/java/)
+
+## Feedback and contributing
+
+- [GitHub repository](https://github.com/CommunityToolkit/Aspire)

@@ -2,6 +2,8 @@ using CommunityToolkit.Aspire.Hosting.ActiveMQ;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -12,6 +14,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="password">A parameter that contains the ActiveMQ server password.</param>
 /// <param name="scheme">Scheme used in the connectionString (e.g. tcp or activemq, see MassTransit)</param>
 /// <param name="settings">Settings being used for ActiveMQ Classic or Artemis</param>
+[AspireExport(ExposeProperties = true)]
 public abstract class ActiveMQServerResourceBase(string name, ParameterResource? userName, ParameterResource password, string scheme, IActiveMQSettings settings) : ContainerResource(name), IResourceWithConnectionString, IResourceWithEnvironment
 {
     internal const string PrimaryEndpointName = "tcp";
@@ -53,6 +56,8 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
     /// <summary>
     /// Gets the ActiveMQ settings.
     /// </summary>
+    /// <remarks>This property is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "IActiveMQSettings is an internal configuration type not compatible with ATS.")]
     public IActiveMQSettings ActiveMqSettings { get; } = settings;
 
     internal ReferenceExpression UserNameReference =>
@@ -80,3 +85,5 @@ public abstract class ActiveMQServerResourceBase(string name, ParameterResource?
     private static T ThrowIfNull<T>([NotNull] T? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
         => argument ?? throw new ArgumentNullException(paramName);
 }
+
+#pragma warning restore ASPIREATS001

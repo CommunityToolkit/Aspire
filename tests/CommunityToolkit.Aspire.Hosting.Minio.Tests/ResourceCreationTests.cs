@@ -1,4 +1,5 @@
-﻿using Aspire.Hosting;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Minio.Tests;
 

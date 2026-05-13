@@ -1,4 +1,6 @@
-﻿using System;
+using System;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -6,6 +8,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// A resource that represents an SFTP container.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
+[AspireExport(ExposeProperties = true)]
 public class SftpContainerResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const int SftpEndpointPort = 22;
@@ -53,3 +56,5 @@ public class SftpContainerResource(string name) : ContainerResource(name), IReso
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

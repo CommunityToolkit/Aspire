@@ -3,6 +3,7 @@
 /// <summary>
 /// This represents the options entity for configuring an executable Java application.
 /// </summary>
+[Obsolete("This class will be removed in a future version.")]
 public class JavaAppExecutableResourceOptions
 {
     /// <summary>

@@ -1,10 +1,12 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.PapercutSmtp;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for adding DataApiBuilder api to an <see cref="IDistributedApplicationBuilder"/>.
+/// Provides extension methods for adding Papercut SMTP to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
 public static class PapercutSmtpHostingExtension
 {
@@ -13,26 +15,32 @@ public static class PapercutSmtpHostingExtension
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
-    /// <param name="httpPort">The HTTP portnumber for the web-console to the Papercut SMTP container.</param>
-    /// <param name="smtpPort">The SMTP portnumber for the Papercut SMTP Conteainer</param>
+    /// <param name="httpPort">The HTTP port number for the Papercut SMTP web console.</param>
+    /// <param name="smtpPort">The SMTP port number for the Papercut SMTP container.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    public static IResourceBuilder<PapercutSmtpContainerResource> AddPapercutSmtp(this IDistributedApplicationBuilder builder,
+    [AspireExport("addPapercutSmtp", Description = "Adds a Papercut SMTP container resource")]
+    public static IResourceBuilder<PapercutSmtpContainerResource> AddPapercutSmtp(
+        this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? httpPort = null,
         int? smtpPort = null)
     {
-        ArgumentNullException.ThrowIfNull("Service name must be specified.", nameof(name));
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
         PapercutSmtpContainerResource resource = new(name);
 
         IResourceBuilder<PapercutSmtpContainerResource> rb = builder.AddResource(resource)
             .WithImage(PapercutSmtpContainerImageTags.Image)
             .WithImageTag(PapercutSmtpContainerImageTags.Tag)
             .WithImageRegistry(PapercutSmtpContainerImageTags.Registry)
-            .WithEndpoint(targetPort: PapercutSmtpContainerResource.SmtpEndpointPort,
+            .WithEndpoint(
+                targetPort: PapercutSmtpContainerResource.SmtpEndpointPort,
                 port: smtpPort,
                 name: PapercutSmtpContainerResource.SmtpEndpointName,
                 scheme: "smtp")
-            .WithHttpEndpoint(targetPort: PapercutSmtpContainerResource.HttpEndpointPort,
+            .WithHttpEndpoint(
+                targetPort: PapercutSmtpContainerResource.HttpEndpointPort,
                 port: httpPort,
                 name: PapercutSmtpContainerResource.HttpEndpointName)
             .WithHttpHealthCheck("/health", endpointName: PapercutSmtpContainerResource.HttpEndpointName);
@@ -40,3 +48,5 @@ public static class PapercutSmtpHostingExtension
         return rb;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

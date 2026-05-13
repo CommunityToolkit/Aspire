@@ -1,5 +1,6 @@
 using Aspire.Components.Common.Tests;
-using Xunit.Sdk;
+using Microsoft.DotNet.XUnitExtensions;
+using Xunit.v3;
 
 namespace CommunityToolkit.Aspire.Testing;
 
@@ -7,7 +8,6 @@ namespace CommunityToolkit.Aspire.Testing;
 /// Marks a test or test class as requiring an authenticated external tool.
 /// Adds a trait to propagate the required tool name to the xUnit pipeline.
 /// </summary>
-[TraitDiscoverer("CommunityToolkit.Aspire.Testing.RequiresAuthenticatedToolDiscoverer", "CommunityToolkit.Aspire.Testing")]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
 public sealed class RequiresAuthenticatedToolAttribute : Attribute, ITraitAttribute
 {
@@ -34,4 +34,16 @@ public sealed class RequiresAuthenticatedToolAttribute : Attribute, ITraitAttrib
 
     /// <summary>Gets a value indicating whether authenticated tools are supported in the current environment.</summary>
     public static bool IsSupported => !PlatformDetection.IsRunningOnCI;
+
+    public IReadOnlyCollection<KeyValuePair<string, string>> GetTraits()
+    {
+        IReadOnlyCollection<KeyValuePair<string, string>> traits = [new("RequiresTools", ToolName)];
+
+        if (!IsSupported)
+        {
+            traits = [.. traits, new KeyValuePair<string, string>(XunitConstants.Category, "failing")];
+        }
+
+        return traits;
+    }
 }

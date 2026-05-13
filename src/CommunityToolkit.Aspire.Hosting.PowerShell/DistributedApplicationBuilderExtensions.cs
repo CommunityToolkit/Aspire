@@ -1,6 +1,9 @@
-﻿using Aspire.Hosting;
+﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
@@ -21,8 +24,10 @@ public static class DistributedApplicationBuilderExtensions
     /// <param name="minRunspaces"></param>
     /// <param name="maxRunspaces"></param>
     /// <returns></returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the string-based overload instead.</remarks>
     /// <exception cref="ArgumentException"></exception>
     /// <exception cref="DistributedApplicationException"></exception>
+    [AspireExportIgnore(Reason = "PSLanguageMode is not ATS-compatible. Use the string-based overload instead.")]
     public static IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -34,41 +39,7 @@ public static class DistributedApplicationBuilderExtensions
 
         var pool = new PowerShellRunspacePoolResource(name, languageMode, minRunspaces, maxRunspaces);
 
-
-        builder.Eventing.Subscribe<InitializeResourceEvent>(pool, async (e, ct) =>
-        {
-            var poolResource = e.Resource as PowerShellRunspacePoolResource;
-
-            Debug.Assert(poolResource is not null);
-
-            var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
-            var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
-
-            var sessionState = InitialSessionState.CreateDefault();
-
-            // This will block until explicit and implied WaitFor calls are completed
-            await builder.Eventing.PublishAsync(
-                new BeforeResourceStartedEvent(poolResource, e.Services), ct);
-
-            foreach (var annotation in poolResource.Annotations.OfType<PowerShellVariableReferenceAnnotation<ConnectionStringReference>>())
-            {
-                if (annotation is { } reference)
-                {
-                    var connectionString = await reference.Value.Resource.GetConnectionStringAsync(ct);
-                    sessionState.Variables.Add(
-                        new SessionStateVariableEntry(reference.Name, connectionString,
-                            $"ConnectionString for {reference.Value.Resource.GetType().Name} '{reference.Name}'",
-                            ScopedItemOptions.ReadOnly | ScopedItemOptions.AllScope));
-                }
-            }
-
-            var poolName = poolResource.Name;
-            var poolLogger = loggerService.GetLogger(poolName);
-
-            _ = poolResource.StartAsync(sessionState, notificationService, poolLogger, ct);
-        });
-
-        return builder.AddResource(pool)
+        var poolBuilder = builder.AddResource(pool)
             .WithInitialState(new()
             {
                 ResourceType = "PowerShellRunspacePool",
@@ -81,5 +52,64 @@ public static class DistributedApplicationBuilderExtensions
                 ]
             })
             .ExcludeFromManifest();
+
+        poolBuilder.OnInitializeResource(async (res, e, ct) =>
+        {
+            var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
+            var notificationService = e.Services.GetRequiredService<ResourceNotificationService>();
+            var hostLifetime = e.Services.GetRequiredService<IHostApplicationLifetime>();
+
+            var sessionState = InitialSessionState.CreateDefault();
+            sessionState.UseFullLanguageModeInDebugger = true;
+
+            // This will block until explicit and implied WaitFor calls are completed
+            await builder.Eventing.PublishAsync(
+                new BeforeResourceStartedEvent(res, e.Services), ct);
+
+            foreach (var annotation in res.Annotations.OfType<PowerShellVariableReferenceAnnotation<ConnectionStringReference>>())
+            {
+                if (annotation is { } reference)
+                {
+                    var connectionString = await reference.Value.Resource.GetConnectionStringAsync(ct);
+                    sessionState.Variables.Add(
+                        new SessionStateVariableEntry(reference.Name, connectionString,
+                            $"ConnectionString for {reference.Value.Resource.GetType().Name} '{reference.Name}'",
+                            ScopedItemOptions.ReadOnly | ScopedItemOptions.AllScope));
+                }
+            }
+
+            var poolName = res.Name;
+            var poolLogger = loggerService.GetLogger(poolName);
+
+            _ = res.StartAsync(sessionState, notificationService, poolLogger, hostLifetime, ct);
+        });
+
+        return poolBuilder;
+    }
+
+    [AspireExport("addPowerShell", Description = "Adds a PowerShell runspace pool resource")]
+    internal static IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        string languageMode = nameof(PSLanguageMode.ConstrainedLanguage),
+        int minRunspaces = 1,
+        int maxRunspaces = 5)
+    {
+        return AddPowerShell(builder, name, ParseLanguageMode(languageMode), minRunspaces, maxRunspaces);
+    }
+
+    private static PSLanguageMode ParseLanguageMode(string languageMode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(languageMode);
+
+        if (Enum.TryParse(languageMode, ignoreCase: true, out PSLanguageMode parsedLanguageMode)
+            && Enum.IsDefined(parsedLanguageMode))
+        {
+            return parsedLanguageMode;
+        }
+
+        throw new ArgumentException(
+            $"Unsupported PowerShell language mode '{languageMode}'. Valid values are: {string.Join(", ", Enum.GetNames<PSLanguageMode>())}.",
+            nameof(languageMode));
     }
 }

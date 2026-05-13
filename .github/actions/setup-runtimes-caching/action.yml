@@ -24,6 +24,11 @@ runs:
           9.0.x
           10.0.x
 
+    - name: Install Aspire CLI
+      uses: timheuer/setup-aspire@v0.1.0
+      with:
+        quality: release
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -63,10 +68,20 @@ runs:
       with:
         deno-version: v2.5.4
 
+    - uses: pnpm/action-setup@v5
+      name: Setup pnpm
+      with:
+        version: 10
+
     - uses: oven-sh/setup-bun@v2
       name: Setup Bun
       with:
         bun-version: latest
+
+    - name: Install cpanminus
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo apt-get install -y cpanminus
 
     - uses: actions/cache@v4
       name: Cache NuGet packages
@@ -85,7 +100,13 @@ runs:
       shell: bash
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        dotnet dev-certs https --trust
+        EXIT_CODE=0
+        dotnet dev-certs https --trust || EXIT_CODE=$?
+        PARTIAL_TRUST_EXIT_CODE=4 # See aspnetcore#65391: exit code 4 indicates partial trust
+        if [ "$EXIT_CODE" -ne 0 ] && [ "$EXIT_CODE" -ne "$PARTIAL_TRUST_EXIT_CODE" ]; then
+          echo "dotnet dev-certs https --trust failed with exit code $EXIT_CODE"
+          exit "$EXIT_CODE"
+        fi
 
     - name: Setup Node globals
       shell: bash

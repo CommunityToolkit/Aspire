@@ -1,4 +1,5 @@
-﻿using Projects;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 

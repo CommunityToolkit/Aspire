@@ -1,4 +1,8 @@
-﻿namespace Aspire.Hosting;
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+[assembly: Aspire.Hosting.AspireExport(typeof(Aspire.Hosting.KeyType))]
+
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Specifies the types of cryptographic keys supported for digital signatures.
@@ -15,3 +19,5 @@ public enum KeyType
     /// </summary>
     Rsa
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

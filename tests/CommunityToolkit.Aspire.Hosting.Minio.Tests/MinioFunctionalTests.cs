@@ -1,10 +1,11 @@
-﻿using Aspire.Components.Common.Tests;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Hosting;
 using Minio;
 using Minio.DataModel.Args;
-using Xunit.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Minio.Tests;
 

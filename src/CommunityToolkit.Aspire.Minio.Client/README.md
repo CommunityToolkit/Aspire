@@ -1,5 +1,8 @@
 ﻿# CommunityToolkit.Aspire.Minio.Client
 
+> [!WARNING]
+> **This integration is deprecated.** The [MinIO OSS project has been archived](https://github.com/minio/minio) and is no longer maintained. This package will be removed in a future version. Please migrate to an alternative S3-compatible storage solution.
+
 Registers a [MinIOClient](https://github.com/minio/minio-dotnet) in the DI container for connecting to MinIO.
 
 ## Getting started

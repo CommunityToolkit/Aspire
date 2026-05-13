@@ -1,4 +1,3 @@
-using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Stripe.Tests;

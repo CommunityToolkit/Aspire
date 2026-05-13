@@ -53,7 +53,7 @@ public class ResourceCreationTests
             },
             async item =>
             {
-                Assert.Equal("PASSWORD_sqlserver1", item.Key);
+                Assert.Equal("PASSWORD_sqlserver", item.Key);
                 Assert.Equal(await sqlserverResource.PasswordParameter.GetValueAsync(default), item.Value);
             },
             item =>

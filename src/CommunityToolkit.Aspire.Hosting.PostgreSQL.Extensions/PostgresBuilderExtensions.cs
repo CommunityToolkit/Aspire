@@ -1,7 +1,9 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+#pragma warning disable ASPIREATS001
 
 namespace Aspire.Hosting;
 
@@ -15,6 +17,7 @@ public static class PostgresBuilderExtensions
     /// </summary>
     /// <remarks>
     /// This version of the package defaults to the <inheritdoc cref="DbGateContainerImageTags.Tag"/> tag of the <inheritdoc cref="DbGateContainerImageTags.Image"/> container image.
+    /// <para>This overload is not available in polyglot app hosts. Use the overload without the configuration callback instead.</para>
     /// </remarks>
     /// <param name="builder">The Postgres server resource builder.</param>
     /// <param name="configureContainer">Configuration callback for DbGate container resource.</param>
@@ -35,6 +38,7 @@ public static class PostgresBuilderExtensions
     /// </code>
     /// </example>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbGateContainerResource>> is not ATS-compatible. Use the callback-free overload instead.")]
     public static IResourceBuilder<PostgresServerResource> WithDbGate(this IResourceBuilder<PostgresServerResource> builder, Action<IResourceBuilder<DbGateContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -52,11 +56,17 @@ public static class PostgresBuilderExtensions
         return builder;
     }
 
+    [AspireExport("withDbGate", Description = "Adds DbGate connected to the PostgreSQL server.")]
+    internal static IResourceBuilder<PostgresServerResource> WithDbGateForPolyglot(this IResourceBuilder<PostgresServerResource> builder, string? containerName = null) =>
+        builder.WithDbGate(configureContainer: null, containerName);
+
     /// <summary>
     /// Adds an administration and development platform for PostgreSQL to the application model using Adminer.
     /// </summary>
     /// <remarks>
     /// This version of the package defaults to the <inheritdoc cref="AdminerContainerImageTags.Tag"/> tag of the <inheritdoc cref="AdminerContainerImageTags.Image"/> container image.
+    /// <para>This overload is not available in polyglot app hosts. Use the overload without the configuration callback instead.</para>
+    /// </remarks>
     /// <param name="builder">The Postgres server resource builder.</param>
     /// <param name="configureContainer">Configuration callback for Adminer container resource.</param>
     /// <param name="containerName">The name of the container (Optional).</param>
@@ -75,8 +85,8 @@ public static class PostgresBuilderExtensions
     /// builder.Build().Run();
     /// </code>
     /// </example>
-    /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "Action<IResourceBuilder<AdminerContainerResource>> is not ATS-compatible. Use the callback-free overload instead.")]
     public static IResourceBuilder<PostgresServerResource> WithAdminer(this IResourceBuilder<PostgresServerResource> builder, Action<IResourceBuilder<AdminerContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -91,6 +101,10 @@ public static class PostgresBuilderExtensions
 
         return builder;
     }
+
+    [AspireExport("withAdminer", Description = "Adds Adminer connected to the PostgreSQL server.")]
+    internal static IResourceBuilder<PostgresServerResource> WithAdminerForPolyglot(this IResourceBuilder<PostgresServerResource> builder, string? containerName = null) =>
+        builder.WithAdminer(configureContainer: null, containerName);
 
     private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<PostgresServerResource> builder)
     {
@@ -172,3 +186,5 @@ public static class PostgresBuilderExtensions
 
     }
 }
+
+#pragma warning restore ASPIREATS001

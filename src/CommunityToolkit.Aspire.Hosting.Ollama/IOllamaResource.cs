@@ -1,8 +1,11 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents an Ollama resource.
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public interface IOllamaResource : IResourceWithConnectionString, IResourceWithEndpoints
 {
     /// <summary>

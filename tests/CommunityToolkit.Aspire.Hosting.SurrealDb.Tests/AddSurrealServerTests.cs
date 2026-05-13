@@ -59,6 +59,8 @@ public class AddSurrealServerTests
         Assert.Equal(SurrealDbContainerImageTags.Image, containerAnnotation.Image);
         Assert.Equal(SurrealDbContainerImageTags.Registry, containerAnnotation.Registry);
 
+        UpdateResourceEndpoint(containerResource);
+
         var config = await surrealServer.Resource.GetEnvironmentVariablesAsync();
 
         Assert.Collection(config,
@@ -203,6 +205,8 @@ public class AddSurrealServerTests
 
         using var app = appBuilder.Build();
 
+        UpdateResourceEndpoint(surrealServer.Resource);
+
         var config = await surrealServer.Resource.GetEnvironmentVariablesAsync();
 
         bool hasValue = config.TryGetValue("SURREAL_LOG", out var value);
@@ -226,13 +230,18 @@ public class AddSurrealServerTests
         // This annotation marks the resource as an OTEL exporter
         Assert.True(surrealServer.Resource.HasAnnotationOfType<OtlpExporterAnnotation>());
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        var variables = await surrealServer.Resource.GetEnvironmentVariableValuesAsync();
-#pragma warning restore CS0618 // Type or member is obsolete
+        var variables = await surrealServer.Resource.GetEnvironmentVariablesAsync(applicationOperation: DistributedApplicationOperation.Publish);
         
         bool hasValue = variables.TryGetValue("SURREAL_TELEMETRY_PROVIDER", out var value);
         
         Assert.True(hasValue);
         Assert.Equal("otlp", value);
+    }
+
+    static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+    {
+        var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
     }
 }

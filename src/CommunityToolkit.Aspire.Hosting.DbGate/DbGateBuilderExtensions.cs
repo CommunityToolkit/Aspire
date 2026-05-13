@@ -1,5 +1,7 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -14,6 +16,7 @@ public static class DbGateBuilderExtensions
     /// <param name="builder">The resource builder for DbGate.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for DbGate.</returns>
+    [AspireExport("withHostPort", Description = "Configures the host port for a DbGate container resource")]
     public static IResourceBuilder<DbGateContainerResource> WithHostPort(this IResourceBuilder<DbGateContainerResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -31,6 +34,7 @@ public static class DbGateBuilderExtensions
     /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a DbGate container resource")]
     public static IResourceBuilder<DbGateContainerResource> WithDataVolume(this IResourceBuilder<DbGateContainerResource> builder, string? name = null, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -45,6 +49,7 @@ public static class DbGateBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">A flag that indicates if this is a read-only mount.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a DbGate container resource")]
     public static IResourceBuilder<DbGateContainerResource> WithDataBindMount(this IResourceBuilder<DbGateContainerResource> builder, string source, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -63,6 +68,7 @@ public static class DbGateBuilderExtensions
     /// Multiple <see cref="AddDbGate(IDistributedApplicationBuilder, string, int?)"/> calls will return the same resource builder instance.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addDbGate", Description = "Adds a DbGate container resource")]
     public static IResourceBuilder<DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, [ResourceName] string name = "dbgate", int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -110,3 +116,5 @@ public static class DbGateBuilderExtensions
         return resourceName.Replace('-', '_');
     }
 }
+
+#pragma warning restore ASPIREATS001

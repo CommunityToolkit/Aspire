@@ -181,13 +181,11 @@ public class AddDbGateTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder1 = builder.AddMongoDB("mongodb1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource1 = mongodbResourceBuilder1.Resource;
 
         var mongodbResourceBuilder2 = builder.AddMongoDB("mongodb2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
             .WithDbGate();
 
         var mongodbResource2 = mongodbResourceBuilder2.Resource;
@@ -203,13 +201,11 @@ public class AddDbGateTests
         var postgresResource2 = postgresResourceBuilder2.Resource;
 
         var redisResourceBuilder1 = builder.AddRedis("redis1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28017))
             .WithDbGate();
 
         var redisResource1 = redisResourceBuilder1.Resource;
 
         var redisResourceBuilder2 = builder.AddRedis("redis2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 28018))
             .WithDbGate();
 
         var redisResource2 = redisResourceBuilder2.Resource;
@@ -243,6 +239,17 @@ public class AddDbGateTests
         Assert.NotNull(dbGateResource);
 
         Assert.Equal("dbgate", dbGateResource.Name);
+
+        UpdateResourceEndpoint(mongodbResourceBuilder1.Resource);
+        UpdateResourceEndpoint(mongodbResourceBuilder2.Resource);
+        UpdateResourceEndpoint(postgresResourceBuilder1.Resource);
+        UpdateResourceEndpoint(postgresResourceBuilder2.Resource);
+        UpdateResourceEndpoint(redisResourceBuilder1.Resource);
+        UpdateResourceEndpoint(redisResourceBuilder2.Resource);
+        UpdateResourceEndpoint(sqlserverResourceBuilder1.Resource);
+        UpdateResourceEndpoint(sqlserverResourceBuilder2.Resource);
+        UpdateResourceEndpoint(mysqlResourceBuilder1.Resource);
+        UpdateResourceEndpoint(mysqlResourceBuilder2.Resource);
 
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
@@ -514,6 +521,13 @@ public class AddDbGateTests
                 Assert.Equal("ENGINE_mysql2", item.Key);
                 Assert.Equal("mysql@dbgate-plugin-mysql", item.Value);
             });
+
+        static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+        {
+            var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+            var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+            endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
+        }
     }
 
     [Fact]

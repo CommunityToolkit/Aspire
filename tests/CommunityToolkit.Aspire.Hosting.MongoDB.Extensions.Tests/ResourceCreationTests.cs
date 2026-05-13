@@ -11,7 +11,6 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder = builder.AddMongoDB("mongodb")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource = mongodbResourceBuilder.Resource;
@@ -25,6 +24,8 @@ public class ResourceCreationTests
         Assert.NotNull(dbGateResource);
 
         Assert.Equal("dbgate", dbGateResource.Name);
+
+        UpdateResourceEndpoint(mongodbResource);
 
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
@@ -111,13 +112,11 @@ public class ResourceCreationTests
         var builder = DistributedApplication.CreateBuilder();
 
         var mongodbResourceBuilder1 = builder.AddMongoDB("mongodb1")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27017))
             .WithDbGate();
 
         var mongodbResource1 = mongodbResourceBuilder1.Resource;
 
         var mongodbResourceBuilder2 = builder.AddMongoDB("mongodb2")
-            .WithEndpoint("tcp", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 27018))
             .WithDbGate();
 
         var mongodbResource2 = mongodbResourceBuilder2.Resource;
@@ -131,6 +130,9 @@ public class ResourceCreationTests
         Assert.NotNull(dbGateResource);
 
         Assert.Equal("dbgate", dbGateResource.Name);
+
+        UpdateResourceEndpoint(mongodbResource1);
+        UpdateResourceEndpoint(mongodbResource2);
 
         var envs = await dbGateResource.GetEnvironmentVariablesAsync();
 
@@ -172,5 +174,12 @@ public class ResourceCreationTests
                 Assert.Equal("ENGINE_mongodb2", item.Key);
                 Assert.Equal("mongo@dbgate-plugin-mongo", item.Value);
             });
+    }
+
+    static void UpdateResourceEndpoint(IResourceWithEndpoints resource)
+    {
+        var endpoint = resource.GetEndpoint("tcp").EndpointAnnotation;
+        var ae = new AllocatedEndpoint(endpoint, "storage.dev.internal", 10000, EndpointBindingMode.SingleAddress, null, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
+        endpoint.AllAllocatedEndpoints.AddOrUpdateAllocatedEndpoint(KnownNetworkIdentifiers.DefaultAspireContainerNetwork, ae);
     }
 }

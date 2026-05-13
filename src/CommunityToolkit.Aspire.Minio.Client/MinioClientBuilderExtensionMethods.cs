@@ -9,6 +9,7 @@ namespace Microsoft.Extensions.Hosting;
 /// <summary>
 /// Provides extension methods for registering MinIO-related services in an <see cref="IHostApplicationBuilder"/>.
 /// </summary>
+[Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
 public static class MinioClientBuilderExtensionMethods
 {
     private const string DefaultConfigSectionName = "Aspire:Minio:Client";

@@ -8,6 +8,7 @@ namespace CommunityToolkit.Aspire.Minio.Client;
 /// <summary>
 /// MinIO client configuration
 /// </summary>
+[Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
 public sealed class MinioClientSettings
 {
     private const string ConnectionStringEndpoint = "Endpoint";
@@ -96,6 +97,7 @@ public sealed class MinioClientSettings
 /// <summary>
 /// Sets app version and name. Used for constructing User-Agent header in all HTTP requests 
 /// </summary>
+[Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
 public class HeaderAppInformation
 {
     /// <summary>
@@ -112,6 +114,7 @@ public class HeaderAppInformation
 /// <summary>
 /// MinIO credentials (access and secret keys)
 /// </summary>
+[Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
 public class MinioCredentials
 {
     /// <summary>

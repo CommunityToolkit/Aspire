@@ -1,10 +1,13 @@
-﻿using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.X509Certificates;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// A resource that represents a RavenDB container.
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class RavenDBServerResource(string name, bool isSecured) : ContainerResource(name), IResourceWithConnectionString
 {
     /// <summary>

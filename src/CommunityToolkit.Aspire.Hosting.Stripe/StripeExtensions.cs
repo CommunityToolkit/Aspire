@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using System.Diagnostics.CodeAnalysis;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -18,6 +20,7 @@ public static class StripeExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="apiKey">The parameter builder providing the Stripe API key.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("addStripe", Description = "Adds a Stripe CLI resource for local webhook forwarding")]
     public static IResourceBuilder<StripeResource> AddStripe(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -48,6 +51,7 @@ public static class StripeExtensions
     /// <param name="webhookPath">The path to the webhook endpoint.</param>
     /// <param name="events">Optional collection of specific webhook events to listen for (e.g., ["payment_intent.created", "charge.succeeded"]). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withListen", Description = "Configures Stripe CLI to forward webhooks to a resource endpoint")]
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
         IResourceBuilder<IResourceWithEndpoints> forwardTo,
@@ -84,6 +88,7 @@ public static class StripeExtensions
     /// <param name="webhookPath">The path to the webhook endpoint.</param>
     /// <param name="events">Optional collection of specific webhook events to listen for (e.g., ["payment_intent.created", "charge.succeeded"]). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withListenExternalService", Description = "Configures Stripe CLI to forward webhooks to an external service")]
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
         IResourceBuilder<ExternalServiceResource> forwardTo,
@@ -135,6 +140,7 @@ public static class StripeExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="apiKey">The parameter containing the Stripe API key to use.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withApiKey", Description = "Configures the Stripe CLI to use a specific API key")]
     public static IResourceBuilder<StripeResource> WithApiKey(
         this IResourceBuilder<StripeResource> builder,
         IResourceBuilder<ParameterResource> apiKey)
@@ -156,6 +162,7 @@ public static class StripeExtensions
     /// <param name="source">The Stripe CLI resource to reference.</param>
     /// <param name="webhookSigningSecretEnvVarName">Optional environment variable name to use for the webhook signing secret. Defaults to "STRIPE_WEBHOOK_SECRET".</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withStripeReference", Description = "Adds the Stripe webhook signing secret to a resource environment")]
     public static IResourceBuilder<TDestination> WithReference<TDestination>(
         this IResourceBuilder<TDestination> builder,
         IResourceBuilder<StripeResource> source,
@@ -301,3 +308,5 @@ public static class StripeExtensions
         return null;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
