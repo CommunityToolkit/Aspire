@@ -1,11 +1,8 @@
 using System.Text;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting;
-using k8s;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using System.Net;
-using System.Net.Sockets;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 #pragma warning disable ASPIRECERTIFICATES001 // WithHttpsDeveloperCertificate is experimental
@@ -41,8 +38,23 @@ public static class K3sBuilderExtensions
         var options = new K3sClusterOptions();
         configure?.Invoke(options);
 
-        var resource = new K3sClusterResource(name);
+        var resource = new K3sClusterResource(name)
+        {
+            HelmImageInfo = (options.HelmRegistry, options.HelmImage, options.HelmTag),
+            KubectlImageInfo = (options.KubectlRegistry, options.KubectlImage, options.KubectlTag),
+        };
         var tag = options.ImageTag ?? K3sContainerImageTags.Tag;
+
+        // ── Kubeconfig directory on the host ──────────────────────────────────
+        // AppHostDirectory/.k3s/{name}/ holds three sub-directories:
+        //   cluster/  — bind-mounted into the k3s container; k3s writes kubeconfig.yaml here
+        //   local/    — rewritten by the health check with server: https://localhost:{port}
+        //   container/ — rewritten by the health check with server: https://{name}:6443
+        var kubeconfigDir = Path.Combine(builder.AppHostDirectory, ".k3s", name);
+        var clusterDir = Path.Combine(kubeconfigDir, "cluster");
+        Directory.CreateDirectory(clusterDir);
+
+        resource.KubeconfigDirectory = kubeconfigDir;
 
         var resourceBuilder = builder.AddResource(resource)
             .WithImage(K3sContainerImageTags.Image, tag)
@@ -93,11 +105,7 @@ public static class K3sBuilderExtensions
             .WithArgs("--kube-apiserver-arg=v=0")
             .WithArgs("--kube-controller-manager-arg=v=0")
             .WithArgs("--kube-scheduler-arg=v=0")
-            // Suppress kubelet INFO-level noise including the harmless cgroupsv2 race warning
-            // "Failed to kill all the processes attached to cgroup / os: process not initialized".
-            // This is a known benign race condition in Docker-in-Docker: the kubelet tries to
-            // force-kill pod cgroup processes that are already dead. The cgroup is still cleaned
-            // up correctly; only the redundant kill attempt fails.
+            // Suppress kubelet INFO-level noise including the harmless cgroupsv2 race warning.
             .WithArgs("--kubelet-arg=v=0")
 
             // ── API server endpoint ───────────────────────────────────────────
@@ -107,33 +115,24 @@ public static class K3sBuilderExtensions
                 name: K3sClusterResource.ApiServerEndpointName)
 
             // ── Docker / container runtime flags (mirrors k3d) ────────────────
-            // Privileged mode is mandatory for iptables, network namespaces, and cgroups.
             .WithContainerRuntimeArgs("--privileged")
-            // k3d uses Docker's --init (tini) so that k3s's child processes are properly
-            // reaped and signals are forwarded correctly. Without it, zombie processes
-            // accumulate and shutdown becomes unreliable.
             .WithContainerRuntimeArgs("--init")
-            // Use the host user namespace — required when Docker is configured with userns-remap;
-            // a no-op otherwise. k3d always passes this flag.
             .WithContainerRuntimeArgs("--userns=host")
-            // Share the host's (Docker Desktop VM's) cgroup namespace instead of creating
-            // a new one. Without this, the k3s kubelet fails to create the "kubepods" cgroup
-            // hierarchy because the new isolated namespace has domain controllers in an invalid
-            // state for cgroupsv2. k3d always passes --cgroupns=host for this reason.
             .WithContainerRuntimeArgs("--cgroupns=host")
-            // Bind-mount the cgroup filesystem from the Docker Desktop VM into the container
-            // as read-write. With --cgroupns=host the container sees the host's cgroup namespace,
-            // but the mount is still read-only by default; making it rw lets the kubelet create
-            // sub-cgroups for pods (kubepods/besteffort/...). k3d always mounts this as rw.
             .WithContainerRuntimeArgs("--volume=/sys/fs/cgroup:/sys/fs/cgroup:rw")
-            // tmpfs mounts for runtime sockets and PIDs — same as k3d defaults.
             .WithContainerRuntimeArgs("--tmpfs=/run", "--tmpfs=/var/run")
 
+            // ── Kubeconfig bind-mount ─────────────────────────────────────────
+            // Mounts AppHostDirectory/.k3s/{name}/cluster/ into the container so k3s
+            // writes its kubeconfig into a host-accessible directory.
+            // K3S_KUBECONFIG_OUTPUT tells k3s where to write the kubeconfig file.
+            // The health check polls File.Exists on the host side — no docker exec needed.
+            .WithBindMount(clusterDir, "/tmp/k3s-kubeconfig")
+
             // ── Environment ───────────────────────────────────────────────────
-            // Set an explicit cluster token (k3d always sets K3S_TOKEN).
             .WithEnvironment("K3S_TOKEN", $"aspire-k3s-{name}-token")
-            // World-readable kubeconfig so docker exec can read it without root.
             .WithEnvironment("K3S_KUBECONFIG_MODE", "644")
+            .WithEnvironment("K3S_KUBECONFIG_OUTPUT", "/tmp/k3s-kubeconfig/kubeconfig.yaml")
 
             .WithIconName("Kubernetes")
             .WithHttpsDeveloperCertificate();
@@ -212,32 +211,23 @@ public static class K3sBuilderExtensions
             failureStatus: HealthStatus.Unhealthy,
             tags: null));
 
-        // Postgres pattern: the parent cluster's ResourceReadyEvent drives ALL registered
-        // child lifecycles — both HelmReleases and K8sManifests — in parallel.
+        // The cluster's ResourceReadyEvent drives service endpoint port-forwards.
+        // HelmReleaseResource and K8sManifestResource containers are managed directly
+        // by DCP — they WaitFor the cluster and exit when their work completes.
         builder.Eventing.Subscribe<ResourceReadyEvent>(resource, (@event, ct) =>
         {
             var appModel = @event.Services.GetRequiredService<DistributedApplicationModel>();
             var notifications = @event.Services.GetRequiredService<ResourceNotificationService>();
             var loggerService = @event.Services.GetRequiredService<ResourceLoggerService>();
 
-            // Start all Helm release installs concurrently.
-            foreach (var release in appModel.Resources
-                .OfType<HelmReleaseResource>()
-                .Where(r => ReferenceEquals(r.Parent, resource)))
+            // Start all service endpoint forwarders concurrently.
+            foreach (var ep in appModel.Resources
+                .OfType<K3sServiceEndpointResource>()
+                .Where(e => ReferenceEquals(e.Parent, resource)))
             {
-                var logger = loggerService.GetLogger(release);
-                _ = Task.Run(() => K3sHelmBuilderExtensions.RunReleaseAsync(
-                    release, resource, notifications, logger, ct), ct);
-            }
-
-            // Start all manifest applies concurrently.
-            foreach (var manifest in appModel.Resources
-                .OfType<K8sManifestResource>()
-                .Where(m => ReferenceEquals(m.Parent, resource)))
-            {
-                var logger = loggerService.GetLogger(manifest);
-                _ = Task.Run(() => K3sManifestBuilderExtensions.RunManifestAsync(
-                    manifest, resource, notifications, logger, ct), ct);
+                var logger = loggerService.GetLogger(ep);
+                _ = Task.Run(() => K3sServiceEndpointExtensions.RunEndpointAsync(
+                    ep, resource, notifications, logger, ct), ct);
             }
 
             return Task.CompletedTask;
@@ -310,13 +300,6 @@ public static class K3sBuilderExtensions
     /// Adds a named volume for the k3s cluster data directory (<c>/var/lib/rancher/k3s</c>)
     /// so the cluster state (SQLite database, certificates, kubeconfig) survives AppHost restarts.
     /// </summary>
-    /// <param name="builder">The cluster resource builder.</param>
-    /// <param name="name">
-    /// The volume name. When <see langword="null"/>, an auto-generated name is used in the form
-    /// <c>{appName}-{sha256}-{resourceName}-data</c> — the same scheme used by
-    /// <c>PostgresServerResource.WithDataVolume</c> and all other Aspire hosting integrations.
-    /// </param>
-    /// <returns>The resource builder for chaining.</returns>
     public static IResourceBuilder<K3sClusterResource> WithDataVolume(
         this IResourceBuilder<K3sClusterResource> builder,
         string? name = null)
@@ -325,41 +308,30 @@ public static class K3sBuilderExtensions
 
         return builder
             .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/rancher/k3s")
-            // Auto-restart on crash so a persistent cluster survives transient failures
-            // without requiring AppHost intervention. Docker will not restart the container
-            // on explicit stop (DCP shutdown), only on unexpected exits.
             .WithContainerRuntimeArgs("--restart=unless-stopped");
     }
 
     /// <summary>
-    /// Injects the k3s kubeconfig into <paramref name="destination"/> as a
-    /// <c>KUBECONFIG_DATA</c> environment variable (base-64-encoded YAML) — no files are written.
+    /// Injects the k3s kubeconfig into <paramref name="destination"/> so it can authenticate
+    /// to the cluster. The injection method is selected automatically based on the resource type:
     /// <list type="bullet">
     ///   <item>
-    ///     <see cref="ContainerResource"/>s (Auto or InlineData) receive the
-    ///     <em>container-network</em> kubeconfig
-    ///     (<c>server: https://{resourceName}:6443</c>).
+    ///     <see cref="ContainerResource"/>s receive <c>KUBECONFIG_DATA</c> (base-64-encoded YAML
+    ///     of the container-network kubeconfig) and <c>KUBECONFIG=/var/k3s/kubeconfig.yaml</c>
+    ///     once the file is injected at container-start time.
     ///   </item>
     ///   <item>
-    ///     Projects and executables (Auto or HostPath) receive the
-    ///     <em>host</em> kubeconfig
-    ///     (<c>server: https://localhost:{allocatedPort}</c>).
+    ///     Projects and executables receive <c>KUBECONFIG=&lt;host path&gt;/local/kubeconfig.yaml</c>
+    ///     pointing to a file that is accessible directly on the host filesystem.
     ///   </item>
     /// </list>
-    /// Consuming code reads the variable and builds a client without touching disk:
-    /// <code>
-    /// var bytes  = Convert.FromBase64String(Environment.GetEnvironmentVariable("KUBECONFIG_DATA")!);
-    /// using var stream = new MemoryStream(bytes);
-    /// var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(stream);
-    /// </code>
     /// The variable is populated only after the cluster health check passes; use
     /// <c>WaitFor(cluster)</c> on the dependent resource to guarantee ordering.
     /// </summary>
     [AspireExport("withReference", Description = "Injects kubeconfig credentials into the dependent resource")]
     public static IResourceBuilder<TDestination> WithReference<TDestination>(
         this IResourceBuilder<TDestination> destination,
-        IResourceBuilder<K3sClusterResource> source,
-        KubeconfigInjectionStrategy strategy = KubeconfigInjectionStrategy.Auto)
+        IResourceBuilder<K3sClusterResource> source)
         where TDestination : IResourceWithEnvironment
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -367,43 +339,37 @@ public static class K3sBuilderExtensions
 
         var cluster = source.Resource;
 
-        return destination.WithEnvironment(ctx =>
+        if (destination.Resource is ContainerResource)
         {
-            // Select the right kubeconfig variant based on where the resource runs:
-            //   • ContainerResource  → container-network URL (reaches API server via DCP DNS)
-            //   • Project/Executable → host URL (reaches API server via localhost port-mapping)
-            var useContainerVariant =
-                strategy == KubeconfigInjectionStrategy.ContainerNetwork
-                || (strategy == KubeconfigInjectionStrategy.Auto
-                    && destination.Resource is ContainerResource);
-
-            var cfg = useContainerVariant
-                ? cluster.ContainerKubeconfig
-                : cluster.AdminKubeconfig;
-
-            if (cfg is not null)
+            // Containers receive KUBECONFIG_DATA (base64-encoded container-network kubeconfig).
+            // KubernetesClient reads this via:
+            //   var bytes = Convert.FromBase64String(Environment.GetEnvironmentVariable("KUBECONFIG_DATA")!);
+            //   using var stream = new MemoryStream(bytes);
+            //   var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(stream);
+            // For standard kubectl, use WithContainerFiles to inject a real file instead.
+            return destination.WithEnvironment(ctx =>
             {
-                var yaml = KubernetesYaml.Serialize(cfg);
+                if (cluster.KubeconfigDirectory is null) return;
+                var path = Path.Combine(cluster.KubeconfigDirectory, "container", "kubeconfig.yaml");
+                if (!File.Exists(path)) return;
+                var yaml = File.ReadAllText(path);
                 ctx.EnvironmentVariables["KUBECONFIG_DATA"] =
                     Convert.ToBase64String(Encoding.UTF8.GetBytes(yaml));
-            }
+            });
+        }
+
+        // Projects and executables: KUBECONFIG points to the host-accessible local kubeconfig.
+        // This file is regenerated on every AppHost start (port may change).
+        return destination.WithEnvironment(ctx =>
+        {
+            if (cluster.KubeconfigDirectory is null) return;
+            var path = Path.Combine(cluster.KubeconfigDirectory, "local", "kubeconfig.yaml");
+            ctx.EnvironmentVariables["KUBECONFIG"] = path;
         });
     }
 
     /// <summary>
-    /// Serialises the admin kubeconfig (<c>server: https://localhost:{port}</c>) to YAML.
-    /// Returns <see langword="null"/> if the health check has not yet populated the config.
-    /// </summary>
-    internal static string? GetAdminKubeconfigYaml(K3sClusterResource cluster) =>
-        cluster.AdminKubeconfig is null
-            ? null
-            : KubernetesYaml.Serialize(cluster.AdminKubeconfig);
-
-    /// <summary>
     /// Sets the container lifetime for the k3s cluster <em>and all its agent nodes</em>.
-    /// When <see cref="ContainerLifetime.Persistent"/> is used the agents must also be
-    /// persistent — otherwise they are recreated on every AppHost restart while the server
-    /// retains its state, causing the node re-join sequence to fail.
     /// </summary>
     public static IResourceBuilder<K3sClusterResource> WithLifetime(
         this IResourceBuilder<K3sClusterResource> builder,
@@ -411,13 +377,10 @@ public static class K3sBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        // Apply to the cluster container (identical to the built-in generic WithLifetime).
         builder.WithAnnotation(
             new ContainerLifetimeAnnotation { Lifetime = lifetime },
             ResourceAnnotationMutationBehavior.Replace);
 
-        // Propagate to every agent — they share the same cluster state volume and must
-        // have the same lifetime so nodes survive AppHost restarts in sync with the server.
         foreach (var agent in builder.Resource.AgentResources)
         {
             var existing = agent.Annotations.OfType<ContainerLifetimeAnnotation>().ToList();
@@ -431,6 +394,16 @@ public static class K3sBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Returns the path to the <c>local/kubeconfig.yaml</c> file for this cluster,
+    /// used by helm and manifest runners that invoke host-side tools.
+    /// Returns <see langword="null"/> if the cluster directory is not yet configured.
+    /// </summary>
+    internal static string? GetLocalKubeconfigPath(K3sClusterResource cluster) =>
+        cluster.KubeconfigDirectory is null
+            ? null
+            : Path.Combine(cluster.KubeconfigDirectory, "local", "kubeconfig.yaml");
 
     // cgroupsv2 fix adapted from moby/moby (Apache-2.0, used with permission by k3d).
     // See: https://github.com/k3d-io/k3d/blob/main/pkg/types/fixes/assets/k3d-entrypoint-cgroupv2.sh

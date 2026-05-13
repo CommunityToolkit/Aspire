@@ -23,7 +23,7 @@ public class K8sManifestResourceTests
     }
 
     [Fact]
-    public void AddK8sManifestStoresPath()
+    public void AddK8sManifestStoresAbsolutePath()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
@@ -34,7 +34,11 @@ public class K8sManifestResourceTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(model.Resources.OfType<K8sManifestResource>());
-        Assert.Equal("./k8s/crds/", resource.Path);
+        // Path is resolved to absolute at registration time.
+        Assert.True(System.IO.Path.IsPathRooted(resource.Path));
+        Assert.EndsWith(System.IO.Path.Combine("k8s", "crds"),
+            resource.Path.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -50,26 +54,18 @@ public class K8sManifestResourceTests
 
         var resource = Assert.Single(model.Resources.OfType<K8sManifestResource>());
         Assert.Same(cluster.Resource, resource.Parent);
+        Assert.IsAssignableFrom<IResourceWithParent<K3sClusterResource>>(resource);
     }
 
     [Fact]
-    public void AddK8sManifestImplementsIResourceWithParent()
+    public void K8sManifestResourceIsContainerResource()
     {
+        // K8sManifestResource extends ContainerResource — it runs bitnami/kubectl in Docker.
+        // No host-side kubectl binary required. WaitForCompletion waits for exit code 0.
         var resource = new K8sManifestResource(
             "crd", "./crd.yaml", new K3sClusterResource("k8s"));
 
-        var nonGeneric = resource as IResourceWithParent;
-        Assert.NotNull(nonGeneric);
-        Assert.Same(resource.Parent, nonGeneric.Parent);
-    }
-
-    [Fact]
-    public void AddK8sManifestImplementsIResourceWithWaitSupport()
-    {
-        var resource = new K8sManifestResource(
-            "crd", "./crd.yaml", new K3sClusterResource("k8s"));
-
-        Assert.IsAssignableFrom<IResourceWithWaitSupport>(resource);
+        Assert.IsAssignableFrom<ContainerResource>(resource);
     }
 
     [Fact]

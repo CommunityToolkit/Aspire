@@ -23,3 +23,5 @@ examples/perl/**/local/*
 **cpanfile.snapshot
 **/.modules/
 **/*.AppHost.TypeScript/nuget.config
+
+**/.k3s/

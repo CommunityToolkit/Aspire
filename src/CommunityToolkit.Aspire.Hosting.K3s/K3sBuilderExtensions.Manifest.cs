@@ -1,15 +1,6 @@
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting;
-using k8s;
-using k8s.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -22,15 +13,17 @@ public static class K3sManifestBuilderExtensions
 {
     /// <summary>
     /// Applies one or more Kubernetes YAML files to the cluster via
-    /// <c>kubectl apply --server-side</c> (Server-Side Apply). No bind-mount is required.
+    /// <c>kubectl apply --server-side</c> running inside a <c>bitnami/kubectl</c> container.
+    /// No host-side <c>kubectl</c> binary is required.
+    /// <para>
+    /// After applying the manifests the container waits for any CRDs to reach the
+    /// <c>Established</c> condition, then exits with code 0. Use
+    /// <c>WaitForCompletion(manifest)</c> on dependent resources.
+    /// </para>
     /// <list type="bullet">
     ///   <item>A single file: <c>cluster.AddK8sManifest("crd", "./k8s/widget-crd.yaml")</c></item>
-    ///   <item>A directory: all <c>.yaml</c>/<c>.yml</c> files applied lexicographically.</item>
-    ///   <item>A glob: <c>"./k8s/crds/*.yaml"</c></item>
+    ///   <item>A directory: all <c>.yaml</c>/<c>.yml</c> files applied (kubectl handles ordering).</item>
     /// </list>
-    /// CRDs are detected automatically; the resource waits for the <c>Established</c>
-    /// condition via the KubernetesClient before transitioning to <c>Running</c>, so
-    /// <c>WaitFor(manifest)</c> correctly gates dependent operators.
     /// </summary>
     [AspireExport("addK8sManifest", Description = "Applies Kubernetes YAML manifests to the k3s cluster")]
     public static IResourceBuilder<K8sManifestResource> AddK8sManifest(
@@ -43,323 +36,91 @@ public static class K3sManifestBuilderExtensions
         ArgumentNullException.ThrowIfNull(path);
 
         var cluster = builder.Resource;
-        var manifest = new K8sManifestResource(name, path, cluster);
 
+        // Resolve to an absolute path so the bind-mount and container path are stable.
+        var absolutePath = System.IO.Path.IsPathRooted(path)
+            ? path
+            : System.IO.Path.GetFullPath(
+                System.IO.Path.Combine(builder.ApplicationBuilder.AppHostDirectory, path));
+
+        string hostBindDir;
+        string containerManifestPath;
+
+        if (Directory.Exists(absolutePath))
+        {
+            hostBindDir = absolutePath;
+            containerManifestPath = "/k8s-manifests";
+        }
+        else
+        {
+            hostBindDir = System.IO.Path.GetDirectoryName(absolutePath)!;
+            containerManifestPath = $"/k8s-manifests/{System.IO.Path.GetFileName(absolutePath)}";
+        }
+
+        var manifest = new K8sManifestResource(name, absolutePath, cluster);
         cluster.AddManifest(manifest.Name);
 
-        var healthCheckKey = $"manifest_{name}_ready";
-        builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
-            healthCheckKey,
-            sp => new K8sManifestHealthCheck(manifest),
-            failureStatus: HealthStatus.Unhealthy,
-            tags: null));
+        var containerKubeconfigDir = Path.Combine(cluster.KubeconfigDirectory!, "container");
+        Directory.CreateDirectory(containerKubeconfigDir);
+
+        var (kubectlRegistry, kubectlImage, kubectlTag) = cluster.KubectlImageInfo;
 
         return builder.ApplicationBuilder
             .AddResource(manifest)
+            .WithImage(kubectlImage, kubectlTag)
+            .WithImageRegistry(kubectlRegistry)
+            .WithEntrypoint("/bin/sh")
+            .WithContainerFiles("/", async (ctx, ct) =>
+            {
+                var script = BuildManifestScript(containerManifestPath);
+                return [new ContainerFile
+                {
+                    Name = "kubectl-apply.sh",
+                    Contents = script,
+                    Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+                         | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
+                         | UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
+                }];
+            })
+            .WithArgs("/kubectl-apply.sh")
+            .WithBindMount(hostBindDir, "/k8s-manifests")
+            .WithBindMount(containerKubeconfigDir, "/root/.kube")
+            .WithEnvironment("KUBECONFIG", "/root/.kube/kubeconfig.yaml")
+            .WithIconName("Code")
             .ExcludeFromManifest()
-            .WithHealthCheck(healthCheckKey)
             .WithInitialState(new CustomResourceSnapshot
             {
                 ResourceType = "K8s Manifest",
                 State = KnownResourceStates.NotStarted,
-                Properties = [new ResourcePropertySnapshot("Path", path)],
+                Properties = [new ResourcePropertySnapshot("Path", absolutePath)],
             });
     }
 
-    /// <summary>
-    /// Exposes a Kubernetes service from this manifest as a clickable endpoint in the dashboard.
-    /// Traffic is forwarded in-process via the KubernetesClient WebSocket API.
-    /// </summary>
-    /// <param name="builder">The manifest resource builder.</param>
-    /// <param name="serviceName">The Kubernetes service name.</param>
-    /// <param name="servicePort">The service port number.</param>
-    /// <param name="name">Friendly name shown in the dashboard.</param>
-    /// <param name="namespace">
-    /// The namespace containing the service. Defaults to <c>"default"</c>.
-    /// For remote manifests (HTTP URLs) the namespace must be specified explicitly.
-    /// </param>
-    public static IResourceBuilder<K8sManifestResource> WithEndpoint(
-        this IResourceBuilder<K8sManifestResource> builder,
-        string serviceName,
-        int servicePort,
-        string name,
-        string @namespace = "default")
+    // ── Script generation ─────────────────────────────────────────────────────
+
+    internal static string BuildManifestScript(string containerManifestPath)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(serviceName);
-        ArgumentNullException.ThrowIfNull(name);
+        var sb = new StringBuilder("#!/bin/sh\nset -e\n");
 
-        builder.Resource.EndpointDefinitions.Add(
-            new ManifestEndpointDefinition(serviceName, servicePort, name, @namespace));
+        // Poll until the k3s health check writes the kubeconfig — same pattern as the
+        // helm installer. Replaces WaitFor(cluster) for child resources.
+        sb.AppendLine("until [ -f /root/.kube/kubeconfig.yaml ]; do");
+        sb.AppendLine("  echo 'Waiting for k3s cluster to be ready...'");
+        sb.AppendLine("  sleep 5");
+        sb.AppendLine("done");
 
-        return builder;
+        sb.AppendLine($"kubectl apply -f \"{containerManifestPath}\" --server-side --field-manager=aspire-k3s --force-conflicts");
+        // Wait for CRD Established condition if any CRDs are present.
+        // The check guard prevents failure when no CRDs were applied.
+        sb.AppendLine("if kubectl get crd --no-headers 2>/dev/null | grep -q .; then");
+        sb.AppendLine("  kubectl wait --for=condition=Established crd --all --timeout=300s");
+        sb.AppendLine("fi");
+        return sb.ToString();
     }
 
-    // ── Lifecycle (called from the cluster's ResourceReadyEvent) ──────────────
-
-    internal static async Task RunManifestAsync(
-        K8sManifestResource manifest,
-        K3sClusterResource cluster,
-        ResourceNotificationService notifications,
-        ILogger logger,
-        CancellationToken ct)
+    // Keep for unit tests — file resolution logic is the same.
+    internal static IReadOnlyList<string> ResolveFilesForTest(string path)
     {
-        await notifications.PublishUpdateAsync(manifest,
-            state => state with { State = KnownResourceStates.Starting })
-            .ConfigureAwait(false);
-
-        try
-        {
-            var kubeconfigYaml = K3sBuilderExtensions.GetAdminKubeconfigYaml(cluster);
-
-            if (kubeconfigYaml is null)
-            {
-                throw new InvalidOperationException(
-                    "k3s kubeconfig is not yet available when applying manifest.");
-            }
-
-            // Write a temp kubeconfig file — kubectl requires a path, same as helm.
-            var tempKubeconfig = Path.Combine(
-                Path.GetTempPath(),
-                $"aspire-k3s-manifest-{Environment.ProcessId}-{manifest.Name}.yaml");
-
-            await File.WriteAllTextAsync(tempKubeconfig, kubeconfigYaml, Encoding.UTF8, ct)
-                .ConfigureAwait(false);
-
-            try
-            {
-                var files = ResolveFiles(manifest.Path);
-
-                logger.LogInformation(
-                    "Applying {Count} manifest file(s) from '{Path}'", files.Count, manifest.Path);
-
-                // kubectl apply --server-side (SSA) for each file.
-                foreach (var file in files)
-                {
-                    await KubectlApplyAsync(file, tempKubeconfig, logger, ct)
-                        .ConfigureAwait(false);
-                }
-
-                // Wait for any CRDs to reach Established using the KubernetesClient.
-                await WaitForCrdsEstablishedAsync(
-                    files, kubeconfigYaml, logger, ct).ConfigureAwait(false);
-            }
-            finally
-            {
-                try { File.Delete(tempKubeconfig); } catch { /* best effort */ }
-            }
-
-            manifest.IsReady = true;
-
-            // Start in-process port-forwards for any declared endpoints.
-            var urls = ImmutableArray<UrlSnapshot>.Empty;
-            if (manifest.EndpointDefinitions.Count > 0)
-            {
-                urls = await StartPortForwardAsync(manifest, kubeconfigYaml, logger, ct)
-                    .ConfigureAwait(false);
-            }
-
-            await notifications.PublishUpdateAsync(manifest, state => state with
-            {
-                State = KnownResourceStates.Running,
-                Urls = urls,
-                Properties =
-                [
-                    .. state.Properties.Where(p => p.Name is not "Path"),
-                    new ResourcePropertySnapshot("Path", manifest.Path),
-                ],
-            }).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (!ct.IsCancellationRequested)
-        {
-            logger.LogError(ex, "Failed to apply manifest '{Name}'.", manifest.Name);
-
-            await notifications.PublishUpdateAsync(manifest,
-                state => state with { State = KnownResourceStates.FailedToStart })
-                .ConfigureAwait(false);
-        }
-    }
-
-    // ── kubectl apply ─────────────────────────────────────────────────────────
-
-    private static async Task KubectlApplyAsync(
-        string file,
-        string kubeconfigPath,
-        ILogger logger,
-        CancellationToken ct)
-    {
-        logger.LogInformation("Applying {File}", file);
-
-        var psi = new ProcessStartInfo("kubectl")
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-
-        psi.ArgumentList.Add("apply");
-        psi.ArgumentList.Add("-f");
-        psi.ArgumentList.Add(file);
-        psi.ArgumentList.Add($"--kubeconfig={kubeconfigPath}");
-        psi.ArgumentList.Add("--server-side");
-        psi.ArgumentList.Add("--field-manager=aspire-k3s");
-        psi.ArgumentList.Add("--force-conflicts");
-
-        using var process = Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start kubectl process.");
-
-        process.OutputDataReceived += (_, e) =>
-        {
-            if (e.Data is not null) logger.LogInformation("{Line}", e.Data);
-        };
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (e.Data is not null) logger.LogWarning("{Line}", e.Data);
-        };
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        await process.WaitForExitAsync(ct).ConfigureAwait(false);
-
-        if (process.ExitCode != 0)
-        {
-            throw new InvalidOperationException(
-                $"kubectl apply failed for '{file}' (exit code {process.ExitCode}).");
-        }
-    }
-
-    // ── Port-forward for manifest endpoints ──────────────────────────────────
-
-    private static async Task<ImmutableArray<UrlSnapshot>> StartPortForwardAsync(
-        K8sManifestResource manifest,
-        string kubeconfigYaml,
-        ILogger logger,
-        CancellationToken ct)
-    {
-        var urls = ImmutableArray.CreateBuilder<UrlSnapshot>();
-
-        foreach (var ep in manifest.EndpointDefinitions)
-        {
-            var hostPort = AllocateHostPort();
-
-            var forwarder = new K3sInProcessPortForwarder(
-                kubeconfigYaml,
-                ep.Namespace,
-                ep.ServiceName,
-                hostPort,
-                ep.ServicePort);
-
-            _ = forwarder.RunAsync(logger, ct);
-
-            var scheme = ep.ServicePort is 443 or 8443 ? "https" : "http";
-            urls.Add(new UrlSnapshot(ep.EndpointName, $"{scheme}://localhost:{hostPort}", IsInternal: false));
-        }
-
-        return urls.ToImmutable();
-    }
-
-    private static int AllocateHostPort()
-    {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
-    }
-
-    // ── CRD readiness (in-process via KubernetesClient) ──────────────────────
-
-    private static async Task WaitForCrdsEstablishedAsync(
-        IReadOnlyList<string> files,
-        string kubeconfigYaml,
-        ILogger logger,
-        CancellationToken ct)
-    {
-        var crdNames = new List<string>();
-
-        foreach (var file in files)
-        {
-            // Skip remote URLs — kubectl downloaded and applied them, but we can't parse
-            // them with KubernetesYaml locally. CRD detection for remote files is skipped;
-            // if you need CRD readiness gating, use a local file path instead.
-            if (file.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                file.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            var objects = await KubernetesYaml.LoadAllFromFileAsync(file)
-                .ConfigureAwait(false);
-
-            foreach (var obj in objects)
-            {
-                if (obj is V1CustomResourceDefinition crd && crd.Metadata?.Name is { } crdName)
-                {
-                    crdNames.Add(crdName);
-                }
-            }
-        }
-
-        if (crdNames.Count == 0)
-        {
-            return;
-        }
-
-        using var configStream = new MemoryStream(Encoding.UTF8.GetBytes(kubeconfigYaml));
-        var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(configStream);
-        using var k8sClient = new Kubernetes(config);
-
-        foreach (var crdName in crdNames)
-        {
-            await WaitForCrdEstablishedAsync(k8sClient, crdName, logger, ct)
-                .ConfigureAwait(false);
-        }
-    }
-
-    private static async Task WaitForCrdEstablishedAsync(
-        Kubernetes k8sClient,
-        string crdName,
-        ILogger logger,
-        CancellationToken ct)
-    {
-        logger.LogInformation("Waiting for CRD '{Crd}' to reach Established...", crdName);
-
-        while (!ct.IsCancellationRequested)
-        {
-            var crd = await k8sClient.ApiextensionsV1
-                .ReadCustomResourceDefinitionAsync(crdName, cancellationToken: ct)
-                .ConfigureAwait(false);
-
-            var established = crd.Status?.Conditions?.Any(c =>
-                c.Type == "Established" &&
-                string.Equals(c.Status, "True", StringComparison.OrdinalIgnoreCase)) == true;
-
-            if (established)
-            {
-                logger.LogInformation("CRD '{Crd}' is Established.", crdName);
-                return;
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(2), ct).ConfigureAwait(false);
-        }
-    }
-
-    // ── File resolution ───────────────────────────────────────────────────────
-
-    // Exposed for unit tests via InternalsVisibleTo.
-    internal static IReadOnlyList<string> ResolveFilesForTest(string path) =>
-        ResolveFiles(path);
-
-    private static IReadOnlyList<string> ResolveFiles(string path)
-    {
-        // kubectl apply -f supports HTTPS URLs natively — pass through as-is.
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            return [path];
-        }
-
         if (Directory.Exists(path))
         {
             return [
@@ -380,21 +141,6 @@ public static class K3sManifestBuilderExtensions
 
         return [path];
     }
-}
-
-/// <summary>
-/// Health check that satisfies <c>WaitFor(manifest)</c>.
-/// Returns <see cref="HealthCheckResult.Healthy"/> once all files are applied
-/// and any CRDs have reached the <c>Established</c> condition.
-/// </summary>
-internal sealed class K8sManifestHealthCheck(K8sManifestResource manifest) : IHealthCheck
-{
-    public Task<HealthCheckResult> CheckHealthAsync(
-        HealthCheckContext context,
-        CancellationToken cancellationToken = default)
-        => Task.FromResult(manifest.IsReady
-            ? HealthCheckResult.Healthy("Manifests applied")
-            : HealthCheckResult.Unhealthy("Manifests not yet applied"));
 }
 
 #pragma warning restore ASPIREATS001

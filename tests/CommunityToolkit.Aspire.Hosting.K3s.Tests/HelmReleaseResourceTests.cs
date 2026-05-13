@@ -21,10 +21,10 @@ public class HelmReleaseResourceTests
     }
 
     [Fact]
-    public void AddHelmReleaseDoesNotCreateSeparateInstallResource()
+    public void HelmReleaseResourceIsContainerResource()
     {
-        // helm upgrade --install runs internally inside the HelmReleaseResource lifecycle;
-        // no separate ExecutableResource is added to the application model.
+        // HelmReleaseResource extends ContainerResource — it runs bitnami/helm in Docker.
+        // No host-side helm binary required. WaitForCompletion waits for exit code 0.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
 
@@ -33,7 +33,8 @@ public class HelmReleaseResourceTests
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Empty(model.Resources.OfType<ExecutableResource>());
+        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
+        Assert.IsAssignableFrom<ContainerResource>(resource);
     }
 
     [Fact]
@@ -118,7 +119,6 @@ public class HelmReleaseResourceTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
-
         cluster.AddHelmRelease("argocd", "argo-cd");
 
         using var app = appBuilder.Build();
@@ -126,27 +126,7 @@ public class HelmReleaseResourceTests
 
         var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
         Assert.Same(cluster.Resource, resource.Parent);
-    }
-
-    [Fact]
-    public void HelmReleaseImplementsNonGenericIResourceWithParent()
-    {
-        // The Aspire dashboard uses the non-generic IResourceWithParent to group
-        // child resources under their parent. Verify both the generic and non-generic
-        // interfaces are satisfied and point to the same cluster resource.
-        var appBuilder = DistributedApplication.CreateBuilder();
-        var cluster = appBuilder.AddK3sCluster("k8s");
-        cluster.AddHelmRelease("argocd", "argo-cd");
-
-        using var app = appBuilder.Build();
-        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-
-        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
-
-        // Non-generic IResourceWithParent (used by the dashboard)
-        var nonGeneric = resource as IResourceWithParent;
-        Assert.NotNull(nonGeneric);
-        Assert.Same(cluster.Resource, nonGeneric.Parent);
+        Assert.IsAssignableFrom<IResourceWithParent<K3sClusterResource>>(resource);
     }
 
     [Fact]
@@ -168,39 +148,36 @@ public class HelmReleaseResourceTests
     }
 
     [Fact]
-    public void WithEndpointAccumulatesEndpoints()
+    public void AddServiceEndpointAddsEndpointResource()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
+        cluster.AddHelmRelease("argocd", "argo-cd");
 
-        cluster.AddHelmRelease("argocd", "argo-cd")
-            .WithEndpoint("argocd-server", servicePort: 443, name: "ui");
+        cluster.AddServiceEndpoint("argocd-ui", "argocd-server", servicePort: 443, @namespace: "argocd");
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
-        var ep = Assert.Single(resource.EndpointDefinitions);
+        var ep = Assert.Single(model.Resources.OfType<K3sServiceEndpointResource>());
         Assert.Equal("argocd-server", ep.ServiceName);
         Assert.Equal(443, ep.ServicePort);
-        Assert.Equal("ui", ep.EndpointName);
+        Assert.Equal("argocd", ep.Namespace);
     }
 
     [Fact]
-    public void WithEndpointMultipleEndpoints()
+    public void AddServiceEndpointMultipleEndpointsAllRegistered()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
 
-        cluster.AddHelmRelease("argocd", "argo-cd")
-            .WithEndpoint("argocd-server", 443, "ui")
-            .WithEndpoint("argocd-server", 80, "http");
+        cluster.AddServiceEndpoint("ui", "argocd-server", 443);
+        cluster.AddServiceEndpoint("http", "argocd-server", 80);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
-        Assert.Equal(2, resource.EndpointDefinitions.Count);
+        Assert.Equal(2, model.Resources.OfType<K3sServiceEndpointResource>().Count());
     }
 
     [Fact]
@@ -218,127 +195,106 @@ public class HelmReleaseResourceTests
         Assert.Contains(ManifestPublishingCallbackAnnotation.Ignore, resource.Annotations);
     }
 
-    // ── BuildHelmInstallArgs tests (pure logic, no DI needed) ─────────────────
+    // ── BuildHelmScript tests (pure logic, no DI needed) ──────────────────────
 
-    [Fact]
-    public void BuildHelmInstallArgsIncludesUpgradeInstall()
+    private static HelmReleaseResource MakeRelease(
+        string releaseName, string chart, string? repo, string? version,
+        string @namespace, Dictionary<string, string>? values = null)
     {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "argocd", "argo-cd", null, null, "argocd", null, "/tmp/admin.yaml");
-
-        var list = args.ToArray();
-        Assert.Contains("upgrade", list);
-        Assert.Contains("--install", list);
-        Assert.Contains("argocd", list);
-        Assert.Contains("argo-cd", list);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsIncludesKubeconfig()
-    {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", null, null, "default", null, "/tmp/admin.yaml");
-
-        Assert.Contains("--kubeconfig=/tmp/admin.yaml", args);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsIncludesWait()
-    {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", null, null, "default", null, "/tmp/admin.yaml");
-
-        Assert.Contains("--wait", args);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsIncludesNamespace()
-    {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", null, null, "my-ns", null, "/tmp/admin.yaml");
-
-        var list = args.ToArray();
-        Assert.Contains("--namespace", list);
-        Assert.Contains("my-ns", list);
-        Assert.Contains("--create-namespace", list);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsWithRepoAliasUsesPrefixedChartRef()
-    {
-        // When a repo alias is pre-registered via `helm repo add`, BuildHelmInstallArgs
-        // uses "{alias}/{chart}" notation — NOT the --repo flag (which is unreliable).
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", "my-repo-alias", null, "default", null, "/tmp/admin.yaml");
-
-        var list = args.ToArray();
-        Assert.DoesNotContain("--repo", list);
-        Assert.Contains("my-repo-alias/chart", list);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsWithNullAliasUsesChartDirectly()
-    {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "oci://registry/chart", null, null, "default", null, "/tmp/admin.yaml");
-
-        Assert.DoesNotContain("--repo", args);
-        Assert.Contains("oci://registry/chart", args);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsIncludesVersion()
-    {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", null, "7.8.0", "default", null, "/tmp/admin.yaml");
-
-        var list = args.ToArray();
-        Assert.Contains("--version", list);
-        Assert.Contains("7.8.0", list);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsOmitsRepoWhenNull()
-    {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", null, null, "default", null, "/tmp/admin.yaml");
-
-        Assert.DoesNotContain("--repo", args);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsOmitsVersionWhenNull()
-    {
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", null, null, "default", null, "/tmp/admin.yaml");
-
-        Assert.DoesNotContain("--version", args);
-    }
-
-    [Fact]
-    public void BuildHelmInstallArgsIncludesSetValues()
-    {
-        var values = new Dictionary<string, string>
+        var cluster = new K3sClusterResource("k8s");
+        var r = new HelmReleaseResource(releaseName, releaseName, @namespace, cluster)
         {
-            ["service.type"] = "NodePort",
-            ["replicaCount"] = "2",
+            Chart = chart,
+            RepoUrl = repo,
+            Version = version,
         };
-        var args = K3sHelmBuilderExtensions.BuildHelmInstallArgs(
-            "r", "chart", null, null, "default", values, "/tmp/admin.yaml");
-
-        var list = args.ToArray();
-        Assert.Contains("--set", list);
-        Assert.Contains("service.type=NodePort", list);
-        Assert.Contains("replicaCount=2", list);
+        foreach (var kv in values ?? [])
+            r.HelmValues[kv.Key] = kv.Value;
+        return r;
     }
 
-    // ── WaitFor support ───────────────────────────────────────────────────────
+    [Fact]
+    public void BuildHelmScriptIncludesUpgradeInstall()
+    {
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("argocd", "argo-cd", null, null, "argocd"));
+
+        Assert.Contains("helm upgrade --install", script);
+        Assert.Contains("\"argocd\"", script);
+        Assert.Contains("\"argo-cd\"", script);
+    }
 
     [Fact]
-    public void HelmReleaseHasHealthCheckForWaitForSupport()
+    public void BuildHelmScriptIncludesWaitAndNamespace()
     {
-        // WaitFor(helmRelease) is satisfied by the HelmReleaseHealthCheck,
-        // which flips IsReady once RunReleaseAsync completes.
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("r", "chart", null, null, "my-ns"));
+
+        Assert.Contains("--wait", script);
+        Assert.Contains("--namespace \"my-ns\"", script);
+        Assert.Contains("--create-namespace", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptWithRepoAddsRepoSteps()
+    {
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("r", "chart", "https://my-repo.example.com", null, "default"));
+
+        Assert.Contains("helm repo add", script);
+        Assert.Contains("helm repo update", script);
+        Assert.Contains("aspire-k3s-r/chart", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptWithoutRepoSkipsRepoSteps()
+    {
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("r", "oci://registry/chart", null, null, "default"));
+
+        Assert.DoesNotContain("helm repo add", script);
+        Assert.Contains("\"oci://registry/chart\"", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptIncludesVersion()
+    {
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("r", "chart", null, "7.8.0", "default"));
+
+        Assert.Contains("--version \"7.8.0\"", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptOmitsVersionWhenNull()
+    {
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("r", "chart", null, null, "default"));
+
+        Assert.DoesNotContain("--version", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptIncludesSetValues()
+    {
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(
+            MakeRelease("r", "chart", null, null, "default", new()
+            {
+                ["service.type"] = "NodePort",
+                ["replicaCount"] = "2",
+            }));
+
+        Assert.Contains("--set \"service.type=NodePort\"", script);
+        Assert.Contains("--set \"replicaCount=2\"", script);
+    }
+
+    // ── WaitForCompletion support ─────────────────────────────────────────────
+
+    [Fact]
+    public void HelmReleaseHasNoHealthCheckAnnotation()
+    {
+        // HelmReleaseResource is a run-to-completion container — consumers use
+        // WaitForCompletion(helmRelease) rather than WaitFor.  No health check needed.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         cluster.AddHelmRelease("argocd", "argo-cd");
@@ -347,17 +303,7 @@ public class HelmReleaseResourceTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
-        Assert.Contains(resource.Annotations.OfType<HealthCheckAnnotation>(), a =>
-            a.Key == "helm_argocd_ready");
-    }
-
-    [Fact]
-    public void HelmReleaseIsReadyFlagStartsFalse()
-    {
-        var resource = new HelmReleaseResource(
-            "argocd", "argocd", "default", new K3sClusterResource("k8s"));
-
-        Assert.False(resource.IsReady);
+        Assert.Empty(resource.Annotations.OfType<HealthCheckAnnotation>());
     }
 
     // ── Public API null-guard tests ───────────────────────────────────────────
@@ -397,10 +343,10 @@ public class HelmReleaseResourceTests
     }
 
     [Fact]
-    public void WithEndpointShouldThrowWhenBuilderIsNull()
+    public void AddServiceEndpointShouldThrowWhenBuilderIsNull()
     {
-        IResourceBuilder<HelmReleaseResource> builder = null!;
-        var action = () => builder.WithEndpoint("svc", 443, "ui");
+        IResourceBuilder<K3sClusterResource> builder = null!;
+        var action = () => builder.AddServiceEndpoint("ui", "svc", 443);
         Assert.Throws<ArgumentNullException>(action);
     }
 }

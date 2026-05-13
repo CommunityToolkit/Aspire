@@ -1,5 +1,3 @@
-using k8s.KubeConfigModels;
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -10,20 +8,25 @@ public sealed class K3sClusterResource(string name) : ContainerResource(name)
 {
     internal const string ApiServerEndpointName = "api";
 
-    /// <summary>
-    /// Gets the admin kubeconfig for host-side processes
-    /// (<c>server: https://localhost:{allocatedPort}</c>).
-    /// Populated by <c>K3sReadinessHealthCheck</c> after the cluster passes <c>/healthz</c>.
-    /// Serialise with <c>KubernetesYaml.Serialize(AdminKubeconfig)</c> when needed.
-    /// </summary>
-    internal K8SConfiguration? AdminKubeconfig { get; set; }
+    /// <summary>Container image settings for the Helm installer, resolved from cluster options.</summary>
+    internal (string Registry, string Image, string Tag) HelmImageInfo { get; set; }
+        = ("docker.io", "alpine/helm", "3.17.3");
+
+    /// <summary>Container image settings for the kubectl manifest applier, resolved from cluster options.</summary>
+    internal (string Registry, string Image, string Tag) KubectlImageInfo { get; set; }
+        = ("docker.io", "alpine/k8s", "1.32.3");
 
     /// <summary>
-    /// Gets the kubeconfig for containers on the DCP Docker network
-    /// (<c>server: https://{resourceName}:6443</c>).
-    /// Populated by <c>K3sReadinessHealthCheck</c> after the cluster passes <c>/healthz</c>.
+    /// Host-side directory that holds all kubeconfig variants for this cluster.
+    /// Set by <c>AddK3sCluster</c> to <c>AppHostDirectory/.k3s/{name}/</c>.
+    /// Sub-directories:
+    /// <list type="bullet">
+    ///   <item><c>cluster/kubeconfig.yaml</c> — raw file written by k3s (bind-mounted)</item>
+    ///   <item><c>local/kubeconfig.yaml</c> — <c>server: https://localhost:{port}</c> (host processes)</item>
+    ///   <item><c>container/kubeconfig.yaml</c> — <c>server: https://{name}:6443</c> (DCP-network containers)</item>
+    /// </list>
     /// </summary>
-    internal K8SConfiguration? ContainerKubeconfig { get; set; }
+    internal string? KubeconfigDirectory { get; set; }
 
     private EndpointReference? _apiEndpoint;
 

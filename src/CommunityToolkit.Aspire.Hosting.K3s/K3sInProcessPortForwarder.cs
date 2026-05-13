@@ -1,108 +1,127 @@
-using System.Diagnostics;
-using System.Text;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using k8s;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting;
 
 /// <summary>
-/// Forwards a local TCP port to a Kubernetes service by running
-/// <c>kubectl port-forward service/{name} {localPort}:{servicePort} -n {namespace}</c>
-/// as a managed subprocess.
+/// Forwards a local TCP port to a Kubernetes service using the KubernetesClient
+/// WebSocket port-forward API — no <c>kubectl</c> binary required.
 /// <para>
-/// Mirrors what a developer types in a terminal — the most reliable approach for
-/// k3s-in-Docker because kubectl handles WebSocket negotiation, kubelet routing,
-/// and reconnect logic internally.
+/// The listener binds to <c>0.0.0.0:{localPort}</c> so both host processes
+/// (<c>localhost:{port}</c>) and DCP-network containers
+/// (<c>host.docker.internal:{port}</c>) can reach the service.
 /// </para>
 /// </summary>
 internal sealed class K3sInProcessPortForwarder(
-    string kubeconfigYaml,
+    string kubeconfigPath,
     string @namespace,
     string serviceName,
     int localPort,
-    int servicePort)
+    int servicePort,
+    Action<bool> onReadyChanged)
 {
     public async Task RunAsync(ILogger logger, CancellationToken ct)
     {
-        logger.LogInformation(
-            "Port-forward: localhost:{Local} → svc/{Service}.{Ns}:{Port}",
-            localPort, serviceName, @namespace, servicePort);
+        var backoff = TimeSpan.FromSeconds(2);
 
-        var tempConfig = Path.Combine(
-            Path.GetTempPath(),
-            $"aspire-k3s-pf-{Environment.ProcessId}-{serviceName}.yaml");
-
-        await File.WriteAllTextAsync(tempConfig, kubeconfigYaml, Encoding.UTF8, ct)
-            .ConfigureAwait(false);
-
-        try
+        while (!ct.IsCancellationRequested)
         {
-            while (!ct.IsCancellationRequested)
+            var listener = new TcpListener(IPAddress.Any, localPort);
+            try
             {
-                try
-                {
-                    await RunKubectlAsync(tempConfig, logger, ct).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex,
-                        "Port-forward for svc/{Service} exited; restarting in 5 s…", serviceName);
+                listener.Start();
+                onReadyChanged(true);
 
-                    await Task.Delay(TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);
+                logger.LogInformation(
+                    "Port-forward: 0.0.0.0:{Local} → svc/{Service}.{Ns}:{Port}",
+                    localPort, serviceName, @namespace, servicePort);
+
+                while (!ct.IsCancellationRequested)
+                {
+                    var tcp = await listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+                    _ = Task.Run(
+                        () => ForwardConnectionAsync(tcp, logger, ct),
+                        CancellationToken.None);
                 }
             }
-        }
-        finally
-        {
-            try { File.Delete(tempConfig); } catch { /* best-effort cleanup */ }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex,
+                    "Port-forward for svc/{Service} failed; retrying in {Delay}s…",
+                    serviceName, backoff.TotalSeconds);
+                onReadyChanged(false);
+            }
+            finally
+            {
+                listener.Stop();
+            }
+
+            if (ct.IsCancellationRequested) break;
+
+            try { await Task.Delay(backoff, ct).ConfigureAwait(false); } catch (OperationCanceledException) { break; }
+            backoff = TimeSpan.FromSeconds(Math.Min(backoff.TotalSeconds * 2, 30));
         }
     }
 
-    private async Task RunKubectlAsync(string kubeconfigPath, ILogger logger, CancellationToken ct)
+    private async Task ForwardConnectionAsync(TcpClient tcp, ILogger logger, CancellationToken ct)
     {
-        var psi = new ProcessStartInfo("kubectl")
+        using var _ = tcp;
+        try
         {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
+            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath);
+            using var k8sClient = new Kubernetes(config);
 
-        psi.ArgumentList.Add("port-forward");
-        psi.ArgumentList.Add($"service/{serviceName}");
-        psi.ArgumentList.Add($"{localPort}:{servicePort}");
-        psi.ArgumentList.Add("-n");
-        psi.ArgumentList.Add(@namespace);
-        psi.ArgumentList.Add($"--kubeconfig={kubeconfigPath}");
+            // Resolve the service to a running pod.
+            var svc = await k8sClient.CoreV1
+                .ReadNamespacedServiceAsync(serviceName, @namespace, cancellationToken: ct)
+                .ConfigureAwait(false);
 
-        using var process = Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start kubectl port-forward.");
+            var selector = string.Join(",",
+                (svc.Spec.Selector ?? new Dictionary<string, string>()).Select(kv => $"{kv.Key}={kv.Value}"));
 
-        using var reg = ct.Register(() =>
+            var pods = await k8sClient.CoreV1
+                .ListNamespacedPodAsync(@namespace, labelSelector: selector, cancellationToken: ct)
+                .ConfigureAwait(false);
+
+            var pod = pods.Items.FirstOrDefault(p =>
+                p.Status?.Phase == "Running" &&
+                p.Status?.ContainerStatuses?.All(c => c.Ready) == true);
+
+            if (pod is null)
+            {
+                logger.LogWarning(
+                    "No ready pod found for service {Service}/{Ns} — connection dropped.",
+                    serviceName, @namespace);
+                return;
+            }
+
+            // Open WebSocket port-forward to the pod.
+            using var ws = await k8sClient.WebSocketNamespacedPodPortForwardAsync(
+                pod.Metadata.Name, @namespace, [servicePort],
+                cancellationToken: ct).ConfigureAwait(false);
+
+            using var demuxer = new StreamDemuxer(ws, StreamType.PortForward);
+            demuxer.Start();
+
+            using var k8sStream = demuxer.GetStream((byte?)0, (byte?)0);
+            using var tcpStream = tcp.GetStream();
+
+            // Bidirectional byte pump until either side closes.
+            await Task.WhenAny(
+                tcpStream.CopyToAsync(k8sStream, ct),
+                k8sStream.CopyToAsync(tcpStream, ct)).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
+        catch (Exception ex)
         {
-            try { process.Kill(entireProcessTree: true); } catch { /* already exited */ }
-        });
-
-        process.OutputDataReceived += (_, e) =>
-        {
-            if (e.Data is not null) logger.LogDebug("{Line}", e.Data);
-        };
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (e.Data is not null) logger.LogDebug("{Line}", e.Data);
-        };
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-
-        await process.WaitForExitAsync(ct).ConfigureAwait(false);
-
-        if (process.ExitCode != 0 && !ct.IsCancellationRequested)
-        {
-            throw new InvalidOperationException(
-                $"kubectl port-forward exited with code {process.ExitCode}.");
+            logger.LogDebug(ex, "Port-forward connection for svc/{Service} closed.", serviceName);
         }
     }
 }

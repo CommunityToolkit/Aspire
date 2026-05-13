@@ -37,4 +37,44 @@ public sealed class K3sClusterOptions
     /// When <see langword="null"/>, the default tag embedded in the package is used.
     /// </summary>
     public string? ImageTag { get; set; }
+
+    // ── Helm installer image ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets the registry for the Helm installer container image.
+    /// Defaults to <c>docker.io</c>.
+    /// </summary>
+    public string HelmRegistry { get; set; } = HelmContainerImageTags.Registry;
+
+    /// <summary>
+    /// Gets or sets the Helm installer container image name.
+    /// Defaults to <c>alpine/helm</c>.
+    /// </summary>
+    public string HelmImage { get; set; } = HelmContainerImageTags.Image;
+
+    /// <summary>
+    /// Gets or sets the Helm installer container image tag.
+    /// Defaults to <c>3.17.3</c>.
+    /// </summary>
+    public string HelmTag { get; set; } = HelmContainerImageTags.Tag;
+
+    // ── kubectl image ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets the registry for the kubectl container image used by manifest applies.
+    /// Defaults to <c>docker.io</c>.
+    /// </summary>
+    public string KubectlRegistry { get; set; } = KubectlContainerImageTags.Registry;
+
+    /// <summary>
+    /// Gets or sets the kubectl container image name used by manifest applies.
+    /// Defaults to <c>alpine/k8s</c>.
+    /// </summary>
+    public string KubectlImage { get; set; } = KubectlContainerImageTags.Image;
+
+    /// <summary>
+    /// Gets or sets the kubectl container image tag used by manifest applies.
+    /// Defaults to <c>1.32.3</c>.
+    /// </summary>
+    public string KubectlTag { get; set; } = KubectlContainerImageTags.Tag;
 }

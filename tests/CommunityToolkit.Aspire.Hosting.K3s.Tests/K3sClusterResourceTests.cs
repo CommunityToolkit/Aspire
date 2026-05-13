@@ -211,13 +211,14 @@ public class K3sClusterResourceTests
     }
 
     [Fact]
-    public void K3sClusterResourceHasNoKubeconfigDirectoryByDefault()
+    public void AddK3sClusterSetsKubeconfigDirectory()
     {
-        // Kubeconfig is now stored in-memory (K8SConfiguration objects) and
-        // never written to disk by the resource itself — docker exec reads it.
-        var resource = new K3sClusterResource("k8s");
-        Assert.Null(resource.AdminKubeconfig);
-        Assert.Null(resource.ContainerKubeconfig);
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var clusterBuilder = appBuilder.AddK3sCluster("k8s");
+
+        // KubeconfigDirectory is set by AddK3sCluster under AppHostDirectory/.k3s/{name}/
+        Assert.NotNull(clusterBuilder.Resource.KubeconfigDirectory);
+        Assert.EndsWith(Path.Combine(".k3s", "k8s"), clusterBuilder.Resource.KubeconfigDirectory);
     }
 
     [Fact]

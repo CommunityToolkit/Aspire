@@ -2,8 +2,12 @@ namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a Helm chart release deployed to a k3s cluster.
-/// Appears as a distinct dashboard entry; transitions <c>Starting → Running</c>
-/// when all pods reach the <c>Ready</c> state.
+/// <para>
+/// Runs as an <c>alpine/helm</c> container on the DCP network. The container polls for the
+/// cluster kubeconfig (written when the cluster health check first passes), executes
+/// <c>helm upgrade --install --wait</c>, and exits with code 0 on success. Use
+/// <c>WaitForCompletion(helmRelease)</c> on resources that depend on the release being installed.
+/// </para>
 /// </summary>
 /// <param name="name">The Aspire resource name (also used as the Helm release name).</param>
 /// <param name="releaseName">The Helm release name passed to <c>helm upgrade --install</c>.</param>
@@ -14,7 +18,7 @@ public sealed class HelmReleaseResource(
     string releaseName,
     string @namespace,
     K3sClusterResource cluster)
-    : Resource(name), IResourceWithParent<K3sClusterResource>, IResourceWithWaitSupport
+    : ContainerResource(name), IResourceWithParent<K3sClusterResource>
 {
     /// <inheritdoc />
     public K3sClusterResource Parent { get; } = cluster ?? throw new ArgumentNullException(nameof(cluster));
@@ -29,17 +33,4 @@ public sealed class HelmReleaseResource(
     internal string? RepoUrl { get; set; }
     internal string? Version { get; set; }
     internal Dictionary<string, string> HelmValues { get; } = new(StringComparer.Ordinal);
-    internal List<HelmEndpointDefinition> EndpointDefinitions { get; } = [];
-
-    /// <summary>
-    /// Set to <see langword="true"/> by the lifecycle when the helm install completes and
-    /// all pods are ready. The <c>WaitFor(helmRelease)</c> health check polls this flag.
-    /// </summary>
-    internal volatile bool IsReady;
 }
-
-/// <summary>Describes a Kubernetes service endpoint to expose from a Helm release.</summary>
-/// <param name="ServiceName">The Kubernetes service name.</param>
-/// <param name="ServicePort">The service port number.</param>
-/// <param name="EndpointName">A friendly name shown in the dashboard.</param>
-internal sealed record HelmEndpointDefinition(string ServiceName, int ServicePort, string EndpointName);

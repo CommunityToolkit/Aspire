@@ -1,34 +1,37 @@
 // K3s hosting example
 // ──────────────────────────────────────────────────────────────────────────────
 // Prerequisites (host machine):
-//   • Docker with --privileged support
+//   • Docker with --privileged support (Linux or Docker Desktop on Mac/Windows)
 //   • helm  → https://helm.sh/docs/intro/install/
 //   • kubectl → https://kubernetes.io/docs/tasks/tools/
 //
 // What this demonstrates:
 //   1. A k3s cluster starts inside a Docker container.
-//   2. Headlamp (https://headlamp.dev) is installed as a child Helm release —
-//      a clickable http URL appears in the Aspire dashboard.
-//   3. podinfo is installed — a lightweight demo app that shows the helm lifecycle.
-//   4. Both releases are children of k8s in the Aspire resource tree.
-//   5. WithPersistentState keeps the cluster data alive across AppHost restarts.
+//   2. podinfo is installed via Helm — a lightweight demo app.
+//   3. A K3sServiceEndpointResource exposes the podinfo service:
+//        • Host processes reach it at http://localhost:{port}
+//        • DCP-network containers reach it at http://host.docker.internal:{port}
+//   4. WithDataVolume keeps the cluster state alive across AppHost restarts.
 // ──────────────────────────────────────────────────────────────────────────────
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var cluster = builder.AddK3sCluster("k8s",  configure: opts =>
-    {
-        opts.AgentCount = 2;
-    })
+var cluster = builder
+    .AddK3sCluster("k8s")
+    .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 
-// cluster.AddHelmRelease(
-//         name: "podinfo",
-//         chart: "podinfo",
-//         repo: "https://stefanprodan.github.io/podinfo",
-//         version: "6.7.1",
-//         @namespace: "podinfo")
-//     .WithHelmValue("service.type", "NodePort")
-//     .WithEndpoint("podinfo", servicePort: 9898, name: "web");
+var podinfo = cluster.AddHelmRelease(
+    name: "podinfo",
+    chart: "podinfo",
+    repo: "https://stefanprodan.github.io/podinfo",
+    version: "6.7.1",
+    @namespace: "podinfo");
+
+// Expose the podinfo service as an Aspire endpoint resource.
+// WaitForCompletion waits for the helm install container to exit with code 0
+// before starting the port-forward — no NodePort required.
+cluster.AddServiceEndpoint("podinfo-web", "podinfo", servicePort: 9898, @namespace: "podinfo")
+    .WaitForCompletion(podinfo);
 
 builder.Build().Run();
