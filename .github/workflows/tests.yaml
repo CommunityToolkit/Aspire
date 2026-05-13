@@ -37,6 +37,7 @@ jobs:
             Hosting.Golang.Tests,
             Hosting.JavaScript.Extensions.Tests,
             Hosting.Java.Tests,
+            Hosting.K3s.Tests,
             Hosting.k6.Tests,
             Hosting.Keycloak.Extensions.Tests,
             Hosting.KurrentDB.Tests,

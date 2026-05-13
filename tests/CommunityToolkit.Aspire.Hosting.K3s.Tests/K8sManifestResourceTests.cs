@@ -1,0 +1,191 @@
+using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
+
+namespace CommunityToolkit.Aspire.Hosting.K3s.Tests;
+
+public class K8sManifestResourceTests
+{
+    // ── AddK8sManifest registration ───────────────────────────────────────────
+
+    [Fact]
+    public void AddK8sManifestAddsResourceWithCorrectName()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddK8sManifest("widget-crd", "./k8s/widget-crd.yaml");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K8sManifestResource>());
+        Assert.Equal("widget-crd", resource.Name);
+    }
+
+    [Fact]
+    public void AddK8sManifestStoresPath()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddK8sManifest("crds", "./k8s/crds/");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K8sManifestResource>());
+        Assert.Equal("./k8s/crds/", resource.Path);
+    }
+
+    [Fact]
+    public void AddK8sManifestParentIsCluster()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddK8sManifest("widget-crd", "./widget-crd.yaml");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K8sManifestResource>());
+        Assert.Same(cluster.Resource, resource.Parent);
+    }
+
+    [Fact]
+    public void AddK8sManifestImplementsIResourceWithParent()
+    {
+        var resource = new K8sManifestResource(
+            "crd", "./crd.yaml", new K3sClusterResource("k8s"));
+
+        var nonGeneric = resource as IResourceWithParent;
+        Assert.NotNull(nonGeneric);
+        Assert.Same(resource.Parent, nonGeneric.Parent);
+    }
+
+    [Fact]
+    public void AddK8sManifestImplementsIResourceWithWaitSupport()
+    {
+        var resource = new K8sManifestResource(
+            "crd", "./crd.yaml", new K3sClusterResource("k8s"));
+
+        Assert.IsAssignableFrom<IResourceWithWaitSupport>(resource);
+    }
+
+    [Fact]
+    public void AddK8sManifestIsExcludedFromManifest()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddK8sManifest("widget-crd", "./widget-crd.yaml");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K8sManifestResource>());
+        Assert.Contains(ManifestPublishingCallbackAnnotation.Ignore, resource.Annotations);
+    }
+
+    [Fact]
+    public void ClusterTracksRegisteredManifests()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddK8sManifest("widget-crd", "./widget-crd.yaml");
+        cluster.AddK8sManifest("rbac", "./rbac.yaml");
+
+        Assert.Contains("widget-crd", cluster.Resource.Manifests);
+        Assert.Contains("rbac", cluster.Resource.Manifests);
+        Assert.Equal(2, cluster.Resource.Manifests.Count);
+    }
+
+    [Fact]
+    public void MultipleManifestsCanBeRegisteredOnSameCluster()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddK8sManifest("crd1", "./crd1.yaml");
+        cluster.AddK8sManifest("crd2", "./crd2.yaml");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        Assert.Equal(2, model.Resources.OfType<K8sManifestResource>().Count());
+    }
+
+    // ── Public API null-guard tests ───────────────────────────────────────────
+
+    [Fact]
+    public void AddK8sManifestShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<K3sClusterResource> builder = null!;
+        var action = () => builder.AddK8sManifest("crd", "./crd.yaml");
+        Assert.Throws<ArgumentNullException>(action);
+    }
+
+    [Fact]
+    public void AddK8sManifestShouldThrowWhenNameIsNull()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var action = () => cluster.AddK8sManifest(null!, "./crd.yaml");
+        Assert.Throws<ArgumentNullException>(action);
+    }
+
+    [Fact]
+    public void AddK8sManifestShouldThrowWhenPathIsNull()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var action = () => cluster.AddK8sManifest("crd", null!);
+        Assert.Throws<ArgumentNullException>(action);
+    }
+
+    // ── File resolution ───────────────────────────────────────────────────────
+
+    [Fact]
+    public void ResolveFilesSingleFile()
+    {
+        // Create a temp file to test with
+        var file = Path.Combine(Path.GetTempPath(), $"test-{Guid.NewGuid():N}.yaml");
+        File.WriteAllText(file, "apiVersion: v1\nkind: ConfigMap");
+
+        try
+        {
+            var files = K3sManifestBuilderExtensions.ResolveFilesForTest(file);
+            Assert.Single(files, f => f == file);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    [Fact]
+    public void ResolveFilesDirectory()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "b.yaml"), "");
+        File.WriteAllText(Path.Combine(dir, "a.yaml"), "");
+        File.WriteAllText(Path.Combine(dir, "c.yml"), "");
+
+        try
+        {
+            var files = K3sManifestBuilderExtensions.ResolveFilesForTest(dir);
+
+            // Lexicographic order, all YAML extensions
+            Assert.Equal(3, files.Count);
+            Assert.Equal("a.yaml", Path.GetFileName(files[0]));
+            Assert.Equal("b.yaml", Path.GetFileName(files[1]));
+            Assert.Equal("c.yml", Path.GetFileName(files[2]));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+}
