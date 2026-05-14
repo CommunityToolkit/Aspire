@@ -93,6 +93,40 @@ function Invoke-CleanupStep {
     }
 }
 
+function Remove-PathWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [switch]$Recurse
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+
+    $maxAttempts = 6
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            if ($Recurse) {
+                Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop
+            }
+            else {
+                Remove-Item -LiteralPath $Path -Force -ErrorAction Stop
+            }
+
+            return
+        }
+        catch {
+            if ($attempt -eq $maxAttempts) {
+                throw
+            }
+
+            Start-Sleep -Milliseconds (250 * $attempt)
+        }
+    }
+}
+
 $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
 $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
@@ -209,6 +243,12 @@ try {
   <packageSources>
     <add key="local-polyglot" value="$localSource" />
   </packageSources>
+
+  <packageSourceMapping>
+    <packageSource key="local-polyglot">
+      <package pattern="CommunityToolkit.Aspire.*" />
+    </packageSource>
+  </packageSourceMapping>
 </configuration>
 "@ | Set-Content -Path $nugetConfigPath -NoNewline
 
@@ -218,7 +258,8 @@ try {
         Invoke-ExternalCommand "aspire" @(
             "restore",
             "--apphost", $resolvedAppHostPath,
-            "--non-interactive"
+            "--non-interactive",
+            "--log-level", "debug"
         )
         Invoke-ExternalCommand "npx" @("tsc", "--noEmit")
     }
@@ -231,7 +272,8 @@ try {
             "secret", "set",
             $secretPair[0], $secretPair[1],
             "--apphost", $resolvedAppHostPath,
-            "--non-interactive"
+            "--non-interactive",
+            "--log-level", "debug"
         )
     }
 
@@ -243,7 +285,7 @@ try {
             "--isolated",
             "--format", "Json",
             "--non-interactive",
-            "--debug"
+            "--log-level", "debug"
         )
         $appStarted = $true
 
@@ -254,7 +296,7 @@ try {
                 "--status", $WaitStatus,
                 "--apphost", $resolvedAppHostPath,
                 "--timeout", $WaitTimeoutSeconds,
-                "--debug"
+                "--log-level", "debug"
             )
         }
 
@@ -262,7 +304,7 @@ try {
             "describe",
             "--apphost", $resolvedAppHostPath,
             "--format", "Json",
-            "--debug"
+            "--log-level", "debug"
         )
     }
     finally {
@@ -273,24 +315,6 @@ catch {
     $primaryError = $_
 }
 finally {
-    Invoke-CleanupStep -Description "restore Aspire config" -Action {
-        if ($null -ne $originalConfig) {
-            Set-Content -Path $configPath -Value $originalConfig -NoNewline
-        }
-    } -Failures $cleanupFailures
-
-    Invoke-CleanupStep -Description "remove generated nuget.config" -Action {
-        if (Test-Path $nugetConfigPath) {
-            Remove-Item $nugetConfigPath -Force
-        }
-    } -Failures $cleanupFailures
-
-    Invoke-CleanupStep -Description "remove local package source" -Action {
-        if (Test-Path $localSource) {
-            Remove-Item $localSource -Recurse -Force
-        }
-    } -Failures $cleanupFailures
-
     Invoke-CleanupStep -Description "stop Aspire app" -Action {
         if ($appStarted) {
             Push-Location $appHostDirectory
@@ -303,6 +327,8 @@ finally {
             finally {
                 Pop-Location
             }
+
+            Start-Sleep -Milliseconds 500
         }
     } -Failures $cleanupFailures
 
@@ -315,6 +341,20 @@ finally {
                 "--non-interactive"
             )
         }
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "restore Aspire config" -Action {
+        if ($null -ne $originalConfig) {
+            Set-Content -Path $configPath -Value $originalConfig -NoNewline
+        }
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "remove generated nuget.config" -Action {
+        Remove-PathWithRetry -Path $nugetConfigPath
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "remove local package source" -Action {
+        Remove-PathWithRetry -Path $localSource -Recurse
     } -Failures $cleanupFailures
 }
 

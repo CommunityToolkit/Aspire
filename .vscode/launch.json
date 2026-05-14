@@ -1,0 +1,42 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run TypeScript App Host test harness",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/eng/testing/validate-typescript-apphost.ps1",
+      "cwd": "${cwd}",
+      "args": [
+        "-AppHostPath",
+        "./examples/${input:example-folder}/CommunityToolkit.Aspire.Hosting.${input:project}.AppHost.TypeScript/apphost.ts",
+        "-PackageProjectPath",
+        "./src/CommunityToolkit.Aspire.Hosting.${input:project}/CommunityToolkit.Aspire.Hosting.${input:project}.csproj",
+        "-PackageName",
+        "CommunityToolkit.Aspire.Hosting.${input:project}",
+        "-WaitForResources",
+        "${input:waitForResources}"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "project",
+      "type": "promptString",
+      "description": "The project to run the TypeScript app host tests for (sans `CommunityToolkit.Aspire.Hosting.`)."
+    },
+    {
+      "id": "example-folder",
+      "type": "promptString",
+      "description": "The example folder to use for the TypeScript app host tests (e.g. `activemq`)."
+    },
+    {
+      "id": "waitForResources",
+      "type": "promptString",
+      "description": "The resources to wait for before running the TypeScript app host tests."
+    }
+  ]
+}
