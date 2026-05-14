@@ -30,8 +30,11 @@ jobs:
           days-before-stale: 21
           days-before-close: 14
           enable-statistics: true
-          exempt-issue-labels: "awaiting-response"
+          exempt-issue-labels: "awaiting-response,Question,Resolved"
           exempt-pr-labels: "awaiting-response"
+          exempt-draft-pr: true
+          exempt-all-assignees: true
+          exempt-all-milestones: true
           remove-stale-when-updated: true
           stale-issue-message: "We have noticed this issue has not been updated within 21 days. If there is no action on this issue in the next 14 days, we will automatically close it. You can use `/stale-extend` to extend the window."
           stale-pr-message: "We have noticed this PR has not been updated within 21 days. If there is no action on this PR in the next 14 days, we will automatically close it. You can use `/stale-extend` to extend the window."
@@ -44,25 +47,33 @@ jobs:
         name: Question and Resolved issue stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 5
-          days-before-close: 2
+          days-before-stale: 10
+          days-before-close: 7
           enable-statistics: true
-          only-issue-labels: "Question,Resolved"
+          any-of-issue-labels: "Question,Resolved"
+          exempt-all-assignees: true
+          exempt-all-milestones: true
           remove-stale-when-updated: true
-          stale-issue-message: "We have noticed this issue has been resolved for 5 days. If there is no action on this issue in the next 2 days, we will automatically close it. You can use `/stale-extend` to extend the window."
+          stale-issue-message: "We have noticed this issue has been marked as Question or Resolved and has not been updated within 10 days. If there is no action on this issue in the next 7 days, we will automatically close it. You can use `/stale-extend` to extend the window."
+          close-issue-message: "This issue has remained stale after being marked as Question or Resolved and has been automatically closed."
           stale-issue-label: "stale"
 
       - uses: actions/stale@v10
         name: Awaiting response issue and PR stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 7
-          days-before-close: 3
+          days-before-stale: 10
+          days-before-close: 7
           enable-statistics: true
           only-issue-labels: "awaiting-response"
           only-pr-labels: "awaiting-response"
+          exempt-draft-pr: true
+          exempt-all-assignees: true
+          exempt-all-milestones: true
           remove-stale-when-updated: true
-          stale-issue-message: "We have noticed this issue has been awaiting response for 7 days. If there is no action on this issue in the next 3 days, we will automatically close it. You can use `/stale-extend` to extend the window."
-          stale-pr-message: "We have noticed this PR has been awaiting response for 7 days. If there is no action on this PR in the next 3 days, we will automatically close it. You can use `/stale-extend` to extend the window."
+          stale-issue-message: "We have noticed this issue has been awaiting response for 10 days. If there is no action on this issue in the next 7 days, we will automatically close it. You can use `/stale-extend` to extend the window."
+          stale-pr-message: "We have noticed this PR has been awaiting response for 10 days. If there is no action on this PR in the next 7 days, we will automatically close it. You can use `/stale-extend` to extend the window."
+          close-issue-message: "This issue has remained in awaiting response state and has been automatically closed."
+          close-pr-message: "This PR has remained in awaiting response state and has been automatically closed."
           stale-issue-label: "stale"
           stale-pr-label: "stale"

@@ -57,18 +57,24 @@ public static class NgrokExtensions
             .WithImage(NgrokContainerValues.Image, NgrokContainerValues.Tag)
             .WithImageRegistry(NgrokContainerValues.Registry)
             .WithBindMount(configurationFolder, "/var/tmp/ngrok")
-            .WithHttpEndpoint(targetPort: 4040, port: endpointPort, name: endpointName);
-        resourceBuilder.OnResourceEndpointsAllocated(async (resource, e, ct) =>
+            .WithHttpEndpoint(targetPort: 4040, port: endpointPort, name: endpointName)
+            .WithArgs(context =>
+            {
+                var hasEndpoints = context.Resource.Annotations
+                    .OfType<NgrokEndpointAnnotation>()
+                    .Any(annotation => annotation.Endpoints.Count > 0);
+                context.Args.Add("start");
+                context.Args.Add(hasEndpoints ? "--all" : "--none");
+                context.Args.Add("--config");
+                context.Args.Add($"/var/tmp/ngrok/{name}.yml");
+            });
+        resourceBuilder.OnBeforeResourceStarted(async (resource, e, ct) =>
         {
             var endpointTuples = resource.Annotations
                 .OfType<NgrokEndpointAnnotation>()
-                .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointRefernce: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
+                .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointReference: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
                 .ToList();
             await CreateNgrokConfigurationFileAsync(configurationFolder, name, endpointTuples, configurationVersion ?? 3);
-
-            resourceBuilder.WithArgs(
-                "start", endpointTuples.Count > 0 ? "--all" : "--none",
-                "--config", $"/var/tmp/ngrok/{name}.yml");
         });
         return resourceBuilder;
     }
