@@ -6,11 +6,10 @@ import { createBuilder } from "./.modules/aspire.js";
 const builder = await createBuilder();
 const bindMountSource = mkdtempSync(join(tmpdir(), "meilisearch-"));
 
-const masterKey = await builder.addParameterWithValue(
-    "search-master-key",
-    "search-master-key-value",
-    { secret: true },
-);
+const masterKey = await builder.addParameter("search-master-key", {
+    value: "search-master-key-value",
+    secret: true,
+});
 
 // addMeilisearch — named master key and explicit port
 const meilisearch = await builder.addMeilisearch("search", {

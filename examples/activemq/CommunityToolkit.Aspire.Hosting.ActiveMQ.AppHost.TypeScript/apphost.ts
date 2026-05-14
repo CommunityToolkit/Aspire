@@ -11,10 +11,12 @@ const artemisConfPath = join(bindMountRoot, "artemis-conf");
 mkdirSync(artemisDataPath, { recursive: true });
 mkdirSync(artemisConfPath, { recursive: true });
 
-const mqPassword = await builder.addParameterWithValue("mq-password", "admin", {
+const mqPassword = await builder.addParameter("mq-password", {
+    value: "admin",
     secret: true,
 });
-const mqUser = await builder.addParameterWithValue("mq-user", "admin", {
+const mqUser = await builder.addParameter("mq-user", {
+    value: "admin",
     publishValueAsDefault: true,
 });
 

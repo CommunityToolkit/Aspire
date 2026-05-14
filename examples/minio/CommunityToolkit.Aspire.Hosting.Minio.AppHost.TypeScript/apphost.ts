@@ -2,24 +2,20 @@ import { createBuilder } from "./.modules/aspire.js";
 
 const builder = await createBuilder();
 
-const rootUser = await builder.addParameterWithValue(
-    "minio-root-user",
-    "minioadmin",
-);
-const rootPassword = await builder.addParameterWithValue(
-    "minio-root-password",
-    "minio-password",
-    { secret: true },
-);
-const overrideUser = await builder.addParameterWithValue(
-    "override-root-user",
-    "override-admin",
-);
-const overridePassword = await builder.addParameterWithValue(
-    "override-root-password",
-    "override-password",
-    { secret: true },
-);
+const rootUser = await builder.addParameter("minio-root-user", {
+    value: "minioadmin",
+});
+const rootPassword = await builder.addParameter("minio-root-password", {
+    value: "minio-password",
+    secret: true,
+});
+const overrideUser = await builder.addParameter("override-root-user", {
+    value: "override-admin",
+});
+const overridePassword = await builder.addParameter("override-root-password", {
+    value: "override-password",
+    secret: true,
+});
 
 const minio = await builder.addMinioContainer("minio", {
     rootUser,
