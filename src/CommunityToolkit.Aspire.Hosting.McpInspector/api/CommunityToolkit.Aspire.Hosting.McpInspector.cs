@@ -21,22 +21,29 @@ namespace Aspire.Hosting
 
     public static partial class McpInspectorResourceBuilderExtensions
     {
+        [AspireExportIgnore(Reason = "McpInspectorOptions is not ATS-compatible. Use the parameter-based overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, McpInspectorOptions options) { throw null; }
 
+        [AspireExportIgnore(Reason = "Action<McpInspectorOptions> is not ATS-compatible. Use the parameter-based overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, System.Action<McpInspectorOptions> configureOptions) { throw null; }
 
         [System.Obsolete("Use the overload with McpInspectorOptions instead. This overload will be removed in the next version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name, int clientPort = 6274, int serverPort = 6277, string inspectorVersion = "0.17.2") { throw null; }
 
+        [AspireExportIgnore(Reason = "Use the parameter-based overload so polyglot app hosts expose a single addMcpInspector capability.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
+        [AspireExport("withBun", Description = "Configures the MCP Inspector to use bun as the package manager")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithBun(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
 
+        [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer", Description = "Configures the MCP Inspector to use a specified MCP server resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithMcpServer<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, ApplicationModel.IResourceBuilder<TResource> mcpServer, bool isDefault = true, McpTransportType transportType = McpTransportType.StreamableHttp, string path = "/mcp")
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }
 
+        [AspireExport("withPnpm", Description = "Configures the MCP Inspector to use pnpm as the package manager")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithPnpm(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
 
+        [AspireExport("withYarn", Description = "Configures the MCP Inspector to use yarn as the package manager")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithYarn(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
     }
 
