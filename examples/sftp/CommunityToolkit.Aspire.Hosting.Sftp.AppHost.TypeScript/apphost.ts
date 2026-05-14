@@ -45,13 +45,11 @@ const sftpDefaults = await builder.addSftp("sftp-defaults");
 await sftpDefaults.withEnvironment("SFTP_USERS", "bar:pass:::upload");
 
 // ---- Property access on SftpContainerResource (ExposeProperties = true) ----
-const _endpoint = await sftp.primaryEndpoint();
 const _host = await sftp.host();
 const _port = await sftp.port();
 const _uri = await sftp.uriExpression();
 const _connectionString = await sftp.connectionStringExpression();
 
-const _defaultEndpoint = await sftpDefaults.primaryEndpoint();
 const _defaultHost = await sftpDefaults.host();
 const _defaultPort = await sftpDefaults.port();
 const _defaultUri = await sftpDefaults.uriExpression();
