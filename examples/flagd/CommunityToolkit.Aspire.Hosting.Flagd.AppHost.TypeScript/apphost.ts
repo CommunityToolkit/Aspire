@@ -1,33 +1,34 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.modules/aspire.js";
 
 const builder = await createBuilder();
 
-const flagd = await builder.addFlagd('flagd', {
+const flagd = await builder.addFlagd("flagd", {
     port: 18013,
-    ofrepPort: 18016
+    ofrepPort: 18016,
 });
 
-const flagdDefault = await builder.addFlagd('flagd-default');
+const flagdDefault = await builder.addFlagd("flagd-default");
 
-await flagd.withBindFileSync('./flags');
-await flagdDefault.withBindFileSync('./flags', { filename: 'custom-flagd.json' });
+await flagd.withBindFileSync("./flags");
+await flagdDefault.withBindFileSync("./flags", {
+    filename: "custom-flagd.json",
+});
 
-const flagdResource = await flagd;
-const _primaryEndpoint = await flagdResource.primaryEndpoint.get();
-const _host = await flagdResource.host.get();
-const _port = await flagdResource.port.get();
-const _healthCheckEndpoint = await flagdResource.healthCheckEndpoint.get();
-const _ofrepEndpoint = await flagdResource.ofrepEndpoint.get();
-const _uriExpression = await flagdResource.uriExpression.get();
-const _connectionStringExpression = await flagdResource.connectionStringExpression.get();
+const _primaryEndpoint = await flagd.primaryEndpoint();
+const _host = await flagd.host();
+const _port = await flagd.port();
+const _healthCheckEndpoint = await flagd.getEndpoint("health");
+const _ofrepEndpoint = await flagd.getEndpoint("ofrep");
+const _uriExpression = await flagd.uriExpression();
+const _connectionStringExpression = await flagd.connectionStringExpression();
 
-const flagdDefaultResource = await flagdDefault;
-const _defaultPrimaryEndpoint = await flagdDefaultResource.primaryEndpoint.get();
-const _defaultHost = await flagdDefaultResource.host.get();
-const _defaultPort = await flagdDefaultResource.port.get();
-const _defaultHealthCheckEndpoint = await flagdDefaultResource.healthCheckEndpoint.get();
-const _defaultOfrepEndpoint = await flagdDefaultResource.ofrepEndpoint.get();
-const _defaultUriExpression = await flagdDefaultResource.uriExpression.get();
-const _defaultConnectionStringExpression = await flagdDefaultResource.connectionStringExpression.get();
+const _defaultPrimaryEndpoint = await flagdDefault.primaryEndpoint();
+const _defaultHost = await flagdDefault.host();
+const _defaultPort = await flagdDefault.port();
+const _defaultHealthCheckEndpoint = await flagdDefault.getEndpoint("health");
+const _defaultOfrepEndpoint = await flagdDefault.getEndpoint("ofrep");
+const _defaultUriExpression = await flagdDefault.uriExpression();
+const _defaultConnectionStringExpression =
+    await flagdDefault.connectionStringExpression();
 
 await builder.build().run();

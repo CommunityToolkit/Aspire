@@ -2,8 +2,8 @@ import { createBuilder, type KeycloakResource, type WithPostgresOptions } from '
 
 const builder = await createBuilder();
 
-const dbUserName = await builder.addParameterWithValue("db-username", "postgres");
-const dbPassword = await builder.addParameterWithValue("db-password", "Postgres!123", { secret: true });
+const dbUserName = await builder.addParameter("db-username", { value: "postgres" });
+const dbPassword = await builder.addParameter("db-password", { value: "Postgres!123", secret: true });
 
 const postgres = await builder.addPostgres("keycloak-postgres", {
     userName: dbUserName,

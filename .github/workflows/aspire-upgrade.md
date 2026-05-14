@@ -21,7 +21,7 @@ safe-outputs:
 
 # aspire-upgrade
 
-The target version prefix is **13.2**.
+The target version prefix is **13.3**.
 
 # aspire-upgrade
 
