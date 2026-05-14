@@ -19,12 +19,16 @@ const dab = await builder
     .addDataAPIBuilder("dab", {
         configFilePaths: [primaryConfigPath],
     })
+    .waitFor(sql)
     .withReference(db);
 
-const dabWithOptions = await builder.addDataAPIBuilder("dab-with-options", {
-    configFilePaths: [primaryConfigPath, secondaryConfigPath],
-    httpPort: 5001,
-});
+const dabWithOptions = await builder
+    .addDataAPIBuilder("dab-with-options", {
+        configFilePaths: [primaryConfigPath, secondaryConfigPath],
+        httpPort: 5001,
+    })
+    .waitFor(sql)
+    .withReference(db);
 
 const _primaryEndpoint = await dab.primaryEndpoint();
 const _host = await dab.host();
