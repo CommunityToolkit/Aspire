@@ -34,8 +34,8 @@ await minioDefaults.withUserName(overrideUser).withPassword(overridePassword);
 await minioDefaults.withDataVolume();
 await minioBindMount.withDataBindMount("./runtime-data/minio-bind");
 
-const _minioRootUser = await minio.rootUser();
-const _minioPasswordParameter = await minio.passwordParameter();
+const _minioRootUser = await minio.rootUser.get();
+const _minioPasswordParameter = await minio.passwordParameter.get();
 const _minioPrimaryEndpoint = await minio.primaryEndpoint();
 const _minioHost = await minio.host();
 const _minioPort = await minio.port();
