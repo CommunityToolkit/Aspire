@@ -93,6 +93,40 @@ function Invoke-CleanupStep {
     }
 }
 
+function Remove-PathWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [switch]$Recurse
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+
+    $maxAttempts = 6
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            if ($Recurse) {
+                Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop
+            }
+            else {
+                Remove-Item -LiteralPath $Path -Force -ErrorAction Stop
+            }
+
+            return
+        }
+        catch {
+            if ($attempt -eq $maxAttempts) {
+                throw
+            }
+
+            Start-Sleep -Milliseconds (250 * $attempt)
+        }
+    }
+}
+
 $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
 $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
@@ -281,24 +315,6 @@ catch {
     $primaryError = $_
 }
 finally {
-    Invoke-CleanupStep -Description "restore Aspire config" -Action {
-        if ($null -ne $originalConfig) {
-            Set-Content -Path $configPath -Value $originalConfig -NoNewline
-        }
-    } -Failures $cleanupFailures
-
-    Invoke-CleanupStep -Description "remove generated nuget.config" -Action {
-        if (Test-Path $nugetConfigPath) {
-            Remove-Item $nugetConfigPath -Force
-        }
-    } -Failures $cleanupFailures
-
-    Invoke-CleanupStep -Description "remove local package source" -Action {
-        if (Test-Path $localSource) {
-            Remove-Item $localSource -Recurse -Force
-        }
-    } -Failures $cleanupFailures
-
     Invoke-CleanupStep -Description "stop Aspire app" -Action {
         if ($appStarted) {
             Push-Location $appHostDirectory
@@ -311,6 +327,8 @@ finally {
             finally {
                 Pop-Location
             }
+
+            Start-Sleep -Milliseconds 500
         }
     } -Failures $cleanupFailures
 
@@ -323,6 +341,20 @@ finally {
                 "--non-interactive"
             )
         }
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "restore Aspire config" -Action {
+        if ($null -ne $originalConfig) {
+            Set-Content -Path $configPath -Value $originalConfig -NoNewline
+        }
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "remove generated nuget.config" -Action {
+        Remove-PathWithRetry -Path $nugetConfigPath
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "remove local package source" -Action {
+        Remove-PathWithRetry -Path $localSource -Recurse
     } -Failures $cleanupFailures
 }
 
