@@ -114,7 +114,7 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.0.2" />
-    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.0" />
+    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.4" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
