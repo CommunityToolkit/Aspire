@@ -29,23 +29,23 @@ await bindMountBacked.withDataBindMount(bindMountRoot);
 await defaultVolumeBacked.withDataVolume();
 
 // ---- Endpoint access on KurrentDBResource ----
-const _volumeEndpoint = await volumeBacked.getEndpoint("http");
-const _volumeHost = await _volumeEndpoint.host();
-const _volumePort = await _volumeEndpoint.port();
-const _volumeUri = await _volumeEndpoint.url();
+const _volumeEndpoint = await volumeBacked.primaryEndpoint();
+const _volumeHost = await volumeBacked.host();
+const _volumePort = await volumeBacked.port();
+const _volumeUri = await volumeBacked.uriExpression();
 const _volumeConnectionString = await volumeBacked.connectionStringExpression();
 
-const _bindEndpoint = await bindMountBacked.getEndpoint("http");
-const _bindHost = await _bindEndpoint.host();
-const _bindPort = await _bindEndpoint.port();
-const _bindUri = await _bindEndpoint.url();
+const _bindEndpoint = await bindMountBacked.primaryEndpoint();
+const _bindHost = await bindMountBacked.host();
+const _bindPort = await bindMountBacked.port();
+const _bindUri = await bindMountBacked.uriExpression();
 const _bindConnectionString =
     await bindMountBacked.connectionStringExpression();
 
-const _defaultVolumeEndpoint = await defaultVolumeBacked.getEndpoint("http");
-const _defaultVolumeHost = await _defaultVolumeEndpoint.host();
-const _defaultVolumePort = await _defaultVolumeEndpoint.port();
-const _defaultVolumeUri = await _defaultVolumeEndpoint.url();
+const _defaultVolumeEndpoint = await defaultVolumeBacked.primaryEndpoint();
+const _defaultVolumeHost = await defaultVolumeBacked.host();
+const _defaultVolumePort = await defaultVolumeBacked.port();
+const _defaultVolumeUri = await defaultVolumeBacked.uriExpression();
 const _defaultVolumeConnectionString =
     await defaultVolumeBacked.connectionStringExpression();
 

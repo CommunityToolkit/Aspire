@@ -24,16 +24,16 @@ await mailpit.withDataVolume("mailpit-data");
 await mailpitDefault.withDataBindMount(bindMountPath);
 
 // ---- Endpoint access on MailPitContainerResource ----
-const _mailpitEndpoint = await mailpit.getEndpoint("smtp");
-const _mailpitHost = await _mailpitEndpoint.host();
-const _mailpitPort = await _mailpitEndpoint.port();
-const _mailpitUri = await _mailpitEndpoint.url();
+const _mailpitEndpoint = await mailpit.primaryEndpoint();
+const _mailpitHost = await mailpit.host();
+const _mailpitPort = await mailpit.port();
+const _mailpitUri = await mailpit.uriExpression();
 const _mailpitConnectionString = await mailpit.connectionStringExpression();
 
-const _mailpitDefaultEndpoint = await mailpitDefault.getEndpoint("smtp");
-const _mailpitDefaultHost = await _mailpitDefaultEndpoint.host();
-const _mailpitDefaultPort = await _mailpitDefaultEndpoint.port();
-const _mailpitDefaultUri = await _mailpitDefaultEndpoint.url();
+const _mailpitDefaultEndpoint = await mailpitDefault.primaryEndpoint();
+const _mailpitDefaultHost = await mailpitDefault.host();
+const _mailpitDefaultPort = await mailpitDefault.port();
+const _mailpitDefaultUri = await mailpitDefault.uriExpression();
 const _mailpitDefaultConnectionString =
     await mailpitDefault.connectionStringExpression();
 

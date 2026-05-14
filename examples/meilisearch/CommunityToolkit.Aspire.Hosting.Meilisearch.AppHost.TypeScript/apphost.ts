@@ -28,17 +28,17 @@ await meilisearch.withDataVolume({ name: "search-data" });
 await meilisearchWithDefaults.withDataBindMount(bindMountSource);
 
 // ---- Property access on MeilisearchResource (ExposeProperties = true) ----
-const _primaryEndpoint = await meilisearch.getEndpoint("http");
-const _host = await _primaryEndpoint.host();
-const _port = await _primaryEndpoint.port();
-const _uri = await _primaryEndpoint.url();
+const _primaryEndpoint = await meilisearch.primaryEndpoint();
+const _host = await meilisearch.host();
+const _port = await meilisearch.port();
+const _uri = await meilisearch.uriExpression();
 const _connectionString = await meilisearch.connectionStringExpression();
 
 const _defaultsPrimaryEndpoint =
-    await meilisearchWithDefaults.getEndpoint("http");
-const _defaultsHost = await _defaultsPrimaryEndpoint.host();
-const _defaultsPort = await _defaultsPrimaryEndpoint.port();
-const _defaultsUri = await _defaultsPrimaryEndpoint.url();
+    await meilisearchWithDefaults.primaryEndpoint();
+const _defaultsHost = await meilisearchWithDefaults.host();
+const _defaultsPort = await meilisearchWithDefaults.port();
+const _defaultsUri = await meilisearchWithDefaults.uriExpression();
 const _defaultsConnectionString =
     await meilisearchWithDefaults.connectionStringExpression();
 

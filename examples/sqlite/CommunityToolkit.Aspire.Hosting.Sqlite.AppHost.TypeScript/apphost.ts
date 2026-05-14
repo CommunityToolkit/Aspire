@@ -14,11 +14,11 @@ const builder = await createBuilder();
 await builder.subscribeAfterResourcesCreated(async (event) => {
     const model = await event.model();
     const sqliteWeb = asSqliteWebResource(await model.findResourceByName("sqlite-browser"));
-    const _sqliteWebEndpoint = await sqliteWeb.getEndpoint("http");
-    const _sqliteWebHost = await _sqliteWebEndpoint.host();
-    const _sqliteWebPort = await _sqliteWebEndpoint.port();
+    const _sqliteWebEndpoint = await sqliteWeb.primaryEndpoint();
+    const _sqliteWebHost = await sqliteWeb.host();
+    const _sqliteWebPort = await sqliteWeb.port();
     const _sqliteWebConnectionString = await sqliteWeb.connectionStringExpression();
-    const _sqliteWebUri = await _sqliteWebEndpoint.url();
+    const _sqliteWebUri = await sqliteWeb.uriExpression();
 });
 
 const sqlite = await builder.addSqlite("sqlite", {

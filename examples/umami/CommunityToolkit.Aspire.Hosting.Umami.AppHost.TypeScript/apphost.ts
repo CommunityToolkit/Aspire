@@ -20,6 +20,6 @@ await umami.withPostgreSQL(analyticsDatabase);
 await umamiDefault.withPostgreSQL(analyticsDatabase);
 
 // Property access on UmamiResource (ExposeProperties = true)
-const _primaryEndpoint = await umami.getEndpoint("http");
+const _primaryEndpoint = await umami.primaryEndpoint();
 
 await builder.build().run();

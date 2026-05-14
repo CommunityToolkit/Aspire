@@ -14,20 +14,20 @@ await flagdDefault.withBindFileSync("./flags", {
     filename: "custom-flagd.json",
 });
 
-const _primaryEndpoint = await flagd.getEndpoint("http");
-const _host = await _primaryEndpoint.host();
-const _port = await _primaryEndpoint.port();
+const _primaryEndpoint = await flagd.primaryEndpoint();
+const _host = await flagd.host();
+const _port = await flagd.port();
 const _healthCheckEndpoint = await flagd.getEndpoint("health");
 const _ofrepEndpoint = await flagd.getEndpoint("ofrep");
-const _uriExpression = await _primaryEndpoint.url();
+const _uriExpression = await flagd.uriExpression();
 const _connectionStringExpression = await flagd.connectionStringExpression();
 
-const _defaultPrimaryEndpoint = await flagdDefault.getEndpoint("http");
-const _defaultHost = await _defaultPrimaryEndpoint.host();
-const _defaultPort = await _defaultPrimaryEndpoint.port();
+const _defaultPrimaryEndpoint = await flagdDefault.primaryEndpoint();
+const _defaultHost = await flagdDefault.host();
+const _defaultPort = await flagdDefault.port();
 const _defaultHealthCheckEndpoint = await flagdDefault.getEndpoint("health");
 const _defaultOfrepEndpoint = await flagdDefault.getEndpoint("ofrep");
-const _defaultUriExpression = await _defaultPrimaryEndpoint.url();
+const _defaultUriExpression = await flagdDefault.uriExpression();
 const _defaultConnectionStringExpression =
     await flagdDefault.connectionStringExpression();
 

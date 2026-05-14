@@ -14,9 +14,9 @@ await mysql
         containerName: "mysql-dbgate",
     });
 
-const _primaryEndpoint = await mysql.getEndpoint("tcp");
-const _host = await _primaryEndpoint.host();
-const _port = await _primaryEndpoint.port();
+const _primaryEndpoint = await mysql.primaryEndpoint();
+const _host = await mysql.host();
+const _port = await mysql.port();
 const _connectionString = await mysql.connectionStringExpression();
 
 await builder.build().run();

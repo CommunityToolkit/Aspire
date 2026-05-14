@@ -65,24 +65,24 @@ await artemis2.withDataVolume();
 await artemis2.withConfVolume();
 
 // ---- Endpoint access on ActiveMQServerResourceBase ----
-const _classicEndpoint = await classic.getEndpoint("tcp");
-const _classicHost = await _classicEndpoint.host();
-const _classicPort = await _classicEndpoint.port();
-const _classicUri = await _classicEndpoint.url();
+const _classicEndpoint = await classic.primaryEndpoint();
+const _classicHost = await classic.host();
+const _classicPort = await classic.port();
+const _classicUri = await classic.uriExpression();
 const _classicCstr = await classic.connectionStringExpression();
 
-const _classic2Endpoint = await classic2.getEndpoint("tcp");
-const _classic2Host = await _classic2Endpoint.host();
-const _classic2Port = await _classic2Endpoint.port();
+const _classic2Endpoint = await classic2.primaryEndpoint();
+const _classic2Host = await classic2.host();
+const _classic2Port = await classic2.port();
 
-const _artemisEndpoint = await artemis.getEndpoint("tcp");
-const _artemisHost = await _artemisEndpoint.host();
-const _artemisPort = await _artemisEndpoint.port();
-const _artemisUri = await _artemisEndpoint.url();
+const _artemisEndpoint = await artemis.primaryEndpoint();
+const _artemisHost = await artemis.host();
+const _artemisPort = await artemis.port();
+const _artemisUri = await artemis.uriExpression();
 const _artemisCstr = await artemis.connectionStringExpression();
 
-const _artemis2Endpoint = await artemis2.getEndpoint("tcp");
-const _artemis2Host = await _artemis2Endpoint.host();
-const _artemis2Port = await _artemis2Endpoint.port();
+const _artemis2Endpoint = await artemis2.primaryEndpoint();
+const _artemis2Host = await artemis2.host();
+const _artemis2Port = await artemis2.port();
 
 await builder.build().run();

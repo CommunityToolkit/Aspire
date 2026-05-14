@@ -10,10 +10,10 @@ const database = await postgres.addDatabase("appdb");
 await database.withFlywayMigration("flyway-migration", "./migrations");
 await database.withFlywayRepair("flyway-repair", "./migrations");
 
-const _primaryEndpoint = await postgres.getEndpoint("tcp");
-const _host = await _primaryEndpoint.host();
-const _port = await _primaryEndpoint.port();
-const _serverUri = await _primaryEndpoint.url();
+const _primaryEndpoint = await postgres.primaryEndpoint();
+const _host = await postgres.host();
+const _port = await postgres.port();
+const _serverUri = await postgres.uriExpression();
 const _serverJdbcConnectionString = await postgres.jdbcConnectionString();
 
 const _databaseName = await database.databaseName();

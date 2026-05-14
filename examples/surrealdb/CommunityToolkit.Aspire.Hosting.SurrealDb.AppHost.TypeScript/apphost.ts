@@ -34,11 +34,11 @@ let mounted = await builder.addSurrealServer("mounted", {
 mounted = await mounted.withDataBindMount("./data");
 mounted = await mounted.withInitFiles("./seed.surql");
 
-const _primaryEndpoint = await primary.getEndpoint("tcp");
-const _primaryHost = await _primaryEndpoint.host();
-const _primaryPort = await _primaryEndpoint.port();
+const _primaryEndpoint = await primary.primaryEndpoint();
+const _primaryHost = await primary.host();
+const _primaryPort = await primary.port();
 const _primaryPasswordParameter = await primary.passwordParameter();
-const _primaryUri = await _primaryEndpoint.url();
+const _primaryUri = await primary.uriExpression();
 const _primaryConnectionString = await primary.connectionStringExpression();
 
 const _namespaceParent = await appNamespace.parent();
@@ -54,10 +54,10 @@ const _databaseName = await appDatabase.databaseName();
 const _databaseParentName = await _databaseParent.name();
 const _databaseServerName = await (await _databaseParent.parent()).name();
 
-const _mountedEndpoint = await mounted.getEndpoint("tcp");
-const _mountedHost = await _mountedEndpoint.host();
-const _mountedPort = await _mountedEndpoint.port();
-const _mountedUri = await _mountedEndpoint.url();
+const _mountedEndpoint = await mounted.primaryEndpoint();
+const _mountedHost = await mounted.host();
+const _mountedPort = await mounted.port();
+const _mountedUri = await mounted.uriExpression();
 const _mountedConnectionString = await mounted.connectionStringExpression();
 
 await builder.build().run();

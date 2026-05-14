@@ -21,22 +21,19 @@ const dab = await builder
     })
     .withReference(db);
 
-const dabWithOptions = await builder
-    .addDataAPIBuilder("dab-with-options", {
-        configFilePaths: [primaryConfigPath, secondaryConfigPath],
-        httpPort: 5001,
-    })
-    .withReference(db);
+const dabWithOptions = await builder.addDataAPIBuilder("dab-with-options", {
+    configFilePaths: [primaryConfigPath, secondaryConfigPath],
+    httpPort: 5001,
+});
 
-// const _primaryEndpoint = await dab.getEndpoint("http");
-// // const _host = await _primaryEndpoint.host();
-// const exists = await _primaryEndpoint.exists();
-// const _port = await _primaryEndpoint.port();
-// const _uri = await _primaryEndpoint.url();
+const _primaryEndpoint = await dab.primaryEndpoint();
+const _host = await dab.host();
+const _port = await dab.port();
+const _uri = await dab.uriExpression();
 
-// const _secondaryPrimaryEndpoint = await dabWithOptions.getEndpoint("http");
-// const _secondaryHost = await _secondaryPrimaryEndpoint.host();
-// const _secondaryPort = await _secondaryPrimaryEndpoint.port();
-// const _secondaryUri = await _secondaryPrimaryEndpoint.url();
+const _secondaryPrimaryEndpoint = await dabWithOptions.primaryEndpoint();
+const _secondaryHost = await dabWithOptions.host();
+const _secondaryPort = await dabWithOptions.port();
+const _secondaryUri = await dabWithOptions.uriExpression();
 
 await builder.build().run();

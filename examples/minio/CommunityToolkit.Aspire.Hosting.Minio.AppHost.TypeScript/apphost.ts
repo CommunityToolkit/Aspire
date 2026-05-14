@@ -40,23 +40,23 @@ await minioBindMount.withDataBindMount("./runtime-data/minio-bind");
 
 const _minioRootUser = await minio.rootUser();
 const _minioPasswordParameter = await minio.passwordParameter();
-const _minioPrimaryEndpoint = await minio.getEndpoint("http");
-const _minioHost = await _minioPrimaryEndpoint.host();
-const _minioPort = await _minioPrimaryEndpoint.port();
-const _minioUri = await _minioPrimaryEndpoint.url();
+const _minioPrimaryEndpoint = await minio.primaryEndpoint();
+const _minioHost = await minio.host();
+const _minioPort = await minio.port();
+const _minioUri = await minio.uriExpression();
 const _minioConnectionString = await minio.connectionStringExpression();
 
-const _defaultsPrimaryEndpoint = await minioDefaults.getEndpoint("http");
-const _defaultsHost = await _defaultsPrimaryEndpoint.host();
-const _defaultsPort = await _defaultsPrimaryEndpoint.port();
-const _defaultsUri = await _defaultsPrimaryEndpoint.url();
+const _defaultsPrimaryEndpoint = await minioDefaults.primaryEndpoint();
+const _defaultsHost = await minioDefaults.host();
+const _defaultsPort = await minioDefaults.port();
+const _defaultsUri = await minioDefaults.uriExpression();
 const _defaultsConnectionString =
     await minioDefaults.connectionStringExpression();
 
-const _bindMountPrimaryEndpoint = await minioBindMount.getEndpoint("http");
-const _bindMountHost = await _bindMountPrimaryEndpoint.host();
-const _bindMountPort = await _bindMountPrimaryEndpoint.port();
-const _bindMountUri = await _bindMountPrimaryEndpoint.url();
+const _bindMountPrimaryEndpoint = await minioBindMount.primaryEndpoint();
+const _bindMountHost = await minioBindMount.host();
+const _bindMountPort = await minioBindMount.port();
+const _bindMountUri = await minioBindMount.uriExpression();
 const _bindMountConnectionString =
     await minioBindMount.connectionStringExpression();
 

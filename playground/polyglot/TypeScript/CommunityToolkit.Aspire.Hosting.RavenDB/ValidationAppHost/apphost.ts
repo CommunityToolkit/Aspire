@@ -29,19 +29,19 @@ await raven.withLogVolume({
 });
 
 const ravenResource = await raven;
-const _primaryEndpoint = await ravenResource.getEndpoint("http");
-const _host = await _primaryEndpoint.host.get();
-const _port = await _primaryEndpoint.port.get();
+const _primaryEndpoint = await ravenResource.primaryEndpoint();
+const _host = await ravenResource.host.get();
+const _port = await ravenResource.port.get();
 const _tcpEndpoint = await ravenResource.getEndpoint("tcp");
-const _uri = await _primaryEndpoint.url.get();
+const _uri = await ravenResource.uriExpression.get();
 const _connectionString = await ravenResource.connectionStringExpression.get();
 
 const ordersDatabaseResource = await ordersDatabase;
 const _databaseName: string = await ordersDatabaseResource.databaseName.get();
 const _databaseConnectionString = await ordersDatabaseResource.connectionStringExpression.get();
 const ordersDatabaseParent = await ordersDatabaseResource.parent.get();
-const _databaseParentEndpoint = await ordersDatabaseParent.getEndpoint("http");
-const _databaseParentHost = await _databaseParentEndpoint.host.get();
+const _databaseParentEndpoint = await ordersDatabaseParent.primaryEndpoint();
+const _databaseParentHost = await ordersDatabaseParent.host.get();
 const _databaseParentConnectionString = await ordersDatabaseParent.connectionStringExpression.get();
 
 if (validateSecondResource) {

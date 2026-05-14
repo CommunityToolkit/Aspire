@@ -24,6 +24,6 @@ if (process.env.ASPIRE_COMPILE_ONLY === '1') {
 
 // ---- Property access on DbGateContainerResource (ExposeProperties = true) ----
 const dbgateResource = await dbgate;
-const _primaryEndpoint = await dbgateResource.getEndpoint("http");
+const _primaryEndpoint = await dbgateResource.primaryEndpoint();
 
 await builder.build().run();
