@@ -1,10 +1,12 @@
-import { mkdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.modules/aspire.js";
 
 const builder = await createBuilder();
-const bindMountRoot = fileURLToPath(new URL("./data/kurrentdb/", import.meta.url));
+const bindMountRoot = fileURLToPath(
+    new URL("./data/kurrentdb/", import.meta.url),
+);
 
 mkdirSync(bindMountRoot, { recursive: true });
 
@@ -26,26 +28,25 @@ await bindMountBacked.withDataBindMount(bindMountRoot);
 // withDataVolume — default overload
 await defaultVolumeBacked.withDataVolume();
 
-// ---- Property access on KurrentDBResource (ExposeProperties = true) ----
-const volumeBackedResource = await volumeBacked;
-const _volumeEndpoint = await volumeBackedResource.primaryEndpoint.get();
-const _volumeHost = await volumeBackedResource.host.get();
-const _volumePort = await volumeBackedResource.port.get();
-const _volumeUri = await volumeBackedResource.uriExpression.get();
-const _volumeConnectionString = await volumeBackedResource.connectionStringExpression.get();
+// ---- Endpoint access on KurrentDBResource ----
+const _volumeEndpoint = await volumeBacked.primaryEndpoint();
+const _volumeHost = await volumeBacked.host();
+const _volumePort = await volumeBacked.port();
+const _volumeUri = await volumeBacked.uriExpression();
+const _volumeConnectionString = await volumeBacked.connectionStringExpression();
 
-const bindMountBackedResource = await bindMountBacked;
-const _bindEndpoint = await bindMountBackedResource.primaryEndpoint.get();
-const _bindHost = await bindMountBackedResource.host.get();
-const _bindPort = await bindMountBackedResource.port.get();
-const _bindUri = await bindMountBackedResource.uriExpression.get();
-const _bindConnectionString = await bindMountBackedResource.connectionStringExpression.get();
+const _bindEndpoint = await bindMountBacked.primaryEndpoint();
+const _bindHost = await bindMountBacked.host();
+const _bindPort = await bindMountBacked.port();
+const _bindUri = await bindMountBacked.uriExpression();
+const _bindConnectionString =
+    await bindMountBacked.connectionStringExpression();
 
-const defaultVolumeBackedResource = await defaultVolumeBacked;
-const _defaultVolumeEndpoint = await defaultVolumeBackedResource.primaryEndpoint.get();
-const _defaultVolumeHost = await defaultVolumeBackedResource.host.get();
-const _defaultVolumePort = await defaultVolumeBackedResource.port.get();
-const _defaultVolumeUri = await defaultVolumeBackedResource.uriExpression.get();
-const _defaultVolumeConnectionString = await defaultVolumeBackedResource.connectionStringExpression.get();
+const _defaultVolumeEndpoint = await defaultVolumeBacked.primaryEndpoint();
+const _defaultVolumeHost = await defaultVolumeBacked.host();
+const _defaultVolumePort = await defaultVolumeBacked.port();
+const _defaultVolumeUri = await defaultVolumeBacked.uriExpression();
+const _defaultVolumeConnectionString =
+    await defaultVolumeBacked.connectionStringExpression();
 
 await builder.build().run();

@@ -10,8 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class BunAppExtensions
     {
+        [AspireExport("addBunApp", Description = "Adds a Bun app")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> AddBunApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string entryPoint = "index.ts", bool watch = false) { throw null; }
 
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<BunInstallerResource>> is not ATS-compatible. Use the overload without configureInstaller instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> WithBunPackageInstallation(this ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> resource, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.BunInstallerResource>>? configureInstaller = null) { throw null; }
     }
 }

@@ -10,15 +10,19 @@ namespace Aspire.Hosting
 {
     public static partial class PostgresBuilderExtensions
     {
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<AdminerContainerResource>> is not ATS-compatible. Use the callback-free overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> WithAdminer(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.AdminerContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
 
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbGateContainerResource>> is not ATS-compatible. Use the callback-free overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 
     public static partial class PostgresDatabaseResourceBuilderExtensions
     {
+        [AspireExportIgnore(Reason = "IResourceBuilder<FlywayResource> cannot be created from polyglot app hosts. Use the overload that creates the Flyway resource from a name and migration scripts path instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayMigration(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
 
+        [AspireExportIgnore(Reason = "IResourceBuilder<FlywayResource> cannot be created from polyglot app hosts. Use the overload that creates the Flyway resource from a name and migration scripts path instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayRepair(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
 
         public sealed partial class <G>$AA8667B1135AA5AD8A3F1D9C715BEAB5
@@ -26,9 +30,11 @@ namespace Aspire.Hosting
             internal <G>$AA8667B1135AA5AD8A3F1D9C715BEAB5() { }
 
             [System.Runtime.CompilerServices.ExtensionMarker("<M>$FAAD81E80F530CA95E6E899142B58B46")]
+            [AspireExportIgnore(Reason = "IResourceBuilder<FlywayResource> cannot be created from polyglot app hosts. Use the overload that creates the Flyway resource from a name and migration scripts path instead.")]
             public ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayMigration(ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
 
             [System.Runtime.CompilerServices.ExtensionMarker("<M>$FAAD81E80F530CA95E6E899142B58B46")]
+            [AspireExportIgnore(Reason = "IResourceBuilder<FlywayResource> cannot be created from polyglot app hosts. Use the overload that creates the Flyway resource from a name and migration scripts path instead.")]
             public ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> WithFlywayRepair(ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> flywayResourceBuilder) { throw null; }
 
             public static partial class <M>$FAAD81E80F530CA95E6E899142B58B46

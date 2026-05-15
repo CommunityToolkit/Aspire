@@ -10,27 +10,36 @@ namespace Aspire.Hosting
 {
     public static partial class RavenDBBuilderExtensions
     {
+        [AspireExport("addDatabase", Description = "Adds a RavenDB database resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBDatabaseResource> AddDatabase(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string name, string? databaseName = null, bool ensureCreated = false) { throw null; }
 
+        [AspireExportIgnore(Reason = "RavenDBServerSettings includes secured certificate and licensing configuration that is not fully compatible with ATS.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder, string name, CommunityToolkit.Aspire.Hosting.RavenDB.RavenDBServerSettings serverSettings) { throw null; }
 
+        [AspireExportIgnore(Reason = "Dictionary<string, object> environment variables and manual secured configuration are not supported by ATS for this overload.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder, string name, bool secured, System.Collections.Generic.Dictionary<string, object> environmentVariables, int? port = null) { throw null; }
 
+        [AspireExport("addRavenDB", Description = "Adds a RavenDB server resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
+        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the RavenDB data directory")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
+        [AspireExport("withDataVolume", Description = "Adds a named volume for the RavenDB data directory")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
 
+        [AspireExport("withLogBindMount", Description = "Adds a bind mount for the RavenDB logs directory")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithLogBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
+        [AspireExport("withLogVolume", Description = "Adds a named volume for the RavenDB logs directory")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithLogVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class RavenDBDatabaseResource : Resource, IResourceWithParent<RavenDBServerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class RavenDBDatabaseResource : Resource, IResourceWithParent<RavenDBServerResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public RavenDBDatabaseResource(string name, string databaseName, RavenDBServerResource parent) : base(default!) { }
 
@@ -43,7 +52,8 @@ namespace Aspire.Hosting.ApplicationModel
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
-    public partial class RavenDBServerResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class RavenDBServerResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public RavenDBServerResource(string name, bool isSecured) : base(default!, default) { }
 
@@ -92,6 +102,8 @@ namespace CommunityToolkit.Aspire.Hosting.RavenDB
     public partial class RavenDBServerSettings
     {
         protected RavenDBServerSettings() { }
+
+        public bool? ForceTcpScheme { get { throw null; } set { } }
 
         public LicensingOptions? LicensingOptions { get { throw null; } }
 

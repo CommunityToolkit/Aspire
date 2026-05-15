@@ -3,6 +3,10 @@
     "path": "apphost.ts",
     "language": "typescript/nodejs"
   },
+  "sdk": {
+    "version": "13.3.0"
+  },
+  "channel": "stable",
   "profiles": {
     "https": {
       "applicationUrl": "https://localhost:29750;http://localhost:28931",
@@ -13,6 +17,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Bun": ""
+    "CommunityToolkit.Aspire.Hosting.Bun": "../../../src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj"
   }
 }

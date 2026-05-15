@@ -1,7 +1,7 @@
 import { createBuilder } from './.modules/aspire.js';
 
 const builder = await createBuilder();
-const rustAppPath = "../../../../../examples/rust/actix_api";
+const rustAppPath = "../actix_api";
 
 // addRustApp — minimal call
 const rustApp = await builder.addRustApp("rust-app", rustAppPath);
