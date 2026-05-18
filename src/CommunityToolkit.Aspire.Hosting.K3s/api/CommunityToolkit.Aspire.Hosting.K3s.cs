@@ -60,7 +60,7 @@ namespace Aspire.Hosting
     public static partial class K3sServiceEndpointExtensions
     {
         [AspireExport("addServiceEndpoint", Description = "Exposes a Kubernetes service as an Aspire endpoint resource")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sServiceEndpointResource> AddServiceEndpoint(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string serviceName, int servicePort, string @namespace = "default") { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sServiceEndpointResource> AddServiceEndpoint(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string serviceName, int servicePort, string @namespace = "default", string? scheme = null) { throw null; }
 
         [AspireExport("withReference", Description = "Injects the k3s service URL into a dependent resource")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> destination, ApplicationModel.IResourceBuilder<ApplicationModel.K3sServiceEndpointResource> source)

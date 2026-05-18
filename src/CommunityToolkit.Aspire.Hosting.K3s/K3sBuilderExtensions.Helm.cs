@@ -204,20 +204,33 @@ public static class K3sHelmBuilderExtensions
         }
 
         // --set flags override everything above (highest Helm precedence).
-        // Both key and value are single-quoted so quotes, spaces, or $ in values are safe.
+        // Values are Helm-escaped then shell-escaped:
+        //   1. HelmEscape: escapes Helm's --set parser metacharacters (`,`, `{`, `}`, `\`)
+        //      so Helm treats them as literals rather than array/map/list syntax.
+        //   2. ShellEscape: wraps in POSIX single quotes so the shell passes the value
+        //      to Helm without any shell interpretation.
+        // For values containing commas, braces, or backslashes that Helm --set cannot
+        // represent safely (e.g. multi-line strings), use WithHelmValuesFile instead.
         foreach (var (key, value) in release.HelmValues)
-            sb.Append($" --set {ShellEscape($"{key}={value}")}");
+            sb.Append($" --set {ShellEscape($"{key}={HelmEscape(value)}")}");
 
         return sb.ToString();
     }
 
     /// <summary>
+    /// Escapes Helm <c>--set</c> value metacharacters so that Helm's own parser treats
+    /// them as literals rather than as array/map/list syntax delimiters.
+    /// </summary>
+    private static string HelmEscape(string value) =>
+        value.Replace("\\", "\\\\")  // backslash first to avoid double-escaping
+             .Replace(",", "\\,")    // comma separates multiple assignments
+             .Replace("{", "\\{")    // brace opens a map/list literal
+             .Replace("}", "\\}");
+
+    /// <summary>
     /// Wraps <paramref name="value"/> in POSIX single quotes so that all shell
-    /// metacharacters (<c>$</c>, <c>`</c>, <c>\</c>, <c>"</c>, <c>;</c>,
-    /// <c>&amp;</c>, <c>|</c>, space, etc.) are treated as literals in Dockerfile
-    /// <c>RUN</c> shell-form commands and Delve's <c>--build-flags</c> parser.
-    /// Embedded single quotes are escaped with the standard POSIX technique:
-    /// <c>'</c> → <c>'\''</c>.
+    /// metacharacters are treated as literals. Embedded single quotes are escaped
+    /// with the standard POSIX technique: <c>'</c> → <c>'\''</c>.
     /// </summary>
     private static string ShellEscape(string value) =>
         $"'{value.Replace("'", "'\\''")}'";

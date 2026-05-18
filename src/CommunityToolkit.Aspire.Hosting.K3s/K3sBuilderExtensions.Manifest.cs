@@ -164,9 +164,14 @@ public static class K3sManifestBuilderExtensions
         sb.AppendLine("  kubectl apply -f /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts");
         sb.AppendLine("fi");
 
-        // Wait for CRD Established condition if any CRDs are present.
-        sb.AppendLine("if kubectl get crd --no-headers 2>/dev/null | grep -q .; then");
-        sb.AppendLine("  kubectl wait --for=condition=Established crd --all --timeout=300s");
+        // Wait only for CRDs applied by this manifest, identified via the aspire-k3s
+        // field-manager. Using --all would also wait for pre-existing or concurrently
+        // installed CRDs that are stuck, causing an unrelated manifest to hang.
+        sb.AppendLine("CRDS=$(kubectl get crd -o name --no-headers 2>/dev/null \\");
+        sb.AppendLine("  | xargs -r -I{} sh -c 'kubectl get {} -o jsonpath=\"{.metadata.managedFields[*].manager}\" 2>/dev/null | grep -q aspire-k3s && echo {}' 2>/dev/null)");
+        sb.AppendLine("if [ -n \"$CRDS\" ]; then");
+        sb.AppendLine("  # shellcheck disable=SC2086");
+        sb.AppendLine("  kubectl wait --for=condition=Established $CRDS --timeout=300s");
         sb.AppendLine("fi");
 
         return sb.ToString();

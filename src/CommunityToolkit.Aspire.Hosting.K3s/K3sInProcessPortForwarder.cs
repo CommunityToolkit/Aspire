@@ -35,6 +35,11 @@ internal sealed class K3sInProcessPortForwarder(
 
         while (!ct.IsCancellationRequested)
         {
+            // IPAddress.Any (0.0.0.0) is required: DCP-network containers reach the
+            // forwarded service via host.docker.internal:{port}, which resolves to the
+            // Docker host IP — not 127.0.0.1. Binding to loopback would silently drop
+            // all container traffic. Users on shared networks should be aware that the
+            // forwarded service is reachable from other hosts on the same LAN.
             var listener = new TcpListener(IPAddress.Any, localPort);
             try
             {
