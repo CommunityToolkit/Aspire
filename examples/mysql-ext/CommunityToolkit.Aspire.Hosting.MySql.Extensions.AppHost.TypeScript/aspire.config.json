@@ -3,6 +3,9 @@
     "path": "apphost.ts",
     "language": "typescript/nodejs"
   },
+  "sdk": {
+    "version": "13.3.0"
+  },
   "profiles": {
     "https": {
       "applicationUrl": "https://localhost:29750;http://localhost:28931",
@@ -14,6 +17,6 @@
   },
   "packages": {
     "Aspire.Hosting.MySql": "",
-    "CommunityToolkit.Aspire.Hosting.MySql.Extensions": ""
+    "CommunityToolkit.Aspire.Hosting.MySql.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj"
   }
 }

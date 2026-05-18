@@ -21,9 +21,9 @@ const connectionProject = await builder.addSqlProject('connection-project');
 await connectionProject.withDacpac(projectPath);
 await connectionProject.withConnectionReference(existingConnection);
 
-const _databaseProjectDacpacPath: string | null = await databaseProject.dacpacPath.get();
-const _databaseProjectDacDeployOptionsPath: string | null = await databaseProject.dacDeployOptionsPath.get();
-const _databaseProjectSkipWhenDeployed: boolean = await databaseProject.skipWhenDeployed.get();
-const _connectionProjectDacpacPath: string | null = await connectionProject.dacpacPath.get();
+const _databaseProjectDacpacPath: string | null = await databaseProject.dacpacPath();
+const _databaseProjectDacDeployOptionsPath: string | null = await databaseProject.dacDeployOptionsPath();
+const _databaseProjectSkipWhenDeployed: boolean = await databaseProject.skipWhenDeployed();
+const _connectionProjectDacpacPath: string | null = await connectionProject.dacpacPath();
 
 await builder.build().run();

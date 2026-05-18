@@ -10,14 +10,19 @@ namespace Aspire.Hosting
 {
     public static partial class StripeExtensions
     {
+        [AspireExport("addStripe", Description = "Adds a Stripe CLI resource for local webhook forwarding")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> AddStripe(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> apiKey) { throw null; }
 
+        [AspireExport("withApiKey", Description = "Configures the Stripe CLI to use a specific API key")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> WithApiKey(this ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> apiKey) { throw null; }
 
+        [AspireExport("withListen", Description = "Configures Stripe CLI to forward webhooks to a resource endpoint")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> WithListen(this ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.IResourceWithEndpoints> forwardTo, string webhookPath = "/webhooks/stripe", System.Collections.Generic.IEnumerable<string>? events = null) { throw null; }
 
+        [AspireExport("withListenExternalService", Description = "Configures Stripe CLI to forward webhooks to an external service")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> WithListen(this ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> builder, ApplicationModel.IResourceBuilder<ExternalServiceResource> forwardTo, string webhookPath = "/webhooks/stripe", System.Collections.Generic.IEnumerable<string>? events = null) { throw null; }
 
+        [AspireExport("withStripeReference", Description = "Adds the Stripe webhook signing secret to a resource environment")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> source, string webhookSigningSecretEnvVarName = "STRIPE_WEBHOOK_SECRET")
             where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
     }
@@ -25,6 +30,7 @@ namespace Aspire.Hosting
 
 namespace Aspire.Hosting.ApplicationModel
 {
+    [AspireExport(ExposeProperties = true)]
     public partial class StripeResource : ContainerResource
     {
         public StripeResource(string name) : base(default!, default) { }

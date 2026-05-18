@@ -9,22 +9,12 @@ permissions:
   pull-requests: write
 
 jobs:
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Comment body: ${{ github.event.comment.body }}"
-          echo "Issue number: ${{ github.event.issue.number }}"
-          echo "Pull request number: ${{ github.event.pull_request.number }}"
-
   remove-stale-label:
     if: github.event.comment.body == '/stale-extend'
     runs-on: ubuntu-latest
     steps:
       - name: Remove stale label from pull request
-        uses: "actions/github-script@v8.0.0"
+        uses: "actions/github-script@v9.0.0"
         with:
           script: |
             github.rest.issues.removeLabel({
@@ -36,7 +26,7 @@ jobs:
         if: github.event_name == 'issue_comment' && github.event.issue.pull_request
 
       - name: Remove stale label from issue
-        uses: "actions/github-script@v8.0.0"
+        uses: "actions/github-script@v9.0.0"
         with:
           script: |
             github.rest.issues.removeLabel({

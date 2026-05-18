@@ -1,7 +1,7 @@
 import { createBuilder } from './.modules/aspire.js';
 
 const builder = await createBuilder();
-const sqlPassword = await builder.addParameterWithValue('sql-password', 'SqlServer_Pass123!', { secret: true });
+const sqlPassword = await builder.addParameter('sql-password', { value: 'SqlServer_Pass123!', secret: true });
 const sqlServer = builder
     .addSqlServer('sqlserver', { password: sqlPassword })
     .withDbGate({

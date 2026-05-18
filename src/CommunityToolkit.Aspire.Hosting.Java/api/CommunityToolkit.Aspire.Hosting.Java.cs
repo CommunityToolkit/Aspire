@@ -10,17 +10,55 @@ namespace Aspire.Hosting
 {
     public static partial class JavaAppHostingExtension
     {
+        [System.Obsolete("Use AddJavaContainerApp instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppContainerResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, ApplicationModel.JavaAppContainerResourceOptions options) { throw null; }
 
+        [System.Obsolete("Use AddJavaApp(string, string, string, string[]?) instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, ApplicationModel.JavaAppExecutableResourceOptions options) { throw null; }
 
+        [AspireExport("addJavaAppWithJar", Description = "Adds a Java application resource that runs a JAR file")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string jarPath, string[]? args = null) { throw null; }
+
+        [AspireExport("addJavaApp", Description = "Adds a Java application resource")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory) { throw null; }
+
+        [AspireExport("addJavaContainerApp", Description = "Adds a containerized Java application resource")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppContainerResource> AddJavaContainerApp(this IDistributedApplicationBuilder builder, string name, string image, string? imageTag = null) { throw null; }
+
+        [System.Obsolete("Use AddJavaContainerApp instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppContainerResource> AddSpringApp(this IDistributedApplicationBuilder builder, string name, ApplicationModel.JavaAppContainerResourceOptions options) { throw null; }
 
+        [System.Obsolete("Use AddJavaApp instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddSpringApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, ApplicationModel.JavaAppExecutableResourceOptions options) { throw null; }
 
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithMavenBuild(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, MavenOptions? mavenOptions = null) { throw null; }
+        [AspireExport("withGradleBuild", Description = "Adds a Gradle build step to the Java application")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithGradleBuild(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, params string[] args) { throw null; }
+
+        [AspireExport("withGradleTask", Description = "Configures the Java application to run using a Gradle task")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithGradleTask(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, string task, params string[] args) { throw null; }
+
+        [AspireExport("withJvmArgs", Description = "Configures Java Virtual Machine arguments for the resource")]
+        public static ApplicationModel.IResourceBuilder<T> WithJvmArgs<T>(this ApplicationModel.IResourceBuilder<T> builder, string[] args)
+            where T : ApplicationModel.IResourceWithEnvironment { throw null; }
+
+        [System.Obsolete("Use WithMavenBuild(string?, params string[]) instead. This method will be removed in a future version.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithMavenBuild(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, MavenOptions mavenOptions) { throw null; }
+
+        [AspireExport("withMavenBuild", Description = "Adds a Maven build step to the Java application")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithMavenBuild(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, params string[] args) { throw null; }
+
+        [AspireExport("withMavenGoal", Description = "Configures the Java application to run using a Maven goal")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithMavenGoal(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, string goal, params string[] args) { throw null; }
+
+        [AspireExport("withOtelAgent", Description = "Configures the OpenTelemetry Java agent for the resource")]
+        public static ApplicationModel.IResourceBuilder<T> WithOtelAgent<T>(this ApplicationModel.IResourceBuilder<T> builder, string? agentPath = null)
+            where T : ApplicationModel.IResourceWithEnvironment { throw null; }
+
+        [AspireExport("withWrapperPath", Description = "Configures a custom build tool wrapper script path")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithWrapperPath(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, string wrapperScript) { throw null; }
     }
 
+    [System.Obsolete("This class will be removed in a future version.")]
     public sealed partial class MavenOptions
     {
         public string[] Args { get { throw null; } set { } }
@@ -33,11 +71,18 @@ namespace Aspire.Hosting
 
 namespace Aspire.Hosting.ApplicationModel
 {
+    public partial class GradleBuildResource : ExecutableResource
+    {
+        public GradleBuildResource(string name, string wrapperScript, string workingDirectory) : base(default!, default!, default!) { }
+    }
+
+    [AspireExport(ExposeProperties = true)]
     public partial class JavaAppContainerResource : ContainerResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
     {
         public JavaAppContainerResource(string name, string? entrypoint = null) : base(default!, default) { }
     }
 
+    [System.Obsolete("This class will be removed in a future version.")]
     public partial class JavaAppContainerResourceOptions
     {
         public string[]? Args { get { throw null; } set { } }
@@ -55,11 +100,18 @@ namespace Aspire.Hosting.ApplicationModel
         public int TargetPort { get { throw null; } set { } }
     }
 
-    public partial class JavaAppExecutableResource : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
+    [AspireExport(ExposeProperties = true)]
+    public partial class JavaAppExecutableResource : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource, IResourceWithWaitSupport
     {
+        [System.Obsolete("Use JavaAppExecutableResource(string, string) instead. This constructor will be removed in a future version.")]
         public JavaAppExecutableResource(string name, string command, string workingDirectory) : base(default!, default!, default!) { }
+
+        public JavaAppExecutableResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+
+        public string? JarPath { get { throw null; } set { } }
     }
 
+    [System.Obsolete("This class will be removed in a future version.")]
     public partial class JavaAppExecutableResourceOptions
     {
         public string? ApplicationName { get { throw null; } set { } }
@@ -71,5 +123,10 @@ namespace Aspire.Hosting.ApplicationModel
         public string? OtelAgentPath { get { throw null; } set { } }
 
         public int Port { get { throw null; } set { } }
+    }
+
+    public partial class MavenBuildResource : ExecutableResource
+    {
+        public MavenBuildResource(string name, string wrapperScript, string workingDirectory) : base(default!, default!, default!) { }
     }
 }

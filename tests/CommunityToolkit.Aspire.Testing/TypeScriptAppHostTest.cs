@@ -14,6 +14,7 @@ public static class TypeScriptAppHostTest
     /// <param name="waitForResources">The resources that must reach the expected Aspire state, if any.</param>
     /// <param name="waitStatus">The Aspire resource status to wait for.</param>
     /// <param name="requiredCommands">Optional commands that must exist on <c>PATH</c> before validation runs.</param>
+    /// <param name="secrets">Optional dictionary of secret key-value pairs to set via <c>aspire secret set</c> before starting the app host.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public static async Task Run(
         string appHostProject,
@@ -22,6 +23,7 @@ public static class TypeScriptAppHostTest
         IEnumerable<string> waitForResources,
         string waitStatus = "healthy",
         IEnumerable<string>? requiredCommands = null,
+        Dictionary<string, string>? secrets = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appHostProject);
@@ -74,6 +76,12 @@ public static class TypeScriptAppHostTest
         {
             arguments.Add("-RequiredCommands");
             arguments.Add(string.Join(',', commands));
+        }
+
+        if (secrets is { Count: > 0 })
+        {
+            arguments.Add("-Secrets");
+            arguments.Add(string.Join(',', secrets.Select(kvp => $"{kvp.Key}={kvp.Value}")));
         }
 
         await ProcessTestUtilities.RunProcessAsync(shell, arguments, repoRoot, cancellationToken);
