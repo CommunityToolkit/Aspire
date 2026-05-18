@@ -16,24 +16,34 @@ namespace Aspire.Hosting
 
     public static partial class OllamaResourceBuilderExtensions
     {
+        [AspireExport("addHuggingFaceModel", Description = "Adds a Hugging Face model to the Ollama resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaModelResource> AddHuggingFaceModel(this ApplicationModel.IResourceBuilder<ApplicationModel.IOllamaResource> builder, string name, string modelName) { throw null; }
 
+        [AspireExport("addNamedModel", Description = "Adds a named Ollama model resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaModelResource> AddModel(this ApplicationModel.IResourceBuilder<ApplicationModel.IOllamaResource> builder, string name, string modelName) { throw null; }
 
+        [AspireExport("addModel", Description = "Adds an Ollama model resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaModelResource> AddModel(this ApplicationModel.IResourceBuilder<ApplicationModel.IOllamaResource> builder, string modelName) { throw null; }
 
+        [AspireExport("addOllama", Description = "Adds an Ollama container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> AddOllama(this IDistributedApplicationBuilder builder, string name, int? port = null) { throw null; }
 
+        [AspireExport("addOllamaLocal", Description = "Adds an Ollama executable resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaExecutableResource> AddOllamaLocal(this IDistributedApplicationBuilder builder, string name, int? port = null, int? targetPort = null) { throw null; }
 
+        [AspireExport("withOllamaDataVolume", MethodName = "withDataVolume", Description = "Adds a data volume to the Ollama container")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
 
+        [AspireExport("withOpenWebUIDataVolume", MethodName = "withDataVolume", Description = "Adds a data volume to the Open WebUI container")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
 
+        [AspireExport("withGPUSupport", Description = "Adds GPU support to the Ollama container")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> WithGPUSupport(this ApplicationModel.IResourceBuilder<ApplicationModel.OllamaResource> builder, OllamaGpuVendor vendor = OllamaGpuVendor.Nvidia) { throw null; }
 
+        [AspireExport("withHostPort", Description = "Configures the Open WebUI host port")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource> builder, int? port) { throw null; }
 
+        [AspireExport("withOpenWebUI", Description = "Adds an Open WebUI resource for an Ollama resource")]
         public static ApplicationModel.IResourceBuilder<T> WithOpenWebUI<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.OpenWebUIResource>>? configureContainer = null, string? containerName = null)
             where T : class, ApplicationModel.IOllamaResource { throw null; }
     }
@@ -41,7 +51,8 @@ namespace Aspire.Hosting
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial interface IOllamaResource : IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences, IResourceWithEndpoints
+    [AspireExport(ExposeProperties = true)]
+    public partial interface IOllamaResource : IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences, IResourceWithEndpoints
     {
         EndpointReferenceExpression Host { get; }
 
@@ -56,7 +67,8 @@ namespace Aspire.Hosting.ApplicationModel
         void AddModel(string modelName);
     }
 
-    public partial class OllamaExecutableResource : ExecutableResource, IOllamaResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences, IResourceWithEndpoints
+    [AspireExport(ExposeProperties = true)]
+    public partial class OllamaExecutableResource : ExecutableResource, IOllamaResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences, IResourceWithEndpoints
     {
         public OllamaExecutableResource(string name) : base(default!, default!, default!) { }
 
@@ -77,7 +89,8 @@ namespace Aspire.Hosting.ApplicationModel
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
-    public partial class OllamaModelResource : Resource, IResourceWithParent<IOllamaResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class OllamaModelResource : Resource, IResourceWithParent<IOllamaResource>, IResourceWithParent, IResource, IResourceWithConnectionString, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public OllamaModelResource(string name, string modelName, IOllamaResource parent) : base(default!) { }
 
@@ -90,7 +103,8 @@ namespace Aspire.Hosting.ApplicationModel
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
-    public partial class OllamaResource : ContainerResource, IOllamaResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences, IResourceWithEndpoints
+    [AspireExport(ExposeProperties = true)]
+    public partial class OllamaResource : ContainerResource, IOllamaResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences, IResourceWithEndpoints
     {
         public OllamaResource(string name) : base(default!, default) { }
 
@@ -111,7 +125,8 @@ namespace Aspire.Hosting.ApplicationModel
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
-    public partial class OpenWebUIResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class OpenWebUIResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public OpenWebUIResource(string name) : base(default!, default) { }
 

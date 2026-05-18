@@ -2,7 +2,7 @@ import { createBuilder } from './.modules/aspire.js';
 
 const builder = await createBuilder();
 
-const authToken = await builder.addParameterWithValue("ngrok-auth-token", "ngrok-token-value", { secret: true });
+const authToken = await builder.addParameter("ngrok-auth-token", { value: "ngrok-token-value", secret: true });
 
 const upstream = await builder
     .addContainer("upstream", "nginx:alpine")

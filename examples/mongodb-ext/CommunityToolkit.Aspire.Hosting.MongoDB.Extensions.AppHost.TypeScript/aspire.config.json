@@ -3,6 +3,9 @@
     "path": "apphost.ts",
     "language": "typescript/nodejs"
   },
+  "sdk": {
+    "version": "13.3.0"
+  },
   "profiles": {
     "https": {
       "applicationUrl": "https://localhost:29750;http://localhost:28931",
@@ -13,6 +16,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.MongoDB.Extensions": "13.2.1-polyglot.local"
+    "CommunityToolkit.Aspire.Hosting.MongoDB.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions/CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj"
   }
 }

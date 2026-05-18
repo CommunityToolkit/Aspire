@@ -10,16 +10,27 @@ namespace Aspire.Hosting
 {
     public static partial class DataApiBuilderHostingExtension
     {
+        [AspireExportIgnore(Reason = "Polyglot app hosts use the overload that makes both configFilePaths and httpPort optional to avoid optional parameter ordering issues.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, int? httpPort = null, params string[] configFilePaths) { throw null; }
 
+        [AspireExportIgnore(Reason = "Polyglot app hosts use the overload that makes both configFilePaths and httpPort optional.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DataApiBuilderContainerResource> AddDataAPIBuilder(this IDistributedApplicationBuilder builder, string name, params string[] configFilePaths) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
+    [AspireExport(ExposeProperties = true)]
     public partial class DataApiBuilderContainerResource : ContainerResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
     {
         public DataApiBuilderContainerResource(string name, string? entrypoint = null) : base(default!, default) { }
+
+        public EndpointReferenceExpression Host { get { throw null; } }
+
+        public EndpointReferenceExpression Port { get { throw null; } }
+
+        public EndpointReference PrimaryEndpoint { get { throw null; } }
+
+        public ReferenceExpression UriExpression { get { throw null; } }
     }
 }

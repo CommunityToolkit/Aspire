@@ -10,6 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class RustAppHostingExtension
     {
+        [AspireExport("addRustApp", Description = "Adds a Rust application to the application model")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RustAppExecutableResource> AddRustApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[]? args = null) { throw null; }
     }
 }

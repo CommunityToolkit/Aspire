@@ -10,20 +10,25 @@ namespace Aspire.Hosting
 {
     public static partial class AzureContainerAppEnvironmentResourceBuilderExtensions
     {
+        [AspireExport("withDaprComponents", Description = "Configures an Azure Container App environment to publish Dapr components")]
         public static ApplicationModel.IResourceBuilder<Azure.AppContainers.AzureContainerAppEnvironmentResource> WithDaprComponents(this ApplicationModel.IResourceBuilder<Azure.AppContainers.AzureContainerAppEnvironmentResource> builder) { throw null; }
     }
 
     public static partial class AzureDaprHostingExtensions
     {
+        [AspireExportIgnore(Reason = "Action<AzureResourceInfrastructure> requires an Azure provisioning callback that is not compatible with ATS.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.AzureDaprComponentResource> AddAzureDaprResource(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, System.Action<Azure.AzureResourceInfrastructure> configureInfrastructure) { throw null; }
 
+        [AspireExportIgnore(Reason = "ContainerAppManagedEnvironmentDaprComponent is an Azure.Provisioning type not compatible with ATS.")]
         public static void AddScopes(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, global::Azure.Provisioning.AppContainers.ContainerAppManagedEnvironmentDaprComponent daprComponent) { }
 
+        [AspireExportIgnore(Reason = "BicepValue<string> and ContainerAppManagedEnvironmentDaprComponent are Azure.Provisioning types not compatible with ATS.")]
         public static global::Azure.Provisioning.AppContainers.ContainerAppManagedEnvironmentDaprComponent CreateDaprComponent(string bicepIdentifier, global::Azure.Provisioning.BicepValue<string> name, string componentType, string version) { throw null; }
     }
 
     public static partial class AzureKeyVaultDaprHostingExtensions
     {
+        [AspireExportIgnore(Reason = "ProvisioningParameter is an Azure.Provisioning type not compatible with ATS.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> ConfigureKeyVaultSecretsComponent(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, global::Azure.Provisioning.ProvisioningParameter kvNameParam) { throw null; }
     }
 }
