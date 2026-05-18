@@ -21,8 +21,8 @@ namespace CommunityToolkit.Aspire.Hosting.K3s.IntegrationTests;
 /// </list>
 /// No host-side <c>helm</c> or <c>kubectl</c> is needed — both run as Docker containers
 /// (<c>alpine/helm</c> and <c>alpine/k8s</c>).
-/// Tests are gated by <c>[RequiresDocker]</c> and run on both <c>ubuntu-latest</c>
-/// and <c>windows-latest</c> CI jobs since privileged Linux containers work on Docker Desktop.
+/// Tests are gated by <c>[RequiresDocker]</c> and run on <c>ubuntu-latest</c> only —
+/// GitHub-hosted Windows runners do not support privileged Linux containers reliably.
 /// </para>
 /// </summary>
 [RequiresDocker]

@@ -83,6 +83,11 @@ jobs:
             Sftp.Tests,
             SurrealDb.Tests,
           ]
+        exclude:
+          # k3s integration tests require privileged Linux containers.
+          # GitHub-hosted Windows runners do not support this reliably.
+          - os: windows-latest
+            name: Hosting.K3s.IntegrationTests
 
     steps:
       - name: Checkout code
