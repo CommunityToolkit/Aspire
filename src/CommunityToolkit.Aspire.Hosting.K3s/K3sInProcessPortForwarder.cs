@@ -98,31 +98,40 @@ internal sealed class K3sInProcessPortForwarder(
                     .ReadNamespacedServiceAsync(serviceName, @namespace, cancellationToken: ct)
                     .ConfigureAwait(false);
 
-                if (svc.Spec.Selector is null or { Count: 0 })
+                var exposesRequestedPort = svc.Spec?.Ports?.Any(p => p.Port == servicePort) == true;
+                if (!exposesRequestedPort)
+                {
+                    logger.LogDebug(
+                        "Service {Service}/{Ns} does not expose requested port {ServicePort}; retrying…",
+                        serviceName, @namespace, servicePort);
+                }
+                else if (svc.Spec?.Selector is null or { Count: 0 })
                 {
                     logger.LogWarning(
                         "Service {Service}/{Ns} has no pod selector — cannot determine readiness.",
                         serviceName, @namespace);
                     return;
                 }
-
-                var labelSelector = string.Join(",",
-                    svc.Spec.Selector.Select(kv => $"{kv.Key}={kv.Value}"));
-
-                var pods = await k8sClient.CoreV1
-                    .ListNamespacedPodAsync(@namespace, labelSelector: labelSelector, cancellationToken: ct)
-                    .ConfigureAwait(false);
-
-                var hasReadyPod = pods.Items.Any(p =>
-                    p.Status?.Phase == "Running" &&
-                    p.Status?.ContainerStatuses?.All(c => c.Ready) == true);
-
-                if (hasReadyPod)
+                else
                 {
-                    logger.LogDebug(
-                        "Service {Service}/{Ns} has a ready pod — port-forward is ready.",
-                        serviceName, @namespace);
-                    return;
+                    var labelSelector = string.Join(",",
+                        svc.Spec.Selector.Select(kv => $"{kv.Key}={kv.Value}"));
+
+                    var pods = await k8sClient.CoreV1
+                        .ListNamespacedPodAsync(@namespace, labelSelector: labelSelector, cancellationToken: ct)
+                        .ConfigureAwait(false);
+
+                    var hasReadyPod = pods.Items.Any(p =>
+                        p.Status?.Phase == "Running" &&
+                        p.Status?.ContainerStatuses?.All(c => c.Ready) == true);
+
+                    if (hasReadyPod)
+                    {
+                        logger.LogDebug(
+                            "Service {Service}/{Ns} exposes requested port {ServicePort} and has a ready pod — port-forward is ready.",
+                            serviceName, @namespace, servicePort);
+                        return;
+                    }
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
