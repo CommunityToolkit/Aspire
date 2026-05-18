@@ -10,8 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class MySqlBuilderExtensions
     {
+        [AspireExport("withAdminer", Description = "Adds an Adminer resource for the MySql server.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> WithAdminer(this ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.AdminerContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
 
+        [AspireExport("withDbGate", Description = "Adds a DbGate resource for the MySql server.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }

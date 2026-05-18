@@ -11,6 +11,7 @@ namespace Aspire.Hosting
     public static partial class StreamlitAppHostingExtension
     {
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE001", UrlFormat = "https://github.com/CommunityToolkit/Aspire/issues/{0}")]
+        [AspireExport("addStreamlitApp", Description = "Adds a Streamlit application resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.StreamlitAppResource> AddStreamlitApp(this IDistributedApplicationBuilder builder, string name, string appDirectory, string scriptPath) { throw null; }
     }
 

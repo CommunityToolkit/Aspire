@@ -3,6 +3,9 @@
     "path": "apphost.ts",
     "language": "typescript/nodejs"
   },
+  "sdk": {
+    "version": "13.3.0"
+  },
   "profiles": {
     "https": {
       "applicationUrl": "https://localhost:29750;http://localhost:28931",
@@ -13,7 +16,7 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Zitadel": "13.2.1-polyglot.local",
+    "CommunityToolkit.Aspire.Hosting.Zitadel": "../../../src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj",
     "Aspire.Hosting.PostgreSQL": ""
   }
 }

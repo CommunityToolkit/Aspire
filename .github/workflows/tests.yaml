@@ -137,6 +137,7 @@ jobs:
         with:
           name: binlog-${{ matrix.name }}-${{ matrix.os }}
           path: "**/*.binlog"
+        continue-on-error: true
 
       - name: Upload test results artifact
         if: always()

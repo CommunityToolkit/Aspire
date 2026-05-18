@@ -10,6 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class MongoDBBuilderExtensions
     {
+        [AspireExportIgnore(Reason = "The configuration callback depends on DbGate container APIs that are not exported to polyglot app hosts. Use the overload without a configuration callback instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MongoDBServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.MongoDBServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }

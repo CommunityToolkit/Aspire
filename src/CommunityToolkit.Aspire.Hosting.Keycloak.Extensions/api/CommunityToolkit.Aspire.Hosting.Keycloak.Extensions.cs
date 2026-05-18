@@ -10,6 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class KeycloakPostgresExtension
     {
+        [AspireExport("withPostgres", Description = "Configures a Keycloak resource to use a PostgreSQL database")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KeycloakResource> WithPostgres(this ApplicationModel.IResourceBuilder<ApplicationModel.KeycloakResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> database, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? username = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, bool xaEnabled = false) { throw null; }
     }
 }
