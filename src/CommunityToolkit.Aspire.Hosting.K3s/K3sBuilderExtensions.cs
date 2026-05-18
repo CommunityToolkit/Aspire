@@ -1,4 +1,3 @@
-using System.Text;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -245,7 +244,27 @@ public static class K3sBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(tag);
 
-        return builder.WithImageTag(tag);
+        // Update the server image tag.
+        builder.WithImageTag(tag);
+
+        // Sync all agent nodes to the same tag — mismatched server/agent versions can
+        // break node joins and exceed Kubernetes' supported ±1 minor version skew.
+        foreach (var agent in builder.Resource.AgentResources)
+        {
+            var existing = agent.Annotations.OfType<ContainerImageAnnotation>().FirstOrDefault();
+            if (existing is not null)
+            {
+                agent.Annotations.Remove(existing);
+                agent.Annotations.Add(new ContainerImageAnnotation
+                {
+                    Image = existing.Image,
+                    Tag = tag,
+                    Registry = existing.Registry,
+                });
+            }
+        }
+
+        return builder;
     }
 
     /// <summary>Sets the pod subnet CIDR (<c>--cluster-cidr</c>).</summary>
@@ -317,17 +336,20 @@ public static class K3sBuilderExtensions
     /// to the cluster. The injection method is selected automatically based on the resource type:
     /// <list type="bullet">
     ///   <item>
-    ///     <see cref="ContainerResource"/>s receive <c>KUBECONFIG_DATA</c> (base-64-encoded YAML
-    ///     of the container-network kubeconfig) and <c>KUBECONFIG=/var/k3s/kubeconfig.yaml</c>
-    ///     once the file is injected at container-start time.
+    ///     <see cref="ContainerResource"/>s receive a physical kubeconfig file copied to
+    ///     <c>/var/k3s/kubeconfig.yaml</c> (container-network variant,
+    ///     <c>server: https://{resourceName}:6443</c>). <c>KUBECONFIG=/var/k3s/kubeconfig.yaml</c>
+    ///     is set automatically so all standard Kubernetes tooling (<c>kubectl</c>, <c>helm</c>,
+    ///     KubernetesClient SDK) works without any custom bootstrap code.
     ///   </item>
     ///   <item>
     ///     Projects and executables receive <c>KUBECONFIG=&lt;host path&gt;/local/kubeconfig.yaml</c>
-    ///     pointing to a file that is accessible directly on the host filesystem.
+    ///     pointing directly to a file on the host filesystem.
     ///   </item>
     /// </list>
-    /// The variable is populated only after the cluster health check passes; use
-    /// <c>WaitFor(cluster)</c> on the dependent resource to guarantee ordering.
+    /// Both files are written by the health check after all nodes reach <c>Ready</c> state.
+    /// Use <c>WaitFor(cluster)</c> on the dependent resource to guarantee the files exist
+    /// before the resource starts.
     /// </summary>
     [AspireExport("withReference", Description = "Injects kubeconfig credentials into the dependent resource")]
     public static IResourceBuilder<TDestination> WithReference<TDestination>(
@@ -342,21 +364,24 @@ public static class K3sBuilderExtensions
 
         if (destination.Resource is ContainerResource)
         {
-            // Containers receive KUBECONFIG_DATA (base64-encoded container-network kubeconfig).
-            // KubernetesClient reads this via:
-            //   var bytes = Convert.FromBase64String(Environment.GetEnvironmentVariable("KUBECONFIG_DATA")!);
-            //   using var stream = new MemoryStream(bytes);
-            //   var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(stream);
-            // For standard kubectl, use WithContainerFiles to inject a real file instead.
-            return destination.WithEnvironment(ctx =>
-            {
-                if (cluster.KubeconfigDirectory is null) return;
-                var path = Path.Combine(cluster.KubeconfigDirectory, "container", "kubeconfig.yaml");
-                if (!File.Exists(path)) return;
-                var yaml = File.ReadAllText(path);
-                ctx.EnvironmentVariables["KUBECONFIG_DATA"] =
-                    Convert.ToBase64String(Encoding.UTF8.GetBytes(yaml));
-            });
+            // Containers get a bind-mount of the container/ kubeconfig directory at /var/k3s.
+            // ContainerMountAnnotation is added directly to bypass the T : ContainerResource
+            // constraint on WithBindMount — the annotation is equivalent.
+            //
+            // Bind-mount (not file copy) is used for the same reason as in the helm and
+            // kubectl installer containers: if the cluster is recreated while a container is
+            // running, the new kubeconfig appears automatically without restarting the container.
+            var containerKubeconfigDir = Path.Combine(cluster.KubeconfigDirectory!, "container");
+            Directory.CreateDirectory(containerKubeconfigDir);
+
+            destination.Resource.Annotations.Add(
+                new ContainerMountAnnotation(
+                    containerKubeconfigDir,
+                    "/var/k3s",
+                    ContainerMountType.BindMount,
+                    isReadOnly: true));
+
+            return destination.WithEnvironment("KUBECONFIG", "/var/k3s/kubeconfig.yaml");
         }
 
         // Projects and executables: KUBECONFIG points to the host-accessible local kubeconfig.

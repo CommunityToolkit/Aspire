@@ -178,32 +178,48 @@ public static class K3sHelmBuilderExtensions
         if (release.RepoUrl is not null)
         {
             var alias = $"aspire-k3s-{release.ReleaseName}";
-            sb.AppendLine($"helm repo add --force-update \"{alias}\" \"{release.RepoUrl}\"");
-            sb.AppendLine($"helm repo update \"{alias}\"");
+            sb.AppendLine($"helm repo add --force-update {ShellEscape(alias)} {ShellEscape(release.RepoUrl)}");
+            sb.AppendLine($"helm repo update {ShellEscape(alias)}");
         }
 
         var chartRef = release.RepoUrl is not null
             ? $"aspire-k3s-{release.ReleaseName}/{release.Chart}"
             : release.Chart!;
 
-        sb.Append($"helm upgrade --install \"{release.ReleaseName}\" \"{chartRef}\"");
-        sb.Append($" --namespace \"{release.Namespace}\" --create-namespace");
+        sb.Append($"helm upgrade --install {ShellEscape(release.ReleaseName)} {ShellEscape(chartRef)}");
+        sb.Append($" --namespace {ShellEscape(release.Namespace)} --create-namespace");
         sb.Append(" --wait --timeout 10m");
 
         if (release.Version is not null)
-            sb.Append($" --version \"{release.Version}\"");
+            sb.Append($" --version {ShellEscape(release.Version)}");
 
         // Values files: injected as {index}-{filename} to guarantee uniqueness and order.
         // Applied first so --set flags below can override individual keys.
+        // Paths are single-quoted so spaces or special characters in filenames are safe.
         for (var i = 0; i < release.ValuesFiles.Count; i++)
-            sb.Append($" --values \"/helm-values/{i}-{System.IO.Path.GetFileName(release.ValuesFiles[i])}\"");
+        {
+            var filename = $"{i}-{System.IO.Path.GetFileName(release.ValuesFiles[i])}";
+            sb.Append($" --values {ShellEscape($"/helm-values/{filename}")}");
+        }
 
         // --set flags override everything above (highest Helm precedence).
+        // Both key and value are single-quoted so quotes, spaces, or $ in values are safe.
         foreach (var (key, value) in release.HelmValues)
-            sb.Append($" --set \"{key}={value}\"");
+            sb.Append($" --set {ShellEscape($"{key}={value}")}");
 
         return sb.ToString();
     }
+
+    /// <summary>
+    /// Wraps <paramref name="value"/> in POSIX single quotes so that all shell
+    /// metacharacters (<c>$</c>, <c>`</c>, <c>\</c>, <c>"</c>, <c>;</c>,
+    /// <c>&amp;</c>, <c>|</c>, space, etc.) are treated as literals in Dockerfile
+    /// <c>RUN</c> shell-form commands and Delve's <c>--build-flags</c> parser.
+    /// Embedded single quotes are escaped with the standard POSIX technique:
+    /// <c>'</c> → <c>'\''</c>.
+    /// </summary>
+    private static string ShellEscape(string value) =>
+        $"'{value.Replace("'", "'\\''")}'";
 }
 
 #pragma warning restore ASPIREATS001

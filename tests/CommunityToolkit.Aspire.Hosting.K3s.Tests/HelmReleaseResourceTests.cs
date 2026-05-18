@@ -220,8 +220,8 @@ public class HelmReleaseResourceTests
             MakeRelease("argocd", "argo-cd", null, null, "argocd"));
 
         Assert.Contains("helm upgrade --install", script);
-        Assert.Contains("\"argocd\"", script);
-        Assert.Contains("\"argo-cd\"", script);
+        Assert.Contains("'argocd'", script);
+        Assert.Contains("'argo-cd'", script);
     }
 
     [Fact]
@@ -231,7 +231,7 @@ public class HelmReleaseResourceTests
             MakeRelease("r", "chart", null, null, "my-ns"));
 
         Assert.Contains("--wait", script);
-        Assert.Contains("--namespace \"my-ns\"", script);
+        Assert.Contains("--namespace 'my-ns'", script);
         Assert.Contains("--create-namespace", script);
     }
 
@@ -253,7 +253,7 @@ public class HelmReleaseResourceTests
             MakeRelease("r", "oci://registry/chart", null, null, "default"));
 
         Assert.DoesNotContain("helm repo add", script);
-        Assert.Contains("\"oci://registry/chart\"", script);
+        Assert.Contains("'oci://registry/chart'", script);
     }
 
     [Fact]
@@ -262,7 +262,7 @@ public class HelmReleaseResourceTests
         var script = K3sHelmBuilderExtensions.BuildHelmScript(
             MakeRelease("r", "chart", null, "7.8.0", "default"));
 
-        Assert.Contains("--version \"7.8.0\"", script);
+        Assert.Contains("--version '7.8.0'", script);
     }
 
     [Fact]
@@ -284,8 +284,8 @@ public class HelmReleaseResourceTests
                 ["replicaCount"] = "2",
             }));
 
-        Assert.Contains("--set \"service.type=NodePort\"", script);
-        Assert.Contains("--set \"replicaCount=2\"", script);
+        Assert.Contains("--set 'service.type=NodePort'", script);
+        Assert.Contains("--set 'replicaCount=2'", script);
     }
 
     // ── WaitForCompletion support ─────────────────────────────────────────────
@@ -366,8 +366,8 @@ public class HelmReleaseResourceTests
         var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
 
         // Index prefix guarantees uniqueness even when basenames collide.
-        Assert.Contains("--values \"/helm-values/0-values.yaml\"", script);
-        Assert.Contains("--values \"/helm-values/1-values-prod.yaml\"", script);
+        Assert.Contains("--values '/helm-values/0-values.yaml'", script);
+        Assert.Contains("--values '/helm-values/1-values-prod.yaml'", script);
     }
 
     [Fact]
@@ -385,8 +385,8 @@ public class HelmReleaseResourceTests
 
         var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
 
-        var firstValuesIdx = script.IndexOf("--values \"/helm-values/0-", StringComparison.Ordinal);
-        var secondValuesIdx = script.IndexOf("--values \"/helm-values/1-", StringComparison.Ordinal);
+        var firstValuesIdx = script.IndexOf("--values '/helm-values/0-", StringComparison.Ordinal);
+        var secondValuesIdx = script.IndexOf("--values '/helm-values/1-", StringComparison.Ordinal);
         var setIdx = script.IndexOf("--set", StringComparison.Ordinal);
 
         Assert.True(firstValuesIdx < secondValuesIdx, "0-base.yaml must precede 1-prod.yaml");
@@ -404,8 +404,8 @@ public class HelmReleaseResourceTests
 
         var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
 
-        Assert.Contains("--values \"/helm-values/0-values.yaml\"", script);
-        Assert.Contains("--values \"/helm-values/1-values.yaml\"", script);
+        Assert.Contains("--values '/helm-values/0-values.yaml'", script);
+        Assert.Contains("--values '/helm-values/1-values.yaml'", script);
     }
 
     [Fact]

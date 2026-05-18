@@ -14,6 +14,12 @@ namespace CommunityToolkit.Aspire.Hosting;
 /// (<c>localhost:{port}</c>) and DCP-network containers
 /// (<c>host.docker.internal:{port}</c>) can reach the service.
 /// </para>
+/// <para>
+/// The <paramref name="onReadyChanged"/> callback is invoked with <see langword="true"/>
+/// only after a ready pod is confirmed via <c>ListNamespacedPodAsync</c> — not when the
+/// TCP listener starts. This ensures <c>WaitFor(endpoint)</c> on dependent resources
+/// correctly waits until the k8s service has a reachable pod.
+/// </para>
 /// </summary>
 internal sealed class K3sInProcessPortForwarder(
     string kubeconfigPath,
@@ -33,11 +39,16 @@ internal sealed class K3sInProcessPortForwarder(
             try
             {
                 listener.Start();
-                onReadyChanged(true);
 
                 logger.LogInformation(
                     "Port-forward: 0.0.0.0:{Local} → svc/{Service}.{Ns}:{Port}",
                     localPort, serviceName, @namespace, servicePort);
+
+                // Probe the service before signalling ready — the Kubernetes service and
+                // a ready pod must exist before any connection can succeed.
+                // This makes the ready signal meaningful for WaitFor(endpoint) consumers.
+                await WaitForServiceReadyAsync(logger, ct).ConfigureAwait(false);
+                onReadyChanged(true);
 
                 while (!ct.IsCancellationRequested)
                 {
@@ -67,6 +78,57 @@ internal sealed class K3sInProcessPortForwarder(
 
             try { await Task.Delay(backoff, ct).ConfigureAwait(false); } catch (OperationCanceledException) { break; }
             backoff = TimeSpan.FromSeconds(Math.Min(backoff.TotalSeconds * 2, 30));
+        }
+    }
+
+    /// <summary>
+    /// Polls until the named service has at least one fully-ready pod.
+    /// This ensures the ready signal is only emitted when connections can actually succeed.
+    /// </summary>
+    private async Task WaitForServiceReadyAsync(ILogger logger, CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath);
+                using var k8sClient = new Kubernetes(config);
+
+                var svc = await k8sClient.CoreV1
+                    .ReadNamespacedServiceAsync(serviceName, @namespace, cancellationToken: ct)
+                    .ConfigureAwait(false);
+
+                var selector = string.Join(",",
+                    (svc.Spec.Selector ?? new Dictionary<string, string>())
+                    .Select(kv => $"{kv.Key}={kv.Value}"));
+
+                var pods = await k8sClient.CoreV1
+                    .ListNamespacedPodAsync(@namespace, labelSelector: selector, cancellationToken: ct)
+                    .ConfigureAwait(false);
+
+                var hasReadyPod = pods.Items.Any(p =>
+                    p.Status?.Phase == "Running" &&
+                    p.Status?.ContainerStatuses?.All(c => c.Ready) == true);
+
+                if (hasReadyPod)
+                {
+                    logger.LogDebug(
+                        "Service {Service}/{Ns} has a ready pod — port-forward is ready.",
+                        serviceName, @namespace);
+                    return;
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug(ex,
+                    "Service {Service}/{Ns} not yet ready; retrying…", serviceName, @namespace);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(3), ct).ConfigureAwait(false);
         }
     }
 
@@ -102,9 +164,20 @@ internal sealed class K3sInProcessPortForwarder(
                 return;
             }
 
+            // Resolve the pod container port from the service's targetPort.
+            // WebSocketNamespacedPodPortForwardAsync requires the pod/container port,
+            // NOT the service port. For services where port != targetPort the wrong
+            // port would be forwarded otherwise.
+            var svcPort = svc.Spec.Ports.FirstOrDefault(p => p.Port == servicePort);
+            // TargetPort is IntOrString — its Value property is always a string.
+            // Parse it as an integer; if it's a named port or unset, fall back to the service port.
+            var podPort = svcPort?.TargetPort?.Value is { } tp && int.TryParse(tp, out var tpInt)
+                ? tpInt
+                : servicePort;
+
             // Open WebSocket port-forward to the pod.
             using var ws = await k8sClient.WebSocketNamespacedPodPortForwardAsync(
-                pod.Metadata.Name, @namespace, [servicePort],
+                pod.Metadata.Name, @namespace, [podPort],
                 cancellationToken: ct).ConfigureAwait(false);
 
             using var demuxer = new StreamDemuxer(ws, StreamType.PortForward);

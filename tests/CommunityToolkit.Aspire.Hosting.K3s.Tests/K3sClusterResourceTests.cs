@@ -185,29 +185,49 @@ public class K3sClusterResourceTests
     public void WithReferenceSetsKubeconfigEnvForProject()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-
         var cluster = appBuilder.AddK3sCluster("k8s");
 
-        // ProjectResource would need a project file; use ExecutableResource as a proxy
+        // ProjectResource would need a project file; use ExecutableResource as a proxy.
         var exe = appBuilder.AddExecutable("myapp", "myapp", ".");
         exe.WithReference(cluster);
 
-        // Verify the environment callback was added (no exception thrown)
         using var app = appBuilder.Build();
-        Assert.NotNull(app);
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var exeResource = Assert.Single(model.Resources.OfType<ExecutableResource>());
+
+        // Executables receive KUBECONFIG pointing to local/kubeconfig.yaml on the host.
+        Assert.Contains(
+            exeResource.Annotations.OfType<EnvironmentCallbackAnnotation>(),
+            a => a.Callback is not null);
     }
 
     [Fact]
-    public void WithReferenceSetsKubeconfigDataEnvForContainer()
+    public void WithReferenceMountsKubeconfigDirForContainer()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-
         var cluster = appBuilder.AddK3sCluster("k8s");
         var container = appBuilder.AddContainer("operator", "myorg/operator");
         container.WithReference(cluster);
 
         using var app = appBuilder.Build();
-        Assert.NotNull(app);
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var containerResource = model.Resources
+            .OfType<ContainerResource>()
+            .Single(r => r.Name == "operator");
+
+        // All containers (user containers, helm, and kubectl installers) receive a bind-mount
+        // of the container/ kubeconfig directory. Bind-mount is used so the kubeconfig
+        // updates automatically if the cluster is recreated without restarting the container.
+        var mount = containerResource.Annotations
+            .OfType<ContainerMountAnnotation>()
+            .FirstOrDefault(m => m.Target == "/var/k3s");
+
+        Assert.NotNull(mount);
+        Assert.Equal(ContainerMountType.BindMount, mount.Type);
+        Assert.True(mount.IsReadOnly);
+        Assert.EndsWith(Path.Combine(".k3s", "k8s", "container"), mount.Source);
     }
 
     [Fact]

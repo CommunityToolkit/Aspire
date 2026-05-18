@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting;
+using k8s;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -20,20 +21,12 @@ public static class K3sServiceEndpointExtensions
     /// Exposes a Kubernetes service as a first-class Aspire endpoint resource.
     /// <para>
     /// An in-process KubernetesClient WebSocket port-forward is started when the cluster is ready,
-    /// binding to <c>0.0.0.0:{hostPort}</c>. Use <c>WaitFor</c> to sequence after a
-    /// <see cref="HelmReleaseResource"/> or <see cref="K8sManifestResource"/> that deploys the service.
+    /// binding to <c>0.0.0.0:{hostPort}</c>. The endpoint only becomes healthy after the
+    /// Kubernetes service has a ready pod — use <c>WaitForCompletion</c> on a
+    /// <see cref="HelmReleaseResource"/> or <see cref="K8sManifestResource"/> to sequence the
+    /// install before starting the port-forward.
     /// </para>
     /// </summary>
-    /// <example>
-    /// <code>
-    /// var nginx = cluster.AddHelmRelease("nginx", "nginx", repo: "https://charts.bitnami.com/bitnami");
-    /// var ui = cluster.AddServiceEndpoint("nginx-ui", "nginx", servicePort: 80)
-    ///     .WaitFor(nginx);
-    /// builder.AddProject&lt;Projects.Api&gt;("api")
-    ///     .WaitFor(ui)
-    ///     .WithReference(ui);
-    /// </code>
-    /// </example>
     [AspireExport("addServiceEndpoint",
         Description = "Exposes a Kubernetes service as an Aspire endpoint resource")]
     public static IResourceBuilder<K3sServiceEndpointResource> AddServiceEndpoint(
@@ -46,6 +39,10 @@ public static class K3sServiceEndpointExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(serviceName);
+
+        if (servicePort is < 1 or > 65535)
+            throw new ArgumentOutOfRangeException(nameof(servicePort),
+                servicePort, "Service port must be in the range 1–65535.");
 
         var cluster = builder.Resource;
         var endpoint = new K3sServiceEndpointResource(name, serviceName, servicePort, @namespace, cluster);
@@ -79,10 +76,10 @@ public static class K3sServiceEndpointExtensions
     /// Injects the service URL exposed by <paramref name="source"/> into
     /// <paramref name="destination"/> using the Aspire <c>services__{name}__url</c> convention.
     /// <list type="bullet">
-    ///   <item>Host processes receive <c>https://localhost:{port}</c>.</item>
-    ///   <item>Container resources receive <c>https://host.docker.internal:{port}</c>.
-    ///     On Linux without Docker Desktop, add
-    ///     <c>--add-host=host.docker.internal:host-gateway</c> to the container runtime args.</item>
+    ///   <item>Host processes receive <c>http(s)://localhost:{port}</c>.</item>
+    ///   <item>Container resources receive <c>http(s)://host.docker.internal:{port}</c>.
+    ///     The <c>--add-host=host.docker.internal:host-gateway</c> runtime arg is injected
+    ///     automatically so the hostname resolves on Linux Docker Engine.</item>
     /// </list>
     /// </summary>
     [AspireExport("withReference",
@@ -101,6 +98,14 @@ public static class K3sServiceEndpointExtensions
 
         if (destination.Resource is ContainerResource)
         {
+            // Inject --add-host so host.docker.internal resolves inside Linux containers.
+            // DCP does not inject this automatically; Docker Desktop on Mac/Windows resolves
+            // it natively, but Docker Engine on Linux requires the explicit mapping.
+            // ContainerRuntimeArgsCallbackAnnotation receives IList<object> directly.
+            destination.Resource.Annotations.Add(
+                new ContainerRuntimeArgsCallbackAnnotation(
+                    args => args.Add("--add-host=host.docker.internal:host-gateway")));
+
             return destination.WithEnvironment(ctx =>
             {
                 if (ep.IsReady)
@@ -137,9 +142,6 @@ public static class K3sServiceEndpointExtensions
                     "k3s local kubeconfig is not yet available for service endpoint.");
             }
 
-            // Allocate a host port by opening a listener, reading the OS-assigned port,
-            // then closing it before the forwarder binds — the port stays reserved in the
-            // kernel TIME_WAIT for long enough that the forwarder wins the race.
             var hostPort = AllocatePort();
             endpoint.HostPort = hostPort;
 
@@ -154,7 +156,6 @@ public static class K3sServiceEndpointExtensions
                 isReady =>
                 {
                     endpoint.IsReady = isReady;
-                    var state = isReady ? KnownResourceStates.Running : KnownResourceStates.RuntimeUnhealthy;
                     var urls = isReady
                         ? BuildUrls(scheme, endpoint.Name, hostPort, cluster.Name)
                         : ImmutableArray<UrlSnapshot>.Empty;
@@ -167,10 +168,6 @@ public static class K3sServiceEndpointExtensions
                 });
 
             _ = Task.Run(() => forwarder.RunAsync(logger, ct), ct);
-
-            // Wait for the forwarder to signal ready (IsReady set via callback above).
-            // The health check also reads IsReady, so WaitFor on dependent resources
-            // naturally blocks until the port-forward is accepting connections.
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
@@ -203,7 +200,8 @@ public static class K3sServiceEndpointExtensions
 
 /// <summary>
 /// Health check that satisfies <c>WaitFor(serviceEndpoint)</c>.
-/// Returns <see cref="HealthCheckResult.Healthy"/> once the port-forward is active.
+/// Returns <see cref="HealthCheckResult.Healthy"/> once the port-forward has a confirmed
+/// connection to a ready pod.
 /// </summary>
 internal sealed class K3sServiceEndpointHealthCheck(K3sServiceEndpointResource endpoint) : IHealthCheck
 {

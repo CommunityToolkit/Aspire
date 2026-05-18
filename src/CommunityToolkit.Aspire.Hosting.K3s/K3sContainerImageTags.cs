@@ -8,6 +8,6 @@ internal static class K3sContainerImageTags
     /// <remarks>rancher/k3s</remarks>
     public const string Image = "rancher/k3s";
 
-    /// <remarks>v1.31.4-k3s1</remarks>
-    public const string Tag = "v1.31.4-k3s1";
+    /// <remarks>v1.32.3-k3s1</remarks>
+    public const string Tag = "v1.32.3-k3s1";
 }

@@ -86,10 +86,34 @@ public static class K3sManifestBuilderExtensions
         }
         else
         {
-            // Single file or regular directory — use Aspire's built-in
-            // WithContainerFiles(destinationPath, hostSourcePath) which copies the
-            // file or all files in the directory into the container without a bind-mount.
-            resourceBuilder.WithContainerFiles("/k8s-manifests", absolutePath);
+            // Single file or regular directory — copy via async callback so the file(s)
+            // need not exist when the AppHost is built (only when the container starts).
+            // This mirrors WithContainerFiles(path, hostPath) semantics but without the
+            // build-time path validation that Aspire's string overload performs.
+            resourceBuilder.WithContainerFiles("/k8s-manifests", async (ctx, ct) =>
+            {
+                if (Directory.Exists(absolutePath))
+                {
+                    var files = Directory
+                        .GetFiles(absolutePath, "*.yaml", SearchOption.TopDirectoryOnly)
+                        .Concat(Directory.GetFiles(absolutePath, "*.yml", SearchOption.TopDirectoryOnly))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Order(StringComparer.OrdinalIgnoreCase);
+
+                    return [.. files
+                        .Select(f => (ContainerFileSystemItem)new ContainerFile
+                        {
+                            Name = System.IO.Path.GetFileName(f),
+                            SourcePath = f,
+                        })];
+                }
+
+                return [(ContainerFileSystemItem)new ContainerFile
+                {
+                    Name = System.IO.Path.GetFileName(absolutePath),
+                    SourcePath = absolutePath,
+                }];
+            });
         }
 
         return resourceBuilder
