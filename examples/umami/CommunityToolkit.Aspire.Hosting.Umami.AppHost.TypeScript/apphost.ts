@@ -2,7 +2,7 @@ import { createBuilder } from './.modules/aspire.js';
 
 const builder = await createBuilder();
 
-const umamiSecret = await builder.addParameterWithValue("umami-secret", "SuperSecret123!", { secret: true });
+const umamiSecret = await builder.addParameter("umami-secret", { value: "SuperSecret123!", secret: true });
 const postgres = await builder.addPostgres("postgres");
 const analyticsDatabase = await postgres.addDatabase("analytics");
 
@@ -20,7 +20,6 @@ await umami.withPostgreSQL(analyticsDatabase);
 await umamiDefault.withPostgreSQL(analyticsDatabase);
 
 // Property access on UmamiResource (ExposeProperties = true)
-const umamiResource = await umami;
-const _primaryEndpoint = await umamiResource.primaryEndpoint.get();
+const _primaryEndpoint = await umami.primaryEndpoint();
 
 await builder.build().run();

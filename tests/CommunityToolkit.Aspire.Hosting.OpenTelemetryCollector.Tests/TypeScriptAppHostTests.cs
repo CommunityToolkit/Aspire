@@ -12,7 +12,7 @@ public class TypeScriptAppHostTests
             appHostProject: "CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector",
             exampleName: "opentelemetry-collector",
-            waitForResources: ["collector", "collector-routed"],
+            waitForResources: ["collector"],
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }

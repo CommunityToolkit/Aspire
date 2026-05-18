@@ -1,6 +1,6 @@
 using Aspire.Components.Common.Tests;
 using CommunityToolkit.Aspire.Testing;
-using OpenFeature.Contrib.Providers.Flagd;
+using OpenFeature.Providers.Flagd;
 using OpenFeature.Providers.Ofrep;
 using OpenFeature.Providers.Ofrep.Configuration;
 

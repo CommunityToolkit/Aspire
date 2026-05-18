@@ -9,6 +9,9 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies"
+      - "skip-nuget-publish"
     ignore:
       # Ignore Aspire.Hosting and Aspire.Hosting.*   . We have a separate process for updating them
       - dependency-name: "Aspire.Hosting"
@@ -17,3 +20,6 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    labels:
+      - "dependencies"
+      - "skip-nuget-publish"

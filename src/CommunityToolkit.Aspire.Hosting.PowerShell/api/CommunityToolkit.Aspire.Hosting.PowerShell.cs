@@ -10,6 +10,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
 {
     public static partial class DistributedApplicationBuilderExtensions
     {
+        [global::Aspire.Hosting.AspireExportIgnore(Reason = "PSLanguageMode is not ATS-compatible. Use the string-based overload instead.")]
         public static global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(this global::Aspire.Hosting.IDistributedApplicationBuilder builder, string name, System.Management.Automation.PSLanguageMode languageMode = System.Management.Automation.PSLanguageMode.ConstrainedLanguage, int minRunspaces = 1, int maxRunspaces = 5) { throw null; }
     }
 
@@ -30,8 +31,10 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
 
     public static partial class PowerShellRunspacePoolResourceBuilderExtensions
     {
+        [global::Aspire.Hosting.AspireExport("addScript", Description = "Adds a PowerShell script resource")]
         public static global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellScriptResource> AddScript(this global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellRunspacePoolResource> builder, string name, string script) { throw null; }
 
+        [global::Aspire.Hosting.AspireExportIgnore(Reason = "IResourceBuilder<IResourceWithConnectionString> is not currently validated for ATS export in this integration.")]
         public static global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellRunspacePoolResource> WithReference(this global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellRunspacePoolResource> builder, global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.IResourceWithConnectionString> source, string? connectionName = null, bool optional = false) { throw null; }
     }
 
@@ -56,6 +59,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
 
     public static partial class PowerShellScriptResourceBuilderExtensions
     {
+        [global::Aspire.Hosting.AspireExportIgnore(Reason = "object[] is not ATS-compatible. Use the string-based overload instead.")]
         public static global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellScriptResource> WithArgs(this global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellScriptResource> builder, params object[] args) { throw null; }
     }
 
