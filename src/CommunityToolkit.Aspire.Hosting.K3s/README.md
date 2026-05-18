@@ -4,7 +4,7 @@ Provides extension methods and resource definitions for the .NET Aspire AppHost 
 [k3s](https://k3s.io/) lightweight Kubernetes cluster as part of the local development
 inner loop. The cluster, Helm chart installs, manifest applies, and service endpoint
 exposures all appear as first-class resources in the Aspire dashboard — no external
-tooling beyond Docker is required.
+tooling beyond a supported container runtime is required.
 
 ## Getting Started
 

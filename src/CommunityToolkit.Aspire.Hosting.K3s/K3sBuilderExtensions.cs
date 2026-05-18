@@ -327,8 +327,7 @@ public static class K3sBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         return builder
-            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/rancher/k3s")
-            .WithContainerRuntimeArgs("--restart=unless-stopped");
+            .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/rancher/k3s");
     }
 
     /// <summary>
