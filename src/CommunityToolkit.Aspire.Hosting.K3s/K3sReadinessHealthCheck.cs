@@ -69,14 +69,18 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
         }
         catch (Exception ex) when (IsTlsOrAuthFailure(ex))
         {
-            // Stale kubeconfig — cluster was recreated with new certs (e.g. data volume wiped).
-            // Invalidate everything; k3s will overwrite cluster/kubeconfig.yaml on next start.
+            // Stale cached client — the cluster was recreated with new certs while the
+            // health check held an old IKubernetes instance. k3s has already written a fresh
+            // kubeconfig to rawPath (it writes once at startup, not continuously), so we must
+            // NOT delete rawPath — that would remove the fresh file and leave the health check
+            // waiting forever for a file that k3s will never rewrite.
+            // Instead, discard only the cached client and the derived variants so they are
+            // regenerated from the fresh raw file on the next check cycle.
             _cachedClient?.Dispose();
             _cachedClient = null;
-            TryDelete(rawPath);
             TryDelete(Path.Combine(dir, "local", "kubeconfig.yaml"));
             TryDelete(Path.Combine(dir, "container", "kubeconfig.yaml"));
-            return HealthCheckResult.Unhealthy("k3s kubeconfig is stale — waiting for cluster refresh");
+            return HealthCheckResult.Unhealthy("k3s kubeconfig is stale — retrying with fresh credentials");
         }
         catch (Exception ex)
         {

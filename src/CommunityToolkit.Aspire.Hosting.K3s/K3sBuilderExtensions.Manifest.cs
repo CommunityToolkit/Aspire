@@ -13,7 +13,7 @@ public static class K3sManifestBuilderExtensions
 {
     /// <summary>
     /// Applies one or more Kubernetes YAML files — or a Kustomize overlay — to the cluster
-    /// via a <c>bitnami/kubectl</c> container. No host-side <c>kubectl</c> binary is required.
+    /// via a <c>rancher/kubectl</c> container. No host-side <c>kubectl</c> binary is required.
     /// <para>
     /// The container exits with code 0 after manifests are applied and any CRDs reach the
     /// <c>Established</c> condition. Use <c>WaitForCompletion(manifest)</c> on dependent resources.
@@ -65,15 +65,18 @@ public static class K3sManifestBuilderExtensions
             .WithEntrypoint("/bin/sh")
             // Script is injected at "/kubectl-apply.sh". The script auto-detects whether
             // /k8s-manifests contains a kustomization.yaml and uses -k or -f accordingly.
-            .WithContainerFiles("/", async (ctx, ct) =>
-                [new ContainerFile
+            .WithContainerFiles("/", (ctx, ct) =>
+            {
+                IEnumerable<ContainerFileSystemItem> items = [new ContainerFile
                 {
                     Name = "kubectl-apply.sh",
                     Contents = BuildManifestScript(),
                     Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
                          | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
                          | UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
-                }])
+                }];
+                return Task.FromResult(items);
+            })
             .WithArgs("/kubectl-apply.sh")
             .WithBindMount(containerKubeconfigDir, "/root/.kube");
 
@@ -90,8 +93,10 @@ public static class K3sManifestBuilderExtensions
             // need not exist when the AppHost is built (only when the container starts).
             // This mirrors WithContainerFiles(path, hostPath) semantics but without the
             // build-time path validation that Aspire's string overload performs.
-            resourceBuilder.WithContainerFiles("/k8s-manifests", async (ctx, ct) =>
+            resourceBuilder.WithContainerFiles("/k8s-manifests", (ctx, ct) =>
             {
+                IEnumerable<ContainerFileSystemItem> items;
+
                 if (Directory.Exists(absolutePath))
                 {
                     var files = Directory
@@ -100,19 +105,22 @@ public static class K3sManifestBuilderExtensions
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .Order(StringComparer.OrdinalIgnoreCase);
 
-                    return [.. files
-                        .Select(f => (ContainerFileSystemItem)new ContainerFile
-                        {
-                            Name = System.IO.Path.GetFileName(f),
-                            SourcePath = f,
-                        })];
+                    items = [.. files.Select(f => new ContainerFile
+                    {
+                        Name = Path.GetFileName(f),
+                        SourcePath = f,
+                    })];
+                }
+                else
+                {
+                    items = [new ContainerFile
+                    {
+                        Name = Path.GetFileName(absolutePath),
+                        SourcePath = absolutePath,
+                    }];
                 }
 
-                return [(ContainerFileSystemItem)new ContainerFile
-                {
-                    Name = System.IO.Path.GetFileName(absolutePath),
-                    SourcePath = absolutePath,
-                }];
+                return Task.FromResult(items);
             });
         }
 
@@ -138,9 +146,12 @@ public static class K3sManifestBuilderExtensions
     {
         var sb = new StringBuilder("#!/bin/sh\nset -e\n");
 
-        // Poll until the k3s health check writes the kubeconfig.
-        sb.AppendLine("until [ -f /root/.kube/kubeconfig.yaml ]; do");
-        sb.AppendLine("  echo 'Waiting for k3s cluster to be ready...'");
+        // Poll until the kubeconfig exists AND the k3s API server is reachable.
+        // DCP sets up container network aliases asynchronously, so the kubeconfig file
+        // can appear in the bind-mount before the k8s hostname resolves in the kubectl
+        // container. Using `kubectl cluster-info` verifies both the file and the network.
+        sb.AppendLine("until [ -f /root/.kube/kubeconfig.yaml ] && kubectl cluster-info --kubeconfig /root/.kube/kubeconfig.yaml > /dev/null 2>&1; do");
+        sb.AppendLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
         sb.AppendLine("  sleep 5");
         sb.AppendLine("done");
 

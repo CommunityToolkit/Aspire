@@ -270,27 +270,46 @@ public class K3sIntegrationTests : IAsyncLifetime
         _app = null;
 
         // ── Second run with the same named volume ─────────────────────────
-        var builder2 = TestDistributedApplicationBuilder.Create();
+        using var builder2 = TestDistributedApplicationBuilder.Create();
         builder2.AddK3sCluster("k8s").WithDataVolume(volumeName);
 
         await using var app2 = builder2.Build();
-        await app2.StartAsync();
+        try
+        {
+            await app2.StartAsync();
 
-        var rns2 = app2.Services.GetRequiredService<ResourceNotificationService>();
-        using var cts2 = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-        await rns2.WaitForResourceHealthyAsync("k8s", cts2.Token);
+            var rns2 = app2.Services.GetRequiredService<ResourceNotificationService>();
+            using var cts2 = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            await rns2.WaitForResourceHealthyAsync("k8s", cts2.Token);
 
-        var kubeconfigPath2 = Path.Combine(
-            builder2.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
+            var kubeconfigPath2 = Path.Combine(
+                builder2.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
 
-        using var k8sClient2 = new Kubernetes(
-            KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath2));
+            using var k8sClient2 = new Kubernetes(
+                KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath2));
 
-        var cm = await k8sClient2.CoreV1.ReadNamespacedConfigMapAsync(
-            "persist-check", "default", cancellationToken: cts2.Token);
+            var cm = await k8sClient2.CoreV1.ReadNamespacedConfigMapAsync(
+                "persist-check", "default", cancellationToken: cts2.Token);
 
-        Assert.Equal("first", cm.Data["run"]);
+            Assert.Equal("first", cm.Data["run"]);
+        }
+        finally
+        {
+            await app2.StopAsync();
 
-        await app2.StopAsync();
+            // Remove the named volume so it does not accumulate on CI runners.
+            try
+            {
+                using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("docker")
+                {
+                    ArgumentList = { "volume", "rm", "--force", volumeName },
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                });
+                if (process is not null) await process.WaitForExitAsync();
+            }
+            catch { /* best effort */ }
+        }
     }
 }

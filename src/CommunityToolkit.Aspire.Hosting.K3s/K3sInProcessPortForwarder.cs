@@ -98,12 +98,19 @@ internal sealed class K3sInProcessPortForwarder(
                     .ReadNamespacedServiceAsync(serviceName, @namespace, cancellationToken: ct)
                     .ConfigureAwait(false);
 
-                var selector = string.Join(",",
-                    (svc.Spec.Selector ?? new Dictionary<string, string>())
-                    .Select(kv => $"{kv.Key}={kv.Value}"));
+                if (svc.Spec.Selector is null or { Count: 0 })
+                {
+                    logger.LogWarning(
+                        "Service {Service}/{Ns} has no pod selector — cannot determine readiness.",
+                        serviceName, @namespace);
+                    return;
+                }
+
+                var labelSelector = string.Join(",",
+                    svc.Spec.Selector.Select(kv => $"{kv.Key}={kv.Value}"));
 
                 var pods = await k8sClient.CoreV1
-                    .ListNamespacedPodAsync(@namespace, labelSelector: selector, cancellationToken: ct)
+                    .ListNamespacedPodAsync(@namespace, labelSelector: labelSelector, cancellationToken: ct)
                     .ConfigureAwait(false);
 
                 var hasReadyPod = pods.Items.Any(p =>
@@ -145,11 +152,19 @@ internal sealed class K3sInProcessPortForwarder(
                 .ReadNamespacedServiceAsync(serviceName, @namespace, cancellationToken: ct)
                 .ConfigureAwait(false);
 
-            var selector = string.Join(",",
-                (svc.Spec.Selector ?? new Dictionary<string, string>()).Select(kv => $"{kv.Key}={kv.Value}"));
+            if (svc.Spec.Selector is null or { Count: 0 })
+            {
+                logger.LogWarning(
+                    "Service {Service}/{Ns} has no pod selector — connection dropped.",
+                    serviceName, @namespace);
+                return;
+            }
+
+            var labelSelector = string.Join(",",
+                svc.Spec.Selector.Select(kv => $"{kv.Key}={kv.Value}"));
 
             var pods = await k8sClient.CoreV1
-                .ListNamespacedPodAsync(@namespace, labelSelector: selector, cancellationToken: ct)
+                .ListNamespacedPodAsync(@namespace, labelSelector: labelSelector, cancellationToken: ct)
                 .ConfigureAwait(false);
 
             var pod = pods.Items.FirstOrDefault(p =>
@@ -165,15 +180,29 @@ internal sealed class K3sInProcessPortForwarder(
             }
 
             // Resolve the pod container port from the service's targetPort.
-            // WebSocketNamespacedPodPortForwardAsync requires the pod/container port,
-            // NOT the service port. For services where port != targetPort the wrong
-            // port would be forwarded otherwise.
+            // WebSocketNamespacedPodPortForwardAsync requires the container port, not the
+            // service port. targetPort can be a numeric string or a named port string.
             var svcPort = svc.Spec.Ports.FirstOrDefault(p => p.Port == servicePort);
-            // TargetPort is IntOrString — its Value property is always a string.
-            // Parse it as an integer; if it's a named port or unset, fall back to the service port.
-            var podPort = svcPort?.TargetPort?.Value is { } tp && int.TryParse(tp, out var tpInt)
-                ? tpInt
-                : servicePort;
+            int podPort;
+            if (svcPort?.TargetPort?.Value is { } tp)
+            {
+                if (int.TryParse(tp, out var numeric))
+                {
+                    podPort = numeric;
+                }
+                else
+                {
+                    // Named targetPort — resolve against the selected pod's container ports.
+                    podPort = pod.Spec.Containers
+                        .SelectMany(c => c.Ports ?? [])
+                        .FirstOrDefault(p => p.Name == tp)
+                        ?.ContainerPort ?? servicePort;
+                }
+            }
+            else
+            {
+                podPort = servicePort;
+            }
 
             // Open WebSocket port-forward to the pod.
             using var ws = await k8sClient.WebSocketNamespacedPodPortForwardAsync(

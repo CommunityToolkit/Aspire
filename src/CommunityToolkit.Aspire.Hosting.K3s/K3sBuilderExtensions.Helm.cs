@@ -69,10 +69,10 @@ public static class K3sHelmBuilderExtensions
             // The install script is injected as /helm-install.sh via WithContainerFiles.
             // The callback fires when the container is being started (after WaitFor(cluster)
             // is satisfied), so all WithHelmValue() calls have been made by then.
-            .WithContainerFiles("/", async (ctx, ct) =>
+            .WithContainerFiles("/", (ctx, ct) =>
             {
                 var script = BuildHelmScript(release);
-                return [new ContainerFile
+                IEnumerable<ContainerFileSystemItem> items = [new ContainerFile
                 {
                     Name = "helm-install.sh",
                     Contents = script,
@@ -80,23 +80,22 @@ public static class K3sHelmBuilderExtensions
                          | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
                          | UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
                 }];
+                return Task.FromResult(items);
             })
             .WithArgs("/helm-install.sh")
-            // Inject host-side values files declared via WithHelmValuesFile using
-            // Aspire's built-in WithContainerFiles(destinationPath, hostSourcePath).
-            // One call per file; each copies the file into /helm-values/ in the container.
-            // The callback wraps all files so it fires after all WithHelmValuesFile() calls.
-            .WithContainerFiles("/helm-values", async (ctx, ct) =>
-                release.ValuesFiles
+            // Inject host-side values files declared via WithHelmValuesFile.
+            // The callback fires at container-start time so all WithHelmValuesFile() calls
+            // have been made and ValuesFiles is fully populated.
+            .WithContainerFiles("/helm-values", (ctx, ct) =>
+            {
+                IEnumerable<ContainerFileSystemItem> items = [.. release.ValuesFiles
                     .Select((hostPath, i) => (ContainerFileSystemItem)new ContainerFile
                     {
-                        // Prefix with index so files are unique even if basenames collide
-                        // (e.g. prod/values.yaml + base/values.yaml → 0-values.yaml, 1-values.yaml)
-                        // and order is explicit on the filesystem as well as in the script.
-                        Name = $"{i}-{System.IO.Path.GetFileName(hostPath)}",
+                        Name = $"{i}-{Path.GetFileName(hostPath)}",
                         SourcePath = hostPath,
-                    })
-                    .ToList())
+                    })];
+                return Task.FromResult(items);
+            })
             .WithBindMount(containerKubeconfigDir, "/root/.kube")
             .WithEnvironment("KUBECONFIG", "/root/.kube/kubeconfig.yaml")
             .WithIconName("Rocket")
@@ -167,11 +166,13 @@ public static class K3sHelmBuilderExtensions
     {
         var sb = new StringBuilder("#!/bin/sh\nset -e\n");
 
-        // Poll until the k3s health check writes the kubeconfig — the file appears only
-        // after all nodes are Ready. This replaces WaitFor(cluster) since a container
-        // cannot WaitFor its IResourceWithParent.
-        sb.AppendLine("until [ -f /root/.kube/kubeconfig.yaml ]; do");
-        sb.AppendLine("  echo 'Waiting for k3s cluster to be ready...'");
+        // Poll until the kubeconfig exists AND the k3s API server is reachable.
+        // DCP sets up container network aliases asynchronously, so the kubeconfig file
+        // can appear in the bind-mount before the k8s hostname resolves in the helm
+        // container. Using `helm list` (which calls the k8s API) verifies both the
+        // file and the network path before proceeding.
+        sb.AppendLine("until [ -f /root/.kube/kubeconfig.yaml ] && helm list --kubeconfig /root/.kube/kubeconfig.yaml > /dev/null 2>&1; do");
+        sb.AppendLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
         sb.AppendLine("  sleep 5");
         sb.AppendLine("done");
 

@@ -4,7 +4,7 @@ namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents one or more Kubernetes YAML manifests applied to the parent k3s cluster via
-/// <c>kubectl apply --server-side</c> running inside a <c>bitnami/kubectl</c> container.
+/// <c>kubectl apply --server-side</c> running inside a <c>rancher/kubectl</c> container.
 /// <para>
 /// The container polls for the cluster kubeconfig (written when the cluster health check
 /// first passes), applies the manifests, waits for any CRDs to reach <c>Established</c>,

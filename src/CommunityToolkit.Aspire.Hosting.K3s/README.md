@@ -65,7 +65,7 @@ Values are applied in this order (last wins):
 
 ## Applying Kubernetes manifests
 
-`AddK8sManifest` runs `kubectl apply --server-side` inside an `alpine/k8s` container.
+`AddK8sManifest` runs `kubectl apply --server-side` inside an `rancher/kubectl` container.
 No host-side `kubectl` binary is required. Kustomize overlays are auto-detected.
 
 ```csharp
@@ -115,18 +115,16 @@ builder.AddContainer("sidecar", "myorg/sidecar")
 | Consumer type | What is injected |
 |---|---|
 | `ProjectResource` / `ExecutableResource` | `KUBECONFIG=…/.k3s/k8s/local/kubeconfig.yaml` |
-| `ContainerResource` | `KUBECONFIG_DATA=<base64 container-network kubeconfig>` |
+| `ContainerResource` | Bind-mount of `container/kubeconfig.yaml` at `/var/k3s/` + `KUBECONFIG=/var/k3s/kubeconfig.yaml` |
+
+All standard Kubernetes tooling (`kubectl`, `helm`, KubernetesClient SDK) reads `KUBECONFIG` automatically — no custom bootstrap code required.
 
 Reading in .NET:
 ```csharp
-// Project / executable — standard kubectl convention
+// Works identically for both projects and containers — the SDK reads KUBECONFIG automatically.
 var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(
     Environment.GetEnvironmentVariable("KUBECONFIG"));
-
-// Container — decode from env var
-var bytes  = Convert.FromBase64String(Environment.GetEnvironmentVariable("KUBECONFIG_DATA")!);
-using var stream = new MemoryStream(bytes);
-var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(stream);
+using var client = new Kubernetes(config);
 ```
 
 ## Persistent cluster state
@@ -154,7 +152,7 @@ The health check waits for all nodes to reach `Ready` before the cluster is mark
 
 ## Image overrides
 
-The `alpine/helm` and `alpine/k8s` images are pinned but configurable:
+The `alpine/helm` and `rancher/kubectl` images are pinned but configurable:
 
 ```csharp
 builder.AddK3sCluster("k8s", configure: opts =>

@@ -251,7 +251,13 @@ public class K3sClusterResourceTests
         using var app = appBuilder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var args = resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>();
+        Assert.Contains(args, a => a is not null); // arg callbacks registered
+        // Verify the actual arg value by evaluating the callbacks.
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in args) a.Callback(ctx);
+        Assert.Contains("--cluster-cidr=10.88.0.0/16", ctx.Args);
     }
 
     [Fact]
@@ -264,7 +270,11 @@ public class K3sClusterResourceTests
         using var app = appBuilder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+        Assert.Contains("--service-cidr=10.89.0.0/16", ctx.Args);
     }
 
     [Fact]
@@ -277,7 +287,11 @@ public class K3sClusterResourceTests
         using var app = appBuilder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+        Assert.Contains("--disable=traefik", ctx.Args);
     }
 
     [Fact]
@@ -290,7 +304,11 @@ public class K3sClusterResourceTests
         using var app = appBuilder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var resource = Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+        Assert.Contains("--write-kubeconfig-mode=644", ctx.Args);
     }
 
     [Fact]

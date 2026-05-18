@@ -68,13 +68,13 @@ public sealed class K3sClusterOptions
 
     /// <summary>
     /// Gets or sets the kubectl container image name used by manifest applies.
-    /// Defaults to <c>alpine/k8s</c>.
+    /// Defaults to <c>rancher/kubectl</c> — maintained by the same team as k3s.
     /// </summary>
     public string KubectlImage { get; set; } = KubectlContainerImageTags.Image;
 
     /// <summary>
     /// Gets or sets the kubectl container image tag used by manifest applies.
-    /// Defaults to <c>1.32.3</c>.
+    /// Defaults to <c>v1.32.3</c>, matching the default k3s server version.
     /// </summary>
     public string KubectlTag { get; set; } = KubectlContainerImageTags.Tag;
 }
