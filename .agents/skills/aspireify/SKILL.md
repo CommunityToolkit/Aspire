@@ -189,7 +189,7 @@ Before editing AppHost or service project files, check whether the workspace is 
 
 ### Use the latest stable Aspire SDK
 
-If `aspire init` created a `.csproj` AppHost, check the `Aspire.AppHost.Sdk` version in the `.csproj`. If it references a preview version that isn't available on NuGet (common when using a PR build of the CLI), update it to the latest stable release. Run `dotnet nuget list source` and check NuGet.org for the current stable version (e.g., `13.2.2`). Do not leave the AppHost pinned to an unavailable preview SDK — `dotnet build` will fail.
+If `aspire init` created a `.csproj` AppHost, check the `Aspire.AppHost.Sdk` version in the `.csproj`. If it references a preview version that isn't available on NuGet (common when using a PR build of the CLI), update it to the latest stable release. Run `dotnet nuget list source` and check NuGet.org for the current stable version (e.g., `13.3.0`). Do not leave the AppHost pinned to an unavailable preview SDK — `dotnet build` will fail.
 
 ### Use the Aspire CLI, not raw dotnet commands, for Aspire operations
 

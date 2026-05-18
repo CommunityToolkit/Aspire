@@ -8,8 +8,8 @@ namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
 public class WithPackageTests
 {
     [Theory]
-    [InlineData("Mojolicious", "Mojolicious-installer")]
-    [InlineData("OpenTelemetry::SDK", "OpenTelemetry88SDK-installer")]
+    [InlineData("Mojolicious", "perl-app-Mojolicious-installer")]
+    [InlineData("OpenTelemetry::SDK", "perl-app-OpenTelemetry88SDK-installer")]
     public void WithPackage_CreatesInstallerWithCorrectName(string moduleName, string expectedInstallerName)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -117,5 +117,88 @@ public class WithPackageTests
         var moduleAnnotation = resource.Annotations.OfType<PerlRequiredModuleAnnotation>().Single();
         Assert.Equal("Mojolicious", moduleAnnotation.Name);
         Assert.True(moduleAnnotation.SkipTest);
+    }
+
+    [Fact]
+    public void TwoResourcesWithSamePackage_CreatesSeparateInstallers()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("worker", "scripts", "workerService.pl")
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK");
+
+        builder.AddPerlApi("api", "scripts", "apiService.pl")
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installers = appModel.Resources.OfType<PerlModuleInstallerResource>().ToList();
+
+        Assert.Equal(2, installers.Count);
+        Assert.Contains(installers, i => i.Name == "worker-OpenTelemetry88SDK-installer");
+        Assert.Contains(installers, i => i.Name == "api-OpenTelemetry88SDK-installer");
+    }
+
+    [Fact]
+    public void TwoResourcesWithMultipleSharedPackages_CreatesIndependentInstallers()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("worker", "scripts", "workerService.pl")
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK")
+            .WithPackage("DBI");
+
+        builder.AddPerlApi("api", "scripts", "apiService.pl")
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK")
+            .WithPackage("Mojolicious");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installers = appModel.Resources.OfType<PerlModuleInstallerResource>().ToList();
+
+        Assert.Equal(4, installers.Count);
+        Assert.Contains(installers, i => i.Name == "worker-OpenTelemetry88SDK-installer");
+        Assert.Contains(installers, i => i.Name == "worker-DBI-installer");
+        Assert.Contains(installers, i => i.Name == "api-OpenTelemetry88SDK-installer");
+        Assert.Contains(installers, i => i.Name == "api-Mojolicious-installer");
+    }
+
+    [Fact]
+    public void TwoResourcesWithSamePackage_InstallersAreParentedCorrectly()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("worker", "scripts", "workerService.pl")
+            .WithCpanMinus()
+            .WithPackage("DBI");
+
+        builder.AddPerlApi("api", "scripts", "apiService.pl")
+            .WithCpanMinus()
+            .WithPackage("DBI");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var workerInstaller = appModel.Resources.OfType<PerlModuleInstallerResource>()
+            .Single(i => i.Name == "worker-DBI-installer");
+        var apiInstaller = appModel.Resources.OfType<PerlModuleInstallerResource>()
+            .Single(i => i.Name == "api-DBI-installer");
+
+        var workerParent = workerInstaller.Annotations
+            .OfType<ResourceRelationshipAnnotation>()
+            .Single(a => a.Type == "Parent");
+        var apiParent = apiInstaller.Annotations
+            .OfType<ResourceRelationshipAnnotation>()
+            .Single(a => a.Type == "Parent");
+
+        Assert.Equal("worker", workerParent.Resource.Name);
+        Assert.Equal("api", apiParent.Resource.Name);
     }
 }
