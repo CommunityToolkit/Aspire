@@ -87,7 +87,7 @@ public class WithLocalLibTests
     }
 
     [Theory]
-    [InlineData("specificLocal", "packageName", "packageName-installer")]
+    [InlineData("specificLocal", "packageName", "perl-app-packageName-installer")]
     public void WithPackageAndLocalLib_InstallerAndPackageAndLocalLibCorrectlyConfigured(
         string expectedLocalLibPath, 
         string packageName, 

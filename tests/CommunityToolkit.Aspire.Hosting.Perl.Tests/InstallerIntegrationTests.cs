@@ -70,4 +70,29 @@ public class InstallerIntegrationTests
             moduleInstaller.Annotations.OfType<WaitAnnotation>(),
             wait => wait.Resource.Name == "perl-app-perlbrew-cpanm-installer" && wait.WaitType == WaitType.WaitForCompletion);
     }
+
+    [Fact, RequiresLinux]
+    public void TwoResourcesWithPerlbrewAndSamePackage_CreatesSeparateInstallers()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlScript("worker", "scripts", "workerService.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root")
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK");
+
+        builder.AddPerlApi("api", "scripts", "apiService.pl")
+            .WithPerlbrewEnvironment("5.38.0", perlbrewRoot: "/tmp/ctaspire-missing-perlbrew-root")
+            .WithCpanMinus()
+            .WithPackage("OpenTelemetry::SDK");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var installers = appModel.Resources.OfType<PerlModuleInstallerResource>().ToList();
+
+        Assert.Equal(2, installers.Count);
+        Assert.Contains(installers, i => i.Name == "worker-OpenTelemetry88SDK-installer");
+        Assert.Contains(installers, i => i.Name == "api-OpenTelemetry88SDK-installer");
+    }
 }
