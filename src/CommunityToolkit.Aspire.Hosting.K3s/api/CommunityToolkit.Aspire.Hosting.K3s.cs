@@ -8,47 +8,125 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
-    public static partial class K3sHelmBuilderExtensions
-    {
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> AddHelmRelease(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string chart, string? repo = null, string? version = null, string @namespace = "default") { throw null; }
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValue(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string key, string value) { throw null; }
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithEndpoint(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string serviceName, int servicePort, string name) { throw null; }
-    }
-
     public static partial class K3sBuilderExtensions
     {
-        [System.Diagnostics.CodeAnalysis.Experimental("ASPIREATS001")]
+        [AspireExport("addK3sCluster", Description = "Adds a k3s Kubernetes cluster resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> AddK3sCluster(this IDistributedApplicationBuilder builder, string name, int? apiServerPort = null, System.Action<CommunityToolkit.Aspire.Hosting.K3sClusterOptions>? configure = null) { throw null; }
-        [System.Diagnostics.CodeAnalysis.Experimental("ASPIREATS001")]
-        public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> destination, ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> source, CommunityToolkit.Aspire.Hosting.KubeconfigInjectionStrategy strategy = CommunityToolkit.Aspire.Hosting.KubeconfigInjectionStrategy.Auto) where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
-        [System.Diagnostics.CodeAnalysis.Experimental("ASPIREATS001")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithK3sVersion(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string tag) { throw null; }
-        [System.Diagnostics.CodeAnalysis.Experimental("ASPIREATS001")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithPodSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
-        [System.Diagnostics.CodeAnalysis.Experimental("ASPIREATS001")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithServiceSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
-        [System.Diagnostics.CodeAnalysis.Experimental("ASPIREATS001")]
+
+        [AspireExport("withDataVolume", Description = "Adds a named volume for the k3s cluster data directory so state survives AppHost restarts")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string? name = null) { throw null; }
+
+        [AspireExport("withDisabledComponent", Description = "Disables a built-in k3s component")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithDisabledComponent(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string component) { throw null; }
-        [System.Diagnostics.CodeAnalysis.Experimental("ASPIREATS001")]
+
+        [AspireExport("withExtraArg", Description = "Appends a raw argument to the k3s server command")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithExtraArg(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string arg) { throw null; }
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithPersistentState(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string? volumeName = null) { throw null; }
+
+        [AspireExport("withK3sVersion", Description = "Overrides the k3s server image version")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithK3sVersion(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string tag) { throw null; }
+
+        [AspireExport("withLifetime", Description = "Sets the container lifetime for the k3s cluster and all its agent nodes")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithLifetime(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, ApplicationModel.ContainerLifetime lifetime) { throw null; }
+
+        [AspireExport("withPodSubnet", Description = "Sets the pod subnet CIDR for the k3s cluster")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithPodSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
+
+        [AspireExport("withReference", Description = "Injects kubeconfig credentials into the dependent resource")]
+        public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> destination, ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> source)
+            where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
+
+        [AspireExport("withServiceSubnet", Description = "Sets the service subnet CIDR for the k3s cluster")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithServiceSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
+    }
+
+    public static partial class K3sHelmBuilderExtensions
+    {
+        [AspireExport("addHelmRelease", Description = "Adds a Helm chart release to the k3s cluster")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> AddHelmRelease(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string chart, string? repo = null, string? version = null, string @namespace = "default") { throw null; }
+
+        [AspireExport("withHelmValue", Description = "Adds a --set key=value argument to the Helm release")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValue(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string key, string value) { throw null; }
+
+        [AspireExport("withHelmValuesFile", Description = "Injects a host-side YAML values file into the Helm installer container")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValuesFile(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string path) { throw null; }
+    }
+
+    public static partial class K3sManifestBuilderExtensions
+    {
+        [AspireExport("addK8sManifest", Description = "Applies Kubernetes YAML manifests to the k3s cluster")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> AddK8sManifest(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string path) { throw null; }
+    }
+
+    public static partial class K3sServiceEndpointExtensions
+    {
+        [AspireExport("addServiceEndpoint", Description = "Exposes a Kubernetes service as an Aspire endpoint resource")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sServiceEndpointResource> AddServiceEndpoint(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string serviceName, int servicePort, string @namespace = "default") { throw null; }
+
+        [AspireExport("withReference", Description = "Injects the k3s service URL into a dependent resource")]
+        public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> destination, ApplicationModel.IResourceBuilder<ApplicationModel.K3sServiceEndpointResource> source)
+            where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public sealed partial class HelmReleaseResource : Resource, IResourceWithParent<K3sClusterResource>, IResourceWithWaitSupport
+    [AspireExport(ExposeProperties = true)]
+    public sealed partial class HelmReleaseResource : ContainerResource, IResourceWithParent<K3sClusterResource>, IResourceWithParent, IResource
     {
-        public HelmReleaseResource(string name, string releaseName, string @namespace, K3sClusterResource cluster) : base(default!) { }
-        public K3sClusterResource Parent { get { throw null; } }
-        public string ReleaseName { get { throw null; } }
+        public HelmReleaseResource(string name, string releaseName, string @namespace, K3sClusterResource cluster) : base(default!, default) { }
+
         public string Namespace { get { throw null; } }
+
+        public K3sClusterResource Parent { get { throw null; } }
+
+        public string ReleaseName { get { throw null; } }
     }
 
+    public sealed partial class K3sAgentResource : ContainerResource, IResourceWithParent<K3sClusterResource>, IResourceWithParent, IResource
+    {
+        public K3sAgentResource(string name, K3sClusterResource cluster) : base(default!, default) { }
+
+        public K3sClusterResource Parent { get { throw null; } }
+    }
+
+    [AspireExport(ExposeProperties = true)]
     public sealed partial class K3sClusterResource : ContainerResource
     {
-        public K3sClusterResource(string name) : base(default!) { }
+        public K3sClusterResource(string name) : base(default!, default) { }
+
         public EndpointReference ApiEndpoint { get { throw null; } }
+
+        [AspireExportIgnore(Reason = "Internal tracking collection; not needed by guest SDK consumers.")]
+        public System.Collections.Generic.IReadOnlyDictionary<string, string> HelmReleases { get { throw null; } }
+
+        [AspireExportIgnore(Reason = "Internal tracking collection; not needed by guest SDK consumers.")]
+        public System.Collections.Generic.IReadOnlyList<string> Manifests { get { throw null; } }
+    }
+
+    [AspireExport(ExposeProperties = true)]
+    public sealed partial class K3sServiceEndpointResource : Resource, IResourceWithParent<K3sClusterResource>, IResourceWithParent, IResource, IResourceWithWaitSupport
+    {
+        public K3sServiceEndpointResource(string name, string serviceName, int servicePort, string @namespace, K3sClusterResource cluster) : base(default!) { }
+
+        public int HostPort { get { throw null; } }
+
+        public string Namespace { get { throw null; } }
+
+        public K3sClusterResource Parent { get { throw null; } }
+
+        public string ServiceName { get { throw null; } }
+
+        public int ServicePort { get { throw null; } }
+    }
+
+    [AspireExport(ExposeProperties = true)]
+    public sealed partial class K8sManifestResource : ContainerResource, IResourceWithParent<K3sClusterResource>, IResourceWithParent, IResource
+    {
+        public K8sManifestResource(string name, string path, K3sClusterResource cluster) : base(default!, default) { }
+
+        public K3sClusterResource Parent { get { throw null; } }
+
+        public string Path { get { throw null; } }
     }
 }
 
@@ -56,18 +134,28 @@ namespace CommunityToolkit.Aspire.Hosting
 {
     public sealed partial class K3sClusterOptions
     {
-        public K3sClusterOptions() { }
-        public string? ClusterCidr { get { throw null; } set { } }
-        public string? ImageTag { get { throw null; } set { } }
-        public string? ServiceCidr { get { throw null; } set { } }
-        public System.Collections.Generic.IList<string> DisabledComponents { get { throw null; } }
-        public System.Collections.Generic.IList<string> ExtraArgs { get { throw null; } }
-    }
+        public int AgentCount { get { throw null; } set { } }
 
-    public enum KubeconfigInjectionStrategy
-    {
-        Auto = 0,
-        HostNetwork = 1,
-        ContainerNetwork = 2,
+        public string? ClusterCidr { get { throw null; } set { } }
+
+        public System.Collections.Generic.IList<string> DisabledComponents { get { throw null; } }
+
+        public System.Collections.Generic.IList<string> ExtraArgs { get { throw null; } }
+
+        public string HelmImage { get { throw null; } set { } }
+
+        public string HelmRegistry { get { throw null; } set { } }
+
+        public string HelmTag { get { throw null; } set { } }
+
+        public string? ImageTag { get { throw null; } set { } }
+
+        public string KubectlImage { get { throw null; } set { } }
+
+        public string KubectlRegistry { get { throw null; } set { } }
+
+        public string KubectlTag { get { throw null; } set { } }
+
+        public string? ServiceCidr { get { throw null; } set { } }
     }
 }

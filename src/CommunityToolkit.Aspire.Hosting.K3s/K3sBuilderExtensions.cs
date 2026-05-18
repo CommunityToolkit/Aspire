@@ -300,6 +300,7 @@ public static class K3sBuilderExtensions
     /// Adds a named volume for the k3s cluster data directory (<c>/var/lib/rancher/k3s</c>)
     /// so the cluster state (SQLite database, certificates, kubeconfig) survives AppHost restarts.
     /// </summary>
+    [AspireExport("withDataVolume", Description = "Adds a named volume for the k3s cluster data directory so state survives AppHost restarts")]
     public static IResourceBuilder<K3sClusterResource> WithDataVolume(
         this IResourceBuilder<K3sClusterResource> builder,
         string? name = null)
@@ -371,6 +372,7 @@ public static class K3sBuilderExtensions
     /// <summary>
     /// Sets the container lifetime for the k3s cluster <em>and all its agent nodes</em>.
     /// </summary>
+    [AspireExport("withLifetime", Description = "Sets the container lifetime for the k3s cluster and all its agent nodes")]
     public static IResourceBuilder<K3sClusterResource> WithLifetime(
         this IResourceBuilder<K3sClusterResource> builder,
         ContainerLifetime lifetime)

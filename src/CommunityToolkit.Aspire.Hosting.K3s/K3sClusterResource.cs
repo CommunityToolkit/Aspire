@@ -1,9 +1,12 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a k3s Kubernetes cluster running as a privileged container resource.
 /// </summary>
 /// <param name="name">The resource name.</param>
+[AspireExport(ExposeProperties = true)]
 public sealed class K3sClusterResource(string name) : ContainerResource(name)
 {
     internal const string ApiServerEndpointName = "api";
@@ -52,6 +55,7 @@ public sealed class K3sClusterResource(string name) : ContainerResource(name)
         new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>A dictionary of registered Helm releases keyed by resource name.</summary>
+    [AspireExportIgnore(Reason = "Internal tracking collection; not needed by guest SDK consumers.")]
     public IReadOnlyDictionary<string, string> HelmReleases => _helmReleases;
 
     internal void AddHelmRelease(string resourceName, string releaseName) =>
@@ -60,6 +64,7 @@ public sealed class K3sClusterResource(string name) : ContainerResource(name)
     private readonly List<string> _manifests = [];
 
     /// <summary>Names of registered <see cref="K8sManifestResource"/> children.</summary>
+    [AspireExportIgnore(Reason = "Internal tracking collection; not needed by guest SDK consumers.")]
     public IReadOnlyList<string> Manifests => _manifests;
 
     internal void AddManifest(string resourceName) => _manifests.Add(resourceName);

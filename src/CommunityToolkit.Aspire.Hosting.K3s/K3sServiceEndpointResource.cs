@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -12,6 +14,7 @@ namespace Aspire.Hosting.ApplicationModel;
 ///   <item>Container consumers receive <c>services__{name}__url=https://host.docker.internal:{port}</c>.</item>
 /// </list>
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public sealed class K3sServiceEndpointResource(
     string name,
     string serviceName,

@@ -1,9 +1,10 @@
 // K3s hosting example
 // ──────────────────────────────────────────────────────────────────────────────
 // Prerequisites (host machine):
-//   • Docker with --privileged support (Linux or Docker Desktop on Mac/Windows)
-//   • helm  → https://helm.sh/docs/intro/install/
-//   • kubectl → https://kubernetes.io/docs/tasks/tools/
+//   • A container runtime that supports privileged Linux containers:
+//     - Linux: Docker Engine 20.10+ or rootful Podman 4.0+
+//     - macOS / Windows: Docker Desktop (WSL2 / Hyper-V)
+//   No host-side helm or kubectl required — both run as containers.
 //
 // What this demonstrates:
 //   1. A k3s cluster starts inside a Docker container.

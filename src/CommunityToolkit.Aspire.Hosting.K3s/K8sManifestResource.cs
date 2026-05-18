@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -12,6 +14,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <param name="name">The Aspire resource name.</param>
 /// <param name="path">Absolute path to a single YAML file or a directory.</param>
 /// <param name="cluster">The parent k3s cluster resource.</param>
+[AspireExport(ExposeProperties = true)]
 public sealed class K8sManifestResource(string name, string path, K3sClusterResource cluster)
     : ContainerResource(name), IResourceWithParent<K3sClusterResource>
 {

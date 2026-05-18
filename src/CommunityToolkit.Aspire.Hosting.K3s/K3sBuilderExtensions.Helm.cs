@@ -88,9 +88,12 @@ public static class K3sHelmBuilderExtensions
             // The callback wraps all files so it fires after all WithHelmValuesFile() calls.
             .WithContainerFiles("/helm-values", async (ctx, ct) =>
                 release.ValuesFiles
-                    .Select(hostPath => (ContainerFileSystemItem)new ContainerFile
+                    .Select((hostPath, i) => (ContainerFileSystemItem)new ContainerFile
                     {
-                        Name = System.IO.Path.GetFileName(hostPath),
+                        // Prefix with index so files are unique even if basenames collide
+                        // (e.g. prod/values.yaml + base/values.yaml → 0-values.yaml, 1-values.yaml)
+                        // and order is explicit on the filesystem as well as in the script.
+                        Name = $"{i}-{System.IO.Path.GetFileName(hostPath)}",
                         SourcePath = hostPath,
                     })
                     .ToList())
@@ -122,6 +125,7 @@ public static class K3sHelmBuilderExtensions
     /// Path to the values YAML file on the host. Relative paths are resolved against
     /// <c>AppHostDirectory</c>.
     /// </param>
+    [AspireExport("withHelmValuesFile", Description = "Injects a host-side YAML values file into the Helm installer container")]
     public static IResourceBuilder<HelmReleaseResource> WithHelmValuesFile(
         this IResourceBuilder<HelmReleaseResource> builder,
         string path)
@@ -142,6 +146,7 @@ public static class K3sHelmBuilderExtensions
     /// <summary>
     /// Adds a Helm <c>--set key=value</c> argument to this release.
     /// </summary>
+    [AspireExport("withHelmValue", Description = "Adds a --set key=value argument to the Helm release")]
     public static IResourceBuilder<HelmReleaseResource> WithHelmValue(
         this IResourceBuilder<HelmReleaseResource> builder,
         string key,
@@ -188,10 +193,12 @@ public static class K3sHelmBuilderExtensions
         if (release.Version is not null)
             sb.Append($" --version \"{release.Version}\"");
 
-        // Values files are injected into /helm-values/ by WithContainerFiles.
-        foreach (var hostPath in release.ValuesFiles)
-            sb.Append($" --values \"/helm-values/{System.IO.Path.GetFileName(hostPath)}\"");
+        // Values files: injected as {index}-{filename} to guarantee uniqueness and order.
+        // Applied first so --set flags below can override individual keys.
+        for (var i = 0; i < release.ValuesFiles.Count; i++)
+            sb.Append($" --values \"/helm-values/{i}-{System.IO.Path.GetFileName(release.ValuesFiles[i])}\"");
 
+        // --set flags override everything above (highest Helm precedence).
         foreach (var (key, value) in release.HelmValues)
             sb.Append($" --set \"{key}={value}\"");
 

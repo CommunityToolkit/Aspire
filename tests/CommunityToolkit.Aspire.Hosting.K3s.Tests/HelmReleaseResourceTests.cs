@@ -353,7 +353,7 @@ public class HelmReleaseResourceTests
     // ── WithHelmValuesFile tests ──────────────────────────────────────────────
 
     [Fact]
-    public void BuildHelmScriptIncludesValuesFiles()
+    public void BuildHelmScriptIncludesValuesFilesWithIndexPrefix()
     {
         var cluster = new K3sClusterResource("k8s");
         var release = new HelmReleaseResource("argocd", "argocd", "argocd", cluster)
@@ -365,13 +365,47 @@ public class HelmReleaseResourceTests
 
         var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
 
-        Assert.Contains("--values \"/helm-values/values.yaml\"", script);
-        Assert.Contains("--values \"/helm-values/values-prod.yaml\"", script);
-        // Values files are applied before --set overrides (last wins).
-        var valuesIndex = script.IndexOf("--values", StringComparison.Ordinal);
-        var setIndex = script.IndexOf("--set", StringComparison.Ordinal);
-        Assert.True(valuesIndex < setIndex || setIndex == -1,
-            "--values flags should appear before --set flags");
+        // Index prefix guarantees uniqueness even when basenames collide.
+        Assert.Contains("--values \"/helm-values/0-values.yaml\"", script);
+        Assert.Contains("--values \"/helm-values/1-values-prod.yaml\"", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptValuesFilesOrderedBeforeSetFlags()
+    {
+        // Helm precedence: --values (ascending index) → --set (highest, always wins).
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("argocd", "argocd", "argocd", cluster)
+        {
+            Chart = "argo-cd",
+        };
+        release.ValuesFiles.Add("/tmp/base.yaml");
+        release.ValuesFiles.Add("/tmp/prod.yaml");
+        release.HelmValues["key"] = "override";
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        var firstValuesIdx = script.IndexOf("--values \"/helm-values/0-", StringComparison.Ordinal);
+        var secondValuesIdx = script.IndexOf("--values \"/helm-values/1-", StringComparison.Ordinal);
+        var setIdx = script.IndexOf("--set", StringComparison.Ordinal);
+
+        Assert.True(firstValuesIdx < secondValuesIdx, "0-base.yaml must precede 1-prod.yaml");
+        Assert.True(secondValuesIdx < setIdx, "--values flags must precede --set flags");
+    }
+
+    [Fact]
+    public void BuildHelmScriptCollisionSafeWithSameBasename()
+    {
+        // Two files from different directories with the same name must not collide.
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("r", "r", "default", cluster) { Chart = "chart" };
+        release.ValuesFiles.Add("/prod/values.yaml");
+        release.ValuesFiles.Add("/dev/values.yaml");
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        Assert.Contains("--values \"/helm-values/0-values.yaml\"", script);
+        Assert.Contains("--values \"/helm-values/1-values.yaml\"", script);
     }
 
     [Fact]
