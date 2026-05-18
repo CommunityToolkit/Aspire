@@ -1,7 +1,7 @@
 <Project>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="17.11.48" PrivateAssets="true" ExcludeAssets="all" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="17.11.48" PrivateAssets="true" ExcludeAssets="all" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.NET.StringTools" Version="17.11.48" PrivateAssets="true" ExcludeAssets="all" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.Build" Version="17.11.48" PrivateAssets="All" ExcludeAssets="all" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.11.48" PrivateAssets="All" ExcludeAssets="all" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.NET.StringTools" Version="17.11.48" PrivateAssets="All" ExcludeAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 </Project>
