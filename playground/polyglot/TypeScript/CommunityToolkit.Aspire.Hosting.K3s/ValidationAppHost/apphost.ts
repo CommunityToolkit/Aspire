@@ -67,7 +67,7 @@ if (includeCompileOnlyScenarios) {
         .addProject('operator', { projectPath: '../WidgetOperator/WidgetOperator.csproj' })
         .withReference(configuredCluster);
 
-    // Container: receives KUBECONFIG_DATA=<base64>
+    // Container: receives a bind-mounted kubeconfig and KUBECONFIG=/var/k3s/kubeconfig.yaml
     const _containerRef = builder
         .addContainer('sidecar', 'myorg/sidecar')
         .withReference(configuredCluster);
