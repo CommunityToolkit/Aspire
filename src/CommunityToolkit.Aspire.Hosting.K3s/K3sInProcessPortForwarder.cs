@@ -62,6 +62,15 @@ internal sealed class K3sInProcessPortForwarder(
             {
                 break;
             }
+            catch (InvalidOperationException ioe) when (!ct.IsCancellationRequested)
+            {
+                // Non-retryable configuration error (e.g. service has no pod selector).
+                // Log and stop — retrying will never succeed.
+                logger.LogError(ioe, "Port-forward for svc/{Service}/{Ns} cannot be established.",
+                    serviceName, @namespace);
+                onReadyChanged(false);
+                break;
+            }
             catch (Exception ex)
             {
                 logger.LogWarning(ex,
@@ -107,10 +116,8 @@ internal sealed class K3sInProcessPortForwarder(
                 }
                 else if (svc.Spec?.Selector is null or { Count: 0 })
                 {
-                    logger.LogWarning(
-                        "Service {Service}/{Ns} has no pod selector — cannot determine readiness.",
-                        serviceName, @namespace);
-                    return;
+                    throw new InvalidOperationException(
+                        $"Service {serviceName}/{@namespace} has no pod selector and cannot be port-forwarded by {nameof(K3sInProcessPortForwarder)}.");
                 }
                 else
                 {

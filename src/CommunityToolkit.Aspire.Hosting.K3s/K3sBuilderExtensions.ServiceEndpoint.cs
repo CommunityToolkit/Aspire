@@ -34,7 +34,8 @@ public static class K3sServiceEndpointExtensions
         [ResourceName] string name,
         string serviceName,
         int servicePort,
-        string @namespace = "default")
+        string @namespace = "default",
+        string? scheme = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
@@ -44,8 +45,16 @@ public static class K3sServiceEndpointExtensions
             throw new ArgumentOutOfRangeException(nameof(servicePort),
                 servicePort, "Service port must be in the range 1–65535.");
 
+        // Infer scheme from the port when not explicitly provided.
+        // Callers should pass an explicit scheme whenever the Kubernetes service port
+        // does not reliably indicate the application protocol (e.g. HTTPS on port 80).
+        var resolvedScheme = scheme ?? (servicePort is 443 or 8443 ? "https" : "http");
+
         var cluster = builder.Resource;
-        var endpoint = new K3sServiceEndpointResource(name, serviceName, servicePort, @namespace, cluster);
+        var endpoint = new K3sServiceEndpointResource(name, serviceName, servicePort, @namespace, cluster)
+        {
+            Scheme = resolvedScheme,
+        };
 
         var healthCheckKey = $"k3s_endpoint_{name}_ready";
         builder.ApplicationBuilder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
@@ -93,7 +102,7 @@ public static class K3sServiceEndpointExtensions
         ArgumentNullException.ThrowIfNull(source);
 
         var ep = source.Resource;
-        var scheme = ep.ServicePort is 443 or 8443 ? "https" : "http";
+        var scheme = ep.Scheme;
         var envKey = $"services__{ep.Name}__url";
 
         if (destination.Resource is ContainerResource)
@@ -145,7 +154,7 @@ public static class K3sServiceEndpointExtensions
             var hostPort = AllocatePort();
             endpoint.HostPort = hostPort;
 
-            var scheme = endpoint.ServicePort is 443 or 8443 ? "https" : "http";
+            var scheme = endpoint.Scheme;
 
             var forwarder = new K3sInProcessPortForwarder(
                 kubeconfigPath,

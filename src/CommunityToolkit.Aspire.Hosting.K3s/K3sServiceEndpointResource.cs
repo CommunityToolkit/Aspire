@@ -43,6 +43,13 @@ public sealed class K3sServiceEndpointResource(
     public int HostPort { get; internal set; }
 
     /// <summary>
+    /// The URL scheme used for <c>services__{name}__url</c> injection and dashboard URLs.
+    /// Set by <c>AddServiceEndpoint</c>; callers can override the default port-based inference
+    /// via the <c>scheme</c> parameter.
+    /// </summary>
+    internal string Scheme { get; init; } = "http";
+
+    /// <summary>
     /// <see langword="true"/> when the port-forward is active and accepting connections.
     /// Set by <c>K3sInProcessPortForwarder</c>; read by the health check.
     /// </summary>
