@@ -24,4 +24,11 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
     .WaitFor(bitwarden)
     .WithHttpHealthCheck("/health");
 
+if (OperatingSystem.IsLinux())
+{
+    // Work around Linux trust-store discovery issues in Bitwarden.Secrets.Sdk 1.0.0.
+    api.WithEnvironment("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt")
+        .WithEnvironment("SSL_CERT_DIR", "/etc/ssl/certs");
+}
+
 builder.Build().Run();
