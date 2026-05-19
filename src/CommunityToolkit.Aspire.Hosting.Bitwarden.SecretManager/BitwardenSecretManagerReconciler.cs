@@ -58,7 +58,6 @@ internal sealed class BitwardenSecretManagerReconciler(
         await ValidateDeclaredSecretReferencesAsync(resource, stateContext.State, lookupContext, interactionService, logger, cancellationToken).ConfigureAwait(false);
 
         stateContext.State.ProjectId = project.Id;
-        stateContext.State.ConfiguredProjectIdentity = resource.GetConfiguredProjectIdentityKey(remoteProjectName);
 
         await stateStore.SaveAsync(stateContext.Path, stateContext.State, cancellationToken).ConfigureAwait(false);
 
@@ -470,8 +469,6 @@ internal sealed record BitwardenStateFileContext(string Path, BitwardenState Sta
 
 internal sealed class BitwardenState
 {
-    public string? ConfiguredProjectIdentity { get; set; }
-
     public Guid? ProjectId { get; set; }
 
     public Dictionary<string, Guid> ManagedSecretIds { get; set; } = new(StringComparer.OrdinalIgnoreCase);
