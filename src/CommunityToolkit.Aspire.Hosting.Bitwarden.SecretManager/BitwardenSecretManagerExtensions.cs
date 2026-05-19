@@ -1,0 +1,521 @@
+using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Publishing;
+using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+namespace Aspire.Hosting;
+
+/// <summary>
+/// Extension methods for adding Bitwarden Secrets Manager resources.
+/// </summary>
+public static class BitwardenSecretManagerExtensions
+{
+    private const string ManifestType = "bitwarden.secretmanager.v0";
+
+    /// <summary>
+    /// Adds a Bitwarden Secrets Manager resource with a fixed organization identifier.
+    /// </summary>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="name">The resource name.</param>
+    /// <param name="organizationId">The Bitwarden organization identifier.</param>
+    /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        Guid organizationId,
+        IResourceBuilder<ParameterResource> accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        BitwardenSecretManagerResource resource = new(name, organizationId, accessToken.Resource, builder.AppHostDirectory);
+        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
+    }
+
+    /// <summary>
+    /// Adds a Bitwarden Secrets Manager resource with a parameter-backed organization identifier.
+    /// </summary>
+    /// <param name="builder">The distributed application builder.</param>
+    /// <param name="name">The resource name.</param>
+    /// <param name="organizationId">The parameter that resolves to the Bitwarden organization identifier.</param>
+    /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        IResourceBuilder<ParameterResource> organizationId,
+        IResourceBuilder<ParameterResource> accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(organizationId);
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        BitwardenSecretManagerResource resource = new(name, organizationId.Resource, accessToken.Resource, builder.AppHostDirectory);
+        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
+    }
+
+    /// <summary>
+    /// Sets the remote Bitwarden project name.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="remoteProjectName">The remote Bitwarden project name.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithRemoteProjectName(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string remoteProjectName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteProjectName);
+
+        builder.Resource.RemoteProjectName = remoteProjectName;
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the resource to adopt an existing Bitwarden project.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="projectId">The Bitwarden project identifier.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithExistingProject(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        Guid projectId)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.Resource.ExistingProjectId = projectId;
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden API URL.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="apiUrl">The absolute Bitwarden API URL.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string apiUrl)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ValidateAbsoluteUri(apiUrl, nameof(apiUrl));
+
+        builder.Resource.ApiUrl = apiUrl;
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden identity URL.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="identityUrl">The absolute Bitwarden identity URL.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string identityUrl)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ValidateAbsoluteUri(identityUrl, nameof(identityUrl));
+
+        builder.Resource.IdentityUrl = identityUrl;
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden SDK state file path.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="stateFile">The state file path, relative to the AppHost directory when not rooted.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithStateFile(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string stateFile)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(stateFile);
+
+        builder.Resource.StateFile = Path.IsPathRooted(stateFile)
+            ? Path.GetFullPath(stateFile)
+            : Path.GetFullPath(Path.Combine(builder.Resource.AppHostDirectory, stateFile));
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the runtime access token injected into dependents by <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string?)"/>.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="accessToken">The runtime access token parameter.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithRuntimeAccessToken(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        IResourceBuilder<ParameterResource> accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        builder.Resource.RuntimeAccessToken = accessToken.Resource;
+        return builder;
+    }
+
+    /// <summary>
+    /// Gets a Bitwarden secret reference by remote name.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="remoteName">The Bitwarden secret name.</param>
+    /// <returns>A Bitwarden secret reference.</returns>
+    public static IBitwardenSecretReference GetSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string remoteName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.Resource.GetSecret(remoteName);
+    }
+
+    /// <summary>
+    /// Gets a Bitwarden secret reference by secret identifier.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="secretId">The Bitwarden secret identifier.</param>
+    /// <returns>A Bitwarden secret reference.</returns>
+    public static IBitwardenSecretReference GetSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        Guid secretId)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.Resource.GetSecret(secretId);
+    }
+
+    /// <summary>
+    /// Adds a managed Bitwarden secret whose local and remote names are the same.
+    /// </summary>
+    /// <param name="builder">The parent Bitwarden resource builder.</param>
+    /// <param name="name">The Aspire resource name and Bitwarden secret name.</param>
+    /// <param name="value">The secret value parameter.</param>
+    /// <returns>The managed secret resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretResource> AddSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
+        IResourceBuilder<ParameterResource> value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return builder.AddSecret(name, name, value);
+    }
+
+    /// <summary>
+    /// Adds a managed Bitwarden secret whose local and remote names are the same.
+    /// </summary>
+    /// <param name="builder">The parent Bitwarden resource builder.</param>
+    /// <param name="name">The Aspire resource name and Bitwarden secret name.</param>
+    /// <param name="value">The secret value expression.</param>
+    /// <returns>The managed secret resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretResource> AddSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
+        ReferenceExpression value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return builder.AddSecret(name, name, value);
+    }
+
+    /// <summary>
+    /// Adds a managed Bitwarden secret with distinct Aspire and remote names.
+    /// </summary>
+    /// <param name="builder">The parent Bitwarden resource builder.</param>
+    /// <param name="name">The Aspire resource name.</param>
+    /// <param name="remoteName">The Bitwarden secret name.</param>
+    /// <param name="value">The secret value parameter.</param>
+    /// <returns>The managed secret resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretResource> AddSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
+        string remoteName,
+        IResourceBuilder<ParameterResource> value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return AddSecretCore(builder, name, remoteName, value.Resource);
+    }
+
+    /// <summary>
+    /// Adds a managed Bitwarden secret with distinct Aspire and remote names.
+    /// </summary>
+    /// <param name="builder">The parent Bitwarden resource builder.</param>
+    /// <param name="name">The Aspire resource name.</param>
+    /// <param name="remoteName">The Bitwarden secret name.</param>
+    /// <param name="value">The secret value expression.</param>
+    /// <returns>The managed secret resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretResource> AddSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
+        string remoteName,
+        ReferenceExpression value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        return AddSecretCore(builder, name, remoteName, value);
+    }
+
+    /// <summary>
+    /// Configures a managed Bitwarden secret to adopt an existing remote secret.
+    /// </summary>
+    /// <param name="builder">The managed secret resource builder.</param>
+    /// <param name="secretId">The Bitwarden secret identifier.</param>
+    /// <returns>The managed secret resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretResource> WithExistingSecret(
+        this IResourceBuilder<BitwardenSecretResource> builder,
+        Guid secretId)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.Resource.ExistingSecretId = secretId;
+        return builder;
+    }
+
+    /// <summary>
+    /// Injects structured Bitwarden client configuration into the destination resource.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource builder.</param>
+    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
+    /// <returns>The destination resource builder.</returns>
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        string? connectionName = null)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (connectionName is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        }
+
+        connectionName ??= source.Resource.Name;
+
+        builder.WithReferenceRelationship(source);
+
+        if (builder.Resource is IResourceWithWaitSupport waitResource)
+        {
+            builder.ApplicationBuilder.CreateResourceBuilder(waitResource).WaitFor(source);
+        }
+
+        return builder.WithEnvironment(context => source.Resource.ApplyReferenceConfiguration(context.EnvironmentVariables, connectionName));
+    }
+
+    private static IResourceBuilder<BitwardenSecretManagerResource> ConfigureBitwardenSecretManager(
+        IResourceBuilder<BitwardenSecretManagerResource> builder)
+    {
+        builder.ApplicationBuilder.Services.TryAddSingleton<IBitwardenSecretManagerProviderFactory, BitwardenSecretManagerProviderFactory>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenStateStore>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenSecretManagerReconciler>();
+
+        return builder.WithInitialState(new CustomResourceSnapshot
+        {
+            ResourceType = "BitwardenSecretManager",
+            State = KnownResourceStates.NotStarted,
+            Properties = [new("RemoteProjectName", builder.Resource.RemoteProjectName)]
+        })
+        .WithManifestPublishingCallback(context => WriteBitwardenSecretManagerToManifest(context, builder.Resource))
+        .OnInitializeResource(async (resource, eventContext, cancellationToken) =>
+        {
+            await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+            {
+                State = KnownResourceStates.Starting,
+                Properties = [new("RemoteProjectName", resource.RemoteProjectName)]
+            }).ConfigureAwait(false);
+
+            await eventContext.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, eventContext.Services), cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                BitwardenSecretManagerReconciler reconciler = eventContext.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
+                BitwardenReconciliationResult result = await reconciler.InitializeAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
+
+                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+                {
+                    State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+                    StartTimeStamp = DateTime.UtcNow,
+                    Properties =
+                    [
+                        new("RemoteProjectName", resource.RemoteProjectName),
+                        new("ProjectId", result.ProjectId.ToString("D")),
+                        new("StateFile", result.StateFile)
+                    ]
+                }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+                {
+                    State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error),
+                    Properties =
+                    [
+                        new("RemoteProjectName", resource.RemoteProjectName),
+                        new("Error", ex.Message)
+                    ]
+                }).ConfigureAwait(false);
+
+                throw;
+            }
+        });
+    }
+
+    private static IResourceBuilder<BitwardenSecretResource> AddSecretCore(
+        IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string name,
+        string remoteName,
+        object value)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
+        ArgumentNullException.ThrowIfNull(value);
+
+        if (builder.Resource.ManagedSecrets.Any(secret => string.Equals(secret.LocalName, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DistributedApplicationException($"Bitwarden resource '{builder.Resource.Name}' already declares a managed secret with local name '{name}'. Managed local names must be unique per Bitwarden resource.");
+        }
+
+        if (builder.Resource.ManagedSecrets.Any(secret => string.Equals(secret.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DistributedApplicationException($"Bitwarden resource '{builder.Resource.Name}' already declares a managed secret with remote name '{remoteName}'. Managed remote names must be unique per Bitwarden resource.");
+        }
+
+        string secretResourceName = $"{builder.Resource.Name}-{name}";
+        BitwardenSecretResource secret = new(secretResourceName, name, remoteName, builder.Resource, value);
+        builder.Resource.RegisterManagedSecret(secret);
+
+        builder.WithReferenceRelationship(secret);
+        if (value is IResource valueResource)
+        {
+            builder.WithReferenceRelationship(valueResource);
+        }
+        else if (value is ReferenceExpression referenceExpression)
+        {
+            builder.WithReferenceRelationship(referenceExpression);
+            WaitForReferencedResources(builder, referenceExpression);
+        }
+
+        return builder.ApplicationBuilder.AddResource(secret)
+            .WithParentRelationship(builder)
+            .WithInitialState(new CustomResourceSnapshot
+            {
+                ResourceType = "BitwardenSecret",
+                IsHidden = true,
+                Properties = []
+            })
+            .ExcludeFromManifest();
+    }
+
+    private static void WaitForReferencedResources(
+        IResourceBuilder<BitwardenSecretManagerResource> builder,
+        ReferenceExpression referenceExpression)
+    {
+        HashSet<IResource> dependencies = [];
+
+        foreach (object reference in ((IValueWithReferences)referenceExpression).References)
+        {
+            if (reference is not IResource dependency || !dependencies.Add(dependency))
+            {
+                continue;
+            }
+
+            if (ReferenceEquals(dependency, builder.Resource))
+            {
+                continue;
+            }
+
+            if (dependency is IResourceWithParent dependencyWithParent && ReferenceEquals(dependencyWithParent.Parent, builder.Resource))
+            {
+                continue;
+            }
+
+            builder.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(dependency));
+        }
+    }
+
+    private static Task WriteBitwardenSecretManagerToManifest(
+        ManifestPublishingContext context,
+        BitwardenSecretManagerResource resource)
+    {
+        context.Writer.WriteString("type", ManifestType);
+        context.Writer.WriteStartObject("bitwardenSecretManager");
+        WriteManifestValue(context, "organizationId", resource.GetConfiguredOrganizationIdReference());
+        context.Writer.WriteString("projectName", resource.RemoteProjectName);
+
+        if (resource.ExistingProjectId is Guid existingProjectId)
+        {
+            context.Writer.WriteString("existingProjectId", existingProjectId.ToString("D"));
+        }
+
+        context.Writer.WriteString("apiUrl", resource.GetApiUrlOrDefault());
+        context.Writer.WriteString("identityUrl", resource.GetIdentityUrlOrDefault());
+        WriteManifestValue(context, "accessToken", resource.ManagementAccessToken);
+
+        if (resource.RuntimeAccessToken is not null)
+        {
+            WriteManifestValue(context, "runtimeAccessToken", resource.RuntimeAccessToken);
+        }
+
+        if (resource.StateFile is string stateFile)
+        {
+            context.Writer.WriteString("stateFile", context.GetManifestRelativePath(stateFile) ?? stateFile.Replace('\\', '/'));
+        }
+
+        if (resource.ManagedSecrets.Count > 0)
+        {
+            context.Writer.WriteStartObject("secrets");
+
+            foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+            {
+                context.Writer.WriteStartObject(secret.LocalName);
+                context.Writer.WriteString("remoteName", secret.RemoteName);
+
+                if (secret.ExistingSecretId is Guid existingSecretId)
+                {
+                    context.Writer.WriteString("existingSecretId", existingSecretId.ToString("D"));
+                }
+
+                WriteManifestValue(context, "value", secret.Value);
+                context.Writer.WriteEndObject();
+            }
+
+            context.Writer.WriteEndObject();
+        }
+
+        context.Writer.WriteEndObject();
+        return Task.CompletedTask;
+    }
+
+    private static void WriteManifestValue(ManifestPublishingContext context, string propertyName, object value)
+    {
+        switch (value)
+        {
+            case IManifestExpressionProvider manifestExpressionProvider:
+                context.Writer.WriteString(propertyName, manifestExpressionProvider.ValueExpression);
+                break;
+            case Guid guidValue:
+                context.Writer.WriteString(propertyName, guidValue.ToString("D"));
+                break;
+            default:
+                context.Writer.WriteString(propertyName, value.ToString());
+                break;
+        }
+    }
+
+    private static void ValidateAbsoluteUri(string value, string paramName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+
+        if (!Uri.TryCreate(value, UriKind.Absolute, out _))
+        {
+            throw new ArgumentException("The value must be an absolute URI.", paramName);
+        }
+    }
+}

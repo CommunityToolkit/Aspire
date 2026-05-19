@@ -26,6 +26,7 @@ jobs:
             Hosting.Azure.Dapr.Tests,
             Hosting.Azure.DataApiBuilder.Tests,
             Hosting.Azure.Extensions.Tests,
+            Hosting.Bitwarden.SecretManager.Tests,
             Hosting.Bun.Tests,
             Hosting.Dapr.Tests,
             Hosting.DbGate.Tests,
@@ -69,6 +70,7 @@ jobs:
             Hosting.Zitadel.Tests,
 
             # Client integration tests
+            Bitwarden.SecretManager.Tests,
             GoFeatureFlag.Tests,
             KurrentDB.Tests,
             MassTransit.RabbitMQ.Tests,
