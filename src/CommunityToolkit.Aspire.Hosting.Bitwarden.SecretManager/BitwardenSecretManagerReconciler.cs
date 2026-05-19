@@ -27,7 +27,9 @@ internal sealed class BitwardenSecretManagerReconciler(
 
         Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
         string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
-        BitwardenStateFileContext stateContext = await stateStore.LoadAsync(resource, cancellationToken).ConfigureAwait(false);
+        string remoteProjectName = await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
+        resource.ResolvedRemoteProjectName = remoteProjectName;
+        BitwardenStateFileContext stateContext = await stateStore.LoadAsync(resource, remoteProjectName, cancellationToken).ConfigureAwait(false);
         resource.ResolvedStateFile = stateContext.Path;
 
         await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
@@ -35,7 +37,7 @@ internal sealed class BitwardenSecretManagerReconciler(
 
         IInteractionService? interactionService = services.GetService<IInteractionService>();
 
-        BitwardenProjectInfo project = ReconcileProject(resource, stateContext.State, provider, organizationId, logger);
+        BitwardenProjectInfo project = ReconcileProject(resource, remoteProjectName, stateContext.State, provider, organizationId, logger);
         resource.BindResolvedProjectId(project.Id);
 
         Dictionary<string, Guid> staleManagedMappings = stateContext.State.ManagedSecretIds
@@ -56,7 +58,7 @@ internal sealed class BitwardenSecretManagerReconciler(
         await ValidateDeclaredSecretReferencesAsync(resource, stateContext.State, lookupContext, interactionService, logger, cancellationToken).ConfigureAwait(false);
 
         stateContext.State.ProjectId = project.Id;
-        stateContext.State.ConfiguredProjectIdentity = resource.GetConfiguredProjectIdentityKey();
+        stateContext.State.ConfiguredProjectIdentity = resource.GetConfiguredProjectIdentityKey(remoteProjectName);
 
         await stateStore.SaveAsync(stateContext.Path, stateContext.State, cancellationToken).ConfigureAwait(false);
 
@@ -65,6 +67,7 @@ internal sealed class BitwardenSecretManagerReconciler(
 
     private static BitwardenProjectInfo ReconcileProject(
         BitwardenSecretManagerResource resource,
+        string remoteProjectName,
         BitwardenState state,
         IBitwardenSecretManagerProvider provider,
         Guid organizationId,
@@ -87,16 +90,16 @@ internal sealed class BitwardenSecretManagerReconciler(
             BitwardenProjectInfo? persistedProject = provider.GetProject(persistedProjectId);
             if (persistedProject is not null)
             {
-                if (!string.Equals(persistedProject.Name, resource.RemoteProjectName, StringComparison.Ordinal))
+                if (!string.Equals(persistedProject.Name, remoteProjectName, StringComparison.Ordinal))
                 {
                     logger.LogInformation(
                         "Updating Bitwarden project {ProjectId} name from {CurrentProjectName} to {DesiredProjectName} for resource {ResourceName}.",
                         persistedProject.Id,
                         persistedProject.Name,
-                        resource.RemoteProjectName,
+                        remoteProjectName,
                         resource.Name);
 
-                    return provider.UpdateProject(organizationId, persistedProject.Id, resource.RemoteProjectName);
+                    return provider.UpdateProject(organizationId, persistedProject.Id, remoteProjectName);
                 }
 
                 logger.LogInformation("Using persisted Bitwarden project {ProjectId} for resource {ResourceName}.", persistedProject.Id, resource.Name);
@@ -109,8 +112,8 @@ internal sealed class BitwardenSecretManagerReconciler(
                 resource.Name);
         }
 
-        logger.LogInformation("Creating Bitwarden project {ProjectName} for resource {ResourceName}.", resource.RemoteProjectName, resource.Name);
-        return provider.CreateProject(organizationId, resource.RemoteProjectName);
+        logger.LogInformation("Creating Bitwarden project {ProjectName} for resource {ResourceName}.", remoteProjectName, resource.Name);
+        return provider.CreateProject(organizationId, remoteProjectName);
     }
 
     private static async Task ReconcileManagedSecretAsync(
@@ -408,9 +411,9 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
         WriteIndented = true
     };
 
-    public async Task<BitwardenStateFileContext> LoadAsync(BitwardenSecretManagerResource resource, CancellationToken cancellationToken)
+    public async Task<BitwardenStateFileContext> LoadAsync(BitwardenSecretManagerResource resource, string resolvedProjectName, CancellationToken cancellationToken)
     {
-        string path = ResolveStatePath(resource);
+        string path = ResolveStatePath(resource, resolvedProjectName);
         if (!File.Exists(path))
         {
             return new(path, new BitwardenState());
@@ -437,7 +440,7 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
         await JsonSerializer.SerializeAsync(stream, state, JsonOptions, cancellationToken).ConfigureAwait(false);
     }
 
-    private string ResolveStatePath(BitwardenSecretManagerResource resource)
+    private string ResolveStatePath(BitwardenSecretManagerResource resource, string resolvedProjectName)
     {
         if (resource.StateFile is { Length: > 0 } stateFile)
         {
@@ -450,7 +453,7 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
         Directory.CreateDirectory(directory);
 
         string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
-        string identityHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(resource.GetConfiguredProjectIdentityKey())))[..12].ToLowerInvariant();
+        string identityHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(resource.GetConfiguredProjectIdentityKey(resolvedProjectName))))[..12].ToLowerInvariant();
         string defaultPath = Path.Combine(directory, $"{safeResourceName}.{identityHash}.state.json");
 
         if (File.Exists(defaultPath))

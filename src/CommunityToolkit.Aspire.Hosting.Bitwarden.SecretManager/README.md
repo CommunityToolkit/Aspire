@@ -14,21 +14,22 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager
 
 ## Configuration
 
-Create parameters for the Bitwarden organization identifier and access token, then add the Bitwarden resource to your AppHost.
+Create parameters for the Bitwarden project name, organization identifier, and access token, then add the Bitwarden resource to your AppHost. The Aspire resource name and the Bitwarden project name are independent.
 
 ```csharp
 IResourceBuilder<ParameterResource> organizationId = builder.AddParameter("bitwarden-organization-id");
 IResourceBuilder<ParameterResource> accessToken = builder.AddParameter("bitwarden-access-token", secret: true);
+IResourceBuilder<ParameterResource> projectName = builder.AddParameter("bitwarden-project-name");
 
 IResourceBuilder<BitwardenSecretManagerResource> bitwarden = builder.AddBitwardenSecretManager(
     "bitwarden",
+    projectName,
     organizationId,
     accessToken);
 ```
 
 Optional configuration:
 
-- `WithRemoteProjectName(...)` changes the remote Bitwarden project name.
 - `WithExistingProject(...)` adopts an existing Bitwarden project by identifier.
 - `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden endpoints.
 - `WithStateFile(...)` overrides the Bitwarden SDK state file location.

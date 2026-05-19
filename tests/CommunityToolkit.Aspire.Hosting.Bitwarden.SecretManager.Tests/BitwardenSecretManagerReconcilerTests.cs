@@ -23,7 +23,7 @@ public class BitwardenSecretManagerReconcilerTests
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
             var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
 
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", organizationParameter, accessToken)
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "team-secrets", organizationParameter, accessToken)
                 .WithStateFile(stateFile);
             var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
 
@@ -54,6 +54,45 @@ public class BitwardenSecretManagerReconcilerTests
     }
 
     [Fact]
+    public async Task InitializeAsync_UsesParameterBackedProjectName()
+    {
+        var organizationId = Guid.NewGuid();
+        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+            appBuilder.Configuration["Parameters:bitwarden-project-name"] = "shared-team-secrets";
+
+            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+            var projectName = appBuilder.AddParameter("bitwarden-project-name");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectName, organizationId, accessToken)
+                .WithStateFile(stateFile);
+
+            var fakeProvider = new FakeBitwardenProvider();
+            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+            using var app = appBuilder.Build();
+            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+
+            await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+
+            Assert.Single(fakeProvider.CreatedProjects);
+            Assert.Equal("shared-team-secrets", fakeProvider.Projects[fakeProvider.CreatedProjects[0]].Name);
+        }
+        finally
+        {
+            if (File.Exists(stateFile))
+            {
+                File.Delete(stateFile);
+            }
+        }
+    }
+
+    [Fact]
     public async Task InitializeAsync_UsesExistingProjectWithoutRenaming()
     {
         var organizationId = Guid.NewGuid();
@@ -66,9 +105,8 @@ public class BitwardenSecretManagerReconcilerTests
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
 
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", organizationId, accessToken)
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "different-name", organizationId, accessToken)
                 .WithExistingProject(existingProjectId)
-                .WithRemoteProjectName("different-name")
                 .WithStateFile(stateFile);
 
             var fakeProvider = new FakeBitwardenProvider();
@@ -110,7 +148,7 @@ public class BitwardenSecretManagerReconcilerTests
 
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
             var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", organizationId, accessToken)
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
                 .WithExistingProject(existingProjectId)
                 .WithStateFile(stateFile);
 
@@ -118,7 +156,7 @@ public class BitwardenSecretManagerReconcilerTests
                 .WithExistingSecret(existingSecretId);
 
             var fakeProvider = new FakeBitwardenProvider();
-            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "bitwarden", organizationId);
+            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "existing-project-name", organizationId);
             fakeProvider.Secrets[existingSecretId] = new BitwardenSecretInfo(existingSecretId, "managed-secret", "stale-value", string.Empty, organizationId, existingProjectId);
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 

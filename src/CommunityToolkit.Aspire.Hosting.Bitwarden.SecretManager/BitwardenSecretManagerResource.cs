@@ -18,61 +18,115 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     private readonly Dictionary<Guid, string> _resolvedSecretValues = [];
     private readonly Dictionary<string, Guid> _resolvedSecretIdsByRemoteName = new(StringComparer.OrdinalIgnoreCase);
 
+    private BitwardenSecretManagerResource(
+        string name,
+        ParameterResource managementAccessToken,
+        string appHostDirectory)
+        : base(name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(managementAccessToken);
+        ArgumentException.ThrowIfNullOrWhiteSpace(appHostDirectory);
+
+        ManagementAccessToken = managementAccessToken;
+        AppHostDirectory = appHostDirectory;
+        _projectIdReference = new(this);
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BitwardenSecretManagerResource"/> class.
     /// </summary>
     /// <param name="name">The resource name.</param>
+    /// <param name="remoteProjectName">The required remote Bitwarden project name.</param>
     /// <param name="organizationId">The Bitwarden organization identifier.</param>
     /// <param name="managementAccessToken">The access token used to reconcile the Bitwarden project and managed secrets.</param>
     /// <param name="appHostDirectory">The AppHost directory used to resolve relative paths.</param>
     public BitwardenSecretManagerResource(
         string name,
+        string remoteProjectName,
         Guid organizationId,
         ParameterResource managementAccessToken,
         string appHostDirectory)
-        : base(name)
+        : this(name, managementAccessToken, appHostDirectory)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(managementAccessToken);
-        ArgumentException.ThrowIfNullOrWhiteSpace(appHostDirectory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteProjectName);
 
         ConfiguredOrganizationId = organizationId;
-        ManagementAccessToken = managementAccessToken;
-        AppHostDirectory = appHostDirectory;
-        RemoteProjectName = name;
-        _projectIdReference = new(this);
+        RemoteProjectName = remoteProjectName;
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BitwardenSecretManagerResource"/> class.
     /// </summary>
     /// <param name="name">The resource name.</param>
+    /// <param name="remoteProjectNameParameter">The parameter that supplies the required remote Bitwarden project name.</param>
+    /// <param name="organizationId">The Bitwarden organization identifier.</param>
+    /// <param name="managementAccessToken">The access token used to reconcile the Bitwarden project and managed secrets.</param>
+    /// <param name="appHostDirectory">The AppHost directory used to resolve relative paths.</param>
+    public BitwardenSecretManagerResource(
+        string name,
+        ParameterResource remoteProjectNameParameter,
+        Guid organizationId,
+        ParameterResource managementAccessToken,
+        string appHostDirectory)
+        : this(name, managementAccessToken, appHostDirectory)
+    {
+        ArgumentNullException.ThrowIfNull(remoteProjectNameParameter);
+
+        ConfiguredOrganizationId = organizationId;
+        ConfiguredRemoteProjectNameParameter = remoteProjectNameParameter;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BitwardenSecretManagerResource"/> class.
+    /// </summary>
+    /// <param name="name">The resource name.</param>
+    /// <param name="remoteProjectName">The required remote Bitwarden project name.</param>
     /// <param name="organizationIdParameter">The parameter that supplies the Bitwarden organization identifier.</param>
     /// <param name="managementAccessToken">The access token used to reconcile the Bitwarden project and managed secrets.</param>
     /// <param name="appHostDirectory">The AppHost directory used to resolve relative paths.</param>
     public BitwardenSecretManagerResource(
         string name,
+        string remoteProjectName,
         ParameterResource organizationIdParameter,
         ParameterResource managementAccessToken,
         string appHostDirectory)
-        : base(name)
+        : this(name, managementAccessToken, appHostDirectory)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteProjectName);
         ArgumentNullException.ThrowIfNull(organizationIdParameter);
-        ArgumentNullException.ThrowIfNull(managementAccessToken);
-        ArgumentException.ThrowIfNullOrWhiteSpace(appHostDirectory);
 
         ConfiguredOrganizationIdParameter = organizationIdParameter;
-        ManagementAccessToken = managementAccessToken;
-        AppHostDirectory = appHostDirectory;
-        RemoteProjectName = name;
-        _projectIdReference = new(this);
+        RemoteProjectName = remoteProjectName;
     }
 
     /// <summary>
-    /// Gets the remote Bitwarden project name that this resource reconciles.
+    /// Initializes a new instance of the <see cref="BitwardenSecretManagerResource"/> class.
     /// </summary>
-    public string RemoteProjectName { get; internal set; }
+    /// <param name="name">The resource name.</param>
+    /// <param name="remoteProjectNameParameter">The parameter that supplies the required remote Bitwarden project name.</param>
+    /// <param name="organizationIdParameter">The parameter that supplies the Bitwarden organization identifier.</param>
+    /// <param name="managementAccessToken">The access token used to reconcile the Bitwarden project and managed secrets.</param>
+    /// <param name="appHostDirectory">The AppHost directory used to resolve relative paths.</param>
+    public BitwardenSecretManagerResource(
+        string name,
+        ParameterResource remoteProjectNameParameter,
+        ParameterResource organizationIdParameter,
+        ParameterResource managementAccessToken,
+        string appHostDirectory)
+        : this(name, managementAccessToken, appHostDirectory)
+    {
+        ArgumentNullException.ThrowIfNull(remoteProjectNameParameter);
+        ArgumentNullException.ThrowIfNull(organizationIdParameter);
+
+        ConfiguredOrganizationIdParameter = organizationIdParameter;
+        ConfiguredRemoteProjectNameParameter = remoteProjectNameParameter;
+    }
+
+    /// <summary>
+    /// Gets the configured remote Bitwarden project name when supplied as a literal value.
+    /// </summary>
+    public string? RemoteProjectName { get; internal set; }
 
     /// <summary>
     /// Gets the Bitwarden API URL override.
@@ -103,6 +157,8 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal ParameterResource? ConfiguredOrganizationIdParameter { get; }
 
+    internal ParameterResource? ConfiguredRemoteProjectNameParameter { get; set; }
+
     internal ParameterResource ManagementAccessToken { get; }
 
     internal ParameterResource? RuntimeAccessToken { get; set; }
@@ -110,6 +166,8 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     internal string AppHostDirectory { get; }
 
     internal string? ResolvedStateFile { get; set; }
+
+    internal string? ResolvedRemoteProjectName { get; set; }
 
     internal IReadOnlyList<BitwardenSecretResource> ManagedSecrets => _managedSecrets;
 
@@ -178,6 +236,27 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         return accessToken;
     }
 
+    internal async Task<string> GetResolvedRemoteProjectNameAsync(CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(RemoteProjectName))
+        {
+            return RemoteProjectName;
+        }
+
+        if (ConfiguredRemoteProjectNameParameter is not null)
+        {
+            string? remoteProjectName = await ConfiguredRemoteProjectNameParameter.GetValueAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(remoteProjectName))
+            {
+                throw new DistributedApplicationException($"Bitwarden project name parameter '{ConfiguredRemoteProjectNameParameter.Name}' for resource '{Name}' did not resolve to a value.");
+            }
+
+            return remoteProjectName;
+        }
+
+        throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have a remote project name configured.");
+    }
+
     internal object GetConfiguredOrganizationIdReference()
     {
         if (ConfiguredOrganizationIdParameter is not null)
@@ -193,13 +272,53 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have an organization identifier configured.");
     }
 
+    internal object GetConfiguredProjectNameReference()
+    {
+        if (ConfiguredRemoteProjectNameParameter is not null)
+        {
+            return ConfiguredRemoteProjectNameParameter;
+        }
+
+        if (!string.IsNullOrWhiteSpace(RemoteProjectName))
+        {
+            return RemoteProjectName;
+        }
+
+        throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have a remote project name configured.");
+    }
+
     internal object GetEffectiveAccessTokenReference() => RuntimeAccessToken ?? ManagementAccessToken;
 
     internal string GetApiUrlOrDefault() => ApiUrl ?? DefaultApiUrl;
 
     internal string GetIdentityUrlOrDefault() => IdentityUrl ?? DefaultIdentityUrl;
 
-    internal string GetConfiguredProjectIdentityKey() => ExistingProjectId?.ToString("D") ?? RemoteProjectName;
+    internal string GetConfiguredProjectIdentityKey(string? resolvedProjectName = null)
+    {
+        if (ExistingProjectId is Guid existingProjectId)
+        {
+            return existingProjectId.ToString("D");
+        }
+
+        if (!string.IsNullOrWhiteSpace(resolvedProjectName))
+        {
+            return resolvedProjectName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(RemoteProjectName))
+        {
+            return RemoteProjectName;
+        }
+
+        if (ConfiguredRemoteProjectNameParameter is not null)
+        {
+            return ConfiguredRemoteProjectNameParameter.Name;
+        }
+
+        throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have a remote project identity configured.");
+    }
+
+    internal string GetProjectNameDisplayValue() => ResolvedRemoteProjectName ?? GetConfiguredProjectIdentityKey();
 
     internal string? ResolveSecretValue(IBitwardenSecretReference secretReference)
     {
@@ -231,6 +350,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     internal void ResetResolvedValues()
     {
         ProjectId = null;
+        ResolvedRemoteProjectName = null;
         _resolvedSecretValues.Clear();
         _resolvedSecretIdsByRemoteName.Clear();
 
