@@ -178,6 +178,51 @@ public class BitwardenSecretManagerReconcilerTests
             }
         }
     }
+
+    [Fact]
+    public async Task InitializeAsync_WhenManagedSecretIsAlsoReferencedByName_TreatsItAsSingleSecret()
+    {
+        var organizationId = Guid.NewGuid();
+        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+            appBuilder.Configuration["Parameters:managed-secret"] = "managed-secret-value";
+
+            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+            var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
+                .WithStateFile(stateFile);
+
+            var managedSecret = bitwarden.AddSecret("managed-secret", "shared-secret", managedSecretValue);
+            IBitwardenSecretReference reference = bitwarden.GetSecret("shared-secret");
+
+            var fakeProvider = new FakeBitwardenProvider();
+            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+            using var app = appBuilder.Build();
+            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+
+            Assert.Same(managedSecret.Resource, reference);
+            Assert.Single(bitwarden.Resource.DeclaredSecretReferences);
+
+            await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+
+            Assert.NotNull(managedSecret.Resource.SecretId);
+            Assert.Single(fakeProvider.CreatedSecrets);
+            Assert.Equal("managed-secret-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
+        }
+        finally
+        {
+            if (File.Exists(stateFile))
+            {
+                File.Delete(stateFile);
+            }
+        }
+    }
 }
 
 internal sealed class FakeBitwardenProviderFactory(FakeBitwardenProvider provider) : IBitwardenSecretManagerProviderFactory

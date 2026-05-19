@@ -69,6 +69,7 @@ public class BitwardenSecretManagerBuilderTests
         var reference = bitwarden.GetSecret("managed-secret");
 
         Assert.Same(managedSecret.Resource, reference);
+        Assert.Single(bitwarden.Resource.DeclaredSecretReferences);
     }
 
     [Fact]

@@ -58,11 +58,7 @@ public class BitwardenSecretResource : Resource, IResourceWithParent<BitwardenSe
 
     string? IBitwardenSecretReference.RemoteName => RemoteName;
 
-    IResource? IBitwardenSecretReference.SecretOwner
-    {
-        get => this;
-        set { }
-    }
+    IResource? IBitwardenSecretReference.SecretOwner => this;
 
     string IManifestExpressionProvider.ValueExpression => SecretId is Guid secretId
         ? $"{{{Parent.Name}.secrets.{secretId:D}}}"

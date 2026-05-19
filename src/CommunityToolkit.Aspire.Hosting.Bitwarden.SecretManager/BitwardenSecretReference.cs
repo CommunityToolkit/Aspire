@@ -24,9 +24,9 @@ public interface IBitwardenSecretReference : IExpressionValue, IValueProvider, I
     Guid? SecretId { get; }
 
     /// <summary>
-    /// Gets or sets the secret owner resource, when the reference is backed by a managed secret resource.
+    /// Gets the secret owner resource, when the reference is backed by a managed secret resource.
     /// </summary>
-    IResource? SecretOwner { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    IResource? SecretOwner { get => throw new NotImplementedException(); }
 
     IEnumerable<object> IValueWithReferences.References => SecretOwner is null ? [Resource] : [Resource, SecretOwner];
 }
@@ -39,11 +39,7 @@ internal sealed class BitwardenSecretReference(string? remoteName, Guid? secretI
 
     public Guid? SecretId => secretId;
 
-    public IResource? SecretOwner
-    {
-        get => remoteName is null ? null : resource.FindManagedSecretByRemoteName(remoteName);
-        set { }
-    }
+    public IResource? SecretOwner => remoteName is null ? null : resource.FindManagedSecretByRemoteName(remoteName);
 
     public string ValueExpression => secretId is Guid id
         ? $"{{{resource.Name}.secrets.{id:D}}}"
