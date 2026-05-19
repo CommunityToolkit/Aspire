@@ -32,9 +32,9 @@ await browserK6.withK6OtlpEnvironment();
 
 // ---- Property access on K6Resource (ExposeProperties = true) ----
 const defaultK6Resource = await defaultK6;
-const _defaultPrimaryEndpoint = await defaultK6Resource.primaryEndpoint.get();
+const _defaultPrimaryEndpoint = await defaultK6Resource.primaryEndpoint();
 
 const browserK6Resource = await browserK6;
-const _browserPrimaryEndpoint = await browserK6Resource.primaryEndpoint.get();
+const _browserPrimaryEndpoint = await browserK6Resource.primaryEndpoint();
 
 await builder.build().run();

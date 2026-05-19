@@ -16,19 +16,24 @@ namespace Aspire.Hosting
 
     public static partial class SftpHostingExtensions
     {
+        [AspireExport("addSftp", Description = "Adds an SFTP container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> AddSftp(this IDistributedApplicationBuilder builder, string name, int? port = null) { throw null; }
 
+        [AspireExport("withHostKeyFile", Description = "Adds a bind mount for a host key file to an SFTP container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> WithHostKeyFile(this ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> builder, string keyFile, KeyType keyType) { throw null; }
 
+        [AspireExport("withUserKeyFile", Description = "Adds a bind mount for a user's public key file to an SFTP container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> WithUserKeyFile(this ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> builder, string username, string keyFile, KeyType keyType) { throw null; }
 
+        [AspireExport("withUsersFile", Description = "Adds a bind mount for the users.conf file to an SFTP container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> WithUsersFile(this ApplicationModel.IResourceBuilder<ApplicationModel.SftpContainerResource> builder, string usersFile) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class SftpContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class SftpContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public SftpContainerResource(string name) : base(default!, default) { }
 
