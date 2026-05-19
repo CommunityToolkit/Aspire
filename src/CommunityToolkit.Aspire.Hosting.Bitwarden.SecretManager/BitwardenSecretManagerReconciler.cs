@@ -169,7 +169,7 @@ internal sealed class BitwardenSecretManagerReconciler(
             }
             else if (candidates.Count == 1)
             {
-                if (await HasHistoricalManagedMappingAsync(staleManagedMappings, lookupContext, secretResource.RemoteName, cancellationToken).ConfigureAwait(false))
+                if (HasHistoricalManagedMapping(staleManagedMappings, lookupContext, secretResource.RemoteName))
                 {
                     logger.LogInformation(
                         "Creating a new Bitwarden secret for managed secret {SecretName} because the previous local identity was renamed and no explicit adoption was configured.",
@@ -316,11 +316,10 @@ internal sealed class BitwardenSecretManagerReconciler(
         return [.. projectIds];
     }
 
-    private static Task<bool> HasHistoricalManagedMappingAsync(
+    private static bool HasHistoricalManagedMapping(
         IReadOnlyDictionary<string, Guid> staleManagedMappings,
         BitwardenLookupContext lookupContext,
-        string remoteName,
-        CancellationToken cancellationToken)
+        string remoteName)
     {
         foreach ((_, Guid secretId) in staleManagedMappings)
         {
@@ -332,11 +331,11 @@ internal sealed class BitwardenSecretManagerReconciler(
 
             if (string.Equals(secret.Key, remoteName, StringComparison.Ordinal))
             {
-                return Task.FromResult(true);
+                return true;
             }
         }
 
-        return Task.FromResult(false);
+        return false;
     }
 
     private static async Task<string> ResolveSecretValueAsync(object valueSource, string secretName, CancellationToken cancellationToken)
