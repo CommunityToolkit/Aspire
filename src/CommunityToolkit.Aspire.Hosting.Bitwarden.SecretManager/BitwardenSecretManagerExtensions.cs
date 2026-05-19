@@ -31,11 +31,14 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
         ArgumentNullException.ThrowIfNull(accessToken);
 
-        BitwardenSecretManagerResource resource = new(name, projectName, organizationId, accessToken.Resource, builder.AppHostDirectory);
-        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
+        return AddBitwardenSecretManagerCore(
+            builder,
+            name,
+            ConfiguredStringValue.FromLiteral(projectName),
+            ConfiguredGuidValue.FromLiteral(organizationId),
+            accessToken);
     }
 
     /// <summary>
@@ -56,11 +59,14 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(projectName);
         ArgumentNullException.ThrowIfNull(accessToken);
 
-        BitwardenSecretManagerResource resource = new(name, projectName.Resource, organizationId, accessToken.Resource, builder.AppHostDirectory);
-        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
+        return AddBitwardenSecretManagerCore(
+            builder,
+            name,
+            ConfiguredStringValue.FromParameter(projectName.Resource),
+            ConfiguredGuidValue.FromLiteral(organizationId),
+            accessToken);
     }
 
     /// <summary>
@@ -81,12 +87,15 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
         ArgumentNullException.ThrowIfNull(organizationId);
         ArgumentNullException.ThrowIfNull(accessToken);
 
-        BitwardenSecretManagerResource resource = new(name, projectName, organizationId.Resource, accessToken.Resource, builder.AppHostDirectory);
-        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
+        return AddBitwardenSecretManagerCore(
+            builder,
+            name,
+            ConfiguredStringValue.FromLiteral(projectName),
+            ConfiguredGuidValue.FromParameter(organizationId.Resource),
+            accessToken);
     }
 
     /// <summary>
@@ -107,12 +116,15 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(projectName);
         ArgumentNullException.ThrowIfNull(organizationId);
         ArgumentNullException.ThrowIfNull(accessToken);
 
-        BitwardenSecretManagerResource resource = new(name, projectName.Resource, organizationId.Resource, accessToken.Resource, builder.AppHostDirectory);
-        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
+        return AddBitwardenSecretManagerCore(
+            builder,
+            name,
+            ConfiguredStringValue.FromParameter(projectName.Resource),
+            ConfiguredGuidValue.FromParameter(organizationId.Resource),
+            accessToken);
     }
 
     /// <summary>
@@ -346,6 +358,23 @@ public static class BitwardenSecretManagerExtensions
         }
 
         return builder.WithEnvironment(context => source.Resource.ApplyReferenceConfiguration(context.EnvironmentVariables, connectionName));
+    }
+
+    private static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManagerCore(
+        IDistributedApplicationBuilder builder,
+        string name,
+        ConfiguredStringValue projectName,
+        ConfiguredGuidValue organizationId,
+        IResourceBuilder<ParameterResource> accessToken)
+    {
+        // Keep the public overloads explicit, but normalize their implementation here.
+        BitwardenSecretManagerResource resource = new(
+            name,
+            projectName,
+            organizationId,
+            accessToken.Resource,
+            builder.AppHostDirectory);
+        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
     }
 
     private static IResourceBuilder<BitwardenSecretManagerResource> ConfigureBitwardenSecretManager(

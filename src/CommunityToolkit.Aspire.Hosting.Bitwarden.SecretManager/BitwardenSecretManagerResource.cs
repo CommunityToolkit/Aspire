@@ -17,17 +17,31 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     private readonly List<IBitwardenSecretReference> _declaredSecretReferences = [];
     private readonly Dictionary<Guid, string> _resolvedSecretValues = [];
     private readonly Dictionary<string, Guid> _resolvedSecretIdsByRemoteName = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConfiguredGuidValue _organizationId;
+    private readonly ConfiguredStringValue _projectName;
 
-    private BitwardenSecretManagerResource(
+    internal BitwardenSecretManagerResource(
         string name,
+        ConfiguredStringValue projectName,
+        ConfiguredGuidValue organizationId,
         ParameterResource managementAccessToken,
         string appHostDirectory)
         : base(name)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(projectName);
+        ArgumentNullException.ThrowIfNull(organizationId);
         ArgumentNullException.ThrowIfNull(managementAccessToken);
         ArgumentException.ThrowIfNullOrWhiteSpace(appHostDirectory);
 
+        // Collapse the public overload matrix to one internal representation while
+        // still populating the existing exposed properties used elsewhere.
+        _projectName = projectName;
+        _organizationId = organizationId;
+        ConfiguredOrganizationId = organizationId.LiteralValue;
+        ConfiguredOrganizationIdParameter = organizationId.Parameter;
+        RemoteProjectName = projectName.LiteralValue;
+        ConfiguredRemoteProjectNameParameter = projectName.Parameter;
         ManagementAccessToken = managementAccessToken;
         AppHostDirectory = appHostDirectory;
         _projectIdReference = new(this);
@@ -47,12 +61,13 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         Guid organizationId,
         ParameterResource managementAccessToken,
         string appHostDirectory)
-        : this(name, managementAccessToken, appHostDirectory)
+        : this(
+            name,
+            ConfiguredStringValue.FromLiteral(remoteProjectName),
+            ConfiguredGuidValue.FromLiteral(organizationId),
+            managementAccessToken,
+            appHostDirectory)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(remoteProjectName);
-
-        ConfiguredOrganizationId = organizationId;
-        RemoteProjectName = remoteProjectName;
     }
 
     /// <summary>
@@ -69,12 +84,13 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         Guid organizationId,
         ParameterResource managementAccessToken,
         string appHostDirectory)
-        : this(name, managementAccessToken, appHostDirectory)
+        : this(
+            name,
+            ConfiguredStringValue.FromParameter(remoteProjectNameParameter),
+            ConfiguredGuidValue.FromLiteral(organizationId),
+            managementAccessToken,
+            appHostDirectory)
     {
-        ArgumentNullException.ThrowIfNull(remoteProjectNameParameter);
-
-        ConfiguredOrganizationId = organizationId;
-        ConfiguredRemoteProjectNameParameter = remoteProjectNameParameter;
     }
 
     /// <summary>
@@ -91,13 +107,13 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         ParameterResource organizationIdParameter,
         ParameterResource managementAccessToken,
         string appHostDirectory)
-        : this(name, managementAccessToken, appHostDirectory)
+        : this(
+            name,
+            ConfiguredStringValue.FromLiteral(remoteProjectName),
+            ConfiguredGuidValue.FromParameter(organizationIdParameter),
+            managementAccessToken,
+            appHostDirectory)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(remoteProjectName);
-        ArgumentNullException.ThrowIfNull(organizationIdParameter);
-
-        ConfiguredOrganizationIdParameter = organizationIdParameter;
-        RemoteProjectName = remoteProjectName;
     }
 
     /// <summary>
@@ -114,13 +130,13 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         ParameterResource organizationIdParameter,
         ParameterResource managementAccessToken,
         string appHostDirectory)
-        : this(name, managementAccessToken, appHostDirectory)
+        : this(
+            name,
+            ConfiguredStringValue.FromParameter(remoteProjectNameParameter),
+            ConfiguredGuidValue.FromParameter(organizationIdParameter),
+            managementAccessToken,
+            appHostDirectory)
     {
-        ArgumentNullException.ThrowIfNull(remoteProjectNameParameter);
-        ArgumentNullException.ThrowIfNull(organizationIdParameter);
-
-        ConfiguredOrganizationIdParameter = organizationIdParameter;
-        ConfiguredRemoteProjectNameParameter = remoteProjectNameParameter;
     }
 
     /// <summary>
@@ -209,21 +225,11 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     /// <returns>A Bitwarden secret reference.</returns>
     public IBitwardenSecretReference GetSecret(Guid secretId) => GetSecretReference(secretId);
 
-    internal async Task<Guid> GetResolvedOrganizationIdAsync(CancellationToken cancellationToken)
-    {
-        if (ConfiguredOrganizationId is Guid organizationId)
-        {
-            return organizationId;
-        }
-
-        string? organizationIdValue = await ConfiguredOrganizationIdParameter!.GetValueAsync(cancellationToken).ConfigureAwait(false);
-        if (!Guid.TryParse(organizationIdValue, out organizationId))
-        {
-            throw new DistributedApplicationException($"Bitwarden organization parameter '{ConfiguredOrganizationIdParameter.Name}' for resource '{Name}' did not resolve to a valid GUID.");
-        }
-
-        return organizationId;
-    }
+    internal async Task<Guid> GetResolvedOrganizationIdAsync(
+        CancellationToken cancellationToken)
+        => await _organizationId
+            .ResolveAsync(Name, "organization", cancellationToken)
+            .ConfigureAwait(false);
 
     internal async Task<string> GetResolvedManagementAccessTokenAsync(CancellationToken cancellationToken)
     {
@@ -236,56 +242,15 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         return accessToken;
     }
 
-    internal async Task<string> GetResolvedRemoteProjectNameAsync(CancellationToken cancellationToken)
-    {
-        if (!string.IsNullOrWhiteSpace(RemoteProjectName))
-        {
-            return RemoteProjectName;
-        }
+    internal async Task<string> GetResolvedRemoteProjectNameAsync(
+        CancellationToken cancellationToken)
+        => await _projectName
+            .ResolveAsync(Name, "project name", cancellationToken)
+            .ConfigureAwait(false);
 
-        if (ConfiguredRemoteProjectNameParameter is not null)
-        {
-            string? remoteProjectName = await ConfiguredRemoteProjectNameParameter.GetValueAsync(cancellationToken).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(remoteProjectName))
-            {
-                throw new DistributedApplicationException($"Bitwarden project name parameter '{ConfiguredRemoteProjectNameParameter.Name}' for resource '{Name}' did not resolve to a value.");
-            }
+    internal object GetConfiguredOrganizationIdReference() => _organizationId.GetReference(Name, "organization");
 
-            return remoteProjectName;
-        }
-
-        throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have a remote project name configured.");
-    }
-
-    internal object GetConfiguredOrganizationIdReference()
-    {
-        if (ConfiguredOrganizationIdParameter is not null)
-        {
-            return ConfiguredOrganizationIdParameter;
-        }
-
-        if (ConfiguredOrganizationId is Guid organizationId)
-        {
-            return organizationId.ToString("D");
-        }
-
-        throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have an organization identifier configured.");
-    }
-
-    internal object GetConfiguredProjectNameReference()
-    {
-        if (ConfiguredRemoteProjectNameParameter is not null)
-        {
-            return ConfiguredRemoteProjectNameParameter;
-        }
-
-        if (!string.IsNullOrWhiteSpace(RemoteProjectName))
-        {
-            return RemoteProjectName;
-        }
-
-        throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have a remote project name configured.");
-    }
+    internal object GetConfiguredProjectNameReference() => _projectName.GetReference(Name, "project name");
 
     internal object GetEffectiveAccessTokenReference() => RuntimeAccessToken ?? ManagementAccessToken;
 
@@ -294,31 +259,11 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     internal string GetIdentityUrlOrDefault() => IdentityUrl ?? DefaultIdentityUrl;
 
     internal string GetConfiguredProjectIdentityKey(string? resolvedProjectName = null)
-    {
-        if (ExistingProjectId is Guid existingProjectId)
-        {
-            return existingProjectId.ToString("D");
-        }
+        // Existing-project adoption must keep using the remote project ID as the stable key.
+        => ExistingProjectId?.ToString("D")
+            ?? _projectName.GetIdentityKey(Name, "project name", resolvedProjectName);
 
-        if (!string.IsNullOrWhiteSpace(resolvedProjectName))
-        {
-            return resolvedProjectName;
-        }
-
-        if (!string.IsNullOrWhiteSpace(RemoteProjectName))
-        {
-            return RemoteProjectName;
-        }
-
-        if (ConfiguredRemoteProjectNameParameter is not null)
-        {
-            return ConfiguredRemoteProjectNameParameter.Name;
-        }
-
-        throw new DistributedApplicationException($"Bitwarden resource '{Name}' does not have a remote project identity configured.");
-    }
-
-    internal string GetProjectNameDisplayValue() => ResolvedRemoteProjectName ?? GetConfiguredProjectIdentityKey();
+    internal string GetProjectNameDisplayValue() => _projectName.GetDisplayValue(Name, "project name", ResolvedRemoteProjectName);
 
     internal string? ResolveSecretValue(IBitwardenSecretReference secretReference)
     {
@@ -392,6 +337,164 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     {
         return _managedSecrets.LastOrDefault(secret => string.Equals(secret.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase));
     }
+}
+
+// Wraps either a literal GUID or a parameter-backed GUID so resolution and
+// manifest/reference generation can go through one code path.
+internal sealed class ConfiguredGuidValue
+{
+    private ConfiguredGuidValue(Guid? literalValue, ParameterResource? parameter)
+    {
+        LiteralValue = literalValue;
+        Parameter = parameter;
+    }
+
+    public Guid? LiteralValue { get; }
+
+    public ParameterResource? Parameter { get; }
+
+    public static ConfiguredGuidValue FromLiteral(Guid literalValue) => new(literalValue, null);
+
+    public static ConfiguredGuidValue FromParameter(ParameterResource parameter)
+    {
+        ArgumentNullException.ThrowIfNull(parameter);
+        return new(null, parameter);
+    }
+
+    public async Task<Guid> ResolveAsync(
+        string resourceName,
+        string valueName,
+        CancellationToken cancellationToken)
+    {
+        if (LiteralValue is Guid literalValue)
+        {
+            return literalValue;
+        }
+
+        string? value = await Parameter!
+            .GetValueAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (!Guid.TryParse(value, out Guid parsedValue))
+        {
+            throw new DistributedApplicationException(
+                $"Bitwarden {valueName} parameter '{Parameter.Name}' for resource '{resourceName}' did not resolve to a valid GUID.");
+        }
+
+        return parsedValue;
+    }
+
+    public object GetReference(string resourceName, string valueName)
+    {
+        if (Parameter is not null)
+        {
+            return Parameter;
+        }
+
+        if (LiteralValue is Guid literalValue)
+        {
+            return literalValue.ToString("D");
+        }
+
+        throw new DistributedApplicationException(
+            $"Bitwarden resource '{resourceName}' does not have a {valueName} configured.");
+    }
+}
+
+// Wraps either a literal string or a parameter-backed string while preserving a
+// stable pre-resolution identity for state and manifest generation.
+internal sealed class ConfiguredStringValue
+{
+    private ConfiguredStringValue(string? literalValue, ParameterResource? parameter)
+    {
+        LiteralValue = literalValue;
+        Parameter = parameter;
+    }
+
+    public string? LiteralValue { get; }
+
+    public ParameterResource? Parameter { get; }
+
+    public static ConfiguredStringValue FromLiteral(string literalValue)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(literalValue);
+        return new(literalValue, null);
+    }
+
+    public static ConfiguredStringValue FromParameter(ParameterResource parameter)
+    {
+        ArgumentNullException.ThrowIfNull(parameter);
+        return new(null, parameter);
+    }
+
+    public async Task<string> ResolveAsync(
+        string resourceName,
+        string valueName,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(LiteralValue))
+        {
+            return LiteralValue;
+        }
+
+        string? value = await Parameter!
+            .GetValueAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new DistributedApplicationException(
+                $"Bitwarden {valueName} parameter '{Parameter.Name}' for resource '{resourceName}' did not resolve to a value.");
+        }
+
+        return value;
+    }
+
+    public object GetReference(string resourceName, string valueName)
+    {
+        if (Parameter is not null)
+        {
+            return Parameter;
+        }
+
+        if (!string.IsNullOrWhiteSpace(LiteralValue))
+        {
+            return LiteralValue;
+        }
+
+        throw new DistributedApplicationException(
+            $"Bitwarden resource '{resourceName}' does not have a {valueName} configured.");
+    }
+
+    public string GetIdentityKey(
+        string resourceName,
+        string valueName,
+        string? resolvedValue = null)
+    {
+        if (!string.IsNullOrWhiteSpace(resolvedValue))
+        {
+            return resolvedValue;
+        }
+
+        if (!string.IsNullOrWhiteSpace(LiteralValue))
+        {
+            return LiteralValue;
+        }
+
+        // Parameter name is the only stable identity available before the value
+        // is resolved.
+        if (Parameter is not null)
+        {
+            return Parameter.Name;
+        }
+
+        throw new DistributedApplicationException(
+            $"Bitwarden resource '{resourceName}' does not have a {valueName} configured.");
+    }
+
+    public string GetDisplayValue(
+        string resourceName,
+        string valueName,
+        string? resolvedValue = null)
+        => GetIdentityKey(resourceName, valueName, resolvedValue);
 }
 
 internal sealed class BitwardenProjectIdReference(BitwardenSecretManagerResource resource) : IManifestExpressionProvider, IValueProvider, IValueWithReferences
