@@ -503,7 +503,7 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
         _secretIdentifiers ??= provider.ListSecrets(organizationId);
 
         Guid[] secretIds = _secretIdentifiers
-            .Where(secret => string.Equals(secret.Key, remoteName, StringComparison.Ordinal))
+            .Where(secret => string.Equals(secret.Key, remoteName, StringComparison.OrdinalIgnoreCase))
             .Select(secret => secret.Id)
             .ToArray();
 
@@ -528,7 +528,7 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
 
         return secretIds
             .Select(secretId => _secretsById[secretId])
-            .Where(secret => secret is not null && secret.ProjectId == projectId && string.Equals(secret.Key, remoteName, StringComparison.Ordinal))
+            .Where(secret => secret is not null && secret.ProjectId == projectId && string.Equals(secret.Key, remoteName, StringComparison.OrdinalIgnoreCase))
             .Cast<BitwardenSecretInfo>()
             .ToArray();
     }
