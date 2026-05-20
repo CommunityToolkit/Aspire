@@ -301,6 +301,15 @@ internal sealed class BitwardenSecretManagerReconciler(
         string remoteName,
         string value)
     {
+        bool requiresProjectUpdate = secret.ProjectId != managedProjectId;
+        bool requiresNameUpdate = !string.Equals(secret.Key, remoteName, StringComparison.Ordinal);
+        bool requiresValueUpdate = !string.Equals(secret.Value, value, StringComparison.Ordinal);
+
+        if (!requiresProjectUpdate && !requiresNameUpdate && !requiresValueUpdate)
+        {
+            return secret;
+        }
+
         Guid[] projectIds = BuildProjectIds(secret.ProjectId, managedProjectId);
         return provider.UpdateSecret(secret.OrganizationId, secret.Id, remoteName, value, secret.Note, projectIds);
     }
