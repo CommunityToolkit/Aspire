@@ -26,7 +26,7 @@ public interface IBitwardenSecretReference : IExpressionValue, IValueProvider, I
     /// <summary>
     /// Gets the secret owner resource, when the reference is backed by a managed secret resource.
     /// </summary>
-    IResource? SecretOwner { get => throw new NotImplementedException(); }
+    IResource? SecretOwner { get; }
 
     IEnumerable<object> IValueWithReferences.References => SecretOwner is null ? [Resource] : [Resource, SecretOwner];
 }
