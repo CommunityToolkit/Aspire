@@ -32,6 +32,9 @@ internal sealed class K3sInProcessPortForwarder(
     public async Task RunAsync(ILogger logger, CancellationToken ct)
     {
         var backoff = TimeSpan.FromSeconds(2);
+        // Track current port separately so a failed bind can re-allocate rather than
+        // retrying the already-stolen port — avoids the TOCTOU retry loop.
+        var currentPort = localPort;
 
         while (!ct.IsCancellationRequested)
         {
@@ -40,7 +43,7 @@ internal sealed class K3sInProcessPortForwarder(
             // Docker host IP — not 127.0.0.1. Binding to loopback would silently drop
             // all container traffic. Users on shared networks should be aware that the
             // forwarded service is reachable from other hosts on the same LAN.
-            var listener = new TcpListener(IPAddress.Any, localPort);
+            var listener = new TcpListener(IPAddress.Any, currentPort);
             try
             {
                 listener.Start();
@@ -82,6 +85,12 @@ internal sealed class K3sInProcessPortForwarder(
                     "Port-forward for svc/{Service} failed; retrying in {Delay}s…",
                     serviceName, backoff.TotalSeconds);
                 onReadyChanged(false);
+                // Allocate a fresh port on retry — the previous one may have been
+                // stolen between our probe and the forwarder bind (TOCTOU).
+                using var probe = new TcpListener(IPAddress.Any, 0);
+                probe.Start();
+                currentPort = ((IPEndPoint)probe.LocalEndpoint).Port;
+                probe.Stop();
             }
             finally
             {

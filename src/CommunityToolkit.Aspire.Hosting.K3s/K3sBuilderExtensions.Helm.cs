@@ -55,8 +55,10 @@ public static class K3sHelmBuilderExtensions
         // the k3s API via DCP DNS (https://{clusterName}:6443). The directory is created
         // by AddK3sCluster; the kubeconfig file is written by K3sReadinessHealthCheck on
         // first successful health check. WaitFor(cluster) guarantees the file exists.
+        // Ensure the host-side container/ directory exists so the health check can write to it.
         var containerKubeconfigDir = Path.Combine(cluster.KubeconfigDirectory!, "container");
         Directory.CreateDirectory(containerKubeconfigDir);
+        var containerKubeconfigFile = Path.Combine(containerKubeconfigDir, "kubeconfig.yaml");
 
         var (helmRegistry, helmImage, helmTag) = cluster.HelmImageInfo;
 
@@ -76,9 +78,7 @@ public static class K3sHelmBuilderExtensions
                 {
                     Name = "helm-install.sh",
                     Contents = script,
-                    Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
-                         | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
-                         | UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
+                    Mode = K3sFileHelpers.ExecutableScriptMode,
                 }];
                 return Task.FromResult(items);
             })
@@ -96,8 +96,11 @@ public static class K3sHelmBuilderExtensions
                     })];
                 return Task.FromResult(items);
             })
-            .WithBindMount(containerKubeconfigDir, "/root/.kube")
-            .WithEnvironment("KUBECONFIG", "/root/.kube/kubeconfig.yaml")
+            // File-level mount: only the kubeconfig YAML is visible inside the container.
+            // Mounting the full container/ directory would expose it to kubectl's cache
+            // (cache/, http-cache/) and cause concurrent-container cache corruption.
+            .WithBindMount(containerKubeconfigFile, K3sFileHelpers.ContainerKubeconfigPath, isReadOnly: true)
+            .WithEnvironment("KUBECONFIG", K3sFileHelpers.ContainerKubeconfigPath)
             .WithIconName("Rocket")
             .ExcludeFromManifest()
             .WithInitialState(new CustomResourceSnapshot
@@ -171,7 +174,7 @@ public static class K3sHelmBuilderExtensions
         // can appear in the bind-mount before the k8s hostname resolves in the helm
         // container. Using `helm list` (which calls the k8s API) verifies both the
         // file and the network path before proceeding.
-        sb.AppendLine("until [ -f /root/.kube/kubeconfig.yaml ] && helm list --kubeconfig /root/.kube/kubeconfig.yaml > /dev/null 2>&1; do");
+        sb.AppendLine($"until [ -f {K3sFileHelpers.ContainerKubeconfigPath} ] && helm list --kubeconfig {K3sFileHelpers.ContainerKubeconfigPath} > /dev/null 2>&1; do");
         sb.AppendLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
         sb.AppendLine("  sleep 5");
         sb.AppendLine("done");
@@ -211,8 +214,10 @@ public static class K3sHelmBuilderExtensions
         //      to Helm without any shell interpretation.
         // For values containing commas, braces, or backslashes that Helm --set cannot
         // represent safely (e.g. multi-line strings), use WithHelmValuesFile instead.
+        // Apply HelmEscape to BOTH key and value: Helm's --set parser splits on commas
+        // and treats braces/brackets as list/map syntax in both positions.
         foreach (var (key, value) in release.HelmValues)
-            sb.Append($" --set {ShellEscape($"{key}={HelmEscape(value)}")}");
+            sb.Append($" --set {ShellEscape($"{HelmEscape(key)}={HelmEscape(value)}")}");
 
         return sb.ToString();
     }

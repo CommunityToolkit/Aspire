@@ -39,7 +39,8 @@ public static class K3sServiceEndpointExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(serviceName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(@namespace);
 
         if (servicePort is < 1 or > 65535)
             throw new ArgumentOutOfRangeException(nameof(servicePort),
@@ -199,7 +200,10 @@ public static class K3sServiceEndpointExtensions
 
     private static int AllocatePort()
     {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        // Probe on IPAddress.Any to match the forwarder's actual bind address.
+        // Probing on Loopback while the forwarder binds on Any can miss conflicts
+        // on non-loopback interfaces, producing a SocketException at bind time.
+        using var listener = new TcpListener(IPAddress.Any, 0);
         listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();

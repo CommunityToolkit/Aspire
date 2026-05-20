@@ -203,7 +203,7 @@ public class K3sClusterResourceTests
     }
 
     [Fact]
-    public void WithReferenceMountsKubeconfigDirForContainer()
+    public void WithReferenceMountsKubeconfigFileForContainer()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
@@ -217,17 +217,19 @@ public class K3sClusterResourceTests
             .OfType<ContainerResource>()
             .Single(r => r.Name == "operator");
 
-        // All containers (user containers, helm, and kubectl installers) receive a bind-mount
-        // of the container/ kubeconfig directory. Bind-mount is used so the kubeconfig
-        // updates automatically if the cluster is recreated without restarting the container.
+        // Containers receive a file-level bind-mount of container/kubeconfig.yaml at
+        // /tmp/k3s-kubeconfig.yaml (not the directory). Mounting only the file prevents
+        // kubectl's cache directories (cache/, http-cache/) from appearing on the host
+        // and avoids concurrent-container cache corruption.
         var mount = containerResource.Annotations
             .OfType<ContainerMountAnnotation>()
-            .FirstOrDefault(m => m.Target == "/var/k3s");
+            .FirstOrDefault(m => m.Target == "/tmp/k3s-kubeconfig.yaml");
 
         Assert.NotNull(mount);
         Assert.Equal(ContainerMountType.BindMount, mount.Type);
         Assert.True(mount.IsReadOnly);
-        Assert.EndsWith(Path.Combine(".k3s", "k8s", "container"), mount.Source);
+        // Source is the specific file, not the directory.
+        Assert.EndsWith(Path.Combine(".k3s", "k8s", "container", "kubeconfig.yaml"), mount.Source);
     }
 
     [Fact]

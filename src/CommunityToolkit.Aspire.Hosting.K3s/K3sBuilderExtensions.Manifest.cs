@@ -55,6 +55,7 @@ public static class K3sManifestBuilderExtensions
 
         var containerKubeconfigDir = Path.Combine(cluster.KubeconfigDirectory!, "container");
         Directory.CreateDirectory(containerKubeconfigDir);
+        var containerKubeconfigFile = Path.Combine(containerKubeconfigDir, "kubeconfig.yaml");
 
         var (kubectlRegistry, kubectlImage, kubectlTag) = cluster.KubectlImageInfo;
 
@@ -71,20 +72,20 @@ public static class K3sManifestBuilderExtensions
                 {
                     Name = "kubectl-apply.sh",
                     Contents = BuildManifestScript(),
-                    Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
-                         | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
-                         | UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
+                    Mode = K3sFileHelpers.ExecutableScriptMode,
                 }];
                 return Task.FromResult(items);
             })
             .WithArgs("/kubectl-apply.sh")
-            .WithBindMount(containerKubeconfigDir, "/root/.kube");
+            .WithBindMount(containerKubeconfigFile, K3sFileHelpers.ContainerKubeconfigPath, isReadOnly: true);
 
         if (isKustomize)
         {
             // Bind-mount the overlay directory so kubectl kustomize can resolve relative
             // references to base manifests (e.g. ../../base). WithContainerFiles copies
             // files, not directory structure, so it would break cross-directory references.
+            // Read-write is intentional here: kustomize traverses into subdirectories.
+            // The kubectl/helm scripts never write to /k8s-manifests, so this is latent.
             resourceBuilder.WithBindMount(absolutePath, "/k8s-manifests");
         }
         else
@@ -125,7 +126,7 @@ public static class K3sManifestBuilderExtensions
         }
 
         return resourceBuilder
-            .WithEnvironment("KUBECONFIG", "/root/.kube/kubeconfig.yaml")
+            .WithEnvironment("KUBECONFIG", K3sFileHelpers.ContainerKubeconfigPath)
             .WithIconName("Code")
             .ExcludeFromManifest()
             .WithInitialState(new CustomResourceSnapshot
@@ -150,7 +151,7 @@ public static class K3sManifestBuilderExtensions
         // DCP sets up container network aliases asynchronously, so the kubeconfig file
         // can appear in the bind-mount before the k8s hostname resolves in the kubectl
         // container. Using `kubectl cluster-info` verifies both the file and the network.
-        sb.AppendLine("until [ -f /root/.kube/kubeconfig.yaml ] && kubectl cluster-info --kubeconfig /root/.kube/kubeconfig.yaml > /dev/null 2>&1; do");
+        sb.AppendLine($"until [ -f {K3sFileHelpers.ContainerKubeconfigPath} ] && kubectl cluster-info --kubeconfig {K3sFileHelpers.ContainerKubeconfigPath} > /dev/null 2>&1; do");
         sb.AppendLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
         sb.AppendLine("  sleep 5");
         sb.AppendLine("done");

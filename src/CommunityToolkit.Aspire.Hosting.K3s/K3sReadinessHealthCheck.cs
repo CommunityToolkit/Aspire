@@ -102,12 +102,12 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
         var localDir = Path.Combine(dir, "local");
         Directory.CreateDirectory(localDir);
         var localPath = Path.Combine(localDir, "kubeconfig.yaml");
-        await File.WriteAllTextAsync(localPath, BuildConfigYaml(parsed, $"https://localhost:{port}"), ct)
+        await WriteAtomicAsync(localPath, BuildConfigYaml(parsed, $"https://localhost:{port}"), ct)
             .ConfigureAwait(false);
 
         var containerDir = Path.Combine(dir, "container");
         Directory.CreateDirectory(containerDir);
-        await File.WriteAllTextAsync(
+        await WriteAtomicAsync(
             Path.Combine(containerDir, "kubeconfig.yaml"),
             BuildConfigYaml(parsed, $"https://{_resource.Name}:6443"),
             ct).ConfigureAwait(false);
@@ -128,6 +128,18 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
         }
 
         return KubernetesYaml.Serialize(copy);
+    }
+
+    /// <summary>
+    /// Writes <paramref name="content"/> to <paramref name="path"/> atomically by first
+    /// writing to a sibling temp file and then renaming. Readers can never observe a
+    /// partial write; the old file remains readable until the rename commits.
+    /// </summary>
+    private static async Task WriteAtomicAsync(string path, string content, CancellationToken ct)
+    {
+        var tmp = path + ".tmp";
+        await File.WriteAllTextAsync(tmp, content, ct).ConfigureAwait(false);
+        File.Move(tmp, path, overwrite: true);
     }
 
     private static bool IsTlsOrAuthFailure(Exception ex) =>

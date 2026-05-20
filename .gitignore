@@ -23,10 +23,8 @@ examples/perl/**/local/*
 **cpanfile.snapshot
 **/.modules/
 **/*.AppHost.TypeScript/nuget.config
-<<<<<<< main
 
 **/.k3s/
-=======
 tsconfig.apphost.json
 .ngrok
 bun.lock
@@ -35,4 +33,3 @@ yarn.lock
 solr-data
 *.lscache
 apphost.js
->>>>>>> main

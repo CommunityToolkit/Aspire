@@ -68,9 +68,7 @@ public static class K3sBuilderExtensions
             {
                 Name = "aspire-k3s-entrypoint.sh",
                 Contents = K3sInitEntrypointScript,
-                Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
-                     | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
-                     | UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
+                Mode = K3sFileHelpers.ExecutableScriptMode,
             }])
             .WithEntrypoint("/bin/sh")
             .WithArgs("/aspire-k3s-entrypoint.sh")
@@ -137,8 +135,7 @@ public static class K3sBuilderExtensions
             .WithEnvironment("K3S_KUBECONFIG_MODE", "644")
             .WithEnvironment("K3S_KUBECONFIG_OUTPUT", "/tmp/k3s-kubeconfig/kubeconfig.yaml")
 
-            .WithIconName("Kubernetes")
-            .WithHttpsDeveloperCertificate();
+            .WithIconName("Kubernetes");
 
         if (options.ClusterCidr is not null)
         {
@@ -208,9 +205,14 @@ public static class K3sBuilderExtensions
 
         resourceBuilder.WithHealthCheck($"k3s_{name}_ready");
 
+        // Register as a singleton instance so the cached Kubernetes client and kubeconfig
+        // state survive across health-check ticks. Using a factory (sp => new ...) would
+        // create a fresh instance on every check, making _cachedClient dead state and
+        // leaking a Kubernetes/HttpClient on every tick.
+        var healthCheck = new K3sReadinessHealthCheck(resource, resource.ApiEndpoint);
         builder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
             $"k3s_{name}_ready",
-            sp => new K3sReadinessHealthCheck(resource, resource.ApiEndpoint),
+            _ => healthCheck,
             failureStatus: HealthStatus.Unhealthy,
             tags: null));
 
@@ -330,6 +332,14 @@ public static class K3sBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
+        // Idempotent: remove any existing data-volume annotation at this target so that
+        // calling WithDataVolume twice does not produce duplicate mounts that Docker rejects.
+        var existing = builder.Resource.Annotations
+            .OfType<ContainerMountAnnotation>()
+            .FirstOrDefault(m => m.Target == "/var/lib/rancher/k3s");
+        if (existing is not null)
+            builder.Resource.Annotations.Remove(existing);
+
         return builder
             .WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), "/var/lib/rancher/k3s");
     }
@@ -340,8 +350,8 @@ public static class K3sBuilderExtensions
     /// <list type="bullet">
     ///   <item>
     ///     <see cref="ContainerResource"/>s receive a physical kubeconfig file copied to
-    ///     <c>/var/k3s/kubeconfig.yaml</c> (container-network variant,
-    ///     <c>server: https://{resourceName}:6443</c>). <c>KUBECONFIG=/var/k3s/kubeconfig.yaml</c>
+    ///     <c>/tmp/k3s-kubeconfig.yaml</c> (container-network variant,
+    ///     <c>server: https://{resourceName}:6443</c>). <c>KUBECONFIG=/tmp/k3s-kubeconfig.yaml</c>
     ///     is set automatically so all standard Kubernetes tooling (<c>kubectl</c>, <c>helm</c>,
     ///     KubernetesClient SDK) works without any custom bootstrap code.
     ///   </item>
@@ -367,24 +377,31 @@ public static class K3sBuilderExtensions
 
         if (destination.Resource is ContainerResource)
         {
-            // Containers get a bind-mount of the container/ kubeconfig directory at /var/k3s.
-            // ContainerMountAnnotation is added directly to bypass the T : ContainerResource
-            // constraint on WithBindMount — the annotation is equivalent.
-            //
-            // Bind-mount (not file copy) is used for the same reason as in the helm and
-            // kubectl installer containers: if the cluster is recreated while a container is
-            // running, the new kubeconfig appears automatically without restarting the container.
-            var containerKubeconfigDir = Path.Combine(cluster.KubeconfigDirectory!, "container");
-            Directory.CreateDirectory(containerKubeconfigDir);
+            // Idempotent: skip if the file bind-mount was already added (e.g. by a second
+            // WithReference call) — Docker rejects duplicate mounts at the same target.
+            var alreadyMounted = destination.Resource.Annotations
+                .OfType<ContainerMountAnnotation>()
+                .Any(m => m.Target == K3sFileHelpers.ContainerKubeconfigPath);
 
-            destination.Resource.Annotations.Add(
-                new ContainerMountAnnotation(
-                    containerKubeconfigDir,
-                    "/var/k3s",
-                    ContainerMountType.BindMount,
-                    isReadOnly: true));
+            if (!alreadyMounted)
+            {
+                // File-level mount: only the kubeconfig YAML is visible inside the container.
+                // Mounting the entire container/ directory would expose kubectl's cache
+                // directories (cache/, http-cache/) on the host and cause concurrent-container
+                // cache corruption when multiple containers share the same kubeconfig directory.
+                var containerKubeconfigFile = Path.Combine(
+                    cluster.KubeconfigDirectory!, "container", "kubeconfig.yaml");
+                Directory.CreateDirectory(Path.GetDirectoryName(containerKubeconfigFile)!);
 
-            return destination.WithEnvironment("KUBECONFIG", "/var/k3s/kubeconfig.yaml");
+                destination.Resource.Annotations.Add(
+                    new ContainerMountAnnotation(
+                        containerKubeconfigFile,
+                        K3sFileHelpers.ContainerKubeconfigPath,
+                        ContainerMountType.BindMount,
+                        isReadOnly: true));
+            }
+
+            return destination.WithEnvironment("KUBECONFIG", K3sFileHelpers.ContainerKubeconfigPath);
         }
 
         // Projects and executables: KUBECONFIG points to the host-accessible local kubeconfig.
