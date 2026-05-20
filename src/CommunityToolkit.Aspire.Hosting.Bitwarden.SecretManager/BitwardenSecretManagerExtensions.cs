@@ -31,6 +31,7 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
         ArgumentNullException.ThrowIfNull(accessToken);
 
         return AddBitwardenSecretManagerCore(
@@ -59,6 +60,7 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(projectName);
         ArgumentNullException.ThrowIfNull(accessToken);
 
         return AddBitwardenSecretManagerCore(
@@ -87,6 +89,7 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
         ArgumentNullException.ThrowIfNull(organizationId);
         ArgumentNullException.ThrowIfNull(accessToken);
 
@@ -116,6 +119,7 @@ public static class BitwardenSecretManagerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentNullException.ThrowIfNull(projectName);
         ArgumentNullException.ThrowIfNull(organizationId);
         ArgumentNullException.ThrowIfNull(accessToken);
 
@@ -225,6 +229,7 @@ public static class BitwardenSecretManagerExtensions
         string remoteName)
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
         return builder.Resource.GetSecret(remoteName);
     }
 
@@ -254,6 +259,8 @@ public static class BitwardenSecretManagerExtensions
         [ResourceName] string name,
         IResourceBuilder<ParameterResource> value)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(value);
         return builder.AddSecret(name, name, value);
     }
@@ -270,6 +277,8 @@ public static class BitwardenSecretManagerExtensions
         [ResourceName] string name,
         ReferenceExpression value)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(value);
         return builder.AddSecret(name, name, value);
     }
@@ -288,6 +297,9 @@ public static class BitwardenSecretManagerExtensions
         string remoteName,
         IResourceBuilder<ParameterResource> value)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
         ArgumentNullException.ThrowIfNull(value);
         return AddSecretCore(builder, name, remoteName, value.Resource);
     }
@@ -306,6 +318,9 @@ public static class BitwardenSecretManagerExtensions
         string remoteName,
         ReferenceExpression value)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
         ArgumentNullException.ThrowIfNull(value);
         return AddSecretCore(builder, name, remoteName, value);
     }

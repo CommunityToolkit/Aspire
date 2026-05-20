@@ -7,6 +7,48 @@ namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
 public class BitwardenSecretManagerBuilderTests
 {
     [Fact]
+    public void AddBitwardenSecretManager_ParameterProjectName_WhenNull_Throws()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        IResourceBuilder<ParameterResource> projectName = null!;
+
+        Action action = () => appBuilder.AddBitwardenSecretManager("bitwarden", projectName, Guid.NewGuid(), accessToken);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal("projectName", exception.ParamName);
+    }
+
+    [Fact]
+    public void AddSecret_ParameterValue_WhenBuilderIsNull_Throws()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:managed-secret"] = "managed-secret-value";
+
+        IResourceBuilder<BitwardenSecretManagerResource> builder = null!;
+        var value = appBuilder.AddParameter("managed-secret", secret: true);
+
+        Action action = () => BitwardenSecretManagerExtensions.AddSecret(builder, "managed-secret", value);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal("builder", exception.ParamName);
+    }
+
+    [Fact]
+    public void AddSecret_ReferenceValue_WhenBuilderIsNull_Throws()
+    {
+        IResourceBuilder<BitwardenSecretManagerResource> builder = null!;
+        ReferenceExpression value = ReferenceExpression.Create($"test-value");
+
+        Action action = () => BitwardenSecretManagerExtensions.AddSecret(builder, "managed-secret", value);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal("builder", exception.ParamName);
+    }
+
+    [Fact]
     public void AddBitwardenSecretManager_StoresConfiguredProjectName()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
