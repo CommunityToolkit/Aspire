@@ -65,7 +65,7 @@ Values are applied in this order (last wins):
 
 ## Applying Kubernetes manifests
 
-`AddK8sManifest` runs `kubectl apply --server-side` inside an `rancher/kubectl` container.
+`AddK8sManifest` runs `kubectl apply --server-side` inside an `alpine/kubectl` container.
 No host-side `kubectl` binary is required. Kustomize overlays are auto-detected.
 
 ```csharp
@@ -152,7 +152,7 @@ The health check waits for all nodes to reach `Ready` before the cluster is mark
 
 ## Image overrides
 
-The `alpine/helm` and `rancher/kubectl` images are pinned but configurable:
+The `alpine/helm` and `alpine/kubectl` images are pinned but configurable:
 
 ```csharp
 builder.AddK3sCluster("k8s", configure: opts =>
@@ -160,7 +160,7 @@ builder.AddK3sCluster("k8s", configure: opts =>
     opts.HelmImage   = "my-registry/helm";
     opts.HelmTag     = "3.18.0";
     opts.KubectlImage = "my-registry/k8s";
-    opts.KubectlTag   = "1.33.0";
+    opts.KubectlTag   = "1.36.0";
 });
 ```
 

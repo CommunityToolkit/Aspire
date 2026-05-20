@@ -13,7 +13,7 @@ public static class K3sManifestBuilderExtensions
 {
     /// <summary>
     /// Applies one or more Kubernetes YAML files — or a Kustomize overlay — to the cluster
-    /// via a <c>rancher/kubectl</c> container. No host-side <c>kubectl</c> binary is required.
+    /// via a <c>alpine/kubectl</c> container. No host-side <c>kubectl</c> binary is required.
     /// <para>
     /// The container exits with code 0 after manifests are applied and any CRDs reach the
     /// <c>Established</c> condition. Use <c>WaitForCompletion(manifest)</c> on dependent resources.

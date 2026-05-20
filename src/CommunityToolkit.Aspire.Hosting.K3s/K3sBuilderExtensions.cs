@@ -108,14 +108,14 @@ public static class K3sBuilderExtensions
             .WithArgs("--kubelet-arg=v=0")
 
             // ── API server endpoint ───────────────────────────────────────────
-            // Proxy support must be disabled: the kubeconfig embeds the k3s server CA cert
-            // for TLS validation. An Aspire HTTPS proxy would present its own certificate,
-            // causing Kubernetes client TLS validation to fail on every connection.
+            // Declared as HTTPS so the allocated host port appears in the Aspire dashboard
+            // with the correct scheme. Aspire's HTTP proxy does not intercept raw TLS TCP
+            // connections, so Kubernetes clients validate the k3s server CA cert directly
+            // without any proxy interference.
             .WithHttpsEndpoint(
                 targetPort: 6443,
                 port: apiServerPort,
-                name: K3sClusterResource.ApiServerEndpointName,
-                isProxied: false)
+                name: K3sClusterResource.ApiServerEndpointName)
 
             // ── Docker / container runtime flags (mirrors k3d) ────────────────
             .WithContainerRuntimeArgs("--privileged")

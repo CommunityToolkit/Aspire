@@ -20,7 +20,7 @@ namespace CommunityToolkit.Aspire.Hosting.K3s.IntegrationTests;
 ///   <item>macOS / Windows: Docker Desktop (containers run inside WSL2 / Hyper-V VM).</item>
 /// </list>
 /// No host-side <c>helm</c> or <c>kubectl</c> is needed — both run as Docker containers
-/// (<c>alpine/helm</c> and <c>alpine/k8s</c>).
+/// (<c>alpine/helm</c> and <c>alpine/kubectl</c>).
 /// Tests are gated by <c>[RequiresDocker]</c> and run on <c>ubuntu-latest</c> only —
 /// GitHub-hosted Windows runners do not support privileged Linux containers reliably.
 /// </para>
@@ -51,8 +51,8 @@ public class K3sIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task ClusterReachesRunningAndKubeconfigIsValid()
     {
-        var cluster = _builder!.AddK3sCluster("k8s");
-        _app = _builder.Build();
+        _builder!.AddK3sCluster("k8s");
+        _app = _builder!.Build();
 
         await _app.StartAsync();
 
@@ -63,14 +63,14 @@ public class K3sIntegrationTests : IAsyncLifetime
 
         // local/kubeconfig.yaml must exist on the host.
         var kubeconfigPath = Path.Combine(
-            _builder.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
+            _builder!.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
 
         Assert.True(File.Exists(kubeconfigPath),
             $"Expected local kubeconfig at {kubeconfigPath}");
 
         // container/kubeconfig.yaml must also exist.
         var containerKubeconfigPath = Path.Combine(
-            _builder.AppHostDirectory, ".k3s", "k8s", "container", "kubeconfig.yaml");
+            _builder!.AppHostDirectory, ".k3s", "k8s", "container", "kubeconfig.yaml");
         Assert.True(File.Exists(containerKubeconfigPath),
             $"Expected container kubeconfig at {containerKubeconfigPath}");
     }
@@ -87,7 +87,7 @@ public class K3sIntegrationTests : IAsyncLifetime
             version: "18.3.6",
             @namespace: "nginx");
 
-        _app = _builder.Build();
+        _app = _builder!.Build();
         await _app.StartAsync();
 
         var rns = _app.Services.GetRequiredService<ResourceNotificationService>();
@@ -116,7 +116,7 @@ public class K3sIntegrationTests : IAsyncLifetime
         cluster.AddServiceEndpoint("nginx-web", "nginx", servicePort: 80, @namespace: "nginx")
             .WaitForCompletion(nginx);
 
-        _app = _builder.Build();
+        _app = _builder!.Build();
         await _app.StartAsync();
 
         var rns = _app.Services.GetRequiredService<ResourceNotificationService>();
@@ -141,9 +141,9 @@ public class K3sIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task WithReferenceInjectsKubeconfigForProject()
     {
-        var cluster = _builder!.AddK3sCluster("k8s");
+        _builder!.AddK3sCluster("k8s");
 
-        _app = _builder.Build();
+        _app = _builder!.Build();
         await _app.StartAsync();
 
         var rns = _app.Services.GetRequiredService<ResourceNotificationService>();
@@ -152,7 +152,7 @@ public class K3sIntegrationTests : IAsyncLifetime
         await rns.WaitForResourceHealthyAsync("k8s", cts.Token);
 
         var kubeconfigPath = Path.Combine(
-            _builder.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
+            _builder!.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
 
         var yaml = await File.ReadAllTextAsync(kubeconfigPath, cts.Token);
         Assert.Contains("localhost", yaml);
@@ -197,10 +197,10 @@ public class K3sIntegrationTests : IAsyncLifetime
 
         try
         {
-            var cluster = _builder.AddK3sCluster("k8s");
-            var crd = cluster.AddK8sManifest("widget-crd", crdPath);
+            var cluster = _builder!.AddK3sCluster("k8s");
+            cluster.AddK8sManifest("widget-crd", crdPath);
 
-            _app = _builder.Build();
+            _app = _builder!.Build();
             await _app.StartAsync();
 
             var rns = _app.Services.GetRequiredService<ResourceNotificationService>();
@@ -214,7 +214,7 @@ public class K3sIntegrationTests : IAsyncLifetime
 
             // Independently verify the CRD is Established via KubernetesClient.
             var kubeconfigPath = Path.Combine(
-                _builder.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
+                _builder!.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
             var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath);
             using var k8sClient = new Kubernetes(config);
 
@@ -241,7 +241,7 @@ public class K3sIntegrationTests : IAsyncLifetime
 
         // ── First run ─────────────────────────────────────────────────────
         _builder!.AddK3sCluster("k8s").WithDataVolume(volumeName);
-        _app = _builder.Build();
+        _app = _builder!.Build();
         await _app.StartAsync();
 
         var rns1 = _app.Services.GetRequiredService<ResourceNotificationService>();
@@ -249,7 +249,7 @@ public class K3sIntegrationTests : IAsyncLifetime
         await rns1.WaitForResourceHealthyAsync("k8s", cts1.Token);
 
         var kubeconfigPath = Path.Combine(
-            _builder.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
+            _builder!.AppHostDirectory, ".k3s", "k8s", "local", "kubeconfig.yaml");
 
         using (var k8sClient = new Kubernetes(
             KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath)))

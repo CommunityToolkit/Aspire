@@ -3,8 +3,8 @@ namespace CommunityToolkit.Aspire.Hosting;
 internal static class KubectlContainerImageTags
 {
     internal const string Registry = "docker.io";
-    // rancher/kubectl: maintained by the same team as k3s. Version tags mirror
-    // the Kubernetes version, so v1.32.x pairs correctly with the default k3s tag.
-    internal const string Image = "rancher/kubectl";
-    internal const string Tag = "v1.32.3";
+    // alpine/kubectl: Alpine-based image with kubectl and /bin/sh, required by the
+    // manifest apply script. Tag matches the default k3s server Kubernetes version.
+    internal const string Image = "alpine/kubectl";
+    internal const string Tag = "1.36.0";
 }

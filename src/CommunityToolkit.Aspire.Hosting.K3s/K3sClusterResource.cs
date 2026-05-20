@@ -17,7 +17,7 @@ public sealed class K3sClusterResource(string name) : ContainerResource(name)
 
     /// <summary>Container image settings for the kubectl manifest applier, resolved from cluster options.</summary>
     internal (string Registry, string Image, string Tag) KubectlImageInfo { get; set; }
-        = ("docker.io", "rancher/kubectl", "v1.32.3");
+        = ("docker.io", "alpine/kubectl", "1.36.0");
 
     /// <summary>
     /// Host-side directory that holds all kubeconfig variants for this cluster.
