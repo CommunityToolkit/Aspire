@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-config
+data:
+  scrape-interval: 30s
+  retention: 7d
+  log-level: info

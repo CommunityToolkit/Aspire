@@ -158,21 +158,25 @@ public static class K3sManifestBuilderExtensions
 
         // Auto-detect kustomize: if a kustomization file is present, use -k.
         // Otherwise use -f with server-side apply.
+        // Capture output so we can extract any CRD names that were applied.
         sb.AppendLine("if [ -f /k8s-manifests/kustomization.yaml ] || [ -f /k8s-manifests/kustomization.yml ]; then");
         sb.AppendLine("  echo 'Detected kustomization — using kubectl apply -k'");
-        sb.AppendLine("  kubectl apply -k /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts");
+        sb.AppendLine("  APPLIED=$(kubectl apply -k /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts)");
         sb.AppendLine("else");
-        sb.AppendLine("  kubectl apply -f /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts");
+        sb.AppendLine("  APPLIED=$(kubectl apply -f /k8s-manifests --server-side --field-manager=aspire-k3s --force-conflicts)");
         sb.AppendLine("fi");
+        sb.AppendLine("echo \"$APPLIED\"");
 
-        // Wait only for CRDs applied by this manifest, identified via the aspire-k3s
-        // field-manager. Using --all would also wait for pre-existing or concurrently
-        // installed CRDs that are stuck, causing an unrelated manifest to hang.
-        sb.AppendLine("CRDS=$(kubectl get crd -o name --no-headers 2>/dev/null \\");
-        sb.AppendLine("  | xargs -r -I{} sh -c 'kubectl get {} -o jsonpath=\"{.metadata.managedFields[*].manager}\" 2>/dev/null | grep -q aspire-k3s && echo {}' 2>/dev/null)");
-        sb.AppendLine("if [ -n \"$CRDS\" ]; then");
+        // Parse the apply output for CRD names — kubectl apply prints one line per resource
+        // in the form "<kind>/<name> <verb>", e.g.:
+        //   customresourcedefinition.apiextensions.k8s.io/widgets.example.com created
+        // Only lines starting with "customresourcedefinition." belong to this apply.
+        // This avoids touching pre-existing or concurrently installed cluster CRDs and
+        // prevents busybox xargs from returning exit code 123 when grep finds no match.
+        sb.AppendLine("CRD_NAMES=$(echo \"$APPLIED\" | grep '^customresourcedefinition\\.' | awk '{print $1}')");
+        sb.AppendLine("if [ -n \"$CRD_NAMES\" ]; then");
         sb.AppendLine("  # shellcheck disable=SC2086");
-        sb.AppendLine("  kubectl wait --for=condition=Established $CRDS --timeout=300s");
+        sb.AppendLine("  kubectl wait --for=condition=Established $CRD_NAMES --timeout=300s");
         sb.AppendLine("fi");
 
         return sb.ToString();
