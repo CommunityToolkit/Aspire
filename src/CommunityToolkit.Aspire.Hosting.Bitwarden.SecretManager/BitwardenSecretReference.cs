@@ -50,3 +50,21 @@ internal sealed class BitwardenSecretReference(string? remoteName, Guid? secretI
         return ValueTask.FromResult(resource.ResolveSecretValue(this));
     }
 }
+
+internal sealed class BitwardenSecretIdExpression(IBitwardenSecretReference secretReference) : IManifestExpressionProvider, IValueProvider, IValueWithReferences
+{
+    public string ValueExpression => secretReference.SecretId is Guid secretId
+        ? secretId.ToString("D")
+        : secretReference.RemoteName is string remoteName
+            ? $"{{{secretReference.Resource.Name}.secrets.{remoteName}.id}}"
+            : string.Empty;
+
+    IEnumerable<object> IValueWithReferences.References => secretReference.SecretOwner is IResource secretOwner
+        ? [secretReference.Resource, secretOwner]
+        : [secretReference.Resource];
+
+    public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken)
+    {
+        return ValueTask.FromResult(secretReference.SecretId?.ToString("D"));
+    }
+}

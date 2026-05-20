@@ -120,4 +120,58 @@ public class BitwardenSecretManagerBuilderTests
         Assert.Equal(BitwardenSecretManagerResource.DefaultApiUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__ApiUrl"]);
         Assert.Equal(BitwardenSecretManagerResource.DefaultIdentityUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__IdentityUrl"]);
     }
+
+    [Fact]
+    public async Task WithBitwardenSecretValue_InjectsResolvedSecretValue()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        appBuilder.Configuration["Parameters:managed-secret"] = "managed-value";
+
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
+        var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
+
+        Guid secretId = Guid.NewGuid();
+        managedSecret.Resource.SecretId = secretId;
+        bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
+
+        var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
+        consumer.WithBitwardenSecretValue("DEMO_API_KEY", managedSecret.Resource);
+
+        using var app = appBuilder.Build();
+
+        var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal("resolved-managed-value", environmentVariables["DEMO_API_KEY"]);
+    }
+
+    [Fact]
+    public async Task WithBitwardenSecretId_InjectsResolvedSecretId()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        appBuilder.Configuration["Parameters:managed-secret"] = "managed-value";
+
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
+        var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
+
+        Guid secretId = Guid.NewGuid();
+        managedSecret.Resource.SecretId = secretId;
+        bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
+
+        var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
+        consumer.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
+
+        using var app = appBuilder.Build();
+
+        var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal(secretId.ToString("D"), environmentVariables["DEMO_API_KEY_SECRET_ID"]);
+    }
 }

@@ -360,6 +360,52 @@ public static class BitwardenSecretManagerExtensions
         return builder.WithEnvironment(context => source.Resource.ApplyReferenceConfiguration(context.EnvironmentVariables, connectionName));
     }
 
+    /// <summary>
+    /// Injects a Bitwarden secret value into a destination environment variable.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="environmentVariableName">The destination environment variable name.</param>
+    /// <param name="secretReference">The Bitwarden secret reference.</param>
+    /// <returns>The destination resource builder.</returns>
+    public static IResourceBuilder<TDestination> WithBitwardenSecretValue<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        string environmentVariableName,
+        IBitwardenSecretReference secretReference)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
+        ArgumentNullException.ThrowIfNull(secretReference);
+
+        AttachSecretDependencies(builder, secretReference);
+
+        return builder.WithEnvironment(environmentVariableName, secretReference);
+    }
+
+    /// <summary>
+    /// Injects a Bitwarden secret identifier into a destination environment variable.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="environmentVariableName">The destination environment variable name.</param>
+    /// <param name="secretReference">The Bitwarden secret reference.</param>
+    /// <returns>The destination resource builder.</returns>
+    public static IResourceBuilder<TDestination> WithBitwardenSecretId<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        string environmentVariableName,
+        IBitwardenSecretReference secretReference)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
+        ArgumentNullException.ThrowIfNull(secretReference);
+
+        AttachSecretDependencies(builder, secretReference);
+
+        return builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secretReference));
+    }
+
     private static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManagerCore(
         IDistributedApplicationBuilder builder,
         string name,
@@ -585,6 +631,25 @@ public static class BitwardenSecretManagerExtensions
         if (!Uri.TryCreate(value, UriKind.Absolute, out _))
         {
             throw new ArgumentException("The value must be an absolute URI.", paramName);
+        }
+    }
+
+    private static void AttachSecretDependencies<TDestination>(
+        IResourceBuilder<TDestination> builder,
+        IBitwardenSecretReference secretReference)
+        where TDestination : IResourceWithEnvironment
+    {
+        builder.WithReferenceRelationship(secretReference.Resource);
+
+        if (secretReference.SecretOwner is IResource secretOwner)
+        {
+            builder.WithReferenceRelationship(secretOwner);
+        }
+
+        if (builder.Resource is IResourceWithWaitSupport waitResource)
+        {
+            builder.ApplicationBuilder.CreateResourceBuilder(waitResource)
+                .WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(secretReference.Resource));
         }
     }
 }

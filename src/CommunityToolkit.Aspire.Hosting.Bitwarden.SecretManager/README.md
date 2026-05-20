@@ -58,6 +58,17 @@ builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden);
 ```
 
+Use `WithBitwardenSecretValue(...)` and `WithBitwardenSecretId(...)` to pass managed or referenced secrets to dependents as first-class resource values.
+
+```csharp
+IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("demo-api-key", apiKey);
+
+builder.AddProject<Projects.ApiService>("api")
+    .WithReference(bitwarden)
+    .WithBitwardenSecretValue("DEMO_API_KEY", managedSecret.Resource)
+    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
+```
+
 The injected configuration is available under `Aspire:Bitwarden:SecretManager:{connectionName}` and includes:
 
 - `OrganizationId`
