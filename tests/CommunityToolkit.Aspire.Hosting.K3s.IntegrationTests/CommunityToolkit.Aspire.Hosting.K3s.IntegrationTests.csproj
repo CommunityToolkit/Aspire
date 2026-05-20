@@ -1,8 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.K3s\CommunityToolkit.Aspire.Hosting.K3s.csproj" />
-    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
-  </ItemGroup>
-
-</Project>
