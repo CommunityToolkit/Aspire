@@ -15,32 +15,22 @@ namespace CommunityToolkit.Aspire.Hosting;
 ///   <item><c>local/kubeconfig.yaml</c> — <c>server: https://localhost:{allocatedPort}</c> (host processes)</item>
 ///   <item><c>container/kubeconfig.yaml</c> — <c>server: https://{name}:6443</c> (DCP-network containers)</item>
 /// </list>
-/// Then uses a cached <see cref="Kubernetes"/> client to call <c>ListNodeAsync</c>,
-/// confirming that all expected nodes (server + agents) are in <c>Ready</c> state.
+/// Then creates a short-lived <see cref="Kubernetes"/> client (disposed after each check)
+/// to call <c>ListNodeAsync</c>, confirming that all expected nodes are <c>Ready</c>.
 /// No <c>docker exec</c> is involved — works with any container runtime.
 /// </para>
 /// </summary>
-internal sealed class K3sReadinessHealthCheck : IHealthCheck
+internal sealed class K3sReadinessHealthCheck(K3sClusterResource resource, EndpointReference endpoint) : IHealthCheck
 {
-    private readonly K3sClusterResource _resource;
-    private readonly EndpointReference _endpoint;
-    private Kubernetes? _cachedClient;
-
-    internal K3sReadinessHealthCheck(K3sClusterResource resource, EndpointReference endpoint)
-    {
-        _resource = resource;
-        _endpoint = endpoint;
-    }
-
     /// <inheritdoc />
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
-        if (!_endpoint.IsAllocated)
+        if (!endpoint.IsAllocated)
             return HealthCheckResult.Unhealthy("k3s API server endpoint not yet allocated");
 
-        var dir = _resource.KubeconfigDirectory;
+        var dir = resource.KubeconfigDirectory;
         if (dir is null)
             return HealthCheckResult.Unhealthy("Kubeconfig directory not configured on resource");
 
@@ -50,9 +40,16 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
 
         try
         {
-            var client = await EnsureClientAsync(rawPath, cancellationToken).ConfigureAwait(false);
+            var localPath = await EnsureKubeconfigVariantsAsync(rawPath, dir, endpoint.Port, cancellationToken)
+                .ConfigureAwait(false);
 
-            var nodes = await client.CoreV1
+            // Create a fresh client per check — no cached state, no stale connection risk.
+            // At a 5-second health-check interval the TLS handshake overhead is negligible
+            // for a local dev integration.
+            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(localPath);
+            using var k8sClient = new Kubernetes(config);
+
+            var nodes = await k8sClient.CoreV1
                 .ListNodeAsync(cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
@@ -61,7 +58,7 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
                     c.Type == "Ready" &&
                     string.Equals(c.Status, "True", StringComparison.OrdinalIgnoreCase)) == true);
 
-            var expected = 1 + _resource.AgentCount;
+            var expected = 1 + resource.AgentCount;
             if (readyCount < expected)
                 return HealthCheckResult.Unhealthy($"k3s cluster: {readyCount}/{expected} nodes Ready");
 
@@ -69,15 +66,12 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
         }
         catch (Exception ex) when (IsTlsOrAuthFailure(ex))
         {
-            // Stale cached client — the cluster was recreated with new certs while the
-            // health check held an old IKubernetes instance. k3s has already written a fresh
-            // kubeconfig to rawPath (it writes once at startup, not continuously), so we must
-            // NOT delete rawPath — that would remove the fresh file and leave the health check
-            // waiting forever for a file that k3s will never rewrite.
-            // Instead, discard only the cached client and the derived variants so they are
-            // regenerated from the fresh raw file on the next check cycle.
-            _cachedClient?.Dispose();
-            _cachedClient = null;
+            // Stale kubeconfig — cluster was recreated with new certs (e.g. data volume wiped).
+            // k3s has already written a fresh kubeconfig to rawPath (it writes once at startup,
+            // not continuously), so we must NOT delete rawPath — that would remove the fresh
+            // file and leave the health check waiting forever.
+            // Delete only the derived variants so they are regenerated from the fresh raw file
+            // on the next check cycle.
             TryDelete(Path.Combine(dir, "local", "kubeconfig.yaml"));
             TryDelete(Path.Combine(dir, "container", "kubeconfig.yaml"));
             return HealthCheckResult.Unhealthy("k3s kubeconfig is stale — retrying with fresh credentials");
@@ -88,14 +82,16 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
         }
     }
 
-    private async Task<Kubernetes> EnsureClientAsync(string rawPath, CancellationToken ct)
+    /// <summary>
+    /// Reads the raw kubeconfig written by k3s, rewrites it for each consumer variant,
+    /// and writes both to disk atomically. Returns the path to the local variant.
+    /// </summary>
+    private async Task<string> EnsureKubeconfigVariantsAsync(
+        string rawPath,
+        string dir,
+        int port,
+        CancellationToken ct)
     {
-        if (_cachedClient is not null)
-            return _cachedClient;
-
-        var port = _endpoint.Port;
-        var dir = _resource.KubeconfigDirectory!;
-
         var rawYaml = await File.ReadAllTextAsync(rawPath, ct).ConfigureAwait(false);
         var parsed = KubernetesYaml.Deserialize<K8SConfiguration>(rawYaml);
 
@@ -109,12 +105,10 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
         Directory.CreateDirectory(containerDir);
         await WriteAtomicAsync(
             Path.Combine(containerDir, "kubeconfig.yaml"),
-            BuildConfigYaml(parsed, $"https://{_resource.Name}:6443"),
+            BuildConfigYaml(parsed, $"https://{resource.Name}:6443"),
             ct).ConfigureAwait(false);
 
-        var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(localPath);
-        _cachedClient = new Kubernetes(config);
-        return _cachedClient;
+        return localPath;
     }
 
     private static string BuildConfigYaml(K8SConfiguration source, string serverUrl)
@@ -132,8 +126,7 @@ internal sealed class K3sReadinessHealthCheck : IHealthCheck
 
     /// <summary>
     /// Writes <paramref name="content"/> to <paramref name="path"/> atomically by first
-    /// writing to a sibling temp file and then renaming. Readers can never observe a
-    /// partial write; the old file remains readable until the rename commits.
+    /// writing to a sibling temp file then renaming. Readers never observe a partial write.
     /// </summary>
     private static async Task WriteAtomicAsync(string path, string content, CancellationToken ct)
     {

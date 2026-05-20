@@ -1,5 +1,7 @@
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
+using CommunityToolkit.Aspire.Hosting;
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -54,4 +56,11 @@ public sealed class K3sServiceEndpointResource(
     /// Set by <c>K3sInProcessPortForwarder</c>; read by the health check.
     /// </summary>
     internal volatile bool IsReady;
+
+    /// <summary>
+    /// The active port-forwarder, retained so it can be disposed when the parent cluster
+    /// stops (via <c>ResourceStoppedEvent</c>) or when the AppHost shuts down — whichever
+    /// comes first.
+    /// </summary>
+    internal K3sInProcessPortForwarder? Forwarder { get; set; }
 }

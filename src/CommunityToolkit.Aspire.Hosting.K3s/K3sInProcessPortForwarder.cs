@@ -27,50 +27,54 @@ internal sealed class K3sInProcessPortForwarder(
     string serviceName,
     int localPort,
     int servicePort,
-    Action<bool> onReadyChanged)
+    Action<bool> onReadyChanged) : IAsyncDisposable
 {
+    private readonly CancellationTokenSource _cts = new();
+    private TcpListener? _listener;
+
     public async Task RunAsync(ILogger logger, CancellationToken ct)
     {
+        // Link the outer application-lifetime token with our own so either can stop the loop.
+        // _cts.Token lets DisposeAsync cancel independently of the outer token (e.g. when
+        // the cluster resource stops before the full AppHost shuts down).
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _cts.Token);
+        var linkedCt = linked.Token;
+
         var backoff = TimeSpan.FromSeconds(2);
-        // Track current port separately so a failed bind can re-allocate rather than
-        // retrying the already-stolen port — avoids the TOCTOU retry loop.
         var currentPort = localPort;
 
-        while (!ct.IsCancellationRequested)
+        while (!linkedCt.IsCancellationRequested)
         {
-            // IPAddress.Any (0.0.0.0) is required: DCP-network containers reach the
-            // forwarded service via host.docker.internal:{port}, which resolves to the
-            // Docker host IP — not 127.0.0.1. Binding to loopback would silently drop
-            // all container traffic. Users on shared networks should be aware that the
-            // forwarded service is reachable from other hosts on the same LAN.
             var listener = new TcpListener(IPAddress.Any, currentPort);
+            _listener = listener;
             try
             {
                 listener.Start();
 
-                logger.LogInformation(
-                    "Port-forward: 0.0.0.0:{Local} → svc/{Service}.{Ns}:{Port}",
-                    localPort, serviceName, @namespace, servicePort);
+                if (logger.IsEnabled(LogLevel.Information))
+                    logger.LogInformation(
+                        "Port-forward: 0.0.0.0:{Local} → svc/{Service}.{Ns}:{Port}",
+                        currentPort, serviceName, @namespace, servicePort);
 
                 // Probe the service before signalling ready — the Kubernetes service and
                 // a ready pod must exist before any connection can succeed.
                 // This makes the ready signal meaningful for WaitFor(endpoint) consumers.
-                await WaitForServiceReadyAsync(logger, ct).ConfigureAwait(false);
+                await WaitForServiceReadyAsync(logger, linkedCt).ConfigureAwait(false);
                 onReadyChanged(true);
 
-                while (!ct.IsCancellationRequested)
+                while (!linkedCt.IsCancellationRequested)
                 {
-                    var tcp = await listener.AcceptTcpClientAsync(ct).ConfigureAwait(false);
+                    var tcp = await listener.AcceptTcpClientAsync(linkedCt).ConfigureAwait(false);
                     _ = Task.Run(
-                        () => ForwardConnectionAsync(tcp, logger, ct),
-                        CancellationToken.None);
+                        () => ForwardConnectionAsync(tcp, logger, linkedCt),
+                        linkedCt);
                 }
             }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            catch (OperationCanceledException) when (linkedCt.IsCancellationRequested)
             {
                 break;
             }
-            catch (InvalidOperationException ioe) when (!ct.IsCancellationRequested)
+            catch (InvalidOperationException ioe) when (!linkedCt.IsCancellationRequested)
             {
                 // Non-retryable configuration error (e.g. service has no pod selector).
                 // Log and stop — retrying will never succeed.
@@ -94,14 +98,29 @@ internal sealed class K3sInProcessPortForwarder(
             }
             finally
             {
+                _listener = null;
                 listener.Stop();
             }
 
-            if (ct.IsCancellationRequested) break;
+            if (linkedCt.IsCancellationRequested) break;
 
-            try { await Task.Delay(backoff, ct).ConfigureAwait(false); } catch (OperationCanceledException) { break; }
+            try { await Task.Delay(backoff, linkedCt).ConfigureAwait(false); }
+            catch (OperationCanceledException) { break; }
             backoff = TimeSpan.FromSeconds(Math.Min(backoff.TotalSeconds * 2, 30));
         }
+
+        onReadyChanged(false);
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask DisposeAsync()
+    {
+        // Cancel the linked CTS so RunAsync exits its loop even if the outer
+        // application-lifetime token is still live (e.g. cluster stopped but AppHost
+        // is still running).
+        await _cts.CancelAsync().ConfigureAwait(false);
+        _listener?.Stop();
+        _cts.Dispose();
     }
 
     /// <summary>
@@ -149,7 +168,7 @@ internal sealed class K3sInProcessPortForwarder(
                     if (hasReadyPod)
                     {
                         logger.LogDebug(
-                            "Service {Service}/{Ns} exposes requested port {ServicePort} and has a ready pod — port-forward is ready.",
+                            "Service {Service}/{Ns} exposes port {Port} and has a ready pod — port-forward is ready.",
                             serviceName, @namespace, servicePort);
                         return;
                     }
@@ -158,6 +177,10 @@ internal sealed class K3sInProcessPortForwarder(
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
                 return;
+            }
+            catch (InvalidOperationException)
+            {
+                throw; // Non-retryable — let RunAsync catch it.
             }
             catch (Exception ex)
             {

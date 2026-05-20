@@ -64,6 +64,18 @@ public static class K3sServiceEndpointExtensions
             failureStatus: HealthStatus.Unhealthy,
             tags: null));
 
+        // Dispose the forwarder when the parent cluster stops so the port is released
+        // promptly rather than waiting for the application-lifetime CT to fire.
+        // ResourceStoppedEvent fires after the cluster container has stopped — at that
+        // point port-forwarding is no longer useful regardless.
+        builder.ApplicationBuilder.Eventing.Subscribe<ResourceStoppedEvent>(
+            cluster,
+            async (@event, ct) =>
+            {
+                if (endpoint.Forwarder is { } forwarder)
+                    await forwarder.DisposeAsync().ConfigureAwait(false);
+            });
+
         return builder.ApplicationBuilder
             .AddResource(endpoint)
             .ExcludeFromManifest()
@@ -177,7 +189,17 @@ public static class K3sServiceEndpointExtensions
                     });
                 });
 
-            _ = Task.Run(() => forwarder.RunAsync(logger, ct), ct);
+            // Retain the forwarder so ResourceStoppedEvent on the cluster can dispose it
+            // independently of the application-lifetime cancellation token.
+            endpoint.Forwarder = forwarder;
+
+            _ = Task.Run(async () =>
+            {
+                await using (forwarder.ConfigureAwait(false))
+                {
+                    await forwarder.RunAsync(logger, ct).ConfigureAwait(false);
+                }
+            }, ct);
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
