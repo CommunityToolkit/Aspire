@@ -41,18 +41,18 @@ internal sealed class BitwardenSecretManagerReconciler(
             logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
             resource.ResolvedRemoteProjectName = remoteProjectName;
 
-            logger.LogDebug("Loading Bitwarden state file for resource '{ResourceName}' with project name '{ProjectName}'.", resource.Name, remoteProjectName);
+            logger.LogDebug("Loading Bitwarden reconciliation state file for resource '{ResourceName}' with project name '{ProjectName}'.", resource.Name, remoteProjectName);
             BitwardenStateFileContext stateContext = await stateStore.LoadAsync(resource, remoteProjectName, cancellationToken).ConfigureAwait(false);
             resource.ResolvedStateFile = stateContext.Path;
-            logger.LogInformation("Loaded Bitwarden state file from '{StatePath}'.", stateContext.Path);
+            logger.LogInformation("Loaded Bitwarden reconciliation state file from '{StatePath}'.", stateContext.Path);
 
             logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
             await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
 
-            logger.LogDebug("Logging into Bitwarden provider for resource '{ResourceName}'.", resource.Name);
+            logger.LogDebug("Logging into Bitwarden provider for resource '{ResourceName}' using auth state file '{AuthStatePath}'.", resource.Name, stateContext.AuthPath);
             try
             {
-                provider.Login(accessToken, stateContext.Path);
+                provider.Login(accessToken, stateContext.AuthPath);
                 logger.LogDebug("Successfully authenticated with Bitwarden provider.");
             }
             catch (BitwardenAuthException ex)
@@ -509,23 +509,25 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
 
     public async Task<BitwardenStateFileContext> LoadAsync(BitwardenSecretManagerResource resource, string resolvedProjectName, CancellationToken cancellationToken)
     {
-        string path = ResolveStatePath(resource, resolvedProjectName);
-        if (!File.Exists(path))
+        string statePath = ResolveStatePath(resource, resolvedProjectName);
+        string? authPath = ResolveAuthStatePath(resource);
+
+        if (!File.Exists(statePath))
         {
-            return new(path, new BitwardenState());
+            return new(statePath, authPath, new BitwardenState());
         }
 
         try
         {
-            await using FileStream stream = File.OpenRead(path);
+            await using FileStream stream = File.OpenRead(statePath);
             BitwardenState? state = await JsonSerializer.DeserializeAsync<BitwardenState>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
             state ??= new BitwardenState();
             state.Normalize();
-            return new(path, state);
+            return new(statePath, authPath, state);
         }
         catch (Exception ex)
         {
-            throw new DistributedApplicationException($"Failed to load Bitwarden state file from '{path}'.", ex);
+            throw new DistributedApplicationException($"Failed to load Bitwarden state file from '{statePath}'.", ex);
         }
     }
 
@@ -574,9 +576,19 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
         string[] existingPaths = Directory.GetFiles(directory, $"{safeResourceName}.*.state.json", SearchOption.TopDirectoryOnly);
         return existingPaths.Length == 1 ? existingPaths[0] : defaultPath;
     }
+
+    private static string? ResolveAuthStatePath(BitwardenSecretManagerResource resource)
+    {
+        if (resource.AuthStateFile is { Length: > 0 } authStateFile)
+        {
+            return authStateFile;
+        }
+
+        return null;
+    }
 }
 
-internal sealed record BitwardenStateFileContext(string Path, BitwardenState State);
+internal sealed record BitwardenStateFileContext(string Path, string? AuthPath, BitwardenState State);
 
 internal sealed class BitwardenState
 {
@@ -666,7 +678,7 @@ internal sealed class BitwardenSecretManagerProviderFactory : IBitwardenSecretMa
 
 internal interface IBitwardenSecretManagerProvider : IAsyncDisposable
 {
-    void Login(string accessToken, string stateFile);
+    void Login(string accessToken, string? authStateFile);
 
     BitwardenProjectInfo? GetProject(Guid projectId);
 
@@ -698,15 +710,21 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
         });
     }
 
-    public void Login(string accessToken, string stateFile)
+    public void Login(string accessToken, string? authStateFile)
     {
-        string? directory = Path.GetDirectoryName(stateFile);
+        if (string.IsNullOrWhiteSpace(authStateFile))
+        {
+            _client.Auth.LoginAccessToken(accessToken);
+            return;
+        }
+
+        string? directory = Path.GetDirectoryName(authStateFile);
         if (!string.IsNullOrEmpty(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        _client.Auth.LoginAccessToken(accessToken, stateFile);
+        _client.Auth.LoginAccessToken(accessToken, authStateFile);
     }
 
     public BitwardenProjectInfo? GetProject(Guid projectId)

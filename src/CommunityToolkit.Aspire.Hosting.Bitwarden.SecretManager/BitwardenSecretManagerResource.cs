@@ -155,9 +155,14 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     public string? IdentityUrl { get; internal set; }
 
     /// <summary>
-    /// Gets the explicit state file path used for the Bitwarden SDK login state.
+    /// Gets the explicit reconciliation state file path.
     /// </summary>
     public string? StateFile { get; internal set; }
+
+    /// <summary>
+    /// Gets the explicit Bitwarden SDK auth state file path.
+    /// </summary>
+    public string? AuthStateFile { get; internal set; }
 
     /// <summary>
     /// Gets the existing Bitwarden project identifier to adopt.
@@ -290,6 +295,11 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__AccessToken"] = GetEffectiveAccessTokenReference();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__ApiUrl"] = GetApiUrlOrDefault();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__IdentityUrl"] = GetIdentityUrlOrDefault();
+
+        if (AuthStateFile is { Length: > 0 } authStateFile)
+        {
+            environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__StateFile"] = authStateFile;
+        }
     }
 
     internal void ResetResolvedValues()

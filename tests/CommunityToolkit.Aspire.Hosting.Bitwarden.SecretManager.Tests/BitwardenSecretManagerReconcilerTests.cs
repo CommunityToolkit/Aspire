@@ -11,6 +11,7 @@ public class BitwardenSecretManagerReconcilerTests
     {
         var organizationId = Guid.NewGuid();
         var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
+        var authStateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.auth.bin");
 
         try
         {
@@ -24,7 +25,8 @@ public class BitwardenSecretManagerReconcilerTests
             var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
 
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "team-secrets", organizationParameter, accessToken)
-                .WithStateFile(stateFile);
+                .WithStateFile(stateFile)
+                .WithAuthStateFile(authStateFile);
             var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
 
             var fakeProvider = new FakeBitwardenProvider();
@@ -43,12 +45,18 @@ public class BitwardenSecretManagerReconcilerTests
             Assert.NotNull(managedSecret.Resource.SecretId);
             Assert.Equal("managed-secret-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
             Assert.True(File.Exists(result.StateFile));
+            Assert.Equal(authStateFile, fakeProvider.AuthStateFile);
         }
         finally
         {
             if (File.Exists(stateFile))
             {
                 File.Delete(stateFile);
+            }
+
+            if (File.Exists(authStateFile))
+            {
+                File.Delete(authStateFile);
             }
         }
     }
@@ -82,6 +90,7 @@ public class BitwardenSecretManagerReconcilerTests
 
             Assert.Single(fakeProvider.CreatedProjects);
             Assert.Equal("shared-team-secrets", fakeProvider.Projects[fakeProvider.CreatedProjects[0]].Name);
+            Assert.Null(fakeProvider.AuthStateFile);
         }
         finally
         {
@@ -302,12 +311,12 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
 
     public string? AccessToken { get; private set; }
 
-    public string? StateFile { get; private set; }
+    public string? AuthStateFile { get; private set; }
 
-    public void Login(string accessToken, string stateFile)
+    public void Login(string accessToken, string? authStateFile)
     {
         AccessToken = accessToken;
-        StateFile = stateFile;
+        AuthStateFile = authStateFile;
     }
 
     public BitwardenProjectInfo? GetProject(Guid projectId)

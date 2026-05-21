@@ -1,5 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
@@ -115,6 +114,27 @@ public class BitwardenSecretManagerBuilderTests
     }
 
     [Fact]
+    public void WithAuthStateFile_StoresConfiguredAbsolutePath()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        const string authStateRelativePath = "./.state/bitwarden-auth.bin";
+
+        appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken)
+            .WithAuthStateFile(authStateRelativePath);
+
+        using var app = appBuilder.Build();
+
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
+
+        string expectedPath = Path.GetFullPath(Path.Combine(resource.AppHostDirectory, authStateRelativePath));
+        Assert.Equal(expectedPath, resource.AuthStateFile);
+    }
+
+    [Fact]
     public void AddSecret_DuplicateRemoteName_Throws()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
@@ -138,6 +158,7 @@ public class BitwardenSecretManagerBuilderTests
     {
         var organizationId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
+        var authStateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.auth.bin");
 
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
@@ -146,7 +167,8 @@ public class BitwardenSecretManagerBuilderTests
         var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
 
-        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "consumer-project", organizationParameter, accessToken);
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "consumer-project", organizationParameter, accessToken)
+            .WithAuthStateFile(authStateFile);
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
@@ -161,6 +183,7 @@ public class BitwardenSecretManagerBuilderTests
         Assert.Equal("runtime-access-token", environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AccessToken"]);
         Assert.Equal(BitwardenSecretManagerResource.DefaultApiUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__ApiUrl"]);
         Assert.Equal(BitwardenSecretManagerResource.DefaultIdentityUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__IdentityUrl"]);
+        Assert.Equal(authStateFile, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__StateFile"]);
     }
 
     [Fact]

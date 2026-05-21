@@ -32,7 +32,8 @@ Optional configuration:
 
 - `WithExistingProject(...)` adopts an existing Bitwarden project by identifier.
 - `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden endpoints.
-- `WithStateFile(...)` overrides the Bitwarden SDK state file location.
+- `WithStateFile(...)` overrides the reconciliation state JSON file location.
+- `WithAuthStateFile(...)` overrides the Bitwarden SDK auth state file location.
 - `WithRuntimeAccessToken(...)` overrides the token injected into dependents.
 
 ## Usage

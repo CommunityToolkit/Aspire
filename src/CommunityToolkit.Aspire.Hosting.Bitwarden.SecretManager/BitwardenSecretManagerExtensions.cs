@@ -182,7 +182,7 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Overrides the Bitwarden SDK state file path.
+    /// Overrides the reconciliation state file path.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="stateFile">The state file path, relative to the AppHost directory when not rooted.</param>
@@ -197,6 +197,26 @@ public static class BitwardenSecretManagerExtensions
         builder.Resource.StateFile = Path.IsPathRooted(stateFile)
             ? Path.GetFullPath(stateFile)
             : Path.GetFullPath(Path.Combine(builder.Resource.AppHostDirectory, stateFile));
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden SDK auth state file path.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="authStateFile">The auth state file path, relative to the AppHost directory when not rooted.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthStateFile(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string authStateFile)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(authStateFile);
+
+        builder.Resource.AuthStateFile = Path.IsPathRooted(authStateFile)
+            ? Path.GetFullPath(authStateFile)
+            : Path.GetFullPath(Path.Combine(builder.Resource.AppHostDirectory, authStateFile));
 
         return builder;
     }
@@ -596,6 +616,11 @@ public static class BitwardenSecretManagerExtensions
         if (resource.StateFile is string stateFile)
         {
             context.Writer.WriteString("stateFile", context.GetManifestRelativePath(stateFile) ?? stateFile.Replace('\\', '/'));
+        }
+
+        if (resource.AuthStateFile is string authStateFile)
+        {
+            context.Writer.WriteString("authStateFile", context.GetManifestRelativePath(authStateFile) ?? authStateFile.Replace('\\', '/'));
         }
 
         if (resource.ManagedSecrets.Count > 0)
