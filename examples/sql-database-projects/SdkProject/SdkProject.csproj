@@ -1,19 +1,11 @@
-<Project Sdk="MSBuild.Sdk.SqlProj/3.2.0">
+<Project Sdk="MSBuild.Sdk.SqlProj/4.2.0">
     <PropertyGroup>
         <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
-        <SqlServerVersion>Sql150</SqlServerVersion>
+        <SqlServerVersion>Sql160</SqlServerVersion>
         <RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
         <!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->
         <NoWarn>SQLPROJ0001</NoWarn>
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     </PropertyGroup>
 
-    <ItemGroup>
-        <!-- These packages adds additional code analysis rules -->
-        <!-- We recommend using these, but they can be removed if desired -->
-    </ItemGroup>
-
-    <PropertyGroup>
-        <!-- Refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#publishing-support for supported publishing options -->
-    </PropertyGroup>
 </Project>
