@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
         <SqlServerVersion>Sql160</SqlServerVersion>
-        <RunSqlCodeAnalysis>True</RunSqlCodeAnalysis>
+        <RunSqlCodeAnalysis>true</RunSqlCodeAnalysis>
         <!-- For additional properties that can be set here, please refer to https://github.com/rr-wfm/MSBuild.Sdk.SqlProj#model-properties -->
         <NoWarn>SQLPROJ0001</NoWarn>
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
