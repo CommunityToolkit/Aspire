@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>seaweedfs hosting cloud storage s3</AdditionalPackageTags>
+    <Description>Provides extension methods and resource definitions for the Aspire AppHost to support running SeaweedFS containers with an S3-compatible API.</Description>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests" />
+  </ItemGroup>
+  
+</Project>

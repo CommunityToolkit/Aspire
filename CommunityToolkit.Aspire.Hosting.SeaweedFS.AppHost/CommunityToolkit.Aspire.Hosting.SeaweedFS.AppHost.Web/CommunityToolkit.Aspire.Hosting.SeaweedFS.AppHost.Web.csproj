@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.SeaweedFS.AppHost.ServiceDefaults\CommunityToolkit.Aspire.Hosting.SeaweedFS.AppHost.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
