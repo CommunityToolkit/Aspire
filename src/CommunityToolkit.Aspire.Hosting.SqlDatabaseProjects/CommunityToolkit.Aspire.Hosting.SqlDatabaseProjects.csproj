@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.SqlServer" />
+    <PackageReference Include="Microsoft.Build.Framework" VersionOverride="18.6.3" />
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.SqlServer.DacFx" />
   </ItemGroup>
