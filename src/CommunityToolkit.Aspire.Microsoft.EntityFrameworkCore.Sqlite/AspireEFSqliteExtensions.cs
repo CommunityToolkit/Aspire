@@ -71,13 +71,13 @@ public static class AspireEFSqliteExtensions
     }
 
     /// <summary>
-    /// Enriches a <see cref="IHostApplicationBuilder"/> to register the <typeparamref name="TDbContext"/> as a scoped service 
-    /// with simplified configuration and optional OpenTelemetry instrumentation.
+    /// Configures retries, health check, logging and telemetry for the <see cref="DbContext" />.
     /// </summary>
     /// <typeparam name="TDbContext">The type of the <see cref="DbContext"/>.</typeparam>
     /// <param name="builder">The <see cref="IHostApplicationBuilder"/> to read config from and add services to.</param>
     /// <param name="configureSettings">An optional delegate that can be used for customizing options. It's invoked after the settings are read from the configuration.</param>
     /// <exception cref="ArgumentNullException">Thrown if mandatory <paramref name="builder"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when mandatory <see cref="DbContext"/> is not registered in DI.</exception>
     public static void EnrichSqliteDatabaseDbContext<[DynamicallyAccessedMembers(RequiredByEF)] TDbContext>(
         this IHostApplicationBuilder builder,
         Action<SqliteEntityFrameworkCoreSettings>? configureSettings = null)
@@ -93,8 +93,8 @@ public static class AspireEFSqliteExtensions
 
         configureSettings?.Invoke(settings);
 
-        builder.Services.AddDbContext<TDbContext>(options =>
-            options.UseSqlite(settings.ConnectionString));
+        builder.CheckDbContextRegistered<TDbContext>();
+
         ConfigureInstrumentation<TDbContext>(builder, settings);
     }
 
