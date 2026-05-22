@@ -10,17 +10,21 @@ namespace Aspire.Hosting
 {
     public static partial class KurrentDBBuilderExtensions
     {
+        [AspireExport("addKurrentDB", Description = "Adds a KurrentDB container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> AddKurrentDB(this IDistributedApplicationBuilder builder, string name, int? port = null) { throw null; }
 
+        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a KurrentDB container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> builder, string source) { throw null; }
 
+        [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a KurrentDB container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.KurrentDBResource> builder, string? name = null) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class KurrentDBResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class KurrentDBResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public KurrentDBResource(string name) : base(default!, default) { }
 

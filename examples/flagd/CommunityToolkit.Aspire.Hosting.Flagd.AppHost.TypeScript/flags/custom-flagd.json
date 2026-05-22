@@ -1,0 +1,13 @@
+{
+  "$schema": "https://flagd.dev/schema/v0/flags.json",
+  "flags": {
+    "background-color": {
+      "state": "ENABLED",
+      "variants": {
+        "red": "#FF0000",
+        "blue": "#0000FF"
+      },
+      "defaultVariant": "blue"
+    }
+  }
+}

@@ -1,20 +1,27 @@
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Hooks to add the OTLP environment variables to the various resources
+/// Provides extension methods for routing resource telemetry through an OpenTelemetry Collector.
 /// </summary>
 public static class OpenTelemetryCollectorRoutingExtensions
 {
     /// <summary>
-    /// Resource the telemetry for the resource through the specified OpenTelemetry Collector
+    /// Routes telemetry for the resource through the specified OpenTelemetry Collector.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="collectorBuilder"></param>
-    /// <returns></returns>
-    public static IResourceBuilder<T> WithOpenTelemetryCollectorRouting<T>(this IResourceBuilder<T> builder, IResourceBuilder<OpenTelemetryCollectorResource> collectorBuilder) where T : IResourceWithEnvironment
+    /// <typeparam name="T">The type of the resource being configured.</typeparam>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="collectorBuilder">The OpenTelemetry Collector resource builder.</param>
+    /// <returns>A reference to the resource builder.</returns>
+    [AspireExport("withOpenTelemetryCollectorRouting", Description = "Routes telemetry for a resource through the specified OpenTelemetry Collector")]
+    public static IResourceBuilder<T> WithOpenTelemetryCollectorRouting<T>(
+        this IResourceBuilder<T> builder,
+        IResourceBuilder<OpenTelemetryCollectorResource> collectorBuilder)
+        where T : IResourceWithEnvironment
     {
         builder.WithEnvironment(callback =>
         {
@@ -31,5 +38,6 @@ public static class OpenTelemetryCollectorRoutingExtensions
 
         return builder;
     }
-
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

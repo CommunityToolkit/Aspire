@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Python;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -41,6 +43,7 @@ public static class StreamlitAppHostingExtension
     /// </code>
     /// </example>
     [Experimental("CTASPIRE001", UrlFormat = "https://github.com/CommunityToolkit/Aspire/issues/{0}")]
+    [AspireExport("addStreamlitApp", Description = "Adds a Streamlit application resource")]
     public static IResourceBuilder<StreamlitAppResource> AddStreamlitApp(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -102,3 +105,5 @@ public static class StreamlitAppHostingExtension
         return streamlitBuilder;
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

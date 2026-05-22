@@ -3,6 +3,7 @@
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Azure;
+using Aspire.Hosting.Publishing;
 
 namespace Aspire.Hosting;
 
@@ -39,6 +40,7 @@ public static class AzureTableStorageResourceBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withTableAzureStorageExplorer", MethodName = "withAzureStorageExplorer", Description = "Adds an Azure Storage Explorer instance to a Table storage resource.")]
     public static IResourceBuilder<AzureTableStorageResource> WithAzureStorageExplorer(
         this IResourceBuilder<AzureTableStorageResource> tables,
         Action<IResourceBuilder<AzureStorageExplorerResource>>? configureContainer = null,

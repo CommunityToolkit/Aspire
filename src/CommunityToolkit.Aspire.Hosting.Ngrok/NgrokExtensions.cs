@@ -3,6 +3,8 @@ using CommunityToolkit.Aspire.Hosting.Ngrok;
 using System.Runtime.InteropServices;
 using System.Text;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -23,6 +25,7 @@ public static class NgrokExtensions
     /// <param name="endpointName">The name of the endpoint for this resource, defaults to http.</param>
     /// <param name="configurationVersion">The output version of the ngrok configuration file.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    [AspireExport("addNgrok", Description = "Adds an ngrok container resource")]
     public static IResourceBuilder<NgrokResource> AddNgrok(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -54,18 +57,24 @@ public static class NgrokExtensions
             .WithImage(NgrokContainerValues.Image, NgrokContainerValues.Tag)
             .WithImageRegistry(NgrokContainerValues.Registry)
             .WithBindMount(configurationFolder, "/var/tmp/ngrok")
-            .WithHttpEndpoint(targetPort: 4040, port: endpointPort, name: endpointName);
-        resourceBuilder.OnResourceEndpointsAllocated(async (resource, e, ct) =>
+            .WithHttpEndpoint(targetPort: 4040, port: endpointPort, name: endpointName)
+            .WithArgs(context =>
+            {
+                var hasEndpoints = context.Resource.Annotations
+                    .OfType<NgrokEndpointAnnotation>()
+                    .Any(annotation => annotation.Endpoints.Count > 0);
+                context.Args.Add("start");
+                context.Args.Add(hasEndpoints ? "--all" : "--none");
+                context.Args.Add("--config");
+                context.Args.Add($"/var/tmp/ngrok/{name}.yml");
+            });
+        resourceBuilder.OnBeforeResourceStarted(async (resource, e, ct) =>
         {
             var endpointTuples = resource.Annotations
                 .OfType<NgrokEndpointAnnotation>()
-                .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointRefernce: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
+                .SelectMany(annotation => annotation.Endpoints.Select(ngrokEndpoint => (endpointReference: annotation.Resource.GetEndpoint(ngrokEndpoint.EndpointName), ngrokEndpoint)))
                 .ToList();
             await CreateNgrokConfigurationFileAsync(configurationFolder, name, endpointTuples, configurationVersion ?? 3);
-
-            resourceBuilder.WithArgs(
-                "start", endpointTuples.Count > 0 ? "--all" : "--none",
-                "--config", $"/var/tmp/ngrok/{name}.yml");
         });
         return resourceBuilder;
     }
@@ -76,6 +85,7 @@ public static class NgrokExtensions
     /// <param name="builder">The ngrok resource builder.</param>
     /// <param name="ngrokAuthToken">The ngrok auth token.</param>
     /// <returns>The same reference to ngrok resource builder.</returns>
+    [AspireExport("withAuthTokenValue", MethodName = "withAuthTokenValue", Description = "Adds a ngrok auth token from a literal string")]
     public static IResourceBuilder<NgrokResource> WithAuthToken(
         this IResourceBuilder<NgrokResource> builder,
         string ngrokAuthToken)
@@ -92,6 +102,7 @@ public static class NgrokExtensions
     /// <param name="builder">The ngrok resource builder.</param>
     /// <param name="ngrokAuthToken">The ngrok auth token as a parameter resource.</param>
     /// <returns>The same reference to ngrok resource builder.</returns>
+    [AspireExport("withAuthToken", Description = "Adds a ngrok auth token from a parameter resource")]
     public static IResourceBuilder<NgrokResource> WithAuthToken(
         this IResourceBuilder<NgrokResource> builder,
         IResourceBuilder<ParameterResource> ngrokAuthToken)
@@ -106,12 +117,47 @@ public static class NgrokExtensions
     /// Configures a resource with endpoints as a ngrok tunnel endpoint.
     /// </summary>
     /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="builder">The ngrok resource builder.</param>
+    /// <param name="resource">The resource whose endpoint should be exposed through ngrok.</param>
+    /// <param name="endpointName">The endpoint name to expose.</param>
+    /// <param name="ngrokUrl">The ngrok URL to use, or <see langword="null"/> to allow ngrok to choose one.</param>
+    /// <param name="labels">Optional endpoint labels.</param>
+    /// <returns>The same reference to ngrok resource builder.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the overload that accepts <see cref="IReadOnlyDictionary{TKey, TValue}"/> labels instead.</remarks>
+    [AspireExportIgnore(Reason = "IDictionary<string, string> is not ATS-compatible. Use the IReadOnlyDictionary<string, string> overload instead.")]
     public static IResourceBuilder<NgrokResource> WithTunnelEndpoint<TResource>(
         this IResourceBuilder<NgrokResource> builder,
         IResourceBuilder<TResource> resource,
         string endpointName,
         string? ngrokUrl = null,
         IDictionary<string, string>? labels = null) where TResource : IResourceWithEndpoints
+        => AddTunnelEndpoint(builder, resource, endpointName, ngrokUrl, labels is null ? null : new Dictionary<string, string>(labels));
+
+    /// <summary>
+    /// Configures a resource with endpoints as a ngrok tunnel endpoint.
+    /// </summary>
+    /// <typeparam name="TResource">The resource type.</typeparam>
+    /// <param name="builder">The ngrok resource builder.</param>
+    /// <param name="resource">The resource whose endpoint should be exposed through ngrok.</param>
+    /// <param name="endpointName">The endpoint name to expose.</param>
+    /// <param name="ngrokUrl">The ngrok URL to use, or <see langword="null"/> to allow ngrok to choose one.</param>
+    /// <param name="labels">Optional endpoint labels.</param>
+    /// <returns>The same reference to ngrok resource builder.</returns>
+    [AspireExport("withTunnelEndpoint", MethodName = "withTunnelEndpoint", Description = "Configures a resource endpoint as an ngrok tunnel endpoint")]
+    internal static IResourceBuilder<NgrokResource> WithTunnelEndpointLabels<TResource>(
+        this IResourceBuilder<NgrokResource> builder,
+        IResourceBuilder<TResource> resource,
+        string endpointName,
+        string? ngrokUrl = null,
+        IReadOnlyDictionary<string, string>? labels = null) where TResource : IResourceWithEndpoints
+        => AddTunnelEndpoint(builder, resource, endpointName, ngrokUrl, labels);
+
+    private static IResourceBuilder<NgrokResource> AddTunnelEndpoint<TResource>(
+        IResourceBuilder<NgrokResource> builder,
+        IResourceBuilder<TResource> resource,
+        string endpointName,
+        string? ngrokUrl,
+        IReadOnlyDictionary<string, string>? labels) where TResource : IResourceWithEndpoints
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(resource);
@@ -124,12 +170,12 @@ public static class NgrokExtensions
             .SingleOrDefault(a => a.Resource.Name == resource.Resource.Name);
         if (existingAnnotation is not null)
         {
-            existingAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels));
+            existingAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels is null ? null : new Dictionary<string, string>(labels)));
         }
         else
         {
             var newAnnotation = new NgrokEndpointAnnotation(resource.Resource);
-            newAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels));
+            newAnnotation.Endpoints.Add(new NgrokEndpoint(endpointName, ngrokUrl, labels is null ? null : new Dictionary<string, string>(labels)));
             builder.Resource.Annotations.Add(newAnnotation);
         }
 
@@ -193,3 +239,5 @@ public static class NgrokExtensions
         return $"{endpoint.Scheme}://{host}:{endpoint.Port}";
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

@@ -1,4 +1,6 @@
-﻿using Aspire.Hosting;
+﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,6 +21,7 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
     /// <param name="name"></param>
     /// <param name="script"></param>
     /// <returns></returns>
+    [AspireExport("addScript", Description = "Adds a PowerShell script resource")]
     public static IResourceBuilder<PowerShellScriptResource> AddScript(
         this IResourceBuilder<PowerShellRunspacePoolResource> builder,
         [ResourceName] string name,
@@ -101,17 +104,25 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
     /// <param name="connectionName"></param>
     /// <param name="optional"></param>
     /// <returns></returns>
+    /// <remarks>This method is not available in polyglot app hosts.</remarks>
+    [AspireExportIgnore(Reason = "IResourceBuilder<IResourceWithConnectionString> is not currently validated for ATS export in this integration.")]
     public static IResourceBuilder<PowerShellRunspacePoolResource> WithReference(this IResourceBuilder<PowerShellRunspacePoolResource> builder, IResourceBuilder<IResourceWithConnectionString> source, string? connectionName = null, bool optional = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(source);
 
+        if (connectionName is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        }
+
         var resource = source.Resource;
+        var variableName = connectionName ?? resource.Name;
 
         builder.WithReferenceRelationship(resource);
 
         return builder.WithAnnotation(new PowerShellVariableReferenceAnnotation<ConnectionStringReference>(
-            resource.Name, new ConnectionStringReference(resource, optional)));
+            variableName, new ConnectionStringReference(resource, optional)));
     }
 }
 

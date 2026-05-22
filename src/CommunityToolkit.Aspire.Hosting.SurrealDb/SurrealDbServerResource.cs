@@ -6,6 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// A resource that represents a SurrealDB container.
 /// </summary>
+[AspireExport(ExposeProperties = true)]
 public class SurrealDbServerResource : ContainerResource, IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "tcp";

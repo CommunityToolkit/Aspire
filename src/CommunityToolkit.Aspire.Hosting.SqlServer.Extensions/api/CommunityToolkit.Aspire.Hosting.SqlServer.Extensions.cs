@@ -10,8 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class SqlServerBuilderExtensions
     {
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<AdminerContainerResource>> is not supported reliably in polyglot app hosts. Use the container options overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlServerServerResource> WithAdminer(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlServerServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.AdminerContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
 
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbGateContainerResource>> is not supported reliably in polyglot app hosts. Use the container options overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlServerServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlServerServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }

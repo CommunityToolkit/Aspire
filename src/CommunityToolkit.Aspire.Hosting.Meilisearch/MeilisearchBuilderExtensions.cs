@@ -7,6 +7,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using CommunityToolkit.Aspire.Meilisearch;
 using Microsoft.Extensions.DependencyInjection;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -39,9 +41,10 @@ public static class MeilisearchBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("addMeilisearch", Description = "Adds a Meilisearch container resource")]
     public static IResourceBuilder<MeilisearchResource> AddMeilisearch(
         this IDistributedApplicationBuilder builder,
-        string name,
+        [ResourceName] string name,
         IResourceBuilder<ParameterResource>? masterKey = null,
         int? port = null)
     {
@@ -104,6 +107,7 @@ public static class MeilisearchBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a Meilisearch container resource")]
     public static IResourceBuilder<MeilisearchResource> WithDataVolume(this IResourceBuilder<MeilisearchResource> builder, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -133,6 +137,7 @@ public static class MeilisearchBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a Meilisearch container resource")]
     public static IResourceBuilder<MeilisearchResource> WithDataBindMount(this IResourceBuilder<MeilisearchResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -176,3 +181,5 @@ public static class MeilisearchBuilderExtensions
         return new MeilisearchClient(endpoint!.ToString(), apiKey: masterKey!);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

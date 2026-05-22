@@ -1,4 +1,4 @@
-﻿using System;
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -6,6 +6,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// A resource that represents an SFTP container.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
+[AspireExport(ExposeProperties = true)]
 public class SftpContainerResource(string name) : ContainerResource(name), IResourceWithConnectionString
 {
     internal const int SftpEndpointPort = 22;
@@ -32,7 +33,8 @@ public class SftpContainerResource(string name) : ContainerResource(name), IReso
     /// <summary>
     /// ConnectionString for the atmoz SFTP server in the form of sftp://host:port.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression => ReferenceExpression.Create($"{SftpEndpoint.Url}");
+    public ReferenceExpression ConnectionStringExpression =>
+        ReferenceExpression.Create($"{SftpEndpointScheme}://{Host}:{Port}");
 
     /// <summary>
     /// Gets the connection URI expression for the atmoz SFTP endpoint.
@@ -44,12 +46,10 @@ public class SftpContainerResource(string name) : ContainerResource(name), IReso
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
-        if (Uri.TryCreate(SftpEndpoint.Url, UriKind.Absolute, out var uri))
-        {
-            yield return new("Host", ReferenceExpression.Create($"{uri.Host}"));
-            yield return new("Port", ReferenceExpression.Create($"{uri.Port.ToString()}"));
-        }
-
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
         yield return new("Uri", UriExpression);
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

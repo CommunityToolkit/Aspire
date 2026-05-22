@@ -10,37 +10,49 @@ namespace Aspire.Hosting
 {
     public static partial class DaprMetadataResourceBuilderExtensions
     {
+        [AspireExportIgnore(Reason = "IValueProvider is too broad for stable polyglot code generation. Use the endpoint, reference expression, or parameter overloads instead.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.IValueProvider valueProvider) { throw null; }
 
+        [AspireExport("withMetadataParameter", MethodName = "withMetadataParameter", Description = "Adds parameter-backed metadata to a Dapr component")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.ParameterResource parameterResource) { throw null; }
 
+        [AspireExport("withMetadata", Description = "Adds static metadata to a Dapr component")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, string value) { throw null; }
     }
 
     public static partial class IDistributedApplicationBuilderExtensions
     {
+        [AspireExport("addDapr", Description = "Adds Dapr support to the distributed application builder")]
         public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, System.Action<CommunityToolkit.Aspire.Hosting.Dapr.DaprOptions>? configure = null) { throw null; }
 
+        [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> AddDaprComponent(this IDistributedApplicationBuilder builder, string name, string type, CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions? options = null) { throw null; }
 
+        [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> AddDaprPubSub(this IDistributedApplicationBuilder builder, string name, CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions? options = null) { throw null; }
 
+        [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> AddDaprStateStore(this IDistributedApplicationBuilder builder, string name, CommunityToolkit.Aspire.Hosting.Dapr.DaprComponentOptions? options = null) { throw null; }
     }
 
     public static partial class IDistributedApplicationResourceBuilderExtensions
     {
+        [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
         public static ApplicationModel.IResourceBuilder<T> WithDaprSidecar<T>(this ApplicationModel.IResourceBuilder<T> builder, CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions? options = null)
             where T : ApplicationModel.IResource { throw null; }
 
+        [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", Description = "Adds a Dapr sidecar to the resource and exposes it for callback configuration")]
         public static ApplicationModel.IResourceBuilder<T> WithDaprSidecar<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource>> configureSidecar)
             where T : ApplicationModel.IResource { throw null; }
 
+        [AspireExportIgnore(Reason = "Use the options-based overload instead to avoid ambiguous polyglot overloads.")]
         public static ApplicationModel.IResourceBuilder<T> WithDaprSidecar<T>(this ApplicationModel.IResourceBuilder<T> builder, string appId)
             where T : ApplicationModel.IResource { throw null; }
 
+        [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> WithOptions(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> builder, CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions options) { throw null; }
 
+        [AspireExport("withReference", Description = "Associates a Dapr component with a Dapr sidecar resource")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> WithReference(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> builder, ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> component) { throw null; }
 
         [System.Obsolete("Add reference to the sidecar resource instead of the project resource")]
@@ -51,6 +63,7 @@ namespace Aspire.Hosting
 
 namespace CommunityToolkit.Aspire.Hosting.Dapr
 {
+    [global::Aspire.Hosting.AspireDto]
     public sealed partial record DaprComponentOptions()
     {
         public string? LocalPath { get { throw null; } init { } }
@@ -87,12 +100,14 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
         public required string Value { get { throw null; } set { } }
     }
 
+    [global::Aspire.Hosting.AspireExport(ExposeProperties = true)]
     public sealed partial record DaprOptions()
     {
         public string? DaprPath { get { throw null; } set { } }
 
         public bool? EnableTelemetry { get { throw null; } set { } }
 
+        [global::Aspire.Hosting.AspireExportIgnore(Reason = "Action<IResource, DaprSidecarOptions?> callbacks are not ATS-compatible.")]
         public System.Action<global::Aspire.Hosting.ApplicationModel.IResource, DaprSidecarOptions?>? PublishingConfigurationAction { get { throw null; } set { } }
     }
 
@@ -189,6 +204,7 @@ namespace CommunityToolkit.Aspire.Hosting.Dapr
     {
     }
 
+    [global::Aspire.Hosting.AspireExport(ExposeProperties = true)]
     public partial interface IDaprComponentResource : global::Aspire.Hosting.ApplicationModel.IResource, global::Aspire.Hosting.ApplicationModel.IResourceWithWaitSupport
     {
         DaprComponentOptions? Options { get; }

@@ -8,6 +8,7 @@
 //------------------------------------------------------------------------------
 namespace CommunityToolkit.Aspire.Minio.Client
 {
+    [System.Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
     public partial class HeaderAppInformation
     {
         public string AppName { get { throw null; } set { } }
@@ -15,6 +16,7 @@ namespace CommunityToolkit.Aspire.Minio.Client
         public string AppVersion { get { throw null; } set { } }
     }
 
+    [System.Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
     public sealed partial class MinioClientSettings
     {
         public Microsoft.Extensions.DependencyInjection.ServiceLifetime ServiceLifetime;
@@ -29,6 +31,7 @@ namespace CommunityToolkit.Aspire.Minio.Client
         public bool UseSsl { get { throw null; } set { } }
     }
 
+    [System.Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
     public partial class MinioCredentials
     {
         public string AccessKey { get { throw null; } set { } }
@@ -39,6 +42,7 @@ namespace CommunityToolkit.Aspire.Minio.Client
 
 namespace Microsoft.Extensions.Hosting
 {
+    [System.Obsolete("The MinIO OSS project has been archived and is no longer maintained. This integration is deprecated and will be removed in a future version.")]
     public static partial class MinioClientBuilderExtensionMethods
     {
         public static void AddMinioClient(this IHostApplicationBuilder builder, string? connectionName = null, string? configurationSectionName = "Aspire:Minio:Client", System.Action<CommunityToolkit.Aspire.Minio.Client.MinioClientSettings>? configureSettings = null) { }

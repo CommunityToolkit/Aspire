@@ -1,5 +1,7 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using System.Text;
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -32,6 +34,7 @@ public static class RedisBuilderExtensions
     /// </code>
     /// </example>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withDbGate", Description = "Adds a DbGate administration and development platform for Redis")]
     public static IResourceBuilder<RedisResource> WithDbGate(this IResourceBuilder<RedisResource> builder, Action<IResourceBuilder<DbGateContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -76,3 +79,5 @@ public static class RedisBuilderExtensions
         }
     }
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental

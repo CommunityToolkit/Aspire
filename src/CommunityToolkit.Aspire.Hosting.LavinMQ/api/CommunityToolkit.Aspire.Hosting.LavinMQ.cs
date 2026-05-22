@@ -10,17 +10,21 @@ namespace Aspire.Hosting
 {
     public static partial class LavinMQHostingExtension
     {
+        [AspireExport("addLavinMQ", Description = "Adds a LavinMQ container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> AddLavinMQ(this IDistributedApplicationBuilder builder, string name, int amqpPort = 5672, int managementPort = 15672) { throw null; }
 
+        [AspireExport("withDataBindMount", Description = "Adds a data bind mount to a LavinMQ container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
+        [AspireExport("withDataVolume", Description = "Adds a data volume to a LavinMQ container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, string name, bool isReadOnly = false) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class LavinMQContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class LavinMQContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public LavinMQContainerResource(string name) : base(default!, default) { }
 
@@ -29,6 +33,8 @@ namespace Aspire.Hosting.ApplicationModel
         public EndpointReferenceExpression Host { get { throw null; } }
 
         public EndpointReferenceExpression Port { get { throw null; } }
+
+        public EndpointReference PrimaryEndpoint { get { throw null; } }
 
         public ReferenceExpression UriExpression { get { throw null; } }
 

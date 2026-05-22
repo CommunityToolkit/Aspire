@@ -5,6 +5,8 @@ using Azure.Provisioning.Expressions;
 using Azure.Provisioning;
 using CommunityToolkit.Aspire.Hosting.Dapr;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -16,10 +18,12 @@ public static class AzureDaprHostingExtensions
     /// <summary>
     /// Adds an Azure Dapr resource to the resource builder.
     /// </summary>
+    /// <remarks>This method is not available in polyglot app hosts.</remarks>
     /// <param name="builder">The resource builder.</param>
     /// <param name="name">The name of the Dapr resource.</param>
     /// <param name="configureInfrastructure">The action to configure the Azure resource infrastructure.</param>
     /// <returns>The updated resource builder.</returns>
+    [AspireExportIgnore(Reason = "Action<AzureResourceInfrastructure> requires an Azure provisioning callback that is not compatible with ATS.")]
     public static IResourceBuilder<AzureDaprComponentResource> AddAzureDaprResource(
         this IResourceBuilder<IDaprComponentResource> builder,
         [ResourceName] string name,
@@ -41,8 +45,10 @@ public static class AzureDaprHostingExtensions
     /// <summary>
     /// Adds scopes to the specified Dapr component in a container app managed environment.
     /// </summary>
+    /// <remarks>This method is not available in polyglot app hosts.</remarks>
     /// <param name="builder">The resource builder.</param>
     /// <param name="daprComponent">The Dapr component to add scopes to.</param>
+    [AspireExportIgnore(Reason = "ContainerAppManagedEnvironmentDaprComponent is an Azure.Provisioning type not compatible with ATS.")]
     public static void AddScopes(this IResourceBuilder<IDaprComponentResource> builder, ContainerAppManagedEnvironmentDaprComponent daprComponent)
     {
         daprComponent.Scopes = [];
@@ -74,11 +80,13 @@ public static class AzureDaprHostingExtensions
     /// <summary>
     /// Creates a new Dapr component for a container app managed environment.
     /// </summary>
+    /// <remarks>This method is not available in polyglot app hosts.</remarks>
     /// <param name="bicepIdentifier">The name of the resource.</param>
     /// <param name="name">The name of the dapr component</param>
     /// <param name="componentType">The type of the Dapr component.</param>
     /// <param name="version">The version of the Dapr component.</param>
     /// <returns>A new instance of <see cref="ContainerAppManagedEnvironmentDaprComponent"/>.</returns>
+    [AspireExportIgnore(Reason = "BicepValue<string> and ContainerAppManagedEnvironmentDaprComponent are Azure.Provisioning types not compatible with ATS.")]
     public static ContainerAppManagedEnvironmentDaprComponent CreateDaprComponent(
         string bicepIdentifier,
         BicepValue<string> name,

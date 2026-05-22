@@ -18,6 +18,8 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="appId">The ID for the application, used for service discovery.</param>
     /// <returns>The resource builder instance.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the generated <c>withDaprSidecar</c> overload that accepts a Dapr sidecar configuration object instead.</remarks>
+    [AspireExportIgnore(Reason = "Use the options-based overload instead to avoid ambiguous polyglot overloads.")]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, string appId) where T : IResource
     {
         return builder.WithDaprSidecar(new DaprSidecarOptions { AppId = appId });
@@ -30,6 +32,8 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="options">Options for configuring the Dapr sidecar, if any.</param>
     /// <returns>The resource builder instance.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the generated <c>withDaprSidecar</c> overload that accepts a Dapr sidecar configuration object instead.</remarks>
+    [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, DaprSidecarOptions? options = null) where T : IResource
     {
         return builder.WithDaprSidecar(
@@ -42,6 +46,12 @@ public static class IDistributedApplicationResourceBuilderExtensions
             });
     }
 
+    [AspireExport("withDaprSidecar", MethodName = "withDaprSidecar", Description = "Adds a Dapr sidecar to the resource and optionally configures it")]
+    internal static IResourceBuilder<T> WithDaprSidecarExport<T>(this IResourceBuilder<T> builder, DaprSidecarExportOptions? sidecarOptions = null) where T : IResource
+    {
+        return builder.WithDaprSidecar(sidecarOptions?.ToDaprSidecarOptions());
+    }
+
     /// <summary>
     /// Ensures that a Dapr sidecar is started for the resource.
     /// </summary>
@@ -49,6 +59,7 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="configureSidecar">A callback that can be use to configure the Dapr sidecar.</param>
     /// <returns>The resource builder instance.</returns>
+    [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", Description = "Adds a Dapr sidecar to the resource and exposes it for callback configuration")]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
     {
         // Add Dapr is idempotent, so we can call it multiple times.
@@ -76,9 +87,17 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The Dapr sidecar resource builder instance.</param>
     /// <param name="options">Options for configuring the Dapr sidecar.</param>
     /// <returns>The Dapr sidecar resource builder instance.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use the generated <c>withOptions</c> overload that accepts a Dapr sidecar configuration object instead.</remarks>
+    [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
     public static IResourceBuilder<IDaprSidecarResource> WithOptions(this IResourceBuilder<IDaprSidecarResource> builder, DaprSidecarOptions options)
     {
         return builder.WithAnnotation(new DaprSidecarOptionsAnnotation(options));
+    }
+
+    [AspireExport("withOptions", MethodName = "withOptions", Description = "Configures options for a Dapr sidecar resource")]
+    internal static IResourceBuilder<IDaprSidecarResource> WithOptionsExport(this IResourceBuilder<IDaprSidecarResource> builder, DaprSidecarExportOptions sidecarOptions)
+    {
+        return builder.WithOptions(sidecarOptions.ToDaprSidecarOptions());
     }
 
     /// <summary>
@@ -97,6 +116,7 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="component">The Dapr component to use with the sidecar.</param>
+    [AspireExport("withReference", Description = "Associates a Dapr component with a Dapr sidecar resource")]
     public static IResourceBuilder<IDaprSidecarResource> WithReference(this IResourceBuilder<IDaprSidecarResource> builder, IResourceBuilder<IDaprComponentResource> component)
     {
         return builder.WithAnnotation(new DaprComponentReferenceAnnotation(component.Resource));

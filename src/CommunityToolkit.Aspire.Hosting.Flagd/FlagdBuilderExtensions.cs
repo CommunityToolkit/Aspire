@@ -2,6 +2,8 @@ using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Flagd;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -22,6 +24,7 @@ public static class FlagdBuilderExtensions
     /// <param name="ofrepPort">The host port for flagd OFREP endpoint. If not provided, a random port will be assigned.</param>
     /// <remarks>The flagd container requires a sync source to be configured.</remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
+    [AspireExport("addFlagd", Description = "Adds a flagd container resource")]
     public static IResourceBuilder<FlagdResource> AddFlagd(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -51,11 +54,17 @@ public static class FlagdBuilderExtensions
     /// <param name="logLevel">The log level to use. Currently only debug is supported.</param>
     /// <returns>The <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the log level is not valid.</exception>
-    /// <remarks>Currently only debug is supported.</remarks>
+    /// <remarks>
+    /// Currently only debug is supported. This method is not available in polyglot app hosts. Configure the
+    /// <c>FLAGD_DEBUG</c> environment variable directly instead.
+    /// </remarks>
+    [AspireExportIgnore(Reason = "Microsoft.Extensions.Logging.LogLevel is defined in an external assembly and is not compatible with ATS.")]
     public static IResourceBuilder<FlagdResource> WithLogLevel(
         this IResourceBuilder<FlagdResource> builder,
         LogLevel logLevel)
     {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+
         if (logLevel == LogLevel.Debug)
         {
             return builder.WithEnvironment("FLAGD_DEBUG", "true");
@@ -68,9 +77,10 @@ public static class FlagdBuilderExtensions
     /// Configures flagd to use a bind mount as the source of flags.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="fileSource">The path to the flag configuration file on the host.</param>
+    /// <param name="fileSource">The path to the host directory that contains the flag configuration file.</param>
     /// <param name="filename">The name of the flag configuration file. Defaults to "flagd.json".</param>
     /// <returns>The <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
+    [AspireExport("withBindFileSync", Description = "Configures flagd to use a bind-mounted flag configuration file")]
     public static IResourceBuilder<FlagdResource> WithBindFileSync(
         this IResourceBuilder<FlagdResource> builder,
         string fileSource,
@@ -84,3 +94,5 @@ public static class FlagdBuilderExtensions
             .WithArgs("--uri", $"file:./flags/{filename}");
     }
 }
+
+#pragma warning restore ASPIREATS001
