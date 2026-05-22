@@ -78,13 +78,22 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
 
             try
             {
+                await notificationService.PublishUpdateAsync(res,
+                    state => state with
+                    {
+                        State = KnownResourceStates.Starting,
+                        Properties = [
+                            .. state.Properties,
+                        ],
+                    });
+
                 // this will block until the runspace pool is started, which is implied by the WaitFor call
                 await builder.ApplicationBuilder.Eventing.PublishAsync(
                     new BeforeResourceStartedEvent(res, e.Services), ct);
 
                 scriptLogger.LogInformation("Starting script '{ScriptName}'", scriptName);
 
-                _ = res.StartAsync(scriptLogger, notificationService, ct);
+                await res.StartAsync(scriptLogger, notificationService, ct);
             }
             catch (Exception ex)
             {

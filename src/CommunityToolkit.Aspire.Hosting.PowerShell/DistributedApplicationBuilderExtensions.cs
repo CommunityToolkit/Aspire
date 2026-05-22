@@ -4,7 +4,6 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 
@@ -62,6 +61,15 @@ public static class DistributedApplicationBuilderExtensions
             var sessionState = InitialSessionState.CreateDefault();
             sessionState.UseFullLanguageModeInDebugger = true;
 
+            await notificationService.PublishUpdateAsync(res,
+                state => state with
+                {
+                    State = KnownResourceStates.Starting,
+                    Properties = [
+                        .. state.Properties,
+                    ],
+                });
+
             // This will block until explicit and implied WaitFor calls are completed
             await builder.Eventing.PublishAsync(
                 new BeforeResourceStartedEvent(res, e.Services), ct);
@@ -81,7 +89,7 @@ public static class DistributedApplicationBuilderExtensions
             var poolName = res.Name;
             var poolLogger = loggerService.GetLogger(poolName);
 
-            _ = res.StartAsync(sessionState, notificationService, poolLogger, hostLifetime, ct);
+            await res.StartAsync(sessionState, notificationService, poolLogger, hostLifetime, ct);
         });
 
         return poolBuilder;

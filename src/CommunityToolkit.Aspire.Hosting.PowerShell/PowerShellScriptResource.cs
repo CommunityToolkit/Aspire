@@ -151,20 +151,24 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
                         "Unknown PowerShell invocation state")
                 };
 
-                scriptLogger.LogDebug("Publishing script {ScriptName} state as known state: {ScriptState}", Name, knownState);
+                // Only publish state updates for known states that are not the initial state.
+                if (knownState != KnownResourceStates.NotStarted)
+                {
+                    scriptLogger.LogDebug("Publishing script {ScriptName} state as known state: {ScriptState}", Name, knownState);
 
-                await notificationService.PublishUpdateAsync(this,
-                    state => state with
-                    {
-                        State = knownState,
-                        Properties = [
-                                .. state.Properties,
+                    await notificationService.PublishUpdateAsync(this,
+                        state => state with
+                        {
+                            State = knownState,
+                            Properties = [
+                                    .. state.Properties,
                                 new( "PSInvocationState", args.InvocationStateInfo.State.ToString() ),
                                 new( "Reason", args.InvocationStateInfo.Reason?.Message ?? string.Empty ),
-                            ],
-                        StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
-                        StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
-                    });
+                                ],
+                            StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
+                            StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
+                        });
+                }
             };
 
             if (this.TryGetLastAnnotation<PowerShellScriptArgsAnnotation>(out var scriptArgsAnnotation))
@@ -253,7 +257,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
             _isDisposed = true;
             _ps.Stop();
             _ps.Dispose();
-            _cts?.Dispose();
+            _cts.Dispose();
         }
     }
 }
