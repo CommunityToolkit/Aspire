@@ -128,7 +128,7 @@
     <PackageVersion Include="System.Linq.AsyncEnumerable" Version="$(DotNetExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Overrides">
-    <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.8" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
