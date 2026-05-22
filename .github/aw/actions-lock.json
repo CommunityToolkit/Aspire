@@ -1,19 +1,51 @@
 {
   "entries": {
-    "actions/github-script@v8": {
+    "actions/github-script@v9.0.0": {
       "repo": "actions/github-script",
-      "version": "v8",
-      "sha": "ed597411d8f924073f98dfc5c65a23a2325f34cd"
+      "version": "v9.0.0",
+      "sha": "3a2844b7e9c422d3c10d287c895573f7108da1b3"
     },
-    "github/gh-aw-actions/setup@v0.61.0": {
+    "github/gh-aw-actions/setup@v0.74.8": {
       "repo": "github/gh-aw-actions/setup",
-      "version": "v0.61.0",
-      "sha": "df014dd7d03b638e860b2aeca95c833fd97c8cf1"
+      "version": "v0.74.8",
+      "sha": "efa55847f72aadb03490d955263ff911bf758700"
     },
-    "github/gh-aw/actions/setup@v0.61.0": {
+    "github/gh-aw/actions/setup@v0.74.8": {
       "repo": "github/gh-aw/actions/setup",
-      "version": "v0.61.0",
-      "sha": "9758a19d946df81723a0938eb0b4e41236bab981"
+      "version": "v0.74.8",
+      "sha": "0feed75a980b06f247abbbf80127f8eb2c19e2c5"
+    }
+  },
+  "containers": {
+    "ghcr.io/github/gh-aw-firewall/agent:0.24.2": {
+      "image": "ghcr.io/github/gh-aw-firewall/agent:0.24.2",
+      "digest": "sha256:9b6d793b360ee92185436e47617415a08641d2583107538576b11ce0cb160882",
+      "pinned_image": "ghcr.io/github/gh-aw-firewall/agent:0.24.2@sha256:9b6d793b360ee92185436e47617415a08641d2583107538576b11ce0cb160882"
+    },
+    "ghcr.io/github/gh-aw-firewall/api-proxy:0.24.2": {
+      "image": "ghcr.io/github/gh-aw-firewall/api-proxy:0.24.2",
+      "digest": "sha256:c2a9d21dcb07f987ca183b05c02dd7af44bdfe5540fe277a1406f7226022ff8f",
+      "pinned_image": "ghcr.io/github/gh-aw-firewall/api-proxy:0.24.2@sha256:c2a9d21dcb07f987ca183b05c02dd7af44bdfe5540fe277a1406f7226022ff8f"
+    },
+    "ghcr.io/github/gh-aw-firewall/squid:0.24.2": {
+      "image": "ghcr.io/github/gh-aw-firewall/squid:0.24.2",
+      "digest": "sha256:bbe9880f75df607bdc4cc0fa928eee4eb8d1c586f8f9d5433371d05bcd42f203",
+      "pinned_image": "ghcr.io/github/gh-aw-firewall/squid:0.24.2@sha256:bbe9880f75df607bdc4cc0fa928eee4eb8d1c586f8f9d5433371d05bcd42f203"
+    },
+    "ghcr.io/github/gh-aw-mcpg:v0.1.15": {
+      "image": "ghcr.io/github/gh-aw-mcpg:v0.1.15",
+      "digest": "sha256:f41e42401cfbec9766875fae16d445223e9bf29047d138cc73bbbca4fda0028c",
+      "pinned_image": "ghcr.io/github/gh-aw-mcpg:v0.1.15@sha256:f41e42401cfbec9766875fae16d445223e9bf29047d138cc73bbbca4fda0028c"
+    },
+    "ghcr.io/github/github-mcp-server:v0.32.0": {
+      "image": "ghcr.io/github/github-mcp-server:v0.32.0",
+      "digest": "sha256:2763823c63bcca718ce53850a1d7fcf2f501ec84028394f1b63ce7e9f4f9be28",
+      "pinned_image": "ghcr.io/github/github-mcp-server:v0.32.0@sha256:2763823c63bcca718ce53850a1d7fcf2f501ec84028394f1b63ce7e9f4f9be28"
+    },
+    "node:lts-alpine": {
+      "image": "node:lts-alpine",
+      "digest": "sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14",
+      "pinned_image": "node:lts-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14"
     }
   }
 }
