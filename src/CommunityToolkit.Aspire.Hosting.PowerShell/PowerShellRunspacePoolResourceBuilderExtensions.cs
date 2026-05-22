@@ -93,7 +93,9 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
 
                 scriptLogger.LogInformation("Starting script '{ScriptName}'", scriptName);
 
-                await res.StartAsync(scriptLogger, notificationService, ct);
+                // we don't want to block initialization until the script completes;
+                // it's better to fire and forget here.
+                _ = res.StartAsync(scriptLogger, notificationService, ct);
             }
             catch (Exception ex)
             {
