@@ -1,6 +1,5 @@
 #nullable enable
 Aspire.Quartz.IBackgroundJobClient
-Aspire.Quartz.IJob
 Aspire.Quartz.JobContext
 Aspire.Quartz.JobContext.JobContext() -> void
 Aspire.Quartz.JobContext.JobId.get -> string?

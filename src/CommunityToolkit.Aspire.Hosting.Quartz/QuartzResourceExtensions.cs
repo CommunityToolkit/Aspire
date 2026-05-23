@@ -1,8 +1,7 @@
-using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Quartz;
 
-namespace CommunityToolkit.Aspire.Hosting.Quartz;
+namespace Aspire.Hosting;
 
 /// <summary>
 /// Extension methods for adding Quartz.NET resources to an Aspire application.

@@ -2,30 +2,32 @@ using System.Diagnostics;
 using Aspire.Quartz;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Quartz;
 
-namespace Aspire.Quartz;
+namespace Microsoft.Extensions.Hosting;
 
 /// <summary>
-/// Extension methods for adding Quartz background job client to the service collection.
+/// Extension methods for adding Quartz background job client to an <see cref="IHostApplicationBuilder"/>.
 /// </summary>
 public static class QuartzClientExtensions
 {
     /// <summary>
-    /// Adds Quartz background job client to the service collection.
+    /// Adds Quartz background job client to the application.
     /// This adds production-ready features: idempotency, OpenTelemetry, and health checks.
     /// </summary>
-    /// <param name="services">The service collection.</param>
+    /// <param name="builder">The host application builder.</param>
     /// <param name="connectionName">The name of the connection string (default: "quartzdb").</param>
     /// <param name="idempotencyExpiration">The expiration time for idempotency keys (default: 7 days).</param>
-    /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddQuartzClient(
-        this IServiceCollection services,
+    /// <returns>The host application builder for chaining.</returns>
+    public static IHostApplicationBuilder AddQuartzClient(
+        this IHostApplicationBuilder builder,
         string connectionName = "quartzdb",
         TimeSpan? idempotencyExpiration = null)
     {
         var expiration = idempotencyExpiration ?? QuartzConstants.DefaultIdempotencyExpiration;
+        var services = builder.Services;
+        var configuration = builder.Configuration;
 
         // Register ActivitySource for OpenTelemetry
         services.AddSingleton(new ActivitySource("Aspire.Quartz.Client"));
@@ -33,7 +35,6 @@ public static class QuartzClientExtensions
         // Register connection factory for idempotency store
         services.AddSingleton<IDbConnectionFactory>(sp =>
         {
-            var configuration = sp.GetRequiredService<IConfiguration>();
             var logger = sp.GetRequiredService<ILogger<DbConnectionFactory>>();
 
             var connectionString = configuration.GetConnectionString(connectionName);
@@ -63,6 +64,6 @@ public static class QuartzClientExtensions
         services.AddHealthChecks()
             .AddCheck<QuartzHealthCheck>("quartz", tags: new[] { "ready", "quartz" });
 
-        return services;
+        return builder;
     }
 }

@@ -1,4 +1,3 @@
-using Aspire.Quartz;
 using Microsoft.AspNetCore.SignalR;
 using Quartz;
 using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Extensions;
@@ -89,7 +88,7 @@ builder.Services.AddQuartzHostedService(options =>
 });
 
 // Add Quartz client for job enqueuing (MUST be called after AddQuartz)
-builder.Services.AddQuartzClient("quartzdb");
+builder.AddQuartzClient("quartzdb");
 
 // Register our scheduler service
 builder.Services.AddSingleton<QuartzJobScheduler>();

@@ -1,5 +1,3 @@
-using CommunityToolkit.Aspire.Hosting.Quartz;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 // PostgreSQL for Quartz job storage

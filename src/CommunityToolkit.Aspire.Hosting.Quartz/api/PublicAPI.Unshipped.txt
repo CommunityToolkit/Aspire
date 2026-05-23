@@ -1,5 +1,20 @@
 #nullable enable
 Aspire.Hosting.QuartzResourceExtensions
-static Aspire.Hosting.QuartzResourceExtensions.AddQuartz(this Aspire.Hosting.IDistributedApplicationBuilder builder, string name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource>!
+static Aspire.Hosting.QuartzResourceExtensions.AddQuartz(this Aspire.Hosting.IDistributedApplicationBuilder! builder, string! name) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>!
+static Aspire.Hosting.QuartzResourceExtensions.WithDatabase(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>! builder, Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.IResourceWithConnectionString!>! database) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>!
+static Aspire.Hosting.QuartzResourceExtensions.WithIdempotencyExpiration(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>! builder, System.TimeSpan expiration) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>!
+static Aspire.Hosting.QuartzResourceExtensions.WithMaxConcurrency(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>! builder, int maxConcurrency) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>!
+static Aspire.Hosting.QuartzResourceExtensions.WithoutMigration(this Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>! builder) -> Aspire.Hosting.ApplicationModel.IResourceBuilder<Aspire.Hosting.ApplicationModel.QuartzResource!>!
 Aspire.Hosting.ApplicationModel.QuartzResource
+Aspire.Hosting.ApplicationModel.QuartzResource.ConnectionStringExpression.get -> Aspire.Hosting.ApplicationModel.ReferenceExpression!
+Aspire.Hosting.ApplicationModel.QuartzResource.EnableMigration.get -> bool
+Aspire.Hosting.ApplicationModel.QuartzResource.EnableMigration.set -> void
+Aspire.Hosting.ApplicationModel.QuartzResource.IdempotencyExpiration.get -> System.TimeSpan
+Aspire.Hosting.ApplicationModel.QuartzResource.IdempotencyExpiration.set -> void
+Aspire.Hosting.ApplicationModel.QuartzResource.MaxConcurrency.get -> int
+Aspire.Hosting.ApplicationModel.QuartzResource.MaxConcurrency.set -> void
+Aspire.Hosting.ApplicationModel.QuartzResource.Provider.get -> Aspire.Quartz.DatabaseProvider
+Aspire.Hosting.ApplicationModel.QuartzResource.Provider.set -> void
 Aspire.Hosting.ApplicationModel.QuartzResource.QuartzResource(string! name) -> void
+Aspire.Hosting.ApplicationModel.QuartzResource.SchedulerName.get -> string!
+Aspire.Hosting.ApplicationModel.QuartzResource.SchedulerName.set -> void

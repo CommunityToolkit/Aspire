@@ -1,3 +1,5 @@
+using Quartz;
+
 namespace Aspire.Quartz;
 
 /// <summary>

@@ -11,10 +11,11 @@ dotnet add package CommunityToolkit.Aspire.Quartz.Abstractions
 ## What's Included
 
 - `IBackgroundJobClient` - Interface for job scheduling
-- `IJob` - Base interface for jobs (from Quartz.NET)
 - `JobOptions` - Configuration for job execution
 - `RetryPolicy` - Retry configuration
 - `JobContext` - Execution context
+
+Jobs should implement `Quartz.IJob` directly.
 
 ## Usage
 

@@ -21,7 +21,7 @@ builder.Services.AddQuartz(q =>
 builder.Services.AddQuartzHostedService();
 
 // Add Quartz client
-builder.Services.AddQuartzClient(builder.Configuration.GetConnectionString("quartzdb"));
+builder.Services.AddQuartzClient("quartzdb");
 
 // Enqueue a job
 await jobClient.EnqueueAsync<SendEmailJob>(

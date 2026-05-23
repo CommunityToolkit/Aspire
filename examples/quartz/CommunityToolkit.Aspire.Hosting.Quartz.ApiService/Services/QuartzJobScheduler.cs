@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Quartz;
 using CommunityToolkit.Aspire.Hosting.Quartz.ApiService.Jobs;
 
@@ -17,6 +18,15 @@ public class QuartzJobScheduler
     {
         _schedulerFactory = schedulerFactory;
         _logger = logger;
+    }
+
+    private static string SanitizeLogValue(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        // Remove newlines and control characters to prevent log injection
+        return Regex.Replace(value, "[\r\n\x00-\x08\x0B\x0C\x0E-\x1F]", string.Empty);
     }
 
     /// <summary>
@@ -46,7 +56,7 @@ public class QuartzJobScheduler
 
         _logger.LogInformation(
             "Scheduled one-time job {JobType} with ID {JobId} at {StartTime}",
-            typeof(TJob).Name, jobId, startTime);
+            typeof(TJob).Name, SanitizeLogValue(jobId), startTime);
 
         return jobId;
     }
@@ -78,7 +88,7 @@ public class QuartzJobScheduler
 
         _logger.LogInformation(
             "Scheduled recurring job {JobType} with ID {JobId} using cron: {CronExpression}",
-            typeof(TJob).Name, jobId, cronExpression);
+            typeof(TJob).Name, SanitizeLogValue(jobId), SanitizeLogValue(cronExpression));
 
         return jobId;
     }
@@ -120,7 +130,7 @@ public class QuartzJobScheduler
 
         _logger.LogInformation(
             "Scheduled repeating job {JobType} with ID {JobId} every {Interval}",
-            typeof(TJob).Name, jobId, interval);
+            typeof(TJob).Name, SanitizeLogValue(jobId), interval);
 
         return jobId;
     }
@@ -137,7 +147,7 @@ public class QuartzJobScheduler
 
         if (result)
         {
-            _logger.LogInformation("Cancelled job {JobId} in group {JobGroup}", jobId, jobGroup);
+            _logger.LogInformation("Cancelled job {JobId} in group {JobGroup}", SanitizeLogValue(jobId), SanitizeLogValue(jobGroup));
         }
 
         return result;

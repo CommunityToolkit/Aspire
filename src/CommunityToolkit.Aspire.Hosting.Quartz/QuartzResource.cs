@@ -1,7 +1,6 @@
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Quartz;
 
-namespace CommunityToolkit.Aspire.Hosting.Quartz;
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a Quartz.NET background job scheduler resource in an Aspire application.
