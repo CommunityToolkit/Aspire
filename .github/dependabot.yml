@@ -1,25 +1,21 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
-version: 2
 updates:
-  - package-ecosystem: "nuget" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "skip-nuget-publish"
-    ignore:
-      # Ignore Aspire.Hosting and Aspire.Hosting.*   . We have a separate process for updating them
-      - dependency-name: "Aspire.Hosting"
-      - dependency-name: "Aspire.Hosting.*"
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "skip-nuget-publish"
+- directory: /
+  ignore:
+  - dependency-name: "Aspire.Hosting"
+  - dependency-name: "Aspire.Hosting.*"
+  labels:
+  - dependencies
+  - skip-nuget-publish
+  package-ecosystem: nuget
+  schedule:
+    interval: weekly
+- directory: /
+  ignore:
+  - dependency-name: "github/gh-aw-actions/**" # Managed by gh aw compile. Version-locked to the gh-aw compiler; do not bump.
+  labels:
+  - dependencies
+  - skip-nuget-publish
+  package-ecosystem: github-actions
+  schedule:
+    interval: weekly
+version: 2

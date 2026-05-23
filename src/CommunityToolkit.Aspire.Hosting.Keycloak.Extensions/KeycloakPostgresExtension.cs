@@ -17,7 +17,7 @@ public static class KeycloakPostgresExtension
         var pgServer = database.Resource.Parent;
         var ep = pgServer.GetEndpoint("tcp");
 
-        var dbName = database.Resource.Name;
+        var dbName = database.Resource.DatabaseName;
 
         var jdbcUrl = ReferenceExpression.Create(
             $"jdbc:postgresql://{ep.Property(EndpointProperty.Host)}:{ep.Property(EndpointProperty.Port)}/{dbName}");
