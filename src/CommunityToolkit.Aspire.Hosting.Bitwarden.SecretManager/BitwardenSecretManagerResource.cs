@@ -165,6 +165,11 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     public string? AuthStateFile { get; internal set; }
 
     /// <summary>
+    /// Gets the parameter-backed Bitwarden SDK auth state file path.
+    /// </summary>
+    internal ParameterResource? AuthStateFileParameter { get; set; }
+
+    /// <summary>
     /// Gets the existing Bitwarden project identifier to adopt.
     /// </summary>
     public Guid? ExistingProjectId { get; internal set; }
@@ -296,7 +301,11 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__ApiUrl"] = GetApiUrlOrDefault();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__IdentityUrl"] = GetIdentityUrlOrDefault();
 
-        if (AuthStateFile is { Length: > 0 } authStateFile)
+        if (AuthStateFileParameter is { } authStateFileParameter)
+        {
+            environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__StateFile"] = authStateFileParameter;
+        }
+        else if (AuthStateFile is { Length: > 0 } authStateFile)
         {
             environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__StateFile"] = authStateFile;
         }

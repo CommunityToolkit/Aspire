@@ -218,6 +218,28 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
+    /// Overrides the Bitwarden SDK auth state file path using a parameter.
+    /// When the parameter has no configured value the path falls back to the Aspire store default.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="authStateFile">
+    /// A parameter whose value is the auth state file path.
+    /// Relative paths are resolved against the Aspire store directory.
+    /// </param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthStateFile(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        IResourceBuilder<ParameterResource> authStateFile)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(authStateFile);
+
+        builder.Resource.AuthStateFileParameter = authStateFile.Resource;
+
+        return builder;
+    }
+
+    /// <summary>
     /// Overrides the runtime access token injected into dependents by <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string?)"/>.
     /// </summary>
     /// <param name="builder">The resource builder.</param>

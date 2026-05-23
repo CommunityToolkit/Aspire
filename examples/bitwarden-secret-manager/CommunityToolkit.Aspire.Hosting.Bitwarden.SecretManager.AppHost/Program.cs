@@ -21,7 +21,16 @@ bitwarden.WithRuntimeAccessToken(accessToken /* replace with least privilege tok
 // By default both files are stored in the Aspire store (obj/.aspire/...) and reused across runs.
 // Override when you need a specific path, e.g. to share state across workspaces or a CI cache.
 bitwarden.WithStateFile("demo.json");
-bitwarden.WithAuthStateFile("auth");
+
+// Optional: customize the auth cache location via a parameter.
+// Falls back to the Aspire store automatically when the parameter is not configured (e.g. local dev).
+// In deployed environments, set Parameters__bitwarden-auth-state-location to a mounted
+// volume path (e.g. /var/lib/bitwarden/auth-state) to persist auth state across runs.
+// The parameter value is never written into the generated compose file.
+if (builder.ExecutionContext.IsPublishMode)
+{
+    bitwarden.WithAuthStateFile(builder.AddParameter("bitwarden-auth-state-location"));
+}
 
 // Add a secret to the project with the value of the demo API key parameter.
 // The secret is created or updated on each run. Use `GetSecret` if you only want to read an existing secret.

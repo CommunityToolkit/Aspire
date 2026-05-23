@@ -47,7 +47,8 @@ internal sealed class BitwardenSecretManagerReconciler(
             resource.ResolvedRemoteProjectName = remoteProjectName;
 
             logger.LogDebug("Loading Bitwarden reconciliation state file for resource '{ResourceName}' with project name '{ProjectName}'.", resource.Name, remoteProjectName);
-            BitwardenStateFileContext stateContext = await stateStore.LoadAsync(resource, remoteProjectName, cancellationToken).ConfigureAwait(false);
+            string authStatePath = await ResolveAuthStatePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
+            BitwardenStateFileContext stateContext = await stateStore.LoadAsync(resource, remoteProjectName, authStatePath, cancellationToken).ConfigureAwait(false);
             resource.ResolvedStateFile = stateContext.Path;
             logger.LogInformation("Loaded Bitwarden reconciliation state file from '{StatePath}'.", stateContext.Path);
 
@@ -524,6 +525,38 @@ internal sealed class BitwardenSecretManagerReconciler(
         return projectName;
     }
 
+    private static async Task<string> ResolveAuthStatePathAsync(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services,
+        CancellationToken cancellationToken)
+    {
+        IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
+
+        if (resource.AuthStateFileParameter is { } parameter)
+        {
+            string? value = null;
+            try { value = await parameter.GetValueAsync(cancellationToken).ConfigureAwait(false); }
+            catch (MissingParameterValueException) { }
+
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return Path.IsPathRooted(value)
+                    ? value
+                    : Path.GetFullPath(Path.Combine(aspireStore.BasePath, value));
+            }
+        }
+
+        if (resource.AuthStateFile is { Length: > 0 } authStateFile)
+        {
+            return Path.IsPathRooted(authStateFile)
+                ? authStateFile
+                : Path.GetFullPath(Path.Combine(aspireStore.BasePath, authStateFile));
+        }
+
+        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
+        return Path.Combine(aspireStore.BasePath, "bitwarden", $"{safeResourceName}.auth.state");
+    }
+
     private static Task<string> ResolveManagementAccessTokenAsync(
         BitwardenSecretManagerResource resource,
         IInteractionService? interactionService,
@@ -642,10 +675,9 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
         WriteIndented = true
     };
 
-    public async Task<BitwardenStateFileContext> LoadAsync(BitwardenSecretManagerResource resource, string resolvedProjectName, CancellationToken cancellationToken)
+    public async Task<BitwardenStateFileContext> LoadAsync(BitwardenSecretManagerResource resource, string resolvedProjectName, string authPath, CancellationToken cancellationToken)
     {
         string statePath = ResolveStatePath(resource, resolvedProjectName);
-        string authPath = ResolveAuthStatePath(resource);
 
         if (!File.Exists(statePath))
         {
@@ -714,20 +746,6 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
         return existingPaths.Length == 1 ? existingPaths[0] : defaultPath;
     }
 
-    private string ResolveAuthStatePath(BitwardenSecretManagerResource resource)
-    {
-        IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
-
-        if (resource.AuthStateFile is { Length: > 0 } authStateFile)
-        {
-            return Path.IsPathRooted(authStateFile)
-                ? authStateFile
-                : Path.GetFullPath(Path.Combine(aspireStore.BasePath, authStateFile));
-        }
-
-        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
-        return Path.Combine(aspireStore.BasePath, "bitwarden", $"{safeResourceName}.auth.state");
-    }
 }
 
 internal sealed record BitwardenStateFileContext(string Path, string AuthPath, BitwardenState State);
