@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 
+/// <summary>
+/// Reconciles the declared Bitwarden graph during AppHost startup.
+/// </summary>
 internal sealed class BitwardenSecretManagerReconciler(
     IBitwardenSecretManagerProviderFactory providerFactory,
     BitwardenStateStore stateStore)
@@ -28,16 +31,18 @@ internal sealed class BitwardenSecretManagerReconciler(
 
         try
         {
+            IInteractionService? interactionService = services.GetService<IInteractionService>();
+
             logger.LogDebug("Resolving organization ID for resource '{ResourceName}'.", resource.Name);
-            Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
+            Guid organizationId = await ResolveOrganizationIdAsync(resource, interactionService, cancellationToken).ConfigureAwait(false);
             logger.LogDebug("Resolved organization ID: {OrganizationId}.", organizationId);
 
             logger.LogDebug("Resolving management access token for resource '{ResourceName}'.", resource.Name);
-            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+            string accessToken = await ResolveManagementAccessTokenAsync(resource, interactionService, cancellationToken).ConfigureAwait(false);
             logger.LogDebug("Successfully resolved management access token.");
 
             logger.LogDebug("Resolving remote project name for resource '{ResourceName}'.", resource.Name);
-            string remoteProjectName = await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
+            string remoteProjectName = await ResolveProjectNameAsync(resource, interactionService, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
             resource.ResolvedRemoteProjectName = remoteProjectName;
 
@@ -60,8 +65,6 @@ internal sealed class BitwardenSecretManagerReconciler(
                 logger.LogError(ex, "Failed to authenticate with Bitwarden provider for resource '{ResourceName}'. Verify that the access token is valid and has the necessary permissions.", resource.Name);
                 throw new DistributedApplicationException($"Bitwarden authentication failed for resource '{resource.Name}': The provided access token is invalid or lacks the required permissions. Please verify the token and try again.", ex);
             }
-
-            IInteractionService? interactionService = services.GetService<IInteractionService>();
 
             logger.LogDebug("Reconciling Bitwarden project for resource '{ResourceName}'.", resource.Name);
             BitwardenProjectInfo project = ReconcileProject(resource, remoteProjectName, stateContext.State, provider, organizationId, logger);
@@ -176,7 +179,7 @@ internal sealed class BitwardenSecretManagerReconciler(
         IReadOnlyDictionary<string, Guid> staleManagedMappings)
     {
         logger.LogDebug("Resolving value for managed secret '{SecretName}'.", secretResource.LocalName);
-        string resolvedValue = await ResolveSecretValueAsync(secretResource.Value, secretResource.LocalName, cancellationToken).ConfigureAwait(false);
+        string resolvedValue = await ResolveSecretValueAsync(resource, secretResource.Value, secretResource.LocalName, interactionService, cancellationToken).ConfigureAwait(false);
         logger.LogDebug("Successfully resolved value for managed secret '{SecretName}'.", secretResource.LocalName);
 
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
@@ -436,11 +439,21 @@ internal sealed class BitwardenSecretManagerReconciler(
         return false;
     }
 
-    private static async Task<string> ResolveSecretValueAsync(object valueSource, string secretName, CancellationToken cancellationToken)
+    private static async Task<string> ResolveSecretValueAsync(
+        BitwardenSecretManagerResource resource,
+        object valueSource,
+        string secretName,
+        IInteractionService? interactionService,
+        CancellationToken cancellationToken)
     {
         string? value = valueSource switch
         {
-            ParameterResource parameter => await parameter.GetValueAsync(cancellationToken).ConfigureAwait(false),
+            ParameterResource parameter => await ResolveRequiredParameterValueAsync(
+                parameter,
+                resource,
+                $"managed secret '{secretName}'",
+                interactionService,
+                cancellationToken).ConfigureAwait(false),
             ReferenceExpression referenceExpression => await referenceExpression.GetValueAsync(cancellationToken).ConfigureAwait(false),
             _ => throw new DistributedApplicationException($"Managed Bitwarden secret '{secretName}' uses unsupported value source type '{valueSource.GetType().Name}'.")
         };
@@ -451,6 +464,128 @@ internal sealed class BitwardenSecretManagerReconciler(
         }
 
         return value;
+    }
+
+    private static async Task<Guid> ResolveOrganizationIdAsync(
+        BitwardenSecretManagerResource resource,
+        IInteractionService? interactionService,
+        CancellationToken cancellationToken)
+    {
+        if (resource.ConfiguredOrganizationId is Guid literalOrganizationId)
+        {
+            return literalOrganizationId;
+        }
+
+        ParameterResource organizationParameter = resource.ConfiguredOrganizationIdParameter
+            ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' does not have an organization configured.");
+
+        string organizationValue = await ResolveRequiredParameterValueAsync(
+            organizationParameter,
+            resource,
+            "organization ID",
+            interactionService,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!Guid.TryParse(organizationValue, out Guid organizationId))
+        {
+            throw new DistributedApplicationException(
+                $"Bitwarden organization parameter '{organizationParameter.Name}' for resource '{resource.Name}' did not resolve to a valid GUID.");
+        }
+
+        return organizationId;
+    }
+
+    private static async Task<string> ResolveProjectNameAsync(
+        BitwardenSecretManagerResource resource,
+        IInteractionService? interactionService,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(resource.RemoteProjectName))
+        {
+            return resource.RemoteProjectName;
+        }
+
+        ParameterResource projectNameParameter = resource.ConfiguredRemoteProjectNameParameter
+            ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' does not have a project name configured.");
+
+        string projectName = await ResolveRequiredParameterValueAsync(
+            projectNameParameter,
+            resource,
+            "project name",
+            interactionService,
+            cancellationToken).ConfigureAwait(false);
+
+        if (string.IsNullOrWhiteSpace(projectName))
+        {
+            throw new DistributedApplicationException(
+                $"Bitwarden project name parameter '{projectNameParameter.Name}' for resource '{resource.Name}' did not resolve to a value.");
+        }
+
+        return projectName;
+    }
+
+    private static Task<string> ResolveManagementAccessTokenAsync(
+        BitwardenSecretManagerResource resource,
+        IInteractionService? interactionService,
+        CancellationToken cancellationToken)
+    {
+        return ResolveRequiredParameterValueAsync(
+            resource.ManagementAccessToken,
+            resource,
+            "management access token",
+            interactionService,
+            cancellationToken);
+    }
+
+    private static async Task<string> ResolveRequiredParameterValueAsync(
+        ParameterResource parameter,
+        BitwardenSecretManagerResource resource,
+        string purpose,
+        IInteractionService? interactionService,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            string? configuredValue = await parameter.GetValueAsync(cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(configuredValue))
+            {
+                throw new DistributedApplicationException(
+                    $"Bitwarden {purpose} parameter '{parameter.Name}' for resource '{resource.Name}' did not resolve to a value.");
+            }
+
+            return configuredValue;
+        }
+        catch (MissingParameterValueException ex)
+        {
+            if (interactionService is null || !interactionService.IsAvailable)
+            {
+                throw new DistributedApplicationException(
+                    $"Bitwarden {purpose} parameter '{parameter.Name}' for resource '{resource.Name}' is missing. Configure it under Parameters:{parameter.Name} or run with interactive prompts enabled.",
+                    ex);
+            }
+
+            InteractionInput input = new()
+            {
+                Name = parameter.Name,
+                Label = $"Bitwarden {purpose}",
+                InputType = parameter.Secret ? InputType.SecretText : InputType.Text,
+                Required = true
+            };
+
+            InteractionResult<InteractionInput> result = await interactionService.PromptInputAsync(
+                $"Missing Bitwarden parameter '{parameter.Name}'",
+                $"Bitwarden resource '{resource.Name}' requires a value for {purpose}. Enter a value for parameter '{parameter.Name}' to continue.",
+                input,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            if (result.Canceled || result.Data is null || string.IsNullOrWhiteSpace(result.Data.Value))
+            {
+                throw new DistributedApplicationException(
+                    $"Bitwarden parameter prompt for '{parameter.Name}' was canceled or returned an empty value.");
+            }
+
+            return result.Data.Value;
+        }
     }
 
     private static async Task<Guid> ResolveDuplicateAsync(

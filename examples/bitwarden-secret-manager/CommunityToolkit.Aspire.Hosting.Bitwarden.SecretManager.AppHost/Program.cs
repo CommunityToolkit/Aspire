@@ -10,7 +10,7 @@ var demoApiKey = builder.AddParameter("demo-api-key", secret: true);
 // Set up a secrets project within the specified organization using the provided management access token.
 // The management token MUST have write permissions to the project if it already exists.
 // If the project doesn't exist, it will be automatically created with write access for the provided token. 
-var bitwarden = builder.AddBitwardenSecretManager("bitwarden", projectName, organizationId, accessToken);
+var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organizationId, accessToken);
 
 // Recommended: configure the Bitwarden client with a runtime access token that has fewer privileges than the management token.
 bitwarden.WithRuntimeAccessToken(accessToken /* replace with least privilege token */);

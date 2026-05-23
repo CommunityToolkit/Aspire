@@ -2,19 +2,21 @@
 
 ## Overview
 
-`CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager` adds a non-container Aspire hosting resource for Bitwarden Secrets Manager projects and secrets.
+`CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager` helps you work with Bitwarden Secrets Manager in your Aspire AppHost.
 
-The resource reconciles a Bitwarden project during AppHost startup, can manage named secrets inside that project, and exposes structured metadata to dependent applications through `WithReference(...)`.
+Use it to define your Bitwarden project and secrets in one place, then apply them with `aspire deploy`.
 
-## Installation
+## Getting Started
+
+### Install the package
 
 ```bash
 dotnet add package CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager
 ```
 
-## Configuration
+### Basic setup
 
-Create parameters for the Bitwarden project name, organization identifier, and access token, then add the Bitwarden resource to your AppHost. The Aspire resource name and the Bitwarden project name are independent.
+Create parameters for the project name, organization ID, and access token, then add the Bitwarden resource to your AppHost. The Aspire resource name and the Bitwarden project name are independent.
 
 ```csharp
 IResourceBuilder<ParameterResource> organizationId = builder.AddParameter("bitwarden-organization-id");
@@ -28,17 +30,19 @@ IResourceBuilder<BitwardenSecretManagerResource> bitwarden = builder.AddBitwarde
     accessToken);
 ```
 
-Optional configuration:
+### Optional configuration
+
+You can further customize the resource with the following options:
 
 - `WithExistingProject(...)` adopts an existing Bitwarden project by identifier.
 - `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden endpoints.
-- `WithStateFile(...)` overrides the reconciliation state JSON file location.
-- `WithAuthStateFile(...)` overrides the Bitwarden SDK auth state file location.
+- `WithStateFile(...)` overrides the local deployment state JSON file location.
+- `WithAuthStateFile(...)` overrides the local Bitwarden SDK auth state file location.
 - `WithRuntimeAccessToken(...)` overrides the token injected into dependents.
 
 ## Usage
 
-Use `AddSecret(...)` to manage remote Bitwarden secrets during startup.
+Use `AddSecret(...)` to declare managed Bitwarden secrets.
 
 ```csharp
 IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("api-key", secret: true);
@@ -46,20 +50,20 @@ IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("api-key", sec
 IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("api-key", apiKey);
 ```
 
-Use `GetSecret(...)` to reference existing remote secrets.
+Use `GetSecret(...)` to reference an existing remote secret.
 
 ```csharp
 IBitwardenSecretReference existingSecret = bitwarden.GetSecret("shared-api-key");
 ```
 
-Use `WithReference(...)` to inject structured Bitwarden client configuration into dependent resources.
+Use `WithReference(...)` to inject Bitwarden client configuration into dependent resources.
 
 ```csharp
 builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden);
 ```
 
-Use `WithBitwardenSecretValue(...)` and `WithBitwardenSecretId(...)` to pass managed or referenced secrets to dependents as first-class resource values.
+Use `WithBitwardenSecretValue(...)` and `WithBitwardenSecretId(...)` to pass managed or referenced secrets to dependent resources.
 
 ```csharp
 IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("demo-api-key", apiKey);
@@ -77,3 +81,23 @@ The injected configuration is available under `Aspire:Bitwarden:SecretManager:{c
 - `AccessToken`
 - `ApiUrl`
 - `IdentityUrl`
+
+## Deployment
+
+Deployment applies your declared Bitwarden resources.
+
+Typical flow:
+
+1. Declare the Bitwarden project and any managed secrets in the AppHost graph.
+2. Run `aspire deploy` for the AppHost.
+
+During `aspire deploy`, the integration runs a Bitwarden deployment step that:
+
+- resolves declared project and secret configuration
+- connects to Bitwarden using configured credentials
+- creates or updates the project
+- creates or updates managed secrets
+
+This keeps the experience declaration-first: resources and references are your contract, and deployment materializes that contract.
+
+In day-to-day usage, you can treat Bitwarden API orchestration as an internal detail of the integration.

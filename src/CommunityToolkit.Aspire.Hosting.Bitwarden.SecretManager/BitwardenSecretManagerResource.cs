@@ -3,7 +3,7 @@
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// Represents a Bitwarden Secrets Manager project resource.
+/// Represents a Bitwarden Secrets Manager project and secret graph.
 /// </summary>
 [AspireExport(ExposeProperties = true)]
 public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport

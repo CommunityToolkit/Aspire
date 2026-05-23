@@ -1,5 +1,7 @@
+#pragma warning disable ASPIREPIPELINES001
+
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.Publishing;
+using Aspire.Hosting.Pipelines;
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -11,8 +13,6 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class BitwardenSecretManagerExtensions
 {
-    private const string ManifestType = "bitwarden.secretmanager.v0";
-
     /// <summary>
     /// Adds a Bitwarden Secrets Manager resource with a fixed project name and fixed organization identifier.
     /// </summary>
@@ -461,59 +461,75 @@ public static class BitwardenSecretManagerExtensions
     private static IResourceBuilder<BitwardenSecretManagerResource> ConfigureBitwardenSecretManager(
         IResourceBuilder<BitwardenSecretManagerResource> builder)
     {
+        bool isPublishMode = builder.ApplicationBuilder.ExecutionContext.IsPublishMode;
+
         builder.ApplicationBuilder.Services.TryAddSingleton<IBitwardenSecretManagerProviderFactory, BitwardenSecretManagerProviderFactory>();
         builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenStateStore>();
         builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenSecretManagerReconciler>();
 
-        return builder.WithInitialState(new CustomResourceSnapshot
+        builder.WithPipelineStepFactory(
+            $"bitwarden-{builder.Resource.Name}-reconcile",
+            async context => await BitwardenSecretManagerDeploymentStep.ExecuteAsync(context, builder.Resource.Name).ConfigureAwait(false),
+            requiredBy: [WellKnownPipelineSteps.Deploy],
+            tags: [WellKnownPipelineTags.ProvisionInfrastructure]
+        );
+
+        var resourceBuilder = builder.WithInitialState(new CustomResourceSnapshot
         {
             ResourceType = "BitwardenSecretManager",
             State = KnownResourceStates.NotStarted,
             Properties = [new("RemoteProjectName", builder.Resource.GetProjectNameDisplayValue())]
-        })
-        .WithManifestPublishingCallback(context => WriteBitwardenSecretManagerToManifest(context, builder.Resource))
-        .OnInitializeResource(async (resource, eventContext, cancellationToken) =>
-        {
-            await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-            {
-                State = KnownResourceStates.Starting,
-                Properties = [new("RemoteProjectName", resource.GetProjectNameDisplayValue())]
-            }).ConfigureAwait(false);
-
-            await eventContext.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, eventContext.Services), cancellationToken).ConfigureAwait(false);
-
-            try
-            {
-                BitwardenSecretManagerReconciler reconciler = eventContext.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-                BitwardenReconciliationResult result = await reconciler.InitializeAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
-
-                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-                {
-                    State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
-                    StartTimeStamp = DateTime.UtcNow,
-                    Properties =
-                    [
-                        new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                        new("ProjectId", result.ProjectId.ToString("D")),
-                        new("StateFile", result.StateFile)
-                    ]
-                }).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-                {
-                    State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error),
-                    Properties =
-                    [
-                        new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                        new("Error", ex.Message)
-                    ]
-                }).ConfigureAwait(false);
-
-                throw;
-            }
         });
+
+        // Only register startup reconciliation in non-publish mode;
+        // in publish mode, the publishing step handles reconciliation
+        if (!isPublishMode)
+        {
+            resourceBuilder.OnInitializeResource(async (resource, eventContext, cancellationToken) =>
+            {
+                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+                {
+                    State = KnownResourceStates.Starting,
+                    Properties = [new("RemoteProjectName", resource.GetProjectNameDisplayValue())]
+                }).ConfigureAwait(false);
+
+                await eventContext.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, eventContext.Services), cancellationToken).ConfigureAwait(false);
+
+                try
+                {
+                    BitwardenSecretManagerReconciler reconciler = eventContext.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
+                    BitwardenReconciliationResult result = await reconciler.InitializeAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
+
+                    await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+                    {
+                        State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+                        StartTimeStamp = DateTime.UtcNow,
+                        Properties =
+                        [
+                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                            new("ProjectId", result.ProjectId.ToString("D")),
+                            new("StateFile", result.StateFile)
+                        ]
+                    }).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+                    {
+                        State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error),
+                        Properties =
+                        [
+                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                            new("Error", ex.Message)
+                        ]
+                    }).ConfigureAwait(false);
+
+                    throw;
+                }
+            });
+        }
+
+        return resourceBuilder;
     }
 
     private static IResourceBuilder<BitwardenSecretResource> AddSecretCore(
@@ -560,6 +576,7 @@ public static class BitwardenSecretManagerExtensions
                 IsHidden = true,
                 Properties = []
             })
+            // Managed secret children are implementation details of the declared graph.
             .ExcludeFromManifest();
     }
 
@@ -587,80 +604,6 @@ public static class BitwardenSecretManagerExtensions
             }
 
             builder.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(dependency));
-        }
-    }
-
-    private static Task WriteBitwardenSecretManagerToManifest(
-        ManifestPublishingContext context,
-        BitwardenSecretManagerResource resource)
-    {
-        context.Writer.WriteString("type", ManifestType);
-        context.Writer.WriteStartObject("bitwardenSecretManager");
-        WriteManifestValue(context, "organizationId", resource.GetConfiguredOrganizationIdReference());
-        WriteManifestValue(context, "projectName", resource.GetConfiguredProjectNameReference());
-
-        if (resource.ExistingProjectId is Guid existingProjectId)
-        {
-            context.Writer.WriteString("existingProjectId", existingProjectId.ToString("D"));
-        }
-
-        context.Writer.WriteString("apiUrl", resource.GetApiUrlOrDefault());
-        context.Writer.WriteString("identityUrl", resource.GetIdentityUrlOrDefault());
-        WriteManifestValue(context, "accessToken", resource.ManagementAccessToken);
-
-        if (resource.RuntimeAccessToken is not null)
-        {
-            WriteManifestValue(context, "runtimeAccessToken", resource.RuntimeAccessToken);
-        }
-
-        if (resource.StateFile is string stateFile)
-        {
-            context.Writer.WriteString("stateFile", context.GetManifestRelativePath(stateFile) ?? stateFile.Replace('\\', '/'));
-        }
-
-        if (resource.AuthStateFile is string authStateFile)
-        {
-            context.Writer.WriteString("authStateFile", context.GetManifestRelativePath(authStateFile) ?? authStateFile.Replace('\\', '/'));
-        }
-
-        if (resource.ManagedSecrets.Count > 0)
-        {
-            context.Writer.WriteStartObject("secrets");
-
-            foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
-            {
-                context.Writer.WriteStartObject(secret.LocalName);
-                context.Writer.WriteString("remoteName", secret.RemoteName);
-
-                if (secret.ExistingSecretId is Guid existingSecretId)
-                {
-                    context.Writer.WriteString("existingSecretId", existingSecretId.ToString("D"));
-                }
-
-                WriteManifestValue(context, "value", secret.Value);
-                context.Writer.WriteEndObject();
-            }
-
-            context.Writer.WriteEndObject();
-        }
-
-        context.Writer.WriteEndObject();
-        return Task.CompletedTask;
-    }
-
-    private static void WriteManifestValue(ManifestPublishingContext context, string propertyName, object value)
-    {
-        switch (value)
-        {
-            case IManifestExpressionProvider manifestExpressionProvider:
-                context.Writer.WriteString(propertyName, manifestExpressionProvider.ValueExpression);
-                break;
-            case Guid guidValue:
-                context.Writer.WriteString(propertyName, guidValue.ToString("D"));
-                break;
-            default:
-                context.Writer.WriteString(propertyName, value.ToString());
-                break;
         }
     }
 
