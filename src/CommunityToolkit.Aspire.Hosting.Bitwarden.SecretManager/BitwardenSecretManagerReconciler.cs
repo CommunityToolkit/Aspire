@@ -875,7 +875,7 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
         {
             return Map(_client.Projects.Get(projectId));
         }
-        catch (BitwardenException)
+        catch (BitwardenException ex) when (!IsTransientError(ex))
         {
             return null;
         }
@@ -893,11 +893,14 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
         {
             return Map(_client.Secrets.Get(secretId));
         }
-        catch (BitwardenException)
+        catch (BitwardenException ex) when (!IsTransientError(ex))
         {
             return null;
         }
     }
+
+    private static bool IsTransientError(BitwardenException ex)
+        => ex.Message.StartsWith("error sending request", StringComparison.OrdinalIgnoreCase);
 
     public IReadOnlyList<BitwardenSecretInfo> GetSecretsByIds(Guid[] secretIds)
     {
