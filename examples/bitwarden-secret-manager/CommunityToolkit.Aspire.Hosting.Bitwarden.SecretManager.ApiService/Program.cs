@@ -4,7 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddBitwardenSecretManagerClient("bitwarden", settings => settings.DisableHealthChecks = true);
+// Register the Bitwarden secret manager client with Aspire configuration binding.
+// Use the same connection name as the Bitwarden project in the AppHost
+// Configuration is injected as Aspire:Bitwarden:SecretManager:{connection_name}:{setting}
+// (e.g. Aspire:Bitwarden:SecretManager:secrets:AccessToken).
+builder.AddBitwardenSecretManagerClient(connectionName: "secrets", settings =>
+{
+    // You can optionally override Aspire injected values here or set additional client settings.
+    settings.IdentityUrl = "https://vault.bitwarden.com/identity";
+    settings.ApiUrl = "https://vault.bitwarden.com/api";
+    settings.DisableHealthChecks = true;
+});
 
 var app = builder.Build();
 
