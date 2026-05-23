@@ -185,7 +185,7 @@ public static class BitwardenSecretManagerExtensions
     /// Overrides the reconciliation state file path.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="stateFile">The state file path, relative to the AppHost directory when not rooted.</param>
+    /// <param name="stateFile">The state file path, relative to the Aspire store directory when not rooted.</param>
     /// <returns>The resource builder.</returns>
     public static IResourceBuilder<BitwardenSecretManagerResource> WithStateFile(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
@@ -194,9 +194,7 @@ public static class BitwardenSecretManagerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(stateFile);
 
-        builder.Resource.StateFile = Path.IsPathRooted(stateFile)
-            ? Path.GetFullPath(stateFile)
-            : Path.GetFullPath(Path.Combine(builder.Resource.AppHostDirectory, stateFile));
+        builder.Resource.StateFile = stateFile;
 
         return builder;
     }
@@ -205,7 +203,7 @@ public static class BitwardenSecretManagerExtensions
     /// Overrides the Bitwarden SDK auth state file path.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="authStateFile">The auth state file path, relative to the AppHost directory when not rooted.</param>
+    /// <param name="authStateFile">The auth state file path, relative to the Aspire store directory when not rooted.</param>
     /// <returns>The resource builder.</returns>
     public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthStateFile(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
@@ -214,9 +212,7 @@ public static class BitwardenSecretManagerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(authStateFile);
 
-        builder.Resource.AuthStateFile = Path.IsPathRooted(authStateFile)
-            ? Path.GetFullPath(authStateFile)
-            : Path.GetFullPath(Path.Combine(builder.Resource.AppHostDirectory, authStateFile));
+        builder.Resource.AuthStateFile = authStateFile;
 
         return builder;
     }

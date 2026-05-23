@@ -17,8 +17,11 @@ var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organi
 // Recommended: configure the Bitwarden client with a runtime access token that has fewer privileges than the management token.
 bitwarden.WithRuntimeAccessToken(accessToken /* replace with least privilege token */);
 
-// Optionally share the authentication cache between all applications that reference this instance.
-bitwarden.WithAuthStateFile("obj/auth.cache");
+// Optional: override the default Aspire store locations for state files.
+// By default both files are stored in the Aspire store (obj/.aspire/...) and reused across runs.
+// Override when you need a specific path, e.g. to share state across workspaces or a CI cache.
+bitwarden.WithStateFile("demo.json");
+bitwarden.WithAuthStateFile("auth");
 
 // Add a secret to the project with the value of the demo API key parameter.
 // The secret is created or updated on each run. Use `GetSecret` if you only want to read an existing secret.

@@ -645,7 +645,7 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
     public async Task<BitwardenStateFileContext> LoadAsync(BitwardenSecretManagerResource resource, string resolvedProjectName, CancellationToken cancellationToken)
     {
         string statePath = ResolveStatePath(resource, resolvedProjectName);
-        string? authPath = ResolveAuthStatePath(resource);
+        string authPath = ResolveAuthStatePath(resource);
 
         if (!File.Exists(statePath))
         {
@@ -689,12 +689,14 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
 
     private string ResolveStatePath(BitwardenSecretManagerResource resource, string resolvedProjectName)
     {
+        IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
+
         if (resource.StateFile is { Length: > 0 } stateFile)
         {
-            return stateFile;
+            return Path.IsPathRooted(stateFile)
+                ? stateFile
+                : Path.GetFullPath(Path.Combine(aspireStore.BasePath, stateFile));
         }
-
-        IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
 
         string directory = Path.Combine(aspireStore.BasePath, "bitwarden");
         Directory.CreateDirectory(directory);
@@ -712,18 +714,23 @@ internal sealed class BitwardenStateStore(IServiceProvider services)
         return existingPaths.Length == 1 ? existingPaths[0] : defaultPath;
     }
 
-    private static string? ResolveAuthStatePath(BitwardenSecretManagerResource resource)
+    private string ResolveAuthStatePath(BitwardenSecretManagerResource resource)
     {
+        IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
+
         if (resource.AuthStateFile is { Length: > 0 } authStateFile)
         {
-            return authStateFile;
+            return Path.IsPathRooted(authStateFile)
+                ? authStateFile
+                : Path.GetFullPath(Path.Combine(aspireStore.BasePath, authStateFile));
         }
 
-        return null;
+        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
+        return Path.Combine(aspireStore.BasePath, "bitwarden", $"{safeResourceName}.auth.state");
     }
 }
 
-internal sealed record BitwardenStateFileContext(string Path, string? AuthPath, BitwardenState State);
+internal sealed record BitwardenStateFileContext(string Path, string AuthPath, BitwardenState State);
 
 internal sealed class BitwardenState
 {

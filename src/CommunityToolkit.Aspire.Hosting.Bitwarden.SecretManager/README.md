@@ -36,8 +36,8 @@ You can further customize the resource with the following options:
 
 - `WithExistingProject(...)` adopts an existing Bitwarden project by identifier.
 - `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden endpoints.
-- `WithStateFile(...)` overrides the local deployment state JSON file location.
-- `WithAuthStateFile(...)` overrides the local Bitwarden SDK auth state file location.
+- `WithStateFile(...)` overrides the reconciliation state file location (default: Aspire store).
+- `WithAuthStateFile(...)` overrides the SDK auth state file location (default: Aspire store).
 - `WithRuntimeAccessToken(...)` overrides the token injected into dependents.
 
 ## Usage

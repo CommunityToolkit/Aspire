@@ -70,6 +70,7 @@ public class BitwardenSecretManagerReconcilerTests
         try
         {
             var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
             appBuilder.Configuration["Parameters:bitwarden-project-name"] = "shared-team-secrets";
 
@@ -90,7 +91,7 @@ public class BitwardenSecretManagerReconcilerTests
 
             Assert.Single(fakeProvider.CreatedProjects);
             Assert.Equal("shared-team-secrets", fakeProvider.Projects[fakeProvider.CreatedProjects[0]].Name);
-            Assert.Null(fakeProvider.AuthStateFile);
+            Assert.NotNull(fakeProvider.AuthStateFile);
         }
         finally
         {
@@ -111,6 +112,7 @@ public class BitwardenSecretManagerReconcilerTests
         try
         {
             var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
 
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
@@ -152,6 +154,7 @@ public class BitwardenSecretManagerReconcilerTests
         try
         {
             var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
             appBuilder.Configuration["Parameters:managed-secret"] = "updated-value";
 
@@ -199,6 +202,7 @@ public class BitwardenSecretManagerReconcilerTests
         try
         {
             var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
             appBuilder.Configuration["Parameters:managed-secret"] = "unchanged-value";
 
@@ -244,6 +248,7 @@ public class BitwardenSecretManagerReconcilerTests
         try
         {
             var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
             appBuilder.Configuration["Parameters:managed-secret"] = "managed-secret-value";
 

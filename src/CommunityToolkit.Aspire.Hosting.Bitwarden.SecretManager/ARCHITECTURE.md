@@ -61,6 +61,17 @@ Happy path:
 
 For local run scenarios, the same declared graph is used. The implementation invokes reconciliation during resource initialization to keep local state aligned. This run-mode behavior is separate from publish-time step execution and does not change the architecture: declaration and pipeline-step deployment remain the primary model.
 
+## State Management
+
+The integration uses `IAspireStore` for all file-based state, consistent with Aspire's hosting conventions:
+
+- **Reconciliation state** (`{safeResourceName}.{identityHash}.state.json`): persists the Bitwarden project ID and secret ID mappings between runs. Located in `{aspireStore.BasePath}/bitwarden/` by default.
+- **SDK auth state** (`{safeResourceName}.auth.state`): caches the Bitwarden SDK authentication tokens between runs. Located in `{aspireStore.BasePath}/bitwarden/` by default.
+
+Both paths are resolved at reconciliation time from `IAspireStore`, which the AppHost DI container provides. This works identically in run mode and publish mode.
+
+`WithStateFile(...)` and `WithAuthStateFile(...)` are escape hatches that replace the default store-backed paths with an explicit location. These are intended for cases where state must be shared across workspaces or managed outside of Aspire's store (e.g. a shared CI cache).
+
 ## Non-Goals
 
 - Defining a new custom manifest schema as the primary deployment contract.
