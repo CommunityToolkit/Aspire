@@ -46,6 +46,12 @@ if (builder.ExecutionContext.IsPublishMode || (builder.ExecutionContext.IsRunMod
     // Work around Linux trust-store discovery issues in Bitwarden.Secrets.Sdk 1.0.0.
     api.WithEnvironment("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt")
         .WithEnvironment("SSL_CERT_DIR", "/etc/ssl/certs");
+
+    if (builder.ExecutionContext.IsRunMode && OperatingSystem.IsLinux())
+    {
+        Environment.SetEnvironmentVariable("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt");
+        Environment.SetEnvironmentVariable("SSL_CERT_DIR", "/etc/ssl/certs");
+    }
 }
 
 builder.Build().Run();
