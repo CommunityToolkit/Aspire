@@ -2,6 +2,8 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+builder.AddDockerComposeEnvironment("docker");
+
 var organizationId = builder.AddParameter("bitwarden-organization-id");
 var projectName = builder.AddParameter("bitwarden-project-name");
 var accessToken = builder.AddParameter("bitwarden-access-token", secret: true);
@@ -36,7 +38,7 @@ api.WithReference(bitwarden).WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", dem
 //    This approach is simpler (no Bitwarden code in the application) but requires redeploying the application whenever the secret value changes.
 api.WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret.Resource);
 
-if (OperatingSystem.IsLinux())
+if (builder.ExecutionContext.IsPublishMode || (builder.ExecutionContext.IsRunMode && OperatingSystem.IsLinux()))
 {
     // Work around Linux trust-store discovery issues in Bitwarden.Secrets.Sdk 1.0.0.
     api.WithEnvironment("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt")
