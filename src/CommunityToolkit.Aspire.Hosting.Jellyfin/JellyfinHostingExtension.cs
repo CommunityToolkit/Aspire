@@ -30,7 +30,7 @@ public static class JellyfinHostingExtension
         int? httpPort = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         JellyfinContainerResource resource = new(name);
 
@@ -81,7 +81,7 @@ public static class JellyfinHostingExtension
         bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
 
         return builder.WithBindMount(source, JellyfinContainerResource.ConfigTarget, isReadOnly);
     }
@@ -108,7 +108,7 @@ public static class JellyfinHostingExtension
         string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
 
         return builder.WithBindMount(source, JellyfinContainerResource.CacheTarget, isReadOnly: false);
     }
@@ -130,7 +130,7 @@ public static class JellyfinHostingExtension
         bool isReadOnly = true)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
 
         return builder.WithBindMount(source, target, isReadOnly);
@@ -146,7 +146,7 @@ public static class JellyfinHostingExtension
         string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
 
         return builder.WithBindMount(source, JellyfinContainerResource.FontsTarget, isReadOnly: true);
     }

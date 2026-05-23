@@ -57,6 +57,7 @@ public class JellyfinContainerResource(string name) : ContainerResource(name), I
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
+        yield return new("Endpoint", UriExpression);
         yield return new("Host", ReferenceExpression.Create($"{Host}"));
         yield return new("Port", ReferenceExpression.Create($"{Port}"));
         yield return new("Uri", UriExpression);

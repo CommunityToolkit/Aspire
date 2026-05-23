@@ -230,4 +230,23 @@ public class ContainerResourceCreationTests
         Assert.Equal(ProtocolType.Udp, endpoint.Protocol);
         Assert.Equal(1900, endpoint.TargetPort);
     }
+
+    [Fact]
+    public void ConnectionPropertiesIncludeEndpointHostPortAndUri()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        builder.AddJellyfin("jellyfin");
+
+        using var app = builder.Build();
+        var resource = app.Services.GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<JellyfinContainerResource>().Single();
+
+        var withCs = (IResourceWithConnectionString)resource;
+        var keys = withCs.GetConnectionProperties().Select(kv => kv.Key).ToArray();
+
+        Assert.Contains("Endpoint", keys);
+        Assert.Contains("Host", keys);
+        Assert.Contains("Port", keys);
+        Assert.Contains("Uri", keys);
+    }
 }
