@@ -1,0 +1,15 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.3.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>e4c5a7b2-3f8d-4d6c-9b1e-1f0c5e6a8d2b</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Jellyfin\CommunityToolkit.Aspire.Hosting.Jellyfin.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>
