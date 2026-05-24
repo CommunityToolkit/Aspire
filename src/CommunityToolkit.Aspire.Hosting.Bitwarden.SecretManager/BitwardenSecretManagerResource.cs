@@ -155,19 +155,14 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     public string? IdentityUrl { get; internal set; }
 
     /// <summary>
-    /// Gets the explicit reconciliation state file path.
+    /// Gets the AppHost cache file path override (integration bookkeeping: project ID, secret ID mappings).
     /// </summary>
-    public string? StateFile { get; internal set; }
+    public string? CacheFile { get; internal set; }
 
     /// <summary>
-    /// Gets the explicit Bitwarden SDK auth state file path.
+    /// Gets the AppHost auth cache file path override (Bitwarden SDK auth session on the AppHost).
     /// </summary>
-    public string? AuthStateFile { get; internal set; }
-
-    /// <summary>
-    /// Gets the parameter-backed Bitwarden SDK auth state file path.
-    /// </summary>
-    internal ParameterResource? AuthStateFileParameter { get; set; }
+    public string? AuthCacheFile { get; internal set; }
 
     /// <summary>
     /// Gets the existing Bitwarden project identifier to adopt.
@@ -191,7 +186,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal string AppHostDirectory { get; }
 
-    internal string? ResolvedStateFile { get; set; }
+    internal string? ResolvedCacheFile { get; set; }
 
     internal string? ResolvedRemoteProjectName { get; set; }
 
@@ -300,15 +295,6 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__AccessToken"] = GetEffectiveAccessTokenReference();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__ApiUrl"] = GetApiUrlOrDefault();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__IdentityUrl"] = GetIdentityUrlOrDefault();
-
-        if (AuthStateFileParameter is { } authStateFileParameter)
-        {
-            environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__StateFile"] = authStateFileParameter;
-        }
-        else if (AuthStateFile is { Length: > 0 } authStateFile)
-        {
-            environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__StateFile"] = authStateFile;
-        }
     }
 
     internal void ResetResolvedValues()

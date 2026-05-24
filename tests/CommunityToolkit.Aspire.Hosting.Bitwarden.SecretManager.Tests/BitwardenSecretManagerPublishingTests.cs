@@ -8,26 +8,6 @@ namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
 public class BitwardenSecretManagerPublishingTests
 {
     [Fact]
-    public void AddBitwardenSecretManager_InPublishMode_AddsManifestPublishingCallback()
-    {
-        using var appBuilder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
-        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
-
-        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-
-        appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
-
-        using var app = appBuilder.Build();
-
-        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
-
-        Assert.True(resource.TryGetAnnotationsOfType<ManifestPublishingCallbackAnnotation>(out var annotations));
-        Assert.NotEmpty(annotations);
-        Assert.DoesNotContain(ManifestPublishingCallbackAnnotation.Ignore, resource.Annotations);
-    }
-
-    [Fact]
     public void AddSecret_InPublishMode_DeclaresGraphButExcludesManagedSecretFromManifest()
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);

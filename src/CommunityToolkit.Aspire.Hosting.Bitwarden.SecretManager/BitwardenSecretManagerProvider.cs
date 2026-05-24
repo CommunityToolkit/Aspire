@@ -17,7 +17,7 @@ internal sealed class BitwardenSecretManagerProviderFactory : IBitwardenSecretMa
 
 internal interface IBitwardenSecretManagerProvider : IAsyncDisposable
 {
-    void Login(string accessToken, string? authStateFile);
+    void Login(string accessToken, string? authCacheFile);
 
     BitwardenProjectInfo? GetProject(Guid projectId);
 
@@ -49,21 +49,21 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
         });
     }
 
-    public void Login(string accessToken, string? authStateFile)
+    public void Login(string accessToken, string? authCacheFile)
     {
-        if (string.IsNullOrWhiteSpace(authStateFile))
+        if (string.IsNullOrWhiteSpace(authCacheFile))
         {
             _client.Auth.LoginAccessToken(accessToken);
             return;
         }
 
-        string? directory = Path.GetDirectoryName(authStateFile);
+        string? directory = Path.GetDirectoryName(authCacheFile);
         if (!string.IsNullOrEmpty(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        _client.Auth.LoginAccessToken(accessToken, authStateFile);
+        _client.Auth.LoginAccessToken(accessToken, authCacheFile);
     }
 
     public BitwardenProjectInfo? GetProject(Guid projectId)

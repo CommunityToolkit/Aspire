@@ -13,7 +13,7 @@ namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 /// </summary>
 internal sealed class BitwardenSecretManagerReconciler(
     IBitwardenSecretManagerProviderFactory providerFactory,
-    BitwardenStateStore stateStore)
+    BitwardenStore bitwardenStore)
 {
     public async Task<BitwardenReconciliationResult> InitializeAsync(
         BitwardenSecretManagerResource resource,
@@ -45,19 +45,19 @@ internal sealed class BitwardenSecretManagerReconciler(
             logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
             resource.ResolvedRemoteProjectName = remoteProjectName;
 
-            logger.LogDebug("Loading Bitwarden reconciliation state file for resource '{ResourceName}' with project name '{ProjectName}'.", resource.Name, remoteProjectName);
-            string authStatePath = await ResolveAuthStatePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
-            BitwardenStateFileContext stateContext = await stateStore.LoadAsync(resource, remoteProjectName, authStatePath, cancellationToken).ConfigureAwait(false);
-            resource.ResolvedStateFile = stateContext.Path;
-            logger.LogInformation("Loaded Bitwarden reconciliation state file from '{StatePath}'.", stateContext.Path);
+            logger.LogDebug("Loading Bitwarden AppHost cache for resource '{ResourceName}' with project name '{ProjectName}'.", resource.Name, remoteProjectName);
+            string authCachePath = ResolveAuthCachePath(resource, services);
+            BitwardenCacheContext cacheContext = await bitwardenStore.LoadAsync(resource, remoteProjectName, authCachePath, cancellationToken).ConfigureAwait(false);
+            resource.ResolvedCacheFile = cacheContext.CachePath;
+            logger.LogInformation("Loaded Bitwarden AppHost cache from '{AppHostCachePath}'.", cacheContext.CachePath);
 
             logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
             await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
 
-            logger.LogDebug("Logging into Bitwarden provider for resource '{ResourceName}' using auth state file '{AuthStatePath}'.", resource.Name, stateContext.AuthPath);
+            logger.LogDebug("Logging into Bitwarden provider for resource '{ResourceName}' using auth cache '{AppHostAuthCachePath}'.", resource.Name, cacheContext.AuthCachePath);
             try
             {
-                provider.Login(accessToken, stateContext.AuthPath);
+                provider.Login(accessToken, cacheContext.AuthCachePath);
                 logger.LogDebug("Successfully authenticated with Bitwarden provider.");
             }
             catch (BitwardenAuthException ex)
@@ -67,11 +67,11 @@ internal sealed class BitwardenSecretManagerReconciler(
             }
 
             logger.LogDebug("Reconciling Bitwarden project for resource '{ResourceName}'.", resource.Name);
-            BitwardenProjectInfo project = ReconcileProject(resource, remoteProjectName, stateContext.State, provider, organizationId, logger);
+            BitwardenProjectInfo project = ReconcileProject(resource, remoteProjectName, cacheContext.Cache, provider, organizationId, logger);
             resource.BindResolvedProjectId(project.Id);
             logger.LogInformation("Successfully reconciled project {ProjectId} for resource '{ResourceName}'.", project.Id, resource.Name);
 
-            Dictionary<string, Guid> staleManagedMappings = stateContext.State.ManagedSecretIds
+            Dictionary<string, Guid> staleManagedMappings = cacheContext.Cache.ManagedSecretIds
                 .Where(entry => resource.ManagedSecrets.All(secret => !string.Equals(secret.LocalName, entry.Key, StringComparison.OrdinalIgnoreCase)))
                 .ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.OrdinalIgnoreCase);
 
@@ -86,24 +86,24 @@ internal sealed class BitwardenSecretManagerReconciler(
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
             {
                 logger.LogDebug("Processing managed secret '{SecretName}' (remote name: {RemoteName}).", secret.LocalName, secret.RemoteName);
-                await ReconcileManagedSecretAsync(resource, organizationId, secret, stateContext.State, lookupContext, provider, interactionService, logger, cancellationToken, staleManagedMappings).ConfigureAwait(false);
+                await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, logger, cancellationToken, staleManagedMappings).ConfigureAwait(false);
             }
 
-            stateContext.State.ManagedSecretIds = resource.ManagedSecrets
+            cacheContext.Cache.ManagedSecretIds = resource.ManagedSecrets
                 .Where(secret => secret.SecretId is not null)
                 .ToDictionary(secret => secret.LocalName, secret => secret.SecretId!.Value, StringComparer.OrdinalIgnoreCase);
 
             logger.LogInformation("Validating {DeclaredSecretCount} declared secret references for resource '{ResourceName}'.", resource.DeclaredSecretReferences.Count, resource.Name);
-            await ValidateDeclaredSecretReferencesAsync(resource, stateContext.State, lookupContext, interactionService, logger, cancellationToken).ConfigureAwait(false);
+            await ValidateDeclaredSecretReferencesAsync(resource, cacheContext.Cache, lookupContext, interactionService, logger, cancellationToken).ConfigureAwait(false);
 
-            stateContext.State.ProjectId = project.Id;
+            cacheContext.Cache.ProjectId = project.Id;
 
-            logger.LogDebug("Saving Bitwarden state file to '{StatePath}'.", stateContext.Path);
-            await stateStore.SaveAsync(stateContext.Path, stateContext.State, cancellationToken).ConfigureAwait(false);
+            logger.LogDebug("Saving Bitwarden state file to '{StatePath}'.", cacheContext.CachePath);
+            await bitwardenStore.SaveAsync(cacheContext.CachePath, cacheContext.Cache, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Successfully saved Bitwarden state file.");
 
             logger.LogInformation("Bitwarden SecretManager initialization completed successfully for resource '{ResourceName}' with project {ProjectId}.", resource.Name, project.Id);
-            return new BitwardenReconciliationResult(project.Id, stateContext.Path);
+            return new BitwardenReconciliationResult(project.Id, cacheContext.CachePath);
         }
         catch (Exception ex)
         {
@@ -115,7 +115,7 @@ internal sealed class BitwardenSecretManagerReconciler(
     private static BitwardenProjectInfo ReconcileProject(
         BitwardenSecretManagerResource resource,
         string remoteProjectName,
-        BitwardenState state,
+        BitwardenCache cache,
         IBitwardenSecretManagerProvider provider,
         Guid organizationId,
         ILogger logger)
@@ -134,7 +134,7 @@ internal sealed class BitwardenSecretManagerReconciler(
             return existingProject;
         }
 
-        if (state.ProjectId is Guid persistedProjectId)
+        if (cache.ProjectId is Guid persistedProjectId)
         {
             logger.LogDebug("Attempting to reuse persisted project {ProjectId} from state file for resource '{ResourceName}'.", persistedProjectId, resource.Name);
             BitwardenProjectInfo? persistedProject = provider.GetProject(persistedProjectId);
@@ -170,7 +170,7 @@ internal sealed class BitwardenSecretManagerReconciler(
         BitwardenSecretManagerResource resource,
         Guid organizationId,
         BitwardenSecretResource secretResource,
-        BitwardenState state,
+        BitwardenCache state,
         BitwardenLookupContext lookupContext,
         IBitwardenSecretManagerProvider provider,
         IInteractionService? interactionService,
@@ -277,7 +277,7 @@ internal sealed class BitwardenSecretManagerReconciler(
 
     private static async Task ValidateDeclaredSecretReferencesAsync(
         BitwardenSecretManagerResource resource,
-        BitwardenState state,
+        BitwardenCache state,
         BitwardenLookupContext lookupContext,
         IInteractionService? interactionService,
         ILogger logger,
@@ -518,36 +518,27 @@ internal sealed class BitwardenSecretManagerReconciler(
         return projectName;
     }
 
-    private static async Task<string> ResolveAuthStatePathAsync(
+    private static string ResolveAuthCachePath(
         BitwardenSecretManagerResource resource,
-        IServiceProvider services,
-        CancellationToken cancellationToken)
+        IServiceProvider services)
     {
-        IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
+        // AppAuthCacheFile/AppAuthCacheFileParameter are injected into the deployed app via env vars.
+        // The reconciler runs on the AppHost, so it only uses AuthCacheFile or the Aspire store default.
 
-        if (resource.AuthStateFileParameter is { } parameter)
+        if (resource.AuthCacheFile is { Length: > 0 } authCacheFile)
         {
-            string? value = null;
-            try { value = await parameter.GetValueAsync(cancellationToken).ConfigureAwait(false); }
-            catch (MissingParameterValueException) { }
-
-            if (!string.IsNullOrWhiteSpace(value))
+            if (Path.IsPathRooted(authCacheFile))
             {
-                return Path.IsPathRooted(value)
-                    ? value
-                    : Path.GetFullPath(Path.Combine(aspireStore.BasePath, value));
+                return authCacheFile;
             }
+
+            IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
+            return Path.GetFullPath(Path.Combine(aspireStore.BasePath, authCacheFile));
         }
 
-        if (resource.AuthStateFile is { Length: > 0 } authStateFile)
-        {
-            return Path.IsPathRooted(authStateFile)
-                ? authStateFile
-                : Path.GetFullPath(Path.Combine(aspireStore.BasePath, authStateFile));
-        }
-
+        IAspireStore store = services.GetRequiredService<IAspireStore>();
         string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
-        return Path.Combine(aspireStore.BasePath, "bitwarden", $"{safeResourceName}.auth.state");
+        return Path.Combine(store.BasePath, "bitwarden", $"{safeResourceName}.auth-cache");
     }
 
     private static Task<string> ResolveManagementAccessTokenAsync(
@@ -622,7 +613,7 @@ internal sealed class BitwardenSecretManagerReconciler(
     }
 }
 
-internal sealed record BitwardenReconciliationResult(Guid ProjectId, string StateFile);
+internal sealed record BitwardenReconciliationResult(Guid ProjectId, string CacheFile);
 
 internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider provider, Guid organizationId)
 {

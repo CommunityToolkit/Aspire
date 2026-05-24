@@ -25,8 +25,8 @@ public class BitwardenSecretManagerReconcilerTests
             var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
 
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "team-secrets", organizationParameter, accessToken)
-                .WithStateFile(stateFile)
-                .WithAuthStateFile(authStateFile);
+                .WithCacheFile(stateFile)
+                .WithAuthCacheFile(authStateFile);
             var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
 
             var fakeProvider = new FakeBitwardenProvider();
@@ -44,8 +44,8 @@ public class BitwardenSecretManagerReconcilerTests
             Assert.Single(fakeProvider.CreatedSecrets);
             Assert.NotNull(managedSecret.Resource.SecretId);
             Assert.Equal("managed-secret-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
-            Assert.True(File.Exists(result.StateFile));
-            Assert.Equal(authStateFile, fakeProvider.AuthStateFile);
+            Assert.True(File.Exists(result.CacheFile));
+            Assert.Equal(authStateFile, fakeProvider.AuthCacheFile);
         }
         finally
         {
@@ -78,7 +78,7 @@ public class BitwardenSecretManagerReconcilerTests
             var projectName = appBuilder.AddParameter("bitwarden-project-name");
 
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectName, organizationId, accessToken)
-                .WithStateFile(stateFile);
+                .WithCacheFile(stateFile);
 
             var fakeProvider = new FakeBitwardenProvider();
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
@@ -91,7 +91,7 @@ public class BitwardenSecretManagerReconcilerTests
 
             Assert.Single(fakeProvider.CreatedProjects);
             Assert.Equal("shared-team-secrets", fakeProvider.Projects[fakeProvider.CreatedProjects[0]].Name);
-            Assert.NotNull(fakeProvider.AuthStateFile);
+            Assert.NotNull(fakeProvider.AuthCacheFile);
         }
         finally
         {
@@ -118,7 +118,7 @@ public class BitwardenSecretManagerReconcilerTests
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "different-name", organizationId, accessToken)
                 .WithExistingProject(existingProjectId)
-                .WithStateFile(stateFile);
+                .WithCacheFile(stateFile);
 
             var fakeProvider = new FakeBitwardenProvider();
             fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "existing-remote-name", organizationId);
@@ -162,7 +162,7 @@ public class BitwardenSecretManagerReconcilerTests
             var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
                 .WithExistingProject(existingProjectId)
-                .WithStateFile(stateFile);
+                .WithCacheFile(stateFile);
 
             var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue)
                 .WithExistingSecret(existingSecretId);
@@ -210,7 +210,7 @@ public class BitwardenSecretManagerReconcilerTests
             var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
                 .WithExistingProject(existingProjectId)
-                .WithStateFile(stateFile);
+                .WithCacheFile(stateFile);
 
             var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue)
                 .WithExistingSecret(existingSecretId);
@@ -255,7 +255,7 @@ public class BitwardenSecretManagerReconcilerTests
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
             var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
             var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithStateFile(stateFile);
+                .WithCacheFile(stateFile);
 
             var managedSecret = bitwarden.AddSecret("managed-secret", "shared-secret", managedSecretValue);
             IBitwardenSecretReference reference = bitwarden.GetSecret("shared-secret");
@@ -316,12 +316,12 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
 
     public string? AccessToken { get; private set; }
 
-    public string? AuthStateFile { get; private set; }
+    public string? AuthCacheFile { get; private set; }
 
-    public void Login(string accessToken, string? authStateFile)
+    public void Login(string accessToken, string? authCacheFile)
     {
         AccessToken = accessToken;
-        AuthStateFile = authStateFile;
+        AuthCacheFile = authCacheFile;
     }
 
     public BitwardenProjectInfo? GetProject(Guid projectId)

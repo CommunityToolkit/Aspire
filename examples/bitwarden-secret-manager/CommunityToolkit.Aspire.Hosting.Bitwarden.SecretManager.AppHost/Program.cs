@@ -17,20 +17,16 @@ var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organi
 // Recommended: configure the Bitwarden client with a runtime access token that has fewer privileges than the management token.
 bitwarden.WithRuntimeAccessToken(accessToken /* replace with least privilege token */);
 
-// Optional: override the default Aspire store locations for state files.
-// By default both files are stored in the Aspire store (obj/.aspire/...) and reused across runs.
-// Override when you need a specific path, e.g. to share state across workspaces or a CI cache.
-bitwarden.WithStateFile("demo.json");
+// Optional: override the AppHost cache file location.
+// This file stores the Bitwarden project ID and secret ID mappings between runs so the integration
+// can reuse existing Bitwarden resources rather than creating duplicates.
+// By default it is stored in the Aspire store (obj/.aspire/...). Override to share it across workspaces or CI pipelines.
+bitwarden.WithCacheFile("demo.json");
 
-// Optional: customize the auth cache location via a parameter.
-// Falls back to the Aspire store automatically when the parameter is not configured (e.g. local dev).
-// In deployed environments, set Parameters__bitwarden-auth-state-location to a mounted
-// volume path (e.g. /var/lib/bitwarden/auth-state) to persist auth state across runs.
-// The parameter value is never written into the generated compose file.
-if (builder.ExecutionContext.IsPublishMode)
-{
-    bitwarden.WithAuthStateFile(builder.AddParameter("bitwarden-auth-state-location"));
-}
+// Optional: override the AppHost auth cache file location.
+// By default it is stored in the Aspire store alongside the bookkeeping cache.
+// Override to reuse a Bitwarden SDK auth session across CI runs or workspaces without re-authenticating.
+bitwarden.WithAuthCacheFile(".apphost-auth-cache");
 
 // Add a secret to the project with the value of the demo API key parameter.
 // The secret is created or updated on each run. Use `GetSecret` if you only want to read an existing secret.
@@ -46,13 +42,28 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
 // (See ApiService/Program.cs for an example of retrieving secrets from the client in code.)
 api.WithReference(bitwarden).WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource);
 
+// Optional: persist the app's Bitwarden SDK auth session across restarts so it does not re-authenticate on every startup.
+// In run mode a fixed local path is fine; in deployed environments use a parameter so each
+// environment can point to a durable storage location (e.g. a mounted volume).
+// In deployed environments, set Parameters__bitwarden-auth-cache-location to a persistent path, e.g. /data/bitwarden/auth-cache.
+if (builder.ExecutionContext.IsRunMode)
+{
+    string apiProjectDir = Path.GetDirectoryName(api.Resource.GetProjectMetadata().ProjectPath)!;
+    string authCachePath = Path.Combine(apiProjectDir, "obj", ".app-auth-cache");
+    api.WithAuthCacheFile(bitwarden, authCachePath);
+}
+else if (builder.ExecutionContext.IsPublishMode)
+{
+    api.WithAuthCacheFile(bitwarden, builder.AddParameter("app-auth-cache-location"));
+}
+
 // 2. Using direct secret references in the project configuration, which injects the secret value as an environment variable at runtime.
 //    This approach is simpler (no Bitwarden code in the application) but requires redeploying the application whenever the secret value changes.
 api.WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret.Resource);
 
+// Work around Linux trust-store discovery issues in Bitwarden.Secrets.Sdk 1.0.0.
 if (builder.ExecutionContext.IsPublishMode || (builder.ExecutionContext.IsRunMode && OperatingSystem.IsLinux()))
 {
-    // Work around Linux trust-store discovery issues in Bitwarden.Secrets.Sdk 1.0.0.
     api.WithEnvironment("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt")
         .WithEnvironment("SSL_CERT_DIR", "/etc/ssl/certs");
 

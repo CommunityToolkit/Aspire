@@ -84,7 +84,17 @@ public static class AspireBitwardenSecretManagerExtensions
             IdentityUrl = settings.IdentityUrl
         });
 
-        client.Auth.LoginAccessToken(settings.AccessToken, settings.StateFile ?? string.Empty);
+        string authCacheFile = settings.AuthCacheFile ?? string.Empty;
+        if (authCacheFile is { Length: > 0 })
+        {
+            string? authCacheDir = Path.GetDirectoryName(authCacheFile);
+            if (authCacheDir is { Length: > 0 })
+            {
+                Directory.CreateDirectory(authCacheDir);
+            }
+        }
+
+        client.Auth.LoginAccessToken(settings.AccessToken, authCacheFile);
         return client;
     }
 

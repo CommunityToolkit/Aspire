@@ -182,61 +182,120 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Overrides the reconciliation state file path.
+    /// Overrides the AppHost cache file path (integration bookkeeping: Bitwarden project ID, secret ID mappings).
+    /// Defaults to the Aspire store when not set. Override to share cache across workspaces or persist it in CI.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="stateFile">The state file path, relative to the Aspire store directory when not rooted.</param>
+    /// <param name="cacheFile">The cache file path, relative to the Aspire store directory when not rooted.</param>
     /// <returns>The resource builder.</returns>
-    public static IResourceBuilder<BitwardenSecretManagerResource> WithStateFile(
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithCacheFile(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
-        string stateFile)
+        string cacheFile)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(stateFile);
+        ArgumentException.ThrowIfNullOrWhiteSpace(cacheFile);
 
-        builder.Resource.StateFile = stateFile;
+        builder.Resource.CacheFile = cacheFile;
 
         return builder;
     }
 
     /// <summary>
-    /// Overrides the Bitwarden SDK auth state file path.
+    /// Overrides the AppHost auth cache file path (Bitwarden SDK auth session used by the AppHost reconciler).
+    /// Defaults to the Aspire store when not set. Override to reuse a cached auth session across CI runs.
+    /// Use <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string, string?)"/> or
+    /// <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, IResourceBuilder{ParameterResource}, string?)"/>
+    /// to configure the auth cache path inside the deployed app.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="authStateFile">The auth state file path, relative to the Aspire store directory when not rooted.</param>
+    /// <param name="authCacheFile">The auth cache file path on the AppHost, relative to the Aspire store directory when not rooted.</param>
     /// <returns>The resource builder.</returns>
-    public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthStateFile(
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthCacheFile(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
-        string authStateFile)
+        string authCacheFile)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(authStateFile);
+        ArgumentException.ThrowIfNullOrWhiteSpace(authCacheFile);
 
-        builder.Resource.AuthStateFile = authStateFile;
+        builder.Resource.AuthCacheFile = authCacheFile;
 
         return builder;
     }
 
     /// <summary>
-    /// Overrides the Bitwarden SDK auth state file path using a parameter.
-    /// When the parameter has no configured value the path falls back to the Aspire store default.
+    /// Injects the Bitwarden SDK auth cache file path into the destination resource using a hardcoded path.
+    /// The value is injected as <c>AuthCacheFile</c> under <c>Aspire:Bitwarden:SecretManager:{connectionName}</c>.
+    /// It is not used by the AppHost reconciler. Use this when the auth cache path is fixed (e.g. a local run path).
+    /// Use <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, IResourceBuilder{ParameterResource}, string?)"/>
+    /// to make the path environment-specific via a parameter.
     /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="authStateFile">
-    /// A parameter whose value is the auth state file path.
-    /// Relative paths are resolved against the Aspire store directory.
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource builder.</param>
+    /// <param name="appAuthCacheFile">
+    /// The auth cache file path inside the app.
+    /// Set this to a persistent storage path (e.g. <c>/data/bitwarden/auth-cache</c>) to persist auth state across restarts.
     /// </param>
-    /// <returns>The resource builder.</returns>
-    public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthStateFile(
-        this IResourceBuilder<BitwardenSecretManagerResource> builder,
-        IResourceBuilder<ParameterResource> authStateFile)
+    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
+    /// <returns>The destination resource builder.</returns>
+    public static IResourceBuilder<TDestination> WithAuthCacheFile<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        string appAuthCacheFile,
+        string? connectionName = null)
+        where TDestination : IResourceWithEnvironment
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(authStateFile);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentException.ThrowIfNullOrWhiteSpace(appAuthCacheFile);
 
-        builder.Resource.AuthStateFileParameter = authStateFile.Resource;
+        if (connectionName is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        }
 
-        return builder;
+        connectionName ??= source.Resource.Name;
+
+        return builder.WithEnvironment(
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AuthCacheFile",
+            appAuthCacheFile);
+    }
+
+    /// <summary>
+    /// Injects the Bitwarden SDK auth cache file path into the destination resource using a parameter.
+    /// The parameter value is injected as <c>AuthCacheFile</c> under <c>Aspire:Bitwarden:SecretManager:{connectionName}</c>.
+    /// It is not used by the AppHost reconciler. Use this when the auth cache path varies per environment.
+    /// Use <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string, string?)"/>
+    /// to use a hardcoded path instead.
+    /// </summary>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource builder.</param>
+    /// <param name="appAuthCacheFile">
+    /// A parameter whose value is the auth cache file path inside the app.
+    /// In deployed environments, set this to a persistent storage path (e.g. <c>/data/bitwarden/auth-cache</c>) to persist auth state across restarts.
+    /// </param>
+    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
+    /// <returns>The destination resource builder.</returns>
+    public static IResourceBuilder<TDestination> WithAuthCacheFile<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        IResourceBuilder<ParameterResource> appAuthCacheFile,
+        string? connectionName = null)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(appAuthCacheFile);
+
+        if (connectionName is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        }
+
+        connectionName ??= source.Resource.Name;
+
+        return builder.WithEnvironment(
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AuthCacheFile",
+            appAuthCacheFile);
     }
 
     /// <summary>
@@ -482,7 +541,7 @@ public static class BitwardenSecretManagerExtensions
         bool isPublishMode = builder.ApplicationBuilder.ExecutionContext.IsPublishMode;
 
         builder.ApplicationBuilder.Services.TryAddSingleton<IBitwardenSecretManagerProviderFactory, BitwardenSecretManagerProviderFactory>();
-        builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenStateStore>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenStore>();
         builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenSecretManagerReconciler>();
 
         builder.WithPipelineStepFactory(
@@ -527,7 +586,7 @@ public static class BitwardenSecretManagerExtensions
                         [
                             new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
                             new("ProjectId", result.ProjectId.ToString("D")),
-                            new("StateFile", result.StateFile)
+                            new("CacheFile", result.CacheFile)
                         ]
                     }).ConfigureAwait(false);
                 }

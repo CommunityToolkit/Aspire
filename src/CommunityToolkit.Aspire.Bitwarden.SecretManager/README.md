@@ -27,6 +27,7 @@ The configuration section includes:
 - `AccessToken`
 - `ApiUrl`
 - `IdentityUrl`
+- `AuthCacheFile` _(optional)_ — path to the Bitwarden SDK auth cache file inside the app. Set via `WithAuthCacheFile(...)` in the AppHost. Persist the auth session to a durable storage path to avoid re-authenticating on every app restart.
 
 ## Usage
 

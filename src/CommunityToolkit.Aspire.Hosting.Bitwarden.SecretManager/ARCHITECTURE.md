@@ -46,7 +46,7 @@ During execution, the step:
 - connects to Bitwarden using configured credentials
 - creates or updates the project
 - creates or updates managed secrets
-- records resulting identifiers/state needed by the runtime experience
+- records resulting identifiers needed by the runtime experience
 
 Happy path:
 
@@ -61,16 +61,24 @@ Happy path:
 
 For local run scenarios, the same declared graph is used. The implementation invokes reconciliation during resource initialization to keep local state aligned. This run-mode behavior is separate from publish-time step execution and does not change the architecture: declaration and pipeline-step deployment remain the primary model.
 
-## State Management
+## Cache Files
 
-The integration uses `IAspireStore` for all file-based state, consistent with Aspire's hosting conventions:
+The integration maintains two cache files on the AppHost, and one optional cache file in the deployed app.
 
-- **Reconciliation state** (`{safeResourceName}.{identityHash}.state.json`): persists the Bitwarden project ID and secret ID mappings between runs. Located in `{aspireStore.BasePath}/bitwarden/` by default.
-- **SDK auth state** (`{safeResourceName}.auth.state`): caches the Bitwarden SDK authentication tokens between runs. Located in `{aspireStore.BasePath}/bitwarden/` by default.
+### AppHost cache files (AppHost side)
 
-Both paths are resolved at reconciliation time from `IAspireStore`, which the AppHost DI container provides. This works identically in run mode and publish mode.
+Both files are resolved at reconciliation time from `IAspireStore`, which the AppHost DI container provides. They are used identically in run mode and publish mode.
 
-`WithStateFile(...)` and `WithAuthStateFile(...)` are escape hatches that replace the default store-backed paths with an explicit location. These are intended for cases where state must be shared across workspaces or managed outside of Aspire's store (e.g. a shared CI cache).
+- **AppHost cache** (`{safeResourceName}.{identityHash}.state.json`): the integration's own bookkeeping — persists the Bitwarden project ID and secret ID mappings between runs. Located in `{aspireStore.BasePath}/bitwarden/` by default. Override with `WithCacheFile(...)`.
+- **AppHost auth cache** (`{safeResourceName}.auth-cache`): caches the Bitwarden SDK authentication session between runs so the AppHost does not need to re-authenticate on every run. Located in `{aspireStore.BasePath}/bitwarden/` by default. Override with `WithAuthCacheFile(...)`.
+
+`WithCacheFile(...)` and `WithAuthCacheFile(...)` are escape hatches that replace the default store-backed paths with an explicit location. These are intended for cases where the cache must be shared across workspaces or managed outside of Aspire's store (e.g. a shared CI cache directory).
+
+### App auth cache (deployed app side)
+
+- **App auth cache**: caches the Bitwarden SDK authentication session inside the deployed app. This is independent of the AppHost auth cache — the two run in different processes and on different machines. Configure with `WithAuthCacheFile(...)` on the dependent resource builder (not on the Bitwarden resource), passing the Bitwarden source so the connection name can be resolved. Accepts a string for a fixed path or a parameter for an environment-specific path. The value is injected into the app via the `AuthCacheFile` configuration key under `Aspire:Bitwarden:SecretManager:{connectionName}`.
+
+The AppHost reconciler never reads the app auth cache path. The deployed app never reads the AppHost cache files.
 
 ## Non-Goals
 
@@ -79,3 +87,4 @@ Both paths are resolved at reconciliation time from `IAspireStore`, which the Ap
 - Making runtime reconciliation the primary architectural concept.
 
 The intended design is pipeline-step-first, declared-resource-first.
+

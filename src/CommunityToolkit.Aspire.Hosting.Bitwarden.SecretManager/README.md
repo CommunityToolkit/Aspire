@@ -36,9 +36,19 @@ You can further customize the resource with the following options:
 
 - `WithExistingProject(...)` adopts an existing Bitwarden project by identifier.
 - `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden endpoints.
-- `WithStateFile(...)` overrides the reconciliation state file location (default: Aspire store).
-- `WithAuthStateFile(...)` overrides the SDK auth state file location (default: Aspire store).
+- `WithCacheFile(...)` overrides the AppHost cache file location (default: Aspire store). The AppHost cache tracks Bitwarden project and secret IDs between runs.
+- `WithAuthCacheFile(...)` overrides the AppHost auth cache file location (default: Aspire store). The AppHost auth cache persists the Bitwarden SDK auth session between runs on the AppHost.
 - `WithRuntimeAccessToken(...)` overrides the token injected into dependents.
+
+Use `WithAuthCacheFile(...)` on a dependent resource builder to persist its Bitwarden SDK auth session across restarts. Accepts a string for a fixed path or a parameter for an environment-specific path:
+
+```csharp
+builder.AddProject<Projects.ApiService>("api")
+    .WithReference(bitwarden)
+    .WithAuthCacheFile(bitwarden, "/data/bitwarden/auth-cache");                   // fixed path
+    // or:
+    .WithAuthCacheFile(bitwarden, builder.AddParameter("auth-cache-location"));    // env-specific path
+```
 
 ## Usage
 
@@ -101,3 +111,4 @@ During `aspire deploy`, the integration runs a Bitwarden deployment step that:
 This keeps the experience declaration-first: resources and references are your contract, and deployment materializes that contract.
 
 In day-to-day usage, you can treat Bitwarden API orchestration as an internal detail of the integration.
+
