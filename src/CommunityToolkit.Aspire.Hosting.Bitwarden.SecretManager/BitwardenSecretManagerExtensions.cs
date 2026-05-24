@@ -544,13 +544,43 @@ public static class BitwardenSecretManagerExtensions
         builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenStore>();
         builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenSecretManagerReconciler>();
 
+        string bitwardenStepName = $"bitwarden-{builder.Resource.Name}-reconcile";
+
         builder.WithPipelineStepFactory(
-            $"bitwarden-{builder.Resource.Name}-reconcile",
+            bitwardenStepName,
             async context => await BitwardenSecretManagerDeploymentStep.ExecuteAsync(context, builder.Resource.Name).ConfigureAwait(false),
             dependsOn: [WellKnownPipelineSteps.DeployPrereq],
             requiredBy: [WellKnownPipelineSteps.Deploy],
             tags: [WellKnownPipelineTags.ProvisionInfrastructure]
         );
+
+        // Workaround: PrepareAsync (Aspire.Hosting.Docker) only resolves ParameterResource and
+        // ContainerImageReference sources — custom IValueProvider types are skipped, leaving blank
+        // values in .env.{env}. Until PrepareAsync handles IValueProvider generically, wire the
+        // Bitwarden step to run after prepare-{env} and patch the blanks, with compose-up blocked
+        // until the patch is applied.
+        builder.WithPipelineConfiguration(context =>
+        {
+            var bitwardenStep = context.Steps.FirstOrDefault(s => s.Name == bitwardenStepName);
+            if (bitwardenStep is null)
+            {
+                return;
+            }
+
+            foreach (var computeEnv in context.Model.Resources.OfType<IComputeEnvironmentResource>())
+            {
+                string prepareStepName = $"prepare-{computeEnv.Name}";
+                string composeUpStepName = $"docker-compose-up-{computeEnv.Name}";
+
+                if (context.Steps.Any(s => s.Name == prepareStepName))
+                {
+                    bitwardenStep.DependsOn(prepareStepName);
+                }
+
+                var composeUpStep = context.Steps.FirstOrDefault(s => s.Name == composeUpStepName);
+                composeUpStep?.DependsOn(bitwardenStepName);
+            }
+        });
 
         var resourceBuilder = builder.WithInitialState(new CustomResourceSnapshot
         {
