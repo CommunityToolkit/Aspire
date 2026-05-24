@@ -488,6 +488,7 @@ public static class BitwardenSecretManagerExtensions
         builder.WithPipelineStepFactory(
             $"bitwarden-{builder.Resource.Name}-reconcile",
             async context => await BitwardenSecretManagerDeploymentStep.ExecuteAsync(context, builder.Resource.Name).ConfigureAwait(false),
+            dependsOn: [WellKnownPipelineSteps.DeployPrereq],
             requiredBy: [WellKnownPipelineSteps.Deploy],
             tags: [WellKnownPipelineTags.ProvisionInfrastructure]
         );
