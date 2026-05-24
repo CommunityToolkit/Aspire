@@ -4,10 +4,10 @@ using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
 
-public class BitwardenSecretManagerReconcilerTests
+public class BitwardenSecretManagerProvisionerTests
 {
     [Fact]
-    public async Task InitializeAsync_CreatesProjectAndManagedSecret()
+    public async Task ProvisionAsync_CreatesProjectAndManagedSecret()
     {
         var organizationId = Guid.NewGuid();
         var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
@@ -33,18 +33,19 @@ public class BitwardenSecretManagerReconcilerTests
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
             using var app = appBuilder.Build();
-            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            var result = await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
 
-            Assert.NotEqual(Guid.Empty, result.ProjectId);
-            Assert.Equal(result.ProjectId, bitwarden.Resource.ProjectId);
+            Assert.NotEqual(Guid.Empty, bitwarden.Resource.ProjectId!.Value);
             Assert.Single(fakeProvider.CreatedProjects);
             Assert.Single(fakeProvider.CreatedSecrets);
             Assert.NotNull(managedSecret.Resource.SecretId);
             Assert.Equal("managed-secret-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
-            Assert.True(File.Exists(result.CacheFile));
+            Assert.True(File.Exists(bitwarden.Resource.ResolvedCacheFile));
             Assert.Equal(authStateFile, fakeProvider.AuthCacheFile);
         }
         finally
@@ -62,7 +63,7 @@ public class BitwardenSecretManagerReconcilerTests
     }
 
     [Fact]
-    public async Task InitializeAsync_UsesParameterBackedProjectName()
+    public async Task ProvisionAsync_UsesParameterBackedProjectName()
     {
         var organizationId = Guid.NewGuid();
         var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
@@ -84,10 +85,12 @@ public class BitwardenSecretManagerReconcilerTests
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
             using var app = appBuilder.Build();
-            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
 
             Assert.Single(fakeProvider.CreatedProjects);
             Assert.Equal("shared-team-secrets", fakeProvider.Projects[fakeProvider.CreatedProjects[0]].Name);
@@ -103,7 +106,7 @@ public class BitwardenSecretManagerReconcilerTests
     }
 
     [Fact]
-    public async Task InitializeAsync_UsesExistingProjectWithoutRenaming()
+    public async Task ProvisionAsync_UsesExistingProjectWithoutRenaming()
     {
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
@@ -125,10 +128,12 @@ public class BitwardenSecretManagerReconcilerTests
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
             using var app = appBuilder.Build();
-            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
 
             Assert.Equal(existingProjectId, bitwarden.Resource.ProjectId);
             Assert.Empty(fakeProvider.CreatedProjects);
@@ -144,7 +149,7 @@ public class BitwardenSecretManagerReconcilerTests
     }
 
     [Fact]
-    public async Task InitializeAsync_AdoptsExplicitExistingSecret()
+    public async Task ProvisionAsync_AdoptsExplicitExistingSecret()
     {
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
@@ -173,10 +178,12 @@ public class BitwardenSecretManagerReconcilerTests
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
             using var app = appBuilder.Build();
-            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
 
             Assert.Equal(existingSecretId, managedSecret.Resource.SecretId);
             Assert.Contains(existingSecretId, fakeProvider.UpdatedSecrets);
@@ -192,7 +199,7 @@ public class BitwardenSecretManagerReconcilerTests
     }
 
     [Fact]
-    public async Task InitializeAsync_AdoptsExplicitExistingSecret_DoesNotUpdateWhenUnchanged()
+    public async Task ProvisionAsync_AdoptsExplicitExistingSecret_DoesNotUpdateWhenUnchanged()
     {
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
@@ -221,10 +228,12 @@ public class BitwardenSecretManagerReconcilerTests
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
             using var app = appBuilder.Build();
-            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
-            await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
 
             Assert.Equal(existingSecretId, managedSecret.Resource.SecretId);
             Assert.DoesNotContain(existingSecretId, fakeProvider.UpdatedSecrets);
@@ -240,7 +249,7 @@ public class BitwardenSecretManagerReconcilerTests
     }
 
     [Fact]
-    public async Task InitializeAsync_WhenManagedSecretIsAlsoReferencedByName_TreatsItAsSingleSecret()
+    public async Task ProvisionAsync_WhenManagedSecretIsAlsoReferencedByName_TreatsItAsSingleSecret()
     {
         var organizationId = Guid.NewGuid();
         var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
@@ -264,13 +273,15 @@ public class BitwardenSecretManagerReconcilerTests
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
             using var app = appBuilder.Build();
-            var reconciler = app.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerReconciler>();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
 
             Assert.Same(managedSecret.Resource, reference);
             Assert.Single(bitwarden.Resource.DeclaredSecretReferences);
 
-            await reconciler.InitializeAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
 
             Assert.NotNull(managedSecret.Resource.SecretId);
             Assert.Single(fakeProvider.CreatedSecrets);

@@ -542,27 +542,82 @@ public static class BitwardenSecretManagerExtensions
 
         builder.ApplicationBuilder.Services.TryAddSingleton<IBitwardenSecretManagerProviderFactory, BitwardenSecretManagerProviderFactory>();
         builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenStore>();
-        builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenSecretManagerReconciler>();
+        builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenSecretManagerProvisioner>();
 
-        string bitwardenStepName = $"bitwarden-{builder.Resource.Name}-reconcile";
+        var resource = builder.Resource;
+        string n = resource.Name;
+        string authenticateStepName = $"bitwarden-authenticate-{n}";
+        string provisionProjectStepName = $"bitwarden-provision-project-{n}";
+        string provisionSecretsStepName = $"bitwarden-provision-secrets-{n}";
+        string patchEnvStepName = $"bitwarden-patch-env-{n}";
 
-        builder.WithPipelineStepFactory(
-            bitwardenStepName,
-            async context => await BitwardenSecretManagerDeploymentStep.ExecuteAsync(context, builder.Resource.Name).ConfigureAwait(false),
-            dependsOn: [WellKnownPipelineSteps.DeployPrereq],
-            requiredBy: [WellKnownPipelineSteps.Deploy],
-            tags: [WellKnownPipelineTags.ProvisionInfrastructure]
-        );
+        builder.WithPipelineStepFactory(async _ =>
+        {
+            PipelineStep authenticateStep = new()
+            {
+                Name = authenticateStepName,
+                Description = $"Authenticate with Bitwarden Secrets Manager",
+                Action = async ctx =>
+                {
+                    var provisioner = ctx.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+                    await provisioner.AuthenticateAsync(resource, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
+                },
+                DependsOnSteps = [WellKnownPipelineSteps.DeployPrereq],
+                Resource = resource
+            };
 
-        // Workaround: PrepareAsync (Aspire.Hosting.Docker) only resolves ParameterResource and
-        // ContainerImageReference sources — custom IValueProvider types are skipped, leaving blank
-        // values in .env.{env}. Until PrepareAsync handles IValueProvider generically, wire the
-        // Bitwarden step to run after prepare-{env} and patch the blanks, with compose-up blocked
-        // until the patch is applied.
+            PipelineStep provisionProjectStep = new()
+            {
+                Name = provisionProjectStepName,
+                Description = $"Provision Bitwarden project '{n}'",
+                Action = async ctx =>
+                {
+                    var provisioner = ctx.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+                    await provisioner.ProvisionProjectAsync(resource, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
+                },
+                DependsOnSteps = [authenticateStepName],
+                Resource = resource
+            };
+
+            PipelineStep provisionSecretsStep = new()
+            {
+                Name = provisionSecretsStepName,
+                Description = $"Provision Bitwarden secrets for '{n}'",
+                Action = async ctx =>
+                {
+                    var provisioner = ctx.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+                    await provisioner.ProvisionSecretsAsync(resource, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
+                },
+                DependsOnSteps = [provisionProjectStepName],
+                RequiredBySteps = [WellKnownPipelineSteps.Deploy],
+                Tags = [WellKnownPipelineTags.ProvisionInfrastructure],
+                Resource = resource
+            };
+
+            // Workaround: PrepareAsync (Aspire.Hosting.Docker) only resolves ParameterResource and
+            // ContainerImageReference sources — custom IValueProvider types are skipped, leaving blank
+            // values in .env.{env}. Until PrepareAsync handles IValueProvider generically, this step
+            // patches the blanks after prepare-{env} runs. Remove once fixed upstream.
+            PipelineStep patchEnvStep = new()
+            {
+                Name = patchEnvStepName,
+                Description = $"Apply Bitwarden-resolved values to environment files for '{n}'",
+                Action = async ctx =>
+                {
+                    await BitwardenSecretManagerDeploymentStep.PatchEnvFilesAsync(ctx, resource).ConfigureAwait(false);
+                },
+                DependsOnSteps = [provisionSecretsStepName],
+                RequiredBySteps = [WellKnownPipelineSteps.Deploy],
+                Resource = resource
+            };
+
+            return new[] { authenticateStep, provisionProjectStep, provisionSecretsStep, patchEnvStep };
+        });
+
         builder.WithPipelineConfiguration(context =>
         {
-            var bitwardenStep = context.Steps.FirstOrDefault(s => s.Name == bitwardenStepName);
-            if (bitwardenStep is null)
+            var patchEnvStep = context.Steps.FirstOrDefault(s => s.Name == patchEnvStepName);
+            if (patchEnvStep is null)
             {
                 return;
             }
@@ -574,11 +629,11 @@ public static class BitwardenSecretManagerExtensions
 
                 if (context.Steps.Any(s => s.Name == prepareStepName))
                 {
-                    bitwardenStep.DependsOn(prepareStepName);
+                    patchEnvStep.DependsOn(prepareStepName);
                 }
 
                 var composeUpStep = context.Steps.FirstOrDefault(s => s.Name == composeUpStepName);
-                composeUpStep?.DependsOn(bitwardenStepName);
+                composeUpStep?.DependsOn(patchEnvStepName);
             }
         });
 
@@ -605,8 +660,10 @@ public static class BitwardenSecretManagerExtensions
 
                 try
                 {
-                    BitwardenSecretManagerReconciler reconciler = eventContext.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-                    BitwardenReconciliationResult result = await reconciler.InitializeAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
+                    BitwardenSecretManagerProvisioner provisioner = eventContext.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+                    await provisioner.AuthenticateAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
+                    await provisioner.ProvisionProjectAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
+                    await provisioner.ProvisionSecretsAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
 
                     await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
                     {
@@ -615,8 +672,8 @@ public static class BitwardenSecretManagerExtensions
                         Properties =
                         [
                             new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                            new("ProjectId", result.ProjectId.ToString("D")),
-                            new("CacheFile", result.CacheFile)
+                            new("ProjectId", resource.ProjectId!.Value.ToString("D")),
+                            new("CacheFile", resource.ResolvedCacheFile!)
                         ]
                     }).ConfigureAwait(false);
                 }

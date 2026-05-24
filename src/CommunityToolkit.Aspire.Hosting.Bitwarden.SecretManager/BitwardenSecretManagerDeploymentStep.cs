@@ -10,45 +10,16 @@ using Microsoft.Extensions.Logging;
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 
 /// <summary>
-/// Runs the Bitwarden reconciliation during the AppHost deployment pipeline.
+/// Patches Bitwarden-resolved values into environment files written by <c>prepare-{env}</c>.
 /// </summary>
 /// <remarks>
-/// PatchEnvFilesAsync is a workaround for PrepareAsync (Aspire.Hosting.Docker) not calling
-/// GetValueAsync on custom IValueProvider sources — it only resolves ParameterResource and
-/// ContainerImageReference, leaving Bitwarden-derived env vars blank. Remove once fixed upstream.
+/// Workaround for PrepareAsync (Aspire.Hosting.Docker) not calling GetValueAsync on custom
+/// IValueProvider sources — it only resolves ParameterResource and ContainerImageReference,
+/// leaving Bitwarden-derived env vars blank. Remove once fixed upstream.
 /// </remarks>
 internal static class BitwardenSecretManagerDeploymentStep
 {
-    public static async Task ExecuteAsync(PipelineStepContext context, string resourceName)
-    {
-        BitwardenSecretManagerResource? bitwarden = context.Model.Resources
-            .OfType<BitwardenSecretManagerResource>()
-            .FirstOrDefault(resource => string.Equals(resource.Name, resourceName, StringComparison.Ordinal));
-
-        if (bitwarden is null)
-        {
-            return;
-        }
-
-        context.Logger.LogInformation("Starting Bitwarden deployment step as part of the deployment pipeline for resource '{ResourceName}'.", resourceName);
-
-        try
-        {
-            BitwardenSecretManagerReconciler reconciler = context.Services.GetRequiredService<BitwardenSecretManagerReconciler>();
-            BitwardenReconciliationResult result = await reconciler.InitializeAsync(bitwarden, context.Services, context.Logger, context.CancellationToken).ConfigureAwait(false);
-
-            context.Logger.LogInformation("Bitwarden deployment step completed successfully for resource '{ResourceName}'. Project ID: {ProjectId}", resourceName, result.ProjectId.ToString("D"));
-
-            await PatchEnvFilesAsync(context, bitwarden).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            context.Logger.LogError(ex, "Bitwarden deployment step failed during deployment for resource '{ResourceName}'.", resourceName);
-            throw;
-        }
-    }
-
-    private static async Task PatchEnvFilesAsync(PipelineStepContext context, BitwardenSecretManagerResource bitwarden)
+    internal static async Task PatchEnvFilesAsync(PipelineStepContext context, BitwardenSecretManagerResource bitwarden)
     {
         var outputService = context.Services.GetRequiredService<IPipelineOutputService>();
         var hostEnvironment = context.Services.GetService<IHostEnvironment>();

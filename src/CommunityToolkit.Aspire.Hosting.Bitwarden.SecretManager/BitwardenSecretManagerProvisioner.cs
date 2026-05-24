@@ -9,13 +9,17 @@ using Microsoft.Extensions.Logging;
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 
 /// <summary>
-/// Reconciles the declared Bitwarden graph during AppHost startup.
+/// Provisions the declared Bitwarden project and secrets graph during the AppHost deployment pipeline.
 /// </summary>
-internal sealed class BitwardenSecretManagerReconciler(
+internal sealed class BitwardenSecretManagerProvisioner(
     IBitwardenSecretManagerProviderFactory providerFactory,
     BitwardenStore bitwardenStore)
 {
-    public async Task<BitwardenReconciliationResult> InitializeAsync(
+    /// <summary>
+    /// Authenticates with Bitwarden Secrets Manager and sets up the cache paths on the resource.
+    /// Must run before <see cref="ProvisionProjectAsync"/> and <see cref="ProvisionSecretsAsync"/>.
+    /// </summary>
+    public async Task AuthenticateAsync(
         BitwardenSecretManagerResource resource,
         IServiceProvider services,
         ILogger logger,
@@ -26,30 +30,20 @@ internal sealed class BitwardenSecretManagerReconciler(
         ArgumentNullException.ThrowIfNull(logger);
 
         resource.ResetResolvedValues();
-        logger.LogDebug("Starting Bitwarden SecretManager initialization for resource '{ResourceName}'.", resource.Name);
+        logger.LogDebug("Starting Bitwarden authentication for resource '{ResourceName}'.", resource.Name);
 
         try
         {
-            IInteractionService? interactionService = services.GetService<IInteractionService>();
-
-            logger.LogDebug("Resolving organization ID for resource '{ResourceName}'.", resource.Name);
-            Guid organizationId = await ResolveOrganizationIdAsync(resource, cancellationToken).ConfigureAwait(false);
-            logger.LogDebug("Resolved organization ID: {OrganizationId}.", organizationId);
-
-            logger.LogDebug("Resolving management access token for resource '{ResourceName}'.", resource.Name);
-            string accessToken = await ResolveManagementAccessTokenAsync(resource, cancellationToken).ConfigureAwait(false);
-            logger.LogDebug("Successfully resolved management access token.");
-
-            logger.LogDebug("Resolving remote project name for resource '{ResourceName}'.", resource.Name);
-            string remoteProjectName = await ResolveProjectNameAsync(resource, cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
+            string remoteProjectName = await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
             resource.ResolvedRemoteProjectName = remoteProjectName;
+            logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
 
-            logger.LogDebug("Loading Bitwarden AppHost cache for resource '{ResourceName}' with project name '{ProjectName}'.", resource.Name, remoteProjectName);
             string authCachePath = ResolveAuthCachePath(resource, services);
             BitwardenCacheContext cacheContext = await bitwardenStore.LoadAsync(resource, remoteProjectName, authCachePath, cancellationToken).ConfigureAwait(false);
             resource.ResolvedCacheFile = cacheContext.CachePath;
             logger.LogInformation("Loaded Bitwarden AppHost cache from '{AppHostCachePath}'.", cacheContext.CachePath);
+
+            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
 
             logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
             await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
@@ -58,18 +52,93 @@ internal sealed class BitwardenSecretManagerReconciler(
             try
             {
                 provider.Login(accessToken, cacheContext.AuthCachePath);
-                logger.LogDebug("Successfully authenticated with Bitwarden provider.");
+                logger.LogInformation("Successfully authenticated with Bitwarden Secrets Manager for resource '{ResourceName}'.", resource.Name);
             }
             catch (BitwardenAuthException ex)
             {
-                logger.LogError(ex, "Failed to authenticate with Bitwarden provider for resource '{ResourceName}'. Verify that the access token is valid and has the necessary permissions.", resource.Name);
+                logger.LogError(ex, "Failed to authenticate with Bitwarden Secrets Manager for resource '{ResourceName}'. Verify that the access token is valid and has the necessary permissions.", resource.Name);
                 throw new DistributedApplicationException($"Bitwarden authentication failed for resource '{resource.Name}': The provided access token is invalid or lacks the required permissions. Please verify the token and try again.", ex);
             }
+        }
+        catch (Exception ex) when (ex is not DistributedApplicationException)
+        {
+            logger.LogError(ex, "Bitwarden authentication failed for resource '{ResourceName}'.", resource.Name);
+            throw;
+        }
+    }
 
-            logger.LogDebug("Reconciling Bitwarden project for resource '{ResourceName}'.", resource.Name);
+    /// <summary>
+    /// Creates or updates the remote Bitwarden project and binds the resolved project ID on the resource.
+    /// Requires <see cref="AuthenticateAsync"/> to have completed successfully first.
+    /// </summary>
+    public async Task ProvisionProjectAsync(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        logger.LogDebug("Starting Bitwarden project provisioning for resource '{ResourceName}'.", resource.Name);
+
+        try
+        {
+            string remoteProjectName = resource.ResolvedRemoteProjectName
+                ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
+
+            string authCachePath = ResolveAuthCachePath(resource, services);
+            BitwardenCacheContext cacheContext = await bitwardenStore.LoadAsync(resource, remoteProjectName, authCachePath, cancellationToken).ConfigureAwait(false);
+
+            Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
+            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
+            provider.Login(accessToken, cacheContext.AuthCachePath);
+
             BitwardenProjectInfo project = ReconcileProject(resource, remoteProjectName, cacheContext.Cache, provider, organizationId, logger);
             resource.BindResolvedProjectId(project.Id);
-            logger.LogInformation("Successfully reconciled project {ProjectId} for resource '{ResourceName}'.", project.Id, resource.Name);
+            logger.LogInformation("Successfully provisioned project {ProjectId} for resource '{ResourceName}'.", project.Id, resource.Name);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Bitwarden project provisioning failed for resource '{ResourceName}'.", resource.Name);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Creates or updates managed secrets and validates declared secret references, then saves the AppHost cache.
+    /// Requires <see cref="ProvisionProjectAsync"/> to have completed successfully first.
+    /// </summary>
+    public async Task ProvisionSecretsAsync(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        logger.LogDebug("Starting Bitwarden secrets provisioning for resource '{ResourceName}'.", resource.Name);
+
+        try
+        {
+            string remoteProjectName = resource.ResolvedRemoteProjectName
+                ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
+
+            string authCachePath = ResolveAuthCachePath(resource, services);
+            BitwardenCacheContext cacheContext = await bitwardenStore.LoadAsync(resource, remoteProjectName, authCachePath, cancellationToken).ConfigureAwait(false);
+
+            Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
+            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+
+            IInteractionService? interactionService = services.GetService<IInteractionService>();
+
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
+            provider.Login(accessToken, cacheContext.AuthCachePath);
 
             Dictionary<string, Guid> staleManagedMappings = cacheContext.Cache.ManagedSecretIds
                 .Where(entry => resource.ManagedSecrets.All(secret => !string.Equals(secret.LocalName, entry.Key, StringComparison.OrdinalIgnoreCase)))
@@ -82,7 +151,7 @@ internal sealed class BitwardenSecretManagerReconciler(
 
             BitwardenLookupContext lookupContext = new(provider, organizationId);
 
-            logger.LogInformation("Reconciling {ManagedSecretCount} managed secrets for resource '{ResourceName}'.", resource.ManagedSecrets.Count, resource.Name);
+            logger.LogInformation("Provisioning {ManagedSecretCount} managed secrets for resource '{ResourceName}'.", resource.ManagedSecrets.Count, resource.Name);
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
             {
                 logger.LogDebug("Processing managed secret '{SecretName}' (remote name: {RemoteName}).", secret.LocalName, secret.RemoteName);
@@ -96,18 +165,17 @@ internal sealed class BitwardenSecretManagerReconciler(
             logger.LogInformation("Validating {DeclaredSecretCount} declared secret references for resource '{ResourceName}'.", resource.DeclaredSecretReferences.Count, resource.Name);
             await ValidateDeclaredSecretReferencesAsync(resource, cacheContext.Cache, lookupContext, interactionService, logger, cancellationToken).ConfigureAwait(false);
 
-            cacheContext.Cache.ProjectId = project.Id;
+            cacheContext.Cache.ProjectId = resource.ProjectId;
 
             logger.LogDebug("Saving Bitwarden state file to '{StatePath}'.", cacheContext.CachePath);
             await bitwardenStore.SaveAsync(cacheContext.CachePath, cacheContext.Cache, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Successfully saved Bitwarden state file.");
 
-            logger.LogInformation("Bitwarden SecretManager initialization completed successfully for resource '{ResourceName}' with project {ProjectId}.", resource.Name, project.Id);
-            return new BitwardenReconciliationResult(project.Id, cacheContext.CachePath);
+            logger.LogInformation("Bitwarden secrets provisioning completed for resource '{ResourceName}' with project {ProjectId}.", resource.Name, resource.ProjectId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Bitwarden SecretManager initialization failed for resource '{ResourceName}'.", resource.Name);
+            logger.LogError(ex, "Bitwarden secrets provisioning failed for resource '{ResourceName}'.", resource.Name);
             throw;
         }
     }
@@ -272,7 +340,7 @@ internal sealed class BitwardenSecretManagerReconciler(
         lookupContext.CacheSecret(secret);
         secretResource.SecretId = secret.Id;
         resource.BindResolvedSecret(secret.Id, secretResource.RemoteName, secret.Value);
-        logger.LogInformation("Successfully reconciled managed secret '{SecretName}' with ID {SecretId}.", secretResource.LocalName, secret.Id);
+        logger.LogInformation("Successfully provisioned managed secret '{SecretName}' with ID {SecretId}.", secretResource.LocalName, secret.Id);
     }
 
     private static async Task ValidateDeclaredSecretReferencesAsync(
@@ -464,94 +532,6 @@ internal sealed class BitwardenSecretManagerReconciler(
         return value;
     }
 
-    private static async Task<Guid> ResolveOrganizationIdAsync(
-        BitwardenSecretManagerResource resource,
-        CancellationToken cancellationToken)
-    {
-        if (resource.ConfiguredOrganizationId is Guid literalOrganizationId)
-        {
-            return literalOrganizationId;
-        }
-
-        ParameterResource organizationParameter = resource.ConfiguredOrganizationIdParameter
-            ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' does not have an organization configured.");
-
-        string organizationValue = await ResolveRequiredParameterValueAsync(
-            organizationParameter,
-            resource,
-            "organization ID",
-            cancellationToken).ConfigureAwait(false);
-
-        if (!Guid.TryParse(organizationValue, out Guid organizationId))
-        {
-            throw new DistributedApplicationException(
-                $"Bitwarden organization parameter '{organizationParameter.Name}' for resource '{resource.Name}' did not resolve to a valid GUID.");
-        }
-
-        return organizationId;
-    }
-
-    private static async Task<string> ResolveProjectNameAsync(
-        BitwardenSecretManagerResource resource,
-        CancellationToken cancellationToken)
-    {
-        if (!string.IsNullOrWhiteSpace(resource.RemoteProjectName))
-        {
-            return resource.RemoteProjectName;
-        }
-
-        ParameterResource projectNameParameter = resource.ConfiguredRemoteProjectNameParameter
-            ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' does not have a project name configured.");
-
-        string projectName = await ResolveRequiredParameterValueAsync(
-            projectNameParameter,
-            resource,
-            "project name",
-            cancellationToken).ConfigureAwait(false);
-
-        if (string.IsNullOrWhiteSpace(projectName))
-        {
-            throw new DistributedApplicationException(
-                $"Bitwarden project name parameter '{projectNameParameter.Name}' for resource '{resource.Name}' did not resolve to a value.");
-        }
-
-        return projectName;
-    }
-
-    private static string ResolveAuthCachePath(
-        BitwardenSecretManagerResource resource,
-        IServiceProvider services)
-    {
-        // AppAuthCacheFile/AppAuthCacheFileParameter are injected into the deployed app via env vars.
-        // The reconciler runs on the AppHost, so it only uses AuthCacheFile or the Aspire store default.
-
-        if (resource.AuthCacheFile is { Length: > 0 } authCacheFile)
-        {
-            if (Path.IsPathRooted(authCacheFile))
-            {
-                return authCacheFile;
-            }
-
-            IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
-            return Path.GetFullPath(Path.Combine(aspireStore.BasePath, authCacheFile));
-        }
-
-        IAspireStore store = services.GetRequiredService<IAspireStore>();
-        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
-        return Path.Combine(store.BasePath, "bitwarden", $"{safeResourceName}.auth-cache");
-    }
-
-    private static Task<string> ResolveManagementAccessTokenAsync(
-        BitwardenSecretManagerResource resource,
-        CancellationToken cancellationToken)
-    {
-        return ResolveRequiredParameterValueAsync(
-            resource.ManagementAccessToken,
-            resource,
-            "management access token",
-            cancellationToken);
-    }
-
     private static async Task<string> ResolveRequiredParameterValueAsync(
         ParameterResource parameter,
         BitwardenSecretManagerResource resource,
@@ -611,9 +591,27 @@ internal sealed class BitwardenSecretManagerReconciler(
 
         return selectedSecretId;
     }
-}
 
-internal sealed record BitwardenReconciliationResult(Guid ProjectId, string CacheFile);
+    private static string ResolveAuthCachePath(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services)
+    {
+        if (resource.AuthCacheFile is { Length: > 0 } authCacheFile)
+        {
+            if (Path.IsPathRooted(authCacheFile))
+            {
+                return authCacheFile;
+            }
+
+            IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
+            return Path.GetFullPath(Path.Combine(aspireStore.BasePath, authCacheFile));
+        }
+
+        IAspireStore store = services.GetRequiredService<IAspireStore>();
+        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
+        return Path.Combine(store.BasePath, "bitwarden", $"{safeResourceName}.auth-cache");
+    }
+}
 
 internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider provider, Guid organizationId)
 {
