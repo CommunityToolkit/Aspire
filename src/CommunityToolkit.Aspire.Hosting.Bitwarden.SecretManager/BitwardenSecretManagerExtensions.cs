@@ -576,6 +576,7 @@ public static class BitwardenSecretManagerExtensions
                     await provisioner.ProvisionProjectAsync(resource, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
                 },
                 DependsOnSteps = [authenticateStepName],
+                Tags = [WellKnownPipelineTags.ProvisionInfrastructure],
                 Resource = resource
             };
 
