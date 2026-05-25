@@ -3,6 +3,9 @@
     "path": "apphost.ts",
     "language": "typescript/nodejs"
   },
+  "sdk": {
+    "version": "13.3.0"
+  },
   "profiles": {
     "https": {
       "applicationUrl": "https://localhost:29750;http://localhost:28931",
@@ -13,6 +16,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.KurrentDB": ""
+    "CommunityToolkit.Aspire.Hosting.KurrentDB": "../../../src/CommunityToolkit.Aspire.Hosting.KurrentDB/CommunityToolkit.Aspire.Hosting.KurrentDB.csproj"
   }
 }

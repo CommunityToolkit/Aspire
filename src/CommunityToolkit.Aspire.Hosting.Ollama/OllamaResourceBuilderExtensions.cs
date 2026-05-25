@@ -193,7 +193,7 @@ public static partial class OllamaResourceBuilderExtensions
 
                 if (!success || endpoint is null)
                 {
-                    return new ExecuteCommandResult { Success = false, ErrorMessage = "Invalid connection string" };
+                    return new ExecuteCommandResult { Success = false, Message = "Invalid connection string" };
                 }
 
                 var ollamaClient = new OllamaApiClient(endpoint);

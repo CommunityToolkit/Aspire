@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="OpenFeature.Contrib.Providers.Flagd" />
+    <PackageReference Include="OpenFeature.Providers.Flagd" />
     <PackageReference Include="OpenFeature.Providers.Ofrep" />
   </ItemGroup>
 
