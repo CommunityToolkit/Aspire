@@ -31,3 +31,4 @@ yarn.lock
 solr-data
 *.lscache
 apphost.js
+affected-tests
