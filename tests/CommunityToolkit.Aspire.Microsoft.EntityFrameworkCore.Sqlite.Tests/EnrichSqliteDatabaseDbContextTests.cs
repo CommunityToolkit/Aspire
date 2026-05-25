@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests;
@@ -9,13 +8,12 @@ namespace CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.Tests;
 public class EnrichSqliteDatabaseDbContextTests
 {
     [Fact]
-    public void EnrichSqliteDatabaseDbContext_RegistersDbContext()
+    public void EnrichSqliteDatabaseDbContext_UsesAlreadyRegisteredDbContext()
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "Data Source=:memory:")
-        ]);
+        builder.Services.AddDbContext<TestDbContext>(options =>
+            options.UseSqlite("Data Source=:memory:"));
 
         // Act
         builder.EnrichSqliteDatabaseDbContext<TestDbContext>();
@@ -27,6 +25,17 @@ public class EnrichSqliteDatabaseDbContextTests
     }
 
     [Fact]
+    public void EnrichSqliteDatabaseDbContext_ThrowsWhenDbContextIsNotRegistered()
+    {
+        // Arrange
+        var builder = WebApplication.CreateBuilder();
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() =>
+            builder.EnrichSqliteDatabaseDbContext<TestDbContext>());
+    }
+
+    [Fact]
     public void EnrichSqliteDatabaseDbContext_ThrowsWhenBuilderIsNull()
     {
         // Act & Assert
@@ -35,13 +44,12 @@ public class EnrichSqliteDatabaseDbContextTests
     }
 
     [Fact]
-    public void EnrichSqliteDatabaseDbContext_DisablesOpenTelemetryWhenFalse()
+    public void EnrichSqliteDatabaseDbContext_DisablesOpenTelemetryWhenConfigured()
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "Data Source=:memory:")
-        ]);
+        builder.Services.AddDbContextPool<TestDbContext>(options =>
+            options.UseSqlite("Data Source=:memory:"));
 
         // Act
         builder.EnrichSqliteDatabaseDbContext<TestDbContext>(settings => settings.DisableTracing = true);
@@ -57,9 +65,8 @@ public class EnrichSqliteDatabaseDbContextTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        builder.Configuration.AddInMemoryCollection([
-            new KeyValuePair<string, string?>("ConnectionStrings:DefaultConnection", "Data Source=:memory:")
-        ]);
+        builder.Services.AddDbContext<TestDbContext>(options =>
+            options.UseSqlite("Data Source=:memory:"));
 
         // Act
         builder.EnrichSqliteDatabaseDbContext<TestDbContext>(settings => settings.DisableTracing = false);
@@ -70,7 +77,7 @@ public class EnrichSqliteDatabaseDbContextTests
         Assert.NotNull(dbContext);
 
         // Verify OpenTelemetry services are registered (basic smoke test)
-        var services = app.Services.GetServices<IHostedService>().ToList();
-        Assert.True(services.Count > 0, "Services should be registered");
+        var healthCheckService = app.Services.GetService<HealthCheckService>();
+        Assert.NotNull(healthCheckService);
     }
 }

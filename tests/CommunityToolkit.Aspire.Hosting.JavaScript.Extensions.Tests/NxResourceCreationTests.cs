@@ -59,6 +59,7 @@ public class NxResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
+    [InlineData("bun")]
     public async Task Nx_WithPackageManagerLaunch_InfersFromInstallerWhenNotProvided(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -70,6 +71,7 @@ public class NxResourceCreationTests
             "npm" => nxBuilder.WithNpm(),
             "yarn" => nxBuilder.WithYarn(),
             "pnpm" => nxBuilder.WithPnpm(),
+            "bun" => nxBuilder.WithBun(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager), $"Unsupported package manager: {packageManager}"),
         }).WithPackageManagerLaunch();
 
@@ -93,6 +95,7 @@ public class NxResourceCreationTests
             "npm" => "npx",
             "yarn" => "yarn",
             "pnpm" => "pnpx",
+            "bun" => "bunx",
             _ => packageManager
         }, nxAppResource.Command);
         var nxAppArgs = await nxAppResource.GetArgumentListAsync();
@@ -178,6 +181,7 @@ public class NxResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
+    [InlineData("bun")]
     public async Task Nx_WithPackageManager_WithoutRunWith_DoesNotAffectAppExecution(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -189,6 +193,7 @@ public class NxResourceCreationTests
             "npm" => nxBuilder.WithNpm(),
             "yarn" => nxBuilder.WithYarn(),
             "pnpm" => nxBuilder.WithPnpm(),
+            "bun" => nxBuilder.WithBun(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
         };
 
@@ -273,6 +278,7 @@ public class NxResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
+    [InlineData("bun")]
     public async Task Nx_MultipleApps_AllInheritExecutionAnnotation(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -283,6 +289,7 @@ public class NxResourceCreationTests
             "npm" => nx.WithNpm(),
             "yarn" => nx.WithYarn(),
             "pnpm" => nx.WithPnpm(),
+            "bun" => nx.WithBun(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
         };
         nx = nx.WithPackageManagerLaunch();
@@ -304,6 +311,7 @@ public class NxResourceCreationTests
                 "npm" => "npx",
                 "yarn" => "yarn",
                 "pnpm" => "pnpx",
+                "bun" => "bunx",
                 _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
             };
 
