@@ -22,6 +22,15 @@ param(
 
     [int]$WaitTimeoutSeconds = 180,
 
+    [string]$HttpProbeResource = "",
+
+    [string]$HttpProbeEndpointName = "http",
+
+    [string]$HttpProbePath = "",
+
+    [AllowEmptyString()]
+    [string]$HttpProbeExpectedText,
+
     [string[]]$Secrets = @()
 )
 
@@ -67,6 +76,26 @@ function Invoke-ExternalCommand {
         $joinedArguments = [string]::Join(" ", $Arguments)
         throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $joinedArguments"
     }
+}
+
+function Invoke-ExternalCommandCaptureOutput {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    $resolvedFilePath = Resolve-ExternalCommandPath $FilePath
+    $output = & $resolvedFilePath @Arguments 2>&1
+
+    if ($LASTEXITCODE -ne 0) {
+        $joinedArguments = [string]::Join(" ", $Arguments)
+        throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $joinedArguments"
+    }
+
+    return (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine)
 }
 
 function Invoke-CleanupStep {
@@ -125,6 +154,78 @@ function Remove-PathWithRetry {
 
             Start-Sleep -Milliseconds (250 * $attempt)
         }
+    }
+}
+
+function ConvertFrom-AspireJsonOutput {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Text
+    )
+
+    $jsonStartIndex = $Text.IndexOf('{')
+    $jsonEndIndex = $Text.LastIndexOf('}')
+
+    if ($jsonStartIndex -lt 0 -or $jsonEndIndex -lt $jsonStartIndex) {
+        throw "Could not find a JSON payload in Aspire command output."
+    }
+
+    $jsonText = $Text.Substring($jsonStartIndex, ($jsonEndIndex - $jsonStartIndex) + 1)
+    return $jsonText | ConvertFrom-Json -AsHashtable -Depth 100
+}
+
+function Get-ResourceEndpointUrl {
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable]$DescribePayload,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$EndpointName
+    )
+
+    $resource = @($DescribePayload["resources"]) |
+        Where-Object {
+            $_["displayName"] -eq $ResourceName -or $_["name"] -eq $ResourceName
+        } |
+        Select-Object -First 1
+
+    if ($null -eq $resource) {
+        throw "Resource '$ResourceName' was not present in 'aspire describe' output."
+    }
+
+    $endpoint = @($resource["urls"]) |
+        Where-Object { $_["name"] -eq $EndpointName } |
+        Select-Object -First 1
+
+    if ($null -eq $endpoint -or [string]::IsNullOrWhiteSpace($endpoint["url"])) {
+        throw "Resource '$ResourceName' did not expose endpoint '$EndpointName' in 'aspire describe' output."
+    }
+
+    return $endpoint["url"]
+}
+
+function Assert-HttpProbeResponse {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseUrl,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string]$ExpectedText
+    )
+
+    $probeUri = [System.Uri]::new([System.Uri]$BaseUrl, $Path)
+    $response = Invoke-WebRequest -Uri $probeUri -TimeoutSec 30
+    $actualText = $response.Content
+
+    if ($actualText -ne $ExpectedText) {
+        throw "HTTP probe for '$probeUri' returned '$actualText' instead of expected '$ExpectedText'."
     }
 }
 
@@ -227,6 +328,22 @@ foreach ($secret in $Secrets) {
     $key = $secret.Substring(0, $eqIndex)
     $value = $secret.Substring($eqIndex + 1)
     $parsedSecrets.Add(@($key, $value))
+}
+
+$hasHttpProbe =
+    -not [string]::IsNullOrWhiteSpace($HttpProbeResource) -or
+    -not [string]::IsNullOrWhiteSpace($HttpProbePath) -or
+    $PSBoundParameters.ContainsKey("HttpProbeExpectedText")
+
+if ($hasHttpProbe -and (
+        [string]::IsNullOrWhiteSpace($HttpProbeResource) -or
+        [string]::IsNullOrWhiteSpace($HttpProbePath) -or
+        -not $PSBoundParameters.ContainsKey("HttpProbeExpectedText"))) {
+    throw "HttpProbeResource, HttpProbePath, and HttpProbeExpectedText must all be provided together."
+}
+
+if ($hasHttpProbe -and [string]::IsNullOrWhiteSpace($HttpProbeEndpointName)) {
+    throw "HttpProbeEndpointName cannot be empty when HTTP probing is enabled."
 }
 
 try {
@@ -338,12 +455,20 @@ try {
             )
         }
 
-        Invoke-ExternalCommand "aspire" @(
+        $describeOutput = Invoke-ExternalCommandCaptureOutput "aspire" @(
             "describe",
             "--apphost", $resolvedAppHostPath,
             "--format", "Json",
             "--log-level", "debug"
         )
+
+        Write-Output $describeOutput
+
+        if ($hasHttpProbe) {
+            $describePayload = ConvertFrom-AspireJsonOutput $describeOutput
+            $endpointUrl = Get-ResourceEndpointUrl -DescribePayload $describePayload -ResourceName $HttpProbeResource -EndpointName $HttpProbeEndpointName
+            Assert-HttpProbeResponse -BaseUrl $endpointUrl -Path $HttpProbePath -ExpectedText $HttpProbeExpectedText
+        }
     }
     finally {
         Pop-Location

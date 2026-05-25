@@ -6,6 +6,7 @@
   "sdk": {
     "version": "13.3.0"
   },
+  "channel": "stable",
   "profiles": {
     "https": {
       "applicationUrl": "https://localhost:17453;http://localhost:15453",
@@ -15,7 +16,6 @@
       }
     }
   },
-  "channel": "stable",
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Perl": "../../../../src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj"
   }

@@ -15,6 +15,10 @@ public static class TypeScriptAppHostTest
     /// <param name="waitStatus">The Aspire resource status to wait for.</param>
     /// <param name="requiredCommands">Optional commands that must exist on <c>PATH</c> before validation runs.</param>
     /// <param name="useConfiguredPackages"><see langword="true"/> to validate the AppHost using the package mappings already present in <c>aspire.config.json</c> instead of packing a local polyglot package first.</param>
+    /// <param name="httpProbeResource">Optional resource display name to probe over HTTP after startup validation completes.</param>
+    /// <param name="httpProbePath">Optional relative path to request from the probed HTTP endpoint.</param>
+    /// <param name="httpProbeExpectedText">Optional exact response text expected from the HTTP probe.</param>
+    /// <param name="httpProbeEndpointName">The named endpoint to probe when <paramref name="httpProbeResource"/> is provided.</param>
     /// <param name="secrets">Optional dictionary of secret key-value pairs to set via <c>aspire secret set</c> before starting the app host.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public static async Task Run(
@@ -25,6 +29,10 @@ public static class TypeScriptAppHostTest
         string waitStatus = "healthy",
         IEnumerable<string>? requiredCommands = null,
         bool useConfiguredPackages = false,
+        string? httpProbeResource = null,
+        string? httpProbePath = null,
+        string? httpProbeExpectedText = null,
+        string httpProbeEndpointName = "http",
         Dictionary<string, string>? secrets = null,
         CancellationToken cancellationToken = default)
     {
@@ -36,6 +44,25 @@ public static class TypeScriptAppHostTest
         if (waitStatus is not "healthy" and not "up" and not "down")
         {
             throw new ArgumentException("Wait status must be one of 'healthy', 'up', or 'down'.", nameof(waitStatus));
+        }
+
+        bool hasHttpProbeConfiguration =
+            !string.IsNullOrWhiteSpace(httpProbeResource)
+            || !string.IsNullOrWhiteSpace(httpProbePath)
+            || httpProbeExpectedText is not null;
+
+        if (hasHttpProbeConfiguration &&
+            (string.IsNullOrWhiteSpace(httpProbeResource)
+            || string.IsNullOrWhiteSpace(httpProbePath)
+            || httpProbeExpectedText is null))
+        {
+            throw new ArgumentException(
+                "HTTP probing requires a resource name, request path, and expected response text.");
+        }
+
+        if (hasHttpProbeConfiguration && string.IsNullOrWhiteSpace(httpProbeEndpointName))
+        {
+            throw new ArgumentException("HTTP probe endpoint name cannot be empty.", nameof(httpProbeEndpointName));
         }
 
         List<string> resources = waitForResources
@@ -80,6 +107,18 @@ public static class TypeScriptAppHostTest
         if (useConfiguredPackages)
         {
             arguments.Add("-UseConfiguredPackages");
+        }
+
+        if (hasHttpProbeConfiguration)
+        {
+            arguments.Add("-HttpProbeResource");
+            arguments.Add(httpProbeResource!);
+            arguments.Add("-HttpProbePath");
+            arguments.Add(httpProbePath!);
+            arguments.Add("-HttpProbeExpectedText");
+            arguments.Add(httpProbeExpectedText!);
+            arguments.Add("-HttpProbeEndpointName");
+            arguments.Add(httpProbeEndpointName);
         }
 
         if (secrets is { Count: > 0 })

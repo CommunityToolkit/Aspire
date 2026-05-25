@@ -1,6 +1,6 @@
 # Perl TypeScript Support Migration Roadmap
 
-This roadmap turns the existing support plan in [perl-typescript-support-plan.md](perl-typescript-support-plan.md) into reviewable execution chunks for adding TypeScript AppHost support to CommunityToolkit.Aspire.Hosting.Perl. The target is the current `examples/perl/cpanm-api-integration` scenario first, and the guiding rule is that the exported TypeScript surface should be idiomatic for TypeScript callers rather than a literal copy of every C# overload. Based on the current plan and the existing ATS patterns already used elsewhere in the repo, there is no structural reason this migration cannot be made; the main risks are export-shape compatibility, generated SDK ergonomics, and environment-level validation.
+This roadmap turns the existing support plan in [perl-typescript-support-plan.md](perl-typescript-support-plan.md) into reviewable execution chunks for adding TypeScript AppHost support to CommunityToolkit.Aspire.Hosting.Perl. The target started with the current `examples/perl/cpanm-api-integration` scenario first, and the finish line is now the full public Perl AppHost-facing C# surface: every public API should be exported to TypeScript, including experimental APIs, while still preferring TypeScript-friendly shapes where overload translation is needed. Based on the current plan and the existing ATS patterns already used elsewhere in the repo, there is no structural reason this migration cannot be made; the main risks are export-shape compatibility, generated SDK ergonomics, and environment-level validation.
 
 Please as we do work on this roadmap's steps, keep the document up to date as we make changes.
 
@@ -18,12 +18,12 @@ Please as we do work on this roadmap's steps, keep the document up to date as we
 | 8 | [Port the sample behavior idiomatically](#step-8-port-the-sample-behavior-idiomatically) | Recreate the existing sample flow in `apphost.ts` using generated exports, not hand-written wrappers. | Endpoint/reference wiring may expose a rough API shape that needs a return to step 3 or 5. | Complete |
 | 9 | [Add automated TypeScript AppHost validation](#step-9-add-automated-typescript-apphost-validation) | Add the Perl-specific test case that uses the shared TypeScript AppHost validation harness. | Wait targets, resource status selection, or command prerequisites may need tuning. | Complete |
 | 10 | [Run end-to-end validation and capture follow-up work](#step-10-run-end-to-end-validation-and-capture-follow-up-work) | Execute the narrow and full validation passes, then record any deferred parity work. | Windows Perl environment issues, ATS edge cases, or sample-specific runtime behavior. | Complete |
-| 11 | [Lock the full-capability finish line](#step-11-lock-the-full-capability-finish-line) | Define exactly what counts toward 100% TypeScript capability coverage and turn the remaining public Perl APIs into a tracked matrix. | Disagreement over whether experimental or partially implemented C# APIs count toward the finish line. | Not started |
-| 12 | [Export package-manager parity methods](#step-12-export-package-manager-parity-methods) | Export `WithCarton` and `WithProjectDependencies` and confirm their generated TypeScript shapes are acceptable. | `cartonDeployment` option shape or Carton/WithPackage interaction may need polyglot-specific handling. | Not started |
-| 13 | [Validate project-dependency scenarios](#step-13-validate-project-dependency-scenarios) | Add TypeScript AppHost examples and tests for `cpanm --installdeps` and Carton-based dependency flows. | Missing `cpanfile` fixtures, `cpanfile.snapshot` handling, or environment prerequisites may make the first scenario too optimistic. | Not started |
-| 14 | [Design and export the Perlbrew surface](#step-14-design-and-export-the-perlbrew-surface) | Decide whether TypeScript should expose `WithPerlbrew`, `WithPerlbrewEnvironment`, or a single canonical method, then export it. | Alias duplication and Windows-specific failure semantics may make the raw C# surface too awkward for polyglot callers. | Not started |
+| 11 | [Lock the full-capability finish line](#step-11-lock-the-full-capability-finish-line) | Define exactly what counts toward 100% TypeScript capability coverage and turn the remaining public Perl APIs into a tracked matrix. | Remaining gaps now come from unexported or unvalidated public APIs, not from policy ambiguity about experimental surface area. | Complete |
+| 12 | [Export package-manager parity methods](#step-12-export-package-manager-parity-methods) | Export `WithCarton` and `WithProjectDependencies` and confirm their generated TypeScript shapes are acceptable. | `cartonDeployment` option shape or Carton/WithPackage interaction may need polyglot-specific handling. | Complete |
+| 13 | [Validate project-dependency scenarios](#step-13-validate-project-dependency-scenarios) | Add TypeScript AppHost examples and tests for `cpanm --installdeps` and Carton-based dependency flows. | The scenarios now depend on normal environment prerequisites (`perl`, `cpanm`, `carton`, Aspire restore) rather than missing fixture work. | Complete |
+| 14 | [Design and export the Perlbrew surface](#step-14-design-and-export-the-perlbrew-surface) | Export both public Perlbrew helpers and validate their Linux/Windows behavior in TypeScript. | Linux-only runtime behavior and Windows-specific failure semantics still need an explicit validation story. | Not started |
 | 15 | [Validate Perlbrew across platforms](#step-15-validate-perlbrew-across-platforms) | Add Linux-positive TypeScript validation and explicit Windows behavior checks for the Perlbrew flow. | Perlbrew is Linux-only, so the validation matrix likely needs platform-aware test gating or a Linux-only lane. | Not started |
-| 16 | [Export the certificate-trust capability](#step-16-export-the-certificate-trust-capability) | Export `WithPerlCertificateTrust` intentionally and decide how experimental API status should surface in the TypeScript story. | Experimental API policy or ATS handling may require an explicit support decision before export. | Not started |
+| 16 | [Export the certificate-trust capability](#step-16-export-the-certificate-trust-capability) | Export `WithPerlCertificateTrust` as part of the public parity target and validate its TypeScript behavior. | End-to-end validation may require more infrastructure than the export itself. | Not started |
 | 17 | [Validate certificate-trust behavior](#step-17-validate-certificate-trust-behavior) | Add a TypeScript scenario that proves certificate bundle propagation to both runtime and installer paths. | A realistic HTTPS fixture and cross-platform certificate handling may be harder than the export itself. | Not started |
 | 18 | [Finish module and executable support in C#](#step-18-finish-module-and-executable-support-in-c) | Close the underlying C# behavior gaps for `AddPerlModule` and `AddPerlExecutable` before exporting them. | The methods exist today, but runtime, publish, or sample-level behavior may still be under-specified for full support. | Not started |
 | 19 | [Export and validate module and executable entry points](#step-19-export-and-validate-module-and-executable-entry-points) | Export `AddPerlModule` and `AddPerlExecutable` only after the C# implementation is promoted to supported behavior. | The generated SDK can be added quickly, but example and runtime proof may lag behind implementation work. | Not started |
@@ -469,6 +469,30 @@ Likely blockers
 1. The team may need to decide whether experimental and partially implemented APIs count toward “100%” immediately.
 2. One alias or convenience method may be intentionally C#-only even if the underlying behavior is supported.
 
+Completion notes
+
+1. The parity target is now explicit: every public Perl AppHost-facing C# API counts toward the TypeScript finish line, including experimental APIs.
+2. Alias-style public APIs stay literal to the C# surface for parity purposes, so `WithPerlbrew` and `WithPerlbrewEnvironment` both remain in-scope rather than being collapsed into one canonical TypeScript method.
+3. `WithPerlCertificateTrust` counts toward the finish line immediately even though it remains experimental on the C# side.
+4. The matrix below is now the source of truth for what is exported, what is validated, and what remains.
+
+Finish-line matrix
+
+| API | Public parity status | TypeScript status | Validation expectation | Remaining work |
+| --- | --- | --- | --- | --- |
+| `AddPerlApi` | Counts now | Exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | None for current parity slice |
+| `AddPerlScript` | Counts now | Exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | None for current parity slice |
+| `AddPerlModule` | Counts now | Not yet exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | Export and add dedicated TypeScript validation |
+| `AddPerlExecutable` | Counts now | Not yet exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | Export and add dedicated TypeScript validation |
+| `WithCpanMinus` | Counts now | Exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | None for current parity slice |
+| `WithPackage` | Counts now | Exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | None for current parity slice |
+| `WithLocalLib` | Counts now | Exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | None for current parity slice |
+| `WithCarton` | Counts now | Exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario | None for current parity slice |
+| `WithProjectDependencies` | Counts now | Exported | Generated SDK presence, compile-time usage, runtime-backed AppHost scenario, deployment-lockfile path | None for current parity slice |
+| `WithPerlbrew` | Counts now | Not yet exported | Generated SDK presence, compile-time usage, Linux-positive runtime behavior, Windows-negative behavior | Export and validate |
+| `WithPerlbrewEnvironment` | Counts now | Not yet exported | Generated SDK presence, compile-time usage, Linux-positive runtime behavior, Windows-negative behavior | Export and validate |
+| `WithPerlCertificateTrust` | Counts now, experimental | Not yet exported | Generated SDK presence, compile-time usage, runtime env propagation, installer env propagation | Export and validate |
+
 [Back to roadmap chart](#roadmap-chart)
 
 ## Step 12: Export package-manager parity methods
@@ -498,6 +522,13 @@ Likely blockers
 
 1. `WithProjectDependencies(cartonDeployment: true)` may generate an options shape that needs a TypeScript-specific overload.
 2. The Carton and per-package installer interaction may need clearer guidance in generated or human-facing docs.
+
+Completion notes
+
+1. Added `AspireExport` annotations to `WithCarton` and `WithProjectDependencies` without changing their existing C# interaction rules.
+2. The TypeScript scenario now exercises the intended generated call shape for deployment mode as `withProjectDependencies({ cartonDeployment: true })`.
+3. The existing `WithPackage()` and `WithCarton()` incompatibility remains unchanged and continues to be enforced by the underlying C# implementation.
+4. Focused package-manager regression coverage passed after the export change: `WithCartonTests` and `WithProjectDependenciesTests` ran green.
 
 [Back to roadmap chart](#roadmap-chart)
 
@@ -529,18 +560,27 @@ Likely blockers
 1. The Carton scenario may need new example fixtures such as `cpanfile` and `cpanfile.snapshot`.
 2. Command availability such as `carton` may require new required-command gating in the test matrix.
 
+Completion notes
+
+1. The TypeScript AppHost example now focuses on a single Carton-backed Perl API resource plus the existing driver resource, instead of registering multiple nearly identical API resources in one AppHost.
+2. The C# AppHost in the same example continues to cover the `cpanm` package-install flow, while the TypeScript AppHost now exercises a different public surface area with `withCarton().withProjectDependencies({ cartonDeployment: true })`.
+3. The TypeScript AppHost now reuses the shared `examples/perl/cpanm-api-integration/scripts/API.pl` entrypoint; the Carton `cpanfile` and `cpanfile.snapshot` live beside that shared script so `withProjectDependencies()` installs from the real working directory rather than a duplicate fixture app.
+4. The shared-harness Perl TypeScript AppHost test now waits for both `perl-api` and `perl-driver`, and it requires `perl` plus `carton` for the TypeScript scenario.
+5. Focused runtime validation passed for the simplified Carton scenario through the shared TypeScript AppHost harness after correcting a local user-level NuGet source issue in the validation environment.
+6. The full Perl test project also passed after these changes with 174 of 174 tests green.
+
 [Back to roadmap chart](#roadmap-chart)
 
 ## Step 14: Design and export the Perlbrew surface
 
 Goal
 
-1. Make the Perlbrew TypeScript story intentional instead of blindly mirroring two overlapping C# methods.
+1. Export the two public Perlbrew methods into TypeScript and validate them with intentional platform-aware coverage.
 
 Do in this chunk
 
-1. Decide whether TypeScript should expose both `WithPerlbrew` and `WithPerlbrewEnvironment`, or only one canonical method.
-2. Add exports for the chosen Perlbrew surface, reshaping arguments only if that materially improves TypeScript readability.
+1. Export both `WithPerlbrew` and `WithPerlbrewEnvironment` because both public C# methods now count toward the parity target.
+2. Reshape arguments only if that materially improves TypeScript readability without dropping either public method.
 3. Preserve the current Windows failure behavior and Linux-only support constraints.
 4. Confirm the generated method names make the Perlbrew flow understandable without leaking internal C# naming history.
 
@@ -556,7 +596,7 @@ Exit criteria
 
 Likely blockers
 
-1. Exporting both Perlbrew methods may create avoidable duplication in the TypeScript surface.
+1. The two public Perlbrew methods overlap semantically, so the TypeScript story still needs careful naming and documentation even though both methods remain in scope.
 2. Windows-specific failure messaging may complicate what “supported in TypeScript” means for this capability.
 
 [Back to roadmap chart](#roadmap-chart)
@@ -595,18 +635,18 @@ Likely blockers
 
 Goal
 
-1. Decide and implement how `WithPerlCertificateTrust` should participate in the TypeScript surface.
+1. Export `WithPerlCertificateTrust` and validate it as part of the public TypeScript parity target.
 
 Do in this chunk
 
-1. Confirm whether the experimental certificate-trust API belongs in the 100% parity target now.
-2. If yes, add the export and inspect the generated TypeScript shape.
+1. Add the export for `WithPerlCertificateTrust` and inspect the generated TypeScript shape.
+2. Preserve the fact that the API is still experimental on the C# side while keeping it in-scope for parity.
 3. Keep the current installer-propagation and idempotency behavior intact.
-4. If the experimental status needs special treatment, document that policy rather than silently deferring the method.
+4. Add the corresponding runtime and installer validation plan rather than silently deferring the method.
 
 Stop and review when
 
-1. There is a clear support decision for the certificate-trust capability.
+1. The exported TypeScript story for certificate trust is explicit and consistent with the public C# surface.
 2. The generated TypeScript API does not hide that the method is still experimental if that distinction still matters.
 
 Exit criteria
@@ -616,8 +656,8 @@ Exit criteria
 
 Likely blockers
 
-1. Experimental API policy may require a broader repo-level decision.
-2. The export itself is easy, but end-to-end validation may require more infrastructure than the method shape suggests.
+1. The export itself is easy, but end-to-end validation may require more infrastructure than the method shape suggests.
+2. The final TypeScript story still needs a clear way to communicate that the method is experimental without excluding it from parity.
 
 [Back to roadmap chart](#roadmap-chart)
 
