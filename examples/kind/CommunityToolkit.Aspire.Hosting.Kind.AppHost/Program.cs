@@ -12,7 +12,7 @@ var dashboard = builder.AddContainer("headlamp", "ghcr.io/headlamp-k8s/headlamp:
     .WithReference(cluster);
 
 // Deploy a Helm chart to the Kind cluster, exposed via NodePort so containers
-// on the Kind Docker network can reach it.
+// on the Kind container network can reach it.
 var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
     .WithHelmValue("replica.replicaCount", "0")
     .WithHelmValue("master.service.type", "NodePort")
@@ -20,7 +20,7 @@ var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicha
     .WithNamespace("cache");
 
 // Test Aspire-container → Kind-workload connectivity by pinging Redis
-// through the Kind Docker network on the NodePort.
+// through the Kind container network on the NodePort.
 builder.AddContainer("redis-ping", "nicolaka/netshoot")
     .WithKindNetwork()
     .WaitFor(cluster)

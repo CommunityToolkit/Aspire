@@ -18,7 +18,7 @@ public static class KindContainerExtensions
 
     /// <summary>
     /// Configures a container resource to reference the Kind cluster by bind-mounting the container-compatible
-    /// kubeconfig, injecting environment variables, and connecting to the Kind network.
+    /// kubeconfig, injecting environment variables, and connecting to the Kind container network.
     /// </summary>
     /// <param name="builder">The container resource builder.</param>
     /// <param name="kind">The Kind cluster resource builder.</param>
@@ -36,7 +36,7 @@ public static class KindContainerExtensions
     /// <para>
     /// The container-compatible kubeconfig uses the Kind control-plane container name 
     /// (<c>{clusterName}-control-plane</c>) instead of <c>127.0.0.1</c>, enabling container-to-container 
-    /// communication over the Kind Docker network.
+    /// communication over the Kind container network.
     /// </para>
     /// </remarks>
     public static IResourceBuilder<ContainerResource> WithReference(
@@ -60,7 +60,7 @@ public static class KindContainerExtensions
     }
 
     /// <summary>
-    /// Connects a container resource to the Kind Docker network, enabling it to
+    /// Connects a container resource to the Kind container network, enabling it to
     /// communicate with the Kind cluster's API server and nodes.
     /// </summary>
     /// <param name="builder">The container resource builder.</param>
@@ -70,19 +70,19 @@ public static class KindContainerExtensions
     /// Use this method when a container needs direct network connectivity to the Kind control plane.
     /// </para>
     /// <para>
-    /// Kind creates a separate Docker network ("kind") for its nodes. Aspire manages
-    /// its own Docker network for containers it creates. Containers on different Docker
+    /// Kind creates a separate container network ("kind") for its nodes. Aspire manages
+    /// its own container network for containers it creates. Containers on different
     /// networks cannot communicate by default.
     /// </para>
     /// <para>
-    /// Aspire does not provide a built-in way to add containers to additional Docker networks,
+    /// Aspire does not provide a built-in way to add containers to additional container networks,
     /// and <c>WithContainerRuntimeArgs("--network", "kind")</c> is overridden internally.
     /// See <see href="https://github.com/microsoft/aspire/issues/14081"/> for the upstream feature request.
     /// </para>
     /// <para>
     /// This method works around the limitation by subscribing to the container's stopped event.
     /// When the container stops (typically because it can't reach the Kind cluster), the hook
-    /// connects the container to the "kind" network via <c>docker network connect</c> and
+    /// connects the container to the "kind" network via the configured container runtime and
     /// restarts it.
     /// </para>
     /// <para>
@@ -127,7 +127,7 @@ public static class KindContainerExtensions
                     var logger = loggerService.GetLogger(containerName);
                     logger.LogError(
                         "Failed to restart container '{ContainerName}' after connecting to 'kind' network: {Error}",
-                        containerName, startResult.ErrorMessage);
+                        containerName, startResult.Message);
                 }
             });
 
@@ -135,7 +135,7 @@ public static class KindContainerExtensions
     }
 
     /// <summary>
-    /// Connects the container to the "kind" Docker network if not already connected.
+    /// Connects the container to the "kind" container network if not already connected.
     /// </summary>
     /// <returns><see langword="true"/> if the connection was made (or was already present); <see langword="false"/> on failure.</returns>
     private static async Task<bool> ConnectToKindNetworkAsync(
@@ -154,10 +154,12 @@ public static class KindContainerExtensions
         var loggerService = services.GetRequiredService<ResourceLoggerService>();
         var logger = loggerService.GetLogger(containerName);
         var processRunner = services.GetRequiredService<IProcessRunner>();
+        var containerRuntimeResolver = services.GetRequiredService<IKindContainerRuntimeResolver>();
+        var containerRuntime = await containerRuntimeResolver.ResolveAsync(logger, ct).ConfigureAwait(false);
 
         var connectResult = await processRunner.RunAsync(
             logger,
-            "docker",
+            containerRuntime.Executable,
             [
                 "network",
                 "connect",
@@ -168,7 +170,7 @@ public static class KindContainerExtensions
 
         if (connectResult.ExitCode != 0)
         {
-            // docker network connect returns an error if the container is already on the network.
+            // The container runtime returns an error if the container is already on the network.
             // Treat this as success to handle concurrent calls from multiple event handlers.
             if (connectResult.Error.Contains("already exists in network", StringComparison.OrdinalIgnoreCase))
             {

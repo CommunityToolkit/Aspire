@@ -202,13 +202,43 @@ public class KindImageLoadingTests
         Assert.Contains("--name my-env-kind", kindLoadCommands[0].Arguments);
     }
 
-    private static (FakeProcessRunner runner, IDistributedApplicationTestingBuilder builder) CreateBuilderWithFakeRunner()
+    [Fact]
+    public async Task UsesPodmanProviderWhenLoadingImagesWithPodmanRuntime()
+    {
+        var (fakeRunner, builder) = CreateBuilderWithFakeRunner("ASPIRE_CONTAINER_RUNTIME=podman");
+
+        builder.AddKubernetesEnvironment("k8s").WithKind();
+
+        var api = new TestComputeResource("api");
+        api.Annotations.Add(new ContainerBuildOptionsCallbackAnnotation(ctx =>
+        {
+            ctx.LocalImageName = "api";
+            ctx.LocalImageTag = "latest";
+        }));
+        builder.AddResource(api);
+
+        using var app = builder.Build();
+        await app.RunAsync();
+
+        var kindLoadCommand = Assert.Single(fakeRunner.Commands,
+            c => c.FileName == "kind" && c.Arguments.Contains("load docker-image"));
+
+        Assert.NotNull(kindLoadCommand.EnvironmentVariables);
+        Assert.Equal("podman", kindLoadCommand.EnvironmentVariables["KIND_EXPERIMENTAL_PROVIDER"]);
+    }
+
+    private static (FakeProcessRunner runner, IDistributedApplicationTestingBuilder builder) CreateBuilderWithFakeRunner(params string[] args)
     {
         var fakeRunner = new FakeProcessRunner();
-        var builder = TestDistributedApplicationBuilder.Create(
+        var builderArgs = new List<string>
+        {
             "AppHost:Operation=publish",
             $"Pipeline:OutputPath={Directory.CreateTempSubdirectory(".kind-test").FullName}",
-            "Pipeline:Deploy=true");
+            "Pipeline:Deploy=true",
+        };
+        builderArgs.AddRange(args);
+
+        var builder = TestDistributedApplicationBuilder.Create(builderArgs.ToArray());
 
         builder.Services.AddSingleton<IProcessRunner>(fakeRunner);
 

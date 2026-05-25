@@ -1,10 +1,10 @@
 # CommunityToolkit.Aspire.Hosting.Kind
 
-An [Aspire](https://learn.microsoft.com/dotnet/aspire) hosting integration that manages local [Kind](https://kind.sigs.k8s.io/) (Kubernetes in Docker) clusters for development, and provides a compute environment for `aspire publish` and `aspire deploy`.
+An [Aspire](https://learn.microsoft.com/dotnet/aspire) hosting integration that manages local [Kind](https://kind.sigs.k8s.io/) clusters for development with Docker or Podman, and provides a compute environment for `aspire publish` and `aspire deploy`.
 
 ## Prerequisites
 
-- **Docker** - Kind runs Kubernetes nodes as Docker containers. Install from [docker.com](https://docs.docker.com/get-docker/).
+- **Docker or Podman** - Kind runs Kubernetes nodes as containers. Install [Docker](https://docs.docker.com/get-docker/) or [Podman](https://podman.io/docs/installation).
 - **Kind CLI** - The `kind` command must be available on your `PATH`. Install from [kind.sigs.k8s.io](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
 - **Helm CLI** - Required for deploy scenarios and Helm chart resources. Install from [helm.sh](https://helm.sh/docs/intro/install/).
 
@@ -71,20 +71,20 @@ var cluster = builder.AddKindCluster("mycluster")
 Kind adds an extra network boundary compared to a typical Aspire app, so it helps to think about four separate buckets:
 
 - **Process / executable resources** run on the host machine.
-- **Aspire-managed containers** are regular containers created by Aspire on its application Docker network.
-- **Kind cluster** means the Kind control-plane and worker node containers on Docker's `kind` network.
-- **Kind-managed workloads** are Kubernetes workloads running in the Kind cluster, such as Redis installed with `cluster.AddHelmChart(...)`. They run inside the Kind node containers in an isolated network namespace managed by the kindnet CNI, rather than on the host Docker network. They are reached through Kubernetes networking and exposure mechanisms (NodePort, HostPort, etc.), not as peer Aspire `AddContainer(...)` resources.
+- **Aspire-managed containers** are regular containers created by Aspire on its application container network.
+- **Kind cluster** means the Kind control-plane and worker node containers on the runtime's `kind` network.
+- **Kind-managed workloads** are Kubernetes workloads running in the Kind cluster, such as Redis installed with `cluster.AddHelmChart(...)`. They run inside the Kind node containers in an isolated network namespace managed by the kindnet CNI, rather than on the host container network. They are reached through Kubernetes networking and exposure mechanisms (NodePort, HostPort, etc.), not as peer Aspire `AddContainer(...)` resources.
 
 In the matrix below, **Yes** means there is a usable network path. **No** means there is no direct path by default.
 
 | From \\ To | Host Process | Aspire-managed container | Kind control plane | Kind-managed workload |
 |---|---|---|---|---|
 | **Host Process** | Yes | Yes | Yes — Kind publishes the API to host `127.0.0.1:<port>`; `WithReference(kind)` injects kubeconfig | Yes, via `kubectl port-forward` or NodePort on localhost |
-| **Aspire-managed container** | Yes | Yes | Yes — `WithReference(kind)` rewrites the kubeconfig and `WithKindNetwork()` joins the Docker `kind` network | Yes — requires `WithKindNetwork()` plus a Kubernetes exposure mechanism (NodePort, HostPort) |
-| **Kind control plane** | No by default | No by default — the control plane has no route to Aspire's Docker network | Yes | Yes |
+| **Aspire-managed container** | Yes | Yes | Yes — `WithReference(kind)` rewrites the kubeconfig and `WithKindNetwork()` joins the runtime's `kind` network | Yes — requires `WithKindNetwork()` plus a Kubernetes exposure mechanism (NodePort, HostPort) |
+| **Kind control plane** | No by default | No by default — the control plane has no route to Aspire's container network | Yes | Yes |
 | **Kind-managed workload** | No by default | No by default — pods run in an isolated network namespace inside the Kind node container | Yes | Yes |
 
-> `WithKindNetwork()` connects the Aspire container to the Docker `kind` network, giving it L3 connectivity to the Kind node containers. It does **not** grant access to the Kubernetes pod or service networks — workloads inside the cluster must be exposed via NodePort, HostPort, or a similar mechanism.
+> `WithKindNetwork()` connects the Aspire container to the runtime's `kind` network, giving it L3 connectivity to the Kind node containers. It does **not** grant access to the Kubernetes pod or service networks — workloads inside the cluster must be exposed via NodePort, HostPort, or a similar mechanism.
 
 ### Connecting services to the cluster
 
@@ -103,9 +103,9 @@ The container-specific `WithReference` overload automatically:
 - Bind-mounts the Kind kubeconfig into the container at `/etc/kubeconfig/config`
 - Sets `KUBECONFIG` to the in-container mount path
 - Sets `K8S_CLUSTER_NAME` to the Kind cluster name
-- Connects the container to the Kind Docker network
+- Connects the container to the Kind container network
 
-> **Note:** The kubeconfig mounted into containers uses the Kind control-plane container name (e.g., `mycluster-control-plane:6443`) instead of `127.0.0.1`, enabling container-to-container communication over the Kind Docker network.
+> **Note:** The kubeconfig mounted into containers uses the Kind control-plane container name (e.g., `mycluster-control-plane:6443`) instead of `127.0.0.1`, enabling container-to-container communication over the Kind container network.
 
 ### Non-container resources
 
@@ -125,9 +125,9 @@ var api = builder.AddProject<Projects.MyApi>("api")
 | `KUBECONFIG` | `/etc/kubeconfig/config` inside the container, backed by a bind mount of the container-compatible kubeconfig file. | Path to the host kubeconfig file for the Kind cluster. |
 | `K8S_CLUSTER_NAME` | The name of the Kind cluster. | The name of the Kind cluster. |
 
-### Docker networking
+### Container networking
 
-Aspire containers run on a separate Docker network from Kind nodes. If you have a container resource that needs to reach the Kind cluster's API server, call `WithKindNetwork` to bridge the two networks:
+Aspire containers run on a separate container network from Kind nodes. If you have a container resource that needs to reach the Kind cluster's API server, call `WithKindNetwork` to bridge the two networks:
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster");
@@ -137,7 +137,7 @@ var worker = builder.AddContainer("my-worker", "myregistry/my-worker")
     .WithKindNetwork();
 ```
 
-> **Note:** `WithKindNetwork` is available on `IResourceBuilder<ContainerResource>`. It connects the container to the `kind` Docker network automatically when the container starts.
+> **Note:** `WithKindNetwork` is available on `IResourceBuilder<ContainerResource>`. It connects the container to the `kind` container network automatically when the container starts.
 
 ### Deploying Helm charts to the cluster
 
@@ -233,7 +233,7 @@ builder.AddContainer("my-container", "my-image")
 | `WithWorkerNodes(int)` | Sets the number of worker nodes (default: 0, control-plane only) |
 | `WithClusterLifetime(ClusterLifetime)` | `Session` (default) or `Persistent` |
 | `WithReference(kind)` | Injects `KUBECONFIG` and `K8S_CLUSTER_NAME` into another resource |
-| `WithKindNetwork()` | Connects a container to the Kind Docker network |
+| `WithKindNetwork()` | Connects a container to the Kind container network |
 | `AddHelmChart(name, chartRef)` | Deploys a Helm chart to the Kind cluster during F5 |
 | `WithKind()` | Configures a `KubernetesEnvironmentResource` to deploy to a local Kind cluster (scenario 2) |
 ## Additional information
