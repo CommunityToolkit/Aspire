@@ -12,8 +12,8 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).3.0</AspireVersion>
-    <AspirePreviewSuffix>-preview.1.26256.5</AspirePreviewSuffix>
+    <AspireVersion>$(AspireMajorVersion).3.0-preview.1.26229.4</AspireVersion>
+    <AspirePreviewSuffix></AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>10.0.7</DotNetExtensionsVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
