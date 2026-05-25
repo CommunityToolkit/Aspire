@@ -145,7 +145,12 @@ def load_test_infra_packages(repo_root: Path) -> set[str]:
 
 def changed_files(repo_root: Path, base_sha: str, head_sha: str) -> list[str]:
     output = run_git(repo_root, "diff", "--name-only", f"{base_sha}...{head_sha}")
-    return [line.strip() for line in output.splitlines() if line.strip()]
+    paths: list[str] = []
+    for line in output.splitlines():
+        stripped = line.strip()
+        if stripped:
+            paths.append(stripped)
+    return paths
 
 
 def package_diff(repo_root: Path, base_sha: str, head_sha: str) -> tuple[set[str], bool]:

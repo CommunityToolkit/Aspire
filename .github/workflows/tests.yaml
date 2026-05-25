@@ -12,6 +12,8 @@ on:
 jobs:
   resolve-test-matrix:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       has-tests: ${{ steps.resolve.outputs.has_tests }}
       tests: ${{ steps.resolve.outputs.tests }}
@@ -26,7 +28,8 @@ jobs:
         shell: bash
         run: |
           if [ -n "${SELECTED_TESTS}" ]; then
-            TESTS_JSON="$(python -c 'import json, os; print(json.dumps(json.loads(os.environ["SELECTED_TESTS"])))')"
+            TESTS_JSON="${SELECTED_TESTS}"
+            python -m json.tool <<< "${TESTS_JSON}" > /dev/null
           else
             TESTS_JSON="$(bash ./eng/testing/generate-test-list-for-workflow.sh --json)"
           fi
@@ -39,13 +42,24 @@ jobs:
             echo "has_tests=true" >> "${GITHUB_OUTPUT}"
           fi
 
-          export TESTS_JSON
-          python -c 'import json, os; tests = json.loads(os.environ["TESTS_JSON"]); handle = open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8"); handle.write("## Test matrix\\n\\n"); handle.write(f"- Selected tests: {len(tests)}\\n\\n"); handle.write("### Tests\\n" + "".join(f"- `{test}`\\n" for test in tests) if tests else "No tests were selected.\\n"); handle.close()'
+          echo "## Test matrix" >> "${GITHUB_STEP_SUMMARY}"
+          echo >> "${GITHUB_STEP_SUMMARY}"
+          TEST_COUNT="$(TESTS_JSON="${TESTS_JSON}" python -c 'import json, os; print(len(json.loads(os.environ["TESTS_JSON"])))')"
+          echo "- Selected tests: ${TEST_COUNT}" >> "${GITHUB_STEP_SUMMARY}"
+          echo >> "${GITHUB_STEP_SUMMARY}"
+
+          if [ "${TESTS_JSON}" = "[]" ]; then
+            echo "No tests were selected." >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "### Tests" >> "${GITHUB_STEP_SUMMARY}"
+            TESTS_JSON="${TESTS_JSON}" python -c 'import json, os; [print(f"- `{test}`") for test in json.loads(os.environ["TESTS_JSON"])]' >> "${GITHUB_STEP_SUMMARY}"
+          fi
 
   noop:
     needs: resolve-test-matrix
     if: needs.resolve-test-matrix.outputs.has-tests != 'true'
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: No affected tests
         run: echo "No integration tests were selected for this run."
@@ -53,6 +67,8 @@ jobs:
   test:
     needs: resolve-test-matrix
     if: needs.resolve-test-matrix.outputs.has-tests == 'true'
+    permissions:
+      contents: read
     env:
       DOTNET_CONFIGURATION: Release
       DAPR_VERSION: "1.15.0"

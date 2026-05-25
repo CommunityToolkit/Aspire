@@ -49,6 +49,8 @@ jobs:
 
   affected-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       has-tests: ${{ steps.select.outputs.has_tests }}
       reason: ${{ steps.select.outputs.reason }}
@@ -76,6 +78,8 @@ jobs:
 
   run-tests:
     needs: affected-tests
+    permissions:
+      contents: read
     uses: ./.github/workflows/tests.yaml
     with:
       selected-tests: ${{ needs.affected-tests.outputs.selected-tests }}
