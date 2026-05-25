@@ -36,7 +36,8 @@ var demoApiKeySecret = bitwarden.AddSecret("demo-api-key", demoApiKey);
 // Register an API service that references the Bitwarden secret manager
 // There are two ways to reference secrets from the Bitwarden secret manager in Aspire.
 var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretManager_ApiService>("api")
-    .WithHttpHealthCheck("/health");
+    .WithHttpHealthCheck("/health")
+    .WithExternalHttpEndpoints();
 
 // 1. Using the secret manager client in code, which allows you to retrieve secrets at runtime and
 //    supports dynamic secret retrieval without redeploying the application when secrets change.
