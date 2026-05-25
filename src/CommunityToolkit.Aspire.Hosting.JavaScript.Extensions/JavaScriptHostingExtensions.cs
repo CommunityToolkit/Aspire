@@ -89,6 +89,7 @@ public static partial class JavaScriptHostingExtensions
                 "npm" => "npx",
                 "yarn" => "yarn",
                 "pnpm" => "pnpx",
+                "bun" => "bunx",
                 _ => executionAnnotation.ExecutableName
             })
               .WithArgs(context =>
@@ -145,6 +146,7 @@ public static partial class JavaScriptHostingExtensions
                 "npm" => "npx",
                 "yarn" => "yarn",
                 "pnpm" => "pnpx",
+                "bun" => "bunx",
                 _ => executionAnnotation.ExecutableName
             })
               .WithArgs(context =>
@@ -199,7 +201,7 @@ public static partial class JavaScriptHostingExtensions
             }
             else
             {
-                throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm first, or provide an explicit package manager.");
+                throw new InvalidOperationException($"The Nx workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm/WithBun first, or provide an explicit package manager.");
             }
         }
 
@@ -237,7 +239,7 @@ public static partial class JavaScriptHostingExtensions
             }
             else
             {
-                throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm first, or provide an explicit package manager.");
+                throw new InvalidOperationException($"The Turborepo workspace '{builder.Resource.Name}' is not configured with a package manager. Call WithNpm/WithYarn/WithPnpm/WithBun first, or provide an explicit package manager.");
             }
         }
 
@@ -339,6 +341,27 @@ public static partial class JavaScriptHostingExtensions
         builder.WithPnpm(install, configureInstaller: null);
 
     /// <summary>
+    /// Configures the Nx workspace to use bun as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Nx workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithNxBun(IResourceBuilder{NxResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
+    public static IResourceBuilder<NxResource> WithBun(this IResourceBuilder<NxResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "bun", install, configureInstaller);
+        return builder;
+    }
+
+    [AspireExport("withNxBun", MethodName = "withBun", Description = "Configures the Nx workspace to use bun as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<NxResource> WithNxBun(this IResourceBuilder<NxResource> builder, bool install = false) =>
+        builder.WithBun(install, configureInstaller: null);
+
+    /// <summary>
     /// Configures the Turborepo workspace to use npm as the package manager and optionally installs packages before apps start.
     /// </summary>
     /// <param name="builder">The Turborepo workspace resource builder.</param>
@@ -400,6 +423,27 @@ public static partial class JavaScriptHostingExtensions
     [AspireExport("withTurborepoPnpm", MethodName = "withPnpm", Description = "Configures the Turborepo workspace to use pnpm as the package manager and optionally installs packages before apps start")]
     internal static IResourceBuilder<TurborepoResource> WithTurborepoPnpm(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
         builder.WithPnpm(install, configureInstaller: null);
+
+    /// <summary>
+    /// Configures the Turborepo workspace to use bun as the package manager and optionally installs packages before apps start.
+    /// </summary>
+    /// <param name="builder">The Turborepo workspace resource builder.</param>
+    /// <param name="install">When true, automatically installs packages before apps start. When false (default), only sets the package manager annotation without creating an installer resource.</param>
+    /// <param name="configureInstaller">A function to configure the installer resource builder.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithTurborepoBun(IResourceBuilder{TurborepoResource}, bool)"/> instead.</remarks>
+    [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
+    public static IResourceBuilder<TurborepoResource> WithBun(this IResourceBuilder<TurborepoResource> builder, bool install = false, Action<IResourceBuilder<JavaScriptInstallerResource>>? configureInstaller = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        AddMonorepoInstaller(builder, "bun", install, configureInstaller);
+        return builder;
+    }
+
+    [AspireExport("withTurborepoBun", MethodName = "withBun", Description = "Configures the Turborepo workspace to use bun as the package manager and optionally installs packages before apps start")]
+    internal static IResourceBuilder<TurborepoResource> WithTurborepoBun(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
+        builder.WithBun(install, configureInstaller: null);
 
     private static void AddMonorepoInstaller<TResource>(
         IResourceBuilder<TResource> builder,
