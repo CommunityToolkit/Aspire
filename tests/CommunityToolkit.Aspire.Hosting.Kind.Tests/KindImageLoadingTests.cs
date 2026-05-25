@@ -242,7 +242,7 @@ public class KindImageLoadingTests
         var builder = TestDistributedApplicationBuilder.Create(builderArgs.ToArray());
 
         builder.Services.AddSingleton<IProcessRunner>(fakeRunner);
-        builder.Services.AddSingleton<Aspire.Hosting.Publishing.IContainerRuntimeResolver>(
+        builder.Services.AddSingleton<global::Aspire.Hosting.Publishing.IContainerRuntimeResolver>(
             new FakeContainerRuntimeResolver(GetRuntimeName(args)));
 
         return (fakeRunner, builder);

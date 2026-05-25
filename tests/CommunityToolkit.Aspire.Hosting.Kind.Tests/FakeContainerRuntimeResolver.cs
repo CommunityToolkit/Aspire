@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #pragma warning disable ASPIRECONTAINERRUNTIME001 // IContainerRuntimeResolver is experimental
+#pragma warning disable ASPIREPIPELINES003 // ContainerImageBuildOptions is experimental
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Publishing;
