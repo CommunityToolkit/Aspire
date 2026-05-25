@@ -3,9 +3,9 @@ using Aspire.Hosting.ApplicationModel;
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Tracks which JavaScript package manager was configured for a monorepo workspace (via WithNpm/WithYarn/WithPnpm).
+/// Tracks which JavaScript package manager was configured for a monorepo workspace (via WithNpm/WithYarn/WithPnpm/WithBun).
 /// </summary>
-/// <param name="packageManager">The name of the JavaScript package manager (e.g., "npm", "yarn", "pnpm").</param>
+/// <param name="packageManager">The name of the JavaScript package manager (e.g., "npm", "yarn", "pnpm", "bun").</param>
 public sealed class JavaScriptPackageManagerConfiguredAnnotation(string packageManager) : IResourceAnnotation
 {
     /// <summary>

@@ -50,9 +50,15 @@ var turbo = builder.AddTurborepoApp("turbo", workingDirectory: "../frontend")
     .WithPnpm()
     .WithPackageManagerLaunch("pnpm"); // Uses 'pnpm' command
 
+// Bun example
+var bunRepo = builder.AddTurborepoApp("bun-repo", workingDirectory: "../frontend")
+    .WithBun()
+    .WithPackageManagerLaunch("bun"); // Uses 'bun' command
+
 // Generated commands:
 // Nx with yarn: yarn nx serve app1
 // Turborepo with pnpm: pnpm turbo run dev --filter app1
+// Turborepo with bun: bunx turbo run dev --filter app1
 ```
 
 ### Package installation with custom flags
@@ -84,4 +90,3 @@ https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-nodejs-exten
 ## Feedback & contributing
 
 https://github.com/CommunityToolkit/Aspire
-

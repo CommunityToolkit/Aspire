@@ -59,6 +59,7 @@ public class TurborepoResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
+    [InlineData("bun")]
     public async Task Turborepo_WithPackageManagerLaunch_InfersFromInstallerWhenNotProvided(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -70,6 +71,7 @@ public class TurborepoResourceCreationTests
             "npm" => turbo.WithNpm(),
             "yarn" => turbo.WithYarn(),
             "pnpm" => turbo.WithPnpm(),
+            "bun" => turbo.WithBun(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager), $"Unsupported package manager: {packageManager}"),
         }).WithPackageManagerLaunch();
 
@@ -92,6 +94,7 @@ public class TurborepoResourceCreationTests
             "npm" => "npx",
             "yarn" => "yarn",
             "pnpm" => "pnpx",
+            "bun" => "bunx",
             _ => packageManager
         }, turboApp.Command);
         var turboArgs = await turboApp.GetArgumentListAsync();
@@ -175,6 +178,7 @@ public class TurborepoResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
+    [InlineData("bun")]
     public async Task Turborepo_WithPackageManager_WithoutRunWith_DoesNotAffectAppExecution(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -185,6 +189,7 @@ public class TurborepoResourceCreationTests
             "npm" => turboBuilder.WithNpm(),
             "yarn" => turboBuilder.WithYarn(),
             "pnpm" => turboBuilder.WithPnpm(),
+            "bun" => turboBuilder.WithBun(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
         };
 
@@ -280,6 +285,7 @@ public class TurborepoResourceCreationTests
     [InlineData("npm")]
     [InlineData("yarn")]
     [InlineData("pnpm")]
+    [InlineData("bun")]
     public async Task Turborepo_MultipleApps_AllInheritExecutionAnnotation(string packageManager)
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -290,6 +296,7 @@ public class TurborepoResourceCreationTests
             "npm" => turbo.WithNpm(),
             "yarn" => turbo.WithYarn(),
             "pnpm" => turbo.WithPnpm(),
+            "bun" => turbo.WithBun(),
             _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
         };
         turbo = turbo.WithPackageManagerLaunch();
@@ -311,6 +318,7 @@ public class TurborepoResourceCreationTests
                 "npm" => "npx",
                 "yarn" => "yarn",
                 "pnpm" => "pnpx",
+                "bun" => "bunx",
                 _ => throw new ArgumentOutOfRangeException(nameof(packageManager))
             };
 
