@@ -79,6 +79,7 @@ internal sealed class DefaultProcessRunner : IProcessRunner
 
         try
         {
+            // WaitForExitAsync observes process termination; WaitForExit() then lets async stdout/stderr event handlers finish draining redirected output.
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             process.WaitForExit();
         }
