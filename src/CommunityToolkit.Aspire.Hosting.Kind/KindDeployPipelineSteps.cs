@@ -76,7 +76,7 @@ internal static class KindDeployPipelineSteps
     {
         var processRunner = ctx.Services.GetRequiredService<IProcessRunner>();
         var containerRuntimeResolver = ctx.Services.GetRequiredService<IKindContainerRuntimeResolver>();
-        var containerRuntime = await containerRuntimeResolver.ResolveAsync(ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
+        var containerRuntime = await containerRuntimeResolver.ResolveAsync(ctx.CancellationToken).ConfigureAwait(false);
 
         foreach (var resource in ctx.Model.Resources)
         {

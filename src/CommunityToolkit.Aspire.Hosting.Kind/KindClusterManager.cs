@@ -189,7 +189,7 @@ internal sealed class KindClusterManager
             return _containerRuntime;
         }
 
-        _containerRuntime = await _containerRuntimeResolver.ResolveAsync(_logger, cancellationToken).ConfigureAwait(false);
+        _containerRuntime = await _containerRuntimeResolver.ResolveAsync(cancellationToken).ConfigureAwait(false);
         return _containerRuntime;
     }
 }

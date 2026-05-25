@@ -3,6 +3,7 @@
 
 #pragma warning disable ASPIREPIPELINES001 // Pipeline APIs are experimental
 #pragma warning disable ASPIREPIPELINES003 // ContainerBuildOptionsCallbackAnnotation is experimental
+#pragma warning disable ASPIRECONTAINERRUNTIME001 // IContainerRuntimeResolver is experimental
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
@@ -241,8 +242,17 @@ public class KindImageLoadingTests
         var builder = TestDistributedApplicationBuilder.Create(builderArgs.ToArray());
 
         builder.Services.AddSingleton<IProcessRunner>(fakeRunner);
+        builder.Services.AddSingleton<Aspire.Hosting.Publishing.IContainerRuntimeResolver>(
+            new FakeContainerRuntimeResolver(GetRuntimeName(args)));
 
         return (fakeRunner, builder);
+    }
+
+    private static string GetRuntimeName(params string[] args)
+    {
+        return args.Any(arg => string.Equals(arg, "ASPIRE_CONTAINER_RUNTIME=podman", StringComparison.OrdinalIgnoreCase))
+            ? "Podman"
+            : "Docker";
     }
 
     /// <summary>

@@ -155,7 +155,7 @@ public static class KindContainerExtensions
         var logger = loggerService.GetLogger(containerName);
         var processRunner = services.GetRequiredService<IProcessRunner>();
         var containerRuntimeResolver = services.GetRequiredService<IKindContainerRuntimeResolver>();
-        var containerRuntime = await containerRuntimeResolver.ResolveAsync(logger, ct).ConfigureAwait(false);
+        var containerRuntime = await containerRuntimeResolver.ResolveAsync(ct).ConfigureAwait(false);
 
         var connectResult = await processRunner.RunAsync(
             logger,
