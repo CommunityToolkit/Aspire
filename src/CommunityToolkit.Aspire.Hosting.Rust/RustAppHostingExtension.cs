@@ -43,7 +43,7 @@ public static class RustAppHostingExtension
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
     /// <param name="name">The name of the resource.</param>
     /// <param name="workingDirectory">The working directory to use for the command.</param>
-    /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
+    /// <param name="args">The optional arguments to be passed to the bacon command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport("addBaconApp", Description = "Adds a Rust application to the application model")]
     public static IResourceBuilder<RustAppExecutableResource> AddBaconApp(
