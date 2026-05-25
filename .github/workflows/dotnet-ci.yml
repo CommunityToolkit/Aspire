@@ -8,6 +8,8 @@ on:
       - "examples/**"
       - "tests/**"
       - "tests-app-hosts/**"
+      - "eng/testing/generate-test-list-for-workflow.sh"
+      - "eng/testing/select-affected-tests.cs"
       - Directory.Build.props
       - Directory.Build.targets
       - Directory.Packages.props
@@ -45,8 +47,45 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration ${{ env.DOTNET_CONFIGURATION }}
 
+  affected-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      has-tests: ${{ steps.select.outputs.has_tests }}
+      reason: ${{ steps.select.outputs.reason }}
+      run-all: ${{ steps.select.outputs.run_all }}
+      selected-tests: ${{ steps.select.outputs.selected_tests }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Select affected tests
+        id: select
+        run: >
+          dotnet run eng/testing/select-affected-tests.cs --
+          --repo-root "${{ github.workspace }}"
+          --base-sha "${{ github.event.pull_request.base.sha }}"
+          --head-sha "${{ github.event.pull_request.head.sha }}"
+          --output-dir "${{ runner.temp }}/affected-tests"
+
+      - name: Upload affected test selection
+        uses: actions/upload-artifact@v7
+        with:
+          name: affected-tests-selection
+          path: ${{ runner.temp }}/affected-tests/**
+
   run-tests:
+    needs: affected-tests
+    permissions:
+      contents: read
     uses: ./.github/workflows/tests.yaml
+    with:
+      selected-tests: ${{ needs.affected-tests.outputs.selected-tests }}
     secrets: inherit
 
   package:
