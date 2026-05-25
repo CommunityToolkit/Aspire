@@ -1,5 +1,3 @@
-using OpenFeature.Contrib.Providers.Flagd;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Add flagd with local flag configuration file

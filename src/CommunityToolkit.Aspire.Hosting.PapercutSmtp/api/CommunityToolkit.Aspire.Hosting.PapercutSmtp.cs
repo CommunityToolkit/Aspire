@@ -10,13 +10,15 @@ namespace Aspire.Hosting
 {
     public static partial class PapercutSmtpHostingExtension
     {
+        [AspireExport("addPapercutSmtp", Description = "Adds a Papercut SMTP container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PapercutSmtpContainerResource> AddPapercutSmtp(this IDistributedApplicationBuilder builder, string name, int? httpPort = null, int? smtpPort = null) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class PapercutSmtpContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class PapercutSmtpContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public PapercutSmtpContainerResource(string name) : base(default!, default) { }
 
