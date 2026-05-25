@@ -173,7 +173,7 @@ static class App
         var selectionPath = Path.Combine(outputDir, "selection.json");
         await File.WriteAllTextAsync(
             selectionPath,
-            JsonSerializer.Serialize(payload, SerializerOptions with { WriteIndented = true }));
+            JsonSerializer.Serialize(payload, SelectionJsonContext.Default.Payload));
 
         var changedFilesPath = Path.Combine(outputDir, "changed-files.txt");
         var changedFilesContent = payload.ChangedFiles.Count > 0
@@ -471,7 +471,7 @@ static class App
 
         var lines = new[]
         {
-            $"selected_tests={JsonSerializer.Serialize(selectedTests, SerializerOptions)}",
+            $"selected_tests={JsonSerializer.Serialize(selectedTests.ToArray(), SelectionJsonContext.Default.StringArray)}",
             $"has_tests={(selectedTests.Count > 0 ? "true" : "false")}",
             $"run_all={(runAll ? "true" : "false")}",
             $"reason={reason}",
@@ -574,11 +574,6 @@ static class App
     private static string RelativePath(string repoRoot, string path) =>
         Path.GetRelativePath(repoRoot, path).Replace('\\', '/');
 
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
     private sealed record Options(string RepoRoot, string BaseSha, string HeadSha, string OutputDir)
     {
         public static Options Parse(string[] args)
@@ -608,7 +603,7 @@ static class App
                 : throw new ArgumentException($"Missing required argument --{name}.");
     }
 
-    private sealed record Payload(
+    internal sealed record Payload(
         [property: JsonPropertyName("changedFiles")] IReadOnlyList<string> ChangedFiles,
         [property: JsonPropertyName("ignoredFiles")] IReadOnlyList<string> IgnoredFiles,
         [property: JsonPropertyName("reason")] string Reason,
@@ -621,4 +616,11 @@ static class App
     {
         public string StandardError { get; } = standardError;
     }
+}
+
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(App.Payload))]
+[JsonSerializable(typeof(string[]))]
+internal sealed partial class SelectionJsonContext : JsonSerializerContext
+{
 }
