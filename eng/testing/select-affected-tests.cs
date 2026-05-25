@@ -6,10 +6,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 
-var exitCode = await Program.MainAsync(args);
+var exitCode = await App.MainAsync(args);
 return exitCode;
 
-static class Program
+static class App
 {
     private static readonly string[] GlobalFullRunPaths =
     [
