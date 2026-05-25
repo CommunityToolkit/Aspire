@@ -2,7 +2,8 @@ using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddDockerComposeEnvironment("docker");
+builder.AddDockerComposeEnvironment("docker")
+    .WithDashboard(false);
 
 var organizationId = builder.AddParameter("bitwarden-organization-id");
 var projectName = builder.AddParameter("bitwarden-project-name");
