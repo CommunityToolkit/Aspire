@@ -220,8 +220,6 @@ def write_outputs(
 
 
 def write_summary(summary_path: Path, summary: str) -> None:
-    if not summary_path:
-        return
     summary_path.write_text(summary, encoding="utf-8")
     step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if step_summary:
