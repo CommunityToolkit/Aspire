@@ -21,7 +21,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
-    [AspireExport]
+    [AspireExport("withCpanMinus", Description = "Configures the Perl resource to use cpanm for package installation")]
     public static IResourceBuilder<TResource> WithCpanMinus<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -212,7 +212,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <c>cpan</c> by default, or <c>cpanm</c> if <see cref="WithCpanMinus{TResource}"/>
     /// was called.
     /// </remarks>
-    [AspireExport]
+    [AspireExport("withPackage", Description = "Installs a Perl package before the resource starts")]
     public static IResourceBuilder<TResource> WithPackage<TResource>(
         this IResourceBuilder<TResource> builder,
         string packageName,

@@ -49,7 +49,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// builder.Build().Run();
     /// </code>
     /// </example>
-    [AspireExport]
+    [AspireExport("addPerlScript", Description = "Adds a Perl script resource")]
     public static IResourceBuilder<PerlAppResource> AddPerlScript(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName, DefaultPerlEnvironment);
@@ -89,7 +89,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// builder.Build().Run();
     /// </code>
     /// </example>
-    [AspireExport]
+    [AspireExport("addPerlApi", Description = "Adds a Perl API resource")]
     public static IResourceBuilder<PerlAppResource> AddPerlApi(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.API, scriptName, DefaultPerlEnvironment, "daemon");
@@ -466,7 +466,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// While it is possible to use <c>cpan</c> with Local::Lib it is complicated to model in Aspire.
     /// </para>
     /// </remarks>
-    [AspireExport]
+    [AspireExport("withLocalLib", Description = "Configures a local::lib directory for Perl module isolation")]
     public static IResourceBuilder<TResource> WithLocalLib<TResource>(
         this IResourceBuilder<TResource> builder,
         string path = "local") where TResource : PerlAppResource

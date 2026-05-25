@@ -4,9 +4,18 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$AppHostPath,
 
+    [string]$PackageProjectPath = "",
+
+    [Parameter(Mandatory = $true)]
+    [string]$PackageName,
+
+    [switch]$UseConfiguredPackages,
+
     [string[]]$WaitForResources = @(),
 
     [string[]]$RequiredCommands = @(),
+
+    [string]$PackageVersion = "",
 
     [ValidateSet("healthy", "up", "down")]
     [string]$WaitStatus = "healthy",
@@ -85,11 +94,96 @@ function Invoke-CleanupStep {
     }
 }
 
+function Remove-PathWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [switch]$Recurse
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+
+    $maxAttempts = 6
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            if ($Recurse) {
+                Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop
+            }
+            else {
+                Remove-Item -LiteralPath $Path -Force -ErrorAction Stop
+            }
+
+            return
+        }
+        catch {
+            if ($attempt -eq $maxAttempts) {
+                throw
+            }
+
+            Start-Sleep -Milliseconds (250 * $attempt)
+        }
+    }
+}
+
 $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
+$resolvedPackageProjectPath = $null
+$localSource = $null
+
+if (-not $UseConfiguredPackages) {
+    if ([string]::IsNullOrWhiteSpace($PackageProjectPath)) {
+        throw "PackageProjectPath is required unless -UseConfiguredPackages is set."
+    }
+
+    $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
+}
+
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
+$configPath = Join-Path $appHostDirectory "aspire.config.json"
+$nugetConfigPath = Join-Path $appHostDirectory "nuget.config"
+$generatedRestoreRoot = Join-Path $appHostDirectory ".aspire\integrations\package-restore"
+$generatedRestoreNugetConfigPath = Join-Path $generatedRestoreRoot "nuget.config"
+$originalConfig = $null
 $appStarted = $false
 $primaryError = $null
 $cleanupFailures = [System.Collections.Generic.List[string]]::new()
+
+if (-not $UseConfiguredPackages) {
+    $localSource = Join-Path ([System.IO.Path]::GetTempPath()) ("ct-polyglot-" + [Guid]::NewGuid().ToString("N"))
+
+    if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
+        $versionPrefix = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getProperty:VersionPrefix).Trim()
+        if ([string]::IsNullOrWhiteSpace($versionPrefix)) {
+            throw "Could not determine the evaluated VersionPrefix for $resolvedPackageProjectPath."
+        }
+
+        $PackageVersion = "$versionPrefix-polyglot.local"
+    }
+}
+
+# Discover local CommunityToolkit project references that also need packing
+$localDependencies = @()
+if (-not $UseConfiguredPackages) {
+    $projRefJson = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getItem:ProjectReference) | Out-String
+    $projRefData = $projRefJson | ConvertFrom-Json
+    $projRefs = @($projRefData.Items.ProjectReference)
+    foreach ($ref in $projRefs) {
+        if ($ref.Filename -like "CommunityToolkit.*") {
+            $localDependencies += @{
+                Name = $ref.Filename
+                FullPath = $ref.FullPath
+            }
+        }
+    }
+}
+
+if ($localDependencies.Count -gt 0) {
+    $depNames = ($localDependencies | ForEach-Object { $_.Name }) -join ", "
+    Write-Host "Discovered local dependencies to pack: $depNames"
+}
 
 if ($WaitForResources.Count -eq 1 -and -not [string]::IsNullOrWhiteSpace($WaitForResources[0])) {
     $splitOptions = [System.StringSplitOptions]::RemoveEmptyEntries -bor [System.StringSplitOptions]::TrimEntries
@@ -136,6 +230,66 @@ foreach ($secret in $Secrets) {
 }
 
 try {
+    $originalConfig = Get-Content -Path $configPath -Raw
+    if (-not $UseConfiguredPackages) {
+        New-Item -ItemType Directory -Path $localSource -Force | Out-Null
+
+        Invoke-ExternalCommand "dotnet" @(
+            "pack",
+            $resolvedPackageProjectPath,
+            "-c", "Debug",
+            "-p:PackageVersion=$PackageVersion",
+            "-o", $localSource
+        )
+
+        foreach ($dep in $localDependencies) {
+            Invoke-ExternalCommand "dotnet" @(
+                "pack",
+                $dep.FullPath,
+                "-c", "Debug",
+                "-p:PackageVersion=$PackageVersion",
+                "-o", $localSource
+            )
+        }
+
+        $config = $originalConfig | ConvertFrom-Json -AsHashtable
+        if ($null -eq $config["packages"]) {
+            $config["packages"] = [ordered]@{}
+        }
+
+        $config["packages"][$PackageName] = $PackageVersion
+        foreach ($dep in $localDependencies) {
+            $config["packages"][$dep.Name] = $PackageVersion
+        }
+        $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath -NoNewline
+
+        $temporaryNugetConfig = @"
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <packageSources>
+        <clear />
+        <add key="local-polyglot" value="$localSource" />
+        <add key="nuget" value="https://api.nuget.org/v3/index.json" />
+    </packageSources>
+
+    <packageSourceMapping>
+        <clear />
+        <packageSource key="local-polyglot">
+            <package pattern="CommunityToolkit.Aspire.*" />
+        </packageSource>
+
+        <packageSource key="nuget">
+            <package pattern="*" />
+        </packageSource>
+    </packageSourceMapping>
+</configuration>
+"@
+
+        $temporaryNugetConfig | Set-Content -Path $nugetConfigPath -NoNewline
+        New-Item -ItemType Directory -Path $generatedRestoreRoot -Force | Out-Null
+        $temporaryNugetConfig | Set-Content -Path $generatedRestoreNugetConfigPath -NoNewline
+    }
+
     Push-Location $appHostDirectory
     try {
         Invoke-ExternalCommand "npm" @("ci")
@@ -224,6 +378,23 @@ finally {
                 "--apphost", $resolvedAppHostPath,
                 "--non-interactive"
             )
+        }
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "restore Aspire config" -Action {
+        if ($null -ne $originalConfig) {
+            Set-Content -Path $configPath -Value $originalConfig -NoNewline
+        }
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "remove generated nuget.config" -Action {
+        Remove-PathWithRetry -Path $nugetConfigPath
+        Remove-PathWithRetry -Path $generatedRestoreNugetConfigPath
+    } -Failures $cleanupFailures
+
+    Invoke-CleanupStep -Description "remove local package source" -Action {
+        if (-not [string]::IsNullOrWhiteSpace($localSource)) {
+            Remove-PathWithRetry -Path $localSource -Recurse
         }
     } -Failures $cleanupFailures
 }

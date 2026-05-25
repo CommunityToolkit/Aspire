@@ -9,7 +9,7 @@ Enable `CommunityToolkit.Aspire.Hosting.Perl` to work from a TypeScript AppHost,
 - `aspire docs get multi-language-integrations`:
   - TypeScript AppHost support comes from ATS annotations on the .NET hosting integration.
   - The CLI scans `[AspireExport]` methods and types, then generates the TypeScript SDK into `.modules/`.
-  - `Aspire.Hosting.Integration.Analyzers` is the recommended build-time guardrail for export mistakes.
+  - ATS diagnostics such as `ASPIREATS001` are the build-time guardrail for export mistakes.
   - Capability IDs must be unique; when needed, use distinct export IDs plus `MethodName` to keep the generated TypeScript names clean.
 - `aspire docs get multi-language-architecture`:
   - TypeScript AppHosts are guest processes that talk to the .NET host over local JSON-RPC.
@@ -34,22 +34,22 @@ Enable `CommunityToolkit.Aspire.Hosting.Perl` to work from a TypeScript AppHost,
 - Existing integrations with TypeScript support follow two patterns:
   - Export add-methods with `[AspireExport(...)]`.
   - Add ATS-friendly overloads or `[AspireExportIgnore]` when the public C# overload is not suitable for polyglot callers.
+- Existing ATS-enabled integrations in this repo currently rely on the diagnostics that already come with the Aspire hosting toolchain; they do not add a separate analyzer package reference in the project file.
 - Shared TypeScript validation already exists in `tests/CommunityToolkit.Aspire.Testing/TypeScriptAppHostTest.cs`, so Perl only needs a new test case instead of new harness code.
-- `Directory.Packages.props` manages package versions centrally and does not currently include `Aspire.Hosting.Integration.Analyzers`.
 
 ## Implementation Plan
 
 1. Enable ATS in the Perl integration project.
-   - Add `Aspire.Hosting.Integration.Analyzers` to `Directory.Packages.props`.
-   - Add a `PackageReference` for the analyzer in `src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj` with private/analyzer-only assets.
-   - Suppress `ASPIREATS001` in the Perl project file, matching the pattern used by other ATS-exporting integrations.
+
+    - Align the Perl project with the current repo ATS pattern rather than introducing a standalone analyzer package.
+    - Suppress `ASPIREATS001` in the Perl project file, matching the pattern used by other ATS-exporting integrations.
+    - Rely on the existing Aspire hosting toolchain to surface ATS diagnostics during build.
 
 2. Export the Perl surface needed by a TypeScript AppHost.
    - Add `[AspireExport]` to the entry points in `src/CommunityToolkit.Aspire.Hosting.Perl/PerlAppResourceBuilderExtensions.cs`:
      - `AddPerlScript`
      - `AddPerlApi`
-     - `AddPerlModule`
-     - `AddPerlExecutable`
+   - Keep `AddPerlModule` and `AddPerlExecutable` out of the TypeScript surface for now because they are not part of the first validated scenario and are not yet fully implemented in C#.
    - Export the fluent methods required by the first sample:
      - `WithCpanMinus`
      - `WithPackage`
@@ -73,7 +73,7 @@ Enable `CommunityToolkit.Aspire.Hosting.Perl` to work from a TypeScript AppHost,
      - `eslint.config.mjs`
      - `package-lock.json` if we keep parity with the committed TypeScript examples already in the repo
    - In `aspire.config.json`, reference the local integration project:
-     - `CommunityToolkit.Aspire.Hosting.Perl`: `../../../src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj`
+     - `CommunityToolkit.Aspire.Hosting.Perl`: `../../../../src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj`
    - Mirror the current C# sample behavior:
      - Perl API resource using `cpanm`, `Mojolicious::Lite`, `local::lib`, and an HTTP endpoint
      - Perl driver script with environment/reference/wait wiring

@@ -14,6 +14,7 @@ public static class TypeScriptAppHostTest
     /// <param name="waitForResources">The resources that must reach the expected Aspire state, if any.</param>
     /// <param name="waitStatus">The Aspire resource status to wait for.</param>
     /// <param name="requiredCommands">Optional commands that must exist on <c>PATH</c> before validation runs.</param>
+    /// <param name="useConfiguredPackages"><see langword="true"/> to validate the AppHost using the package mappings already present in <c>aspire.config.json</c> instead of packing a local polyglot package first.</param>
     /// <param name="secrets">Optional dictionary of secret key-value pairs to set via <c>aspire secret set</c> before starting the app host.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public static async Task Run(
@@ -23,6 +24,7 @@ public static class TypeScriptAppHostTest
         IEnumerable<string> waitForResources,
         string waitStatus = "healthy",
         IEnumerable<string>? requiredCommands = null,
+        bool useConfiguredPackages = false,
         Dictionary<string, string>? secrets = null,
         CancellationToken cancellationToken = default)
     {
@@ -73,6 +75,11 @@ public static class TypeScriptAppHostTest
         {
             arguments.Add("-RequiredCommands");
             arguments.Add(string.Join(',', commands));
+        }
+
+        if (useConfiguredPackages)
+        {
+            arguments.Add("-UseConfiguredPackages");
         }
 
         if (secrets is { Count: > 0 })
