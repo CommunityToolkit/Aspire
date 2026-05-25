@@ -7,7 +7,7 @@ on:
       - ".github/workflows/tests.yaml"
       - ".github/workflows/dotnet-ci.yml"
       - "eng/testing/generate-test-list-for-workflow.sh"
-      - "eng/testing/select-affected-tests.py"
+      - "eng/testing/select-affected-tests.cs"
 
 jobs:
   verify-test-list:
@@ -18,6 +18,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
       - name: Generate test list
         run: |
           bash eng/testing/generate-test-list-for-workflow.sh --plain > generated-test-list.txt
@@ -25,7 +29,7 @@ jobs:
 
       - name: Smoke test affected test resolver
         run: >
-          python eng/testing/select-affected-tests.py
+          dotnet run eng/testing/select-affected-tests.cs --
           --repo-root "${{ github.workspace }}"
           --base-sha "${{ github.event.pull_request.base.sha }}"
           --head-sha "${{ github.event.pull_request.head.sha }}"
