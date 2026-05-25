@@ -131,12 +131,6 @@ static class App
                     continue;
                 }
 
-                if (filePath == ".github/workflows/tests.yaml")
-                {
-                    ignoredFiles.Add(filePath);
-                    continue;
-                }
-
                 if (MatchesGlobalFullRun(filePath))
                 {
                     runAll = true;
