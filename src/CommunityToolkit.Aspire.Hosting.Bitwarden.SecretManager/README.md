@@ -101,14 +101,12 @@ Typical flow:
 1. Declare the Bitwarden project and any managed secrets in the AppHost graph.
 2. Run `aspire deploy` for the AppHost.
 
-During `aspire deploy`, the integration runs a Bitwarden deployment step that:
+During `aspire deploy`, the integration runs four pipeline steps per Bitwarden resource:
 
-- resolves declared project and secret configuration
-- connects to Bitwarden using configured credentials
-- creates or updates the project
-- creates or updates managed secrets
+1. **Authenticate** — resolves credentials and authenticates with Bitwarden Secrets Manager.
+2. **Provision project** — creates or updates the remote Bitwarden project.
+3. **Provision secrets** — creates or updates managed secrets and validates declared references.
+4. **Patch env files** — applies resolved values to Docker Compose environment files (Docker Compose deployments only).
 
 This keeps the experience declaration-first: resources and references are your contract, and deployment materializes that contract.
-
-In day-to-day usage, you can treat Bitwarden API orchestration as an internal detail of the integration.
 

@@ -15,11 +15,11 @@ This design intentionally treats custom publish-manifest schema as legacy. The i
    AppHost resources are the source of truth.
 
 2. Publish-time materialization:
-   Publishing registers and runs a Bitwarden pipeline step per declared Bitwarden resource.
-   Each step deploys the graph by creating or updating the Bitwarden project and managed secrets.
+   Publishing registers four Bitwarden pipeline steps per declared Bitwarden resource.
+   The steps collectively deploy the graph by authenticating, provisioning the project, provisioning secrets, and patching environment files.
 
-3. Reconciler as implementation detail:
-   Reconciliation logic is the internal mechanism used by the publishing step (and local run path), not part of the public architecture contract.
+3. Provisioner as implementation detail:
+   Provisioning logic is the internal mechanism used by the publishing steps (and local run path), not part of the public architecture contract.
 
 4. Consumer contract parity:
    The user experience follows the Azure Key Vault style where declaration and references are first-class, and deployment materializes the declaration.
@@ -27,26 +27,21 @@ This design intentionally treats custom publish-manifest schema as legacy. The i
 ## Publishing
 
 Publishing is the deployment moment for Bitwarden resources.
-When you publish an AppHost, each declared Bitwarden resource contributes a
-pipeline step via `WithPipelineStepFactory(...)` (a resource annotation-backed
-step factory) rather than calling `Pipeline.AddStep(...)` directly.
+When you publish an AppHost, each declared Bitwarden resource contributes four
+pipeline steps via `WithPipelineStepFactory(...)`.
 
-Each step:
+The steps run in order and are scoped to the resource by name:
 
-- has a resource-scoped name (`bitwarden-<resource-name>-reconcile`)
-- is attached with `requiredBy: [WellKnownPipelineSteps.Deploy]`
-- is tagged with `WellKnownPipelineTags.ProvisionInfrastructure`
-- executes with `PipelineStepContext`
-- resolves the matching `BitwardenSecretManagerResource`
-- invokes `BitwardenSecretManagerReconciler.InitializeAsync(...)`
+| # | Step name | What it does |
+|---|---|---|
+| 1 | `bitwarden-authenticate-{name}` | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden |
+| 2 | `bitwarden-provision-project-{name}` | Creates or updates the remote Bitwarden project; binds the resolved project ID |
+| 3 | `bitwarden-provision-secrets-{name}` | Creates or updates managed secrets, validates declared references, saves cache |
+| 4 | `bitwarden-patch-env-{name}` | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files |
 
-During execution, the step:
+Steps 1–3 depend on `DeployPrereq`. Step 3 is tagged `ProvisionInfrastructure` and is required by `Deploy`. Because steps 1–3 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
 
-- resolves declared project and secret configuration
-- connects to Bitwarden using configured credentials
-- creates or updates the project
-- creates or updates managed secrets
-- records resulting identifiers needed by the runtime experience
+Step 4 is a Docker Compose workaround: `PrepareAsync` in `Aspire.Hosting.Docker` only resolves `ParameterResource` and `ContainerImageReference` sources, leaving Bitwarden-derived env vars blank. Step 4 patches those blanks after `prepare-{env}` runs and before `docker-compose-up-{env}` starts. It will be removed once the upstream issue is resolved.
 
 Happy path:
 
@@ -54,7 +49,7 @@ Happy path:
 2. Declare any managed secrets with `AddSecret(...)`.
 3. Reference the Bitwarden resource from dependent resources with `WithReference(...)` or reference a secret value with `WithBitwardenSecretValue(...)` or `WithBitwardenSecretId(...)`.
 4. Publish the AppHost.
-5. During pipeline execution, each Bitwarden step materializes its declared graph in Bitwarden.
+5. During pipeline execution, the four Bitwarden steps materialize the declared graph in Bitwarden.
 6. The deployed graph is stable and available for consumers.
 
 ## Run Mode
