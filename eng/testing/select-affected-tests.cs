@@ -15,7 +15,6 @@ static class App
     [
         ".github/actions/",
         ".github/workflows/",
-        "CommunityToolkit.Aspire.slnx",
         "Directory.Build.props",
         "Directory.Build.targets",
         "eng/testing/generate-test-list-for-workflow.sh",
@@ -41,10 +40,6 @@ static class App
         Directory.CreateDirectory(outputDir);
 
         var allTests = LoadAllTests(repoRoot);
-        var (projectRefs, packageRefs, projectPaths) = ProjectData(repoRoot);
-        var nodeToTests = BuildNodeToTests(allTests, projectRefs);
-        var packageToTests = BuildPackageToTests(packageRefs, nodeToTests);
-        var testInfraPackages = LoadTestInfraPackages(repoRoot);
 
         var selected = new HashSet<string>(StringComparer.Ordinal);
         var ignoredFiles = new List<string>();
@@ -56,6 +51,11 @@ static class App
         try
         {
             var diffFiles = await ChangedFilesAsync(repoRoot, options.BaseSha, options.HeadSha);
+            var (projectRefs, packageRefs, projectPaths) = ProjectData(repoRoot);
+            var nodeToTests = BuildNodeToTests(allTests, projectRefs);
+            var packageToTests = BuildPackageToTests(packageRefs, nodeToTests);
+            var packageToProjects = BuildPackageToProjects(packageRefs);
+            var testInfraPackages = LoadTestInfraPackages(repoRoot);
 
             foreach (var filePath in diffFiles)
             {
@@ -99,16 +99,41 @@ static class App
                         .OrderBy(static packageId => packageId, StringComparer.Ordinal)
                         .ToList();
 
-                    if (missing.Count > 0)
+                    var unresolved = missing
+                        .Where(packageId =>
+                        {
+                            var referencedProjects = new HashSet<string>(StringComparer.Ordinal);
+
+                            if (packageToProjects.TryGetValue(packageId, out var projects))
+                            {
+                                referencedProjects.UnionWith(projects);
+                            }
+
+                            return referencedProjects.Count == 0;
+                        })
+                        .ToList();
+
+                    if (unresolved.Count > 0)
                     {
                         runAll = true;
-                        reason = $"Fell back to the full test matrix because package usage for {string.Join(", ", missing)} could not be resolved safely.";
+                        reason = $"Fell back to the full test matrix because package usage for {string.Join(", ", unresolved)} could not be resolved safely.";
                         reasons.Add(reason);
                         break;
                     }
 
                     selected.UnionWith(impacted);
+                    if (missing.Count > 0)
+                    {
+                        reasons.Add($"Ignored package changes for {string.Join(", ", missing.OrderBy(static packageId => packageId, StringComparer.Ordinal))} because they only affect projects already changed in this PR.");
+                    }
+
                     reasons.Add($"Selected {impacted.Count} tests from package changes in Directory.Packages.props: {string.Join(", ", packageIds.OrderBy(static packageId => packageId, StringComparer.Ordinal))}.");
+                    continue;
+                }
+
+                if (filePath == ".github/workflows/tests.yaml")
+                {
+                    ignoredFiles.Add(filePath);
                     continue;
                 }
 
@@ -226,38 +251,98 @@ static class App
             {
                 var relative = RelativePath(repoRoot, projectPath);
                 projectPaths.Add(relative);
-
-                var refs = new HashSet<string>(StringComparer.Ordinal);
-                var packages = new HashSet<string>(StringComparer.Ordinal);
-                var document = XDocument.Load(projectPath);
-
-                foreach (var element in document.Descendants())
-                {
-                    if (element.Name.LocalName == "ProjectReference")
-                    {
-                        var include = element.Attribute("Include")?.Value;
-                        if (!string.IsNullOrEmpty(include))
-                        {
-                            var resolved = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(projectPath)!, include.Replace('\\', Path.DirectorySeparatorChar)));
-                            refs.Add(RelativePath(repoRoot, resolved));
-                        }
-                    }
-                    else if (element.Name.LocalName == "PackageReference")
-                    {
-                        var include = element.Attribute("Include")?.Value;
-                        if (!string.IsNullOrEmpty(include))
-                        {
-                            packages.Add(include);
-                        }
-                    }
-                }
-
-                projectRefs[relative] = refs;
-                packageRefs[relative] = packages;
+                AddProjectData(repoRoot, projectPath, relative, XDocument.Load(projectPath), projectRefs, packageRefs);
             }
         }
 
         return (projectRefs, packageRefs, projectPaths);
+    }
+
+    private static async Task<(Dictionary<string, HashSet<string>> ProjectRefs, Dictionary<string, HashSet<string>> PackageRefs, List<string> ProjectPaths)> ProjectDataAsync(
+        string repoRoot,
+        string headSha,
+        IReadOnlyList<string> diffFiles)
+    {
+        var projectRefs = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        var packageRefs = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        var projectPaths = new List<string>();
+        var seenProjectPaths = new HashSet<string>(StringComparer.Ordinal);
+        var changedProjectFiles = new HashSet<string>(
+            diffFiles.Where(static filePath => filePath.EndsWith(".csproj", StringComparison.Ordinal)),
+            StringComparer.Ordinal);
+
+        foreach (var rootName in new[] { "src", "tests", "examples", "tests-app-hosts" })
+        {
+            var rootPath = Path.Combine(repoRoot, rootName);
+            if (!Directory.Exists(rootPath))
+            {
+                continue;
+            }
+
+            foreach (var projectPath in Directory.EnumerateFiles(rootPath, "*.csproj", SearchOption.AllDirectories).OrderBy(static path => path, StringComparer.Ordinal))
+            {
+                var relative = RelativePath(repoRoot, projectPath);
+                var document = changedProjectFiles.Contains(relative)
+                    ? XDocument.Parse(await RunGitAsync(repoRoot, "show", $"{headSha}:{relative}"))
+                    : XDocument.Load(projectPath);
+
+                AddProjectData(repoRoot, projectPath, relative, document, projectRefs, packageRefs);
+                projectPaths.Add(relative);
+                seenProjectPaths.Add(relative);
+            }
+        }
+
+        foreach (var projectPath in diffFiles.Where(static filePath => filePath.EndsWith(".csproj", StringComparison.Ordinal)))
+        {
+            if (seenProjectPaths.Contains(projectPath))
+            {
+                continue;
+            }
+
+            var output = await RunGitAsync(repoRoot, "show", $"{headSha}:{projectPath}");
+            var document = XDocument.Parse(output);
+            AddProjectData(repoRoot, Path.Combine(repoRoot, projectPath), projectPath, document, projectRefs, packageRefs);
+            projectPaths.Add(projectPath);
+            seenProjectPaths.Add(projectPath);
+        }
+
+        return (projectRefs, packageRefs, projectPaths);
+    }
+
+    private static void AddProjectData(
+        string repoRoot,
+        string projectPath,
+        string relativeProjectPath,
+        XDocument document,
+        Dictionary<string, HashSet<string>> projectRefs,
+        Dictionary<string, HashSet<string>> packageRefs)
+    {
+        var refs = new HashSet<string>(StringComparer.Ordinal);
+        var packages = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var element in document.Descendants())
+        {
+            if (element.Name.LocalName == "ProjectReference")
+            {
+                var include = element.Attribute("Include")?.Value;
+                if (!string.IsNullOrEmpty(include))
+                {
+                    var resolved = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(projectPath)!, include.Replace('\\', Path.DirectorySeparatorChar)));
+                    refs.Add(RelativePath(repoRoot, resolved));
+                }
+            }
+            else if (element.Name.LocalName == "PackageReference")
+            {
+                var include = element.Attribute("Include")?.Value;
+                if (!string.IsNullOrEmpty(include))
+                {
+                    packages.Add(include);
+                }
+            }
+        }
+
+        projectRefs[relativeProjectPath] = refs;
+        packageRefs[relativeProjectPath] = packages;
     }
 
     private static Dictionary<string, HashSet<string>> BuildNodeToTests(
@@ -340,6 +425,160 @@ static class App
 
         return packageToTests;
     }
+
+    private static Dictionary<string, HashSet<string>> BuildPackageToProjects(Dictionary<string, HashSet<string>> packageRefs)
+    {
+        var packageToProjects = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
+        foreach (var (project, packages) in packageRefs)
+        {
+            foreach (var package in packages)
+            {
+                if (!packageToProjects.TryGetValue(package, out var projects))
+                {
+                    projects = new HashSet<string>(StringComparer.Ordinal);
+                    packageToProjects[package] = projects;
+                }
+
+                projects.Add(project);
+            }
+        }
+
+        return packageToProjects;
+    }
+
+    private static HashSet<string> SelectChangedProjectTests(
+        string project,
+        ChangedProjectData changedProjectData,
+        Dictionary<string, HashSet<string>> nodeToTests,
+        Dictionary<string, HashSet<string>> packageToTests)
+    {
+        var impacted = new HashSet<string>(StringComparer.Ordinal);
+        var queue = new Stack<string>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        queue.Push(project);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Pop();
+            if (!seen.Add(current))
+            {
+                continue;
+            }
+
+            if (nodeToTests.TryGetValue(current, out var tests))
+            {
+                impacted.UnionWith(tests);
+            }
+
+            if (changedProjectData.PackageRefsByProject.TryGetValue(current, out var packages))
+            {
+                foreach (var package in packages)
+                {
+                    if (packageToTests.TryGetValue(package, out var packageTests))
+                    {
+                        impacted.UnionWith(packageTests);
+                    }
+                }
+            }
+
+            if (changedProjectData.ProjectRefsByProject.TryGetValue(current, out var refs))
+            {
+                foreach (var reference in refs)
+                {
+                    queue.Push(reference);
+                }
+            }
+        }
+
+        return impacted;
+    }
+
+    private static async Task<ChangedProjectData> ChangedProjectDataAsync(
+        string repoRoot,
+        string baseSha,
+        string headSha,
+        IReadOnlyList<string> diffFiles)
+    {
+        var packageRefsByProject = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        var projectRefsByProject = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
+        foreach (var filePath in diffFiles.Where(static filePath => filePath.EndsWith(".csproj", StringComparison.Ordinal)))
+        {
+            var output = await RunGitAsync(repoRoot, "diff", "--unified=0", $"{baseSha}...{headSha}", "--", filePath);
+
+            foreach (var rawLine in output.Split('\n', StringSplitOptions.TrimEntries))
+            {
+                if (string.IsNullOrEmpty(rawLine) ||
+                    rawLine.StartsWith("diff --git", StringComparison.Ordinal) ||
+                    rawLine.StartsWith("index ", StringComparison.Ordinal) ||
+                    rawLine.StartsWith("--- ", StringComparison.Ordinal) ||
+                    rawLine.StartsWith("+++ ", StringComparison.Ordinal) ||
+                    rawLine.StartsWith("@@", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (rawLine[0] is not ('+' or '-'))
+                {
+                    continue;
+                }
+
+                var line = rawLine[1..].Trim();
+                if (line.Contains("PackageReference", StringComparison.Ordinal) &&
+                    TryGetAttributeValue(line, "Include", out var include))
+                {
+                    if (!packageRefsByProject.TryGetValue(filePath, out var packages))
+                    {
+                        packages = new HashSet<string>(StringComparer.Ordinal);
+                        packageRefsByProject[filePath] = packages;
+                    }
+
+                    packages.Add(include);
+                }
+                else if (line.Contains("ProjectReference", StringComparison.Ordinal) &&
+                    TryGetAttributeValue(line, "Include", out var reference))
+                {
+                    var projectPath = NormalizeDirectory(Path.GetFullPath(Path.Combine(repoRoot, Path.GetDirectoryName(filePath)!, reference.Replace('\\', Path.DirectorySeparatorChar))));
+                    projectPath = RelativePath(repoRoot, projectPath);
+
+                    if (!projectRefsByProject.TryGetValue(filePath, out var projectRefs))
+                    {
+                        projectRefs = new HashSet<string>(StringComparer.Ordinal);
+                        projectRefsByProject[filePath] = projectRefs;
+                    }
+
+                    projectRefs.Add(projectPath);
+                }
+            }
+        }
+
+        var packageToProjects = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        foreach (var (project, packages) in packageRefsByProject)
+        {
+            foreach (var package in packages)
+            {
+                if (!packageToProjects.TryGetValue(package, out var projects))
+                {
+                    projects = new HashSet<string>(StringComparer.Ordinal);
+                    packageToProjects[package] = projects;
+                }
+
+                projects.Add(project);
+            }
+        }
+
+        var projectPaths = new HashSet<string>(packageRefsByProject.Keys, StringComparer.Ordinal);
+        projectPaths.UnionWith(projectRefsByProject.Keys);
+
+        return new ChangedProjectData(packageRefsByProject, packageToProjects, projectRefsByProject, projectPaths);
+    }
+
+    private sealed record ChangedProjectData(
+        Dictionary<string, HashSet<string>> PackageRefsByProject,
+        Dictionary<string, HashSet<string>> PackageToProjects,
+        Dictionary<string, HashSet<string>> ProjectRefsByProject,
+        HashSet<string> ProjectPaths);
 
     private static HashSet<string> LoadTestInfraPackages(string repoRoot)
     {
