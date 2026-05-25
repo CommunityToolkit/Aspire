@@ -5,7 +5,9 @@ on:
     paths:
       - "tests/**"
       - ".github/workflows/tests.yaml"
+      - ".github/workflows/dotnet-ci.yml"
       - "eng/testing/generate-test-list-for-workflow.sh"
+      - "eng/testing/select-affected-tests.py"
 
 jobs:
   verify-test-list:
@@ -13,10 +15,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Generate test list
-        run: bash eng/testing/generate-test-list-for-workflow.sh > generated-test-list.txt
-
-      - name: Verify test list
         run: |
-          diff -u <(awk '/name: \[/{flag=1; next} /\]/{flag=0} flag' .github/workflows/tests.yaml | sort) <(sort generated-test-list.txt) || exit 1
+          bash eng/testing/generate-test-list-for-workflow.sh --plain > generated-test-list.txt
+          bash eng/testing/generate-test-list-for-workflow.sh --json | python -m json.tool > /dev/null
+
+      - name: Smoke test affected test resolver
+        run: >
+          python eng/testing/select-affected-tests.py
+          --repo-root "${{ github.workspace }}"
+          --base-sha "${{ github.event.pull_request.base.sha }}"
+          --head-sha "${{ github.event.pull_request.head.sha }}"
+          --output-dir "${{ runner.temp }}/affected-tests"
