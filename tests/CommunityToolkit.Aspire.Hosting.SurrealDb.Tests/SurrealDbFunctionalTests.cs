@@ -1,7 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Bogus;
@@ -12,7 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 using SurrealDb.Net;
 using SurrealDb.Net.Exceptions;
-using System.Data;
+using System.ComponentModel.DataAnnotations.Schema;
 using SurrealRecord = SurrealDb.Net.Models.Record;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
@@ -39,7 +38,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
         var ct = cts.Token;
-        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+        await using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var surrealServer = builder.AddSurrealServer("surreal");
 
@@ -47,15 +46,15 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             .AddNamespace("ns")
             .AddDatabase("db");
 
-        using var app = builder.Build();
+        await using var app = builder.Build();
 
-        await app.StartAsync();
+        await app.StartAsync(ct);
 
         await app.ResourceNotifications.WaitForResourceHealthyAsync(db.Resource.Name, ct);
 
         var hb = Host.CreateApplicationBuilder();
 
-        hb.Configuration[$"ConnectionStrings:{db.Resource.Name}"] = await db.Resource.ConnectionStringExpression.GetValueAsync(default);
+        hb.Configuration[$"ConnectionStrings:{db.Resource.Name}"] = await db.Resource.ConnectionStringExpression.GetValueAsync(ct);
 
         hb.AddSurrealClient(db.Resource.Name);
 
@@ -63,10 +62,11 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await host.StartAsync(ct);
 
-        var surrealDbClient = host.Services.GetRequiredService<SurrealDbSession>();
+        await using var scope = host.Services.CreateAsyncScope();
+        await using var client = scope.ServiceProvider.GetRequiredService<SurrealDbSession>();
 
-        await CreateTestData(surrealDbClient, ct);
-        await AssertTestData(surrealDbClient, ct);
+        await CreateTestData(client, ct);
+        await AssertTestData(client, ct);
     }
 
     [Theory]
@@ -80,14 +80,17 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         string? volumeName = null;
         string? bindMountPath = null;
 
+        const string databasePath = "surrealkv://data/db.db";
+
         try
         {
             using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
-            
+
             var password1 = builder1.AddParameter("surreal-password", secret: true);
             password1.Resource.Default = new PasswordConstantDefault();
-            
-            var surrealServer1 = builder1.AddSurrealServer("surreal", path: "rocksdb://data/db.db", password: password1);
+
+            var surrealServer1 =
+                builder1.AddSurrealServer("surreal", path: databasePath, password: password1);
 
             var db1 = surrealServer1
                 .AddNamespace("ns")
@@ -96,7 +99,8 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             if (useVolume)
             {
                 // Use a deterministic volume name to prevent them from exhausting the machines if deletion fails
-                volumeName = VolumeNameGenerator.Generate(surrealServer1, nameof(WithDataShouldPersistStateBetweenUsages));
+                volumeName = VolumeNameGenerator.Generate(surrealServer1,
+                    nameof(WithDataShouldPersistStateBetweenUsages));
 
                 // if the volume already exists (because of a crashing previous run), delete it
                 DockerUtils.AttemptDeleteDockerVolume(volumeName, throwOnFailure: true);
@@ -109,7 +113,9 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
                 if (!OperatingSystem.IsWindows())
                 {
-                    File.SetUnixFileMode(bindMountPath, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
+                    File.SetUnixFileMode(bindMountPath,
+                        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                        UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
                 }
             }
 
@@ -124,14 +130,16 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                 {
                     var hb = Host.CreateApplicationBuilder();
 
-                    hb.Configuration[$"ConnectionStrings:{db1.Resource.Name}"] = await db1.Resource.ConnectionStringExpression.GetValueAsync(ct);
+                    hb.Configuration[$"ConnectionStrings:{db1.Resource.Name}"] =
+                        await db1.Resource.ConnectionStringExpression.GetValueAsync(ct);
 
                     hb.AddSurrealClient(db1.Resource.Name);
 
                     using var host = hb.Build();
                     await host.StartAsync(ct);
 
-                    await using var client = host.Services.GetRequiredService<SurrealDbSession>();
+                    await using var scope1 = host.Services.CreateAsyncScope();
+                    await using var client = scope1.ServiceProvider.GetRequiredService<SurrealDbSession>();
                     await CreateTestData(client, ct);
                     await AssertTestData(client, ct);
                 }
@@ -143,11 +151,12 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             }
 
             using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
-            
+
             var password2 = builder2.AddParameter("surreal-password", secret: true);
             password2.Resource.Default = new PasswordConstantDefault();
-            
-            var surrealServer2 = builder2.AddSurrealServer("surreal", path: "rocksdb://data/db.db", password: password2);
+
+            var surrealServer2 =
+                builder2.AddSurrealServer("surreal", path: databasePath, password: password2);
 
             var db2 = surrealServer2
                 .AddNamespace("ns")
@@ -173,13 +182,15 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                 {
                     var hb = Host.CreateApplicationBuilder();
 
-                    hb.Configuration[$"ConnectionStrings:{db2.Resource.Name}"] = await db2.Resource.ConnectionStringExpression.GetValueAsync(ct);
+                    hb.Configuration[$"ConnectionStrings:{db2.Resource.Name}"] =
+                        await db2.Resource.ConnectionStringExpression.GetValueAsync(ct);
 
                     hb.AddSurrealClient(db2.Resource.Name);
 
                     using var host = hb.Build();
                     await host.StartAsync(ct);
-                    await using var client = host.Services.GetRequiredService<SurrealDbSession>();
+                    await using var scope2 = host.Services.CreateAsyncScope();
+                    await using var client = scope2.ServiceProvider.GetRequiredService<SurrealDbSession>();
                     await AssertTestData(client, ct);
                 }
                 finally
@@ -188,7 +199,6 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                     await app.StopAsync(ct);
                 }
             }
-
         }
         finally
         {
@@ -215,7 +225,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     public async Task VerifyWaitForOnSurrealDbBlocksDependentResources()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-        using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+        await using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
         var healthCheckTcs = new TaskCompletionSource<HealthCheckResult>();
         builder.Services.AddHealthChecks().AddAsyncCheck("blocking_check", () => healthCheckTcs.Task);
@@ -226,7 +236,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         var dependentResource = builder.AddSurrealServer("dependentresource")
             .WaitFor(resource);
 
-        using var app = builder.Build();
+        await using var app = builder.Build();
 
         var pendingStart = app.StartAsync(cts.Token);
 
@@ -244,7 +254,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await pendingStart;
 
-        await app.StopAsync();
+        await app.StopAsync(cts.Token);
     }
     
     [Fact(Skip = "Feature is unstable and blocking the release")]
@@ -278,8 +288,8 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                 """, 
                 cts.Token
             );
-    
-            using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+            await using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
 #pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             var surrealServer = builder
@@ -289,8 +299,8 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
             var ns = surrealServer.AddNamespace(surrealNsName);
             var db = ns.AddDatabase(surrealDbName);
-    
-            using var app = builder.Build();
+
+            await using var app = builder.Build();
     
             await app.StartAsync(cts.Token);
                 
@@ -316,7 +326,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     
             await pipeline.ExecuteAsync(async token =>
             {
-                var client = host.Services.GetRequiredService<SurrealDbClient>();
+                await using var client = host.Services.GetRequiredService<SurrealDbClient>();
 
                 var cars = (await client.Select<Car>(Car.Table, token)).ToList();
                 var car = Assert.Single(cars);
@@ -346,7 +356,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         var surrealNsName = "ns1";
         var surrealDbName = "db1";
 
-        var surreal = builder.AddSurrealServer("surreal", strictMode: true);
+        var surreal = builder.AddSurrealServer("surreal");
 
 #pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         var db = surreal
@@ -358,9 +368,9 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
                 USE DATABASE {surrealDbName};
                 
                 DEFINE TABLE todo;
-                DEFINE FIELD Title ON todo TYPE string;
-                DEFINE FIELD DueBy ON todo TYPE datetime;
-                DEFINE FIELD IsComplete ON todo TYPE bool;
+                DEFINE FIELD title ON todo TYPE string;
+                DEFINE FIELD due_by ON todo TYPE datetime;
+                DEFINE FIELD is_complete ON todo TYPE bool;
                 """
             );
 #pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -381,7 +391,8 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await app.ResourceNotifications.WaitForResourceHealthyAsync(db.Resource.Name, cts.Token);
 
-        await using var client = host.Services.GetRequiredService<SurrealDbSession>();
+        await using var scope = host.Services.CreateAsyncScope();
+        await using var client = scope.ServiceProvider.GetRequiredService<SurrealDbSession>();
 
         await CreateTestData(client, cts.Token);
         await AssertTestData(client, cts.Token);
@@ -406,8 +417,13 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     {
         internal const string Table = "todo";
 
+        [Column("title")]
         public string? Title { get; set; }
+        
+        [Column("due_by")]
         public DateOnly? DueBy { get; set; } = null;
+        
+        [Column("is_complete")]
         public bool IsComplete { get; set; } = false;
     }
 
@@ -425,6 +441,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     {
         internal const string Table = "car";
 
+        [Column("brand")]
         public string Brand { get; set; } = string.Empty;
     }
 }
