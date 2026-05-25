@@ -2,8 +2,8 @@ import { createBuilder } from './.modules/aspire.js';
 
 const builder = await createBuilder();
 
-const stripeApiKey = await builder.addParameterWithValue("stripe-api-key", "sk_test_123", { secret: true });
-const stripeApiKeyOverride = await builder.addParameterWithValue("stripe-api-key-override", "sk_test_override", { secret: true });
+const stripeApiKey = await builder.addParameter("stripe-api-key", { value: "sk_test_123", secret: true });
+const stripeApiKeyOverride = await builder.addParameter("stripe-api-key-override", { value: "sk_test_override", secret: true });
 
 const webhookTarget = await builder
     .addContainer("webhook-target", "nginx:alpine")

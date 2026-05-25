@@ -382,7 +382,7 @@ public static partial class PerlAppResourceBuilderExtensions
             return;
         }
 
-        var installerName = $"{packageName}-installer";
+        var installerName = $"{resource.Resource.Name}-{packageName}-installer";
         resource.ApplicationBuilder.TryCreateResourceBuilder<PerlModuleInstallerResource>(
             installerName, out var existingResource);
 

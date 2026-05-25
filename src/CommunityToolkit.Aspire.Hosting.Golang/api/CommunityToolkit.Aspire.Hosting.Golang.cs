@@ -10,19 +10,34 @@ namespace Aspire.Hosting
 {
     public static partial class GolangAppHostingExtension
     {
+        [AspireExport("addGolangApp", Description = "Adds a Golang app resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string executable, string[]? args = null, string[]? buildTags = null) { throw null; }
 
+        [AspireExportIgnore(Reason = "Use the overload that includes the executable parameter to keep the polyglot addGolangApp surface on a single capability.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[]? args = null, string[]? buildTags = null) { throw null; }
 
         [System.Obsolete("Use AddGolangApp with buildTags parameter instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[] args) { throw null; }
+
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<GoModInstallerResource>> is not supported in polyglot app hosts. Use the overload without configureInstaller instead.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> WithGoModDownload(this ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> builder, bool install = true, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.GoModInstallerResource>>? configureInstaller = null) { throw null; }
+
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<GoModInstallerResource>> is not supported in polyglot app hosts. Use the overload without configureInstaller instead.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> WithGoModTidy(this ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> builder, bool install = true, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.GoModInstallerResource>>? configureInstaller = null) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class GolangAppExecutableResource : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
+    public partial class GolangAppExecutableResource : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource, IContainerFilesDestinationResource
     {
         public GolangAppExecutableResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+
+        public string ContainerFilesDestination { get { throw null; } }
+    }
+
+    public partial class GoModInstallerResource : ExecutableResource
+    {
+        public GoModInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }
     }
 }

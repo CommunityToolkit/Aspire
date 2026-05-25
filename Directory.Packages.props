@@ -10,7 +10,7 @@
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="13.1.0" />
+    <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="13.3.0" />
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
@@ -54,20 +54,20 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="$(DotNetExtensionsVersion)" />
     <!-- OpenTelemetry packages -->
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="$(OpenTelemetryVersion)-beta.2" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
-    <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="$(OpenTelemetryVersion)" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.15.1-beta.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.15.3" />
   </ItemGroup>
   <ItemGroup Label="Build Dependencies">
     <PackageVersion Include="Microsoft.DotNet.GenAPI.Task" Version="9.0.103-servicing.25071.13" />
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.1.0" />
+    <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
@@ -102,10 +102,10 @@
     <!-- Testing packages -->
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
     <PackageVersion Include="Bogus" Version="35.6.3" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
-    <PackageVersion Include="OpenFeature.Contrib.Providers.Flagd" Version="0.3.3" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="OpenFeature.Providers.Flagd" Version="0.6.0" />
     <PackageVersion Include="OpenFeature.Providers.Ofrep" Version="0.1.2" />
-    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.6.0" />
+    <PackageVersion Include="MartinCostello.Logging.XUnit.v3" Version="0.7.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.0" />
     <PackageVersion Include="xunit.v3.assert" Version="3.2.0" />
@@ -116,7 +116,7 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.0.2" />
-    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.0" />
+    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.4" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
@@ -132,5 +132,11 @@
   </ItemGroup>
   <ItemGroup Label="Overrides">
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+    <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
+    <PackageVersion Include="MongoDB.Driver" Version="3.8.1" />
+    <!-- Override to address  https://github.com/advisories/GHSA-6c8g-7p36-r338 -->
+    <PackageVersion Include="SharpCompress" Version="0.48.0" />
   </ItemGroup>
 </Project>

@@ -3,6 +3,9 @@
     "path": "apphost.ts",
     "language": "typescript/nodejs"
   },
+  "sdk": {
+    "version": "13.3.0"
+  },
   "profiles": {
     "https": {
       "applicationUrl": "https://localhost:29750;http://localhost:28931",
@@ -13,6 +16,7 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder": ""
+    "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder": "../../../src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj",
+    "Aspire.Hosting.SqlServer": "13.3.0"
   }
 }

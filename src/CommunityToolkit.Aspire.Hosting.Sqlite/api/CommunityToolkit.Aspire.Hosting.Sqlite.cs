@@ -10,15 +10,18 @@ namespace Aspire.Hosting
 {
     public static partial class SqliteResourceBuilderExtensions
     {
+        [AspireExport("addSqlite", Description = "Adds a Sqlite database resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> AddSqlite(this IDistributedApplicationBuilder builder, string name, string? databasePath = null, string? databaseFileName = null) { throw null; }
 
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<SqliteWebResource>> is not ATS-compatible. Use the overload without the callback instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> WithSqliteWeb(this ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.SqliteWebResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class SqliteResource : Resource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class SqliteResource : Resource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public SqliteResource(string name, string databasePath, string databaseFileName) : base(default!) { }
 
@@ -27,7 +30,8 @@ namespace Aspire.Hosting.ApplicationModel
         System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties() { throw null; }
     }
 
-    public partial class SqliteWebResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class SqliteWebResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public SqliteWebResource(string name) : base(default!, default) { }
 

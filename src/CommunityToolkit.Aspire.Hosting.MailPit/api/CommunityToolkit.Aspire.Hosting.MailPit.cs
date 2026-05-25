@@ -10,17 +10,21 @@ namespace Aspire.Hosting
 {
     public static partial class MailPitHostingExtension
     {
+        [AspireExport("addMailPit", Description = "Adds a MailPit container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> AddMailPit(this IDistributedApplicationBuilder builder, string name, int? httpPort = null, int? smtpPort = null) { throw null; }
 
+        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a MailPit container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
+        [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a MailPit container resource")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> builder, string name, bool isReadOnly = false) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
-    public partial class MailPitContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IManifestExpressionProvider, IValueProvider, IValueWithReferences
+    [AspireExport(ExposeProperties = true)]
+    public partial class MailPitContainerResource : ContainerResource, IResourceWithConnectionString, IResource, IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
     {
         public MailPitContainerResource(string name) : base(default!, default) { }
 
@@ -29,6 +33,8 @@ namespace Aspire.Hosting.ApplicationModel
         public EndpointReferenceExpression Host { get { throw null; } }
 
         public EndpointReferenceExpression Port { get { throw null; } }
+
+        public EndpointReference PrimaryEndpoint { get { throw null; } }
 
         public ReferenceExpression UriExpression { get { throw null; } }
 

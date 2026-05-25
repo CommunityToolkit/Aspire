@@ -10,6 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class AzureRedisCacheDaprHostingExtensions
     {
+        [AspireExport("withReference", Description = "Configures a Dapr component resource to use Azure Managed Redis")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithReference(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, ApplicationModel.IResourceBuilder<Azure.AzureManagedRedisResource> source) { throw null; }
     }
 }
