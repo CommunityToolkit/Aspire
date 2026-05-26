@@ -7,7 +7,7 @@ description: "Use this skill when the user is working with an Aspire distributed
 
 Use this skill when the task is about operating an Aspire distributed application through the Aspire CLI rather than falling back to ad-hoc `dotnet`, `docker`, or shell workflows.
 
-Resources are typically defined in an AppHost such as, `AppHost.cs`, `apphost.ts`, or `AppHost/AppHost.csproj (Program.cs)`.
+Resources are typically defined in an AppHost such as, `AppHost.cs`, `apphost.mts`, or `AppHost/AppHost.csproj (Program.cs)`.
 
 ## Use this skill for
 
@@ -48,7 +48,7 @@ When the AppHost is implemented in C# such as `AppHost.cs`, `apphost.cs`, or a `
 
 ## TypeScript AppHosts
 
-When the AppHost is `apphost.ts`, the `.modules/` folder at the project root contains generated TypeScript modules that expose the Aspire APIs available to the AppHost. Common files include `.modules/aspire.ts`, `base.ts`, and `transport.ts`.
+When the AppHost is `apphost.mts`, the `.modules/` folder at the project root contains generated TypeScript modules that expose the Aspire APIs available to the AppHost. Common files include `.modules/aspire.ts`, `base.ts`, and `transport.ts`.
 
 - Do not edit `.modules/` directly.
 - Use `aspire add <package>` to add integrations and regenerate the available APIs.

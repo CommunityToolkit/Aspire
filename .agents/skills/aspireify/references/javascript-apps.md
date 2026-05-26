@@ -124,7 +124,7 @@ Run `aspire restore` to generate the `.modules/` directory with TypeScript SDK b
 
 Augment if it exists:
 
-- Ensure `".modules/**/*.ts"` and `"apphost.ts"` are in `include`
+- Ensure `".modules/**/*.ts"` and `"apphost.mts"` are in `include`
 - Ensure `"module"` is `"nodenext"` or `"node16"` (ESM required)
 - Ensure `"moduleResolution"` matches
 
@@ -141,7 +141,7 @@ If no `tsconfig.json` exists and `aspire restore` didn't create one, create a mi
     "outDir": "./dist",
     "rootDir": "."
   },
-  "include": ["apphost.ts", ".modules/**/*.ts"]
+  "include": ["apphost.mts", ".modules/**/*.ts"]
 }
 ```
 

@@ -160,7 +160,7 @@ Migration approach:
 
 Before running this skill, `aspire init` must have already:
 
-- Dropped a skeleton AppHost file (`apphost.ts` or `apphost.cs`) at the configured location
+- Dropped a skeleton AppHost file (`apphost.mts` or `apphost.cs`) at the configured location
 - Created `aspire.config.json` at the repository root
 
 Verify both exist before proceeding.
@@ -377,7 +377,7 @@ dotnet sln <solution> add <ServiceDefaults.csproj>
 
 Edit the skeleton AppHost file to add resource definitions for each selected project. Use the appropriate syntax based on language.
 
-#### TypeScript AppHost (`apphost.ts`)
+#### TypeScript AppHost (`apphost.mts`)
 
 ```typescript
 import { createBuilder } from './.modules/aspire.js';

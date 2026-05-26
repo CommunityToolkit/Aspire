@@ -12,7 +12,7 @@
       "cwd": "${cwd}",
       "args": [
         "-AppHostPath",
-        "./examples/${input:example-folder}/CommunityToolkit.Aspire.Hosting.${input:project}.AppHost.TypeScript/apphost.ts",
+        "./examples/${input:example-folder}/CommunityToolkit.Aspire.Hosting.${input:project}.AppHost.TypeScript/apphost.mts",
         "-PackageProjectPath",
         "./src/CommunityToolkit.Aspire.Hosting.${input:project}/CommunityToolkit.Aspire.Hosting.${input:project}.csproj",
         "-PackageName",

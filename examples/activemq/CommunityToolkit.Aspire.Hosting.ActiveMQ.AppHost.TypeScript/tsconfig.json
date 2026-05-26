@@ -9,6 +9,6 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["apphost.ts", ".modules/**/*.ts", ".modules/**/*.d.ts"],
+  "include": ["apphost.mts", ".modules/**/*.ts", ".modules/**/*.d.ts"],
   "exclude": ["node_modules"]
 }

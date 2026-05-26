@@ -1,8 +1,8 @@
 # TypeScript AppHosts
 
-Use this when the AppHost is `apphost.ts` and the task involves generated APIs or TypeScript-specific Aspire workflows.
+Use this when the AppHost is `apphost.mts` and the task involves generated APIs or TypeScript-specific Aspire workflows.
 
-## Scenario: I Added An Integration And Need New APIs To Show Up In `apphost.ts`
+## Scenario: I Added An Integration And Need New APIs To Show Up In `apphost.mts`
 
 Use this when the task touches `.modules/` or newly added integrations.
 
@@ -16,7 +16,7 @@ Keep these points in mind:
 - Common generated files include `.modules/aspire.ts`, `base.ts`, and `transport.ts`.
 - Do not edit `.modules/` directly.
 - Use `aspire add <package>` to regenerate the available APIs after adding an integration.
-- Inspect `.modules/aspire.ts` after `aspire add` to see the refreshed API surface available to `apphost.ts`.
+- Inspect `.modules/aspire.ts` after `aspire add` to see the refreshed API surface available to `apphost.mts`.
 - The local `tsconfig.json` often includes `.modules/**/*.ts` in its compilation scope.
 
 ## Scenario: `.modules/` Disappeared After A Pull, Clean, Or Branch Switch

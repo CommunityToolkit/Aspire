@@ -62,7 +62,7 @@ Keep these points in mind:
 
 ## Scenario: The AppHost Is TypeScript And Generated APIs Matter
 
-If the AppHost is `apphost.ts`, the `.modules/` directory contains generated TypeScript modules that expose Aspire APIs.
+If the AppHost is `apphost.mts`, the `.modules/` directory contains generated TypeScript modules that expose Aspire APIs.
 
 - Do not edit `.modules/` directly.
 - Use `aspire add <package>` to regenerate the available APIs when adding integrations.
