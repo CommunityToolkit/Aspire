@@ -26,9 +26,9 @@ This design intentionally treats custom publish-manifest schema as legacy. The i
 
 ## Publishing
 
-Publishing is the deployment moment for Bitwarden resources.
-When you publish an AppHost, each declared Bitwarden resource contributes four
-pipeline steps via `WithPipelineStepFactory(...)`.
+`aspire deploy` is the deployment moment for Bitwarden resources.
+Each declared Bitwarden resource contributes four pipeline steps via
+`WithPipelineStepFactory(...)`.
 
 The steps run in order and are scoped to the resource by name:
 
@@ -47,21 +47,21 @@ Happy path:
 
 1. Declare the Bitwarden project with `AddBitwardenSecretManager(...)`.
 2. Declare any managed secrets with `AddSecret(...)`.
-3. Reference the Bitwarden resource from dependent resources with `WithReference(...)` or reference a secret value with `WithBitwardenSecretValue(...)` or `WithBitwardenSecretId(...)`.
-4. Publish the AppHost.
+3. Reference the Bitwarden resource from dependent resources with `WithReference(...)` or `WithBitwardenSecretValue(...)`.
+4. Run `aspire deploy`.
 5. During pipeline execution, the four Bitwarden steps materialize the declared graph in Bitwarden.
 6. The deployed graph is stable and available for consumers.
 
 ## Run Mode
 
-For local run scenarios, the same declared graph is used. The implementation invokes reconciliation during resource initialization to keep local state aligned. This run-mode behavior is separate from publish-time step execution and does not change the architecture: declaration and pipeline-step deployment remain the primary model.
+For local run scenarios, the same declared graph is used. The implementation invokes reconciliation during resource initialization to keep local state aligned. This run-mode behavior is separate from deploy-time step execution and does not change the architecture: declaration and pipeline-step deployment remain the primary model.
 
 ## Access Tokens
 
 The integration uses two distinct access tokens with different scopes:
 
 - **Management token** — supplied to `AddBitwardenSecretManager(...)`. Used exclusively by the AppHost provisioner to create and update the Bitwarden project and its secrets. It must have write permissions to the project.
-- **Client token** — optionally supplied as a second argument to `WithReference(bitwarden, token)`. Injected into the dependent resource as `AccessToken` under `Aspire:Bitwarden:SecretManager:{connectionName}`. Defaults to the management token when omitted.
+- **Client token** — optionally supplied via `WithReference(bitwarden, bw => bw.WithAccessToken(token))`. Injected into the dependent resource as `AccessToken` under `Aspire:Bitwarden:SecretManager:{connectionName}`. Defaults to the management token when omitted.
 
 The client token only needs read permissions to the project. Because Bitwarden does not expose an API for granting project access to a service account, this grant must be performed manually in the Bitwarden web vault. For a newly created project the grant must be done after the first AppHost run that creates the project.
 
@@ -74,13 +74,13 @@ The integration maintains two cache files on the AppHost, and one optional cache
 ### AppHost cache files (AppHost side)
 
 - **AppHost cache** (`{resourceName}.{environment}.json` in `.bitwarden/`): the integration's own bookkeeping — persists the Bitwarden project ID and secret ID mappings between runs. Located in `.bitwarden/` relative to the AppHost directory by default, so it is naturally tracked in version control alongside the AppHost. Override with `WithCacheFile(...)`; relative paths resolve from the AppHost directory.
-- **AppHost auth cache** (`{sha256(accessToken)}.auth-cache`): caches the Bitwarden SDK authentication session between runs so the AppHost does not need to re-authenticate on every run. Located in `{aspireStore.BasePath}/bitwarden/` by default, keyed by a hash of the access token so that rotating the token automatically starts a fresh session. Override with `WithAuthCacheFile(...)`; relative paths resolve from the Aspire store.
+- **AppHost auth cache** (`{sha256(accessToken)}.auth-cache`): caches the Bitwarden SDK authentication session between runs so the AppHost does not need to re-authenticate on every run. Located in `.bitwarden/` under the Aspire store by default, keyed by a hash of the access token so that rotating the token automatically starts a fresh session. Override with `WithAuthCacheFile(...)`; relative paths resolve from the Aspire store.
 
 `WithCacheFile(...)` and `WithAuthCacheFile(...)` are escape hatches that replace the default paths with an explicit location. These are intended for cases where the cache must be shared across multiple AppHost projects or stored in a CI cache directory.
 
 ### App auth cache (deployed app side)
 
-- **App auth cache**: caches the Bitwarden SDK authentication session inside the deployed app. This is independent of the AppHost auth cache — the two run in different processes and on different machines. Configure with `WithAuthCacheFile(...)` on the dependent resource builder (not on the Bitwarden resource), passing the Bitwarden source so the connection name can be resolved. Accepts a string for a fixed path or a parameter for an environment-specific path. The value is injected into the app via the `AuthCacheFile` configuration key under `Aspire:Bitwarden:SecretManager:{connectionName}`.
+- **App auth cache**: caches the Bitwarden SDK authentication session inside the deployed app. This is independent of the AppHost auth cache — the two run in different processes and on different machines. Configure via `WithReference(bitwarden, bw => bw.WithAuthCacheFile(...))`. Accepts a string for a fixed path or a parameter for an environment-specific path. The value is injected into the app via the `AuthCacheFile` configuration key under `Aspire:Bitwarden:SecretManager:{connectionName}`.
 
 The AppHost reconciler never reads the app auth cache path. The deployed app never reads the AppHost cache files.
 

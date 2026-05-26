@@ -43,28 +43,17 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
 // 1. Using the secret manager client in code, which allows you to retrieve secrets at runtime and
 //    supports dynamic secret retrieval without redeploying the application when secrets change.
 // (See ApiService/Program.cs for an example of retrieving secrets from the client in code.)
-// Recommended: supply a least-privilege read-only access token so the client does not receive the management token.
-// IMPORTANT: the client token must be granted read permissions to the Bitwarden project.
-// This cannot be automated: Bitwarden does not expose an API for granting project access to a service account.
-// You must grant the service account read access to the project manually in the Bitwarden web vault or CLI.
-// For a newly created project this must be done after the first AppHost run that creates the project.
-api.WithReference(bitwarden, accessToken /* replace with least privilege token */)
-    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource);
+api.WithReference(bitwarden, bw =>
+{
+    bw.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource);
 
-// Optional: persist the app's Bitwarden SDK auth session across restarts so it does not re-authenticate on every startup.
-// In run mode a fixed local path is fine; in deployed environments use a parameter so each
-// environment can point to a durable storage location (e.g. a mounted volume).
-// In deployed environments, set Parameters__bitwarden-auth-cache-location to a persistent path, e.g. /data/bitwarden/auth-cache.
-if (builder.ExecutionContext.IsRunMode)
-{
-    string apiProjectDir = Path.GetDirectoryName(api.Resource.GetProjectMetadata().ProjectPath)!;
-    string authCachePath = Path.Combine(apiProjectDir, "obj", ".app-auth-cache");
-    api.WithAuthCacheFile(bitwarden, authCachePath);
-}
-else if (builder.ExecutionContext.IsPublishMode)
-{
-    api.WithAuthCacheFile(bitwarden, builder.AddParameter("app-auth-cache-location"));
-}
+    // Recommended: supply a least-privilege read-only access token so the client does not receive the management token.
+    // IMPORTANT: the client token must be granted read permissions to the Bitwarden project.
+    // This cannot be automated: Bitwarden does not expose an API for granting project access to a service account.
+    // You must grant the service account read access to the project manually in the Bitwarden web vault or CLI.
+    // For a newly created project this must be done after the first AppHost run that creates the project.
+    bw.WithAccessToken(accessToken /* replace with least privilege token */);
+});
 
 // 2. Using direct secret references in the project configuration, which injects the secret value as an environment variable at runtime.
 //    This approach is simpler (no Bitwarden code in the application) but requires redeploying the application whenever the secret value changes.

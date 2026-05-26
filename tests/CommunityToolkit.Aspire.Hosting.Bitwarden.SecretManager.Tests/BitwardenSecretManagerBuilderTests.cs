@@ -202,7 +202,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, runtimeToken);
+        consumer.WithReference(bitwarden, bw => bw.WithAccessToken(runtimeToken));
 
         using var app = appBuilder.Build();
 
@@ -257,7 +257,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden).WithAuthCacheFile(bitwarden, authCacheLocation);
+        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheFile(authCacheLocation));
 
         using var app = appBuilder.Build();
 
@@ -284,7 +284,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden).WithAuthCacheFile(bitwarden, appAuthCachePath);
+        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheFile(appAuthCachePath));
 
         using var app = appBuilder.Build();
 
@@ -366,7 +366,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
+        consumer.WithReference(bitwarden, bw => bw.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource));
 
         using var app = appBuilder.Build();
 

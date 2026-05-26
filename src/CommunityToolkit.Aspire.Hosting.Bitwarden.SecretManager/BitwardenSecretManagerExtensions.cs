@@ -206,9 +206,9 @@ public static class BitwardenSecretManagerExtensions
     /// <summary>
     /// Overrides the AppHost auth cache file path (Bitwarden SDK auth session used by the AppHost reconciler).
     /// Defaults to the Aspire store when not set. Override to reuse a cached auth session across CI runs.
-    /// Use <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string, string?)"/> or
-    /// <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, IResourceBuilder{ParameterResource}, string?)"/>
-    /// to configure the auth cache path inside the deployed app.
+    /// To configure the auth cache path inside the deployed app, use
+    /// <see cref="BitwardenReferenceBuilder{TDestination}.WithAuthCacheFile(string)"/> inside
+    /// a <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, System.Action{BitwardenReferenceBuilder{TDestination}}, string?)"/> callback.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="authCacheFile">The auth cache file path on the AppHost, relative to the Aspire store directory when not rooted.</param>
@@ -223,82 +223,6 @@ public static class BitwardenSecretManagerExtensions
         builder.Resource.AuthCacheFile = authCacheFile;
 
         return builder;
-    }
-
-    /// <summary>
-    /// Injects the Bitwarden SDK auth cache file path into the destination resource using a hardcoded path.
-    /// The value is injected as <c>AuthCacheFile</c> under <c>Aspire:Bitwarden:SecretManager:{connectionName}</c>.
-    /// It is not used by the AppHost reconciler. Use this when the auth cache path is fixed (e.g. a local run path).
-    /// Use <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, IResourceBuilder{ParameterResource}, string?)"/>
-    /// to make the path environment-specific via a parameter.
-    /// </summary>
-    /// <param name="builder">The destination resource builder.</param>
-    /// <param name="source">The Bitwarden resource builder.</param>
-    /// <param name="appAuthCacheFile">
-    /// The auth cache file path inside the app.
-    /// Set this to a persistent storage path (e.g. <c>/data/bitwarden/auth-cache</c>) to persist auth state across restarts.
-    /// </param>
-    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
-    /// <returns>The destination resource builder.</returns>
-    public static IResourceBuilder<TDestination> WithAuthCacheFile<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        IResourceBuilder<BitwardenSecretManagerResource> source,
-        string appAuthCacheFile,
-        string? connectionName = null)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentException.ThrowIfNullOrWhiteSpace(appAuthCacheFile);
-
-        if (connectionName is not null)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
-        }
-
-        connectionName ??= source.Resource.Name;
-
-        return builder.WithEnvironment(
-            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AuthCacheFile",
-            appAuthCacheFile);
-    }
-
-    /// <summary>
-    /// Injects the Bitwarden SDK auth cache file path into the destination resource using a parameter.
-    /// The parameter value is injected as <c>AuthCacheFile</c> under <c>Aspire:Bitwarden:SecretManager:{connectionName}</c>.
-    /// It is not used by the AppHost reconciler. Use this when the auth cache path varies per environment.
-    /// Use <see cref="WithAuthCacheFile{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string, string?)"/>
-    /// to use a hardcoded path instead.
-    /// </summary>
-    /// <param name="builder">The destination resource builder.</param>
-    /// <param name="source">The Bitwarden resource builder.</param>
-    /// <param name="appAuthCacheFile">
-    /// A parameter whose value is the auth cache file path inside the app.
-    /// In deployed environments, set this to a persistent storage path (e.g. <c>/data/bitwarden/auth-cache</c>) to persist auth state across restarts.
-    /// </param>
-    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
-    /// <returns>The destination resource builder.</returns>
-    public static IResourceBuilder<TDestination> WithAuthCacheFile<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        IResourceBuilder<BitwardenSecretManagerResource> source,
-        IResourceBuilder<ParameterResource> appAuthCacheFile,
-        string? connectionName = null)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(appAuthCacheFile);
-
-        if (connectionName is not null)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
-        }
-
-        connectionName ??= source.Resource.Name;
-
-        return builder.WithEnvironment(
-            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AuthCacheFile",
-            appAuthCacheFile);
     }
 
     /// <summary>
@@ -425,42 +349,6 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Injects structured Bitwarden client configuration into the destination resource,
-    /// using the provided least-privilege read-only access token instead of the management token.
-    /// </summary>
-    /// <remarks>
-    /// The provided token must be granted read permissions to the Bitwarden project.
-    /// Bitwarden does not expose an API for granting project access to a service account, so this cannot be automated.
-    /// Grant the service account read access to the project manually in the Bitwarden web vault or CLI.
-    /// For a newly created project, do this after the first AppHost run that creates the project.
-    /// </remarks>
-    /// <typeparam name="TDestination">The destination resource type.</typeparam>
-    /// <param name="builder">The destination resource builder.</param>
-    /// <param name="source">The Bitwarden resource builder.</param>
-    /// <param name="accessToken">The access token parameter for this client.</param>
-    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
-    /// <returns>The destination resource builder.</returns>
-    public static IResourceBuilder<TDestination> WithReference<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        IResourceBuilder<BitwardenSecretManagerResource> source,
-        IResourceBuilder<ParameterResource> accessToken,
-        string? connectionName = null)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(accessToken);
-
-        connectionName ??= source.Resource.Name;
-
-        return builder
-            .WithReference(source, connectionName)
-            .WithEnvironment(
-                $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AccessToken",
-                accessToken);
-    }
-
-    /// <summary>
     /// Injects structured Bitwarden client configuration into the destination resource.
     /// </summary>
     /// <typeparam name="TDestination">The destination resource type.</typeparam>
@@ -495,6 +383,33 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
+    /// Injects structured Bitwarden client configuration into the destination resource and
+    /// invokes a callback to apply additional Bitwarden-specific configuration for this connection.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource builder.</param>
+    /// <param name="configure">A callback that receives a scoped builder for this connection.</param>
+    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
+    /// <returns>The destination resource builder.</returns>
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        Action<BitwardenReferenceBuilder<TDestination>> configure,
+        string? connectionName = null)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(configure);
+
+        connectionName ??= source.Resource.Name;
+        builder.WithReference(source, connectionName);
+        configure(new BitwardenReferenceBuilder<TDestination>(builder, connectionName));
+        return builder;
+    }
+
+    /// <summary>
     /// Injects a Bitwarden secret value into a destination environment variable.
     /// </summary>
     /// <typeparam name="TDestination">The destination resource type.</typeparam>
@@ -515,29 +430,6 @@ public static class BitwardenSecretManagerExtensions
         AttachSecretDependencies(builder, secretReference);
 
         return builder.WithEnvironment(environmentVariableName, secretReference);
-    }
-
-    /// <summary>
-    /// Injects a Bitwarden secret identifier into a destination environment variable.
-    /// </summary>
-    /// <typeparam name="TDestination">The destination resource type.</typeparam>
-    /// <param name="builder">The destination resource builder.</param>
-    /// <param name="environmentVariableName">The destination environment variable name.</param>
-    /// <param name="secretReference">The Bitwarden secret reference.</param>
-    /// <returns>The destination resource builder.</returns>
-    public static IResourceBuilder<TDestination> WithBitwardenSecretId<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        string environmentVariableName,
-        IBitwardenSecretReference secretReference)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
-        ArgumentNullException.ThrowIfNull(secretReference);
-
-        AttachSecretDependencies(builder, secretReference);
-
-        return builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secretReference));
     }
 
     private static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManagerCore(
@@ -820,7 +712,7 @@ public static class BitwardenSecretManagerExtensions
         }
     }
 
-    private static void AttachSecretDependencies<TDestination>(
+    internal static void AttachSecretDependencies<TDestination>(
         IResourceBuilder<TDestination> builder,
         IBitwardenSecretReference secretReference)
         where TDestination : IResourceWithEnvironment
