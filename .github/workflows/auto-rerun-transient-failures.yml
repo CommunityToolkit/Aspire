@@ -1,0 +1,89 @@
+name: Auto rerun transient PR failures
+
+on:
+  workflow_run:
+    workflows:
+      - .NET CI
+    types:
+      - completed
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  rerun-transient-failures:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.run_attempt == 1
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rerun jobs that failed while Docker was unavailable
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t failed_jobs < <(
+            gh api "repos/${REPO}/actions/runs/${RUN_ID}/jobs?per_page=100" --paginate \
+              --jq '.jobs[] | select(.conclusion == "failure") | @base64'
+          )
+
+          if [ "${#failed_jobs[@]}" -eq 0 ]; then
+            echo "No failed jobs found in ${RUN_URL}."
+            exit 0
+          fi
+
+          rerun_count=0
+
+          for encoded_job in "${failed_jobs[@]}"; do
+            job_json="$(echo "${encoded_job}" | base64 --decode)"
+            job_id="$(echo "${job_json}" | jq -r '.id')"
+            job_name="$(echo "${job_json}" | jq -r '.name')"
+            should_rerun="false"
+
+            docker_probe_failed="$(
+              echo "${job_json}" | jq -e '
+                any(.steps[]?;
+                  .name == "Verify Docker is running" and .conclusion == "failure"
+                )
+              ' >/dev/null 2>&1 && echo "true" || echo "false"
+            )"
+
+            if [ "${docker_probe_failed}" == "true" ]; then
+              should_rerun="true"
+            fi
+
+            setup_step_failed="$(
+              echo "${job_json}" | jq -e '
+                any(.steps[]?;
+                  .name == "Setup Runtimes, Caching, and Tools" and .conclusion == "failure"
+                )
+              ' >/dev/null 2>&1 && echo "true" || echo "false"
+            )"
+
+            if [ "${should_rerun}" != "true" ] && [ "${setup_step_failed}" == "true" ]; then
+              job_log="$(gh run view "${RUN_ID}" --job "${job_id}" --log --repo "${REPO}")"
+
+              if echo "${job_log}" | grep -Eiq 'failed to bind host port.*address already in use|address already in use.*failed to bind host port'; then
+                should_rerun="true"
+              fi
+            fi
+
+            if [ "${should_rerun}" != "true" ]; then
+              echo "Skipping ${job_name} (${job_id}): failure does not match known transient Docker signatures."
+              continue
+            fi
+
+            echo "Rerunning ${job_name} (${job_id}) due to matched transient Docker failure signature."
+            gh api --method POST "repos/${REPO}/actions/jobs/${job_id}/rerun" >/dev/null
+            rerun_count=$((rerun_count + 1))
+          done
+
+          echo "Automatically reran ${rerun_count} failed job(s) from ${RUN_URL}."
