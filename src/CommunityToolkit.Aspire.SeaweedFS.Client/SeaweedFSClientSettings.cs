@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Amazon.S3;
 using System.Data.Common;
-using Amazon.S3;
 
-namespace CommunityToolkit.Aspire.SeaweedFS.Client;
+#pragma warning disable IDE0130
+namespace Microsoft.Extensions.Hosting;
+#pragma warning restore IDE0130
 
 /// <summary>
 /// Provides the settings for configuring the SeaweedFS S3 client.
@@ -66,7 +67,7 @@ public sealed class SeaweedFSClientSettings
         }
 
         // If the connection string is an absolute URI (e.g., "http://...", "https://..."), use it as the endpoint.
-        if (Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
+        if (Uri.TryCreate(connectionString, UriKind.Absolute, out Uri? uri))
         {
             Endpoint = uri;
             return;
@@ -74,41 +75,41 @@ public sealed class SeaweedFSClientSettings
 
         try
         {
-            var connectionBuilder = new DbConnectionStringBuilder
+            DbConnectionStringBuilder connectionBuilder = new()
             {
                 ConnectionString = connectionString
             };
 
-            if (connectionBuilder.TryGetValue(ConnectionStringEndpoint, out var endpoint) &&
-                Uri.TryCreate(endpoint.ToString()?.Trim(), UriKind.Absolute, out var serviceUri))
+            if (connectionBuilder.TryGetValue(ConnectionStringEndpoint, out object? endpoint) &&
+                Uri.TryCreate(endpoint.ToString()?.Trim(), UriKind.Absolute, out Uri? serviceUri))
             {
                 Endpoint = serviceUri;
             }
 
-            if (connectionBuilder.TryGetValue(UseSslKey, out var useSslObj) &&
+            if (connectionBuilder.TryGetValue(UseSslKey, out object? useSslObj) &&
                 useSslObj is string useSslString &&
-                bool.TryParse(useSslString, out var useSslParsed))
+                bool.TryParse(useSslString, out bool useSslParsed))
             {
                 UseSsl = useSslParsed;
             }
 
-            if (connectionBuilder.TryGetValue(ConnectionStringFilerEndpoint, out var filerEndpoint) &&
-                Uri.TryCreate(filerEndpoint.ToString()?.Trim(), UriKind.Absolute, out var filerServiceUri))
+            if (connectionBuilder.TryGetValue(ConnectionStringFilerEndpoint, out object? filerEndpoint) &&
+                Uri.TryCreate(filerEndpoint.ToString()?.Trim(), UriKind.Absolute, out Uri? filerServiceUri))
             {
                 FilerEndpoint = filerServiceUri;
             }
-            else if (connectionBuilder.TryGetValue(ConnectionStringFilerUrl, out var filerUrl) &&
-                     Uri.TryCreate(filerUrl.ToString()?.Trim(), UriKind.Absolute, out var filerUrlUri))
+            else if (connectionBuilder.TryGetValue(ConnectionStringFilerUrl, out object? filerUrl) &&
+                     Uri.TryCreate(filerUrl.ToString()?.Trim(), UriKind.Absolute, out Uri? filerUrlUri))
             {
                 FilerEndpoint = filerUrlUri;
             }
 
-            if (connectionBuilder.TryGetValue(AccessKeyName, out var accessKeyValue) && accessKeyValue is string accessKey)
+            if (connectionBuilder.TryGetValue(AccessKeyName, out object? accessKeyValue) && accessKeyValue is string accessKey)
             {
                 AccessKey = accessKey;
             }
 
-            if (connectionBuilder.TryGetValue(SecretKeyName, out var secretKeyValue) && secretKeyValue is string secretKey)
+            if (connectionBuilder.TryGetValue(SecretKeyName, out object? secretKeyValue) && secretKeyValue is string secretKey)
             {
                 SecretKey = secretKey;
             }

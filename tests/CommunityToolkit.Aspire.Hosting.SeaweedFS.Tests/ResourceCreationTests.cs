@@ -98,16 +98,16 @@ public class ResourceCreationTests
     [Fact]
     public void WithDataVolume_AddsVolumeAnnotation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         builder.AddSeaweedFS("seaweed").WithDataVolume();
 
-        using var app = builder.Build();
+        using DistributedApplication app = builder.Build();
 
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource = appModel.Resources.OfType<SeaweedFSContainerResource>().Single();
+        DistributedApplicationModel appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        SeaweedFSContainerResource resource = appModel.Resources.OfType<SeaweedFSContainerResource>().Single();
 
-        var volumeAnnotation = resource.Annotations.OfType<ContainerMountAnnotation>().SingleOrDefault(a => a.Target == "/data");
+        ContainerMountAnnotation? volumeAnnotation = resource.Annotations.OfType<ContainerMountAnnotation>().SingleOrDefault(a => a.Target == "/data");
 
         Assert.NotNull(volumeAnnotation);
         Assert.Equal(ContainerMountType.Volume, volumeAnnotation.Type);

@@ -1,10 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Aspire.Hosting.ApplicationModel;
 
-namespace CommunityToolkit.Aspire.Hosting.SeaweedFS;
+#pragma warning disable IDE0130
+namespace Aspire.Hosting;
+#pragma warning restore IDE0130
 
 /// <summary>
 /// A resource that represents a SeaweedFS container.
@@ -45,7 +43,7 @@ public sealed class SeaweedFSContainerResource(string name, ParameterResource ac
     /// <returns>A connection string for the SeaweedFS server.</returns>
     public ValueTask<string?> GetConnectionStringAsync(CancellationToken cancellationToken = default)
     {
-        if (this.TryGetLastAnnotation<ConnectionStringRedirectAnnotation>(out var connectionStringAnnotation))
+        if (this.TryGetLastAnnotation<ConnectionStringRedirectAnnotation>(out ConnectionStringRedirectAnnotation? connectionStringAnnotation))
         {
             return connectionStringAnnotation.Resource.GetConnectionStringAsync(cancellationToken);
         }
@@ -55,12 +53,12 @@ public sealed class SeaweedFSContainerResource(string name, ParameterResource ac
 
     private ReferenceExpression GetConnectionString()
     {
-        var builder = new ReferenceExpressionBuilder();
+        ReferenceExpressionBuilder builder = new();
 
-        var hasS3 = Annotations.OfType<SeaweedFSS3Annotation>().Any();
-        var hasFiler = Annotations.OfType<SeaweedFSFilerAnnotation>().Any();
+        bool hasS3 = Annotations.OfType<SeaweedFSS3Annotation>().Any();
+        bool hasFiler = Annotations.OfType<SeaweedFSFilerAnnotation>().Any();
 
-        var targetEndpoint = hasS3 ? PrimaryEndpoint : MasterEndpoint;
+        EndpointReference targetEndpoint = hasS3 ? PrimaryEndpoint : MasterEndpoint;
 
         builder.Append($"Endpoint=http://{targetEndpoint.Property(EndpointProperty.Host)}:{targetEndpoint.Property(EndpointProperty.Port)}");
 
@@ -80,10 +78,10 @@ public sealed class SeaweedFSContainerResource(string name, ParameterResource ac
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
-        var hasS3 = Annotations.OfType<SeaweedFSS3Annotation>().Any();
-        var hasFiler = Annotations.OfType<SeaweedFSFilerAnnotation>().Any();
+        bool hasS3 = Annotations.OfType<SeaweedFSS3Annotation>().Any();
+        bool hasFiler = Annotations.OfType<SeaweedFSFilerAnnotation>().Any();
 
-        var targetEndpoint = hasS3 ? PrimaryEndpoint : MasterEndpoint;
+        EndpointReference targetEndpoint = hasS3 ? PrimaryEndpoint : MasterEndpoint;
 
         yield return new("Host", ReferenceExpression.Create($"{targetEndpoint.Property(EndpointProperty.Host)}"));
         yield return new("Port", ReferenceExpression.Create($"{targetEndpoint.Property(EndpointProperty.Port)}"));
@@ -104,8 +102,8 @@ public sealed class SeaweedFSContainerResource(string name, ParameterResource ac
     }
 }
 
-    // Internal annotations used safely during the resource compilation lifecycle
-    internal sealed class SeaweedFSS3Annotation : IResourceAnnotation { }
+// Internal annotations used safely during the resource compilation lifecycle
+internal sealed class SeaweedFSS3Annotation : IResourceAnnotation { }
 internal sealed class SeaweedFSFilerAnnotation : IResourceAnnotation { }
 internal sealed class SeaweedFSCustomS3ConfigAnnotation(string hostPath) : IResourceAnnotation
 {

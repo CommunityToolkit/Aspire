@@ -1,5 +1,4 @@
-﻿using System;
-using Xunit;
+﻿using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.SeaweedFS.Client.Tests;
 

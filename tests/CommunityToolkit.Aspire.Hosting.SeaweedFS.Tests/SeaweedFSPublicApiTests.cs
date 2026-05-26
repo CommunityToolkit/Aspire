@@ -200,11 +200,11 @@ public class SeaweedFSPublicApiTests
     [Fact]
     public async Task VerifyConnectionString_PointsToS3AndIncludesCredentials_WhenS3IsEnabled()
     {
-        var builder = DistributedApplication.CreateBuilder();
-        var accessKey = builder.AddParameter("access", "my-access");
-        var secretKey = builder.AddParameter("secret", "my-secret");
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        IResourceBuilder<ParameterResource> accessKey = builder.AddParameter("access", "my-access");
+        IResourceBuilder<ParameterResource> secretKey = builder.AddParameter("secret", "my-secret");
 
-        var seaweed = builder.AddSeaweedFS("seaweed")
+        IResourceBuilder<SeaweedFSContainerResource> seaweed = builder.AddSeaweedFS("seaweed")
             .WithAccessKey(accessKey)
             .WithSecretKey(secretKey)
             .WithS3()
@@ -213,11 +213,11 @@ public class SeaweedFSPublicApiTests
             // Mock the Filer endpoint allocation (implicitly added by WithS3) to prevent async evaluation hangs
             .WithEndpoint(SeaweedFSContainerResource.FilerEndpointName, e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 8888));
 
-        var connectionString = await seaweed.Resource.GetConnectionStringAsync();
+        string? connectionString = await seaweed.Resource.GetConnectionStringAsync();
 
         // Assert dynamically against the reference expression to evaluate parameters just like the real AppHost
         // Now includes the FilerEndpoint appended dynamically by the Resource
-        var expected = await ReferenceExpression.Create($"Endpoint=http://localhost:8333;AccessKey={accessKey.Resource};SecretKey={secretKey.Resource};FilerEndpoint=http://localhost:8888").GetValueAsync(CancellationToken.None);
+        string? expected = await ReferenceExpression.Create($"Endpoint=http://localhost:8333;AccessKey={accessKey.Resource};SecretKey={secretKey.Resource};FilerEndpoint=http://localhost:8888").GetValueAsync(CancellationToken.None);
 
         Assert.Equal(expected, connectionString);
     }

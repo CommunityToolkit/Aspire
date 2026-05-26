@@ -1,8 +1,4 @@
-﻿using System;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace CommunityToolkit.Aspire.SeaweedFS.Client;
 
@@ -17,10 +13,10 @@ internal sealed class SeaweedFSFilerHealthCheck(SeaweedFSFilerClient filerClient
         {
             // Send a lightweight GET request to the root of the Filer API. 
             // Using Accept: application/json ensures we get a small JSON directory listing rather than HTML payload.
-            using var request = new HttpRequestMessage(HttpMethod.Get, "/");
+            using HttpRequestMessage request = new(HttpMethod.Get, "/");
             request.Headers.Add("Accept", "application/json");
 
-            var response = await filerClient.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            HttpResponseMessage response = await filerClient.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {

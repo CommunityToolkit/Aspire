@@ -30,7 +30,7 @@ public class SeaweedFSFunctionalTests(ITestOutputHelper testOutputHelper)
         Assert.NotNull(accessKey);
         Assert.NotNull(secretKey);
 
-        var s3Config = new AmazonS3Config
+        AmazonS3Config s3Config = new()
         {
             ServiceURL = s3Endpoint.Url,
             ForcePathStyle = true,
@@ -39,7 +39,7 @@ public class SeaweedFSFunctionalTests(ITestOutputHelper testOutputHelper)
             MaxErrorRetry = 0
         };
 
-        using var s3Client = new AmazonS3Client(accessKey, secretKey, s3Config);
+        using AmazonS3Client s3Client = new(accessKey, secretKey, s3Config);
 
         const string bucketName = "test-bucket";
         const string objectKey = "test-file.txt";
@@ -63,7 +63,7 @@ public class SeaweedFSFunctionalTests(ITestOutputHelper testOutputHelper)
         });
 
         GetObjectResponse getObjectResponse = await s3Client.GetObjectAsync(bucketName, objectKey);
-        using var reader = new StreamReader(getObjectResponse.ResponseStream);
+        using StreamReader reader = new(getObjectResponse.ResponseStream);
         string downloadedContent = await reader.ReadToEndAsync();
 
         Assert.Equal(fileContent, downloadedContent);
@@ -84,14 +84,14 @@ public class SeaweedFSFunctionalTests(ITestOutputHelper testOutputHelper)
 
         EndpointReference filerEndpoint = seaweedfs.GetEndpoint(SeaweedFSContainerResource.FilerEndpointName);
 
-        using var httpClient = new HttpClient { BaseAddress = new Uri(filerEndpoint.Url) };
+        using HttpClient httpClient = new() { BaseAddress = new Uri(filerEndpoint.Url) };
 
         const string fileName = "/my-native-file.txt";
         const string fileContent = "Hello from SeaweedFS Native Filer API!";
 
         await ExecuteWithRetryAsync(async () =>
         {
-            using var content = new StringContent(fileContent, Encoding.UTF8, "text/plain");
+            using StringContent content = new(fileContent, Encoding.UTF8, "text/plain");
             HttpResponseMessage response = await httpClient.PutAsync(fileName, content);
             response.EnsureSuccessStatusCode();
         });
@@ -137,11 +137,11 @@ public class SeaweedFSFunctionalTests(ITestOutputHelper testOutputHelper)
                 await rns1.WaitForResourceHealthyAsync(seaweed1.Resource.Name);
 
                 EndpointReference filerEndpoint1 = seaweed1.GetEndpoint(SeaweedFSContainerResource.FilerEndpointName);
-                using var httpClient1 = new HttpClient { BaseAddress = new Uri(filerEndpoint1.Url) };
+                using HttpClient httpClient1 = new() { BaseAddress = new Uri(filerEndpoint1.Url) };
 
                 await ExecuteWithRetryAsync(async () =>
                 {
-                    using var content = new StringContent(fileContent, Encoding.UTF8, "text/plain");
+                    using StringContent content = new(fileContent, Encoding.UTF8, "text/plain");
                     HttpResponseMessage response = await httpClient1.PutAsync(fileName, content);
                     response.EnsureSuccessStatusCode();
                 });
@@ -169,7 +169,7 @@ public class SeaweedFSFunctionalTests(ITestOutputHelper testOutputHelper)
             await rns2.WaitForResourceHealthyAsync(seaweed2.Resource.Name);
 
             EndpointReference filerEndpoint2 = seaweed2.GetEndpoint(SeaweedFSContainerResource.FilerEndpointName);
-            using var httpClient2 = new HttpClient { BaseAddress = new Uri(filerEndpoint2.Url) };
+            using HttpClient httpClient2 = new() { BaseAddress = new Uri(filerEndpoint2.Url) };
 
             string downloadedContent = await GetStringWithRetryAsync(httpClient2, fileName);
 

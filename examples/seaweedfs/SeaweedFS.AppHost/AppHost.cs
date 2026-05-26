@@ -1,17 +1,30 @@
-using CommunityToolkit.Aspire.Hosting.SeaweedFS;
+IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder(args);
 
-var builder = DistributedApplication.CreateBuilder(args);
+// =========================================================================
+// 🌊 SEAWEEDFS CONFIGURATION EXAMPLES
+// =========================================================================
+// The integration provides flexible options to configure APIs, ports, and security.
+//
+// 1. STANDARD S3 SETUP (Default ports dynamically mapped by Aspire)
+//    builder.AddSeaweedFS("seaweedfs").WithS3().WithDataVolume();
+//
+// 2. NATIVE FILER SETUP (No S3 overhead)
+//    builder.AddSeaweedFS("seaweedfs").WithFiler().WithDataVolume();
+//
+// 3. ADVANCED SETUP (Custom ports, credentials, and persistence)
+//    var accessKey = builder.AddParameter("s3-access-key", "my-custom-admin");
+//    var secretKey = builder.AddParameter("s3-secret-key", "my-super-secret", secret: true);
+//
+//    builder.AddSeaweedFS("seaweedfs")
+//           .WithHostPort(9333)         // Locks the Master API host port
+//           .WithS3(s3Port: 8333)       // Locks the S3 Gateway host port
+//           .WithFiler(filerPort: 8888) // Locks the Filer API host port
+//           .WithAccessKey(accessKey)   // Applies custom S3 Access Key
+//           .WithSecretKey(secretKey)   // Applies custom S3 Secret Key
+//           .WithDataVolume("my-seaweed-data"); // Uses a named docker volume
+// =========================================================================
 
-// SeaweedFS Configuration Options:
-// 1. WithS3(): Enables the S3-compatible API. BEST FOR: Applications requiring AWS S3-compatible 
-//    storage (implicitly enables the Filer API for metadata management).
-//
-// 2. WithFiler(): Enables only the native SeaweedFS Filer API. BEST FOR: High-performance, 
-//    native file system operations without S3 protocol overhead.
-//
-// 3. WithDataVolume(): Ensures persistence by mapping a Docker volume to the container. 
-//    RECOMMENDED for local development if you need to keep data across AppHost restarts.
-var seaweedfs = builder.AddSeaweedFS("seaweedfs")
+IResourceBuilder<SeaweedFSContainerResource> seaweedfs = builder.AddSeaweedFS("seaweedfs")
                        .WithS3();      // Use .WithS3() for AWS compatibility or .WithFiler() for native API
                                        //.WithDataVolume(); // Uncomment to enable persistent storage across restarts
 

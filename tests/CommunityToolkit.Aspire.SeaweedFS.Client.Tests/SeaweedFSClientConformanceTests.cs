@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using Amazon.S3;
-using Aspire.Components.Common.Tests;
+﻿using Amazon.S3;
 using Aspire.Components.ConformanceTests;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace CommunityToolkit.Aspire.SeaweedFS.Client.Tests;
@@ -30,11 +25,11 @@ public class SeaweedFSClientConformanceTests : ConformanceTests<IAmazonS3, Seawe
 
     protected override void PopulateConfiguration(ConfigurationManager configuration, string? key = null)
     {
-        var endpoint = "http://localhost:8333";
+        string endpoint = "http://localhost:8333";
         const string accessKey = "admin";
         const string secretKey = "admin-secret";
 
-        var connString = $"Endpoint={endpoint};AccessKey={accessKey};SecretKey={secretKey};UseSsl=false";
+        string connString = $"Endpoint={endpoint};AccessKey={accessKey};SecretKey={secretKey};UseSsl=false";
 
         configuration.AddInMemoryCollection(
         [
@@ -75,7 +70,7 @@ public class SeaweedFSClientConformanceTests : ConformanceTests<IAmazonS3, Seawe
 
     protected override void TriggerActivity(IAmazonS3 service)
     {
-        using var source = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        using CancellationTokenSource source = new(TimeSpan.FromMilliseconds(100));
         try
         {
             service.ListBucketsAsync(source.Token).Wait();

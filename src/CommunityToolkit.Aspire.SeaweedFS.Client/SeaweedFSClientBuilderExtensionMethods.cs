@@ -1,13 +1,14 @@
-﻿using System;
-using Amazon.Runtime;
+﻿using Amazon.Runtime;
 using Amazon.S3;
+using CommunityToolkit.Aspire.SeaweedFS.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Hosting;
 
-namespace CommunityToolkit.Aspire.SeaweedFS.Client;
+#pragma warning disable IDE0130
+namespace Microsoft.Extensions.Hosting;
+#pragma warning restore IDE0130
 
 /// <summary>
 /// Extension methods for connecting a SeaweedFS cluster to an Aspire application.
@@ -30,7 +31,7 @@ public static class SeaweedFSClientBuilderExtensionMethods
 
         string sectionName = configurationSectionName ?? DefaultConfigSectionName;
 
-        var settings = new SeaweedFSClientSettings();
+        SeaweedFSClientSettings settings = new();
         builder.Configuration.GetSection(sectionName).Bind(settings);
         builder.Configuration.GetSection($"{sectionName}:{connectionName}").Bind(settings);
 
@@ -49,7 +50,7 @@ public static class SeaweedFSClientBuilderExtensionMethods
             }
 
             // Dynamically override the endpoint scheme based on the explicit UseSsl property
-            var uriBuilder = new UriBuilder(settings.Endpoint)
+            UriBuilder uriBuilder = new(settings.Endpoint)
             {
                 Scheme = settings.UseSsl ? Uri.UriSchemeHttps : Uri.UriSchemeHttp
             };
@@ -60,7 +61,7 @@ public static class SeaweedFSClientBuilderExtensionMethods
                 uriBuilder.Port = -1;
             }
 
-            var config = new AmazonS3Config
+            AmazonS3Config config = new()
             {
                 ServiceURL = uriBuilder.Uri.GetLeftPart(UriPartial.Authority),
                 ForcePathStyle = settings.ForcePathStyle,
@@ -107,7 +108,7 @@ public static class SeaweedFSClientBuilderExtensionMethods
 
         string sectionName = configurationSectionName ?? DefaultConfigSectionName;
 
-        var settings = new SeaweedFSClientSettings();
+        SeaweedFSClientSettings settings = new();
         builder.Configuration.GetSection(sectionName).Bind(settings);
         builder.Configuration.GetSection($"{sectionName}:{connectionName}").Bind(settings);
 
@@ -118,9 +119,10 @@ public static class SeaweedFSClientBuilderExtensionMethods
 
         configureSettings?.Invoke(settings);
 
+        // Fallback for FilerEndpoint or generic Endpoint
         Uri baseAddress = settings.FilerEndpoint ?? settings.Endpoint ?? new Uri($"http://{connectionName}");
 
-        var uriBuilder = new UriBuilder(baseAddress)
+        UriBuilder uriBuilder = new(baseAddress)
         {
             Scheme = settings.UseSsl ? Uri.UriSchemeHttps : Uri.UriSchemeHttp
         };
@@ -130,17 +132,28 @@ public static class SeaweedFSClientBuilderExtensionMethods
             uriBuilder.Port = -1;
         }
 
-        builder.Services.AddHttpClient<SeaweedFSFilerClient>(client =>
+        // 1. Register the Named HttpClient
+        builder.Services.AddHttpClient(connectionName, client =>
         {
             client.BaseAddress = uriBuilder.Uri;
         });
+
+        // 2. Register the Keyed Service
+        builder.Services.AddKeyedTransient<SeaweedFSFilerClient>(connectionName, (sp, key) =>
+        {
+            IHttpClientFactory httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            return new SeaweedFSFilerClient(httpClientFactory.CreateClient(connectionName));
+        });
+
+        // TryAddTransient ensures the FIRST registered Filer becomes the default resolvable instance.
+        builder.Services.TryAddTransient<SeaweedFSFilerClient>(sp => sp.GetRequiredKeyedService<SeaweedFSFilerClient>(connectionName));
 
         if (!settings.DisableHealthChecks)
         {
             builder.Services.AddHealthChecks()
                 .Add(new HealthCheckRegistration(
                     name: $"seaweedfs_filer_{connectionName}",
-                    factory: sp => new SeaweedFSFilerHealthCheck(sp.GetRequiredService<SeaweedFSFilerClient>()),
+                    factory: sp => new SeaweedFSFilerHealthCheck(sp.GetRequiredKeyedService<SeaweedFSFilerClient>(connectionName)),
                     failureStatus: HealthStatus.Unhealthy,
                     tags: ["seaweedfs", "storage", "filer"],
                     timeout: TimeSpan.FromSeconds(10)));

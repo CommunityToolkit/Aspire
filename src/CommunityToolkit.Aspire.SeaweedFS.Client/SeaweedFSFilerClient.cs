@@ -1,10 +1,7 @@
-﻿using System;
-using System.Net.Http;
-
-namespace CommunityToolkit.Aspire.SeaweedFS.Client;
+﻿namespace CommunityToolkit.Aspire.SeaweedFS.Client;
 
 /// <summary>
-/// A strictly-typed HTTP client for interacting with the SeaweedFS Native Filer API.
+/// A strongly-typed HTTP client for interacting with the SeaweedFS Native Filer API.
 /// </summary>
 /// <remarks>
 /// The <see cref="SeaweedFSFilerClient"/> provides a direct interface to the SeaweedFS Filer node, 

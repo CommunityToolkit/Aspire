@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Aspire.Testing;
-using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 
@@ -25,7 +24,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.SeaweedFS_AppHos
         // 1. Create a Bucket via the S3 API endpoint (With Retry for Eventual Consistency)
         const string bucketName = "e2e-test-bucket";
         HttpResponseMessage? createBucketResponse = null;
-        
+
         // Retry loop to handle the S3 Gateway topology mapping delay right after boot
         for (int i = 0; i < 15; i++)
         {
@@ -83,7 +82,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.SeaweedFS_AppHos
         HttpResponseMessage listFilerResponse = await httpClient.GetAsync("/filer/list", cts.Token);
         Assert.Equal(HttpStatusCode.OK, listFilerResponse.StatusCode);
 
-        var listResult = await listFilerResponse.Content.ReadAsStringAsync(cts.Token);
+        string listResult = await listFilerResponse.Content.ReadAsStringAsync(cts.Token);
         Assert.Contains(filerFileName, listResult);
     }
 
