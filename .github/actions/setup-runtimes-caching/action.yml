@@ -27,7 +27,7 @@ runs:
     - name: Install Aspire CLI
       uses: timheuer/setup-aspire@v0.1.0
       with:
-        quality: release
+        quality: dev
 
     - name: Set up Python
       uses: actions/setup-python@v5
