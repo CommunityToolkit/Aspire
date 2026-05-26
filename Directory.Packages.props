@@ -135,6 +135,6 @@
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
     <PackageVersion Include="MongoDB.Driver" Version="3.8.1" />
     <!-- Override to address  https://github.com/advisories/GHSA-6c8g-7p36-r338 -->
-    <PackageVersion Include="SharpCompress" Version="0.48.0" />
+    <PackageVersion Include="SharpCompress" Version="1.0.0" />
   </ItemGroup>
 </Project>

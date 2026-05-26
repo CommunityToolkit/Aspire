@@ -15,7 +15,7 @@
     <AspireVersion>$(AspireMajorVersion).4.0-preview.1.26275.2</AspireVersion>
     <AspirePreviewSuffix></AspirePreviewSuffix>
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.7</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.8</DotNetExtensionsVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
     <MEAIVersion>10.0.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
@@ -24,6 +24,11 @@
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <SharedDir>$(RepoRoot)src\Shared</SharedDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Work around the missing in-proc RID selection task in the current .NET 10 SDKs. -->
+    <_AspireUseSdkPickBestRid>false</_AspireUseSdkPickBestRid>
   </PropertyGroup>
 
   <PropertyGroup>
