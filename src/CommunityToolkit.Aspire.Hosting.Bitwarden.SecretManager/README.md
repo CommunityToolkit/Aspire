@@ -153,10 +153,10 @@ contract, and deployment materializes that contract.
 
 ### Access tokens
 
-| Token              | Set with                                      | Used by            | Permissions needed      | When to use                                                             |
-| ------------------ | --------------------------------------------- | ------------------ | ----------------------- | ----------------------------------------------------------------------- |
-| Management token   | `AddBitwardenSecretManager(..., accessToken)` | AppHost reconciler | Read + write to project | Always required                                                         |
-| Client token       | `WithReference(bitwarden, bw => bw.WithAccessToken(token))` | Deployed app | Read-only to project | Supply a least-privilege token so the deployed app cannot modify secrets |
+| Token            | Set with                                                    | Used by            | Permissions needed      | When to use                                                              |
+| ---------------- | ----------------------------------------------------------- | ------------------ | ----------------------- | ------------------------------------------------------------------------ |
+| Management token | `AddBitwardenSecretManager(..., accessToken)`               | AppHost reconciler | Read + write to project | Always required                                                          |
+| Client token     | `WithReference(bitwarden, bw => bw.WithAccessToken(token))` | Deployed app       | Read-only to project    | Supply a least-privilege token so the deployed app cannot modify secrets |
 
 ### Secret declarations
 
@@ -175,8 +175,73 @@ contract, and deployment materializes that contract.
 
 ### Cache files
 
-| Cache              | Stores                          | Default                                                      | Override                                                         | Relative paths      | When to override                                    |
-| ------------------ | ------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- | ------------------- | --------------------------------------------------- |
-| AppHost cache      | Project ID + secret ID mappings | `.bitwarden/{name}.{env}.json` relative to AppHost directory | `bitwarden.WithCacheFile(path)`                                  | AppHost directory   | Share cache across AppHost projects or CI pipelines |
-| AppHost auth cache | AppHost Bitwarden SDK session   | Aspire store, named by token hash                            | `bitwarden.WithAuthCacheFile(path)`                              | Aspire store        | Share session across CI runs                        |
-| App auth cache     | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `api.WithReference(bitwarden, bw => bw.WithAuthCacheFile(path))` | —                   | Persist app session across restarts                 |
+| Cache              | Stores                          | Default                                                      | Override                                                         | Relative paths    | When to override                                    |
+| ------------------ | ------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
+| AppHost cache      | Project ID + secret ID mappings | `.bitwarden/{name}.{env}.json` relative to AppHost directory | `bitwarden.WithCacheFile(path)`                                  | AppHost directory | Share cache across AppHost projects or CI pipelines |
+| AppHost auth cache | AppHost Bitwarden SDK session   | Aspire store, named by token hash                            | `bitwarden.WithAuthCacheFile(path)`                              | Aspire store      | Share session across CI runs                        |
+| App auth cache     | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `api.WithReference(bitwarden, bw => bw.WithAuthCacheFile(path))` | —                 | Persist app session across restarts                 |
+
+### Resource states
+
+The Bitwarden resource is a one-shot provisioner. Dependent resources use `WaitForCompletion`, so they block until provisioning finishes and then start.
+
+| State           | Style   | Dependent resources          |
+| --------------- | ------- | ---------------------------- |
+| `NotStarted`    | —       | Blocked                      |
+| `Waiting`       | —       | Blocked                      |
+| `Running`       | —       | Blocked (still provisioning) |
+| `Finished`      | Success | Unblocked — start normally   |
+| `FailedToStart` | Error   | Error — fail to start        |
+
+### Project provisioning decisions
+
+Runs once per AppHost run, during the `bitwarden-provision-project` pipeline step.
+Paths are tried in order: explicit adoption → persisted mapping → create new.
+
+**Path A — explicit adoption (`WithExistingProject`)**
+
+| Found in Bitwarden | Outcome                             |
+| ------------------ | ----------------------------------- |
+| ✓                  | Use configured project              |
+| ✗                  | Error: configured project not found |
+
+**Path B — persisted mapping exists in cache**
+
+| Found in Bitwarden | Name matches configured | Outcome                                  |
+| ------------------ | ----------------------- | ---------------------------------------- |
+| ✓                  | ✓                       | Reuse persisted project                  |
+| ✓                  | ✗                       | ⚠ Update project name (name drifted)     |
+| ✗                  | —                       | ⚠ Create new project (persisted ID gone) |
+
+**Path C — no cache**
+
+Create new project. There is no name-search path here: the AppHost is the source of truth for the project, so a missing cache means a new project is created. Use `WithExistingProject` to adopt a project that was created outside the declared graph.
+
+### Secret provisioning decisions
+
+Runs once per managed secret, during the `bitwarden-provision-secrets` pipeline step.
+Paths are tried in order: explicit adoption → persisted mapping → name search.
+
+**Path A — explicit adoption (`WithExistingSecret`)**
+
+| Secret found | Outcome                            |
+| ------------ | ---------------------------------- |
+| ✓            | Sync secret                        |
+| ✗            | Error: configured secret not found |
+
+**Path B — persisted mapping exists in cache**
+
+| Secret found | In project | Outcome                     |
+| ------------ | ---------- | --------------------------- |
+| ✓            | ✓          | Sync secret                 |
+| ✓            | ✗          | ⚠ Create replacement secret |
+| ✗            | —          | ⚠ Create replacement secret |
+
+**Path C — name search**
+
+| Name matches | Historical rename | Outcome                                            |
+| ------------ | ----------------- | -------------------------------------------------- |
+| 0            | —                 | Create new secret                                  |
+| 1            | ✗                 | Sync secret                                        |
+| 1            | ✓                 | ⚠ Create new secret (local identity changed)       |
+| > 1          | —                 | Prompt user to pick one (error if non-interactive) |

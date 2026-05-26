@@ -376,7 +376,7 @@ public static class BitwardenSecretManagerExtensions
 
         if (builder.Resource is IResourceWithWaitSupport waitResource)
         {
-            builder.ApplicationBuilder.CreateResourceBuilder(waitResource).WaitFor(source);
+            builder.ApplicationBuilder.CreateResourceBuilder(waitResource).WaitForCompletion(source);
         }
 
         return builder.WithEnvironment(context => source.Resource.ApplyReferenceConfiguration(context.EnvironmentVariables, connectionName));
@@ -571,7 +571,7 @@ public static class BitwardenSecretManagerExtensions
             {
                 await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
                 {
-                    State = KnownResourceStates.Starting,
+                    State = KnownResourceStates.Waiting,
                     Properties =
                     [
                         new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
@@ -580,6 +580,16 @@ public static class BitwardenSecretManagerExtensions
                 }).ConfigureAwait(false);
 
                 await eventContext.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, eventContext.Services), cancellationToken).ConfigureAwait(false);
+
+                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+                {
+                    State = KnownResourceStates.Running,
+                    Properties =
+                    [
+                        new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                        new("CacheFile", resource.CacheFile!)
+                    ]
+                }).ConfigureAwait(false);
 
                 try
                 {
@@ -590,7 +600,7 @@ public static class BitwardenSecretManagerExtensions
 
                     await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
                     {
-                        State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+                        State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
                         StartTimeStamp = DateTime.UtcNow,
                         Properties =
                         [
@@ -727,7 +737,7 @@ public static class BitwardenSecretManagerExtensions
         if (builder.Resource is IResourceWithWaitSupport waitResource)
         {
             builder.ApplicationBuilder.CreateResourceBuilder(waitResource)
-                .WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(secretReference.Resource));
+                .WaitForCompletion(builder.ApplicationBuilder.CreateResourceBuilder(secretReference.Resource));
         }
     }
 }

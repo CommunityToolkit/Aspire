@@ -210,8 +210,8 @@ internal sealed class BitwardenSecretManagerProvisioner(
             {
                 if (!string.Equals(persistedProject.Name, remoteProjectName, StringComparison.Ordinal))
                 {
-                    logger.LogInformation(
-                        "Updating Bitwarden project {ProjectId} name from '{CurrentProjectName}' to '{DesiredProjectName}' for resource {ResourceName}.",
+                    logger.LogWarning(
+                        "Bitwarden project {ProjectId} name drifted to '{CurrentProjectName}'; updating to '{DesiredProjectName}' for resource {ResourceName}.",
                         persistedProject.Id,
                         persistedProject.Name,
                         remoteProjectName,
@@ -253,7 +253,20 @@ internal sealed class BitwardenSecretManagerProvisioner(
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
 
         BitwardenSecretInfo secret;
-        if (state.ManagedSecretIds.TryGetValue(secretResource.LocalName, out Guid persistedSecretId))
+        if (secretResource.ExistingSecretId is Guid explicitSecretId)
+        {
+            logger.LogDebug("Using explicitly configured secret ID {SecretId} for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
+            BitwardenSecretInfo? explicitSecret = lookupContext.GetSecret(explicitSecretId);
+            if (explicitSecret is null)
+            {
+                logger.LogError("Configured secret {SecretId} was not found for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
+                throw new DistributedApplicationException($"Bitwarden secret '{explicitSecretId:D}' configured for managed secret '{secretResource.LocalName}' was not found.");
+            }
+
+            logger.LogDebug("Ensuring configured secret {SecretId} matches desired configuration for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
+            secret = EnsureSecretMatches(provider, explicitSecret, projectId, secretResource.RemoteName, resolvedValue);
+        }
+        else if (state.ManagedSecretIds.TryGetValue(secretResource.LocalName, out Guid persistedSecretId))
         {
             logger.LogDebug("Found persisted secret ID {SecretId} for managed secret '{SecretName}'.", persistedSecretId, secretResource.LocalName);
             BitwardenSecretInfo? persistedSecret = lookupContext.GetSecret(persistedSecretId);
@@ -274,19 +287,6 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 secret = EnsureSecretMatches(provider, persistedSecret, projectId, secretResource.RemoteName, resolvedValue);
             }
         }
-        else if (secretResource.ExistingSecretId is Guid explicitSecretId)
-        {
-            logger.LogDebug("Using explicitly configured secret ID {SecretId} for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
-            BitwardenSecretInfo? explicitSecret = lookupContext.GetSecret(explicitSecretId);
-            if (explicitSecret is null)
-            {
-                logger.LogError("Configured secret {SecretId} was not found for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
-                throw new DistributedApplicationException($"Bitwarden secret '{explicitSecretId:D}' configured for managed secret '{secretResource.LocalName}' was not found.");
-            }
-
-            logger.LogDebug("Ensuring configured secret {SecretId} matches desired configuration for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
-            secret = EnsureSecretMatches(provider, explicitSecret, projectId, secretResource.RemoteName, resolvedValue);
-        }
         else
         {
             logger.LogDebug("Searching for existing secrets named '{RemoteName}' in project {ProjectId} for managed secret '{SecretName}'.", secretResource.RemoteName, projectId, secretResource.LocalName);
@@ -302,7 +302,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             {
                 if (HasHistoricalManagedMapping(staleManagedMappings, lookupContext, secretResource.RemoteName))
                 {
-                    logger.LogInformation(
+                    logger.LogWarning(
                         "Creating a new Bitwarden secret for managed secret '{SecretName}' because the previous local identity was renamed and no explicit adoption was configured.",
                         secretResource.LocalName);
 
