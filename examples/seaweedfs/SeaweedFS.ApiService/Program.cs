@@ -14,7 +14,6 @@ builder.Services.AddProblemDetails();
 // =========================================================================
 // 🌊 REGISTER SEAWEEDFS CLIENTS
 // =========================================================================
-
 // Basic Setup (Endpoints and credentials are automatically injected by AppHost)
 builder.AddSeaweedFSS3Client("seaweedfs");
 builder.AddSeaweedFSFilerClient("seaweedfs");
@@ -57,7 +56,7 @@ RouteGroupBuilder s3Group = app.MapGroup("/s3").WithTags("S3 API");
 s3Group.MapPost("/buckets", async ([FromQuery] string bucketName, IAmazonS3 s3Client) =>
 {
     await s3Client.PutBucketAsync(new PutBucketRequest { BucketName = bucketName });
-    return Results.Ok(new { Message = $"Bucket '{bucketName}' successfully created via S3 API." });
+    return Results.Ok(new { Message = "Bucket successfully created via S3 API." });
 });
 
 s3Group.MapPost("/upload", async ([FromQuery] string bucketName, [FromQuery] string key, [FromBody] string content, IAmazonS3 s3Client) =>
@@ -68,7 +67,7 @@ s3Group.MapPost("/upload", async ([FromQuery] string bucketName, [FromQuery] str
         Key = key,
         ContentBody = content
     });
-    return Results.Ok(new { Message = $"File '{key}' successfully uploaded to bucket '{bucketName}'." });
+    return Results.Ok(new { Message = "File successfully uploaded to bucket via S3 API." });
 });
 
 s3Group.MapGet("/download", async ([FromQuery] string bucketName, [FromQuery] string key, IAmazonS3 s3Client) =>
@@ -77,7 +76,12 @@ s3Group.MapGet("/download", async ([FromQuery] string bucketName, [FromQuery] st
     using StreamReader reader = new(response.ResponseStream);
     string content = await reader.ReadToEndAsync();
 
-    return Results.Ok(new { Bucket = bucketName, Key = key, Content = content });
+    return Results.Ok(new
+    {
+        Bucket = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(bucketName),
+        Key = System.Text.Encodings.Web.HtmlEncoder.Default.Encode(key),
+        Content = content
+    });
 });
 
 // ==========================================
@@ -87,7 +91,6 @@ RouteGroupBuilder filerGroup = app.MapGroup("/filer").WithTags("Filer API");
 
 filerGroup.MapGet("/list", async (SeaweedFSFilerClient filerClient) =>
 {
-    // Requesting 'application/json' ensures the Filer returns a JSON directory listing instead of HTML
     HttpRequestMessage request = new(HttpMethod.Get, "/");
     request.Headers.Add("Accept", "application/json");
 
@@ -102,11 +105,13 @@ filerGroup.MapPost("/upload", async ([FromQuery] string fileName, [FromBody] str
 {
     StringContent stringContent = new(content);
 
+    string safeFileName = Uri.EscapeDataString(fileName.TrimStart('/'));
+
     // Uploads the file directly to the root of the Filer
-    HttpResponseMessage response = await filerClient.HttpClient.PutAsync($"/{fileName.TrimStart('/')}", stringContent);
+    HttpResponseMessage response = await filerClient.HttpClient.PutAsync($"/{safeFileName}", stringContent);
     response.EnsureSuccessStatusCode();
 
-    return Results.Ok(new { Message = $"File '{fileName}' successfully uploaded via native Filer API." });
+    return Results.Ok(new { Message = "File successfully uploaded via native Filer API." });
 });
 
 app.MapDefaultEndpoints();
