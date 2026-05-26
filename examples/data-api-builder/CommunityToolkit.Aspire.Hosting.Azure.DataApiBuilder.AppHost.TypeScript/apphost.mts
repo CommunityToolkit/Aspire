@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const appHostDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -41,3 +41,4 @@ const _secondaryPort = await dabWithOptions.port();
 const _secondaryUri = await dabWithOptions.uriExpression();
 
 await builder.build().run();
+

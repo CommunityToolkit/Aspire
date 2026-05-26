@@ -2,7 +2,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const bindMountPath = mkdtempSync(join(tmpdir(), "dbgate-"));
 
@@ -27,3 +27,4 @@ const dbgateResource = await dbgate;
 const _primaryEndpoint = await dbgateResource.primaryEndpoint();
 
 await builder.build().run();
+

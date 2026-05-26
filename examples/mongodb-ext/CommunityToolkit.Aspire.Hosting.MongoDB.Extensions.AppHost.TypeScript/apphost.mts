@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -14,3 +14,4 @@ await mongoWithNamedDbGate.withDbGate({ containerName: "mongo-ui" });
 await mongoWithNamedDbGate.addDatabase("orders", { databaseName: "orders-db" });
 
 await builder.build().run();
+

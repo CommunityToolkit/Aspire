@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.4.0-preview.1.26275.2"
+    "version": "13.4.0-preview.1.26275.15"
   },
   "channel": "stable",
   "profiles": {
@@ -20,3 +20,4 @@
     "CommunityToolkit.Aspire.Hosting.Bun": "../../../src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj"
   }
 }
+

@@ -62,12 +62,12 @@ Keep these points in mind:
 
 ## Scenario: The AppHost Is TypeScript And Generated APIs Matter
 
-If the AppHost is `apphost.mts`, the `.modules/` directory contains generated TypeScript modules that expose Aspire APIs.
+If the AppHost is `apphost.mts`, the `.aspire/modules/` directory contains generated TypeScript modules that expose Aspire APIs.
 
-- Do not edit `.modules/` directly.
+- Do not edit `.aspire/modules/` directly.
 - Use `aspire add <package>` to regenerate the available APIs when adding integrations.
-- Use `aspire restore` if `.modules/` disappeared after a pull, clean, or branch switch.
-- Inspect `.modules/aspire.ts` after regeneration or restore to see the newly available APIs.
+- Use `aspire restore` if `.aspire/modules/` disappeared after a pull, clean, or branch switch.
+- Inspect `.aspire/modules/aspire.ts` after regeneration or restore to see the newly available APIs.
 
 ## Scenario: I Need Secrets, Deployment, Or A Playwright Handoff
 
@@ -81,3 +81,4 @@ aspire secret list
 Use `aspire publish` and `aspire deploy` for full deployment work, or `aspire do <step>` when the user only wants one named pipeline step such as seeding data or pushing containers.
 
 If Playwright CLI is configured in the environment, use Aspire to discover the endpoint first and let Playwright use that discovered URL afterward. When multiple frontends exist or the URL needs to be passed to another tool, prefer `aspire describe --format Json` before the Playwright handoff.
+

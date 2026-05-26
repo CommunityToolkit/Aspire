@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -32,3 +32,4 @@ const _defaultConnectionStringExpression =
     await flagdDefault.connectionStringExpression();
 
 await builder.build().run();
+

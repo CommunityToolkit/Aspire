@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -39,3 +39,4 @@ await tables.withAzureStorageExplorer({
 });
 
 await builder.build().run();
+

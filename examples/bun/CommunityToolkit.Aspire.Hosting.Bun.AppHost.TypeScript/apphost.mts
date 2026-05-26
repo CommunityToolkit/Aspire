@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -28,3 +28,4 @@ const bunWatch = await builder.addBunApp("bun-watch", {
 await bunWatch.withBunPackageInstallation();
 
 await builder.build().run();
+

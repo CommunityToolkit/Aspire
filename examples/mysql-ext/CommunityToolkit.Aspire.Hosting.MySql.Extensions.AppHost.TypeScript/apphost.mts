@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -20,3 +20,4 @@ const _port = await mysql.port();
 const _connectionString = await mysql.connectionStringExpression();
 
 await builder.build().run();
+

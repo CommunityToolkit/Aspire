@@ -1,7 +1,7 @@
 import {
     createBuilder,
     GoFeatureFlagLogLevel,
-} from "./.aspire/modules/aspire.js";
+} from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -30,3 +30,4 @@ const _uri2 = await goff2.uriExpression();
 const _connectionString2 = await goff2.connectionStringExpression();
 
 await builder.build().run();
+

@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -61,3 +61,4 @@ const _mountedUri = await mounted.uriExpression();
 const _mountedConnectionString = await mounted.connectionStringExpression();
 
 await builder.build().run();
+

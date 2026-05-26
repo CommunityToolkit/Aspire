@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -12,3 +12,4 @@ builder
     .withArgs(["-message", "Hello from Aspire TypeScript"]);
 
 await builder.build().run();
+

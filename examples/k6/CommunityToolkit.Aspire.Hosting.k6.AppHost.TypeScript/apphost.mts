@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -38,3 +38,4 @@ const browserK6Resource = await browserK6;
 const _browserPrimaryEndpoint = await browserK6Resource.primaryEndpoint();
 
 await builder.build().run();
+

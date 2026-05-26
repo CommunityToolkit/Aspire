@@ -1,7 +1,7 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const bindMountSource = mkdtempSync(join(tmpdir(), "meilisearch-"));
@@ -42,3 +42,4 @@ const _defaultsConnectionString =
     await meilisearchWithDefaults.connectionStringExpression();
 
 await builder.build().run();
+

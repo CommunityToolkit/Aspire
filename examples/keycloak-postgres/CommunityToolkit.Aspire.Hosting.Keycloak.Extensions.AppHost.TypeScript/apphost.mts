@@ -2,7 +2,7 @@ import {
     createBuilder,
     type KeycloakResource,
     type WithPostgresOptions,
-} from "./.aspire/modules/aspire.js";
+} from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -40,3 +40,4 @@ void withPostgresDefaults;
 void withPostgresExplicit;
 
 await builder.build().run();
+

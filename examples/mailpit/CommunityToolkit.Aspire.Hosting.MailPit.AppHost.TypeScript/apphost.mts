@@ -2,7 +2,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const bindMountPath = mkdtempSync(join(tmpdir(), "mailpit-"));
 
@@ -38,3 +38,4 @@ const _mailpitDefaultConnectionString =
     await mailpitDefault.connectionStringExpression();
 
 await builder.build().run();
+

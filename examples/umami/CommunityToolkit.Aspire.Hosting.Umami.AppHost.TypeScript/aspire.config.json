@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.4.0-preview.1.26275.2"
+    "version": "13.4.0-preview.1.26275.15"
   },
   "profiles": {
     "https": {
@@ -19,3 +19,4 @@
     "CommunityToolkit.Aspire.Hosting.Umami": "../../../src/CommunityToolkit.Aspire.Hosting.Umami/CommunityToolkit.Aspire.Hosting.Umami.csproj"
   }
 }
+

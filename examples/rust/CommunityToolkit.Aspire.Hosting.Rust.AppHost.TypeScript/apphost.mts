@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const rustAppPath = "../actix_api";
@@ -20,3 +20,4 @@ if (process.env["RUST_ARGS_VALIDATION"] === "1") {
 }
 
 await builder.build().run();
+

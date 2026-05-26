@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -25,3 +25,4 @@ const pubSub = await builder.addDaprPubSubForAzureManagedRedis("pubsub");
 await pubSub.withReference(managedIdentityRedis);
 
 await builder.build().run();
+

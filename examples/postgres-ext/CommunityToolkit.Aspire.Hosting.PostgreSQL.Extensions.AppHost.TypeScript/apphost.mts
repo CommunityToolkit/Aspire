@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -21,3 +21,4 @@ const _databaseUri = await database.uriExpression();
 const _databaseJdbcConnectionString = await database.jdbcConnectionString();
 
 await builder.build().run();
+

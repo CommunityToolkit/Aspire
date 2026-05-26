@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -26,3 +26,4 @@ await umamiDefault.withPostgreSQL(analyticsDatabase);
 const _primaryEndpoint = await umami.primaryEndpoint();
 
 await builder.build().run();
+

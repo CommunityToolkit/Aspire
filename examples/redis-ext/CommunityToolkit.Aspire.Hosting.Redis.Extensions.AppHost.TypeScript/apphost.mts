@@ -1,4 +1,4 @@
-import { ContainerLifetime, createBuilder } from "./.aspire/modules/aspire.js";
+import { ContainerLifetime, createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const runtimeSmoke = process.env.ASPIRE_RUNTIME_SMOKE === "1";
@@ -22,3 +22,4 @@ if (runtimeSmoke) {
 }
 
 await builder.build().run();
+

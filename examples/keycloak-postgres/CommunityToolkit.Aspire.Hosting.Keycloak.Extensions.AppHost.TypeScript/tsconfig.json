@@ -12,7 +12,7 @@
   },
   "include": [
     "apphost.mts",
-    ".modules/**/*.ts"
+    ".aspire/modules/**/*.ts"
   ],
   "exclude": [
     "node_modules"

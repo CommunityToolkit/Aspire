@@ -2,7 +2,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const bindMountPath = mkdtempSync(join(tmpdir(), "lavinmq-"));
 
@@ -31,3 +31,4 @@ const _connectionStringExpression =
     await volumeBroker.connectionStringExpression();
 
 await builder.build().run();
+

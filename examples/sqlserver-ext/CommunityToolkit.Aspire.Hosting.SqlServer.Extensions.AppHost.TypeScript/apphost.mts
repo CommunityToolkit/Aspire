@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const sqlPassword = await builder.addParameter("sql-password", {
@@ -19,3 +19,4 @@ const sqlServer = builder
 const _resolvedSqlServer = await sqlServer;
 
 await builder.build().run();
+

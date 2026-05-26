@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -14,3 +14,4 @@ const _grpcEndpointName = await _grpcEndpoint.endpointName();
 const _httpEndpointName = await _httpEndpoint.endpointName();
 
 await builder.build().run();
+

@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.4.0-preview.1.26275.2"
+    "version": "13.4.0-preview.1.26275.15"
   },
   "profiles": {
     "https": {
@@ -20,3 +20,4 @@
     "Aspire.Hosting.SqlServer": "13.3.0"
   }
 }
+

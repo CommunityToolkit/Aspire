@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -32,3 +32,4 @@ await ngrokValue.withAuthTokenValue("plain-text-token");
 await ngrokValue.withTunnelEndpoint(upstream, "http");
 
 await builder.build().run();
+

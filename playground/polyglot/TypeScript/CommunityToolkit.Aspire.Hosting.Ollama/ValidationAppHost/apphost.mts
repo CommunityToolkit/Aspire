@@ -1,4 +1,4 @@
-import { createBuilder, OllamaGpuVendor } from "./.aspire/modules/aspire.js";
+import { createBuilder, OllamaGpuVendor } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -111,3 +111,4 @@ if (includeCompileOnlyScenarios) {
 }
 
 await builder.build().run();
+

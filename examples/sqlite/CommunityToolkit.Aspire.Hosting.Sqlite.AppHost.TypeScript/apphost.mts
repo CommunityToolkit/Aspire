@@ -1,4 +1,4 @@
-import { createBuilder, SqliteWebResource } from "./.aspire/modules/aspire.js";
+import { createBuilder, SqliteWebResource } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -14,3 +14,4 @@ await sqliteDefault.withSqliteWeb();
 const _sqliteConnectionString = await sqlite.connectionStringExpression();
 
 await builder.build().run();
+

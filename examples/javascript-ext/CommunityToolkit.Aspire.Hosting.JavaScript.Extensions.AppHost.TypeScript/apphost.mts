@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const appHostDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -69,3 +69,4 @@ await turboPnpm.withPackageManagerLaunch({ packageManager: "pnpm" });
 await turboPnpm.withExplicitStart();
 
 await builder.build().run();
+

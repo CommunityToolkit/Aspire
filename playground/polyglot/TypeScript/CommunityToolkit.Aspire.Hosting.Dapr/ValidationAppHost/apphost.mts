@@ -2,7 +2,7 @@ import {
     createBuilder,
     type DaprComponentOptions,
     type ReferenceExpression,
-} from "./.aspire/modules/aspire.js";
+} from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -118,3 +118,4 @@ void [
 ];
 
 await builder.build().run();
+

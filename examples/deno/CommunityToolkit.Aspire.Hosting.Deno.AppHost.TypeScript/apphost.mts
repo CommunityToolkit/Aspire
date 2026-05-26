@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -20,3 +20,4 @@ await builder
     .withHttpHealthCheck({ path: "/health" });
 
 await builder.build().run();
+

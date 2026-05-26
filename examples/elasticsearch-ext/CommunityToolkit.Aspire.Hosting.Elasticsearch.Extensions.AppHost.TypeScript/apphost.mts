@@ -2,7 +2,7 @@ import {
     createBuilder,
     type ElasticsearchResource,
     type ElasticvueContainerResource,
-} from "./.aspire/modules/aspire.js";
+} from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -27,3 +27,4 @@ async function validateWithElasticvue(
 void validateWithElasticvue;
 
 await builder.build().run();
+

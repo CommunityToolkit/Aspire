@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const bindMountRoot = fileURLToPath(
@@ -50,3 +50,4 @@ const _defaultVolumeConnectionString =
     await defaultVolumeBacked.connectionStringExpression();
 
 await builder.build().run();
+

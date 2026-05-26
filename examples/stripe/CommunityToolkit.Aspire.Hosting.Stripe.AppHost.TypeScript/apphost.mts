@@ -1,4 +1,4 @@
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
@@ -41,3 +41,4 @@ await consumer.withStripeReference(stripe, {
 const _webhookSigningSecret: string = await stripe.webhookSigningSecret.get();
 
 await builder.build().run();
+

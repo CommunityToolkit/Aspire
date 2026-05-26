@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createBuilder } from "./.aspire/modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 const bindMountRoot = mkdtempSync(join(tmpdir(), "activemq-polyglot-"));
@@ -88,3 +88,4 @@ const _artemis2Host = await artemis2.host();
 const _artemis2Port = await artemis2.port();
 
 await builder.build().run();
+
