@@ -69,9 +69,9 @@ jobs:
             )"
 
             if [ "${should_rerun}" != "true" ] && [ "${setup_step_failed}" == "true" ]; then
-              job_log="$(gh run view "${RUN_ID}" --job "${job_id}" --log --repo "${REPO}")"
-
-              if echo "${job_log}" | grep -Eiq 'failed to bind host port.*address already in use|address already in use.*failed to bind host port'; then
+              if ! job_log="$(gh run view "${RUN_ID}" --job "${job_id}" --log --repo "${REPO}")"; then
+                echo "Unable to fetch logs for ${job_name} (${job_id}); skipping transient Docker log check."
+              elif echo "${job_log}" | grep -Eiq 'failed to bind host port.*address already in use|address already in use.*failed to bind host port'; then
                 should_rerun="true"
               fi
             fi
