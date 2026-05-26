@@ -38,7 +38,18 @@ You can further customize the resource with the following options:
 - `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden endpoints.
 - `WithCacheFile(...)` overrides the AppHost cache file location (default: `.bitwarden/{resourceName}.{environment}.json` relative to the AppHost directory). The AppHost cache tracks Bitwarden project and secret IDs between runs. Relative paths are resolved from the AppHost directory.
 - `WithAuthCacheFile(...)` overrides the AppHost auth cache file location (default: Aspire store, keyed by a hash of the access token). The AppHost auth cache persists the Bitwarden SDK auth session between runs on the AppHost. Relative paths are resolved from the Aspire store.
-- `WithRuntimeAccessToken(...)` overrides the token injected into dependents.
+
+Pass a least-privilege read-only access token directly to `WithReference(...)` so the client does not receive the management token:
+
+```csharp
+IResourceBuilder<ParameterResource> runtimeToken = builder.AddParameter("runtime-access-token", secret: true);
+
+builder.AddProject<Projects.ApiService>("api")
+    .WithReference(bitwarden, runtimeToken);
+```
+
+> **Note:** The client token must be granted read permissions to the Bitwarden project. Bitwarden does not expose an API for granting project access to a service account, so this step cannot be automated. You must grant the service account read access to the project manually in the Bitwarden web vault or CLI. For a newly created project, do this after the first AppHost run that creates the project.
+
 
 Use `WithAuthCacheFile(...)` on a dependent resource builder to persist its Bitwarden SDK auth session across restarts. Accepts a string for a fixed path or a parameter for an environment-specific path:
 

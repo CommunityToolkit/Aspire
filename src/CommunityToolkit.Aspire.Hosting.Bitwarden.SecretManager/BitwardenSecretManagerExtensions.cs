@@ -302,23 +302,6 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Overrides the runtime access token injected into dependents by <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string?)"/>.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="accessToken">The runtime access token parameter.</param>
-    /// <returns>The resource builder.</returns>
-    public static IResourceBuilder<BitwardenSecretManagerResource> WithRuntimeAccessToken(
-        this IResourceBuilder<BitwardenSecretManagerResource> builder,
-        IResourceBuilder<ParameterResource> accessToken)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(accessToken);
-
-        builder.Resource.RuntimeAccessToken = accessToken.Resource;
-        return builder;
-    }
-
-    /// <summary>
     /// Gets a Bitwarden secret reference by remote name.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
@@ -439,6 +422,42 @@ public static class BitwardenSecretManagerExtensions
 
         builder.Resource.ExistingSecretId = secretId;
         return builder;
+    }
+
+    /// <summary>
+    /// Injects structured Bitwarden client configuration into the destination resource,
+    /// using the provided least-privilege read-only access token instead of the management token.
+    /// </summary>
+    /// <remarks>
+    /// The provided token must be granted read permissions to the Bitwarden project.
+    /// Bitwarden does not expose an API for granting project access to a service account, so this cannot be automated.
+    /// Grant the service account read access to the project manually in the Bitwarden web vault or CLI.
+    /// For a newly created project, do this after the first AppHost run that creates the project.
+    /// </remarks>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource builder.</param>
+    /// <param name="accessToken">The access token parameter for this client.</param>
+    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
+    /// <returns>The destination resource builder.</returns>
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        IResourceBuilder<ParameterResource> accessToken,
+        string? connectionName = null)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        connectionName ??= source.Resource.Name;
+
+        return builder
+            .WithReference(source, connectionName)
+            .WithEnvironment(
+                $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AccessToken",
+                accessToken);
     }
 
     /// <summary>

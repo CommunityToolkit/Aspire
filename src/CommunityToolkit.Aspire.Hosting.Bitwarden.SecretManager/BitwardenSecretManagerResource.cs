@@ -182,8 +182,6 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal ParameterResource ManagementAccessToken { get; }
 
-    internal ParameterResource? RuntimeAccessToken { get; set; }
-
     internal string AppHostDirectory { get; }
 
     internal string? ResolvedRemoteProjectName { get; set; }
@@ -255,8 +253,6 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal object GetConfiguredProjectNameReference() => _projectName.GetReference(Name, "project name");
 
-    internal object GetEffectiveAccessTokenReference() => RuntimeAccessToken ?? ManagementAccessToken;
-
     internal string GetApiUrlOrDefault() => ApiUrl ?? DefaultApiUrl;
 
     internal string GetIdentityUrlOrDefault() => IdentityUrl ?? DefaultIdentityUrl;
@@ -290,7 +286,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     {
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__OrganizationId"] = GetConfiguredOrganizationIdReference();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__ProjectId"] = _projectIdReference;
-        environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__AccessToken"] = GetEffectiveAccessTokenReference();
+        environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__AccessToken"] = ManagementAccessToken;
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__ApiUrl"] = GetApiUrlOrDefault();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__IdentityUrl"] = GetIdentityUrlOrDefault();
     }

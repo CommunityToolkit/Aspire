@@ -32,12 +32,12 @@ pipeline steps via `WithPipelineStepFactory(...)`.
 
 The steps run in order and are scoped to the resource by name:
 
-| # | Step name | What it does |
-|---|---|---|
-| 1 | `bitwarden-authenticate-{name}` | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden |
-| 2 | `bitwarden-provision-project-{name}` | Creates or updates the remote Bitwarden project; binds the resolved project ID |
-| 3 | `bitwarden-provision-secrets-{name}` | Creates or updates managed secrets, validates declared references, saves cache |
-| 4 | `bitwarden-patch-env-{name}` | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files |
+| #   | Step name                            | What it does                                                                   |
+| --- | ------------------------------------ | ------------------------------------------------------------------------------ |
+| 1   | `bitwarden-authenticate-{name}`      | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden    |
+| 2   | `bitwarden-provision-project-{name}` | Creates or updates the remote Bitwarden project; binds the resolved project ID |
+| 3   | `bitwarden-provision-secrets-{name}` | Creates or updates managed secrets, validates declared references, saves cache |
+| 4   | `bitwarden-patch-env-{name}`         | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files       |
 
 Steps 1–3 depend on `DeployPrereq`. Step 3 is tagged `ProvisionInfrastructure` and is required by `Deploy`. Because steps 1–3 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
 
@@ -55,6 +55,17 @@ Happy path:
 ## Run Mode
 
 For local run scenarios, the same declared graph is used. The implementation invokes reconciliation during resource initialization to keep local state aligned. This run-mode behavior is separate from publish-time step execution and does not change the architecture: declaration and pipeline-step deployment remain the primary model.
+
+## Access Tokens
+
+The integration uses two distinct access tokens with different scopes:
+
+- **Management token** — supplied to `AddBitwardenSecretManager(...)`. Used exclusively by the AppHost provisioner to create and update the Bitwarden project and its secrets. It must have write permissions to the project.
+- **Client token** — optionally supplied as a second argument to `WithReference(bitwarden, token)`. Injected into the dependent resource as `AccessToken` under `Aspire:Bitwarden:SecretManager:{connectionName}`. Defaults to the management token when omitted.
+
+The client token only needs read permissions to the project. Because Bitwarden does not expose an API for granting project access to a service account, this grant must be performed manually in the Bitwarden web vault. For a newly created project the grant must be done after the first AppHost run that creates the project.
+
+The AppHost provisioner never reads the client token. The deployed app never reads the management token.
 
 ## Cache Files
 
@@ -80,4 +91,3 @@ The AppHost reconciler never reads the app auth cache path. The deployed app nev
 - Making runtime reconciliation the primary architectural concept.
 
 The intended design is pipeline-step-first, declared-resource-first.
-

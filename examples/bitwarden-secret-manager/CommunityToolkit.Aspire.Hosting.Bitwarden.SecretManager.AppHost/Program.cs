@@ -12,11 +12,8 @@ var demoApiKey = builder.AddParameter("demo-api-key", secret: true);
 
 // Set up a secrets project within the specified organization using the provided management access token.
 // The management token MUST have write permissions to the project if it already exists.
-// If the project doesn't exist, it will be automatically created with write access for the provided token. 
+// If the project doesn't exist, it will be automatically created with write access for the provided token.
 var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organizationId, accessToken);
-
-// Recommended: configure the Bitwarden client with a runtime access token that has fewer privileges than the management token.
-bitwarden.WithRuntimeAccessToken(accessToken /* replace with least privilege token */);
 
 // Optional: override the AppHost cache file location.
 // The cache stores the Bitwarden project ID and secret ID mappings between runs so the integration
@@ -46,7 +43,13 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
 // 1. Using the secret manager client in code, which allows you to retrieve secrets at runtime and
 //    supports dynamic secret retrieval without redeploying the application when secrets change.
 // (See ApiService/Program.cs for an example of retrieving secrets from the client in code.)
-api.WithReference(bitwarden).WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource);
+// Recommended: supply a least-privilege read-only access token so the client does not receive the management token.
+// IMPORTANT: the client token must be granted read permissions to the Bitwarden project.
+// This cannot be automated: Bitwarden does not expose an API for granting project access to a service account.
+// You must grant the service account read access to the project manually in the Bitwarden web vault or CLI.
+// For a newly created project this must be done after the first AppHost run that creates the project.
+api.WithReference(bitwarden, accessToken /* replace with least privilege token */)
+    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource);
 
 // Optional: persist the app's Bitwarden SDK auth session across restarts so it does not re-authenticate on every startup.
 // In run mode a fixed local path is fine; in deployed environments use a parameter so each

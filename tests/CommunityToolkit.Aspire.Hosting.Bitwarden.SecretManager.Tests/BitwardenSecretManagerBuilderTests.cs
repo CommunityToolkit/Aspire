@@ -160,7 +160,7 @@ public class BitwardenSecretManagerBuilderTests
 
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
-        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "runtime-access-token";
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "management-access-token";
 
         var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
@@ -177,10 +177,64 @@ public class BitwardenSecretManagerBuilderTests
 
         Assert.Equal(organizationId.ToString("D"), environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__OrganizationId"]);
         Assert.Equal(projectId.ToString("D"), environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__ProjectId"]);
-        Assert.Equal("runtime-access-token", environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AccessToken"]);
+        Assert.Equal("management-access-token", environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AccessToken"]);
         Assert.Equal(BitwardenSecretManagerResource.DefaultApiUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__ApiUrl"]);
         Assert.Equal(BitwardenSecretManagerResource.DefaultIdentityUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__IdentityUrl"]);
         Assert.False(environmentVariables.ContainsKey($"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheFile"));
+    }
+
+    [Fact]
+    public async Task WithReference_WithAccessToken_OverridesAccessTokenInClient()
+    {
+        var organizationId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
+        appBuilder.Configuration["Parameters:management-token"] = "management-token-value";
+        appBuilder.Configuration["Parameters:runtime-token"] = "runtime-token-value";
+
+        var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
+        var managementToken = appBuilder.AddParameter("management-token", secret: true);
+        var runtimeToken = appBuilder.AddParameter("runtime-token", secret: true);
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "consumer-project", organizationParameter, managementToken);
+        bitwarden.Resource.BindResolvedProjectId(projectId);
+
+        var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
+        consumer.WithReference(bitwarden, runtimeToken);
+
+        using var app = appBuilder.Build();
+
+        var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal("runtime-token-value", environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AccessToken"]);
+    }
+
+    [Fact]
+    public async Task WithReference_WithoutWithAccessToken_InjectsManagementToken()
+    {
+        var organizationId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
+        appBuilder.Configuration["Parameters:management-token"] = "management-token-value";
+
+        var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
+        var managementToken = appBuilder.AddParameter("management-token", secret: true);
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "consumer-project", organizationParameter, managementToken);
+        bitwarden.Resource.BindResolvedProjectId(projectId);
+
+        var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
+        consumer.WithReference(bitwarden);
+
+        using var app = appBuilder.Build();
+
+        var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal("management-token-value", environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AccessToken"]);
     }
 
     [Fact]
