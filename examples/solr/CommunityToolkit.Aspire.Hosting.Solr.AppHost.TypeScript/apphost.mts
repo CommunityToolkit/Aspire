@@ -1,7 +1,7 @@
 import { mkdir, chmod } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createBuilder } from "./.modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 const appHostDirectory = dirname(fileURLToPath(import.meta.url));

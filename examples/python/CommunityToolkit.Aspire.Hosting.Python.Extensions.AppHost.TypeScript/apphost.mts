@@ -1,9 +1,13 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
 // addStreamlitApp — Streamlit app resource
-const dashboard = await builder.addStreamlitApp("dashboard", "./streamlit-app", "app.py");
+const dashboard = await builder.addStreamlitApp(
+    "dashboard",
+    "./streamlit-app",
+    "app.py",
+);
 await dashboard.withExplicitStart();
 const _dashboardResource = await dashboard;
 

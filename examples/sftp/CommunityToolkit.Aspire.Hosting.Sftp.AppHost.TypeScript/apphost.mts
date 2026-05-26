@@ -1,7 +1,7 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createBuilder, KeyType } from "./.modules/aspire.js";
+import { createBuilder, KeyType } from "./.aspire/modules/aspire.js";
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 const appHostFixtureDirectory = join(

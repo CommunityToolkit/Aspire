@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createBuilder } from "./.modules/aspire.js";
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 const bindMountRoot = mkdtempSync(join(tmpdir(), "activemq-polyglot-"));

@@ -1,4 +1,4 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
@@ -9,7 +9,7 @@ await storage.runAsEmulator({
         await azurite.withBlobPort(27000);
         await azurite.withQueuePort(27001);
         await azurite.withTablePort(27002);
-    }
+    },
 });
 
 const blobs = await storage.addBlobs("blobs");
@@ -20,12 +20,12 @@ await blobs.withAzureStorageExplorer({
         const _endpoint = await explorer.primaryEndpoint.get();
         const _host = await explorer.host.get();
         const _port = await explorer.port.get();
-    }
+    },
 });
 
 const queues = await storage.addQueues("queues");
 await queues.withAzureStorageExplorer({
-    name: "queues-explorer"
+    name: "queues-explorer",
 });
 
 const tables = await storage.addTables("tables");
@@ -35,7 +35,7 @@ await tables.withAzureStorageExplorer({
         const _host = await explorer.host.get();
         const _port = await explorer.port.get();
     },
-    name: "tables-explorer"
+    name: "tables-explorer",
 });
 
 await builder.build().run();

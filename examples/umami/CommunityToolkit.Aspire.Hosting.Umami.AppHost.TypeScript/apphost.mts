@@ -1,15 +1,18 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
-const umamiSecret = await builder.addParameter("umami-secret", { value: "SuperSecret123!", secret: true });
+const umamiSecret = await builder.addParameter("umami-secret", {
+    value: "SuperSecret123!",
+    secret: true,
+});
 const postgres = await builder.addPostgres("postgres");
 const analyticsDatabase = await postgres.addDatabase("analytics");
 
 // addUmami — with explicit secret and port
 const umami = await builder.addUmami("umami", {
     secret: umamiSecret,
-    port: 31300
+    port: 31300,
 });
 
 // addUmami — minimal overload

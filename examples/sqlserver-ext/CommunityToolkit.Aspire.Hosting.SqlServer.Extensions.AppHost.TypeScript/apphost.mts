@@ -1,16 +1,19 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
-const sqlPassword = await builder.addParameter('sql-password', { value: 'SqlServer_Pass123!', secret: true });
+const sqlPassword = await builder.addParameter("sql-password", {
+    value: "SqlServer_Pass123!",
+    secret: true,
+});
 const sqlServer = builder
-    .addSqlServer('sqlserver', { password: sqlPassword })
+    .addSqlServer("sqlserver", { password: sqlPassword })
     .withDbGate({
-        containerName: 'dbgate',
-        imageTag: '6.1.4',
+        containerName: "dbgate",
+        imageTag: "6.1.4",
     })
     .withAdminer({
-        containerName: 'sqlserver-adminer',
-        imageTag: '5.1.0',
+        containerName: "sqlserver-adminer",
+        imageTag: "5.1.0",
     });
 
 const _resolvedSqlServer = await sqlServer;

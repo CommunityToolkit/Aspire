@@ -1,27 +1,41 @@
-import { createBuilder, type KeycloakResource, type WithPostgresOptions } from './.modules/aspire.js';
+import {
+    createBuilder,
+    type KeycloakResource,
+    type WithPostgresOptions,
+} from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
-const dbUserName = await builder.addParameter("db-username", { value: "postgres" });
-const dbPassword = await builder.addParameter("db-password", { value: "Postgres!123", secret: true });
+const dbUserName = await builder.addParameter("db-username", {
+    value: "postgres",
+});
+const dbPassword = await builder.addParameter("db-password", {
+    value: "Postgres!123",
+    secret: true,
+});
 
 const postgres = await builder.addPostgres("keycloak-postgres", {
     userName: dbUserName,
-    password: dbPassword
+    password: dbPassword,
 });
 const db = await postgres.addDatabase("keycloak");
 
 // Aspire.Hosting.Keycloak does not yet export addKeycloak to TypeScript, so validate the generated
 // withPostgres signature directly against the generated Keycloak resource handle types.
-type KeycloakWithPostgresParameters = Parameters<KeycloakResource["withPostgres"]>;
+type KeycloakWithPostgresParameters = Parameters<
+    KeycloakResource["withPostgres"]
+>;
 
 const withPostgresDefaults: KeycloakWithPostgresParameters = [db];
 const withPostgresOptions: WithPostgresOptions = {
     username: dbUserName,
     password: dbPassword,
-    xaEnabled: true
+    xaEnabled: true,
 };
-const withPostgresExplicit: KeycloakWithPostgresParameters = [db, withPostgresOptions];
+const withPostgresExplicit: KeycloakWithPostgresParameters = [
+    db,
+    withPostgresOptions,
+];
 void withPostgresDefaults;
 void withPostgresExplicit;
 

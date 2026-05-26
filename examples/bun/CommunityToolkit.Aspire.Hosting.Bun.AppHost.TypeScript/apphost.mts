@@ -1,4 +1,4 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
@@ -6,7 +6,7 @@ const builder = await createBuilder();
 const bunApp = await builder.addBunApp("bun-app", {
     workingDirectory: "./bun-app",
     entryPoint: "index.ts",
-    watch: false
+    watch: false,
 });
 
 // withBunPackageInstallation — default invocation
@@ -15,7 +15,7 @@ await bunApp.withBunPackageInstallation();
 
 // addBunApp — exercise default entry point and watch values
 const bunDefaults = await builder.addBunApp("bun-defaults", {
-    workingDirectory: "./bun-app"
+    workingDirectory: "./bun-app",
 });
 await bunDefaults.withBunPackageInstallation();
 
@@ -23,7 +23,7 @@ await bunDefaults.withBunPackageInstallation();
 const bunWatch = await builder.addBunApp("bun-watch", {
     workingDirectory: "./bun-app",
     entryPoint: "index.ts",
-    watch: true
+    watch: true,
 });
 await bunWatch.withBunPackageInstallation();
 

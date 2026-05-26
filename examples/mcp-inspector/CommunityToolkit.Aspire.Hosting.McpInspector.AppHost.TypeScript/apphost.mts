@@ -1,4 +1,4 @@
-import { createBuilder, McpTransportType } from "./.modules/aspire.js";
+import { createBuilder, McpTransportType } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
@@ -49,4 +49,3 @@ const inspectorBun = await builder.addMcpInspector("inspector-bun", {
 await inspectorBun.withBun();
 
 await builder.build().run();
-

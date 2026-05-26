@@ -1,20 +1,23 @@
-import { ContainerLifetime, createBuilder } from './.modules/aspire.js';
+import { ContainerLifetime, createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
-const runtimeSmoke = process.env.ASPIRE_RUNTIME_SMOKE === '1';
+const runtimeSmoke = process.env.ASPIRE_RUNTIME_SMOKE === "1";
 
-const redisPassword = await builder.addParameter('redis-password', { value: 'redis-password-value', secret: true });
-const redis = await builder.addRedis('cache', { password: redisPassword });
+const redisPassword = await builder.addParameter("redis-password", {
+    value: "redis-password-value",
+    secret: true,
+});
+const redis = await builder.addRedis("cache", { password: redisPassword });
 
 if (runtimeSmoke) {
-    await redis.withDbGate({ containerName: 'cache-dbgate' });
+    await redis.withDbGate({ containerName: "cache-dbgate" });
 } else {
     await redis.withDbGate({
-        containerName: 'cache-dbgate',
+        containerName: "cache-dbgate",
         configureContainer: async (dbgate) => {
-            await dbgate.withEnvironment('REDIS_EXTENSIONS_VALIDATION', '1');
+            await dbgate.withEnvironment("REDIS_EXTENSIONS_VALIDATION", "1");
             await dbgate.withLifetime(ContainerLifetime.Session);
-        }
+        },
     });
 }
 

@@ -1,8 +1,11 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
-const authToken = await builder.addParameter("ngrok-auth-token", { value: "ngrok-token-value", secret: true });
+const authToken = await builder.addParameter("ngrok-auth-token", {
+    value: "ngrok-token-value",
+    secret: true,
+});
 
 const upstream = await builder
     .addContainer("upstream", "nginx:alpine")
@@ -13,15 +16,15 @@ await builder
         configurationFolder: ".ngrok-parameter",
         endpointPort: 59600,
         endpointName: "http",
-        configurationVersion: 3
+        configurationVersion: 3,
     })
     .withAuthToken(authToken)
     .withTunnelEndpoint(upstream, "http", {
         ngrokUrl: "https://parameter.ngrok.test",
         labels: {
             environment: "dev",
-            service: "upstream"
-        }
+            service: "upstream",
+        },
     });
 
 const ngrokValue = builder.addNgrok("ngrok-value");

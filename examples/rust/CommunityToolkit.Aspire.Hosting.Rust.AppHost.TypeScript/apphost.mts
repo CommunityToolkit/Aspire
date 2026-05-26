@@ -1,4 +1,4 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 const rustAppPath = "../actix_api";
@@ -10,9 +10,12 @@ await rustApp.withExternalHttpEndpoints();
 await rustApp.withHttpHealthCheck({ path: "/" });
 
 // addRustApp — optional args
-if (process.env["RUST_ARGS_VALIDATION"] === "1")
-{
-    const rustAppWithArgs = await builder.addRustApp("rust-app-with-args", rustAppPath, { args: ["--", "--help"] });
+if (process.env["RUST_ARGS_VALIDATION"] === "1") {
+    const rustAppWithArgs = await builder.addRustApp(
+        "rust-app-with-args",
+        rustAppPath,
+        { args: ["--", "--help"] },
+    );
     await rustAppWithArgs.withHttpEndpoint({ env: "PORT" });
 }
 

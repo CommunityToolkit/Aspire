@@ -1,4 +1,4 @@
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
@@ -8,7 +8,7 @@ const defaultK6 = await builder.addK6("k6-default");
 // addK6 — exercise optional parameters
 const browserK6 = await builder.addK6("k6-browser", {
     enableBrowserExtensions: true,
-    port: 6566
+    port: 6566,
 });
 
 // withBindMount — mount the local scripts directory into each container
@@ -24,7 +24,7 @@ await defaultK6.withK6OtlpEnvironment();
 // withScript — explicit optional parameters
 await browserK6.withScript("/scripts/main.js", {
     virtualUsers: 5,
-    duration: "45s"
+    duration: "45s",
 });
 
 // withK6OtlpEnvironment — chain on second resource too

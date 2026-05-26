@@ -1,4 +1,4 @@
-import { createBuilder, SqliteWebResource } from "./.modules/aspire.js";
+import { createBuilder, SqliteWebResource } from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 

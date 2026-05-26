@@ -1,4 +1,7 @@
-import { createBuilder, GoFeatureFlagLogLevel } from "./.modules/aspire.js";
+import {
+    createBuilder,
+    GoFeatureFlagLogLevel,
+} from "./.aspire/modules/aspire.js";
 
 const builder = await createBuilder();
 
