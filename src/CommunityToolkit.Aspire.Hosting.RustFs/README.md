@@ -26,3 +26,17 @@ var rustfs = builder.AddRustFs("rustfs")
 builder.Build().Run();
 ```
 
+### Buckets
+
+`AddBucket` registers each bucket as a child `RustFsBucketResource` so it appears in
+the Aspire Dashboard. After the RustFs server becomes healthy, the integration issues
+a signed S3 `PUT /{bucket}` request from the AppHost process to provision the bucket;
+there is no `minio/mc` sidecar container.
+
+Multiple buckets can be added at once via `AddBucket(IReadOnlyList<string>)`:
+
+```csharp
+builder.AddRustFs("rustfs")
+    .AddBucket(["images", "documents", "audit-log"]);
+```
+

@@ -1,13 +1,47 @@
 using Aspire.Components.Common.Tests;
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
-using Xunit.Abstractions;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.RustFs.Tests;
 
 [RequiresDocker]
 public class RustFsFunctionalTests(ITestOutputHelper testOutputHelper)
 {
+    [Fact]
+    public async Task AddBucketCreatesBucketViaHttpApi()
+    {
+        using var distributedApplicationBuilder = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+        var accessKeyParameter = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(distributedApplicationBuilder,
+            "accessKey");
+        distributedApplicationBuilder.Configuration["Parameters:accessKey"] = await accessKeyParameter.GetValueAsync(default);
+        var accessKey = distributedApplicationBuilder.AddParameter(accessKeyParameter.Name);
+
+        var secretKeyParameter = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(distributedApplicationBuilder,
+            "secretKey");
+        distributedApplicationBuilder.Configuration["Parameters:secretKey"] = await secretKeyParameter.GetValueAsync(default);
+        var secretKey = distributedApplicationBuilder.AddParameter(secretKeyParameter.Name);
+
+        var rustfs = distributedApplicationBuilder.AddRustFs("rustfs", accessKey, secretKey);
+        var bucket = rustfs.AddBucket("functional-bucket");
+
+        await using var app = await distributedApplicationBuilder.BuildAsync();
+        await app.StartAsync();
+
+        var rns = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        await rns.WaitForResourceHealthyAsync(rustfs.Resource.Name);
+        var snapshot = await rns.WaitForResourceAsync(
+            bucket.Resource.Name,
+            evt => evt.Snapshot.State?.Style == KnownResourceStateStyles.Success
+                || evt.Snapshot.State?.Style == KnownResourceStateStyles.Error)
+            .WaitAsync(TimeSpan.FromMinutes(2));
+
+        testOutputHelper.WriteLine($"Bucket final state text={snapshot.Snapshot.State?.Text} style={snapshot.Snapshot.State?.Style}");
+        Assert.Equal(KnownResourceStates.Running, snapshot.Snapshot.State?.Text);
+    }
+
     [Fact]
     public async Task ResourceStartsAndHealthCheckPasses()
     {

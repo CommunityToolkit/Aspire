@@ -1,6 +1,8 @@
-using System.Text;
+using System.Data.Common;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.RustFs;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
@@ -127,32 +129,47 @@ public static class RustFsBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a bucket to the RustFs resource using the MinIO CLI (<c>minio/mc</c>).
+    /// Sets the AWS signing region used when creating buckets via the S3 API.
+    /// Defaults to <c>us-east-1</c> if not specified.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="bucketName">The name of the bucket to create.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{ContainerResource}"/> for the bucket creation container.</returns>
-    public static IResourceBuilder<ContainerResource> AddBucket(this IResourceBuilder<RustFsResource> builder, string bucketName)
+    /// <param name="region">The AWS signing region (e.g. <c>us-east-1</c>, <c>ap-northeast-1</c>).</param>
+    /// <returns>The <see cref="IResourceBuilder{RustFsResource}"/>.</returns>
+    public static IResourceBuilder<RustFsResource> WithSigningRegion(this IResourceBuilder<RustFsResource> builder, string region)
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(region);
 
-        if (string.IsNullOrWhiteSpace(bucketName))
-        {
-            throw new ArgumentException("Bucket name cannot be null or empty.", nameof(bucketName));
-        }
-
-        return builder.AddBucket(
-            name: $"{builder.Resource.Name}-create-bucket-{SanitizeForResourceName(bucketName)}",
-            bucketNames: [bucketName]);
+        builder.Resource.SigningRegion = region;
+        return builder;
     }
 
     /// <summary>
-    /// Adds multiple buckets to the RustFs resource using the MinIO CLI (<c>minio/mc</c>).
+    /// Adds a bucket to the RustFs resource. The bucket is created by issuing a signed
+    /// <c>PUT</c> request to the RustFs S3 API after the server resource becomes ready.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="bucketName">The name of the bucket to create.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/> for the bucket resource.</returns>
+    public static IResourceBuilder<RustFsBucketResource> AddBucket(this IResourceBuilder<RustFsResource> builder, string bucketName)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(bucketName);
+
+        return builder.AddBucketCore(
+            name: $"{builder.Resource.Name}-{SanitizeForResourceName(bucketName)}",
+            bucketName: bucketName);
+    }
+
+    /// <summary>
+    /// Adds multiple buckets to the RustFs resource. Each bucket is registered as its own
+    /// <see cref="RustFsBucketResource"/> child resource and created via the RustFs S3 API
+    /// once the server resource becomes ready.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="bucketNames">The names of the buckets to create.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{ContainerResource}"/> for the bucket creation container.</returns>
-    public static IResourceBuilder<ContainerResource> AddBucket(this IResourceBuilder<RustFsResource> builder, IReadOnlyList<string> bucketNames)
+    /// <returns>The original <see cref="IResourceBuilder{RustFsResource}"/> for further chaining.</returns>
+    public static IResourceBuilder<RustFsResource> AddBucket(this IResourceBuilder<RustFsResource> builder, IReadOnlyList<string> bucketNames)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -161,52 +178,165 @@ public static class RustFsBuilderExtensions
             throw new ArgumentException("Bucket names cannot be null or empty.", nameof(bucketNames));
         }
 
-        return builder.AddBucket(
-            name: $"{builder.Resource.Name}-create-buckets",
-            bucketNames: bucketNames);
+        foreach (var bucketName in bucketNames)
+        {
+            if (string.IsNullOrWhiteSpace(bucketName))
+            {
+                continue;
+            }
+
+            builder.AddBucket(bucketName);
+        }
+
+        return builder;
     }
 
-    private static IResourceBuilder<ContainerResource> AddBucket(
+    private static IResourceBuilder<RustFsBucketResource> AddBucketCore(
         this IResourceBuilder<RustFsResource> builder,
         [ResourceName] string name,
-        IReadOnlyList<string> bucketNames)
+        string bucketName)
     {
-        return builder.ApplicationBuilder
-            .AddContainer(name, RustFsContainerImageTags.McImage, RustFsContainerImageTags.McTag)
-            .WithImageRegistry(RustFsContainerImageTags.McRegistry)
+        var parent = builder.Resource;
+        var bucketResource = new RustFsBucketResource(name, bucketName, parent);
+
+        var bucketBuilder = builder.ApplicationBuilder
+            .AddResource(bucketResource)
             .WithParentRelationship(builder)
-            .WaitFor(builder)
-            .WithEntrypoint("/bin/sh")
-            .WithArgs(async ctx =>
+            .WithInitialState(new()
             {
-                var rustFsResource = builder.Resource;
-
-                var accessKey = await rustFsResource.AccessKey.GetValueAsync(ctx.CancellationToken);
-                var secretKey = await rustFsResource.SecretKey.GetValueAsync(ctx.CancellationToken);
-
-                var sb = new StringBuilder();
-
-                sb.Append($"mc alias set rustfs {GetRustFsPrimaryUri(rustFsResource)} '{accessKey}' '{secretKey}';");
-
-                foreach (var bucket in bucketNames)
-                {
-                    if (string.IsNullOrWhiteSpace(bucket))
-                    {
-                        continue;
-                    }
-
-                    sb.Append($"mc mb rustfs/{bucket} --ignore-existing;");
-                }
-
-                ctx.Args.Add("-c");
-                ctx.Args.Add(sb.ToString());
+                ResourceType = "RustFsBucket",
+                State = new ResourceStateSnapshot("Waiting", KnownResourceStateStyles.Info),
+                Properties = [new(CustomResourceKnownProperties.Source, bucketName)],
             });
 
-        static string GetRustFsPrimaryUri(RustFsResource rustFs)
+        builder.ApplicationBuilder.Eventing.Subscribe<ResourceReadyEvent>(parent, (@event, cancellationToken) =>
         {
-            var endpoint = rustFs.GetEndpoint(RustFsResource.PrimaryEndpointName);
-            return $"{endpoint.Scheme}://{rustFs.Name}:{endpoint.TargetPort}";
+            _ = Task.Run(() => CreateBucketOnReadyAsync(@event, bucketResource, parent, cancellationToken), cancellationToken);
+            return Task.CompletedTask;
+        });
+
+        return bucketBuilder;
+    }
+
+    private static async Task CreateBucketOnReadyAsync(
+        ResourceReadyEvent @event,
+        RustFsBucketResource bucketResource,
+        RustFsResource parent,
+        CancellationToken cancellationToken)
+    {
+        var notificationService = @event.Services.GetRequiredService<ResourceNotificationService>();
+        var logger = @event.Services.GetRequiredService<ResourceLoggerService>().GetLogger(bucketResource);
+
+        try
+        {
+            await notificationService.PublishUpdateAsync(bucketResource, state => state with
+            {
+                State = new ResourceStateSnapshot("Creating", KnownResourceStateStyles.Info),
+            }).ConfigureAwait(false);
+
+            var accessKey = await parent.AccessKey.GetValueAsync(cancellationToken).ConfigureAwait(false);
+            var secretKey = await parent.SecretKey.GetValueAsync(cancellationToken).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(accessKey) || string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("RustFs access key or secret key is not available.");
+            }
+
+            var connectionString = await parent.ConnectionStringExpression.GetValueAsync(cancellationToken).ConfigureAwait(false);
+            var endpointUri = ParseEndpointUri(connectionString);
+
+            using var httpClient = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(30),
+            };
+
+            await CreateBucketAsync(httpClient, endpointUri, bucketResource.BucketName, accessKey, secretKey, parent.SigningRegion, logger, cancellationToken).ConfigureAwait(false);
+
+            await notificationService.PublishUpdateAsync(bucketResource, state => state with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success),
+            }).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create RustFs bucket '{Bucket}'", bucketResource.BucketName);
+            await notificationService.PublishUpdateAsync(bucketResource, state => state with
+            {
+                State = new ResourceStateSnapshot(ex.Message, KnownResourceStateStyles.Error),
+            }).ConfigureAwait(false);
+        }
+    }
+
+    private static Uri ParseEndpointUri(string? connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("RustFs connection string is not available.");
+        }
+
+        var csb = new DbConnectionStringBuilder { ConnectionString = connectionString };
+
+        if (!csb.TryGetValue("Endpoint", out var endpointObj) ||
+            endpointObj is not string endpoint ||
+            !Uri.TryCreate(endpoint, UriKind.Absolute, out var uri))
+        {
+            throw new InvalidOperationException("RustFs connection string is missing a valid 'Endpoint' value.");
+        }
+
+        return uri;
+    }
+
+    private static async Task CreateBucketAsync(
+        HttpClient httpClient,
+        Uri endpointUri,
+        string bucketName,
+        string accessKey,
+        string secretKey,
+        string signingRegion,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        var hostHeader = endpointUri.IsDefaultPort
+            ? endpointUri.Host
+            : $"{endpointUri.Host}:{endpointUri.Port}";
+
+        var headers = RustFsS3Signer.SignPutBucket(
+            hostHeader: hostHeader,
+            bucketName: bucketName,
+            accessKey: accessKey,
+            secretKey: secretKey,
+            region: signingRegion,
+            timestamp: DateTimeOffset.UtcNow);
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, new Uri(endpointUri, Uri.EscapeDataString(bucketName)));
+        foreach (var (key, value) in headers)
+        {
+            request.Headers.TryAddWithoutValidation(key, value);
+        }
+
+        using var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+        if (response.IsSuccessStatusCode)
+        {
+            logger.LogInformation("Created RustFs bucket '{Bucket}'", bucketName);
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        if (response.StatusCode == System.Net.HttpStatusCode.Conflict ||
+            body.Contains("BucketAlreadyOwnedByYou", StringComparison.Ordinal) ||
+            body.Contains("BucketAlreadyExists", StringComparison.Ordinal))
+        {
+            logger.LogInformation("RustFs bucket '{Bucket}' already exists", bucketName);
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Failed to create RustFs bucket '{bucketName}': HTTP {(int)response.StatusCode} {response.ReasonPhrase} — {body}");
     }
 
     private static string SanitizeForResourceName(string name) =>

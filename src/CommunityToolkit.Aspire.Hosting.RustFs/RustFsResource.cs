@@ -15,6 +15,8 @@ public sealed class RustFsResource(string name, ParameterResource accessKey, Par
     internal const int PrimaryTargetPort = 9000;
     internal const int ConsoleTargetPort = 9001;
 
+    internal const string DefaultSigningRegion = "us-east-1";
+
     /// <summary>
     /// Gets the access key parameter resource for RustFs.
     /// </summary>
@@ -24,6 +26,11 @@ public sealed class RustFsResource(string name, ParameterResource accessKey, Par
     /// Gets the secret key parameter resource for RustFs.
     /// </summary>
     public ParameterResource SecretKey { get; } = secretKey;
+
+    /// <summary>
+    /// Gets the AWS signing region used for S3 API requests. Defaults to <c>us-east-1</c>.
+    /// </summary>
+    public string SigningRegion { get; internal set; } = DefaultSigningRegion;
 
     private EndpointReference? _primaryEndpoint;
 

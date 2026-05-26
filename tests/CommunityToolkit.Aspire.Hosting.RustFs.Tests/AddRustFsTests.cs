@@ -109,7 +109,31 @@ public class AddRustFsTests
     }
 
     [Fact]
-    public void AddBucketAddsBucketCreationContainer()
+    public void AddBucketRegistersChildBucketResource()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var rustfs = builder.AddRustFs("rustfs");
+        var bucketBuilder = rustfs.AddBucket("mybucket");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var bucket = Assert.Single(appModel.Resources.OfType<RustFsBucketResource>());
+
+        Assert.Equal("mybucket", bucket.BucketName);
+        Assert.Same(rustfs.Resource, bucket.Parent);
+        Assert.Same(bucket, bucketBuilder.Resource);
+
+        var parentAnnotation = bucket.Annotations.OfType<ResourceRelationshipAnnotation>()
+            .SingleOrDefault(a => a.Type == "Parent");
+        Assert.NotNull(parentAnnotation);
+        Assert.Same(rustfs.Resource, parentAnnotation.Resource);
+    }
+
+    [Fact]
+    public void AddBucketDoesNotAddMcContainer()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -120,15 +144,12 @@ public class AddRustFsTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var bucketContainer = Assert.Single(appModel.Resources.OfType<ContainerResource>(), r => r.Name.Contains("create-bucket"));
+        var mcContainers = appModel.Resources
+            .OfType<ContainerResource>()
+            .Where(r => r.Annotations.OfType<ContainerImageAnnotation>().Any(a => a.Image == "minio/mc"))
+            .ToList();
 
-        Assert.True(bucketContainer.TryGetLastAnnotation<ContainerImageAnnotation>(out var imageAnnotation));
-        Assert.Equal(RustFsContainerImageTags.McImage, imageAnnotation.Image);
-
-        var parentAnnotation = bucketContainer.Annotations.OfType<ResourceRelationshipAnnotation>()
-            .SingleOrDefault(a => a.Type == "Parent");
-        Assert.NotNull(parentAnnotation);
-        Assert.Same(rustfs.Resource, parentAnnotation.Resource);
+        Assert.Empty(mcContainers);
     }
 
     [Fact]
@@ -143,13 +164,14 @@ public class AddRustFsTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var bucketContainer = Assert.Single(appModel.Resources.OfType<ContainerResource>(), r => r.Name.Contains("create-bucket"));
+        var bucket = Assert.Single(appModel.Resources.OfType<RustFsBucketResource>());
 
-        Assert.DoesNotContain(".", bucketContainer.Name);
+        Assert.DoesNotContain(".", bucket.Name);
+        Assert.Equal("my.bucket", bucket.BucketName);
     }
 
     [Fact]
-    public void AddBucketListAddsBucketCreationContainer()
+    public void AddBucketListRegistersOneResourcePerBucket()
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -160,9 +182,43 @@ public class AddRustFsTests
 
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var bucketContainer = Assert.Single(appModel.Resources.OfType<ContainerResource>(), r => r.Name.Contains("create-buckets"));
+        var buckets = appModel.Resources.OfType<RustFsBucketResource>().ToList();
+        Assert.Equal(2, buckets.Count);
+        Assert.Contains(buckets, b => b.BucketName == "bucket1");
+        Assert.Contains(buckets, b => b.BucketName == "bucket2");
+    }
 
-        Assert.True(bucketContainer.TryGetLastAnnotation<ContainerImageAnnotation>(out var imageAnnotation));
-        Assert.Equal(RustFsContainerImageTags.McImage, imageAnnotation.Image);
+    [Fact]
+    public void AddBucketListSkipsWhitespaceEntries()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var rustfs = builder.AddRustFs("rustfs");
+        rustfs.AddBucket(["bucket1", "   ", "bucket2"]);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var buckets = appModel.Resources.OfType<RustFsBucketResource>().ToList();
+        Assert.Equal(2, buckets.Count);
+    }
+
+    [Fact]
+    public async Task BucketResourceConnectionStringIncludesBucketName()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var accessKey = builder.AddParameter("accessKey", "ak");
+        var secretKey = builder.AddParameter("secretKey", "sk");
+
+        var rustfs = builder.AddRustFs("rustfs", accessKey, secretKey)
+            .WithEndpoint("http", e => e.AllocatedEndpoint = new AllocatedEndpoint(e, "localhost", 9000));
+
+        var bucket = rustfs.AddBucket("data");
+
+        var connectionString = await bucket.Resource.ConnectionStringExpression.GetValueAsync(default);
+
+        Assert.Equal("Endpoint=http://localhost:9000;AccessKey=ak;SecretKey=sk;Bucket=data", connectionString);
     }
 }
