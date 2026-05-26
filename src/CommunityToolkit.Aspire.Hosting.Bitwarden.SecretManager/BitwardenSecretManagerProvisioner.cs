@@ -12,8 +12,7 @@ namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 /// Provisions the declared Bitwarden project and secrets graph during the AppHost deployment pipeline.
 /// </summary>
 internal sealed class BitwardenSecretManagerProvisioner(
-    IBitwardenSecretManagerProviderFactory providerFactory,
-    BitwardenStore bitwardenStore)
+    IBitwardenSecretManagerProviderFactory providerFactory)
 {
     /// <summary>
     /// Authenticates with Bitwarden Secrets Manager and sets up the cache paths on the resource.
@@ -39,8 +38,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
 
             string authCachePath = ResolveAuthCachePath(resource, services);
-            BitwardenCacheContext cacheContext = await bitwardenStore.LoadAsync(resource, remoteProjectName, authCachePath, cancellationToken).ConfigureAwait(false);
-            resource.ResolvedCacheFile = cacheContext.CachePath;
+            BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Loaded Bitwarden AppHost cache from '{AppHostCachePath}'.", cacheContext.CachePath);
 
             string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
@@ -89,7 +87,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
 
             string authCachePath = ResolveAuthCachePath(resource, services);
-            BitwardenCacheContext cacheContext = await bitwardenStore.LoadAsync(resource, remoteProjectName, authCachePath, cancellationToken).ConfigureAwait(false);
+            BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
             Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
             string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
@@ -130,7 +128,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
 
             string authCachePath = ResolveAuthCachePath(resource, services);
-            BitwardenCacheContext cacheContext = await bitwardenStore.LoadAsync(resource, remoteProjectName, authCachePath, cancellationToken).ConfigureAwait(false);
+            BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
             Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
             string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
@@ -168,7 +166,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             cacheContext.Cache.ProjectId = resource.ProjectId;
 
             logger.LogDebug("Saving Bitwarden state file to '{StatePath}'.", cacheContext.CachePath);
-            await bitwardenStore.SaveAsync(cacheContext.CachePath, cacheContext.Cache, cancellationToken).ConfigureAwait(false);
+            await BitwardenStore.SaveAsync(cacheContext.CachePath, cacheContext.Cache, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Successfully saved Bitwarden state file.");
 
             logger.LogInformation("Bitwarden secrets provisioning completed for resource '{ResourceName}' with project {ProjectId}.", resource.Name, resource.ProjectId);

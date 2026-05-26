@@ -186,8 +186,6 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal string AppHostDirectory { get; }
 
-    internal string? ResolvedCacheFile { get; set; }
-
     internal string? ResolvedRemoteProjectName { get; set; }
 
     internal IReadOnlyList<BitwardenSecretResource> ManagedSecrets => _managedSecrets;

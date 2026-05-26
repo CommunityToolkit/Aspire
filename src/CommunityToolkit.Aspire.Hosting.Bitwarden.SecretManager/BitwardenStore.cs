@@ -1,20 +1,24 @@
 using System.Text.Json;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 
-internal sealed class BitwardenStore(IServiceProvider services)
+internal static class BitwardenStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
     };
 
-    public async Task<BitwardenCacheContext> LoadAsync(BitwardenSecretManagerResource resource, string resolvedProjectName, string authCachePath, CancellationToken cancellationToken)
+    public static async Task<BitwardenCacheContext> LoadAsync(BitwardenSecretManagerResource resource, string authCachePath, CancellationToken cancellationToken)
     {
-        string cachePath = ResolveCachePath(resource, resolvedProjectName);
+        string cachePath = resource.CacheFile!;
+        string? directory = Path.GetDirectoryName(cachePath);
+        if (directory is not null)
+        {
+            Directory.CreateDirectory(directory);
+        }
 
         if (!File.Exists(cachePath))
         {
@@ -35,7 +39,7 @@ internal sealed class BitwardenStore(IServiceProvider services)
         }
     }
 
-    public async Task SaveAsync(string path, BitwardenCache cache, CancellationToken cancellationToken)
+    public static async Task SaveAsync(string path, BitwardenCache cache, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         ArgumentNullException.ThrowIfNull(cache);
@@ -54,36 +58,6 @@ internal sealed class BitwardenStore(IServiceProvider services)
         {
             throw new DistributedApplicationException($"Failed to save Bitwarden AppHost cache file to '{path}'.", ex);
         }
-    }
-
-    private string ResolveCachePath(BitwardenSecretManagerResource resource, string resolvedProjectName)
-    {
-        if (resource.CacheFile is { Length: > 0 } cacheFile)
-        {
-            if (Path.IsPathRooted(cacheFile))
-            {
-                return cacheFile;
-            }
-
-            IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
-            return Path.GetFullPath(Path.Combine(aspireStore.BasePath, cacheFile));
-        }
-
-        IAspireStore store = services.GetRequiredService<IAspireStore>();
-        string directory = Path.Combine(store.BasePath, "bitwarden");
-        Directory.CreateDirectory(directory);
-
-        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
-        string identityHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(resource.GetConfiguredProjectIdentityKey(resolvedProjectName))))[..12].ToLowerInvariant();
-        string defaultPath = Path.Combine(directory, $"{safeResourceName}.{identityHash}.state.json");
-
-        if (File.Exists(defaultPath))
-        {
-            return defaultPath;
-        }
-
-        string[] existingPaths = Directory.GetFiles(directory, $"{safeResourceName}.*.state.json", SearchOption.TopDirectoryOnly);
-        return existingPaths.Length == 1 ? existingPaths[0] : defaultPath;
     }
 }
 

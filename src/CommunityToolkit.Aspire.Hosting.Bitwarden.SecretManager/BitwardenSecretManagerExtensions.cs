@@ -183,10 +183,11 @@ public static class BitwardenSecretManagerExtensions
 
     /// <summary>
     /// Overrides the AppHost cache file path (integration bookkeeping: Bitwarden project ID, secret ID mappings).
-    /// Defaults to the Aspire store when not set. Override to share cache across workspaces or persist it in CI.
+    /// Defaults to <c>.bws/{resourceName}.{environment}.json</c> relative to the AppHost directory.
+    /// Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="cacheFile">The cache file path, relative to the Aspire store directory when not rooted.</param>
+    /// <param name="cacheFile">The cache file path, relative to the AppHost directory when not rooted.</param>
     /// <returns>The resource builder.</returns>
     public static IResourceBuilder<BitwardenSecretManagerResource> WithCacheFile(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
@@ -195,7 +196,9 @@ public static class BitwardenSecretManagerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(cacheFile);
 
-        builder.Resource.CacheFile = cacheFile;
+        builder.Resource.CacheFile = Path.IsPathRooted(cacheFile)
+            ? cacheFile
+            : Path.GetFullPath(Path.Combine(builder.Resource.AppHostDirectory, cacheFile));
 
         return builder;
     }
@@ -532,6 +535,7 @@ public static class BitwardenSecretManagerExtensions
             organizationId,
             accessToken.Resource,
             builder.AppHostDirectory);
+        resource.CacheFile = BuildDefaultCachePath(resource, builder.Environment.EnvironmentName);
         return ConfigureBitwardenSecretManager(builder.AddResource(resource));
     }
 
@@ -541,7 +545,6 @@ public static class BitwardenSecretManagerExtensions
         bool isPublishMode = builder.ApplicationBuilder.ExecutionContext.IsPublishMode;
 
         builder.ApplicationBuilder.Services.TryAddSingleton<IBitwardenSecretManagerProviderFactory, BitwardenSecretManagerProviderFactory>();
-        builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenStore>();
         builder.ApplicationBuilder.Services.TryAddSingleton<BitwardenSecretManagerProvisioner>();
 
         var resource = builder.Resource;
@@ -642,7 +645,11 @@ public static class BitwardenSecretManagerExtensions
         {
             ResourceType = "BitwardenSecretManager",
             State = KnownResourceStates.NotStarted,
-            Properties = [new("RemoteProjectName", builder.Resource.GetProjectNameDisplayValue())]
+            Properties =
+            [
+                new("RemoteProjectName", builder.Resource.GetProjectNameDisplayValue()),
+                new("CacheFile", builder.Resource.CacheFile!)
+            ]
         });
 
         // Only register startup reconciliation in non-publish mode;
@@ -654,7 +661,11 @@ public static class BitwardenSecretManagerExtensions
                 await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
                 {
                     State = KnownResourceStates.Starting,
-                    Properties = [new("RemoteProjectName", resource.GetProjectNameDisplayValue())]
+                    Properties =
+                    [
+                        new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                        new("CacheFile", resource.CacheFile!)
+                    ]
                 }).ConfigureAwait(false);
 
                 await eventContext.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, eventContext.Services), cancellationToken).ConfigureAwait(false);
@@ -674,7 +685,7 @@ public static class BitwardenSecretManagerExtensions
                         [
                             new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
                             new("ProjectId", resource.ProjectId!.Value.ToString("D")),
-                            new("CacheFile", resource.ResolvedCacheFile!)
+                            new("CacheFile", resource.CacheFile!)
                         ]
                     }).ConfigureAwait(false);
                 }
@@ -771,6 +782,13 @@ public static class BitwardenSecretManagerExtensions
 
             builder.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(dependency));
         }
+    }
+
+    internal static string BuildDefaultCachePath(BitwardenSecretManagerResource resource, string environmentName)
+    {
+        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
+        string safeEnvironmentName = string.Concat(environmentName.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
+        return Path.Combine(resource.AppHostDirectory, ".bws", $"{safeResourceName}.{safeEnvironmentName}.json");
     }
 
     private static void ValidateAbsoluteUri(string value, string paramName)

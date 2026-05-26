@@ -19,10 +19,11 @@ var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organi
 bitwarden.WithRuntimeAccessToken(accessToken /* replace with least privilege token */);
 
 // Optional: override the AppHost cache file location.
-// This file stores the Bitwarden project ID and secret ID mappings between runs so the integration
+// Default: stored as .bws/{resourceName}.{environment}.json relative to the AppHost directory.
+// Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
+// The cache file stores the Bitwarden project ID and secret ID mappings between runs so the integration
 // can reuse existing Bitwarden resources rather than creating duplicates.
-// By default it is stored in the Aspire store (obj/.aspire/...). Override to share it across workspaces or CI pipelines.
-bitwarden.WithCacheFile("demo.json");
+bitwarden.WithCacheFile($".bws/secrets.{builder.Environment.EnvironmentName}.json");
 
 // Optional: override the AppHost auth cache file location.
 // By default it is stored in the Aspire store alongside the bookkeeping cache.

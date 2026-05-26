@@ -45,7 +45,7 @@ public class BitwardenSecretManagerProvisionerTests
             Assert.Single(fakeProvider.CreatedSecrets);
             Assert.NotNull(managedSecret.Resource.SecretId);
             Assert.Equal("managed-secret-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
-            Assert.True(File.Exists(bitwarden.Resource.ResolvedCacheFile));
+            Assert.True(File.Exists(bitwarden.Resource.CacheFile));
             Assert.Equal(authStateFile, fakeProvider.AuthCacheFile);
         }
         finally
