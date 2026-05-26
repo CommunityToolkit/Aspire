@@ -183,7 +183,7 @@ public static class BitwardenSecretManagerExtensions
 
     /// <summary>
     /// Overrides the AppHost cache file path (integration bookkeeping: Bitwarden project ID, secret ID mappings).
-    /// Defaults to <c>.bws/{resourceName}.{environment}.json</c> relative to the AppHost directory.
+    /// Defaults to <c>.bitwarden/{resourceName}.{environment}.json</c> relative to the AppHost directory.
     /// Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
@@ -788,7 +788,7 @@ public static class BitwardenSecretManagerExtensions
     {
         string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
         string safeEnvironmentName = string.Concat(environmentName.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
-        return Path.Combine(resource.AppHostDirectory, ".bws", $"{safeResourceName}.{safeEnvironmentName}.json");
+        return Path.Combine(resource.AppHostDirectory, ".bitwarden", $"{safeResourceName}.{safeEnvironmentName}.json");
     }
 
     private static void ValidateAbsoluteUri(string value, string paramName)

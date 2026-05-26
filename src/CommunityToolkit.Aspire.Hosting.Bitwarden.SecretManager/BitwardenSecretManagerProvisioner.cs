@@ -1,5 +1,7 @@
 #pragma warning disable ASPIREINTERACTION001
 
+using System.Security.Cryptography;
+using System.Text;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Bitwarden.Sdk;
@@ -37,7 +39,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             resource.ResolvedRemoteProjectName = remoteProjectName;
             logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
 
-            string authCachePath = ResolveAuthCachePath(resource, services);
+            string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Loaded Bitwarden AppHost cache from '{AppHostCachePath}'.", cacheContext.CachePath);
 
@@ -86,7 +88,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             string remoteProjectName = resource.ResolvedRemoteProjectName
                 ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
 
-            string authCachePath = ResolveAuthCachePath(resource, services);
+            string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
             Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
@@ -127,7 +129,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             string remoteProjectName = resource.ResolvedRemoteProjectName
                 ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
 
-            string authCachePath = ResolveAuthCachePath(resource, services);
+            string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
             Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
@@ -590,9 +592,10 @@ internal sealed class BitwardenSecretManagerProvisioner(
         return selectedSecretId;
     }
 
-    private static string ResolveAuthCachePath(
+    private static async Task<string> ResolveAuthCachePathAsync(
         BitwardenSecretManagerResource resource,
-        IServiceProvider services)
+        IServiceProvider services,
+        CancellationToken cancellationToken)
     {
         if (resource.AuthCacheFile is { Length: > 0 } authCacheFile)
         {
@@ -605,9 +608,19 @@ internal sealed class BitwardenSecretManagerProvisioner(
             return Path.GetFullPath(Path.Combine(aspireStore.BasePath, authCacheFile));
         }
 
+        // Key the default auth cache on the access token value so that rotating the token
+        // automatically starts a fresh session, and different tokens never share a session file.
+        string? accessToken = await resource.ManagementAccessToken.GetValueAsync(cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            throw new DistributedApplicationException($"Bitwarden access token for resource '{resource.Name}' did not resolve to a value.");
+        }
+
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(accessToken));
+        string tokenHash = Convert.ToHexString(hash).ToLowerInvariant()[..7];
+
         IAspireStore store = services.GetRequiredService<IAspireStore>();
-        string safeResourceName = string.Concat(resource.Name.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) ? '-' : ch));
-        return Path.Combine(store.BasePath, "bitwarden", $"{safeResourceName}.auth-cache");
+        return Path.Combine(store.BasePath, ".bitwarden", $"{tokenHash}.auth-cache");
     }
 }
 

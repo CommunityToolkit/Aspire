@@ -36,8 +36,8 @@ You can further customize the resource with the following options:
 
 - `WithExistingProject(...)` adopts an existing Bitwarden project by identifier.
 - `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden endpoints.
-- `WithCacheFile(...)` overrides the AppHost cache file location (default: Aspire store). The AppHost cache tracks Bitwarden project and secret IDs between runs.
-- `WithAuthCacheFile(...)` overrides the AppHost auth cache file location (default: Aspire store). The AppHost auth cache persists the Bitwarden SDK auth session between runs on the AppHost.
+- `WithCacheFile(...)` overrides the AppHost cache file location (default: `.bitwarden/{resourceName}.{environment}.json` relative to the AppHost directory). The AppHost cache tracks Bitwarden project and secret IDs between runs. Relative paths are resolved from the AppHost directory.
+- `WithAuthCacheFile(...)` overrides the AppHost auth cache file location (default: Aspire store, keyed by a hash of the access token). The AppHost auth cache persists the Bitwarden SDK auth session between runs on the AppHost. Relative paths are resolved from the Aspire store.
 - `WithRuntimeAccessToken(...)` overrides the token injected into dependents.
 
 Use `WithAuthCacheFile(...)` on a dependent resource builder to persist its Bitwarden SDK auth session across restarts. Accepts a string for a fixed path or a parameter for an environment-specific path:

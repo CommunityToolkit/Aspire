@@ -19,16 +19,19 @@ var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organi
 bitwarden.WithRuntimeAccessToken(accessToken /* replace with least privilege token */);
 
 // Optional: override the AppHost cache file location.
-// Default: stored as .bws/{resourceName}.{environment}.json relative to the AppHost directory.
-// Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
-// The cache file stores the Bitwarden project ID and secret ID mappings between runs so the integration
+// The cache stores the Bitwarden project ID and secret ID mappings between runs so the integration
 // can reuse existing Bitwarden resources rather than creating duplicates.
-bitwarden.WithCacheFile($".bws/secrets.{builder.Environment.EnvironmentName}.json");
+// Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
+// Default: .bitwarden/{resourceName}.{environment}.json relative to the AppHost directory.
+bitwarden.WithCacheFile($".bitwarden/secrets.{builder.Environment.EnvironmentName}.json");
 
 // Optional: override the AppHost auth cache file location.
-// By default it is stored in the Aspire store alongside the bookkeeping cache.
-// Override to reuse a Bitwarden SDK auth session across CI runs or workspaces without re-authenticating.
-bitwarden.WithAuthCacheFile(".apphost-auth-cache");
+// The auth cache stores the Bitwarden SDK auth session between runs so the integration can reuse the
+// session and avoid re-authenticating on every run.
+// Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
+// Default: Aspire store, keyed by a hash of the access token (rotating the token starts a fresh session).
+// Relative paths are resolved from the Aspire store directory.
+//bitwarden.WithAuthCacheFile("...");
 
 // Add a secret to the project with the value of the demo API key parameter.
 // The secret is created or updated on each run. Use `GetSecret` if you only want to read an existing secret.

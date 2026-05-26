@@ -62,12 +62,10 @@ The integration maintains two cache files on the AppHost, and one optional cache
 
 ### AppHost cache files (AppHost side)
 
-Both files are resolved at reconciliation time from `IAspireStore`, which the AppHost DI container provides. They are used identically in run mode and publish mode.
+- **AppHost cache** (`{resourceName}.{environment}.json` in `.bitwarden/`): the integration's own bookkeeping — persists the Bitwarden project ID and secret ID mappings between runs. Located in `.bitwarden/` relative to the AppHost directory by default, so it is naturally tracked in version control alongside the AppHost. Override with `WithCacheFile(...)`; relative paths resolve from the AppHost directory.
+- **AppHost auth cache** (`{sha256(accessToken)}.auth-cache`): caches the Bitwarden SDK authentication session between runs so the AppHost does not need to re-authenticate on every run. Located in `{aspireStore.BasePath}/bitwarden/` by default, keyed by a hash of the access token so that rotating the token automatically starts a fresh session. Override with `WithAuthCacheFile(...)`; relative paths resolve from the Aspire store.
 
-- **AppHost cache** (`{safeResourceName}.{identityHash}.state.json`): the integration's own bookkeeping — persists the Bitwarden project ID and secret ID mappings between runs. Located in `{aspireStore.BasePath}/bitwarden/` by default. Override with `WithCacheFile(...)`.
-- **AppHost auth cache** (`{safeResourceName}.auth-cache`): caches the Bitwarden SDK authentication session between runs so the AppHost does not need to re-authenticate on every run. Located in `{aspireStore.BasePath}/bitwarden/` by default. Override with `WithAuthCacheFile(...)`.
-
-`WithCacheFile(...)` and `WithAuthCacheFile(...)` are escape hatches that replace the default store-backed paths with an explicit location. These are intended for cases where the cache must be shared across workspaces or managed outside of Aspire's store (e.g. a shared CI cache directory).
+`WithCacheFile(...)` and `WithAuthCacheFile(...)` are escape hatches that replace the default paths with an explicit location. These are intended for cases where the cache must be shared across multiple AppHost projects or stored in a CI cache directory.
 
 ### App auth cache (deployed app side)
 
