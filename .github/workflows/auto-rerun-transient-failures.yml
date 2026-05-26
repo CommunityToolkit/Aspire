@@ -76,6 +76,20 @@ jobs:
               fi
             fi
 
+            if [ "${should_rerun}" != "true" ] && [ "${setup_step_failed}" == "true" ]; then
+              matrix_name="$(echo "${job_name}" | sed -E 's|^[^/]+/ ||')"
+              ts_logs_artifact_name="ts-app-host-logs-${matrix_name}"
+              artifact_dir="$(mktemp -d)"
+
+              if gh run download "${RUN_ID}" --repo "${REPO}" --name "${ts_logs_artifact_name}" -D "${artifact_dir}" >/dev/null 2>&1; then
+                if grep -Eriq 'TaskCanceledException: A task was canceled|Failed to extract bundle|Bundle extraction failed|aspire setup --force' "${artifact_dir}"; then
+                  should_rerun="true"
+                fi
+              fi
+
+              rm -rf "${artifact_dir}"
+            fi
+
             if [ "${should_rerun}" != "true" ]; then
               echo "Skipping ${job_name} (${job_id}): failure does not match known transient Docker signatures."
               continue
