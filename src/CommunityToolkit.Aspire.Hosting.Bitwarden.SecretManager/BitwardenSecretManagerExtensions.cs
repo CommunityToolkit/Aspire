@@ -625,6 +625,100 @@ public static class BitwardenSecretManagerExtensions
                     throw;
                 }
             });
+
+            resourceBuilder.WithCommand(
+                "reset-auth-cache",
+                "Reset auth cache",
+                async context =>
+                {
+                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.ServiceProvider, context.CancellationToken).ConfigureAwait(false);
+                    return new ExecuteCommandResult { Success = true };
+                },
+                new CommandOptions
+                {
+                    IconName = "LockOpen",
+                    IconVariant = IconVariant.Regular,
+                    IsHighlighted = true,
+                    Description = "Delete the cached Bitwarden authentication session. The next run will perform a fresh login.",
+                    UpdateState = context =>
+                    {
+                        string? state = context.ResourceSnapshot?.State?.Text;
+                        if (state == KnownResourceStates.Waiting || state == KnownResourceStates.Running)
+                        {
+                            return ResourceCommandState.Disabled;
+                        }
+
+                        // Enabled in all terminal states: Finished, FailedToStart, NotStarted, etc.
+                        return ResourceCommandState.Enabled;
+                    }
+                });
+
+            resourceBuilder.WithCommand(
+                KnownResourceCommands.RebuildCommand,
+                "Reprovision",
+                async context =>
+                {
+                    ResourceNotificationService notifications = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
+
+                    await notifications.PublishUpdateAsync(resource, state => state with
+                    {
+                        State = KnownResourceStates.Running,
+                        Properties =
+                        [
+                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                            new("CacheFile", resource.CacheFile!)
+                        ]
+                    }).ConfigureAwait(false);
+
+                    try
+                    {
+                        BitwardenSecretManagerProvisioner provisioner = context.ServiceProvider.GetRequiredService<BitwardenSecretManagerProvisioner>();
+                        await provisioner.AuthenticateAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
+                        await provisioner.ProvisionProjectAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
+                        await provisioner.ProvisionSecretsAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
+
+                        await notifications.PublishUpdateAsync(resource, state => state with
+                        {
+                            State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
+                            StartTimeStamp = DateTime.UtcNow,
+                            Properties =
+                            [
+                                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                                new("ProjectId", resource.ProjectId!.Value.ToString("D")),
+                                new("CacheFile", resource.CacheFile!)
+                            ]
+                        }).ConfigureAwait(false);
+
+                        return new ExecuteCommandResult { Success = true };
+                    }
+                    catch (Exception ex)
+                    {
+                        await notifications.PublishUpdateAsync(resource, state => state with
+                        {
+                            State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error),
+                            Properties =
+                            [
+                                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                                new("Error", ex.Message)
+                            ]
+                        }).ConfigureAwait(false);
+
+                        return new ExecuteCommandResult { Success = false, Message = ex.Message };
+                    }
+                },
+                new CommandOptions
+                {
+                    IconName = "ArrowSync",
+                    IconVariant = IconVariant.Regular,
+                    Description = "Re-run authentication and secret provisioning.",
+                    UpdateState = context =>
+                    {
+                        string? state = context.ResourceSnapshot?.State?.Text;
+                        return state is not null && KnownResourceStates.BuildableStates.Contains(state)
+                            ? ResourceCommandState.Enabled
+                            : ResourceCommandState.Disabled;
+                    }
+                });
         }
 
         return resourceBuilder;

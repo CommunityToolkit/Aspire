@@ -592,6 +592,21 @@ internal sealed class BitwardenSecretManagerProvisioner(
         return selectedSecretId;
     }
 
+    public static async Task ResetAuthCacheAsync(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+        ArgumentNullException.ThrowIfNull(services);
+
+        string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
+        if (File.Exists(authCachePath))
+        {
+            File.Delete(authCachePath);
+        }
+    }
+
     private static async Task<string> ResolveAuthCachePathAsync(
         BitwardenSecretManagerResource resource,
         IServiceProvider services,

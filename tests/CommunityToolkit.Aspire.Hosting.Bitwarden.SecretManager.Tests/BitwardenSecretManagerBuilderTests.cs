@@ -374,4 +374,129 @@ public class BitwardenSecretManagerBuilderTests
 
         Assert.Equal(secretId.ToString("D"), environmentVariables["DEMO_API_KEY_SECRET_ID"]);
     }
+
+    [Fact]
+    public void AddBitwardenSecretManager_RegistersResetAuthCacheCommand()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        appBuilder.AddBitwardenSecretManager("bitwarden", "test-project", Guid.NewGuid(), accessToken);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
+
+        var command = Assert.Single(
+            resource.Annotations.OfType<ResourceCommandAnnotation>(),
+            a => a.Name == "reset-auth-cache");
+        Assert.Equal("Reset auth cache", command.DisplayName);
+        Assert.True(command.IsHighlighted);
+    }
+
+    [Fact]
+    public void AddBitwardenSecretManager_RegistersReprovisionCommand()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        appBuilder.AddBitwardenSecretManager("bitwarden", "test-project", Guid.NewGuid(), accessToken);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
+
+        var command = Assert.Single(
+            resource.Annotations.OfType<ResourceCommandAnnotation>(),
+            a => a.Name == KnownResourceCommands.RebuildCommand);
+        Assert.Equal("Reprovision", command.DisplayName);
+        Assert.False(command.IsHighlighted);
+    }
+
+    [Theory]
+    [InlineData("NotStarted", ResourceCommandState.Enabled)]
+    [InlineData("Waiting", ResourceCommandState.Disabled)]
+    [InlineData("Running", ResourceCommandState.Disabled)]
+    [InlineData("Finished", ResourceCommandState.Enabled)]
+    [InlineData("FailedToStart", ResourceCommandState.Enabled)]
+    [InlineData("Exited", ResourceCommandState.Enabled)]
+    public void ResetAuthCacheCommand_UpdateState_ReturnsExpected(string resourceState, ResourceCommandState expected)
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        appBuilder.AddBitwardenSecretManager("bitwarden", "test-project", Guid.NewGuid(), accessToken);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
+        var command = Assert.Single(
+            resource.Annotations.OfType<ResourceCommandAnnotation>(),
+            a => a.Name == "reset-auth-cache");
+
+        var actual = command.UpdateState(new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot { ResourceType = "BitwardenSecretManager", Properties = [], State = resourceState },
+            ServiceProvider = app.Services
+        });
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("NotStarted", ResourceCommandState.Disabled)]
+    [InlineData("Waiting", ResourceCommandState.Enabled)]
+    [InlineData("Running", ResourceCommandState.Enabled)]
+    [InlineData("Finished", ResourceCommandState.Enabled)]
+    [InlineData("FailedToStart", ResourceCommandState.Enabled)]
+    [InlineData("Exited", ResourceCommandState.Enabled)]
+    public void ReprovisionCommand_UpdateState_ReturnsExpected(string resourceState, ResourceCommandState expected)
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        appBuilder.AddBitwardenSecretManager("bitwarden", "test-project", Guid.NewGuid(), accessToken);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
+        var command = Assert.Single(
+            resource.Annotations.OfType<ResourceCommandAnnotation>(),
+            a => a.Name == KnownResourceCommands.RebuildCommand);
+
+        var actual = command.UpdateState(new UpdateCommandStateContext
+        {
+            ResourceSnapshot = new CustomResourceSnapshot { ResourceType = "BitwardenSecretManager", Properties = [], State = resourceState },
+            ServiceProvider = app.Services
+        });
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public async Task AddBitwardenSecretManager_CommandsAreInSnapshot()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        appBuilder.AddBitwardenSecretManager("bitwarden", "test-project", Guid.NewGuid(), accessToken);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
+        var notifications = app.Services.GetRequiredService<ResourceNotificationService>();
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var snapshotTask = notifications.WatchAsync(cts.Token)
+            .Where(e => e.Resource == resource)
+            .FirstAsync(cts.Token);
+
+        await notifications.PublishUpdateAsync(resource, s => s with { });
+
+        var evt = await snapshotTask;
+
+        Assert.Equal(2, evt.Snapshot.Commands.Length);
+        Assert.Single(evt.Snapshot.Commands, c => c.Name == "reset-auth-cache");
+        Assert.Single(evt.Snapshot.Commands, c => c.Name == KnownResourceCommands.RebuildCommand);
+    }
 }
