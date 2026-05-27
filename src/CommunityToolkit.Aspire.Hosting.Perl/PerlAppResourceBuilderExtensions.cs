@@ -6,9 +6,6 @@ using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
 using System.Diagnostics.CodeAnalysis;
 
-
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -674,5 +671,3 @@ public static partial class PerlAppResourceBuilderExtensions
             || File.Exists(Path.Combine(resolvedDir, "Build.PL"));
     }
 }
-
-#pragma warning restore ASPIREATS001

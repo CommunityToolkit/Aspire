@@ -5,8 +5,6 @@ using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -772,5 +770,3 @@ public static partial class PerlAppResourceBuilderExtensions
         };
     }
 }
-
-#pragma warning restore ASPIREATS001
