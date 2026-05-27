@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;
@@ -35,5 +36,25 @@ public class AddPerlExecutableTests
 
         Assert.Throws<ArgumentNullException>(() =>
             builder.AddPerlExecutable("perl-bin", "bin", "my-compiled-perl"));
+    }
+
+    [Fact]
+    public void AddPerlExecutable_DoesNotRegisterInterpreterRequiredCommands()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddPerlExecutable("perl-bin", "bin", "my-compiled-perl");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<PerlAppResource>());
+
+#pragma warning disable ASPIRECOMMAND001
+        var requiredCommands = resource.Annotations.OfType<RequiredCommandAnnotation>().ToList();
+#pragma warning restore ASPIRECOMMAND001
+
+        Assert.DoesNotContain(requiredCommands, annotation => annotation.Command == "perl");
+        Assert.DoesNotContain(requiredCommands, annotation => annotation.Command == "cpan");
     }
 }

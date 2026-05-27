@@ -19,4 +19,20 @@ public class TypeScriptAppHostTests
             httpProbeExpectedText: "fragile",
             cancellationToken: TestContext.Current.CancellationToken);
     }
+
+    [Fact]
+    public async Task TypeScriptAppHostCartonProjectDependencyScenario_CertificateTrustEnv_ReturnsPresent()
+    {
+        await TypeScriptAppHostTest.Run(
+            appHostProject: "CpanmApiIntegration.AppHost.TypeScript",
+            packageName: "CommunityToolkit.Aspire.Hosting.Perl",
+            exampleName: "perl/cpanm-api-integration",
+            waitForResources: ["perl-api", "perl-driver"],
+            requiredCommands: ["perl", "carton"],
+            useConfiguredPackages: true,
+            httpProbeResource: "perl-api",
+            httpProbePath: "/cert-env",
+            httpProbeExpectedText: "present",
+            cancellationToken: TestContext.Current.CancellationToken);
+    }
 }

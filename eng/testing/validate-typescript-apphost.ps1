@@ -11,6 +11,8 @@ param(
 
     [switch]$UseConfiguredPackages,
 
+    [switch]$SkipStart,
+
     [string[]]$WaitForResources = @(),
 
     [string[]]$RequiredCommands = @(),
@@ -89,13 +91,14 @@ function Invoke-ExternalCommandCaptureOutput {
 
     $resolvedFilePath = Resolve-ExternalCommandPath $FilePath
     $output = & $resolvedFilePath @Arguments 2>&1
+    $outputText = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine)
 
     if ($LASTEXITCODE -ne 0) {
         $joinedArguments = [string]::Join(" ", $Arguments)
         throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $joinedArguments"
     }
 
-    return (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine)
+    return $outputText
 }
 
 function Invoke-CleanupStep {
@@ -164,14 +167,59 @@ function ConvertFrom-AspireJsonOutput {
     )
 
     $jsonStartIndex = $Text.IndexOf('{')
-    $jsonEndIndex = $Text.LastIndexOf('}')
+    while ($jsonStartIndex -ge 0) {
+        $depth = 0
+        $inString = $false
+        $isEscaped = $false
 
-    if ($jsonStartIndex -lt 0 -or $jsonEndIndex -lt $jsonStartIndex) {
-        throw "Could not find a JSON payload in Aspire command output."
+        for ($index = $jsonStartIndex; $index -lt $Text.Length; $index++) {
+            $character = $Text[$index]
+
+            if ($isEscaped) {
+                $isEscaped = $false
+                continue
+            }
+
+            if ($character -eq '\\') {
+                if ($inString) {
+                    $isEscaped = $true
+                }
+
+                continue
+            }
+
+            if ($character -eq '"') {
+                $inString = -not $inString
+                continue
+            }
+
+            if ($inString) {
+                continue
+            }
+
+            if ($character -eq '{') {
+                $depth++
+                continue
+            }
+
+            if ($character -eq '}') {
+                $depth--
+                if ($depth -eq 0) {
+                    $jsonText = $Text.Substring($jsonStartIndex, ($index - $jsonStartIndex) + 1)
+                    try {
+                        return $jsonText | ConvertFrom-Json -AsHashtable -Depth 100
+                    }
+                    catch {
+                        break
+                    }
+                }
+            }
+        }
+
+        $jsonStartIndex = $Text.IndexOf('{', $jsonStartIndex + 1)
     }
 
-    $jsonText = $Text.Substring($jsonStartIndex, ($jsonEndIndex - $jsonStartIndex) + 1)
-    return $jsonText | ConvertFrom-Json -AsHashtable -Depth 100
+    throw "Could not find a JSON payload in Aspire command output."
 }
 
 function Get-ResourceEndpointUrl {
@@ -242,7 +290,6 @@ if (-not $UseConfiguredPackages) {
 }
 
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
 $configPath = Join-Path $appHostDirectory "aspire.config.json"
 $nugetConfigPath = Join-Path $appHostDirectory "nuget.config"
 $generatedRestoreRoot = Join-Path $appHostDirectory ".aspire\integrations\package-restore"
@@ -417,6 +464,10 @@ try {
             "--log-level", "debug"
         )
         Invoke-ExternalCommand "npx" @("tsc", "--noEmit")
+
+        if ($SkipStart) {
+            return
+        }
     }
     finally {
         Pop-Location
@@ -459,7 +510,7 @@ try {
             "describe",
             "--apphost", $resolvedAppHostPath,
             "--format", "Json",
-            "--log-level", "debug"
+            "--log-level", "warning"
         )
 
         Write-Output $describeOutput
