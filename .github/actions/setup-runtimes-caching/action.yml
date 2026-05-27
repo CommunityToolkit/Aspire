@@ -24,10 +24,32 @@ runs:
           9.0.x
           10.0.x
 
+    - name: Resolve Aspire version
+      id: aspire-version
+      shell: bash
+      run: |
+        ASPIRE_VERSION="$(dotnet msbuild Directory.Build.props -nologo -v:q -getProperty:AspireVersion)"
+        echo "version=${ASPIRE_VERSION}" >> "$GITHUB_OUTPUT"
+        echo "cli-version=${ASPIRE_VERSION%%-*}" >> "$GITHUB_OUTPUT"
+
     - name: Install Aspire CLI
       uses: timheuer/setup-aspire@v0.1.0
       with:
-        quality: dev
+        quality: staging
+
+    - name: Verify Aspire CLI version
+      shell: bash
+      env:
+        EXPECTED_ASPIRE_CLI_VERSION: ${{ steps.aspire-version.outputs.cli-version }}
+      run: |
+        INSTALLED_ASPIRE_CLI_VERSION="$(aspire --version)"
+        case "${INSTALLED_ASPIRE_CLI_VERSION}" in
+          "${EXPECTED_ASPIRE_CLI_VERSION}"|"${EXPECTED_ASPIRE_CLI_VERSION}"+*) ;;
+          *)
+            echo "Expected Aspire CLI version ${EXPECTED_ASPIRE_CLI_VERSION}, but found ${INSTALLED_ASPIRE_CLI_VERSION}."
+            exit 1
+            ;;
+        esac
 
     - name: Set up Python
       uses: actions/setup-python@v5

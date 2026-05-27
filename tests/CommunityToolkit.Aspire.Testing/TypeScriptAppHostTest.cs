@@ -47,7 +47,6 @@ public static class TypeScriptAppHostTest
         string repoRoot = Path.GetFullPath(Path.Combine("..", "..", "..", "..", ".."));
         string scriptPath = Path.Combine(repoRoot, "eng", "testing", "validate-typescript-apphost.ps1");
         string appHostPath = Path.Combine(repoRoot, "examples", exampleName, appHostProject, "apphost.mts");
-        string packageProjectPath = Path.Combine(repoRoot, "src", packageName, $"{packageName}.csproj");
         string shell = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
 
         List<string> arguments =
@@ -55,9 +54,7 @@ public static class TypeScriptAppHostTest
             "-NoLogo",
             "-NoProfile",
             "-File", scriptPath,
-            "-AppHostPath", appHostPath,
-            "-PackageProjectPath", packageProjectPath,
-            "-PackageName", packageName
+            "-AppHostPath", appHostPath
         ];
 
         if (resources.Count > 0)
