@@ -1,22 +1,6 @@
 ---
-on:
-    workflow_dispatch:
-permissions:
-    contents: read
-    issues: read
-    pull-requests: read
-engine: copilot
-network:
-    allowed:
-        - defaults
-        - dotnet
-tools:
-    github:
-        toolsets: [default]
-    edit:
-    bash: true
-safe-outputs:
-    create-pull-request:
+name: aspire-upgrade
+description: Update the Aspire version in the repository to the latest nightly build.
 ---
 
 # aspire-upgrade
