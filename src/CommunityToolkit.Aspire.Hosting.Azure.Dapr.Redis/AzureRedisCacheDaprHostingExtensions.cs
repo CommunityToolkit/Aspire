@@ -29,7 +29,8 @@ public static class AzureRedisCacheDaprHostingExtensions
     /// <param name="builder">The Dapr component resource builder.</param>
     /// <param name="source">The Azure Managed Redis resource builder.</param>
     /// <returns>The updated Dapr component resource builder.</returns>
-    [AspireExport("withReference", Description = "Configures a Dapr component resource to use Azure Managed Redis")]
+    /// <ats-summary>Configures a Dapr component resource to use Azure Managed Redis</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<IDaprComponentResource> WithReference(this IResourceBuilder<IDaprComponentResource> builder, IResourceBuilder<AzureManagedRedisResource> source)
     {
         if (builder.ApplicationBuilder.ExecutionContext.IsRunMode)

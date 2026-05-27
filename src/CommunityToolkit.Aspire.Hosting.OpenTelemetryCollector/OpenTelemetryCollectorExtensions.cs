@@ -25,7 +25,7 @@ public static class OpenTelemetryCollectorExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="configureSettings">An optional callback that configures the collector settings.</param>
     /// <returns>A reference to the resource builder.</returns>
-    [AspireExport("addOpenTelemetryCollector", Description = "Adds an OpenTelemetry Collector container resource")]
+    [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<OpenTelemetryCollectorResource> AddOpenTelemetryCollector(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -100,7 +100,8 @@ public static class OpenTelemetryCollectorExtensions
     /// </summary>
     /// <param name="builder">The collector resource builder.</param>
     /// <returns>A reference to the resource builder.</returns>
-    [AspireExport("withAppForwarding", Description = "Configures all compatible resources to forward telemetry to this collector")]
+    /// <ats-summary>Configures all compatible resources to forward telemetry to this collector</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<OpenTelemetryCollectorResource> WithAppForwarding(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {
         builder.ApplicationBuilder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
@@ -128,7 +129,7 @@ public static class OpenTelemetryCollectorExtensions
     /// <param name="builder">The collector resource builder.</param>
     /// <param name="configPath">The path to the collector configuration file.</param>
     /// <returns>A reference to the resource builder.</returns>
-    [AspireExport("withConfig", Description = "Adds a configuration file to the collector resource")]
+    [AspireExport]
     public static IResourceBuilder<OpenTelemetryCollectorResource> WithConfig(this IResourceBuilder<OpenTelemetryCollectorResource> builder, string configPath)
     {
         FileInfo configFileInfo = new(configPath);

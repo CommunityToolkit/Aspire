@@ -18,7 +18,8 @@ public static partial class JavaAppHostingExtension
     /// <param name="image">The container image name.</param>
     /// <param name="imageTag">The container image tag.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("addJavaContainerApp", Description = "Adds a containerized Java application resource")]
+    /// <ats-summary>Adds a containerized Java application resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<JavaAppContainerResource> AddJavaContainerApp(this IDistributedApplicationBuilder builder, [ResourceName] string name,
         string image, string? imageTag = null)
     {

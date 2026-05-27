@@ -25,7 +25,8 @@ public static class NgrokExtensions
     /// <param name="endpointName">The name of the endpoint for this resource, defaults to http.</param>
     /// <param name="configurationVersion">The output version of the ngrok configuration file.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
-    [AspireExport("addNgrok", Description = "Adds an ngrok container resource")]
+    /// <ats-summary>Adds an ngrok container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<NgrokResource> AddNgrok(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -85,7 +86,8 @@ public static class NgrokExtensions
     /// <param name="builder">The ngrok resource builder.</param>
     /// <param name="ngrokAuthToken">The ngrok auth token.</param>
     /// <returns>The same reference to ngrok resource builder.</returns>
-    [AspireExport("withAuthTokenValue", MethodName = "withAuthTokenValue", Description = "Adds a ngrok auth token from a literal string")]
+    /// <ats-summary>Adds a ngrok auth token from a literal string</ats-summary>
+    [AspireExport("withAuthTokenValue", MethodName = "withAuthTokenValue")]
     public static IResourceBuilder<NgrokResource> WithAuthToken(
         this IResourceBuilder<NgrokResource> builder,
         string ngrokAuthToken)
@@ -102,7 +104,8 @@ public static class NgrokExtensions
     /// <param name="builder">The ngrok resource builder.</param>
     /// <param name="ngrokAuthToken">The ngrok auth token as a parameter resource.</param>
     /// <returns>The same reference to ngrok resource builder.</returns>
-    [AspireExport("withAuthToken", Description = "Adds a ngrok auth token from a parameter resource")]
+    /// <ats-summary>Adds a ngrok auth token from a parameter resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<NgrokResource> WithAuthToken(
         this IResourceBuilder<NgrokResource> builder,
         IResourceBuilder<ParameterResource> ngrokAuthToken)
@@ -143,7 +146,8 @@ public static class NgrokExtensions
     /// <param name="ngrokUrl">The ngrok URL to use, or <see langword="null"/> to allow ngrok to choose one.</param>
     /// <param name="labels">Optional endpoint labels.</param>
     /// <returns>The same reference to ngrok resource builder.</returns>
-    [AspireExport("withTunnelEndpoint", MethodName = "withTunnelEndpoint", Description = "Configures a resource endpoint as an ngrok tunnel endpoint")]
+    /// <ats-summary>Configures a resource endpoint as an ngrok tunnel endpoint</ats-summary>
+    [AspireExport("withTunnelEndpoint", MethodName = "withTunnelEndpoint")]
     internal static IResourceBuilder<NgrokResource> WithTunnelEndpointLabels<TResource>(
         this IResourceBuilder<NgrokResource> builder,
         IResourceBuilder<TResource> resource,

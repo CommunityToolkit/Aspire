@@ -40,7 +40,8 @@ public static class AzureTableStorageResourceBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withTableAzureStorageExplorer", MethodName = "withAzureStorageExplorer", Description = "Adds an Azure Storage Explorer instance to a Table storage resource.")]
+    /// <ats-summary>Adds an Azure Storage Explorer instance to a Table storage resource.</ats-summary>
+    [AspireExport("withTableAzureStorageExplorer", MethodName = "withAzureStorageExplorer", RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<AzureTableStorageResource> WithAzureStorageExplorer(
         this IResourceBuilder<AzureTableStorageResource> tables,
         Action<IResourceBuilder<AzureStorageExplorerResource>>? configureContainer = null,

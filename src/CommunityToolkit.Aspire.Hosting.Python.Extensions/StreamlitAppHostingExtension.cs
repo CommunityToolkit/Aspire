@@ -42,8 +42,9 @@ public static class StreamlitAppHostingExtension
     /// builder.Build().Run();
     /// </code>
     /// </example>
+    /// <ats-summary>Adds a Streamlit application resource</ats-summary>
     [Experimental("CTASPIRE001", UrlFormat = "https://github.com/CommunityToolkit/Aspire/issues/{0}")]
-    [AspireExport("addStreamlitApp", Description = "Adds a Streamlit application resource")]
+    [AspireExport]
     public static IResourceBuilder<StreamlitAppResource> AddStreamlitApp(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,

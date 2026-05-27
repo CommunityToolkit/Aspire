@@ -34,7 +34,8 @@ public static class RedisBuilderExtensions
     /// </code>
     /// </example>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withDbGate", Description = "Adds a DbGate administration and development platform for Redis")]
+    /// <ats-summary>Adds a DbGate administration and development platform for Redis</ats-summary>
+    [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<RedisResource> WithDbGate(this IResourceBuilder<RedisResource> builder, Action<IResourceBuilder<DbGateContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);

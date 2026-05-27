@@ -86,7 +86,8 @@ public static class DataApiBuilderHostingExtension
     /// <param name="configFilePaths">The path to the config or schema file(s) for Data API Builder.</param>
     /// <param name="httpPort">The HTTP port number for the Data API Builder container.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("addDataAPIBuilder", Description = "Adds a Data API Builder container resource")]
+    /// <ats-summary>Adds a Data API Builder container resource</ats-summary>
+    [AspireExport]
     internal static IResourceBuilder<DataApiBuilderContainerResource> AddDataAPIBuilder(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,

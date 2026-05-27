@@ -35,7 +35,8 @@ public static class MySqlBuilderExtensions
     /// </example>
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withAdminer", Description = "Adds an Adminer resource for the MySql server.")]
+    /// <ats-summary>Adds an Adminer resource for the MySql server.</ats-summary>
+    [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<MySqlServerResource> WithAdminer(this IResourceBuilder<MySqlServerResource> builder, Action<IResourceBuilder<AdminerContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -76,7 +77,8 @@ public static class MySqlBuilderExtensions
     /// </example>
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withDbGate", Description = "Adds a DbGate resource for the MySql server.")]
+    /// <ats-summary>Adds a DbGate resource for the MySql server.</ats-summary>
+    [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<MySqlServerResource> WithDbGate(this IResourceBuilder<MySqlServerResource> builder, Action<IResourceBuilder<DbGateContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);

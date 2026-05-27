@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 using CommunityToolkit.Aspire.Hosting.Perl;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -20,6 +23,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<TResource> WithCpanMinus<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -167,6 +171,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
     /// <seealso cref="WithProjectDependencies{TResource}"/>
+    [AspireExport]
     public static IResourceBuilder<TResource> WithCarton<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -209,6 +214,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <c>cpan</c> by default, or <c>cpanm</c> if <see cref="WithCpanMinus{TResource}"/>
     /// was called.
     /// </remarks>
+    [AspireExport]
     public static IResourceBuilder<TResource> WithPackage<TResource>(
         this IResourceBuilder<TResource> builder,
         string packageName,
@@ -254,6 +260,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// When using Carton with <paramref name="cartonDeployment"/> set to <c>true</c>,
     /// a <c>cpanfile.snapshot</c> must also be present.
     /// </remarks>
+    [AspireExport]
     public static IResourceBuilder<TResource> WithProjectDependencies<TResource>(
         this IResourceBuilder<TResource> builder,
         bool cartonDeployment = false) where TResource : PerlAppResource
@@ -765,3 +772,5 @@ public static partial class PerlAppResourceBuilderExtensions
         };
     }
 }
+
+#pragma warning restore ASPIREATS001

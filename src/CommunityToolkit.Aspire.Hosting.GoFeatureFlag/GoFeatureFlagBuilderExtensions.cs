@@ -40,7 +40,8 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("addGoFeatureFlag", Description = "Adds a GO Feature Flag container resource")]
+    /// <ats-summary>Adds a GO Feature Flag container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<GoFeatureFlagResource> AddGoFeatureFlag(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -89,7 +90,8 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a GO Feature Flag container resource")]
+    /// <ats-summary>Adds a named volume for the data folder to a GO Feature Flag container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<GoFeatureFlagResource> WithDataVolume(this IResourceBuilder<GoFeatureFlagResource> builder, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -119,7 +121,8 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withGoffBindMount", Description = "Adds a bind mount for the GO Feature Flag configuration folder to a GO Feature Flag container resource")]
+    /// <ats-summary>Adds a bind mount for the GO Feature Flag configuration folder to a GO Feature Flag container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<GoFeatureFlagResource> WithGoffBindMount(this IResourceBuilder<GoFeatureFlagResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -159,7 +162,8 @@ public static class GoFeatureFlagBuilderExtensions
         return builder.WithEnvironment("LOGLEVEL", value);
     }
 
-    [AspireExport("withLogLevel", Description = "Configures the logging level for the GO Feature Flag container resource")]
+    /// <ats-summary>Configures the logging level for the GO Feature Flag container resource</ats-summary>
+    [AspireExport]
     internal static IResourceBuilder<GoFeatureFlagResource> WithLogLevel(
         this IResourceBuilder<GoFeatureFlagResource> builder,
         GoFeatureFlagLogLevel logLevel)

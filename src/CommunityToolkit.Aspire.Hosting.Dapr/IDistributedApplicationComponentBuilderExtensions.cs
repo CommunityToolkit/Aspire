@@ -46,7 +46,8 @@ public static class IDistributedApplicationResourceBuilderExtensions
             });
     }
 
-    [AspireExport("withDaprSidecar", MethodName = "withDaprSidecar", Description = "Adds a Dapr sidecar to the resource and optionally configures it")]
+    /// <ats-summary>Adds a Dapr sidecar to the resource and optionally configures it</ats-summary>
+    [AspireExport("withDaprSidecar", MethodName = "withDaprSidecar")]
     internal static IResourceBuilder<T> WithDaprSidecarExport<T>(this IResourceBuilder<T> builder, DaprSidecarExportOptions? sidecarOptions = null) where T : IResource
     {
         return builder.WithDaprSidecar(sidecarOptions?.ToDaprSidecarOptions());
@@ -59,7 +60,8 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="configureSidecar">A callback that can be use to configure the Dapr sidecar.</param>
     /// <returns>The resource builder instance.</returns>
-    [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", Description = "Adds a Dapr sidecar to the resource and exposes it for callback configuration")]
+    /// <ats-summary>Adds a Dapr sidecar to the resource and exposes it for callback configuration</ats-summary>
+    [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
     {
         // Add Dapr is idempotent, so we can call it multiple times.
@@ -94,7 +96,8 @@ public static class IDistributedApplicationResourceBuilderExtensions
         return builder.WithAnnotation(new DaprSidecarOptionsAnnotation(options));
     }
 
-    [AspireExport("withOptions", MethodName = "withOptions", Description = "Configures options for a Dapr sidecar resource")]
+    /// <ats-summary>Configures options for a Dapr sidecar resource</ats-summary>
+    [AspireExport("withOptions", MethodName = "withOptions")]
     internal static IResourceBuilder<IDaprSidecarResource> WithOptionsExport(this IResourceBuilder<IDaprSidecarResource> builder, DaprSidecarExportOptions sidecarOptions)
     {
         return builder.WithOptions(sidecarOptions.ToDaprSidecarOptions());
@@ -116,7 +119,8 @@ public static class IDistributedApplicationResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder instance.</param>
     /// <param name="component">The Dapr component to use with the sidecar.</param>
-    [AspireExport("withReference", Description = "Associates a Dapr component with a Dapr sidecar resource")]
+    /// <ats-summary>Associates a Dapr component with a Dapr sidecar resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<IDaprSidecarResource> WithReference(this IResourceBuilder<IDaprSidecarResource> builder, IResourceBuilder<IDaprComponentResource> component)
     {
         return builder.WithAnnotation(new DaprComponentReferenceAnnotation(component.Resource));

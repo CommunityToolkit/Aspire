@@ -18,7 +18,8 @@ public static class MailPitHostingExtension
     /// <param name="httpPort">Optional. The HTTP port on which MailPit will listen.</param>
     /// <param name="smtpPort">Optional. The SMTP port on which MailPit will listen.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{MailPitContainerResource}"/> for further resource configuration.</returns>
-    [AspireExport("addMailPit", Description = "Adds a MailPit container resource")]
+    /// <ats-summary>Adds a MailPit container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<MailPitContainerResource> AddMailPit(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? httpPort = null,
@@ -60,7 +61,8 @@ public static class MailPitHostingExtension
     /// <param name="name">The name of the data volume to be mounted.</param>
     /// <param name="isReadOnly">A boolean indicating whether the volume should be mounted as read-only.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/> for further configuration.</returns>
-    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a MailPit container resource")]
+    /// <ats-summary>Adds a named volume for the data folder to a MailPit container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<MailPitContainerResource> WithDataVolume(this IResourceBuilder<MailPitContainerResource> builder, string name,
         bool isReadOnly = false)
     {
@@ -79,7 +81,8 @@ public static class MailPitHostingExtension
     /// <param name="source">The source path on the host system to bind to the container.</param>
     /// <param name="isReadOnly">A value indicating whether the bind mount should be read-only. Default is false.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{MailPitContainerResource}"/> with the configured bind mount.</returns>
-    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a MailPit container resource")]
+    /// <ats-summary>Adds a bind mount for the data folder to a MailPit container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<MailPitContainerResource> WithDataBindMount(this IResourceBuilder<MailPitContainerResource> builder, string source,
         bool isReadOnly = false)
     {

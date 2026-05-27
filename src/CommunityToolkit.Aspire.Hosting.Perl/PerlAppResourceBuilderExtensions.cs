@@ -6,6 +6,9 @@ using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 using CommunityToolkit.Aspire.Hosting.Perl.Services;
 using System.Diagnostics.CodeAnalysis;
 
+
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -49,6 +52,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// builder.Build().Run();
     /// </code>
     /// </example>
+    [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlScript(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Script, scriptName, DefaultPerlEnvironment);
@@ -88,6 +92,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// builder.Build().Run();
     /// </code>
     /// </example>
+    [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlApi(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string scriptName)
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.API, scriptName, DefaultPerlEnvironment, "daemon");
@@ -108,6 +113,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// builder.Build().Run();
     /// </code>
     /// </example>
+    [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlModule(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string moduleName)
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Module, moduleName, DefaultPerlEnvironment);
@@ -128,6 +134,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// builder.Build().Run();
     /// </code>
     /// </example>
+    [AspireExport]
     public static IResourceBuilder<PerlAppResource> AddPerlExecutable(
         this IDistributedApplicationBuilder builder, [ResourceName] string resourceName, string appDirectory, string executablePath)
         => AddPerlAppCore(builder, resourceName, appDirectory, EntrypointType.Executable, executablePath, DefaultPerlEnvironment);
@@ -322,6 +329,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// the <c>PERLBREW_ROOT</c> environment variable, or defaults to <c>~/perl5/perlbrew</c>.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<T> WithPerlbrew<T>(
         this IResourceBuilder<T> builder, string version, string? perlbrewRoot = null) where T : PerlAppResource
         => builder.WithPerlbrewEnvironment(version, perlbrewRoot);
@@ -352,6 +360,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// and enabling per-project module isolation.
     /// </para>
     /// </remarks>
+    [AspireExport]
     public static IResourceBuilder<T> WithPerlbrewEnvironment<T>(
         this IResourceBuilder<T> builder, string version, string? perlbrewRoot = null) where T : PerlAppResource
     {
@@ -460,6 +469,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// While it is possible to use <c>cpan</c> with Local::Lib it is complicated to model in Aspire.
     /// </para>
     /// </remarks>
+    [AspireExport]
     public static IResourceBuilder<TResource> WithLocalLib<TResource>(
         this IResourceBuilder<TResource> builder,
         string path = "local") where TResource : PerlAppResource
@@ -495,6 +505,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
     [Experimental("CTASPIREPERL001")]
+    [AspireExport]
     public static IResourceBuilder<TResource> WithPerlCertificateTrust<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -663,3 +674,5 @@ public static partial class PerlAppResourceBuilderExtensions
             || File.Exists(Path.Combine(resolvedDir, "Build.PL"));
     }
 }
+
+#pragma warning restore ASPIREATS001

@@ -49,7 +49,8 @@ public static class McpInspectorResourceBuilderExtensions
     ///     .WithYarn();
     /// </code>
     /// </remarks>
-    [AspireExport("addMcpInspectorPolyglot", MethodName = "addMcpInspector", Description = "Adds a MCP Inspector container resource")]
+    /// <ats-summary>Adds a MCP Inspector container resource</ats-summary>
+    [AspireExport(MethodName = "addMcpInspector")]
     internal static IResourceBuilder<McpInspectorResource> AddMcpInspectorPolyglot(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -274,7 +275,8 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="transportType">The transport type to use for the MCP server. Defaults to <see cref="McpTransportType.StreamableHttp"/>.</param>
     /// <param name="path">The path to use for MCP communication. Defaults to "/mcp".</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
-    [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer", Description = "Configures the MCP Inspector to use a specified MCP server resource")]
+    /// <ats-summary>Configures the MCP Inspector to use a specified MCP server resource</ats-summary>
+    [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer")]
     public static IResourceBuilder<McpInspectorResource> WithMcpServer<TResource>(
         this IResourceBuilder<McpInspectorResource> builder,
         IResourceBuilder<TResource> mcpServer,
@@ -382,7 +384,7 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withYarn", Description = "Configures the MCP Inspector to use yarn as the package manager")]
+    [AspireExport]
     public static IResourceBuilder<McpInspectorResource> WithYarn(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -395,7 +397,7 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withPnpm", Description = "Configures the MCP Inspector to use pnpm as the package manager")]
+    [AspireExport]
     public static IResourceBuilder<McpInspectorResource> WithPnpm(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -408,7 +410,7 @@ public static class McpInspectorResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The MCP Inspector resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withBun", Description = "Configures the MCP Inspector to use bun as the package manager")]
+    [AspireExport]
     public static IResourceBuilder<McpInspectorResource> WithBun(this IResourceBuilder<McpInspectorResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);

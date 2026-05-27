@@ -40,7 +40,8 @@ public static class KurrentDBBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("addKurrentDB", Description = "Adds a KurrentDB container resource")]
+    /// <ats-summary>Adds a KurrentDB container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<KurrentDBResource> AddKurrentDB(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -98,7 +99,8 @@ public static class KurrentDBBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a KurrentDB container resource")]
+    /// <ats-summary>Adds a named volume for the data folder to a KurrentDB container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<KurrentDBResource> WithDataVolume(this IResourceBuilder<KurrentDBResource> builder, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -128,7 +130,8 @@ public static class KurrentDBBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a KurrentDB container resource")]
+    /// <ats-summary>Adds a bind mount for the data folder to a KurrentDB container resource</ats-summary>
+    [AspireExport]
     public static IResourceBuilder<KurrentDBResource> WithDataBindMount(this IResourceBuilder<KurrentDBResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
