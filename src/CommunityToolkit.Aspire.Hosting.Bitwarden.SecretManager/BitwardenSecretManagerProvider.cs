@@ -1,4 +1,6 @@
 using Bitwarden.Sdk;
+using Polly;
+using Polly.Retry;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 
@@ -39,6 +41,7 @@ internal interface IBitwardenSecretManagerProvider : IAsyncDisposable
 internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerProvider
 {
     private readonly BitwardenClient _client;
+    private readonly ResiliencePipeline _pipeline;
 
     public BitwardenSecretManagerProvider(string apiUrl, string identityUrl)
     {
@@ -47,30 +50,46 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
             ApiUrl = apiUrl,
             IdentityUrl = identityUrl
         });
+
+        _pipeline = new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions
+            {
+                ShouldHandle = new PredicateBuilder()
+                    .Handle<BitwardenAuthException>(IsTransientError)
+                    .Handle<BitwardenException>(IsTransientError),
+                MaxRetryAttempts = 3,
+                Delay = TimeSpan.FromSeconds(1),
+                BackoffType = DelayBackoffType.Exponential,
+                UseJitter = true
+            })
+            .Build();
     }
 
     public void Login(string accessToken, string? authCacheFile)
     {
-        if (string.IsNullOrWhiteSpace(authCacheFile))
+        _pipeline.Execute(() =>
         {
-            _client.Auth.LoginAccessToken(accessToken);
-            return;
-        }
+            if (string.IsNullOrWhiteSpace(authCacheFile))
+            {
+                _client.Auth.LoginAccessToken(accessToken);
+                return;
+            }
 
-        string? directory = Path.GetDirectoryName(authCacheFile);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+            string? directory = Path.GetDirectoryName(authCacheFile);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-        _client.Auth.LoginAccessToken(accessToken, authCacheFile);
+            _client.Auth.LoginAccessToken(accessToken, authCacheFile);
+        });
     }
 
     public BitwardenProjectInfo? GetProject(Guid projectId)
     {
         try
         {
-            return Map(_client.Projects.Get(projectId));
+            return _pipeline.Execute(() => Map(_client.Projects.Get(projectId)));
         }
         catch (BitwardenException ex) when (!IsTransientError(ex))
         {
@@ -79,16 +98,16 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
     }
 
     public BitwardenProjectInfo CreateProject(Guid organizationId, string projectName)
-        => Map(_client.Projects.Create(organizationId, projectName));
+        => _pipeline.Execute(() => Map(_client.Projects.Create(organizationId, projectName)));
 
     public BitwardenProjectInfo UpdateProject(Guid organizationId, Guid projectId, string projectName)
-        => Map(_client.Projects.Update(organizationId, projectId, projectName));
+        => _pipeline.Execute(() => Map(_client.Projects.Update(organizationId, projectId, projectName)));
 
     public BitwardenSecretInfo? GetSecret(Guid secretId)
     {
         try
         {
-            return Map(_client.Secrets.Get(secretId));
+            return _pipeline.Execute(() => Map(_client.Secrets.Get(secretId)));
         }
         catch (BitwardenException ex) when (!IsTransientError(ex))
         {
@@ -103,19 +122,17 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
             return [];
         }
 
-        return _client.Secrets.GetByIds(secretIds).Data.Select(Map).ToArray();
+        return _pipeline.Execute(() => _client.Secrets.GetByIds(secretIds).Data.Select(Map).ToArray());
     }
 
     public IReadOnlyList<BitwardenSecretIdentifierInfo> ListSecrets(Guid organizationId)
-    {
-        return _client.Secrets.List(organizationId).Data.Select(Map).ToArray();
-    }
+        => _pipeline.Execute(() => _client.Secrets.List(organizationId).Data.Select(Map).ToArray());
 
     public BitwardenSecretInfo CreateSecret(Guid organizationId, string remoteName, string value, Guid[] projectIds, string note = "")
-        => Map(_client.Secrets.Create(organizationId, remoteName, value, note, projectIds));
+        => _pipeline.Execute(() => Map(_client.Secrets.Create(organizationId, remoteName, value, note, projectIds)));
 
     public BitwardenSecretInfo UpdateSecret(Guid organizationId, Guid secretId, string remoteName, string value, string note, Guid[] projectIds)
-        => Map(_client.Secrets.Update(organizationId, secretId, remoteName, value, note, projectIds));
+        => _pipeline.Execute(() => Map(_client.Secrets.Update(organizationId, secretId, remoteName, value, note, projectIds)));
 
     public ValueTask DisposeAsync()
     {
@@ -123,7 +140,7 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
         return ValueTask.CompletedTask;
     }
 
-    private static bool IsTransientError(BitwardenException ex)
+    private static bool IsTransientError(Exception ex)
         => ex.Message.StartsWith("error sending request", StringComparison.OrdinalIgnoreCase);
 
     private static BitwardenProjectInfo Map(ProjectResponse response) => new(response.Id, response.Name, response.OrganizationId);
