@@ -168,9 +168,9 @@ public static class SurrealDbBuilderExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Adds a SurrealDB namespace resource to the application model</ats-summary>
     /// Adds a SurrealDB namespace to the application model. This is a child resource of a <see cref="SurrealDbServerResource"/>.
     /// </summary>
+    /// <ats-summary>Adds a SurrealDB namespace resource to the application model</ats-summary>
     /// <param name="builder">The SurrealDB resource builders.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="namespaceName">The name of the namespace. If not provided, this defaults to the same value as <paramref name="name"/>.</param>
@@ -250,9 +250,9 @@ public static class SurrealDbBuilderExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Adds a SurrealDB database resource to the application model</ats-summary>
     /// Adds a SurrealDB database to the application model. This is a child resource of a <see cref="SurrealDbNamespaceResource"/>.
     /// </summary>
+    /// <ats-summary>Adds a SurrealDB database resource to the application model</ats-summary>
     /// <param name="builder">The SurrealDB resource builders.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="databaseName">The name of the database. If not provided, this defaults to the same value as <paramref name="name"/>.</param>

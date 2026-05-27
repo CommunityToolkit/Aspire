@@ -12,9 +12,9 @@ namespace Aspire.Hosting;
 public static class ZitadelHostingExtensions
 {
     /// <summary>
-    /// <ats-summary>Adds a Zitadel container resource</ats-summary>
     /// Adds a Zitadel container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
+    /// <ats-summary>Adds a Zitadel container resource</ats-summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder" /> to add the Zitadel container to.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="port">The host port used when launching the container. If <c>null</c> a random port will be assigned</param>
@@ -182,9 +182,9 @@ public static class ZitadelHostingExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Configures the external domain for the Zitadel resource</ats-summary>
     /// Configures the external domain for the Zitadel resource. This overrides the default domain set in <see cref="AddZitadel"/>.
     /// </summary>
+    /// <ats-summary>Configures the external domain for the Zitadel resource</ats-summary>
     /// <param name="builder">The Zitadel resource builder.</param>
     /// <param name="externalDomain">The external domain to use (e.g., "auth.example.com"). Cannot be null or empty.</param>
     /// <returns>The resource builder for chaining.</returns>

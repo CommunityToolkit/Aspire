@@ -33,9 +33,9 @@ public static class McpInspectorResourceBuilderExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Adds a MCP Inspector container resource</ats-summary>
     /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
+    /// <ats-summary>Adds a MCP Inspector container resource</ats-summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
     /// <param name="name">The name of the MCP Inspector container resource.</param>
     /// <param name="clientPort">The port for the client application. Defaults to 6274.</param>

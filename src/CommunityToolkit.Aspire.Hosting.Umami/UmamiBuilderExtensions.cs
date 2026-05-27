@@ -69,9 +69,9 @@ public static class UmamiBuilderExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Configures PostgreSQL as the storage backend for Umami</ats-summary>
     /// References a <see cref="PostgresDatabaseResource"/> as the storage backend for the <see cref="UmamiResource"/>.
     /// </summary>
+    /// <ats-summary>Configures PostgreSQL as the storage backend for Umami</ats-summary>
     /// <param name="builder">The Umami resource builder.</param>
     /// <param name="database">The PostgreSQL database resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>

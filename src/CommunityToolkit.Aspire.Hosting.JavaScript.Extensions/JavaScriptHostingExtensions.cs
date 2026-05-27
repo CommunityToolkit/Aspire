@@ -247,9 +247,9 @@ public static partial class JavaScriptHostingExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Maps the endpoint port for the JavaScript app resource to the appropriate command line argument</ats-summary>
     /// Maps the endpoint port for the <see cref="JavaScriptAppResource"/> to the appropriate command line argument.
     /// </summary>
+    /// <ats-summary>Maps the endpoint port for the JavaScript app resource to the appropriate command line argument</ats-summary>
     /// <param name="builder">The Node.js app resource.</param>
     /// <param name="endpointName">The name of the endpoint to map. If not specified, it will use the first HTTP or HTTPS endpoint found.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>

@@ -190,9 +190,9 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Sets the publish profile path used for DAC deployment options.</ats-summary>
     /// Adds a path to a publish profile for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
     /// </summary>
+    /// <ats-summary>Sets the publish profile path used for DAC deployment options.</ats-summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="optionsPath">Path to the publish profile xml file</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
@@ -222,9 +222,9 @@ public static class SqlProjectBuilderExtensions
     }
 
     /// <summary>
-    /// <ats-summary>Publishes the SQL Server database project to a SQL Server database resource.</ats-summary>
     /// Publishes the SQL Server Database project to the target <see cref="SqlServerDatabaseResource"/>.
     /// </summary>
+    /// <ats-summary>Publishes the SQL Server database project to a SQL Server database resource.</ats-summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="SqlServerDatabaseResource"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
@@ -233,9 +233,9 @@ public static class SqlProjectBuilderExtensions
         this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<SqlServerDatabaseResource> target) => InternalWithReference(builder, target, target.Resource.DatabaseName);
 
     /// <summary>
-    /// <ats-summary>Publishes the SQL Server database project to a connection string resource.</ats-summary>
     /// Publishes the SQL Server Database project to the target <see cref="IResourceWithConnectionString"/>.
     /// </summary>
+    /// <ats-summary>Publishes the SQL Server database project to a connection string resource.</ats-summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="IResourceWithConnectionString"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>

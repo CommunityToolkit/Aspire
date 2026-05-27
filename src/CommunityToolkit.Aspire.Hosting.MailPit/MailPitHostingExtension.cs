@@ -11,9 +11,9 @@ namespace Aspire.Hosting;
 public static class MailPitHostingExtension
 {
     /// <summary>
-    /// <ats-summary>Adds a MailPit container resource</ats-summary>
     /// Adds a MailPit container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
+    /// <ats-summary>Adds a MailPit container resource</ats-summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MailPit resource will be added.</param>
     /// <param name="name">The name of the MailPit container resource.</param>
     /// <param name="httpPort">Optional. The HTTP port on which MailPit will listen.</param>

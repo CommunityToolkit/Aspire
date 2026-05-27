@@ -161,11 +161,11 @@ public static partial class JavaAppHostingExtension
     }
 
     /// <summary>
-    /// <ats-summary>Adds a Maven build step to the Java application</ats-summary>
     /// Adds a Maven build step to the application model.
     /// The wrapper script path defaults to <c>mvnw</c> (or <c>mvnw.cmd</c> on Windows) in the resource's working directory,
     /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
+    /// <ats-summary>Adds a Maven build step to the Java application</ats-summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Maven build step to.</param>
     /// <param name="args">Arguments to pass to the Maven wrapper. If not provided, defaults to <c>clean package</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
@@ -188,11 +188,11 @@ public static partial class JavaAppHostingExtension
     }
 
     /// <summary>
-    /// <ats-summary>Adds a Gradle build step to the Java application</ats-summary>
     /// Adds a Gradle build step to the application model.
     /// The wrapper script path defaults to <c>gradlew</c> (or <c>gradlew.bat</c> on Windows) in the resource's working directory,
     /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
+    /// <ats-summary>Adds a Gradle build step to the Java application</ats-summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to add the Gradle build step to.</param>
     /// <param name="args">Arguments to pass to the Gradle wrapper. If not provided, defaults to <c>clean build</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
@@ -238,12 +238,12 @@ public static partial class JavaAppHostingExtension
     }
 
     /// <summary>
-    /// <ats-summary>Configures the Java application to run using a Maven goal</ats-summary>
     /// Configures the Java application to run using a Maven goal (e.g., <c>spring-boot:run</c>).
     /// In run mode, the resource command is changed from <c>java</c> to the Maven wrapper.
     /// The wrapper script path defaults to <c>mvnw</c> (or <c>mvnw.cmd</c> on Windows) in the resource's working directory,
     /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
+    /// <ats-summary>Configures the Java application to run using a Maven goal</ats-summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to configure.</param>
     /// <param name="goal">The Maven goal to execute (e.g., <c>spring-boot:run</c>).</param>
     /// <param name="args">Additional arguments to pass to the Maven wrapper.</param>
@@ -278,12 +278,12 @@ public static partial class JavaAppHostingExtension
     }
 
     /// <summary>
-    /// <ats-summary>Configures the Java application to run using a Gradle task</ats-summary>
     /// Configures the Java application to run using a Gradle task (e.g., <c>bootRun</c>).
     /// In run mode, the resource command is changed from <c>java</c> to the Gradle wrapper.
     /// The wrapper script path defaults to <c>gradlew</c> (or <c>gradlew.bat</c> on Windows) in the resource's working directory,
     /// unless overridden with <see cref="WithWrapperPath"/>.
     /// </summary>
+    /// <ats-summary>Configures the Java application to run using a Gradle task</ats-summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> to configure.</param>
     /// <param name="task">The Gradle task to execute (e.g., <c>bootRun</c>).</param>
     /// <param name="args">Additional arguments to pass to the Gradle wrapper.</param>
