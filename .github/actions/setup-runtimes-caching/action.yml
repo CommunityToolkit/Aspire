@@ -24,17 +24,10 @@ runs:
           9.0.x
           10.0.x
 
-    - name: Resolve Aspire version
-      id: aspire-version
-      shell: bash
-      run: |
-        ASPIRE_VERSION="$(dotnet msbuild Directory.Build.props -nologo -v:q -getProperty:AspireVersion)"
-        echo "version=${ASPIRE_VERSION}" >> "$GITHUB_OUTPUT"
-
     - name: Install Aspire CLI
       uses: timheuer/setup-aspire@v0.1.0
       with:
-        version: ${{ steps.aspire-version.outputs.version }}
+        quality: staging
 
     - name: Set up Python
       uses: actions/setup-python@v5
