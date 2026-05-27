@@ -90,7 +90,6 @@ public static partial class OllamaResourceBuilderExtensions
     /// <remarks>
     /// This will add the right arguments to the container to enable GPU support as per <see href="https://github.com/ollama/ollama/blob/main/docs/docker.md" />.
     /// </remarks>
-    /// <ats-summary>Adds GPU support to the Ollama container</ats-summary>
     [AspireExport]
     public static IResourceBuilder<OllamaResource> WithGPUSupport(this IResourceBuilder<OllamaResource> builder, OllamaGpuVendor vendor = OllamaGpuVendor.Nvidia)
     {

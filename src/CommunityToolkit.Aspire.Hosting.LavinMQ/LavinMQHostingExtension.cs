@@ -89,7 +89,6 @@ public static class LavinMQHostingExtension
     /// <param name="name">The name of the data volume to be attached to the LavinMQ container resource.</param>
     /// <param name="isReadOnly">Indicates whether the data volume should be mounted as read-only. Default is false.</param>
     /// <returns>The updated resource builder for the LavinMQ container resource.</returns>
-    /// <ats-summary>Adds a data volume to a LavinMQ container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<LavinMQContainerResource> WithDataVolume(this IResourceBuilder<LavinMQContainerResource> builder, string name,
         bool isReadOnly = false)
@@ -108,7 +107,6 @@ public static class LavinMQHostingExtension
     /// <param name="isReadOnly">Indicates if the bind mount should be configured as read-only. Default is false.</param>
     /// <returns>An updated resource builder for the LavinMQ container resource with the configured data bind mount.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the builder or source parameters are null.</exception>
-    /// <ats-summary>Adds a data bind mount to a LavinMQ container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<LavinMQContainerResource> WithDataBindMount(this IResourceBuilder<LavinMQContainerResource> builder, string source,
         bool isReadOnly = false)

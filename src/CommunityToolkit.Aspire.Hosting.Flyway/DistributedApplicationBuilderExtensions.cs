@@ -33,7 +33,6 @@ public static class DistributedApplicationBuilderExtensions
         /// </code>
         /// </example>
         /// </remarks>
-        /// <ats-summary>Adds a Flyway container resource</ats-summary>
         [AspireExport]
         public IResourceBuilder<FlywayResource> AddFlyway([ResourceName] string name, string migrationScriptsPath)
         {

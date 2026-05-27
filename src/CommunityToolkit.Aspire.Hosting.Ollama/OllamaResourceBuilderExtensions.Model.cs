@@ -21,7 +21,6 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds an Ollama model resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<IOllamaResource> builder, string modelName)
     {
@@ -44,7 +43,6 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a named Ollama model resource</ats-summary>
     [AspireExport("addNamedModel")]
     public static IResourceBuilder<OllamaModelResource> AddModel(this IResourceBuilder<IOllamaResource> builder, [ResourceName] string name, string modelName)
     {
@@ -73,7 +71,6 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="modelName">The name of the LLM from Hugging Face in GGUF format to download on initial startup.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a Hugging Face model to the Ollama resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<OllamaModelResource> AddHuggingFaceModel(this IResourceBuilder<IOllamaResource> builder, [ResourceName] string name, string modelName)
     {

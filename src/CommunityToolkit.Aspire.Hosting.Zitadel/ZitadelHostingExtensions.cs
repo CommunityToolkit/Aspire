@@ -12,6 +12,7 @@ namespace Aspire.Hosting;
 public static class ZitadelHostingExtensions
 {
     /// <summary>
+    /// <ats-summary>Adds a Zitadel container resource</ats-summary>
     /// Adds a Zitadel container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder" /> to add the Zitadel container to.</param>
@@ -20,7 +21,6 @@ public static class ZitadelHostingExtensions
     /// <param name="username">An optional parameter to set a username for the admin account, if <c>null</c> will auto generate one.</param>
     /// <param name="password">An optional parameter to set a password for the admin account, if <c>null</c> will auto generate one.</param>
     /// <param name="masterKey">An optional parameter to set the masterkey, if <c>null</c> will auto generate one.</param>
-    /// <ats-summary>Adds a Zitadel container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<ZitadelResource> AddZitadel(
         this IDistributedApplicationBuilder builder,
@@ -144,7 +144,6 @@ public static class ZitadelHostingExtensions
     /// <param name="builder">The Zitadel resource to add database support to.</param>
     /// <param name="server">The Postgres server resource to use for the database.</param>
     /// <param name="databaseName">An optional name for the database Zitadel will use, if left empty will default to <c>"zitadel-db"</c>.</param>
-    /// <ats-summary>Adds database support to the Zitadel resource using a PostgreSQL server</ats-summary>
     [AspireExport]
     public static IResourceBuilder<ZitadelResource> WithDatabase(
         this IResourceBuilder<ZitadelResource> builder,
@@ -163,7 +162,6 @@ public static class ZitadelHostingExtensions
     /// </summary>
     /// <param name="builder">The Zitadel resource to add database support to.</param>
     /// <param name="database">The Postgres database resource to use for the database.</param>
-    /// <ats-summary>Adds database support to the Zitadel resource using an existing PostgreSQL database</ats-summary>
     [AspireExport("withExistingDatabase")]
     public static IResourceBuilder<ZitadelResource> WithDatabase(this IResourceBuilder<ZitadelResource> builder, IResourceBuilder<PostgresDatabaseResource> database)
     {
@@ -184,13 +182,13 @@ public static class ZitadelHostingExtensions
     }
 
     /// <summary>
+    /// <ats-summary>Configures the external domain for the Zitadel resource</ats-summary>
     /// Configures the external domain for the Zitadel resource. This overrides the default domain set in <see cref="AddZitadel"/>.
     /// </summary>
     /// <param name="builder">The Zitadel resource builder.</param>
     /// <param name="externalDomain">The external domain to use (e.g., "auth.example.com"). Cannot be null or empty.</param>
     /// <returns>The resource builder for chaining.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="externalDomain"/> is null or whitespace.</exception>
-    /// <ats-summary>Configures the external domain for the Zitadel resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<ZitadelResource> WithExternalDomain(
         this IResourceBuilder<ZitadelResource> builder,

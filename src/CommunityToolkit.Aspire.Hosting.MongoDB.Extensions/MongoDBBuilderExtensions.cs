@@ -63,7 +63,6 @@ public static class MongoDBBuilderExtensions
     /// <param name="builder">The MongoDB server resource builder.</param>
     /// <param name="containerName">The name of the container (Optional).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a DbGate administration and development platform for MongoDB.</ats-summary>
     [AspireExport("withDbGate")]
     internal static IResourceBuilder<MongoDBServerResource> WithDbGateForPolyglot(this IResourceBuilder<MongoDBServerResource> builder, string? containerName = null)
     {

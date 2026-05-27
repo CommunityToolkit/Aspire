@@ -62,7 +62,6 @@ public static class SqlServerBuilderExtensions
     /// <param name="containerName">The name of the container (Optional).</param>
     /// <param name="imageTag">Optional image tag override for the DbGate container.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a DbGate container for managing the SQL Server resource.</ats-summary>
     [AspireExport]
     internal static IResourceBuilder<SqlServerServerResource> WithDbGate(this IResourceBuilder<SqlServerServerResource> builder, string? containerName = null, string? imageTag = null)
     {
@@ -124,7 +123,6 @@ public static class SqlServerBuilderExtensions
     /// <param name="containerName">The name of the container (Optional).</param>
     /// <param name="imageTag">Optional image tag override for the Adminer container.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds an Adminer container for managing the SQL Server resource.</ats-summary>
     [AspireExport]
     internal static IResourceBuilder<SqlServerServerResource> WithAdminer(this IResourceBuilder<SqlServerServerResource> builder, string? containerName = null, string? imageTag = null)
     {

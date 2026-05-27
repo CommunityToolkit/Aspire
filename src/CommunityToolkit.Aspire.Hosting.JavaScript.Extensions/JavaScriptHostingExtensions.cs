@@ -109,7 +109,6 @@ public static partial class JavaScriptHostingExtensions
         return rb;
     }
 
-    /// <ats-summary>Adds an individual app to an Nx workspace</ats-summary>
     [AspireExport(MethodName = "addApp")]
     internal static IResourceBuilder<NxAppResource> AddNxWorkspaceApp(this IResourceBuilder<NxResource> builder, [ResourceName] string name, string? appName = null) =>
         builder.AddApp(name, appName, configure: null);
@@ -167,7 +166,6 @@ public static partial class JavaScriptHostingExtensions
         return rb;
     }
 
-    /// <ats-summary>Adds an individual app to a Turborepo workspace</ats-summary>
     [AspireExport(MethodName = "addApp")]
     internal static IResourceBuilder<TurborepoAppResource> AddTurborepoWorkspaceApp(this IResourceBuilder<TurborepoResource> builder, [ResourceName] string name, string? filter = null) =>
         builder.AddApp(name, filter, configure: null);
@@ -249,12 +247,12 @@ public static partial class JavaScriptHostingExtensions
     }
 
     /// <summary>
+    /// <ats-summary>Maps the endpoint port for the JavaScript app resource to the appropriate command line argument</ats-summary>
     /// Maps the endpoint port for the <see cref="JavaScriptAppResource"/> to the appropriate command line argument.
     /// </summary>
     /// <param name="builder">The Node.js app resource.</param>
     /// <param name="endpointName">The name of the endpoint to map. If not specified, it will use the first HTTP or HTTPS endpoint found.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Maps the endpoint port for the JavaScript app resource to the appropriate command line argument</ats-summary>
     [AspireExport]
     public static IResourceBuilder<TResource> WithMappedEndpointPort<TResource>(this IResourceBuilder<TResource> builder, string? endpointName = null) where TResource : JavaScriptAppResource
     {
@@ -297,7 +295,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Nx workspace to use npm as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withNpm")]
     internal static IResourceBuilder<NxResource> WithNxNpm(this IResourceBuilder<NxResource> builder, bool install = false) =>
         builder.WithNpm(install, configureInstaller: null);
@@ -319,7 +316,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Nx workspace to use yarn as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withYarn")]
     internal static IResourceBuilder<NxResource> WithNxYarn(this IResourceBuilder<NxResource> builder, bool install = false) =>
         builder.WithYarn(install, configureInstaller: null);
@@ -341,7 +337,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Nx workspace to use pnpm as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withPnpm")]
     internal static IResourceBuilder<NxResource> WithNxPnpm(this IResourceBuilder<NxResource> builder, bool install = false) =>
         builder.WithPnpm(install, configureInstaller: null);
@@ -363,7 +358,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Nx workspace to use bun as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withBun")]
     internal static IResourceBuilder<NxResource> WithNxBun(this IResourceBuilder<NxResource> builder, bool install = false) =>
         builder.WithBun(install, configureInstaller: null);
@@ -385,7 +379,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Turborepo workspace to use npm as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withNpm")]
     internal static IResourceBuilder<TurborepoResource> WithTurborepoNpm(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
         builder.WithNpm(install, configureInstaller: null);
@@ -407,7 +400,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Turborepo workspace to use yarn as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withYarn")]
     internal static IResourceBuilder<TurborepoResource> WithTurborepoYarn(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
         builder.WithYarn(install, configureInstaller: null);
@@ -429,7 +421,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Turborepo workspace to use pnpm as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withPnpm")]
     internal static IResourceBuilder<TurborepoResource> WithTurborepoPnpm(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
         builder.WithPnpm(install, configureInstaller: null);
@@ -451,7 +442,6 @@ public static partial class JavaScriptHostingExtensions
         return builder;
     }
 
-    /// <ats-summary>Configures the Turborepo workspace to use bun as the package manager and optionally installs packages before apps start</ats-summary>
     [AspireExport(MethodName = "withBun")]
     internal static IResourceBuilder<TurborepoResource> WithTurborepoBun(this IResourceBuilder<TurborepoResource> builder, bool install = false) =>
         builder.WithBun(install, configureInstaller: null);

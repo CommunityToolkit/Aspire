@@ -20,7 +20,6 @@ public static class StripeExtensions
     /// <param name="name">The name of the resource.</param>
     /// <param name="apiKey">The parameter builder providing the Stripe API key.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a Stripe CLI resource for local webhook forwarding</ats-summary>
     [AspireExport]
     public static IResourceBuilder<StripeResource> AddStripe(
         this IDistributedApplicationBuilder builder,
@@ -52,7 +51,6 @@ public static class StripeExtensions
     /// <param name="webhookPath">The path to the webhook endpoint.</param>
     /// <param name="events">Optional collection of specific webhook events to listen for (e.g., ["payment_intent.created", "charge.succeeded"]). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Configures Stripe CLI to forward webhooks to a resource endpoint</ats-summary>
     [AspireExport]
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
@@ -90,7 +88,6 @@ public static class StripeExtensions
     /// <param name="webhookPath">The path to the webhook endpoint.</param>
     /// <param name="events">Optional collection of specific webhook events to listen for (e.g., ["payment_intent.created", "charge.succeeded"]). If not specified, all events are forwarded.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Configures Stripe CLI to forward webhooks to an external service</ats-summary>
     [AspireExport("withListenExternalService")]
     public static IResourceBuilder<StripeResource> WithListen(
         this IResourceBuilder<StripeResource> builder,
@@ -165,7 +162,6 @@ public static class StripeExtensions
     /// <param name="source">The Stripe CLI resource to reference.</param>
     /// <param name="webhookSigningSecretEnvVarName">Optional environment variable name to use for the webhook signing secret. Defaults to "STRIPE_WEBHOOK_SECRET".</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds the Stripe webhook signing secret to a resource environment</ats-summary>
     [AspireExport("withStripeReference")]
     public static IResourceBuilder<TDestination> WithReference<TDestination>(
         this IResourceBuilder<TDestination> builder,

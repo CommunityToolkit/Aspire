@@ -83,7 +83,6 @@ public static class ElasticvueBuilderExtensions
     /// </code>
     /// </example>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds Elasticvue for administering an Elasticsearch resource</ats-summary>
     [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<ElasticsearchResource> WithElasticvue(this IResourceBuilder<ElasticsearchResource> builder, Action<IResourceBuilder<ElasticvueContainerResource>>? configureContainer = null, string? containerName = null)
     {

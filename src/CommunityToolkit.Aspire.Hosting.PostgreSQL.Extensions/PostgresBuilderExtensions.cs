@@ -56,7 +56,6 @@ public static class PostgresBuilderExtensions
         return builder;
     }
 
-    /// <ats-summary>Adds DbGate connected to the PostgreSQL server.</ats-summary>
     [AspireExport("withDbGate")]
     internal static IResourceBuilder<PostgresServerResource> WithDbGateForPolyglot(this IResourceBuilder<PostgresServerResource> builder, string? containerName = null) =>
         builder.WithDbGate(configureContainer: null, containerName);
@@ -103,7 +102,6 @@ public static class PostgresBuilderExtensions
         return builder;
     }
 
-    /// <ats-summary>Adds Adminer connected to the PostgreSQL server.</ats-summary>
     [AspireExport("withAdminer")]
     internal static IResourceBuilder<PostgresServerResource> WithAdminerForPolyglot(this IResourceBuilder<PostgresServerResource> builder, string? containerName = null) =>
         builder.WithAdminer(configureContainer: null, containerName);

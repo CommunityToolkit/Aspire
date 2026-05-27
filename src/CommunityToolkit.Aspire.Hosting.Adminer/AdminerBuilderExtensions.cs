@@ -16,7 +16,6 @@ public static class AdminerBuilderExtensions
     /// <param name="builder">The resource builder for Adminer.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for Adminer.</returns>
-    /// <ats-summary>Configures the host port for the Adminer resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<AdminerContainerResource> WithHostPort(this IResourceBuilder<AdminerContainerResource> builder, int? port)
     {
@@ -38,7 +37,6 @@ public static class AdminerBuilderExtensions
     /// Multiple <see cref="AddAdminer(IDistributedApplicationBuilder, string, int?)"/> calls will return the same resource builder instance.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds an Adminer container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<AdminerContainerResource> AddAdminer(this IDistributedApplicationBuilder builder, [ResourceName] string name, int? port = null)
     {

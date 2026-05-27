@@ -16,7 +16,6 @@ public static class DbGateBuilderExtensions
     /// <param name="builder">The resource builder for DbGate.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for DbGate.</returns>
-    /// <ats-summary>Configures the host port for a DbGate container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<DbGateContainerResource> WithHostPort(this IResourceBuilder<DbGateContainerResource> builder, int? port)
     {
@@ -69,7 +68,6 @@ public static class DbGateBuilderExtensions
     /// Multiple <see cref="AddDbGate(IDistributedApplicationBuilder, string, int?)"/> calls will return the same resource builder instance.
     /// </remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a DbGate container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<DbGateContainerResource> AddDbGate(this IDistributedApplicationBuilder builder, [ResourceName] string name = "dbgate", int? port = null)
     {

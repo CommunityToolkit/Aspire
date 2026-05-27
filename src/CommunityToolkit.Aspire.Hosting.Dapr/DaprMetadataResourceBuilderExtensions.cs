@@ -15,7 +15,6 @@ public static class DaprMetadataResourceBuilderExtensions
     /// <param name="name">The name of the metadata property to add to the Dapr component configuration.</param>
     /// <param name="value">The static metadata value to assign.</param>
     /// <returns>The resource builder instance.</returns>
-    /// <ats-summary>Adds static metadata to a Dapr component</ats-summary>
     [AspireExport]
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, string value) =>
         builder.WithAnnotation(new DaprComponentConfigurationAnnotation((schema, ct) =>
@@ -91,7 +90,6 @@ public static class DaprMetadataResourceBuilderExtensions
         }));
     }
 
-    /// <ats-summary>Adds endpoint-backed metadata to a Dapr component</ats-summary>
     [AspireExport("withMetadataEndpoint", MethodName = "withMetadataEndpoint")]
     internal static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, EndpointReference endpointReference)
     {
@@ -112,7 +110,6 @@ public static class DaprMetadataResourceBuilderExtensions
     /// <param name="name">The name of the metadata property to add to the Dapr component configuration.</param>
     /// <param name="parameterResource">The parameter resource whose value should back the metadata entry.</param>
     /// <returns>The resource builder instance.</returns>
-    /// <ats-summary>Adds parameter-backed metadata to a Dapr component</ats-summary>
     [AspireExport("withMetadataParameter", MethodName = "withMetadataParameter")]
     public static IResourceBuilder<IDaprComponentResource> WithMetadata(this IResourceBuilder<IDaprComponentResource> builder, string name, ParameterResource parameterResource)
     {

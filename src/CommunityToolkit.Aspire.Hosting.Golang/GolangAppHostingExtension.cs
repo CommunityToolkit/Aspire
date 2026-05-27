@@ -52,7 +52,6 @@ public static class GolangAppHostingExtension
     /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <param name="buildTags">The optional build tags to be used when building the Golang application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a Golang app resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string executable, string[]? args = null, string[]? buildTags = null)
     {
@@ -265,7 +264,6 @@ public static class GolangAppHostingExtension
     /// <param name="builder">The Golang app resource builder.</param>
     /// <param name="install">When true (default), automatically runs go mod tidy before the application starts. When false, the installer resource is created but requires explicit start.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Runs go mod tidy before the application starts</ats-summary>
     [AspireExport(MethodName = "withGoModTidy")]
     internal static IResourceBuilder<GolangAppExecutableResource> WithGoModTidyPolyglot(
         this IResourceBuilder<GolangAppExecutableResource> builder,
@@ -328,7 +326,6 @@ public static class GolangAppHostingExtension
     /// <param name="builder">The Golang app resource builder.</param>
     /// <param name="install">When true (default), automatically runs go mod download before the application starts. When false, the installer resource is created but requires explicit start.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Runs go mod download before the application starts</ats-summary>
     [AspireExport(MethodName = "withGoModDownload")]
     internal static IResourceBuilder<GolangAppExecutableResource> WithGoModDownloadPolyglot(
         this IResourceBuilder<GolangAppExecutableResource> builder,

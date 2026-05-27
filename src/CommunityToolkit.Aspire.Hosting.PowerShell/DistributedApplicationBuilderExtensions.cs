@@ -96,7 +96,6 @@ public static class DistributedApplicationBuilderExtensions
         return poolBuilder;
     }
 
-    /// <ats-summary>Adds a PowerShell runspace pool resource</ats-summary>
     [AspireExport]
     internal static IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(
         this IDistributedApplicationBuilder builder,

@@ -23,7 +23,6 @@ internal static class AzureRedisCacheDaprHostingPolyglotExtensions
     /// This polyglot helper bridges the underlying Azure Managed Redis factory and configuration methods
     /// so TypeScript app hosts can create resources to pass to <see cref="AzureRedisCacheDaprHostingExtensions.WithReference(IResourceBuilder{IDaprComponentResource}, IResourceBuilder{AzureManagedRedisResource})"/>.
     /// </remarks>
-    /// <ats-summary>Adds an Azure Managed Redis resource for Dapr integration</ats-summary>
     [AspireExport]
     internal static IResourceBuilder<AzureManagedRedisResource> AddAzureManagedRedisForDapr(
         this IDistributedApplicationBuilder builder,

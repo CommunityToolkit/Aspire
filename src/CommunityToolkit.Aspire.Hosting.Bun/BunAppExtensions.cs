@@ -57,7 +57,6 @@ public static class BunAppExtensions
     /// <summary>
     /// Ensures the Bun packages are installed before the application starts using Bun as the package manager.
     /// </summary>
-    /// <ats-summary>Installs Bun packages before the app starts</ats-summary>
     [AspireExport]
     internal static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource)
         => WithBunPackageInstallationCore(resource, configureInstaller: null);

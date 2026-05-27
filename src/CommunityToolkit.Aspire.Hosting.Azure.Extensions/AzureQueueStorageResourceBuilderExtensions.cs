@@ -40,7 +40,6 @@ public static class AzureQueueStorageResourceBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds an Azure Storage Explorer instance to a Queue storage resource.</ats-summary>
     [AspireExport("withQueueAzureStorageExplorer", MethodName = "withAzureStorageExplorer", RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<AzureQueueStorageResource> WithAzureStorageExplorer(
         this IResourceBuilder<AzureQueueStorageResource> queues,

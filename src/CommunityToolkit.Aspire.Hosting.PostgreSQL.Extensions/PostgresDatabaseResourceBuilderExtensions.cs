@@ -44,7 +44,6 @@ public static partial class PostgresDatabaseResourceBuilderExtensions
         public IResourceBuilder<PostgresDatabaseResource> WithFlywayMigration(IResourceBuilder<FlywayResource> flywayResourceBuilder) =>
             builder.WithFlywayCommand(flywayResourceBuilder, "migrate");
 
-        /// <ats-summary>Creates a Flyway resource and configures it to run migrations for the PostgreSQL database.</ats-summary>
         [AspireExport("withFlywayMigration")]
         internal IResourceBuilder<PostgresDatabaseResource> WithFlywayMigrationForPolyglot([ResourceName] string flywayName, string migrationScriptsPath) =>
             builder.WithFlywayMigration(builder.ApplicationBuilder.AddFlyway(flywayName, migrationScriptsPath));
@@ -81,7 +80,6 @@ public static partial class PostgresDatabaseResourceBuilderExtensions
         public IResourceBuilder<PostgresDatabaseResource> WithFlywayRepair(IResourceBuilder<FlywayResource> flywayResourceBuilder) =>
             builder.WithFlywayCommand(flywayResourceBuilder, "repair");
 
-        /// <ats-summary>Creates a Flyway resource and configures it to run repair for the PostgreSQL database.</ats-summary>
         [AspireExport("withFlywayRepair")]
         internal IResourceBuilder<PostgresDatabaseResource> WithFlywayRepairForPolyglot([ResourceName] string flywayName, string migrationScriptsPath) =>
             builder.WithFlywayRepair(builder.ApplicationBuilder.AddFlyway(flywayName, migrationScriptsPath));

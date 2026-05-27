@@ -39,7 +39,6 @@ public static class K6BuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a Grafana k6 container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<K6Resource> AddK6(
         this IDistributedApplicationBuilder builder,
@@ -91,7 +90,6 @@ public static class K6BuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Runs a k6 script when starting the Grafana k6 container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<K6Resource> WithScript(
         this IResourceBuilder<K6Resource> builder,
@@ -121,7 +119,6 @@ public static class K6BuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Sets K6 OTEL environment variables from the existing OTEL environment for this resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<K6Resource> WithK6OtlpEnvironment(
         this IResourceBuilder<K6Resource> builder)

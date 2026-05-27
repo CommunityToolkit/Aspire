@@ -23,7 +23,6 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <param name="builder">The distributed application builder instance.</param>
     /// <param name="configure">Callback to configure dapr options.</param>
     /// <returns>The distributed application builder instance.</returns>
-    /// <ats-summary>Adds Dapr support to the distributed application builder</ats-summary>
     [AspireExport]
     public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null)
     {
@@ -67,7 +66,6 @@ public static partial class IDistributedApplicationBuilderExtensions
         return resourceBuilder;
     }
 
-    /// <ats-summary>Adds a Dapr component resource to the distributed application model</ats-summary>
     [AspireExport("addDaprComponent", MethodName = "addDaprComponent")]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprComponentExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, string type, DaprComponentExportOptions? componentOptions = null)
     {
@@ -126,7 +124,6 @@ public static partial class IDistributedApplicationBuilderExtensions
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.PubSub, options);
     }
 
-    /// <ats-summary>Adds a generic Dapr pub-sub component resource</ats-summary>
     [AspireExport("addDaprPubSub", MethodName = "addDaprPubSub")]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprPubSubExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentExportOptions? componentOptions = null)
     {
@@ -147,7 +144,6 @@ public static partial class IDistributedApplicationBuilderExtensions
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.StateStore, options);
     }
 
-    /// <ats-summary>Adds a generic Dapr state store component resource</ats-summary>
     [AspireExport("addDaprStateStore", MethodName = "addDaprStateStore")]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprStateStoreExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentExportOptions? componentOptions = null)
     {

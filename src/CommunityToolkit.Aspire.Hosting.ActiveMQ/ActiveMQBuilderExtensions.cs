@@ -30,7 +30,6 @@ public static class ActiveMQBuilderExtensions
     /// <param name="scheme">The scheme of the endpoint, e.g. tcp or activemq (for masstransit). Defaults to tcp.</param>
     /// <param name="webPort">The host port that the underlying webconsole is bound to when running locally.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds an ActiveMQ Classic container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<ActiveMQServerResource> AddActiveMQ(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -66,7 +65,6 @@ public static class ActiveMQBuilderExtensions
     /// <param name="scheme">The scheme of the endpoint, e.g. tcp or activemq (for masstransit). Defaults to tcp.</param>
     /// <param name="webPort">The host port that the underlying webconsole is bound to when running locally.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds an ActiveMQ Artemis container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<ActiveMQArtemisServerResource> AddActiveMQArtemis(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,

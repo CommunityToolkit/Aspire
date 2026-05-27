@@ -25,7 +25,6 @@ public static class PowerShellScriptResourceBuilderExtensions
         return builder.WithAnnotation(new PowerShellScriptArgsAnnotation(args));
     }
 
-    /// <ats-summary>Provides string arguments to the PowerShell script</ats-summary>
     [AspireExport]
     internal static IResourceBuilder<PowerShellScriptResource> WithArgs(
         this IResourceBuilder<PowerShellScriptResource> builder, params string[] args)

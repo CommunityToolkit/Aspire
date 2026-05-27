@@ -100,7 +100,6 @@ public static class OpenTelemetryCollectorExtensions
     /// </summary>
     /// <param name="builder">The collector resource builder.</param>
     /// <returns>A reference to the resource builder.</returns>
-    /// <ats-summary>Configures all compatible resources to forward telemetry to this collector</ats-summary>
     [AspireExport]
     public static IResourceBuilder<OpenTelemetryCollectorResource> WithAppForwarding(this IResourceBuilder<OpenTelemetryCollectorResource> builder)
     {

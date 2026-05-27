@@ -17,7 +17,6 @@ public static class FlywayResourceBuilderExtensions
         /// Opts in to sending telemetry data to Redgate about Flyway usage.
         /// </summary>
         /// <returns>The updated <see cref="IResourceBuilder{T}"/>.</returns>
-        /// <ats-summary>Opts in to Redgate telemetry for a Flyway resource</ats-summary>
         [AspireExport]
         public IResourceBuilder<FlywayResource> WithTelemetryOptIn()
         {

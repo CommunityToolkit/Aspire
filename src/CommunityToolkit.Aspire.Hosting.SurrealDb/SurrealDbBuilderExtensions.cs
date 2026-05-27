@@ -51,7 +51,6 @@ public static class SurrealDbBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a SurrealDB server resource to the application model</ats-summary>
     [AspireExport]
     public static IResourceBuilder<SurrealDbServerResource> AddSurrealServer(
         this IDistributedApplicationBuilder builder,
@@ -169,6 +168,7 @@ public static class SurrealDbBuilderExtensions
     }
 
     /// <summary>
+    /// <ats-summary>Adds a SurrealDB namespace resource to the application model</ats-summary>
     /// Adds a SurrealDB namespace to the application model. This is a child resource of a <see cref="SurrealDbServerResource"/>.
     /// </summary>
     /// <param name="builder">The SurrealDB resource builders.</param>
@@ -191,7 +191,6 @@ public static class SurrealDbBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a SurrealDB namespace resource to the application model</ats-summary>
     [AspireExport]
     public static IResourceBuilder<SurrealDbNamespaceResource> AddNamespace(
         this IResourceBuilder<SurrealDbServerResource> builder,
@@ -238,7 +237,6 @@ public static class SurrealDbBuilderExtensions
     /// <remarks>
     /// <value>Default script is <code>DEFINE NAMESPACE IF NOT EXISTS `QUOTED_NAMESPACE_NAME`;</code></value>
     /// </remarks>
-    /// <ats-summary>Defines the SQL script used to create the namespace</ats-summary>
     [AspireExport("withNamespaceCreationScript", MethodName = "withCreationScript")]
     [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbNamespaceResource> WithCreationScript(this IResourceBuilder<SurrealDbNamespaceResource> builder, string script)
@@ -252,6 +250,7 @@ public static class SurrealDbBuilderExtensions
     }
 
     /// <summary>
+    /// <ats-summary>Adds a SurrealDB database resource to the application model</ats-summary>
     /// Adds a SurrealDB database to the application model. This is a child resource of a <see cref="SurrealDbNamespaceResource"/>.
     /// </summary>
     /// <param name="builder">The SurrealDB resource builders.</param>
@@ -274,7 +273,6 @@ public static class SurrealDbBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a SurrealDB database resource to the application model</ats-summary>
     [AspireExport]
     public static IResourceBuilder<SurrealDbDatabaseResource> AddDatabase(
         this IResourceBuilder<SurrealDbNamespaceResource> builder,
@@ -328,7 +326,6 @@ public static class SurrealDbBuilderExtensions
     /// <remarks>
     /// <value>Default script is <code>DEFINE DATABASE IF NOT EXISTS `QUOTED_DATABASE_NAME`;</code></value>
     /// </remarks>
-    /// <ats-summary>Defines the SQL script used to create the database</ats-summary>
     [AspireExport("withDatabaseCreationScript", MethodName = "withCreationScript")]
     [Experimental("CTASPIRE002")]
     public static IResourceBuilder<SurrealDbDatabaseResource> WithCreationScript(this IResourceBuilder<SurrealDbDatabaseResource> builder, string script)
@@ -366,7 +363,6 @@ public static class SurrealDbBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a named volume for the data folder to a SurrealDB resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<SurrealDbServerResource> WithDataVolume(this IResourceBuilder<SurrealDbServerResource> builder, string? name = null)
     {
@@ -400,7 +396,6 @@ public static class SurrealDbBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a bind mount for the data folder to a SurrealDB resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<SurrealDbServerResource> WithDataBindMount(this IResourceBuilder<SurrealDbServerResource> builder, string source)
     {
@@ -469,7 +464,6 @@ public static class SurrealDbBuilderExtensions
         return builder.WithEnvironment("SURREAL_LOG", value);
     }
 
-    /// <ats-summary>Configures logging level for the SurrealDB container resource</ats-summary>
     [AspireExport(MethodName = "withLogLevel")]
     internal static IResourceBuilder<SurrealDbServerResource> WithLogLevelPolyglot(
         this IResourceBuilder<SurrealDbServerResource> builder,
@@ -495,7 +489,6 @@ public static class SurrealDbBuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <returns>The <see cref="IResourceBuilder{SurrealDbServerResource}"/>.</returns>
-    /// <ats-summary>Configures the SurrealDB resource to export telemetry to the Aspire dashboard</ats-summary>
     [AspireExport("withSurrealDbOtlpExporter", MethodName = "withSurrealDbOtlpExporter")]
     public static IResourceBuilder<SurrealDbServerResource> WithOtlpExporter(
         this IResourceBuilder<SurrealDbServerResource> builder
@@ -576,7 +569,6 @@ public static class SurrealDbBuilderExtensions
         return builder;
     }
 
-    /// <ats-summary>Adds a Surrealist UI instance for SurrealDB</ats-summary>
     [AspireExport(MethodName = "withSurrealist")]
     internal static IResourceBuilder<T> WithSurrealistPolyglot<T>(
         this IResourceBuilder<T> builder,

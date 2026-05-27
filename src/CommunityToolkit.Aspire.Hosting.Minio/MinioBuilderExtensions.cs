@@ -25,7 +25,6 @@ public static class MinioBuilderExtensions
     /// <param name="rootUser">The parameter used to provide the root user name for the MinIO resource. If <see langword="null"/> a default value will be used.</param>
     /// <param name="rootPassword">The parameter used to provide the administrator password for the MinIO resource. If <see langword="null"/> a random password will be generated.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{MinioContainerResource}"/>.</returns>
-    /// <ats-summary>Adds a MinIO container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<MinioContainerResource> AddMinioContainer(
         this IDistributedApplicationBuilder builder,
@@ -143,7 +142,6 @@ public static class MinioBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a named volume for the data folder to a MinIO container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<MinioContainerResource> WithDataVolume(this IResourceBuilder<MinioContainerResource> builder, string? name = null)
     {
@@ -174,7 +172,6 @@ public static class MinioBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a bind mount for the data folder to a MinIO container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<MinioContainerResource> WithDataBindMount(this IResourceBuilder<MinioContainerResource> builder, string source)
     {

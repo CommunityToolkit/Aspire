@@ -33,6 +33,7 @@ public static class McpInspectorResourceBuilderExtensions
     }
 
     /// <summary>
+    /// <ats-summary>Adds a MCP Inspector container resource</ats-summary>
     /// Adds a MCP Inspector container resource to the <see cref="IDistributedApplicationBuilder"/>.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the MCP Inspector resource will be added.</param>
@@ -49,7 +50,6 @@ public static class McpInspectorResourceBuilderExtensions
     ///     .WithYarn();
     /// </code>
     /// </remarks>
-    /// <ats-summary>Adds a MCP Inspector container resource</ats-summary>
     [AspireExport(MethodName = "addMcpInspector")]
     internal static IResourceBuilder<McpInspectorResource> AddMcpInspectorPolyglot(
         this IDistributedApplicationBuilder builder,
@@ -275,7 +275,6 @@ public static class McpInspectorResourceBuilderExtensions
     /// <param name="transportType">The transport type to use for the MCP server. Defaults to <see cref="McpTransportType.StreamableHttp"/>.</param>
     /// <param name="path">The path to use for MCP communication. Defaults to "/mcp".</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{McpInspectorResource}"/> for further configuration.</returns>
-    /// <ats-summary>Configures the MCP Inspector to use a specified MCP server resource</ats-summary>
     [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer")]
     public static IResourceBuilder<McpInspectorResource> WithMcpServer<TResource>(
         this IResourceBuilder<McpInspectorResource> builder,

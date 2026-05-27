@@ -18,7 +18,6 @@ public static class PapercutSmtpHostingExtension
     /// <param name="httpPort">The HTTP port number for the Papercut SMTP web console.</param>
     /// <param name="smtpPort">The SMTP port number for the Papercut SMTP container.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Adds a Papercut SMTP container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<PapercutSmtpContainerResource> AddPapercutSmtp(
         this IDistributedApplicationBuilder builder,

@@ -41,7 +41,6 @@ public static class MeilisearchBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a Meilisearch container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<MeilisearchResource> AddMeilisearch(
         this IDistributedApplicationBuilder builder,
@@ -108,7 +107,6 @@ public static class MeilisearchBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a named volume for the data folder to a Meilisearch container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<MeilisearchResource> WithDataVolume(this IResourceBuilder<MeilisearchResource> builder, string? name = null)
     {
@@ -139,7 +137,6 @@ public static class MeilisearchBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a bind mount for the data folder to a Meilisearch container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<MeilisearchResource> WithDataBindMount(this IResourceBuilder<MeilisearchResource> builder, string source)
     {

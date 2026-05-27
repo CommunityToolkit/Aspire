@@ -17,7 +17,6 @@ public static class OpenTelemetryCollectorRoutingExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="collectorBuilder">The OpenTelemetry Collector resource builder.</param>
     /// <returns>A reference to the resource builder.</returns>
-    /// <ats-summary>Routes telemetry for a resource through the specified OpenTelemetry Collector</ats-summary>
     [AspireExport("withOpenTelemetryCollectorOpenTelemetryCollectorRouting")]
     public static IResourceBuilder<T> WithOpenTelemetryCollectorRouting<T>(
         this IResourceBuilder<T> builder,

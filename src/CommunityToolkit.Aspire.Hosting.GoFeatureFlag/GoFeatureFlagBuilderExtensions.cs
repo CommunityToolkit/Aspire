@@ -40,7 +40,6 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a GO Feature Flag container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<GoFeatureFlagResource> AddGoFeatureFlag(
         this IDistributedApplicationBuilder builder,
@@ -90,7 +89,6 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a named volume for the data folder to a GO Feature Flag container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<GoFeatureFlagResource> WithDataVolume(this IResourceBuilder<GoFeatureFlagResource> builder, string? name = null)
     {
@@ -121,7 +119,6 @@ public static class GoFeatureFlagBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a bind mount for the GO Feature Flag configuration folder to a GO Feature Flag container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<GoFeatureFlagResource> WithGoffBindMount(this IResourceBuilder<GoFeatureFlagResource> builder, string source)
     {
@@ -162,7 +159,6 @@ public static class GoFeatureFlagBuilderExtensions
         return builder.WithEnvironment("LOGLEVEL", value);
     }
 
-    /// <ats-summary>Configures the logging level for the GO Feature Flag container resource</ats-summary>
     [AspireExport]
     internal static IResourceBuilder<GoFeatureFlagResource> WithLogLevel(
         this IResourceBuilder<GoFeatureFlagResource> builder,

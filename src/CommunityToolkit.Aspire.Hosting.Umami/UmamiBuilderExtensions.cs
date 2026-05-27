@@ -41,7 +41,6 @@ public static class UmamiBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    /// <ats-summary>Adds a Umami analytics container resource</ats-summary>
     [AspireExport]
     public static IResourceBuilder<UmamiResource> AddUmami(
         this IDistributedApplicationBuilder builder,
@@ -70,12 +69,12 @@ public static class UmamiBuilderExtensions
     }
 
     /// <summary>
+    /// <ats-summary>Configures PostgreSQL as the storage backend for Umami</ats-summary>
     /// References a <see cref="PostgresDatabaseResource"/> as the storage backend for the <see cref="UmamiResource"/>.
     /// </summary>
     /// <param name="builder">The Umami resource builder.</param>
     /// <param name="database">The PostgreSQL database resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    /// <ats-summary>Configures PostgreSQL as the storage backend for Umami</ats-summary>
     [AspireExport]
     public static IResourceBuilder<UmamiResource> WithPostgreSQL(
         this IResourceBuilder<UmamiResource> builder, 

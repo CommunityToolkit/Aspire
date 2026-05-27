@@ -30,7 +30,6 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="containerName">The name of the container (Optional).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>See https://openwebui.com for more information about Open WebUI</remarks>
-    /// <ats-summary>Adds an Open WebUI resource for an Ollama resource</ats-summary>
     [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<T> WithOpenWebUI<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<OpenWebUIResource>>? configureContainer = null, string? containerName = null)
         where T : class, IOllamaResource
@@ -86,7 +85,6 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="builder">The resource builder for Open WebUI.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for Open WebUI.</returns>
-    /// <ats-summary>Configures the Open WebUI host port</ats-summary>
     [AspireExport]
     public static IResourceBuilder<OpenWebUIResource> WithHostPort(this IResourceBuilder<OpenWebUIResource> builder, int? port)
     {
