@@ -627,35 +627,8 @@ public static class BitwardenSecretManagerExtensions
             });
 
             resourceBuilder.WithCommand(
-                "reset-auth-cache",
-                "Reset auth cache",
-                async context =>
-                {
-                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.ServiceProvider, context.CancellationToken).ConfigureAwait(false);
-                    return new ExecuteCommandResult { Success = true };
-                },
-                new CommandOptions
-                {
-                    IconName = "LockOpen",
-                    IconVariant = IconVariant.Regular,
-                    IsHighlighted = true,
-                    Description = "Delete the cached Bitwarden authentication session. The next run will perform a fresh login.",
-                    UpdateState = context =>
-                    {
-                        string? state = context.ResourceSnapshot?.State?.Text;
-                        if (state == KnownResourceStates.Waiting || state == KnownResourceStates.Running)
-                        {
-                            return ResourceCommandState.Disabled;
-                        }
-
-                        // Enabled in all terminal states: Finished, FailedToStart, NotStarted, etc.
-                        return ResourceCommandState.Enabled;
-                    }
-                });
-
-            resourceBuilder.WithCommand(
-                KnownResourceCommands.RebuildCommand,
-                "Reprovision",
+                KnownResourceCommands.RestartCommand,
+                "Sync",
                 async context =>
                 {
                     ResourceNotificationService notifications = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
@@ -708,6 +681,7 @@ public static class BitwardenSecretManagerExtensions
                 },
                 new CommandOptions
                 {
+                    IsHighlighted = true,
                     IconName = "ArrowSync",
                     IconVariant = IconVariant.Regular,
                     Description = "Re-run authentication and secret provisioning.",
@@ -717,6 +691,32 @@ public static class BitwardenSecretManagerExtensions
                         return state is not null && KnownResourceStates.BuildableStates.Contains(state)
                             ? ResourceCommandState.Enabled
                             : ResourceCommandState.Disabled;
+                    }
+                });
+
+            resourceBuilder.WithCommand(
+                "reset-auth-cache",
+                "Reset auth cache",
+                async context =>
+                {
+                    await BitwardenSecretManagerProvisioner.ResetAuthCacheAsync(resource, context.ServiceProvider, context.CancellationToken).ConfigureAwait(false);
+                    return new ExecuteCommandResult { Success = true };
+                },
+                new CommandOptions
+                {
+                    IconName = "KeyReset",
+                    IconVariant = IconVariant.Regular,
+                    Description = "Delete the cached Bitwarden authentication session. The next run will perform a fresh login.",
+                    UpdateState = context =>
+                    {
+                        string? state = context.ResourceSnapshot?.State?.Text;
+                        if (state == KnownResourceStates.Waiting || state == KnownResourceStates.Running)
+                        {
+                            return ResourceCommandState.Disabled;
+                        }
+
+                        // Enabled in all terminal states: Finished, FailedToStart, NotStarted, etc.
+                        return ResourceCommandState.Enabled;
                     }
                 });
         }
