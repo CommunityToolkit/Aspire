@@ -4,14 +4,11 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$AppHostPath,
 
-    [string]$PackageProjectPath = "",
+    [Parameter(Mandatory = $true)]
+    [string]$PackageProjectPath,
 
     [Parameter(Mandatory = $true)]
     [string]$PackageName,
-
-    [switch]$UseConfiguredPackages,
-
-    [switch]$SkipStart,
 
     [string[]]$WaitForResources = @(),
 
@@ -23,15 +20,6 @@ param(
     [string]$WaitStatus = "healthy",
 
     [int]$WaitTimeoutSeconds = 180,
-
-    [string]$HttpProbeResource = "",
-
-    [string]$HttpProbeEndpointName = "http",
-
-    [string]$HttpProbePath = "",
-
-    [AllowEmptyString()]
-    [string]$HttpProbeExpectedText,
 
     [string[]]$Secrets = @()
 )
@@ -78,27 +66,6 @@ function Invoke-ExternalCommand {
         $joinedArguments = [string]::Join(" ", $Arguments)
         throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $joinedArguments"
     }
-}
-
-function Invoke-ExternalCommandCaptureOutput {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$FilePath,
-
-        [Parameter(Mandatory = $true)]
-        [string[]]$Arguments
-    )
-
-    $resolvedFilePath = Resolve-ExternalCommandPath $FilePath
-    $output = & $resolvedFilePath @Arguments 2>&1
-    $outputText = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine)
-
-    if ($LASTEXITCODE -ne 0) {
-        $joinedArguments = [string]::Join(" ", $Arguments)
-        throw "Command failed with exit code ${LASTEXITCODE}: $FilePath $joinedArguments"
-    }
-
-    return $outputText
 }
 
 function Invoke-CleanupStep {
@@ -160,170 +127,37 @@ function Remove-PathWithRetry {
     }
 }
 
-function ConvertFrom-AspireJsonOutput {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Text
-    )
-
-    $jsonStartIndex = $Text.IndexOf('{')
-    while ($jsonStartIndex -ge 0) {
-        $depth = 0
-        $inString = $false
-        $isEscaped = $false
-
-        for ($index = $jsonStartIndex; $index -lt $Text.Length; $index++) {
-            $character = $Text[$index]
-
-            if ($isEscaped) {
-                $isEscaped = $false
-                continue
-            }
-
-            if ($character -eq '\\') {
-                if ($inString) {
-                    $isEscaped = $true
-                }
-
-                continue
-            }
-
-            if ($character -eq '"') {
-                $inString = -not $inString
-                continue
-            }
-
-            if ($inString) {
-                continue
-            }
-
-            if ($character -eq '{') {
-                $depth++
-                continue
-            }
-
-            if ($character -eq '}') {
-                $depth--
-                if ($depth -eq 0) {
-                    $jsonText = $Text.Substring($jsonStartIndex, ($index - $jsonStartIndex) + 1)
-                    try {
-                        return $jsonText | ConvertFrom-Json -AsHashtable -Depth 100
-                    }
-                    catch {
-                        break
-                    }
-                }
-            }
-        }
-
-        $jsonStartIndex = $Text.IndexOf('{', $jsonStartIndex + 1)
-    }
-
-    throw "Could not find a JSON payload in Aspire command output."
-}
-
-function Get-ResourceEndpointUrl {
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable]$DescribePayload,
-
-        [Parameter(Mandatory = $true)]
-        [string]$ResourceName,
-
-        [Parameter(Mandatory = $true)]
-        [string]$EndpointName
-    )
-
-    $resource = @($DescribePayload["resources"]) |
-        Where-Object {
-            $_["displayName"] -eq $ResourceName -or $_["name"] -eq $ResourceName
-        } |
-        Select-Object -First 1
-
-    if ($null -eq $resource) {
-        throw "Resource '$ResourceName' was not present in 'aspire describe' output."
-    }
-
-    $endpoint = @($resource["urls"]) |
-        Where-Object { $_["name"] -eq $EndpointName } |
-        Select-Object -First 1
-
-    if ($null -eq $endpoint -or [string]::IsNullOrWhiteSpace($endpoint["url"])) {
-        throw "Resource '$ResourceName' did not expose endpoint '$EndpointName' in 'aspire describe' output."
-    }
-
-    return $endpoint["url"]
-}
-
-function Assert-HttpProbeResponse {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$BaseUrl,
-
-        [Parameter(Mandatory = $true)]
-        [string]$Path,
-
-        [Parameter(Mandatory = $true)]
-        [AllowEmptyString()]
-        [string]$ExpectedText
-    )
-
-    $probeUri = [System.Uri]::new([System.Uri]$BaseUrl, $Path)
-    $response = Invoke-WebRequest -Uri $probeUri -TimeoutSec 30
-    $actualText = $response.Content
-
-    if ($actualText -ne $ExpectedText) {
-        throw "HTTP probe for '$probeUri' returned '$actualText' instead of expected '$ExpectedText'."
-    }
-}
-
 $resolvedAppHostPath = (Resolve-Path $AppHostPath).Path
-$resolvedPackageProjectPath = $null
-$localSource = $null
-
-if (-not $UseConfiguredPackages) {
-    if ([string]::IsNullOrWhiteSpace($PackageProjectPath)) {
-        throw "PackageProjectPath is required unless -UseConfiguredPackages is set."
-    }
-
-    $resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
-}
-
+$resolvedPackageProjectPath = (Resolve-Path $PackageProjectPath).Path
 $appHostDirectory = Split-Path -Parent $resolvedAppHostPath
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
 $configPath = Join-Path $appHostDirectory "aspire.config.json"
 $nugetConfigPath = Join-Path $appHostDirectory "nuget.config"
-$generatedRestoreRoot = Join-Path $appHostDirectory ".aspire\integrations\package-restore"
-$generatedRestoreNugetConfigPath = Join-Path $generatedRestoreRoot "nuget.config"
+$localSource = Join-Path ([System.IO.Path]::GetTempPath()) ("ct-polyglot-" + [Guid]::NewGuid().ToString("N"))
 $originalConfig = $null
 $appStarted = $false
 $primaryError = $null
 $cleanupFailures = [System.Collections.Generic.List[string]]::new()
 
-if (-not $UseConfiguredPackages) {
-    $localSource = Join-Path ([System.IO.Path]::GetTempPath()) ("ct-polyglot-" + [Guid]::NewGuid().ToString("N"))
-
-    if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
-        $versionPrefix = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getProperty:VersionPrefix).Trim()
-        if ([string]::IsNullOrWhiteSpace($versionPrefix)) {
-            throw "Could not determine the evaluated VersionPrefix for $resolvedPackageProjectPath."
-        }
-
-        $PackageVersion = "$versionPrefix-polyglot.local"
+if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
+    $versionPrefix = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getProperty:VersionPrefix).Trim()
+    if ([string]::IsNullOrWhiteSpace($versionPrefix)) {
+        throw "Could not determine the evaluated VersionPrefix for $resolvedPackageProjectPath."
     }
+
+    $PackageVersion = "$versionPrefix-polyglot.local"
 }
 
 # Discover local CommunityToolkit project references that also need packing
 $localDependencies = @()
-if (-not $UseConfiguredPackages) {
-    $projRefJson = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getItem:ProjectReference) | Out-String
-    $projRefData = $projRefJson | ConvertFrom-Json
-    $projRefs = @($projRefData.Items.ProjectReference)
-    foreach ($ref in $projRefs) {
-        if ($ref.Filename -like "CommunityToolkit.*") {
-            $localDependencies += @{
-                Name = $ref.Filename
-                FullPath = $ref.FullPath
-            }
+$projRefJson = (& dotnet msbuild $resolvedPackageProjectPath -nologo -v:q -getItem:ProjectReference) | Out-String
+$projRefData = $projRefJson | ConvertFrom-Json
+$projRefs = @($projRefData.Items.ProjectReference)
+foreach ($ref in $projRefs) {
+    if ($ref.Filename -like "CommunityToolkit.*") {
+        $localDependencies += @{
+            Name = $ref.Filename
+            FullPath = $ref.FullPath
         }
     }
 }
@@ -377,82 +211,53 @@ foreach ($secret in $Secrets) {
     $parsedSecrets.Add(@($key, $value))
 }
 
-$hasHttpProbe =
-    -not [string]::IsNullOrWhiteSpace($HttpProbeResource) -or
-    -not [string]::IsNullOrWhiteSpace($HttpProbePath) -or
-    $PSBoundParameters.ContainsKey("HttpProbeExpectedText")
-
-if ($hasHttpProbe -and (
-        [string]::IsNullOrWhiteSpace($HttpProbeResource) -or
-        [string]::IsNullOrWhiteSpace($HttpProbePath) -or
-        -not $PSBoundParameters.ContainsKey("HttpProbeExpectedText"))) {
-    throw "HttpProbeResource, HttpProbePath, and HttpProbeExpectedText must all be provided together."
-}
-
-if ($hasHttpProbe -and [string]::IsNullOrWhiteSpace($HttpProbeEndpointName)) {
-    throw "HttpProbeEndpointName cannot be empty when HTTP probing is enabled."
-}
-
 try {
     $originalConfig = Get-Content -Path $configPath -Raw
-    if (-not $UseConfiguredPackages) {
-        New-Item -ItemType Directory -Path $localSource -Force | Out-Null
+    New-Item -ItemType Directory -Path $localSource -Force | Out-Null
 
+    Invoke-ExternalCommand "dotnet" @(
+        "pack",
+        $resolvedPackageProjectPath,
+        "-c", "Debug",
+        "-p:PackageVersion=$PackageVersion",
+        "-o", $localSource
+    )
+
+    foreach ($dep in $localDependencies) {
         Invoke-ExternalCommand "dotnet" @(
             "pack",
-            $resolvedPackageProjectPath,
+            $dep.FullPath,
             "-c", "Debug",
             "-p:PackageVersion=$PackageVersion",
             "-o", $localSource
         )
+    }
 
-        foreach ($dep in $localDependencies) {
-            Invoke-ExternalCommand "dotnet" @(
-                "pack",
-                $dep.FullPath,
-                "-c", "Debug",
-                "-p:PackageVersion=$PackageVersion",
-                "-o", $localSource
-            )
-        }
+    $config = $originalConfig | ConvertFrom-Json -AsHashtable
+    if ($null -eq $config["packages"]) {
+        $config["packages"] = [ordered]@{}
+    }
 
-        $config = $originalConfig | ConvertFrom-Json -AsHashtable
-        if ($null -eq $config["packages"]) {
-            $config["packages"] = [ordered]@{}
-        }
+    $config["packages"][$PackageName] = $PackageVersion
+    foreach ($dep in $localDependencies) {
+        $config["packages"][$dep.Name] = $PackageVersion
+    }
+    $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath -NoNewline
 
-        $config["packages"][$PackageName] = $PackageVersion
-        foreach ($dep in $localDependencies) {
-            $config["packages"][$dep.Name] = $PackageVersion
-        }
-        $config | ConvertTo-Json -Depth 10 | Set-Content -Path $configPath -NoNewline
-
-        $temporaryNugetConfig = @"
+    @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
-    <packageSources>
-        <clear />
-        <add key="local-polyglot" value="$localSource" />
-        <add key="nuget" value="https://api.nuget.org/v3/index.json" />
-    </packageSources>
+  <packageSources>
+    <add key="local-polyglot" value="$localSource" />
+  </packageSources>
 
-    <packageSourceMapping>
-        <clear />
-        <packageSource key="local-polyglot">
-            <package pattern="CommunityToolkit.Aspire.*" />
-        </packageSource>
-
-        <packageSource key="nuget">
-            <package pattern="*" />
-        </packageSource>
-    </packageSourceMapping>
+  <packageSourceMapping>
+    <packageSource key="local-polyglot">
+      <package pattern="CommunityToolkit.Aspire.*" />
+    </packageSource>
+  </packageSourceMapping>
 </configuration>
-"@
-
-        $temporaryNugetConfig | Set-Content -Path $nugetConfigPath -NoNewline
-        New-Item -ItemType Directory -Path $generatedRestoreRoot -Force | Out-Null
-        $temporaryNugetConfig | Set-Content -Path $generatedRestoreNugetConfigPath -NoNewline
-    }
+"@ | Set-Content -Path $nugetConfigPath -NoNewline
 
     Push-Location $appHostDirectory
     try {
@@ -464,10 +269,6 @@ try {
             "--log-level", "debug"
         )
         Invoke-ExternalCommand "npx" @("tsc", "--noEmit")
-
-        if ($SkipStart) {
-            return
-        }
     }
     finally {
         Pop-Location
@@ -506,20 +307,12 @@ try {
             )
         }
 
-        $describeOutput = Invoke-ExternalCommandCaptureOutput "aspire" @(
+        Invoke-ExternalCommand "aspire" @(
             "describe",
             "--apphost", $resolvedAppHostPath,
             "--format", "Json",
-            "--log-level", "warning"
+            "--log-level", "debug"
         )
-
-        Write-Output $describeOutput
-
-        if ($hasHttpProbe) {
-            $describePayload = ConvertFrom-AspireJsonOutput $describeOutput
-            $endpointUrl = Get-ResourceEndpointUrl -DescribePayload $describePayload -ResourceName $HttpProbeResource -EndpointName $HttpProbeEndpointName
-            Assert-HttpProbeResponse -BaseUrl $endpointUrl -Path $HttpProbePath -ExpectedText $HttpProbeExpectedText
-        }
     }
     finally {
         Pop-Location
@@ -565,13 +358,10 @@ finally {
 
     Invoke-CleanupStep -Description "remove generated nuget.config" -Action {
         Remove-PathWithRetry -Path $nugetConfigPath
-        Remove-PathWithRetry -Path $generatedRestoreNugetConfigPath
     } -Failures $cleanupFailures
 
     Invoke-CleanupStep -Description "remove local package source" -Action {
-        if (-not [string]::IsNullOrWhiteSpace($localSource)) {
-            Remove-PathWithRetry -Path $localSource -Recurse
-        }
+        Remove-PathWithRetry -Path $localSource -Recurse
     } -Failures $cleanupFailures
 }
 

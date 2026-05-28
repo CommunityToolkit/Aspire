@@ -108,24 +108,4 @@ public class WithCertificateTrustTests
         // WithPerlCertificateTrust() was called before WithPackage()
         Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
     }
-
-    [Fact]
-    public void WithPerlCertificateTrust_WithProjectDependencies_PropagatesToProjectInstaller()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-
-#pragma warning disable CTASPIREPERL001
-        builder.AddPerlScript("perl-app", "scripts", "app.pl")
-            .WithProjectDependencies()
-            .WithPerlCertificateTrust();
-#pragma warning restore CTASPIREPERL001
-
-        using var app = builder.Build();
-
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var installerResource = Assert.Single(appModel.Resources.OfType<PerlModuleInstallerResource>());
-
-        Assert.Single(installerResource.Annotations.OfType<CommunityToolkit.Aspire.Hosting.Perl.Annotations.PerlCertificateTrustAnnotation>());
-        Assert.Single(installerResource.Annotations.OfType<EnvironmentCallbackAnnotation>());
-    }
 }

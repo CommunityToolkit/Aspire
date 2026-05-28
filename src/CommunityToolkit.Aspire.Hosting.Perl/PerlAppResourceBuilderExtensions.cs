@@ -214,12 +214,8 @@ public static partial class PerlAppResourceBuilderExtensions
         }
 
         resourceBuilder.WithOtlpExporter();
-
-        if (entrypointType != EntrypointType.Executable)
-        {
-            resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
-            resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
-        }
+        resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
+        resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
 
         // Configure OpenTelemetry exporters using environment variables
         // https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/#exporter-selection
