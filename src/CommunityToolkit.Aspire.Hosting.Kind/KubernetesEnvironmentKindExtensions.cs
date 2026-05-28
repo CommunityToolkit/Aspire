@@ -14,7 +14,7 @@ namespace Aspire.Hosting;
 
 /// <summary>
 /// Extension methods for configuring a <see cref="KubernetesEnvironmentResource"/>
-/// to deploy to a local Kind (Kubernetes in Docker) cluster.
+/// to deploy to a local Kind cluster.
 /// </summary>
 public static class KubernetesEnvironmentKindExtensions
 {

@@ -14,12 +14,19 @@ internal sealed class KindClusterManager
     private readonly IKindResource _resource;
     private readonly ILogger _logger;
     private readonly IProcessRunner _processRunner;
+    private readonly IKindContainerRuntimeResolver _containerRuntimeResolver;
+    private KindContainerRuntime? _containerRuntime;
 
-    public KindClusterManager(IKindResource resource, ILogger logger, IProcessRunner processRunner)
+    public KindClusterManager(
+        IKindResource resource,
+        ILogger logger,
+        IProcessRunner processRunner,
+        IKindContainerRuntimeResolver containerRuntimeResolver)
     {
         _resource = resource;
         _logger = logger;
         _processRunner = processRunner;
+        _containerRuntimeResolver = containerRuntimeResolver;
     }
 
     /// <summary>
@@ -27,6 +34,8 @@ internal sealed class KindClusterManager
     /// </summary>
     public async Task CreateClusterAsync(CancellationToken cancellationToken)
     {
+        var containerRuntime = await GetContainerRuntimeAsync(cancellationToken).ConfigureAwait(false);
+
         if (await IsControlPlaneRunningAsync(cancellationToken).ConfigureAwait(false))
         {
             _logger.LogInformation("Kind cluster '{ClusterName}' is already running, exporting kubeconfig.", _resource.Name);
@@ -56,6 +65,7 @@ internal sealed class KindClusterManager
                     $"--config={configPath}",
                     $"--kubeconfig={_resource.KubeconfigPath}",
                 ],
+                environmentVariables: containerRuntime.KindEnvironmentVariables,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (result.ExitCode != 0)
@@ -77,6 +87,8 @@ internal sealed class KindClusterManager
     /// </summary>
     public async Task DeleteClusterAsync(CancellationToken cancellationToken)
     {
+        var containerRuntime = await GetContainerRuntimeAsync(cancellationToken).ConfigureAwait(false);
+
         var result = await _processRunner.RunAsync(
             _logger,
             "kind",
@@ -85,6 +97,7 @@ internal sealed class KindClusterManager
                 "cluster",
                 $"--name={_resource.Name}",
             ],
+            environmentVariables: containerRuntime.KindEnvironmentVariables,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.ExitCode != 0)
@@ -98,10 +111,12 @@ internal sealed class KindClusterManager
     /// </summary>
     public async Task<bool> IsControlPlaneRunningAsync(CancellationToken cancellationToken)
     {
+        var containerRuntime = await GetContainerRuntimeAsync(cancellationToken).ConfigureAwait(false);
+
         var containerName = $"{_resource.Name}-control-plane";
         var result = await _processRunner.RunAsync(
             _logger,
-            "docker",
+            containerRuntime.Executable,
             [
                 "ps",
                 "--filter",
@@ -115,7 +130,7 @@ internal sealed class KindClusterManager
 
         if (result.ExitCode != 0)
         {
-            throw new InvalidOperationException($"Docker command failed: {result.Error}");
+            throw new InvalidOperationException($"Container runtime command failed: {result.Error}");
         }
 
         return result.Output.Contains(containerName, StringComparison.OrdinalIgnoreCase);
@@ -123,6 +138,8 @@ internal sealed class KindClusterManager
 
     private async Task<bool> ClusterExistsAsync(CancellationToken cancellationToken)
     {
+        var containerRuntime = await GetContainerRuntimeAsync(cancellationToken).ConfigureAwait(false);
+
         var result = await _processRunner.RunAsync(
             _logger,
             "kind",
@@ -130,6 +147,7 @@ internal sealed class KindClusterManager
                 "get",
                 "clusters",
             ],
+            environmentVariables: containerRuntime.KindEnvironmentVariables,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.ExitCode != 0)
@@ -144,6 +162,8 @@ internal sealed class KindClusterManager
 
     private async Task ExportKubeconfigAsync(CancellationToken cancellationToken)
     {
+        var containerRuntime = await GetContainerRuntimeAsync(cancellationToken).ConfigureAwait(false);
+
         var result = await _processRunner.RunAsync(
             _logger,
             "kind",
@@ -153,6 +173,7 @@ internal sealed class KindClusterManager
                 $"--name={_resource.Name}",
                 $"--kubeconfig={_resource.KubeconfigPath}",
             ],
+            environmentVariables: containerRuntime.KindEnvironmentVariables,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (result.ExitCode != 0)
@@ -160,5 +181,15 @@ internal sealed class KindClusterManager
             throw new InvalidOperationException($"Failed to export kubeconfig for '{_resource.Name}': {result.Error}");
         }
     }
-}
 
+    private async Task<KindContainerRuntime> GetContainerRuntimeAsync(CancellationToken cancellationToken)
+    {
+        if (_containerRuntime is not null)
+        {
+            return _containerRuntime;
+        }
+
+        _containerRuntime = await _containerRuntimeResolver.ResolveAsync(cancellationToken).ConfigureAwait(false);
+        return _containerRuntime;
+    }
+}

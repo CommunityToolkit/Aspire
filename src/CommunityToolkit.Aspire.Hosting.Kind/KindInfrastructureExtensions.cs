@@ -18,6 +18,7 @@ internal static class KindInfrastructureExtensions
     internal static IServiceCollection AddKindInfrastructure(this IServiceCollection services)
     {
         services.TryAddSingleton<IProcessRunner, DefaultProcessRunner>();
+        services.TryAddSingleton<IKindContainerRuntimeResolver, KindContainerRuntimeResolver>();
         return services;
     }
 }

@@ -34,7 +34,8 @@ internal static class KindDeployPipelineSteps
             Action = async ctx =>
             {
                 var processRunner = ctx.Services.GetRequiredService<IProcessRunner>();
-                var manager = new KindClusterManager(kindResource, ctx.Logger, processRunner);
+                var containerRuntimeResolver = ctx.Services.GetRequiredService<IKindContainerRuntimeResolver>();
+                var manager = new KindClusterManager(kindResource, ctx.Logger, processRunner, containerRuntimeResolver);
                 await manager.CreateClusterAsync(ctx.CancellationToken);
             }
         };
@@ -74,6 +75,8 @@ internal static class KindDeployPipelineSteps
     private static async Task PreloadImagesAsync(KindEnvironmentResource kindResource, PipelineStepContext ctx)
     {
         var processRunner = ctx.Services.GetRequiredService<IProcessRunner>();
+        var containerRuntimeResolver = ctx.Services.GetRequiredService<IKindContainerRuntimeResolver>();
+        var containerRuntime = await containerRuntimeResolver.ResolveAsync(ctx.CancellationToken).ConfigureAwait(false);
 
         foreach (var resource in ctx.Model.Resources)
         {
@@ -92,6 +95,7 @@ internal static class KindDeployPipelineSteps
                 ctx.Logger,
                 "kind",
                 ["load", "docker-image", imageName, "--name", kindResource.Name],
+                environmentVariables: containerRuntime.KindEnvironmentVariables,
                 cancellationToken: ctx.CancellationToken);
 
             if (result.ExitCode != 0)

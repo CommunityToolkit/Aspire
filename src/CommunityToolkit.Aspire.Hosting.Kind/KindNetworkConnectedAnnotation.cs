@@ -6,6 +6,6 @@ using Aspire.Hosting.ApplicationModel;
 namespace CommunityToolkit.Aspire.Hosting.Kind;
 
 /// <summary>
-/// Annotation that tracks whether a container has been connected to the Kind Docker network.
+/// Annotation that tracks whether a container has been connected to the Kind container network.
 /// </summary>
 internal sealed class KindNetworkConnectedAnnotation : IResourceAnnotation;

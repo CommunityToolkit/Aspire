@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire hosting integration for Kind (Kubernetes in Docker) that manages local Kind clusters for development.</Description>
-    <AdditionalPackageTags>hosting kind kubernetes k8s docker</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for Kind that manages local Kind clusters for development with Docker or Podman.</Description>
+    <AdditionalPackageTags>hosting kind kubernetes k8s docker podman</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>

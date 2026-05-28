@@ -4,7 +4,7 @@
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// Represents a resource that manages a local Kind (Kubernetes in Docker) cluster for development.
+/// Represents a resource that manages a local Kind cluster for development.
 /// </summary>
 public sealed class KindClusterResource : Resource, IKindResource, IResourceWithWaitSupport
 {
@@ -27,7 +27,7 @@ public sealed class KindClusterResource : Resource, IKindResource, IResourceWith
     /// <summary>
     /// Gets the path to the container-compatible kubeconfig file.
     /// This kubeconfig uses the Kind control-plane container name instead of 127.0.0.1,
-    /// enabling container-to-container access over the Kind Docker network.
+    /// enabling container-to-container access over the Kind container network.
     /// </summary>
     public string ContainerKubeconfigPath { get; }
 

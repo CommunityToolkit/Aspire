@@ -4,13 +4,13 @@ kind: "Service"
 metadata:
   name: "redis-service"
   labels:
-    app.kubernetes.io/name: "communitytoolkit-aspire-testing"
+    app.kubernetes.io/name: "{{ .Chart.Name }}"
     app.kubernetes.io/component: "redis"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
 spec:
   type: "NodePort"
   selector:
-    app.kubernetes.io/name: "communitytoolkit-aspire-testing"
+    app.kubernetes.io/name: "{{ .Chart.Name }}"
     app.kubernetes.io/component: "redis"
     app.kubernetes.io/instance: "{{ .Release.Name }}"
   ports:

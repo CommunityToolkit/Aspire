@@ -19,6 +19,7 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         string fileName,
         IReadOnlyList<string> arguments,
         string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
         CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Executing: {FileName} {Arguments}", fileName, string.Join(' ', arguments));
@@ -40,6 +41,14 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         if (workingDirectory is not null)
         {
             psi.WorkingDirectory = workingDirectory;
+        }
+
+        if (environmentVariables is not null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                psi.Environment[key] = value;
+            }
         }
 
         using var process = new Process { StartInfo = psi };
@@ -70,7 +79,9 @@ internal sealed class DefaultProcessRunner : IProcessRunner
 
         try
         {
+            // WaitForExitAsync observes process termination; WaitForExit() then lets async stdout/stderr event handlers finish draining redirected output.
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            process.WaitForExit();
         }
         catch
         {

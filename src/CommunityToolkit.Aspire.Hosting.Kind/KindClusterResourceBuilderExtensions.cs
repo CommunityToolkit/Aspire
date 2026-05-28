@@ -17,7 +17,7 @@ namespace Aspire.Hosting;
 public static class KindClusterResourceBuilderExtensions
 {
     /// <summary>
-    /// Adds a Kind (Kubernetes in Docker) cluster resource to the application model.
+    /// Adds a Kind cluster resource to the application model.
     /// </summary>
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the Kind cluster.</param>
@@ -43,7 +43,8 @@ public static class KindClusterResourceBuilderExtensions
                     var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                     var logger = loggerFactory.CreateLogger<KindClusterManager>();
                     var processRunner = sp.GetRequiredService<IProcessRunner>();
-                    var manager = new KindClusterManager(resource, logger, processRunner);
+                    var containerRuntimeResolver = sp.GetRequiredService<IKindContainerRuntimeResolver>();
+                    var manager = new KindClusterManager(resource, logger, processRunner, containerRuntimeResolver);
                     return new KindHealthCheck(manager);
                 },
                 failureStatus: null,
@@ -69,10 +70,11 @@ public static class KindClusterResourceBuilderExtensions
             var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
             var logger = loggerService.GetLogger(resource);
             var processRunner = e.Services.GetRequiredService<IProcessRunner>();
+            var containerRuntimeResolver = e.Services.GetRequiredService<IKindContainerRuntimeResolver>();
 
             await EnsureKindCliIsAvailableAsync(processRunner, logger, ct);
 
-            var manager = new KindClusterManager(resource, logger, processRunner);
+            var manager = new KindClusterManager(resource, logger, processRunner, containerRuntimeResolver);
 
             await notifications.PublishUpdateAsync(resource,
                 state => state with { State = KnownResourceStates.Starting });
