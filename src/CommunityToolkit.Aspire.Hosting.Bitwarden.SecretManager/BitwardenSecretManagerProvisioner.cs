@@ -35,6 +35,10 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
         try
         {
+            // Bitwarden does not throw a descriptive exception when TLS validation fails.
+            // Proactively check the TLS trust environment before attempting to authenticate with Bitwarden.
+            await BitwardenTlsValidator.ValidateTlsCertDirAsync(resource, logger, cancellationToken).ConfigureAwait(false);
+
             string remoteProjectName = await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
             resource.ResolvedRemoteProjectName = remoteProjectName;
             logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);

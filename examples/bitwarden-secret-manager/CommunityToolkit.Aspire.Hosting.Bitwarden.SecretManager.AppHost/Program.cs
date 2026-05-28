@@ -59,17 +59,4 @@ api.WithReference(bitwarden, bw =>
 //    This approach is simpler (no Bitwarden code in the application) but requires redeploying the application whenever the secret value changes.
 api.WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret.Resource);
 
-// Work around Linux trust-store discovery issues in Bitwarden.Secrets.Sdk 1.0.0.
-if (builder.ExecutionContext.IsPublishMode || (builder.ExecutionContext.IsRunMode && OperatingSystem.IsLinux()))
-{
-    api.WithEnvironment("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt")
-        .WithEnvironment("SSL_CERT_DIR", "/etc/ssl/certs");
-
-    if (builder.ExecutionContext.IsRunMode && OperatingSystem.IsLinux())
-    {
-        Environment.SetEnvironmentVariable("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt");
-        Environment.SetEnvironmentVariable("SSL_CERT_DIR", "/etc/ssl/certs");
-    }
-}
-
 builder.Build().Run();
