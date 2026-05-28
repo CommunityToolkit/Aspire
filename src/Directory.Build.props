@@ -18,6 +18,7 @@
     </PackageReference>
 
     <PackageReference Include="Microsoft.DotNet.GenAPI.Task" PrivateAssets="All" />
+    <PackageReference Include="Aspire.Hosting.Integration.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

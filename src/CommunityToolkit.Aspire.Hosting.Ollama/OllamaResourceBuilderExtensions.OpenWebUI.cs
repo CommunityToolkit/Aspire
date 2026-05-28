@@ -30,7 +30,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="containerName">The name of the container (Optional).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>See https://openwebui.com for more information about Open WebUI</remarks>
-    [AspireExport("withOpenWebUI", Description = "Adds an Open WebUI resource for an Ollama resource")]
+    [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<T> WithOpenWebUI<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<OpenWebUIResource>>? configureContainer = null, string? containerName = null)
         where T : class, IOllamaResource
     {
@@ -71,7 +71,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="isReadOnly">A flag that indicates if this is a read-only volume.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [SuppressMessage("ApiDesign", "RS0026", Justification = "The method is named WithDataVolume to be consistent with other methods.")]
-    [AspireExport("withOpenWebUIDataVolume", MethodName = "withDataVolume", Description = "Adds a data volume to the Open WebUI container")]
+    [AspireExport("withOpenWebUIDataVolume", MethodName = "withDataVolume")]
     public static IResourceBuilder<OpenWebUIResource> WithDataVolume(this IResourceBuilder<OpenWebUIResource> builder, string? name = null, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -85,7 +85,7 @@ public static partial class OllamaResourceBuilderExtensions
     /// <param name="builder">The resource builder for Open WebUI.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for Open WebUI.</returns>
-    [AspireExport("withHostPort", Description = "Configures the Open WebUI host port")]
+    [AspireExport]
     public static IResourceBuilder<OpenWebUIResource> WithHostPort(this IResourceBuilder<OpenWebUIResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);

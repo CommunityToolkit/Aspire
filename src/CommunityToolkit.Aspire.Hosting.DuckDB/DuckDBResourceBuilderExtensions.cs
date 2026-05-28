@@ -1,5 +1,7 @@
 using Aspire.Hosting.ApplicationModel;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -15,6 +17,7 @@ public static class DuckDBResourceBuilderExtensions
     /// <param name="databasePath">The optional path to the database file. If no path is provided the database is stored in a temporary location.</param>
     /// <param name="databaseFileName">The filename of the database file. Must include extension. If no file name is provided, a randomly generated file name is used.</param>
     /// <returns>A resource builder for the DuckDB resource.</returns>
+    [AspireExport]
     public static IResourceBuilder<DuckDBResource> AddDuckDB(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? databasePath = null, string? databaseFileName = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -58,6 +61,7 @@ public static class DuckDBResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A resource builder for the DuckDB resource.</returns>
+    [AspireExport]
     public static IResourceBuilder<DuckDBResource> WithReadOnly(this IResourceBuilder<DuckDBResource> builder)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -67,3 +71,5 @@ public static class DuckDBResourceBuilderExtensions
         return builder;
     }
 }
+
+#pragma warning restore ASPIREATS001
