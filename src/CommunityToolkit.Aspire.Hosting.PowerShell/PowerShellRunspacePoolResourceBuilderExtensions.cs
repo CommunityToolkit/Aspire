@@ -21,7 +21,7 @@ public static class PowerShellRunspacePoolResourceBuilderExtensions
     /// <param name="name"></param>
     /// <param name="script"></param>
     /// <returns></returns>
-    [AspireExport("addScript", Description = "Adds a PowerShell script resource")]
+    [AspireExport]
     public static IResourceBuilder<PowerShellScriptResource> AddScript(
         this IResourceBuilder<PowerShellRunspacePoolResource> builder,
         [ResourceName] string name,

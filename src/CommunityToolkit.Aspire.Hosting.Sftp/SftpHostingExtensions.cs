@@ -29,7 +29,7 @@ public static class SftpHostingExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("addSftp", Description = "Adds an SFTP container resource")]
+    [AspireExport]
     public static IResourceBuilder<SftpContainerResource> AddSftp(this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? port = null)
@@ -69,7 +69,7 @@ public static class SftpHostingExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withUsersFile", Description = "Adds a bind mount for the users.conf file to an SFTP container resource")]
+    [AspireExport]
     public static IResourceBuilder<SftpContainerResource> WithUsersFile(this IResourceBuilder<SftpContainerResource> builder, string usersFile)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(usersFile, nameof(usersFile));
@@ -103,7 +103,7 @@ public static class SftpHostingExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withHostKeyFile", Description = "Adds a bind mount for a host key file to an SFTP container resource")]
+    [AspireExport]
     public static IResourceBuilder<SftpContainerResource> WithHostKeyFile(this IResourceBuilder<SftpContainerResource> builder, string keyFile, KeyType keyType)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(keyFile, nameof(keyFile));
@@ -149,7 +149,7 @@ public static class SftpHostingExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withUserKeyFile", Description = "Adds a bind mount for a user's public key file to an SFTP container resource")]
+    [AspireExport]
     public static IResourceBuilder<SftpContainerResource> WithUserKeyFile(this IResourceBuilder<SftpContainerResource> builder, string username, string keyFile, KeyType keyType)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(username, nameof(username));
