@@ -101,6 +101,13 @@ if ($RequiredCommands.Count -eq 1) {
     $RequiredCommands = $RequiredCommands[0].Split(",", $splitOptions)
 }
 
+if ($RequiredCommands -contains "yarn") {
+    if ($null -ne (Get-Command "corepack" -ErrorAction SilentlyContinue)) {
+        Invoke-ExternalCommand "corepack" @("enable")
+        Invoke-ExternalCommand "corepack" @("prepare", "yarn@stable", "--activate")
+    }
+}
+
 foreach ($commandName in $RequiredCommands) {
     if ($null -eq (Get-Command $commandName -ErrorAction SilentlyContinue)) {
         throw "Required command '$commandName' was not found on PATH."

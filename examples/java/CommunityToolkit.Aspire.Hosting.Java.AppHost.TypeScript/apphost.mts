@@ -22,9 +22,9 @@ await containerApp.withOtelAgent();
 await containerApp.withExplicitStart();
 
 await containerApp.entrypoint.set("java");
-const _containerEntrypoint: string = await containerApp.entrypoint.get();
+const _containerEntrypoint: string | null = await containerApp.entrypoint.get();
 await containerApp.shellExecution.set(false);
-const _containerShellExecution: boolean =
+const _containerShellExecution: boolean | null =
     await containerApp.shellExecution.get();
 const _containerName: string = await containerApp.name();
 
@@ -43,9 +43,9 @@ await jarApp.withExplicitStart();
 const _jarCommand: string = await jarApp.command();
 const _jarWorkingDirectory: string = await jarApp.workingDirectory();
 const _jarName: string = await jarApp.name();
-const _jarPathBefore: string = await jarApp.jarPath.get();
+const _jarPathBefore: string | null = await jarApp.jarPath.get();
 await jarApp.jarPath.set(javaJarPath);
-const _jarPathAfter: string = await jarApp.jarPath.get();
+const _jarPathAfter: string | null = await jarApp.jarPath.get();
 
 const mavenGoalApp = await builder.addJavaApp(
     "java-maven-goal",
@@ -83,4 +83,3 @@ await gradleTaskApp.withGradleTask("bootRun", [
 await gradleTaskApp.withExplicitStart();
 
 await builder.build().run();
-

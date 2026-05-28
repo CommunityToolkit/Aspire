@@ -14,14 +14,17 @@ await mkdir(dataDirectory, { recursive: true, mode: 0o777 });
 await chmod(dataDirectory, 0o777);
 
 const solr = await builder.addSolr("solr");
-const builderCoreName: string = await solr.coreName.get();
+const builderCoreName = await solr.coreName.get();
+if (builderCoreName === null) {
+    throw new Error("Expected Solr coreName to be configured.");
+}
 await solr.coreName.set(builderCoreName);
 await solr.withDataVolume({ name: "solr-data" });
 
 const _primaryEndpoint = await solr.primaryEndpoint();
 const _host = await solr.host();
 const _port = await solr.port();
-const _coreName: string = await solr.coreName.get();
+const _coreName: string | null = await solr.coreName.get();
 const _connectionString = await solr.connectionStringExpression();
 const _uriExpression = await solr.uriExpression();
 
@@ -29,7 +32,10 @@ const bindMountedSolr = await builder.addSolr("solr-bind", {
     port: 8984,
     coreName: "bindcore",
 });
-const bindCoreName: string = await bindMountedSolr.coreName.get();
+const bindCoreName = await bindMountedSolr.coreName.get();
+if (bindCoreName === null) {
+    throw new Error("Expected bind-mounted Solr coreName to be configured.");
+}
 await bindMountedSolr.coreName.set(bindCoreName);
 await bindMountedSolr.withDataBindMount(dataDirectory);
 
@@ -44,4 +50,3 @@ if (false) {
 }
 
 await builder.build().run();
-

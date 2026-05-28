@@ -30,7 +30,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var resourceName = "api";
 
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
 
         var createResponse = await httpClient.PostAsJsonAsync("/test", "test");
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
@@ -49,7 +49,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var resourceName = "api";
 
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
 
         var createResponse = await httpClient.PostAsJsonAsync("/blog", new { Url = "https://example.com" });
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);

@@ -38,7 +38,7 @@ await consumer.withStripeReference(stripe, {
     webhookSigningSecretEnvVarName: "CUSTOM_STRIPE_SECRET",
 });
 
-const _webhookSigningSecret: string = await stripe.webhookSigningSecret.get();
+const _webhookSigningSecret: string | null =
+    await stripe.webhookSigningSecret.get();
 
 await builder.build().run();
-
