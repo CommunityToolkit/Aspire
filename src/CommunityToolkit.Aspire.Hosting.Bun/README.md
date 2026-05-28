@@ -27,9 +27,9 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Bun
 Then, in the _Program.cs_ file of `AppHost`, define a Bun resource, then call `AddBunApp`:
 
 ```csharp
-builder.AddBunApp("bun-server", "../bun-server", "main.ts")
+builder.AddBunApp("bun-server", "main.ts")
     .WithHttpEndpoint(env: "PORT")
-    .WithExternalHttpEndpoints();
+    .WithEndpoint();
 ```
 
 ### Migration from Toolkit Bun to core Bun
