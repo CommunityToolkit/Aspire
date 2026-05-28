@@ -5,6 +5,7 @@
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="workingDirectory">The working directory to use for the command.</param>
+[Obsolete("Replaced by GoAppResource in the Aspire.Hosting.Go package. This type will be removed in a future version.")]
 public class GolangAppExecutableResource(string name, string workingDirectory)
     : ExecutableResource(name, "go", workingDirectory), IResourceWithServiceDiscovery, IContainerFilesDestinationResource
 {

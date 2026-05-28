@@ -14,6 +14,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for adding Golang applications to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
+[Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp, WithModTidy, and WithModDownload instead. This type will be removed in a future version.")]
 public static class GolangAppHostingExtension
 {
     /// <summary>
@@ -24,7 +25,7 @@ public static class GolangAppHostingExtension
     /// <param name="workingDirectory">The working directory to use for the command. If null, the working directory of the current process is used.</param>
     /// <param name="args">The optional arguments to be passed to the executable when it is started.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [Obsolete("Use AddGolangApp with buildTags parameter instead. This method will be removed in a future version.")]
+    [Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp(name, appDirectory, packagePath, buildTags).WithAppArgs(args). Runtime arguments are now supplied with WithAppArgs(...). This method will be removed in a future version.")]
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[] args)
         => AddGolangApp(builder, name, workingDirectory, args, null);
 
@@ -39,6 +40,7 @@ public static class GolangAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This overload is not available in polyglot app hosts. Use the overload that accepts an explicit executable path instead.</remarks>
     [AspireExportIgnore(Reason = "Use the overload that includes the executable parameter to keep the polyglot addGolangApp surface on a single capability.")]
+    [Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp(name, appDirectory, packagePath, buildTags).WithAppArgs(args). Runtime arguments are now supplied with WithAppArgs(...). This method will be removed in a future version.")]
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string[]? args = null, string[]? buildTags = null)
         => AddGolangApp(builder, name, workingDirectory, ".", args, buildTags);
 
@@ -53,6 +55,7 @@ public static class GolangAppHostingExtension
     /// <param name="buildTags">The optional build tags to be used when building the Golang application.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
+    [Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp(name, appDirectory, packagePath, buildTags).WithAppArgs(args). The executable argument is now represented by packagePath, and runtime arguments are now supplied with WithAppArgs(...). This method will be removed in a future version.")]
     public static IResourceBuilder<GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, [ResourceName] string name, string workingDirectory, string executable, string[]? args = null, string[]? buildTags = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -252,6 +255,7 @@ public static class GolangAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This overload is not available in polyglot app hosts. Use <c>withGoModTidy</c> without <c>configureInstaller</c> instead.</remarks>
     [AspireExportIgnore(Reason = "Action<IResourceBuilder<GoModInstallerResource>> is not supported in polyglot app hosts. Use the overload without configureInstaller instead.")]
+    [Obsolete("Replaced by the Aspire.Hosting.Go package. Use WithModTidy(). This method will be removed in a future version.")]
     public static IResourceBuilder<GolangAppExecutableResource> WithGoModTidy(
         this IResourceBuilder<GolangAppExecutableResource> builder,
         bool install = true,
@@ -314,6 +318,7 @@ public static class GolangAppHostingExtension
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This overload is not available in polyglot app hosts. Use <c>withGoModDownload</c> without <c>configureInstaller</c> instead.</remarks>
     [AspireExportIgnore(Reason = "Action<IResourceBuilder<GoModInstallerResource>> is not supported in polyglot app hosts. Use the overload without configureInstaller instead.")]
+    [Obsolete("Replaced by the Aspire.Hosting.Go package. Use WithModDownload(). This method will be removed in a future version.")]
     public static IResourceBuilder<GolangAppExecutableResource> WithGoModDownload(
         this IResourceBuilder<GolangAppExecutableResource> builder,
         bool install = true,
