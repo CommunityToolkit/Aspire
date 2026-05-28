@@ -20,8 +20,16 @@ namespace CommunityToolkit.Aspire.Hosting;
 /// No <c>docker exec</c> is involved — works with any container runtime.
 /// </para>
 /// </summary>
-internal sealed class K3sReadinessHealthCheck(K3sClusterResource resource, EndpointReference endpoint) : IHealthCheck
+internal sealed class K3sReadinessHealthCheck(
+    K3sClusterResource resource,
+    EndpointReference endpoint,
+    Func<string, IKubernetes>? kubernetesFactory = null) : IHealthCheck
 {
+    private IKubernetes CreateClient(string path) =>
+        kubernetesFactory is not null
+            ? kubernetesFactory(path)
+            : new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(path));
+
     /// <inheritdoc />
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
@@ -30,6 +38,17 @@ internal sealed class K3sReadinessHealthCheck(K3sClusterResource resource, Endpo
         if (!endpoint.IsAllocated)
             return HealthCheckResult.Unhealthy("k3s API server endpoint not yet allocated");
 
+        return await CheckCoreAsync(endpoint.Port, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Core readiness check given an already-known API server <paramref name="port"/>.
+    /// Extracted so unit tests can exercise the full check path without requiring DCP
+    /// to allocate the endpoint (i.e. without <see cref="EndpointReference.IsAllocated"/>
+    /// being true).
+    /// </summary>
+    internal async Task<HealthCheckResult> CheckCoreAsync(int port, CancellationToken cancellationToken = default)
+    {
         var dir = resource.KubeconfigDirectory;
         if (dir is null)
             return HealthCheckResult.Unhealthy("Kubeconfig directory not configured on resource");
@@ -40,14 +59,13 @@ internal sealed class K3sReadinessHealthCheck(K3sClusterResource resource, Endpo
 
         try
         {
-            var localPath = await EnsureKubeconfigVariantsAsync(rawPath, dir, endpoint.Port, cancellationToken)
+            var localPath = await EnsureKubeconfigVariantsAsync(rawPath, dir, port, cancellationToken)
                 .ConfigureAwait(false);
 
             // Create a fresh client per check — no cached state, no stale connection risk.
             // At a 5-second health-check interval the TLS handshake overhead is negligible
             // for a local dev integration.
-            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(localPath);
-            using var k8sClient = new Kubernetes(config);
+            using var k8sClient = CreateClient(localPath);
 
             var nodes = await k8sClient.CoreV1
                 .ListNodeAsync(cancellationToken: cancellationToken)
@@ -111,7 +129,7 @@ internal sealed class K3sReadinessHealthCheck(K3sClusterResource resource, Endpo
         return localPath;
     }
 
-    private static string BuildConfigYaml(K8SConfiguration source, string serverUrl)
+    internal static string BuildConfigYaml(K8SConfiguration source, string serverUrl)
     {
         var yaml = KubernetesYaml.Serialize(source);
         var copy = KubernetesYaml.Deserialize<K8SConfiguration>(yaml);
@@ -135,7 +153,7 @@ internal sealed class K3sReadinessHealthCheck(K3sClusterResource resource, Endpo
         File.Move(tmp, path, overwrite: true);
     }
 
-    private static bool IsTlsOrAuthFailure(Exception ex) =>
+    internal static bool IsTlsOrAuthFailure(Exception ex) =>
         ex is System.Security.Authentication.AuthenticationException
         || ex.InnerException is System.Security.Authentication.AuthenticationException
         || (ex is k8s.Autorest.HttpOperationException op &&

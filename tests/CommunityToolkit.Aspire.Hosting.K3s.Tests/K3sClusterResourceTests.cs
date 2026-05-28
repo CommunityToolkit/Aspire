@@ -333,4 +333,275 @@ public class K3sClusterResourceTests
 
         Assert.Same(first, second);
     }
+
+    // ── Idempotency ───────────────────────────────────────────────────────────
+
+    [Fact]
+    public void WithDataVolumeCalledTwiceProducesOnlyOneVolumeMount()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s").WithDataVolume().WithDataVolume();
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var mounts = resource.Annotations
+            .OfType<ContainerMountAnnotation>()
+            .Where(v => v.Target == "/var/lib/rancher/k3s" && v.Type == ContainerMountType.Volume)
+            .ToList();
+
+        // Idempotent: second call replaces the first rather than duplicating the mount.
+        Assert.Single(mounts);
+    }
+
+    [Fact]
+    public void WithReferenceContainerCalledTwiceProducesOnlyOneBindMount()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var container = appBuilder.AddContainer("app", "myorg/app");
+
+        container.WithReference(cluster);
+        container.WithReference(cluster);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var containerResource = model.Resources
+            .OfType<ContainerResource>()
+            .Single(r => r.Name == "app");
+
+        // File-level bind-mount at /tmp/k3s-kubeconfig.yaml must not be duplicated —
+        // Docker rejects containers with duplicate mount targets.
+        var kubeconfigMounts = containerResource.Annotations
+            .OfType<ContainerMountAnnotation>()
+            .Where(m => m.Target == "/tmp/k3s-kubeconfig.yaml")
+            .ToList();
+
+        Assert.Single(kubeconfigMounts);
+    }
+
+    // ── WithK3sVersion propagation ────────────────────────────────────────────
+
+    [Fact]
+    public void WithK3sVersionSyncsAllAgentImageTags()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder
+            .AddK3sCluster("k8s", configure: opts => opts.AgentCount = 2)
+            .WithK3sVersion("v1.30.0-k3s1");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var agents = model.Resources.OfType<K3sAgentResource>().ToList();
+        Assert.Equal(2, agents.Count);
+
+        foreach (var agent in agents)
+        {
+            var img = Assert.Single(agent.Annotations.OfType<ContainerImageAnnotation>());
+            Assert.Equal("v1.30.0-k3s1", img.Tag);
+        }
+    }
+
+    [Fact]
+    public void WithK3sVersionCalledTwiceAppliesLastTag()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s")
+            .WithK3sVersion("v1.29.0-k3s1")
+            .WithK3sVersion("v1.30.0-k3s1");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var annotation = Assert.Single(resource.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("v1.30.0-k3s1", annotation.Tag);
+    }
+
+    // ── WithLifetime ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public void WithLifetimePersistentSetsClusterLifetimeAnnotation()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s").WithLifetime(ContainerLifetime.Persistent);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var annotation = Assert.Single(resource.Annotations.OfType<ContainerLifetimeAnnotation>());
+        Assert.Equal(ContainerLifetime.Persistent, annotation.Lifetime);
+    }
+
+    [Fact]
+    public void WithLifetimeSessionSetsClusterLifetimeAnnotation()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s").WithLifetime(ContainerLifetime.Session);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var annotation = Assert.Single(resource.Annotations.OfType<ContainerLifetimeAnnotation>());
+        Assert.Equal(ContainerLifetime.Session, annotation.Lifetime);
+    }
+
+    // ── Argument accumulation ─────────────────────────────────────────────────
+
+    [Fact]
+    public void WithDisabledComponentCalledMultipleTimesAccumulatesArgs()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s")
+            .WithDisabledComponent("traefik")
+            .WithDisabledComponent("coredns");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+
+        Assert.Contains("--disable=traefik", ctx.Args);
+        Assert.Contains("--disable=coredns", ctx.Args);
+    }
+
+    [Fact]
+    public void WithExtraArgCalledMultipleTimesAccumulatesArgs()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s")
+            .WithExtraArg("--write-kubeconfig-mode=644")
+            .WithExtraArg("--node-label=env=dev");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+
+        Assert.Contains("--write-kubeconfig-mode=644", ctx.Args);
+        Assert.Contains("--node-label=env=dev", ctx.Args);
+    }
+
+    // ── Default args (absence checks) ────────────────────────────────────────
+
+    [Fact]
+    public void AddK3sClusterDefaultsToNoClusterCidrArg()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+
+        Assert.DoesNotContain(ctx.Args, arg => arg is string s && s.StartsWith("--cluster-cidr="));
+    }
+
+    [Fact]
+    public void AddK3sClusterDefaultsToNoServiceCidrArg()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+
+        Assert.DoesNotContain(ctx.Args, arg => arg is string s && s.StartsWith("--service-cidr="));
+    }
+
+    // ── Options configure callback ────────────────────────────────────────────
+
+    [Fact]
+    public void AddK3sClusterWithServiceCidrViaOptions()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s", configure: opts =>
+        {
+            opts.ServiceCidr = "10.99.0.0/16";
+        });
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+
+        Assert.Contains("--service-cidr=10.99.0.0/16", ctx.Args);
+    }
+
+    [Fact]
+    public void AddK3sClusterWithMultipleDisabledComponentsViaOptions()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s", configure: opts =>
+        {
+            opts.DisabledComponents.Add("traefik");
+            opts.DisabledComponents.Add("coredns");
+        });
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+
+        Assert.Contains("--disable=traefik", ctx.Args);
+        Assert.Contains("--disable=coredns", ctx.Args);
+    }
+
+    [Fact]
+    public void AddK3sClusterWithExtraArgsViaOptions()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+
+        appBuilder.AddK3sCluster("k8s", configure: opts =>
+        {
+            opts.ExtraArgs.Add("--write-kubeconfig-mode=644");
+        });
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var ctx = new CommandLineArgsCallbackContext([]);
+        foreach (var a in resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>())
+            a.Callback(ctx);
+
+        Assert.Contains("--write-kubeconfig-mode=644", ctx.Args);
+    }
 }

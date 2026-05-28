@@ -435,4 +435,179 @@ public class HelmReleaseResourceTests
         var action = () => builder.WithHelmValuesFile("values.yaml");
         Assert.Throws<ArgumentNullException>(action);
     }
+
+    // ── WithHelmValue override ────────────────────────────────────────────────
+
+    [Fact]
+    public void WithHelmValueOverridesDuplicateKey()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddHelmRelease("argocd", "argo-cd")
+            .WithHelmValue("replicaCount", "1")
+            .WithHelmValue("replicaCount", "3");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
+
+        // Dictionary last-write wins — final value must be "3".
+        Assert.Equal("3", resource.HelmValues["replicaCount"]);
+    }
+
+    [Fact]
+    public void BuildHelmScriptDuplicateKeyAppearsOnce()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("r", "r", "default", cluster) { Chart = "chart" };
+        release.HelmValues["replicaCount"] = "3";
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        // Dictionary deduplication: key appears exactly once in the --set flags.
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(script, "replicaCount").Cast<System.Text.RegularExpressions.Match>());
+    }
+
+    // ── HelmEscape / ShellEscape via BuildHelmScript ──────────────────────────
+
+    [Fact]
+    public void BuildHelmScriptHelmEscapesCommaInValue()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("r", "r", "default", cluster) { Chart = "chart" };
+        release.HelmValues["tags"] = "a,b,c";
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        // Helm --set comma is a list delimiter; must be backslash-escaped.
+        Assert.Contains(@"a\,b\,c", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptHelmEscapesOpenBraceInValue()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("r", "r", "default", cluster) { Chart = "chart" };
+        release.HelmValues["config"] = "{key:val}";
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        Assert.Contains(@"\{key:val\}", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptHelmEscapesBackslashInValue()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("r", "r", "default", cluster) { Chart = "chart" };
+        release.HelmValues["path"] = @"C:\data";
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        // Backslash must be doubled so Helm does not treat it as an escape prefix.
+        Assert.Contains(@"C:\\data", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptShellEscapesSingleQuoteInValue()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("r", "r", "default", cluster) { Chart = "chart" };
+        release.HelmValues["msg"] = "it's";
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        // POSIX single-quote escape: ' → '\''
+        Assert.Contains("it'\\''s", script);
+    }
+
+    [Fact]
+    public void BuildHelmScriptHelmEscapesCommaInKey()
+    {
+        // Helm --set parser applies the same metacharacter rules to keys.
+        var cluster = new K3sClusterResource("k8s");
+        var release = new HelmReleaseResource("r", "r", "default", cluster) { Chart = "chart" };
+        release.HelmValues["a,b"] = "v";
+
+        var script = K3sHelmBuilderExtensions.BuildHelmScript(release);
+
+        Assert.Contains(@"a\,b=v", script);
+    }
+
+    // ── WithHelmValuesFile with absolute path ─────────────────────────────────
+
+    [Fact]
+    public void WithHelmValuesFileStoresAbsolutePathAsIs()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var absolutePath = Path.Combine(Path.GetTempPath(), "values.yaml");
+
+        cluster.AddHelmRelease("argocd", "argo-cd")
+            .WithHelmValuesFile(absolutePath);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
+        var file = Assert.Single(resource.ValuesFiles);
+        Assert.Equal(absolutePath, file);
+    }
+
+    [Fact]
+    public void WithHelmValuesFileMultipleFilesAccumulate()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddHelmRelease("argocd", "argo-cd")
+            .WithHelmValuesFile("base.yaml")
+            .WithHelmValuesFile("prod.yaml");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(model.Resources.OfType<HelmReleaseResource>());
+        Assert.Equal(2, resource.ValuesFiles.Count);
+    }
+
+    // ── Cluster HelmReleases tracking ─────────────────────────────────────────
+
+    [Fact]
+    public void ClusterTracksRegisteredHelmReleases()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        cluster.AddHelmRelease("argocd", "argo-cd");
+        cluster.AddHelmRelease("cert-manager", "cert-manager");
+
+        Assert.Contains("argocd", cluster.Resource.HelmReleases.Keys);
+        Assert.Contains("cert-manager", cluster.Resource.HelmReleases.Keys);
+        Assert.Equal(2, cluster.Resource.HelmReleases.Count);
+    }
+
+    // ── Service endpoint from a different cluster not included ────────────────
+
+    [Fact]
+    public void ServiceEndpointParentMatchesItsCluster()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var clusterA = appBuilder.AddK3sCluster("k8s-a");
+        var clusterB = appBuilder.AddK3sCluster("k8s-b");
+
+        clusterA.AddServiceEndpoint("ep-a", "svc", 80);
+        clusterB.AddServiceEndpoint("ep-b", "svc", 80);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var eps = model.Resources.OfType<K3sServiceEndpointResource>().ToList();
+        Assert.Equal(2, eps.Count);
+
+        Assert.Same(clusterA.Resource, eps.Single(e => e.Name == "ep-a").Parent);
+        Assert.Same(clusterB.Resource, eps.Single(e => e.Name == "ep-b").Parent);
+    }
 }

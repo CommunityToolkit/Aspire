@@ -216,6 +216,31 @@ public class K8sManifestResourceTests
     // ── Kustomize detection ───────────────────────────────────────────────────
 
     [Fact]
+    public void ResolveFilesGlobPattern_ReturnsMatchingFilesOrdered()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"glob-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "c.yaml"), "");
+        File.WriteAllText(Path.Combine(dir, "a.yaml"), "");
+        File.WriteAllText(Path.Combine(dir, "b.yaml"), "");
+
+        try
+        {
+            var globPath = Path.Combine(dir, "*.yaml");
+            var files = K3sManifestBuilderExtensions.ResolveFilesForTest(globPath);
+
+            Assert.Equal(3, files.Count);
+            Assert.Equal("a.yaml", Path.GetFileName(files[0]));
+            Assert.Equal("b.yaml", Path.GetFileName(files[1]));
+            Assert.Equal("c.yaml", Path.GetFileName(files[2]));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void AddK8sManifestKustomizeDirectoryShowsKustomizeResourceType()
     {
         var dir = Path.Combine(Path.GetTempPath(), $"kustomize-{Guid.NewGuid():N}");

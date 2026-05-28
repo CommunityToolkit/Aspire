@@ -27,10 +27,19 @@ internal sealed class K3sInProcessPortForwarder(
     string serviceName,
     int localPort,
     int servicePort,
-    Action<bool> onReadyChanged) : IAsyncDisposable
+    Action<bool> onReadyChanged,
+    Func<string, IKubernetes>? kubernetesFactory = null) : IAsyncDisposable
 {
     private readonly CancellationTokenSource _cts = new();
     private TcpListener? _listener;
+
+    // Creates a client from the kubeconfig path using the injected factory if provided,
+    // or the default KubernetesClient.BuildConfigFromConfigFile path. The factory
+    // parameter exists to enable mock injection in unit tests without a real cluster.
+    private IKubernetes CreateClient() =>
+        kubernetesFactory is not null
+            ? kubernetesFactory(kubeconfigPath)
+            : new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath));
 
     public async Task RunAsync(ILogger logger, CancellationToken ct)
     {
@@ -133,8 +142,7 @@ internal sealed class K3sInProcessPortForwarder(
         {
             try
             {
-                var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath);
-                using var k8sClient = new Kubernetes(config);
+                using var k8sClient = CreateClient();
 
                 var svc = await k8sClient.CoreV1
                     .ReadNamespacedServiceAsync(serviceName, @namespace, cancellationToken: ct)
@@ -197,8 +205,7 @@ internal sealed class K3sInProcessPortForwarder(
         using var _ = tcp;
         try
         {
-            var config = KubernetesClientConfiguration.BuildConfigFromConfigFile(kubeconfigPath);
-            using var k8sClient = new Kubernetes(config);
+            using var k8sClient = CreateClient();
 
             // Resolve the service to a running pod.
             var svc = await k8sClient.CoreV1
