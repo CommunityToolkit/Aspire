@@ -387,7 +387,10 @@ public static class McpInspectorResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder.WithCommand("yarn");
+        return builder
+            .WithCommand("yarn")
+            // MCP Inspector relies on transitive dependencies that Yarn PnP does not expose.
+            .WithEnvironment("YARN_NODE_LINKER", "node-modules");
     }
 
     /// <summary>

@@ -148,7 +148,6 @@ public static partial class OllamaResourceBuilderExtensions
         string displayName,
         Func<OllamaModelResource, IOllamaApiClient, ILogger, ResourceNotificationService, CancellationToken, Task<ExecuteCommandResult>> executeCommand,
         string? displayDescription,
-        object? parameter = null,
         string? confirmationMessage = null,
         string? iconName = null,
         IconVariant? iconVariant = IconVariant.Filled,
@@ -175,7 +174,6 @@ public static partial class OllamaResourceBuilderExtensions
                 commandOptions: new()
                 {
                     Description = displayDescription,
-                    Parameter = parameter,
                     ConfirmationMessage = confirmationMessage,
                     IconName = iconName,
                     IconVariant = iconVariant,
