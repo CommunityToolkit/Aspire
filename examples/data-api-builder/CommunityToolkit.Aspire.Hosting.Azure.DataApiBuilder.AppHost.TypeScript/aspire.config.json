@@ -17,7 +17,6 @@
   },
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder": "../../../src/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder/CommunityToolkit.Aspire.Hosting.Azure.DataApiBuilder.csproj",
-    "Aspire.Hosting.SqlServer": "13.3.0"
+    "Aspire.Hosting.SqlServer": "13.4.0-preview.1.26275.15"
   }
 }
-
