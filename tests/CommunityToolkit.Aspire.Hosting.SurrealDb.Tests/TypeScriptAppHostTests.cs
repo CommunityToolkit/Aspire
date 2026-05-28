@@ -14,6 +14,7 @@ public class TypeScriptAppHostTests
             packageName: "CommunityToolkit.Aspire.Hosting.SurrealDb",
             exampleName: "surrealdb",
             waitForResources: ["primary", "mounted"],
+            waitStatus: "up",
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }

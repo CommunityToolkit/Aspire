@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
 using OllamaSharp;
@@ -7,8 +8,11 @@ using System.Globalization;
 
 namespace CommunityToolkit.Aspire.Hosting.Ollama;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 internal static class OllamaUtilities
 {
+    [AspireExportIgnore(Reason = "Internal helper returns a tuple and accepts CancellationToken; it is not part of the polyglot surface.")]
     public static async Task<(bool hasConnectionString, Uri? endpoint)> TryGetEndpointAsync(this IResourceWithConnectionString resource, CancellationToken ct)
     {
         var connectionString = await resource.ConnectionStringExpression.GetValueAsync(ct);
@@ -79,3 +83,5 @@ internal static class OllamaUtilities
     }
 
 }
+
+#pragma warning restore ASPIREATS001
