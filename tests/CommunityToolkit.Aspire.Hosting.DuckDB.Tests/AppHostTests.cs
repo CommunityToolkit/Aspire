@@ -29,7 +29,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var resourceName = "api";
 
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
 
         var response = await httpClient.GetAsync("/analytics/summary");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -45,7 +45,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var resourceName = "api";
 
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
 
         var createResponse = await httpClient.PostAsync("/analytics/orders", null);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);

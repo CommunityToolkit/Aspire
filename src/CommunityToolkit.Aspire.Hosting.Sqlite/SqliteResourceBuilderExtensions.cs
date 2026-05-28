@@ -17,7 +17,7 @@ public static class SqliteResourceBuilderExtensions
     /// <param name="databasePath">The optional path to the database file. If no path is provided the database is stored in a temporary location.</param>
     /// <param name="databaseFileName">The filename of the database file. Must include extension. If no file name is provided, a randomly generated file name is used.</param>
     /// <returns>A resource builder for the Sqlite resource.</returns>
-    [AspireExport("addSqlite", Description = "Adds a Sqlite database resource")]
+    [AspireExport]
     public static IResourceBuilder<SqliteResource> AddSqlite(this IDistributedApplicationBuilder builder, [ResourceName] string name, string? databasePath = null, string? databaseFileName = null)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -92,7 +92,7 @@ public static class SqliteResourceBuilderExtensions
         return builder;
     }
 
-    [AspireExport("withSqliteWeb", MethodName = "withSqliteWeb", Description = "Adds a Sqlite Web resource for browsing the database")]
+    [AspireExport("withSqliteWeb", MethodName = "withSqliteWeb")]
     internal static IResourceBuilder<SqliteResource> WithSqliteWebForPolyglot(this IResourceBuilder<SqliteResource> builder, string? containerName = null)
         => builder.WithSqliteWeb(configureContainer: null, containerName: containerName);
 }

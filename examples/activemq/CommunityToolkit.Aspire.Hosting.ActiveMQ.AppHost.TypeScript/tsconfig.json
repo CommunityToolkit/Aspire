@@ -9,6 +9,12 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["apphost.ts", ".modules/**/*.ts", ".modules/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "apphost.mts",
+    ".aspire/modules/**/*.ts",
+    ".aspire/modules/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

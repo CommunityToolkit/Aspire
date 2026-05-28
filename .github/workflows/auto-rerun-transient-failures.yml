@@ -96,7 +96,18 @@ jobs:
             fi
 
             echo "Rerunning ${job_name} (${job_id}) due to matched transient Docker failure signature."
-            gh api --method POST "repos/${REPO}/actions/jobs/${job_id}/rerun" >/dev/null
+            if ! rerun_output="$(gh api --method POST "repos/${REPO}/actions/jobs/${job_id}/rerun" 2>&1)"; then
+              # GitHub can reject reruns while the containing workflow run is still in progress.
+              if echo "${rerun_output}" | grep -Fq 'The workflow run containing this job is already running'; then
+                echo "Skipping rerun for ${job_name} (${job_id}): containing workflow run is already running."
+                continue
+              fi
+
+              echo "Failed to rerun ${job_name} (${job_id}). gh output:"
+              echo "${rerun_output}"
+              exit 1
+            fi
+
             rerun_count=$((rerun_count + 1))
           done
 

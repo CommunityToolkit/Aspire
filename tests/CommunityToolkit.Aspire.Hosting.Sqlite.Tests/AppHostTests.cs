@@ -30,7 +30,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var resourceName = "api";
 
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
 
         var createResponse = await httpClient.PostAsJsonAsync("/test", "test");
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
@@ -49,18 +49,21 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var resourceName = "api";
 
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
 
-        var createResponse = await httpClient.PostAsJsonAsync("/blog", new { Url = "https://example.com" });
+        var expectedUrl = $"https://example.com/{Guid.NewGuid()}";
+        var createResponse = await httpClient.PostAsJsonAsync("/blog", new { Url = expectedUrl });
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
-        var getResponse = await httpClient.GetAsync("/blog");
+        var createdBlog = await createResponse.Content.ReadFromJsonAsync<Blog>();
+        Assert.NotNull(createdBlog);
+
+        var getResponse = await httpClient.GetAsync($"/blog/{createdBlog.BlogId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
 
-        var data = await getResponse.Content.ReadFromJsonAsync<List<Blog>>();
+        var data = await getResponse.Content.ReadFromJsonAsync<Blog>();
         Assert.NotNull(data);
-        Assert.Single(data);
-        Assert.Equal("https://example.com", data.First().Url);
+        Assert.Equal(expectedUrl, data.Url);
     }
 
     public class Blog

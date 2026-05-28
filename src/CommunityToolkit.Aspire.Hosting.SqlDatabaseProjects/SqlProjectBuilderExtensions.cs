@@ -53,7 +53,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IDistributedApplicationBuilder"/> instance to add the SQL Server Database project to.</param>
     /// <param name="name">Name of the resource.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    [AspireExport("addSqlProject", Description = "Adds a SQL Server database project resource.")]
+    [AspireExport]
     public static IResourceBuilder<SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
@@ -109,7 +109,7 @@ public static class SqlProjectBuilderExtensions
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="dacpacPath">Path to the .dacpac file.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    [AspireExport("withDacpac", Description = "Sets the path to the .dacpac file to deploy.")]
+    [AspireExport]
     public static IResourceBuilder<SqlProjectResource> WithDacpac(this IResourceBuilder<SqlProjectResource> builder, string dacpacPath)
         => InternalWithDacpac(builder, dacpacPath);
 
@@ -136,7 +136,7 @@ public static class SqlProjectBuilderExtensions
     /// </summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    [AspireExport("withSkipWhenDeployed", Description = "Skips deployment when the target database already matches the dacpac.")]
+    [AspireExport]
     public static IResourceBuilder<SqlProjectResource> WithSkipWhenDeployed(this IResourceBuilder<SqlProjectResource> builder)
         => InternalWithSkipWhenDeployed(builder);
 
@@ -192,10 +192,11 @@ public static class SqlProjectBuilderExtensions
     /// <summary>
     /// Adds a path to a publish profile for configuring dacpac deployment options to the <see cref="SqlProjectResource"/>.
     /// </summary>
+    /// <ats-summary>Sets the publish profile path used for DAC deployment options.</ats-summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project.</param>
     /// <param name="optionsPath">Path to the publish profile xml file</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    [AspireExport("withDacDeployOptions", Description = "Sets the publish profile path used for DAC deployment options.")]
+    [AspireExport]
     public static IResourceBuilder<SqlProjectResource> WithDacDeployOptions(this IResourceBuilder<SqlProjectResource> builder, string optionsPath)
         => InternalWithDacDeployOptions(builder, optionsPath);
 
@@ -223,20 +224,22 @@ public static class SqlProjectBuilderExtensions
     /// <summary>
     /// Publishes the SQL Server Database project to the target <see cref="SqlServerDatabaseResource"/>.
     /// </summary>
+    /// <ats-summary>Publishes the SQL Server database project to a SQL Server database resource.</ats-summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="SqlServerDatabaseResource"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    [AspireExport("withSqlServerDatabaseReference", MethodName = "withReference", Description = "Publishes the SQL Server database project to a SQL Server database resource.")]
+    [AspireExport("withSqlServerDatabaseReference", MethodName = "withReference")]
     public static IResourceBuilder<SqlProjectResource> WithReference(
         this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<SqlServerDatabaseResource> target) => InternalWithReference(builder, target, target.Resource.DatabaseName);
 
     /// <summary>
     /// Publishes the SQL Server Database project to the target <see cref="IResourceWithConnectionString"/>.
     /// </summary>
+    /// <ats-summary>Publishes the SQL Server database project to a connection string resource.</ats-summary>
     /// <param name="builder">An <see cref="IResourceBuilder{T}"/> representing the SQL Server Database project to publish.</param>
     /// <param name="target">An <see cref="IResourceBuilder{T}"/> representing the target <see cref="IResourceWithConnectionString"/> to publish the SQL Server Database project to.</param>
     /// <returns>An <see cref="IResourceBuilder{T}"/> that can be used to further customize the resource.</returns>
-    [AspireExport("withConnectionStringReference", MethodName = "withConnectionReference", Description = "Publishes the SQL Server database project to a connection string resource.")]
+    [AspireExport("withConnectionStringReference", MethodName = "withConnectionReference")]
     public static IResourceBuilder<SqlProjectResource> WithReference(
         this IResourceBuilder<SqlProjectResource> builder, IResourceBuilder<IResourceWithConnectionString> target) => InternalWithReference(builder, target);
 

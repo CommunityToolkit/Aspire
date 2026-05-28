@@ -1,10 +1,10 @@
 {
   "appHost": {
-    "path": "apphost.ts",
+    "path": "apphost.mts",
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.3.0"
+    "version": "13.4.0-preview.1.26275.15"
   },
   "profiles": {
     "https": {
@@ -20,3 +20,4 @@
     "CommunityToolkit.Aspire.Hosting.MySql.Extensions": "../../../src/CommunityToolkit.Aspire.Hosting.MySql.Extensions/CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj"
   }
 }
+

@@ -57,7 +57,7 @@ public static class KeycloakPostgresExtension
     /// <returns>
     /// An updated resource builder with Postgres integration configured for the Keycloak resource.
     /// </returns>
-    [AspireExport("withPostgres", Description = "Configures a Keycloak resource to use a PostgreSQL database")]
+    [AspireExport]
     public static IResourceBuilder<KeycloakResource> WithPostgres(
         this IResourceBuilder<KeycloakResource> builder,
         IResourceBuilder<PostgresDatabaseResource> database,

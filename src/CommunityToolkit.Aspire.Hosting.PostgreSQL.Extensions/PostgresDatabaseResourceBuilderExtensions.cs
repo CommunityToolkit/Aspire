@@ -1,6 +1,7 @@
 using Aspire.Hosting.ApplicationModel;
 
 #pragma warning disable ASPIREATS001
+#pragma warning disable ASPIREEXPORT001 // AspireExport supports C# extension blocks even though the analyzer currently requires static methods.
 
 namespace Aspire.Hosting;
 
@@ -43,7 +44,7 @@ public static partial class PostgresDatabaseResourceBuilderExtensions
         public IResourceBuilder<PostgresDatabaseResource> WithFlywayMigration(IResourceBuilder<FlywayResource> flywayResourceBuilder) =>
             builder.WithFlywayCommand(flywayResourceBuilder, "migrate");
 
-        [AspireExport("withFlywayMigration", Description = "Creates a Flyway resource and configures it to run migrations for the PostgreSQL database.")]
+        [AspireExport("withFlywayMigration")]
         internal IResourceBuilder<PostgresDatabaseResource> WithFlywayMigrationForPolyglot([ResourceName] string flywayName, string migrationScriptsPath) =>
             builder.WithFlywayMigration(builder.ApplicationBuilder.AddFlyway(flywayName, migrationScriptsPath));
 
@@ -79,7 +80,7 @@ public static partial class PostgresDatabaseResourceBuilderExtensions
         public IResourceBuilder<PostgresDatabaseResource> WithFlywayRepair(IResourceBuilder<FlywayResource> flywayResourceBuilder) =>
             builder.WithFlywayCommand(flywayResourceBuilder, "repair");
 
-        [AspireExport("withFlywayRepair", Description = "Creates a Flyway resource and configures it to run repair for the PostgreSQL database.")]
+        [AspireExport("withFlywayRepair")]
         internal IResourceBuilder<PostgresDatabaseResource> WithFlywayRepairForPolyglot([ResourceName] string flywayName, string migrationScriptsPath) =>
             builder.WithFlywayRepair(builder.ApplicationBuilder.AddFlyway(flywayName, migrationScriptsPath));
 
@@ -106,3 +107,4 @@ public static partial class PostgresDatabaseResourceBuilderExtensions
 }
 
 #pragma warning restore ASPIREATS001
+#pragma warning restore ASPIREEXPORT001

@@ -19,7 +19,7 @@ public static class AzureStorageExplorerBuilderExtensions
     /// <param name="builder">The resource builder for Azure Storage Explorer.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for Azure Storage Explorer.</returns>
-    [AspireExport("withHostPort", Description = "Configures the host port that the Azure Storage Explorer resource is exposed on.")]
+    [AspireExport]
     public static IResourceBuilder<AzureStorageExplorerResource> WithHostPort(this IResourceBuilder<AzureStorageExplorerResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);

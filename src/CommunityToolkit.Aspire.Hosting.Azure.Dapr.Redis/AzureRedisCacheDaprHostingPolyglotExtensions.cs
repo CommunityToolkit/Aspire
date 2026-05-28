@@ -23,7 +23,7 @@ internal static class AzureRedisCacheDaprHostingPolyglotExtensions
     /// This polyglot helper bridges the underlying Azure Managed Redis factory and configuration methods
     /// so TypeScript app hosts can create resources to pass to <see cref="AzureRedisCacheDaprHostingExtensions.WithReference(IResourceBuilder{IDaprComponentResource}, IResourceBuilder{AzureManagedRedisResource})"/>.
     /// </remarks>
-    [AspireExport("addAzureManagedRedisForDapr", Description = "Adds an Azure Managed Redis resource for Dapr integration")]
+    [AspireExport]
     internal static IResourceBuilder<AzureManagedRedisResource> AddAzureManagedRedisForDapr(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -54,7 +54,7 @@ internal static class AzureRedisCacheDaprHostingPolyglotExtensions
     /// <param name="builder">The distributed application builder.</param>
     /// <param name="name">The Dapr component name.</param>
     /// <returns>The Dapr component resource builder.</returns>
-    [AspireExport("addDaprStateStoreForAzureManagedRedis", Description = "Adds a Dapr state store component for Azure Managed Redis integration")]
+    [AspireExport]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprStateStoreForAzureManagedRedis(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name)
@@ -71,7 +71,7 @@ internal static class AzureRedisCacheDaprHostingPolyglotExtensions
     /// <param name="builder">The distributed application builder.</param>
     /// <param name="name">The Dapr component name.</param>
     /// <returns>The Dapr component resource builder.</returns>
-    [AspireExport("addDaprPubSubForAzureManagedRedis", Description = "Adds a Dapr pub/sub component for Azure Managed Redis integration")]
+    [AspireExport]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprPubSubForAzureManagedRedis(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name)
