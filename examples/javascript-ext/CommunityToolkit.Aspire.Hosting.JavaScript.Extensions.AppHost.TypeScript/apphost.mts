@@ -9,13 +9,15 @@ const nxDemoRoot = path.join(examplesRoot, "nx-demo");
 const turborepoDemoRoot = path.join(examplesRoot, "turborepo-demo");
 
 const nx = await builder.addNxApp("nx-demo", { workingDirectory: nxDemoRoot });
-await nx.withNpm({ install: true });
+await nx.withNpm();
 await nx.withPackageManagerLaunch();
+await nx.withExplicitStart();
 
 const nxBlog = await nx.addApp("blog-monorepo");
 await nxBlog.withHttpEndpoint({ env: "PORT" });
 await nxBlog.withMappedEndpointPort();
 await nxBlog.withHttpHealthCheck();
+await nxBlog.withExplicitStart();
 
 const nxYarn = await builder.addNxApp("nx-yarn", {
     workingDirectory: nxDemoRoot,
@@ -69,4 +71,3 @@ await turboPnpm.withPackageManagerLaunch({ packageManager: "pnpm" });
 await turboPnpm.withExplicitStart();
 
 await builder.build().run();
-
