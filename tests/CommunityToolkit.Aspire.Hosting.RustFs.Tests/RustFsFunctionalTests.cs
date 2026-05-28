@@ -102,6 +102,17 @@ public class RustFsFunctionalTests(ITestOutputHelper testOutputHelper)
             else
             {
                 bindMountPath = Directory.CreateTempSubdirectory().FullName;
+
+                if (!OperatingSystem.IsWindows())
+                {
+                    const UnixFileMode ownershipPermissions =
+                        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                        UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute |
+                        UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute;
+
+                    File.SetUnixFileMode(bindMountPath, ownershipPermissions);
+                }
+
                 rustfs1.WithDataBindMount(bindMountPath);
             }
 
