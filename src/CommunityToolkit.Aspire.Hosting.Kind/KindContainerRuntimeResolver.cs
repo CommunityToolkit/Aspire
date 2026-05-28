@@ -9,13 +9,13 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 internal sealed record KindContainerRuntime(string Executable)
 {
     // kind selects Podman via KIND_EXPERIMENTAL_PROVIDER; Aspire's container runtime resolver only tells us which runtime Aspire selected.
-    private static readonly IReadOnlyDictionary<string, string?> PodmanKindEnvironmentVariables =
-        new Dictionary<string, string?>
+    private static readonly IReadOnlyDictionary<string, string> PodmanKindEnvironmentVariables =
+        new Dictionary<string, string>
         {
             ["KIND_EXPERIMENTAL_PROVIDER"] = "podman"
         };
 
-    public IReadOnlyDictionary<string, string?>? KindEnvironmentVariables =>
+    public IReadOnlyDictionary<string, string>? KindEnvironmentVariables =>
         Executable.Equals("podman", StringComparison.OrdinalIgnoreCase)
             ? PodmanKindEnvironmentVariables
             : null;

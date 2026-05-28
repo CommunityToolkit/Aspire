@@ -25,7 +25,7 @@ internal sealed class FakeProcessRunner : IProcessRunner
         string fileName,
         IReadOnlyList<string> arguments,
         string? workingDirectory = null,
-        IReadOnlyDictionary<string, string?>? environmentVariables = null,
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
         CancellationToken cancellationToken = default)
     {
         lock (_lock)
@@ -45,5 +45,5 @@ internal sealed class FakeProcessRunner : IProcessRunner
         string FileName,
         string Arguments,
         string? WorkingDirectory,
-        IReadOnlyDictionary<string, string?>? EnvironmentVariables);
+        IReadOnlyDictionary<string, string>? EnvironmentVariables);
 }

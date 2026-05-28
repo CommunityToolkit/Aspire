@@ -19,7 +19,7 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         string fileName,
         IReadOnlyList<string> arguments,
         string? workingDirectory = null,
-        IReadOnlyDictionary<string, string?>? environmentVariables = null,
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
         CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Executing: {FileName} {Arguments}", fileName, string.Join(' ', arguments));

@@ -170,9 +170,9 @@ public static class KindContainerExtensions
 
         if (connectResult.ExitCode != 0)
         {
-            // The container runtime returns an error if the container is already on the network.
-            // Treat this as success to handle concurrent calls from multiple event handlers.
-            if (connectResult.Error.Contains("already exists in network", StringComparison.OrdinalIgnoreCase))
+            // Docker reports this message when the container is already connected to the network.
+            // Treat Docker's already-connected error as success to handle concurrent event handlers.
+            if (IsDockerAlreadyConnectedError(containerRuntime, connectResult))
             {
                 resource.Annotations.Add(new KindNetworkConnectedAnnotation());
                 return true;
@@ -186,6 +186,12 @@ public static class KindContainerExtensions
 
         resource.Annotations.Add(new KindNetworkConnectedAnnotation());
         return true;
+    }
+
+    private static bool IsDockerAlreadyConnectedError(KindContainerRuntime containerRuntime, ProcessResult connectResult)
+    {
+        return containerRuntime.Executable.Equals("docker", StringComparison.OrdinalIgnoreCase) &&
+            connectResult.Error.Contains("already exists in network", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
