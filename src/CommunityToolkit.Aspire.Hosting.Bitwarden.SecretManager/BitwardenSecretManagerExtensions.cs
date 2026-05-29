@@ -6,6 +6,7 @@ using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting;
 
@@ -570,68 +571,8 @@ public static class BitwardenSecretManagerExtensions
         {
             resourceBuilder.OnInitializeResource(async (resource, eventContext, cancellationToken) =>
             {
-                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-                {
-                    State = new ResourceStateSnapshot(KnownResourceStates.ValueMissing, KnownResourceStateStyles.Warn),
-                    Properties =
-                    [
-                        new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                        new("CacheFile", resource.CacheFile!)
-                    ]
-                }).ConfigureAwait(false);
-
                 await eventContext.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, eventContext.Services), cancellationToken).ConfigureAwait(false);
-
-                BitwardenSecretManagerProvisioner provisioner = eventContext.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
-
-                try
-                {
-                    // Phase 1: authenticate — waits only for the management access token.
-                    await provisioner.AuthenticateAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
-
-                    // Phase 2: wait for all remaining parameters before entering Running.
-                    await WaitForRemainingParametersAsync(resource, eventContext.Services, cancellationToken).ConfigureAwait(false);
-
-                    await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-                    {
-                        State = KnownResourceStates.Running,
-                        Properties =
-                        [
-                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                            new("CacheFile", resource.CacheFile!)
-                        ]
-                    }).ConfigureAwait(false);
-
-                    await provisioner.ProvisionProjectAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
-                    await provisioner.ProvisionSecretsAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
-
-                    await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-                    {
-                        State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
-                        StartTimeStamp = DateTime.UtcNow,
-                        Properties =
-                        [
-                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                            new("ProjectId", resource.ProjectId!.Value.ToString("D")),
-                            new("CacheFile", resource.CacheFile!)
-                        ]
-                    }).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-                    {
-                        State = new ResourceStateSnapshot(KnownResourceStates.Exited, KnownResourceStateStyles.Error),
-                        ExitCode = 1,
-                        Properties =
-                        [
-                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                            new("Error", ex.Message)
-                        ]
-                    }).ConfigureAwait(false);
-
-                    throw;
-                }
+                await SyncAsync(resource, eventContext.Notifications, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
             });
 
             resourceBuilder.WithCommand(
@@ -640,67 +581,13 @@ public static class BitwardenSecretManagerExtensions
                 async context =>
                 {
                     ResourceNotificationService notifications = context.ServiceProvider.GetRequiredService<ResourceNotificationService>();
-
-                    await notifications.PublishUpdateAsync(resource, state => state with
-                    {
-                        State = new ResourceStateSnapshot(KnownResourceStates.ValueMissing, KnownResourceStateStyles.Warn),
-                        Properties =
-                        [
-                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                            new("CacheFile", resource.CacheFile!)
-                        ]
-                    }).ConfigureAwait(false);
-
                     try
                     {
-                        BitwardenSecretManagerProvisioner provisioner = context.ServiceProvider.GetRequiredService<BitwardenSecretManagerProvisioner>();
-
-                        // Phase 1: authenticate — waits only for the management access token.
-                        await provisioner.AuthenticateAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
-
-                        // Phase 2: wait for all remaining parameters before entering Running.
-                        await WaitForRemainingParametersAsync(resource, context.ServiceProvider, context.CancellationToken).ConfigureAwait(false);
-
-                        await notifications.PublishUpdateAsync(resource, state => state with
-                        {
-                            State = KnownResourceStates.Running,
-                            Properties =
-                            [
-                                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                                new("CacheFile", resource.CacheFile!)
-                            ]
-                        }).ConfigureAwait(false);
-
-                        await provisioner.ProvisionProjectAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
-                        await provisioner.ProvisionSecretsAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
-
-                        await notifications.PublishUpdateAsync(resource, state => state with
-                        {
-                            State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
-                            StartTimeStamp = DateTime.UtcNow,
-                            Properties =
-                            [
-                                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                                new("ProjectId", resource.ProjectId!.Value.ToString("D")),
-                                new("CacheFile", resource.CacheFile!)
-                            ]
-                        }).ConfigureAwait(false);
-
+                        await SyncAsync(resource, notifications, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
                         return new ExecuteCommandResult { Success = true };
                     }
                     catch (Exception ex)
                     {
-                        await notifications.PublishUpdateAsync(resource, state => state with
-                        {
-                            State = new ResourceStateSnapshot(KnownResourceStates.Exited, KnownResourceStateStyles.Error),
-                            ExitCode = 1,
-                            Properties =
-                            [
-                                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                                new("Error", ex.Message)
-                            ]
-                        }).ConfigureAwait(false);
-
                         return new ExecuteCommandResult { Success = false, Message = ex.Message };
                     }
                 },
@@ -795,6 +682,75 @@ public static class BitwardenSecretManagerExtensions
             })
             // Managed secret children are implementation details of the declared graph.
             .ExcludeFromManifest();
+    }
+
+    private static async Task SyncAsync(
+        BitwardenSecretManagerResource resource,
+        ResourceNotificationService notifications,
+        IServiceProvider services,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        await notifications.PublishUpdateAsync(resource, state => state with
+        {
+            State = new ResourceStateSnapshot(KnownResourceStates.ValueMissing, KnownResourceStateStyles.Warn),
+            Properties =
+            [
+                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                new("CacheFile", resource.CacheFile!)
+            ]
+        }).ConfigureAwait(false);
+
+        BitwardenSecretManagerProvisioner provisioner = services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+
+        try
+        {
+            // Phase 1: authenticate — waits only for the management access token.
+            await provisioner.AuthenticateAsync(resource, services, logger, cancellationToken).ConfigureAwait(false);
+
+            // Phase 2: wait for all remaining parameters before entering Running.
+            await WaitForRemainingParametersAsync(resource, services, cancellationToken).ConfigureAwait(false);
+
+            await notifications.PublishUpdateAsync(resource, state => state with
+            {
+                State = KnownResourceStates.Running,
+                Properties =
+                [
+                    new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                    new("CacheFile", resource.CacheFile!)
+                ]
+            }).ConfigureAwait(false);
+
+            await provisioner.ProvisionProjectAsync(resource, services, logger, cancellationToken).ConfigureAwait(false);
+            await provisioner.ProvisionSecretsAsync(resource, services, logger, cancellationToken).ConfigureAwait(false);
+
+            await notifications.PublishUpdateAsync(resource, state => state with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
+                StartTimeStamp = DateTime.UtcNow,
+                Properties =
+                [
+                    new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                    new("ProjectId", resource.ProjectId!.Value.ToString("D")),
+                    new("CacheFile", resource.CacheFile!)
+                ]
+            }).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            await notifications.PublishUpdateAsync(resource, state => state with
+            {
+                State = new ResourceStateSnapshot(KnownResourceStates.Exited, KnownResourceStateStyles.Error),
+                ExitCode = 1,
+                Properties =
+                [
+                    new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                    new("Error", ex.Message)
+                ]
+            }).ConfigureAwait(false);
+
+            throw;
+        }
     }
 
     private static async Task WaitForRemainingParametersAsync(
