@@ -54,7 +54,37 @@ Happy path:
 
 ## Run Mode
 
-For local run scenarios, the same declared graph is used. The implementation invokes reconciliation during resource initialization to keep local state aligned. This run-mode behavior is separate from deploy-time step execution and does not change the architecture: declaration and pipeline-step deployment remain the primary model.
+For local run scenarios, the same declared graph is used. The implementation invokes reconciliation during resource initialization (`OnInitializeResource`) to keep local state aligned. This run-mode behavior is separate from deploy-time step execution and does not change the architecture: declaration and pipeline-step deployment remain the primary model.
+
+### State machine
+
+The resource reports the following states during a run:
+
+| State                  | Style   | Meaning                                                          |
+| ---------------------- | ------- | ---------------------------------------------------------------- |
+| `NotStarted`           | —       | Resource registered, initialization not yet started              |
+| `ValueMissing`         | Warning | Waiting for one or more parameter values (see phases below)      |
+| `Running`              | —       | All values collected; actively provisioning project and secrets  |
+| `Finished`             | Success | Provisioning succeeded; dependent resources may start            |
+| `Exited` (exit code 1) | Error   | Authentication or provisioning failed; dependent resources error |
+
+Dependent resources declare `WaitForCompletion` on the Bitwarden resource. `Exited` with a non-zero exit code causes `WaitForCompletion` to propagate the failure to those dependents; `Finished` unblocks them.
+
+### Two-phase parameter collection
+
+Run-mode initialization collects parameters in two phases, both expressed as `ValueMissing` state to the dashboard:
+
+**Phase 1 — authentication inputs only.**
+The resource waits for the management access token (and the auth cache path, which is derived from it). It then authenticates with Bitwarden immediately. A bad or missing token fails fast here — before the user is asked for project name or secret values — and the resource transitions to `Exited` (exit code 1).
+
+**Phase 2 — remaining parameters.**
+After a successful authentication, the resource waits for the project name, organization ID, and all managed secret parameter values. Once every value is available, the resource transitions to `Running` and provisioning begins.
+
+The resource never enters `Running` while parameters are still pending. `Running` strictly means "all inputs gathered, provisioning in progress."
+
+### Sync command
+
+The "Sync" command repeats the full initialization sequence (both phases) on demand. It is available in any buildable terminal state (`Running`, `Finished`, `Exited`). Because parameter values are typically already resolved from the initial run, the resource moves through `ValueMissing` quickly before re-entering `Running`.
 
 ## Access Tokens
 

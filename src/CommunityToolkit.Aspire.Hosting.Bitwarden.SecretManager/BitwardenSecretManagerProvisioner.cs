@@ -39,10 +39,9 @@ internal sealed class BitwardenSecretManagerProvisioner(
             // Proactively check the TLS trust environment before attempting to authenticate with Bitwarden.
             await BitwardenTlsValidator.ValidateTlsCertDirAsync(resource, logger, cancellationToken).ConfigureAwait(false);
 
-            string remoteProjectName = await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
-            resource.ResolvedRemoteProjectName = remoteProjectName;
-            logger.LogInformation("Resolved remote project name: {RemoteProjectName}.", remoteProjectName);
-
+            // Auth cache path resolution internally waits for the management access token,
+            // making the token the only input required before authentication can proceed.
+            // Project name and other parameters are collected in a separate phase after auth.
             string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Loaded Bitwarden AppHost cache from '{AppHostCachePath}'.", cacheContext.CachePath);

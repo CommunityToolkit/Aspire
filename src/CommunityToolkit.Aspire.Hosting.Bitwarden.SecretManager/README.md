@@ -185,13 +185,18 @@ contract, and deployment materializes that contract.
 
 The Bitwarden resource is a one-shot provisioner. Dependent resources use `WaitForCompletion`, so they block until provisioning finishes and then start.
 
-| State           | Style   | Dependent resources          |
-| --------------- | ------- | ---------------------------- |
-| `NotStarted`    | —       | Blocked                      |
-| `Waiting`       | —       | Blocked                      |
-| `Running`       | —       | Blocked (still provisioning) |
-| `Finished`      | Success | Unblocked — start normally   |
-| `FailedToStart` | Error   | Error — fail to start        |
+Provisioning runs in two phases before the resource enters `Running`:
+
+1. **Authentication** — waits only for the management access token, then authenticates with Bitwarden. Fails fast here so you learn about a bad token before providing the remaining values.
+2. **Parameter collection** — waits for the project name, organization ID, and all managed secret values. The resource enters `Running` only once every value is in hand.
+
+| State                  | Style   | Dependent resources          |
+| ---------------------- | ------- | ---------------------------- |
+| `NotStarted`           | —       | Blocked                      |
+| `ValueMissing`         | Warning | Blocked                      |
+| `Running`              | —       | Blocked (still provisioning) |
+| `Finished`             | Success | Unblocked — start normally   |
+| `Exited` (exit code 1) | Error   | Error — fail to start        |
 
 ### Project provisioning decisions
 

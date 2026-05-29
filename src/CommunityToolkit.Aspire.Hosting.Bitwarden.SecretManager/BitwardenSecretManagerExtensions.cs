@@ -571,7 +571,7 @@ public static class BitwardenSecretManagerExtensions
             {
                 await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
                 {
-                    State = KnownResourceStates.Waiting,
+                    State = new ResourceStateSnapshot(KnownResourceStates.ValueMissing, KnownResourceStateStyles.Warn),
                     Properties =
                     [
                         new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
@@ -581,20 +581,26 @@ public static class BitwardenSecretManagerExtensions
 
                 await eventContext.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, eventContext.Services), cancellationToken).ConfigureAwait(false);
 
-                await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
-                {
-                    State = KnownResourceStates.Running,
-                    Properties =
-                    [
-                        new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                        new("CacheFile", resource.CacheFile!)
-                    ]
-                }).ConfigureAwait(false);
+                BitwardenSecretManagerProvisioner provisioner = eventContext.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
 
                 try
                 {
-                    BitwardenSecretManagerProvisioner provisioner = eventContext.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+                    // Phase 1: authenticate — waits only for the management access token.
                     await provisioner.AuthenticateAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
+
+                    // Phase 2: wait for all remaining parameters before entering Running.
+                    await WaitForRemainingParametersAsync(resource, cancellationToken).ConfigureAwait(false);
+
+                    await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
+                    {
+                        State = KnownResourceStates.Running,
+                        Properties =
+                        [
+                            new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                            new("CacheFile", resource.CacheFile!)
+                        ]
+                    }).ConfigureAwait(false);
+
                     await provisioner.ProvisionProjectAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
                     await provisioner.ProvisionSecretsAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
 
@@ -614,7 +620,8 @@ public static class BitwardenSecretManagerExtensions
                 {
                     await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
                     {
-                        State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error),
+                        State = new ResourceStateSnapshot(KnownResourceStates.Exited, KnownResourceStateStyles.Error),
+                        ExitCode = 1,
                         Properties =
                         [
                             new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
@@ -635,7 +642,7 @@ public static class BitwardenSecretManagerExtensions
 
                     await notifications.PublishUpdateAsync(resource, state => state with
                     {
-                        State = KnownResourceStates.Running,
+                        State = new ResourceStateSnapshot(KnownResourceStates.ValueMissing, KnownResourceStateStyles.Warn),
                         Properties =
                         [
                             new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
@@ -646,7 +653,23 @@ public static class BitwardenSecretManagerExtensions
                     try
                     {
                         BitwardenSecretManagerProvisioner provisioner = context.ServiceProvider.GetRequiredService<BitwardenSecretManagerProvisioner>();
+
+                        // Phase 1: authenticate — waits only for the management access token.
                         await provisioner.AuthenticateAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
+
+                        // Phase 2: wait for all remaining parameters before entering Running.
+                        await WaitForRemainingParametersAsync(resource, context.CancellationToken).ConfigureAwait(false);
+
+                        await notifications.PublishUpdateAsync(resource, state => state with
+                        {
+                            State = KnownResourceStates.Running,
+                            Properties =
+                            [
+                                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
+                                new("CacheFile", resource.CacheFile!)
+                            ]
+                        }).ConfigureAwait(false);
+
                         await provisioner.ProvisionProjectAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
                         await provisioner.ProvisionSecretsAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
 
@@ -668,7 +691,8 @@ public static class BitwardenSecretManagerExtensions
                     {
                         await notifications.PublishUpdateAsync(resource, state => state with
                         {
-                            State = new ResourceStateSnapshot(KnownResourceStates.FailedToStart, KnownResourceStateStyles.Error),
+                            State = new ResourceStateSnapshot(KnownResourceStates.Exited, KnownResourceStateStyles.Error),
+                            ExitCode = 1,
                             Properties =
                             [
                                 new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
@@ -710,12 +734,12 @@ public static class BitwardenSecretManagerExtensions
                     UpdateState = context =>
                     {
                         string? state = context.ResourceSnapshot?.State?.Text;
-                        if (state == KnownResourceStates.Waiting || state == KnownResourceStates.Running)
+                        if (state == KnownResourceStates.ValueMissing || state == KnownResourceStates.Running)
                         {
                             return ResourceCommandState.Disabled;
                         }
 
-                        // Enabled in all terminal states: Finished, FailedToStart, NotStarted, etc.
+                        // Enabled in all terminal states: Finished, Exited, NotStarted, etc.
                         return ResourceCommandState.Enabled;
                     }
                 });
@@ -770,6 +794,29 @@ public static class BitwardenSecretManagerExtensions
             })
             // Managed secret children are implementation details of the declared graph.
             .ExcludeFromManifest();
+    }
+
+    private static async Task WaitForRemainingParametersAsync(
+        BitwardenSecretManagerResource resource,
+        CancellationToken cancellationToken)
+    {
+        // The access token was already awaited inside AuthenticateAsync.
+        // Collect everything else before entering Running state.
+        await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
+        await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
+
+        foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+        {
+            switch (secret.Value)
+            {
+                case ParameterResource param:
+                    await param.GetValueAsync(cancellationToken).ConfigureAwait(false);
+                    break;
+                case ReferenceExpression expr:
+                    await expr.GetValueAsync(cancellationToken).ConfigureAwait(false);
+                    break;
+            }
+        }
     }
 
     private static void WaitForReferencedResources(
