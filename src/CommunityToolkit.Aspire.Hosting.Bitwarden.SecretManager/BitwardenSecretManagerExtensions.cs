@@ -727,6 +727,7 @@ public static class BitwardenSecretManagerExtensions
             await notifications.PublishUpdateAsync(resource, state => state with
             {
                 State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
+                ExitCode = 0,
                 StartTimeStamp = DateTime.UtcNow,
                 Properties =
                 [
