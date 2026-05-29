@@ -450,7 +450,21 @@ public static class BitwardenSecretManagerExtensions
             accessToken.Resource,
             builder.AppHostDirectory);
         resource.CacheFile = BuildDefaultCachePath(resource, builder.Environment.EnvironmentName);
-        return ConfigureBitwardenSecretManager(builder.AddResource(resource));
+
+        var resourceBuilder = ConfigureBitwardenSecretManager(builder.AddResource(resource));
+
+        resourceBuilder.WithReferenceRelationship(accessToken.Resource);
+        if (projectName.Parameter is { } projectNameParam)
+        {
+            resourceBuilder.WithReferenceRelationship(projectNameParam);
+        }
+
+        if (organizationId.Parameter is { } orgIdParam)
+        {
+            resourceBuilder.WithReferenceRelationship(orgIdParam);
+        }
+
+        return resourceBuilder;
     }
 
     private static IResourceBuilder<BitwardenSecretManagerResource> ConfigureBitwardenSecretManager(
