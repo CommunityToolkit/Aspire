@@ -13,7 +13,7 @@
 
     <AspireMajorVersion>13</AspireMajorVersion>
     <AspireVersion>$(AspireMajorVersion).4.0</AspireVersion>
-    <AspirePreviewSuffix>-preview.1.26277.25</AspirePreviewSuffix>
+    <AspirePreviewSuffix>-preview.1.26277.25</AspirePreviewSuffix> <!-- This is used for non-stable Aspire packages, should never be empty. Append to experimental packages. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>10.0.8</DotNetExtensionsVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
