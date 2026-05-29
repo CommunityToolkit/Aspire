@@ -222,6 +222,20 @@ Paths are tried in order: explicit adoption → persisted mapping → create new
 
 Create new project. There is no name-search path here: the AppHost is the source of truth for the project, so a missing cache means a new project is created. Use `WithExistingProject` to adopt a project that was created outside the declared graph.
 
+### Audit trail
+
+Every time a managed secret is created or updated, the provisioner writes or prepends a timestamped entry to its Bitwarden note field:
+
+```
+[2026-05-29T12:34:56Z] value changed (previous: old-value)
+[2026-05-28T09:00:00Z] key renamed (previous: old-key), value changed (previous: initial-value)
+[2026-05-27T08:00:00Z] Created
+```
+
+Every change kind records its previous value: `key renamed (previous: …)`, `project changed (previous: …)`, `value changed (previous: …)`. When multiple fields change in a single update, all changes are listed in the same entry.
+
+The audit trail grows at the top of the note on each update. It is visible in the Bitwarden web vault and CLI alongside the current secret value.
+
 ### Secret provisioning decisions
 
 Runs once per managed secret, during the `bitwarden-provision-secrets` pipeline step.

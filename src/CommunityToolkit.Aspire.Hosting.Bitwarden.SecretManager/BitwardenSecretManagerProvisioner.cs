@@ -283,7 +283,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     secretResource.RemoteName,
                     projectId);
 
-                secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId]);
+                secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId], SecretUpdateAudit.CreationNote());
                 logger.LogInformation("Created replacement secret {SecretId} for managed secret '{SecretName}'.", secret.Id, secretResource.LocalName);
             }
             else
@@ -300,7 +300,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             if (candidates.Count == 0)
             {
                 logger.LogInformation("No existing secret found for managed secret '{SecretName}' (remote: {RemoteName}). Creating new secret.", secretResource.LocalName, secretResource.RemoteName);
-                secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId]);
+                secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId], SecretUpdateAudit.CreationNote());
                 logger.LogInformation("Created new secret {SecretId} for managed secret '{SecretName}'.", secret.Id, secretResource.LocalName);
             }
             else if (candidates.Count == 1)
@@ -311,7 +311,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                         "Creating a new Bitwarden secret for managed secret '{SecretName}' because the previous local identity was renamed and no explicit adoption was configured.",
                         secretResource.LocalName);
 
-                    secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId]);
+                    secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId], SecretUpdateAudit.CreationNote());
                     logger.LogInformation("Created new secret {SecretId} for renamed managed secret '{SecretName}'.", secret.Id, secretResource.LocalName);
                 }
                 else
@@ -466,17 +466,14 @@ internal sealed class BitwardenSecretManagerProvisioner(
         string remoteName,
         string value)
     {
-        bool requiresProjectUpdate = secret.ProjectId != managedProjectId;
-        bool requiresNameUpdate = !string.Equals(secret.Key, remoteName, StringComparison.Ordinal);
-        bool requiresValueUpdate = !string.Equals(secret.Value, value, StringComparison.Ordinal);
-
-        if (!requiresProjectUpdate && !requiresNameUpdate && !requiresValueUpdate)
+        var audit = SecretUpdateAudit.Compare(secret, managedProjectId, remoteName, value);
+        if (!audit.RequiresUpdate)
         {
             return secret;
         }
 
         Guid[] projectIds = BuildProjectIds(secret.ProjectId, managedProjectId);
-        return provider.UpdateSecret(secret.OrganizationId, secret.Id, remoteName, value, secret.Note, projectIds);
+        return provider.UpdateSecret(secret.OrganizationId, secret.Id, remoteName, value, audit.PrependTo(secret.Note), projectIds);
     }
 
     private static Guid[] BuildProjectIds(Guid? existingProjectId, Guid managedProjectId)
@@ -707,5 +704,40 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
     public void CacheSecret(BitwardenSecretInfo secret)
     {
         _secretsById[secret.Id] = secret;
+    }
+}
+
+internal sealed record SecretUpdateAudit(
+    bool ValueChanged, string PreviousValue,
+    bool NameChanged, string PreviousName,
+    bool ProjectChanged, Guid? PreviousProjectId)
+{
+    public bool RequiresUpdate => ValueChanged || NameChanged || ProjectChanged;
+
+    public static SecretUpdateAudit Compare(BitwardenSecretInfo secret, Guid managedProjectId, string remoteName, string value)
+    {
+        return new(
+                ValueChanged: !string.Equals(secret.Value, value, StringComparison.Ordinal),
+                PreviousValue: secret.Value,
+                NameChanged: !string.Equals(secret.Key, remoteName, StringComparison.Ordinal),
+                PreviousName: secret.Key,
+                ProjectChanged: secret.ProjectId != managedProjectId,
+                PreviousProjectId: secret.ProjectId);
+    }
+
+    public static string CreationNote()
+    {
+        return $"[{DateTimeOffset.UtcNow:yyyy-MM-ddTHH:mm:ssZ}] Created";
+    }
+
+    public string PrependTo(string existingNote)
+    {
+        string timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
+        var changes = new List<string>();
+        if (NameChanged) changes.Add($"key renamed (previous: {PreviousName})");
+        if (ProjectChanged) changes.Add($"project changed (previous: {PreviousProjectId})");
+        if (ValueChanged) changes.Add($"value changed (previous: {PreviousValue})");
+        string entry = $"[{timestamp}] {string.Join(", ", changes)}";
+        return string.IsNullOrEmpty(existingNote) ? entry : $"{entry}\n{existingNote}";
     }
 }
