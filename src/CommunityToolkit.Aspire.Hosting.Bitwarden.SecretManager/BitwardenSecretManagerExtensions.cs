@@ -3,6 +3,7 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
+using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -589,7 +590,7 @@ public static class BitwardenSecretManagerExtensions
                     await provisioner.AuthenticateAsync(resource, eventContext.Services, eventContext.Logger, cancellationToken).ConfigureAwait(false);
 
                     // Phase 2: wait for all remaining parameters before entering Running.
-                    await WaitForRemainingParametersAsync(resource, cancellationToken).ConfigureAwait(false);
+                    await WaitForRemainingParametersAsync(resource, eventContext.Services, cancellationToken).ConfigureAwait(false);
 
                     await eventContext.Notifications.PublishUpdateAsync(resource, state => state with
                     {
@@ -658,7 +659,7 @@ public static class BitwardenSecretManagerExtensions
                         await provisioner.AuthenticateAsync(resource, context.ServiceProvider, context.Logger, context.CancellationToken).ConfigureAwait(false);
 
                         // Phase 2: wait for all remaining parameters before entering Running.
-                        await WaitForRemainingParametersAsync(resource, context.CancellationToken).ConfigureAwait(false);
+                        await WaitForRemainingParametersAsync(resource, context.ServiceProvider, context.CancellationToken).ConfigureAwait(false);
 
                         await notifications.PublishUpdateAsync(resource, state => state with
                         {
@@ -798,18 +799,24 @@ public static class BitwardenSecretManagerExtensions
 
     private static async Task WaitForRemainingParametersAsync(
         BitwardenSecretManagerResource resource,
+        IServiceProvider services,
         CancellationToken cancellationToken)
     {
         // The access token was already awaited inside AuthenticateAsync.
         // Collect everything else before entering Running state.
-        await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
-        await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
+        await resource.GetResolvedRemoteProjectNameAsync(services, cancellationToken).ConfigureAwait(false);
+        await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
 
         foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
         {
             switch (secret.Value)
             {
                 case ParameterResource param:
+                    if (!param.HasValue())
+                    {
+                        await param.PromptAsync(services, cancellationToken).ConfigureAwait(false);
+                    }
+
                     await param.GetValueAsync(cancellationToken).ConfigureAwait(false);
                     break;
                 case ReferenceExpression expr:

@@ -1,5 +1,7 @@
 #pragma warning disable ASPIREATS001
 
+using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -227,13 +229,28 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     public IBitwardenSecretReference GetSecret(Guid secretId) => GetSecretReference(secretId);
 
     internal async Task<Guid> GetResolvedOrganizationIdAsync(
+        IServiceProvider services,
         CancellationToken cancellationToken)
-        => await _organizationId
+    {
+        if (_organizationId.Parameter is ParameterResource orgIdParam &&
+            !orgIdParam.HasValue())
+        {
+            await orgIdParam.PromptAsync(services, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await _organizationId
             .ResolveAsync(Name, "organization", cancellationToken)
             .ConfigureAwait(false);
+    }
 
-    internal async Task<string> GetResolvedManagementAccessTokenAsync(CancellationToken cancellationToken)
+    internal async Task<string> GetResolvedManagementAccessTokenAsync(IServiceProvider services, CancellationToken cancellationToken)
     {
+        // Messy but no other way to conditionally prompt for the missing token parameter
+        if (!ManagementAccessToken.HasValue())
+        {
+            await ManagementAccessToken.PromptAsync(services, cancellationToken).ConfigureAwait(false);
+        }
+
         string? accessToken = await ManagementAccessToken.GetValueAsync(cancellationToken).ConfigureAwait(false);
         if (accessToken is null)
         {
@@ -244,10 +261,19 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     }
 
     internal async Task<string> GetResolvedRemoteProjectNameAsync(
+        IServiceProvider services,
         CancellationToken cancellationToken)
-        => await _projectName
+    {
+        if (_projectName.Parameter is ParameterResource projectNameParam &&
+            !projectNameParam.HasValue())
+        {
+            await projectNameParam.PromptAsync(services, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await _projectName
             .ResolveAsync(Name, "project name", cancellationToken)
             .ConfigureAwait(false);
+    }
 
     internal object GetConfiguredOrganizationIdReference() => _organizationId.GetReference(Name, "organization");
 

@@ -5,6 +5,7 @@ using System.Text;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Bitwarden.Sdk;
+using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -46,7 +47,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Loaded Bitwarden AppHost cache from '{AppHostCachePath}'.", cacheContext.CachePath);
 
-            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
 
             logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
             await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
@@ -89,13 +90,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
         try
         {
             string remoteProjectName = resource.ResolvedRemoteProjectName
-                ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
+                ?? await resource.GetResolvedRemoteProjectNameAsync(services, cancellationToken).ConfigureAwait(false);
 
             string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
-            Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
-            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+            Guid organizationId = await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
+            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
 
             await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
             provider.Login(accessToken, cacheContext.AuthCachePath);
@@ -130,13 +131,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
         try
         {
             string remoteProjectName = resource.ResolvedRemoteProjectName
-                ?? await resource.GetResolvedRemoteProjectNameAsync(cancellationToken).ConfigureAwait(false);
+                ?? await resource.GetResolvedRemoteProjectNameAsync(services, cancellationToken).ConfigureAwait(false);
 
             string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
-            Guid organizationId = await resource.GetResolvedOrganizationIdAsync(cancellationToken).ConfigureAwait(false);
-            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(cancellationToken).ConfigureAwait(false);
+            Guid organizationId = await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
+            string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
 
             IInteractionService? interactionService = services.GetService<IInteractionService>();
 
@@ -158,7 +159,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
             {
                 logger.LogDebug("Processing managed secret '{SecretName}' (remote name: {RemoteName}).", secret.LocalName, secret.RemoteName);
-                await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, logger, cancellationToken, staleManagedMappings).ConfigureAwait(false);
+                await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, services, logger, cancellationToken, staleManagedMappings).ConfigureAwait(false);
             }
 
             cacheContext.Cache.ManagedSecretIds = resource.ManagedSecrets
@@ -245,12 +246,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
         BitwardenLookupContext lookupContext,
         IBitwardenSecretManagerProvider provider,
         IInteractionService? interactionService,
+        IServiceProvider services,
         ILogger logger,
         CancellationToken cancellationToken,
         IReadOnlyDictionary<string, Guid> staleManagedMappings)
     {
         logger.LogDebug("Resolving value for managed secret '{SecretName}'.", secretResource.LocalName);
-        string resolvedValue = await ResolveSecretValueAsync(resource, secretResource.Value, secretResource.LocalName, cancellationToken).ConfigureAwait(false);
+        string resolvedValue = await ResolveSecretValueAsync(resource, secretResource.Value, secretResource.LocalName, services, cancellationToken).ConfigureAwait(false);
         logger.LogDebug("Successfully resolved value for managed secret '{SecretName}'.", secretResource.LocalName);
 
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
@@ -514,6 +516,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         BitwardenSecretManagerResource resource,
         object valueSource,
         string secretName,
+        IServiceProvider services,
         CancellationToken cancellationToken)
     {
         string? value = valueSource switch
@@ -522,6 +525,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 parameter,
                 resource,
                 $"managed secret '{secretName}'",
+                services,
                 cancellationToken).ConfigureAwait(false),
             ReferenceExpression referenceExpression => await referenceExpression.GetValueAsync(cancellationToken).ConfigureAwait(false),
             _ => throw new DistributedApplicationException($"Managed Bitwarden secret '{secretName}' uses unsupported value source type '{valueSource.GetType().Name}'.")
@@ -539,8 +543,14 @@ internal sealed class BitwardenSecretManagerProvisioner(
         ParameterResource parameter,
         BitwardenSecretManagerResource resource,
         string purpose,
+        IServiceProvider services,
         CancellationToken cancellationToken)
     {
+        if (!parameter.HasValue())
+        {
+            await parameter.PromptAsync(services, cancellationToken).ConfigureAwait(false);
+        }
+
         string? configuredValue = await parameter.GetValueAsync(cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(configuredValue))
         {
@@ -628,7 +638,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
         // Key the default auth cache on the access token value so that rotating the token
         // automatically starts a fresh session, and different tokens never share a session file.
-        string? accessToken = await resource.ManagementAccessToken.GetValueAsync(cancellationToken).ConfigureAwait(false);
+        string? accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrEmpty(accessToken))
         {
             throw new DistributedApplicationException($"Bitwarden access token for resource '{resource.Name}' did not resolve to a value.");
