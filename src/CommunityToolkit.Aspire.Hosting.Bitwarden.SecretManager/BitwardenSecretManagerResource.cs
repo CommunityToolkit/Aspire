@@ -288,8 +288,6 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         => ExistingProjectId?.ToString("D")
             ?? _projectName.GetIdentityKey(Name, "project name", resolvedProjectName);
 
-    internal string GetProjectNameDisplayValue() => _projectName.GetDisplayValue(Name, "project name", ResolvedRemoteProjectName);
-
     internal string? ResolveSecretValue(IBitwardenSecretReference secretReference)
     {
         Guid? secretId = secretReference.SecretId;

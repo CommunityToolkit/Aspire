@@ -4,6 +4,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager;
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
+using System.Collections.Immutable;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -560,8 +561,7 @@ public static class BitwardenSecretManagerExtensions
             State = KnownResourceStates.NotStarted,
             Properties =
             [
-                new("RemoteProjectName", builder.Resource.GetProjectNameDisplayValue()),
-                new("CacheFile", builder.Resource.CacheFile!)
+                new("CacheFile", builder.Resource.CacheFile)
             ]
         });
 
@@ -684,6 +684,24 @@ public static class BitwardenSecretManagerExtensions
             .ExcludeFromManifest();
     }
 
+    private static ImmutableArray<ResourcePropertySnapshot> MergeProperties(
+        ImmutableArray<ResourcePropertySnapshot> existing,
+        ResourcePropertySnapshot[]? upsert = null,
+        string[]? remove = null)
+    {
+        Dictionary<string, ResourcePropertySnapshot> dict = existing.ToDictionary(p => p.Name);
+
+        if (remove is not null)
+            foreach (string key in remove)
+                dict.Remove(key);
+
+        if (upsert is not null)
+            foreach (ResourcePropertySnapshot p in upsert)
+                dict[p.Name] = p;
+
+        return [.. dict.Values];
+    }
+
     private static async Task SyncAsync(
         BitwardenSecretManagerResource resource,
         ResourceNotificationService notifications,
@@ -691,14 +709,15 @@ public static class BitwardenSecretManagerExtensions
         ILogger logger,
         CancellationToken cancellationToken)
     {
+        DateTime startTime = DateTime.UtcNow;
+
         await notifications.PublishUpdateAsync(resource, state => state with
         {
             State = new ResourceStateSnapshot(KnownResourceStates.ValueMissing, KnownResourceStateStyles.Warn),
-            Properties =
-            [
-                new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                new("CacheFile", resource.CacheFile!)
-            ]
+            StartTimeStamp = null,
+            StopTimeStamp = null,
+            ExitCode = null,
+            Properties = MergeProperties(state.Properties, remove: ["ProjectId", "Error"])
         }).ConfigureAwait(false);
 
         BitwardenSecretManagerProvisioner provisioner = services.GetRequiredService<BitwardenSecretManagerProvisioner>();
@@ -714,11 +733,12 @@ public static class BitwardenSecretManagerExtensions
             await notifications.PublishUpdateAsync(resource, state => state with
             {
                 State = KnownResourceStates.Running,
-                Properties =
-                [
-                    new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                    new("CacheFile", resource.CacheFile!)
-                ]
+                StartTimeStamp = startTime,
+                Properties = MergeProperties(state.Properties,
+                    upsert:
+                    [
+                        new("CacheFile", resource.CacheFile)
+                    ])
             }).ConfigureAwait(false);
 
             await provisioner.ProvisionProjectAsync(resource, services, logger, cancellationToken).ConfigureAwait(false);
@@ -728,13 +748,13 @@ public static class BitwardenSecretManagerExtensions
             {
                 State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
                 ExitCode = 0,
-                StartTimeStamp = DateTime.UtcNow,
-                Properties =
-                [
-                    new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                    new("ProjectId", resource.ProjectId!.Value.ToString("D")),
-                    new("CacheFile", resource.CacheFile!)
-                ]
+                StopTimeStamp = DateTime.UtcNow,
+                Properties = MergeProperties(state.Properties,
+                    upsert:
+                    [
+                        new("ProjectId", resource.ProjectId!.Value.ToString("D"))
+                    ],
+                    remove: ["Error"])
             }).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -743,11 +763,10 @@ public static class BitwardenSecretManagerExtensions
             {
                 State = new ResourceStateSnapshot(KnownResourceStates.Exited, KnownResourceStateStyles.Error),
                 ExitCode = 1,
-                Properties =
-                [
-                    new("RemoteProjectName", resource.GetProjectNameDisplayValue()),
-                    new("Error", ex.Message)
-                ]
+                StopTimeStamp = DateTime.UtcNow,
+                Properties = MergeProperties(state.Properties,
+                    upsert: [new("Error", ex.Message)],
+                    remove: ["ProjectId"])
             }).ConfigureAwait(false);
 
             throw;
