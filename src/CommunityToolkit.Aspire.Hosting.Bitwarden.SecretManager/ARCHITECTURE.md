@@ -4,8 +4,7 @@ Bitwarden Secrets Manager is modeled as a declared AppHost resource graph.
 The graph is the primary contract. Deployment happens through explicit Aspire pipeline steps that materialize the declared graph in Bitwarden.
 
 - `BitwardenSecretManagerResource` declares a Bitwarden project and its configuration.
-- `BitwardenSecretResource` declares a managed secret that belongs to that project.
-- `IBitwardenSecretReference` declares a consumer-facing reference to a remote secret (by name or id), whether managed or existing.
+- `BitwardenSecretResource` declares either a managed secret (created or updated on every run, `IsManaged = true`) or a reference-only secret (read from an existing Bitwarden secret, `IsManaged = false`). Both modes inherit `ParameterResource` and are returned by `AddSecret` and `GetSecret` respectively as `IResourceBuilder<BitwardenSecretResource>`. Pass `.Resource` to `WithBitwardenSecretValue` or `WithBitwardenSecretId` to inject the secret into a dependent resource.
 
 This design intentionally treats custom publish-manifest schema as legacy. The integration does not rely on a bespoke manifest payload as its architectural center.
 
@@ -27,7 +26,7 @@ This design intentionally treats custom publish-manifest schema as legacy. The i
 ## Publishing
 
 `aspire deploy` is the deployment moment for Bitwarden resources.
-Each declared Bitwarden resource contributes four pipeline steps via
+Each declared Bitwarden resource contributes five pipeline steps via
 `WithPipelineStepFactory(...)`.
 
 The steps run in order and are scoped to the resource by name:
@@ -36,12 +35,13 @@ The steps run in order and are scoped to the resource by name:
 | --- | ------------------------------------ | ------------------------------------------------------------------------------ |
 | 1   | `bitwarden-authenticate-{name}`      | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden    |
 | 2   | `bitwarden-provision-project-{name}` | Creates or updates the remote Bitwarden project; binds the resolved project ID |
-| 3   | `bitwarden-provision-secrets-{name}` | Creates or updates managed secrets, validates declared references, saves cache |
-| 4   | `bitwarden-patch-env-{name}`         | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files       |
+| 3   | `bitwarden-sync-managed-secrets-{name}` | Binds upstream values for managed secrets whose local parameter values are missing |
+| 4   | `bitwarden-provision-secrets-{name}` | Creates or updates managed secrets, validates declared references, saves cache |
+| 5   | `bitwarden-patch-env-{name}`         | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files       |
 
-Steps 1–3 depend on `DeployPrereq`. Step 3 is tagged `ProvisionInfrastructure` and is required by `Deploy`. Because steps 1–3 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
+Steps 1–4 depend on `DeployPrereq`. Step 4 is tagged `ProvisionInfrastructure` and is required by `Deploy`. Because steps 1–4 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
 
-Step 4 is a Docker Compose workaround: `PrepareAsync` in `Aspire.Hosting.Docker` only resolves `ParameterResource` and `ContainerImageReference` sources, leaving Bitwarden-derived env vars blank. Step 4 patches those blanks after `prepare-{env}` runs and before `docker-compose-up-{env}` starts. It will be removed once the upstream issue is resolved.
+Step 5 is a Docker Compose workaround: `PrepareAsync` in `Aspire.Hosting.Docker` only resolves `ParameterResource` and `ContainerImageReference` sources, leaving Bitwarden-derived env vars blank. Step 5 patches those blanks after `prepare-{env}` runs and before `docker-compose-up-{env}` starts. It will be removed once the upstream issue is resolved.
 
 Happy path:
 
@@ -70,21 +70,50 @@ The resource reports the following states during a run:
 
 Dependent resources declare `WaitForCompletion` on the Bitwarden resource. `Exited` with a non-zero exit code causes `WaitForCompletion` to propagate the failure to those dependents; `Finished` unblocks them.
 
-### Two-phase parameter collection
+### Four-phase parameter collection
 
-Run-mode initialization collects parameters in two phases, both expressed as `Waiting` state to the dashboard:
+Run-mode initialization collects parameters in four phases, all expressed as `Waiting` state to the dashboard until all inputs are ready:
 
 **Phase 1 — authentication inputs only.**
 The resource waits for the management access token (and the auth cache path, which is derived from it). It then authenticates with Bitwarden immediately. A bad or missing token fails fast here — before the user is asked for project name or secret values — and the resource transitions to `Exited` (exit code 1).
 
-**Phase 2 — remaining parameters.**
-After a successful authentication, the resource waits for the project name, organization ID, and all managed secret parameter values. Once every value is available, the resource transitions to `Running` and provisioning begins.
+**Phase 2 — upstream managed secret sync.**
+After a successful authentication, the resource resolves the project, then checks Bitwarden for existing managed secrets whose local parameter values are missing. For each secret that has an upstream value, the provisioner:
+
+1. Binds the value into the resource's resolved-secret cache (`BindResolvedSecret`).
+2. Calls `WaitForValueTcs.TrySetResult(value)` on the `BitwardenSecretResource`'s underlying `ParameterResource` so any caller awaiting `GetValueAsync()` unblocks immediately.
+3. Removes the secret from `ParameterProcessor._unresolvedParameters` and cancels the prompt loop if the list becomes empty.
+4. Publishes a `ResourceNotificationService` snapshot update to show the parameter state as `Running` in the dashboard.
+
+The net effect: the "Parameters need values" banner disappears automatically after upstream sync for any secrets whose values already exist in Bitwarden.
+
+**Phase 2.5 — upstream reference secret sync.**
+After managed secret sync, the resource fetches current values for all reference-only secrets (declared via `GetSecret`). For each one, the provisioner binds the value and calls `ResolveWaitForValue` so `ParameterProcessor` sees the value and does not prompt. If a referenced secret does not exist in Bitwarden, the provisioner throws here rather than letting the dashboard ask for a value that the user cannot meaningfully supply.
+
+**Phase 3 — remaining parameters.**
+After upstream sync, the resource waits for any remaining project, organization, or managed secret parameter values. Managed secrets with no upstream value are still in `ParameterProcessor._unresolvedParameters` at this point, so the dashboard's interactive prompt remains active for those only. Once every value is available, the resource transitions to `Running` and provisioning continues.
 
 The resource never enters `Running` while parameters are still pending. `Running` strictly means "all inputs gathered, provisioning in progress."
 
 ### Sync command
 
-The "Sync" command repeats the full initialization sequence (both phases) on demand. It is available in any buildable terminal state (`Running`, `Finished`, `Exited`). Because parameter values are typically already resolved from the initial run, the resource moves through `Waiting` quickly before re-entering `Running`.
+The "Reprovision" command repeats the full initialization sequence on demand. It is available in any state except `NotStarted`. Because parameter values are typically already resolved from the initial run, the resource moves through `Waiting` quickly before re-entering `Running`.
+
+### BitwardenSecretResource as ParameterResource
+
+`BitwardenSecretResource` inherits `ParameterResource`. Both managed (`IsManaged = true`, from `AddSecret`) and reference-only (`IsManaged = false`, from `GetSecret`) instances use this same type. The `IsManaged` flag drives provisioner dispatch and value-resolution behavior.
+
+**Dashboard visibility.** Both kinds use `ResourceType = "Parameter"` in their initial snapshot so they appear in the Aspire dashboard parameters tab. For managed secrets, the `Source` property shows the configuration key (`Parameters:{resourceName}`) where a value can be pre-supplied. For reference-only secrets, the `Source` shows `Bitwarden: {remoteName}` to signal that the value comes exclusively from Bitwarden.
+
+**`ParameterProcessor` integration.** Aspire's built-in `ParameterProcessor` processes every `ParameterResource` on startup. For **managed secrets**: the value getter throws `MissingParameterValueException` when no config key is set, so the secret is added to `_unresolvedParameters`; Phase 2 sync removes resolved secrets from that list. For **reference-only secrets**: `IValueProvider.GetValueAsync` returns `null` before Phase 2.5 resolves the value, preventing `ParameterProcessor` from prompting; Phase 2.5 calls `ResolveWaitForValue` so the value is available by the time `ParameterProcessor` checks.
+
+**Value resolution order.** `IValueProvider.GetValueAsync` is overridden on `BitwardenSecretResource`:
+
+1. Bitwarden resolved-secret cache (populated by `BindResolvedSecret` after Phase 2/2.5 sync or Phase 4 provisioning).
+2. **Managed only** — `ParameterResource.GetValueAsync` — waits on `WaitForValueTcs`, which is set by either `ParameterProcessor` (from config or user input) or by the provisioner (from upstream sync).
+3. **Reference-only** — returns `null` if the Bitwarden cache is empty (pre-Phase 2.5); Phase 2.5 always populates the cache before the resource enters `Running`.
+
+The Bitwarden cache always takes precedence because it represents the authoritative remote state. The `ParameterResource` fallback for managed secrets serves as the write path: the value the user or config supplies is what the provisioner pushes to Bitwarden when the secret does not yet exist.
 
 ## Access Tokens
 

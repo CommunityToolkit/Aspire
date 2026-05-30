@@ -83,16 +83,31 @@ You can further customize the resource with the following options:
 Use `AddSecret(...)` to declare managed Bitwarden secrets.
 
 ```csharp
-IResourceBuilder<ParameterResource> apiKey = builder.AddParameter("api-key", secret: true);
-
-IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("api-key", apiKey);
+IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("api-key");
 ```
+
+Each managed secret appears in the Aspire dashboard parameters tab. Its value is resolved in
+this order during startup:
+
+1. **Bitwarden upstream** — if the secret already exists in Bitwarden, its current value is
+   synced automatically. No prompt, no configuration needed.
+2. **Configuration** — if no upstream value is found, the secret reads the configuration key
+   `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
+3. **Interactive prompt** — if the configuration key is also absent, the dashboard prompts for
+   the value. Once supplied, Bitwarden creates the secret with that value.
+
+The dashboard parameter state transitions to `Running` as soon as the value is resolved by any
+of these paths, so the "Parameters need values" banner disappears automatically after the
+upstream sync phase completes for existing secrets.
 
 Use `GetSecret(...)` to reference an existing remote secret.
 
 ```csharp
-IBitwardenSecretReference existingSecret = bitwarden.GetSecret("shared-api-key");
+IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("shared-api-key");
 ```
+
+Both `AddSecret` and `GetSecret`
+return `IResourceBuilder<BitwardenSecretResource>`, the difference is that `AddSecret` creates a managed secret that is synced and updated by Aspire, while `GetSecret` is unmanaged (read-only) and must already exist in Bitwarden.
 
 Use `WithReference(...)` to inject Bitwarden client configuration into
 dependent resources.
@@ -124,7 +139,7 @@ apply additional Bitwarden-specific configuration in one call. The scoped
 `bw` builder knows the connection name so you never repeat the source:
 
 ```csharp
-IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("demo-api-key", apiKey);
+IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("demo-api-key");
 
 // SDK approach: inject connection config + secret ID for runtime fetching
 builder.AddProject<Projects.ApiService>("api")
@@ -162,15 +177,17 @@ Typical flow:
 1. Declare the Bitwarden project and any managed secrets in the AppHost graph.
 2. Run `aspire deploy` for the AppHost.
 
-During `aspire deploy`, the integration runs four pipeline steps per Bitwarden
+During `aspire deploy`, the integration runs five pipeline steps per Bitwarden
 resource:
 
 1. **Authenticate** — resolves credentials and authenticates with Bitwarden
    Secrets Manager.
 2. **Provision project** — creates or updates the remote Bitwarden project.
-3. **Provision secrets** — creates or updates managed secrets and validates
+3. **Sync managed secrets** — reads existing upstream values for managed
+   secrets whose local parameter values are missing.
+4. **Provision secrets** — creates or updates managed secrets and validates
    declared references.
-4. **Patch env files** — applies resolved values to Docker Compose environment
+5. **Patch env files** — applies resolved values to Docker Compose environment
    files (Docker Compose deployments only).
 
 This keeps the experience declaration-first: resources and references are your
@@ -187,10 +204,12 @@ contract, and deployment materializes that contract.
 
 ### Secret declarations
 
-| API                      | What it does                                                | When to use                                                 |
-| ------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| `AddSecret(name, value)` | Declares a managed secret — created or updated on every run | When Aspire owns the secret value                           |
-| `GetSecret(name)`        | References an existing remote secret by name                | When the secret already exists and you only need to read it |
+Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to pass the secret resource to `WithBitwardenSecretValue` or `WithBitwardenSecretId`.
+
+| API               | What it does                                                                       | When to use                                                 |
+| ----------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `AddSecret(name)` | Declares a managed secret — value is written to Bitwarden on every run             | When Aspire owns the secret value                           |
+| `GetSecret(name)` | References an existing remote secret — value is read from Bitwarden, never written | When the secret already exists and you only need to read it |
 
 ### Secret references (injected into dependent resources)
 
@@ -212,10 +231,12 @@ contract, and deployment materializes that contract.
 
 The Bitwarden resource is a one-shot provisioner. Dependent resources use `WaitForCompletion`, so they block until provisioning finishes and then start.
 
-Provisioning runs in two phases before the resource enters `Running`:
+Provisioning runs in four phases before the resource enters `Running`:
 
 1. **Authentication** — waits only for the management access token, then authenticates with Bitwarden. Fails fast here so you learn about a bad token before providing the remaining values.
-2. **Parameter collection** — waits for the project name, organization ID, and all managed secret values. The resource enters `Running` only once every value is in hand.
+2. **Upstream managed secret sync** — resolves the project and reads existing Bitwarden values for managed secrets whose local parameter values are missing.
+3. **Upstream reference secret sync** — fetches values for all reference-only secrets (declared via `GetSecret`). Fails here if a referenced secret does not exist in Bitwarden.
+4. **Parameter collection** — waits for any remaining project name, organization ID, and managed secret values. The resource enters `Running` only once every value is in hand.
 
 | State                  | Style   | Dependent resources          |
 | ---------------------- | ------- | ---------------------------- |

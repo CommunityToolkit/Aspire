@@ -1,5 +1,6 @@
 #pragma warning disable ASPIREINTERACTION001
 
+using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Text;
 using Aspire.Hosting;
@@ -117,6 +118,155 @@ internal sealed class BitwardenSecretManagerProvisioner(
     }
 
     /// <summary>
+    /// Fetches values for all unmanaged (reference-only) secret resources from Bitwarden and binds them
+    /// so that <see cref="ParameterProcessor"/> does not prompt the user for them.
+    /// Requires <see cref="ProvisionProjectAsync"/> to have completed successfully first.
+    /// </summary>
+    public async Task SyncReferenceSecretValuesAsync(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        if (!resource.UnmanagedSecrets.Any())
+        {
+            return;
+        }
+
+        logger.LogDebug("Starting reference secret value sync for resource '{ResourceName}'.", resource.Name);
+
+        Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
+        Guid organizationId = await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
+        string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
+        string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
+        BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
+
+        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
+            await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
+            await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
+        provider.Login(accessToken, cacheContext.AuthCachePath);
+
+        BitwardenLookupContext lookupContext = new(provider, organizationId);
+
+        foreach (BitwardenSecretResource secret in resource.UnmanagedSecrets)
+        {
+            BitwardenSecretInfo secretInfo;
+
+            Guid? secretId = secret.ExistingSecretId ?? secret.SecretId;
+            if (secretId is Guid id)
+            {
+                logger.LogDebug("Looking up reference secret '{SecretName}' by ID {SecretId}.", secret.LocalName, id);
+                BitwardenSecretInfo? found = lookupContext.GetSecret(id);
+                if (found is null)
+                {
+                    throw new DistributedApplicationException($"Bitwarden secret '{id:D}' referenced by resource '{resource.Name}' was not found.");
+                }
+
+                if (found.ProjectId != projectId)
+                {
+                    throw new DistributedApplicationException($"Bitwarden secret '{id:D}' referenced by resource '{resource.Name}' does not belong to Bitwarden project '{projectId:D}'.");
+                }
+
+                secretInfo = found;
+            }
+            else
+            {
+                logger.LogDebug("Looking up reference secret '{SecretName}' by name '{RemoteName}' in project {ProjectId}.", secret.LocalName, secret.RemoteName, projectId);
+                IReadOnlyList<BitwardenSecretInfo> candidates = lookupContext.FindSecretsByNameInProject(secret.RemoteName, projectId);
+                if (candidates.Count == 0)
+                {
+                    throw new DistributedApplicationException($"Bitwarden secret '{secret.RemoteName}' referenced by resource '{resource.Name}' was not found in Bitwarden project '{projectId:D}'.");
+                }
+
+                if (candidates.Count > 1)
+                {
+                    throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' resolved {candidates.Count} secrets named '{secret.RemoteName}' in project '{projectId:D}'. Resolve the duplicate in Bitwarden or reference by secret ID instead.");
+                }
+
+                secretInfo = candidates[0];
+            }
+
+            secret.SecretId = secretInfo.Id;
+            resource.BindResolvedSecret(secretInfo.Id, secretInfo.Key, secretInfo.Value);
+            secret.ResolveWaitForValue(secretInfo.Value);
+            await NotifySecretValueResolvedAsync(secret, secretInfo.Value, services, cancellationToken).ConfigureAwait(false);
+            logger.LogInformation("Synced reference secret '{SecretName}' from Bitwarden secret {SecretId}.", secret.LocalName, secretInfo.Id);
+        }
+
+        logger.LogInformation("Synced {Count} reference secret values from Bitwarden for resource '{ResourceName}'.", resource.UnmanagedSecrets.Count(), resource.Name);
+    }
+
+    /// <summary>
+    /// Binds existing Bitwarden values for managed secrets whose local parameter values are missing.
+    /// Requires <see cref="ProvisionProjectAsync"/> to have completed successfully first.
+    /// </summary>
+    public async Task SyncMissingManagedSecretValuesAsync(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        logger.LogDebug("Starting upstream managed secret value sync for resource '{ResourceName}'.", resource.Name);
+
+        Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
+        Guid organizationId = await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
+        string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
+        string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
+        BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
+        IInteractionService? interactionService = services.GetService<IInteractionService>();
+
+        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
+            await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
+            await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
+        provider.Login(accessToken, cacheContext.AuthCachePath);
+
+        BitwardenLookupContext lookupContext = new(provider, organizationId);
+        int syncedCount = 0;
+
+        foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+        {
+            if (secret.HasValue())
+            {
+                logger.LogDebug("Skipping upstream sync for managed secret '{SecretName}' because a local value is already configured.", secret.LocalName);
+                continue;
+            }
+
+            BitwardenSecretInfo? upstreamSecret = await ResolveExistingManagedSecretAsync(
+                resource,
+                projectId,
+                secret,
+                cacheContext.Cache,
+                lookupContext,
+                interactionService,
+                logger,
+                cancellationToken).ConfigureAwait(false);
+
+            if (upstreamSecret is null)
+            {
+                logger.LogDebug("No upstream value found for managed secret '{SecretName}'. A local parameter value is still required.", secret.LocalName);
+                continue;
+            }
+
+            secret.SecretId = upstreamSecret.Id;
+            resource.BindResolvedSecret(upstreamSecret.Id, secret.RemoteName, upstreamSecret.Value);
+            secret.ResolveWaitForValue(upstreamSecret.Value);
+            await NotifySecretValueResolvedAsync(secret, upstreamSecret.Value, services, cancellationToken).ConfigureAwait(false);
+            syncedCount++;
+            logger.LogInformation("Synced managed secret '{SecretName}' from existing Bitwarden secret {SecretId}.", secret.LocalName, upstreamSecret.Id);
+        }
+
+        logger.LogInformation("Synced {SyncedSecretCount} managed secret values from upstream for resource '{ResourceName}'.", syncedCount, resource.Name);
+    }
+
+    /// <summary>
     /// Creates or updates managed secrets and validates declared secret references, then saves the AppHost cache.
     /// Requires <see cref="ProvisionProjectAsync"/> to have completed successfully first.
     /// </summary>
@@ -161,18 +311,18 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             BitwardenLookupContext lookupContext = new(provider, organizationId);
 
-            logger.LogInformation("Provisioning {ManagedSecretCount} managed secrets for resource '{ResourceName}'.", resource.ManagedSecrets.Count, resource.Name);
+            logger.LogInformation("Provisioning {ManagedSecretCount} managed secrets for resource '{ResourceName}'.", resource.ManagedSecrets.Count(), resource.Name);
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
             {
                 logger.LogDebug("Processing managed secret '{SecretName}' (remote name: {RemoteName}).", secret.LocalName, secret.RemoteName);
-                await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, services, logger, cancellationToken, staleManagedMappings).ConfigureAwait(false);
+                await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, logger, staleManagedMappings, services, cancellationToken).ConfigureAwait(false);
             }
 
             cacheContext.Cache.ManagedSecretIds = resource.ManagedSecrets
                 .Where(secret => secret.SecretId is not null)
                 .ToDictionary(secret => secret.LocalName, secret => secret.SecretId!.Value, StringComparer.OrdinalIgnoreCase);
 
-            logger.LogInformation("Validating {DeclaredSecretCount} declared secret references for resource '{ResourceName}'.", resource.DeclaredSecretReferences.Count, resource.Name);
+            logger.LogInformation("Validating {DeclaredSecretCount} declared secret references for resource '{ResourceName}'.", resource.DeclaredSecretReferences.Count(), resource.Name);
             await ValidateDeclaredSecretReferencesAsync(resource, cacheContext.Cache, lookupContext, interactionService, logger, cancellationToken).ConfigureAwait(false);
 
             cacheContext.Cache.ProjectId = resource.ProjectId;
@@ -252,13 +402,14 @@ internal sealed class BitwardenSecretManagerProvisioner(
         BitwardenLookupContext lookupContext,
         IBitwardenSecretManagerProvider provider,
         IInteractionService? interactionService,
-        IServiceProvider services,
         ILogger logger,
-        CancellationToken cancellationToken,
-        IReadOnlyDictionary<string, Guid> staleManagedMappings)
+        IReadOnlyDictionary<string, Guid> staleManagedMappings,
+        IServiceProvider services,
+        CancellationToken cancellationToken)
     {
         logger.LogDebug("Resolving value for managed secret '{SecretName}'.", secretResource.LocalName);
-        string resolvedValue = await ResolveSecretValueAsync(resource, secretResource.Value, secretResource.LocalName, services, cancellationToken).ConfigureAwait(false);
+        string resolvedValue = await ((IValueProvider)secretResource).GetValueAsync(cancellationToken).ConfigureAwait(false)
+            ?? throw new DistributedApplicationException($"Managed Bitwarden secret '{secretResource.LocalName}' did not resolve to a value.");
         logger.LogDebug("Successfully resolved value for managed secret '{SecretName}'.", secretResource.LocalName);
 
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
@@ -351,7 +502,63 @@ internal sealed class BitwardenSecretManagerProvisioner(
         lookupContext.CacheSecret(secret);
         secretResource.SecretId = secret.Id;
         resource.BindResolvedSecret(secret.Id, secretResource.RemoteName, secret.Value);
+        secretResource.ResolveWaitForValue(secret.Value);
+        await NotifySecretValueResolvedAsync(secretResource, secret.Value, services, cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Successfully provisioned managed secret '{SecretName}' with ID {SecretId}.", secretResource.LocalName, secret.Id);
+    }
+
+    private static async Task<BitwardenSecretInfo?> ResolveExistingManagedSecretAsync(
+        BitwardenSecretManagerResource resource,
+        Guid projectId,
+        BitwardenSecretResource secretResource,
+        BitwardenCache state,
+        BitwardenLookupContext lookupContext,
+        IInteractionService? interactionService,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        if (secretResource.ExistingSecretId is Guid explicitSecretId)
+        {
+            logger.LogDebug("Checking explicitly configured upstream secret {SecretId} for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
+            BitwardenSecretInfo? explicitSecret = lookupContext.GetSecret(explicitSecretId);
+            if (explicitSecret is not null)
+            {
+                return explicitSecret;
+            }
+
+            return null;
+        }
+
+        if (state.ManagedSecretIds.TryGetValue(secretResource.LocalName, out Guid persistedSecretId))
+        {
+            logger.LogDebug("Checking persisted upstream secret {SecretId} for managed secret '{SecretName}'.", persistedSecretId, secretResource.LocalName);
+            BitwardenSecretInfo? persistedSecret = lookupContext.GetSecret(persistedSecretId);
+            if (persistedSecret is not null && persistedSecret.ProjectId == projectId)
+            {
+                return persistedSecret;
+            }
+        }
+
+        logger.LogDebug("Searching upstream for managed secret '{SecretName}' with remote name '{RemoteName}' in project {ProjectId}.", secretResource.LocalName, secretResource.RemoteName, projectId);
+        IReadOnlyList<BitwardenSecretInfo> candidates = lookupContext.FindSecretsByNameInProject(secretResource.RemoteName, projectId);
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        if (candidates.Count == 1)
+        {
+            return candidates[0];
+        }
+
+        Guid selectedSecretId = await ResolveDuplicateAsync(
+            interactionService,
+            resource,
+            secretResource.RemoteName,
+            candidates,
+            cancellationToken).ConfigureAwait(false);
+
+        return candidates.Single(candidate => candidate.Id == selectedSecretId);
     }
 
     private static async Task ValidateDeclaredSecretReferencesAsync(
@@ -364,25 +571,26 @@ internal sealed class BitwardenSecretManagerProvisioner(
     {
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
 
-        foreach (IBitwardenSecretReference secretReference in resource.DeclaredSecretReferences)
+        foreach (BitwardenSecretResource secretReference in resource.DeclaredSecretReferences)
         {
-            if (secretReference.SecretOwner is BitwardenSecretResource managedSecret)
+            if (secretReference.IsManaged)
             {
-                logger.LogDebug("Processing declared reference to managed secret '{SecretName}'.", managedSecret.LocalName);
-                if (managedSecret.SecretId is Guid managedSecretId)
+                logger.LogDebug("Processing declared reference to managed secret '{SecretName}'.", secretReference.LocalName);
+                if (secretReference.SecretId is Guid managedSecretId)
                 {
-                    string? managedSecretValue = resource.ResolveSecretValue(managedSecret);
+                    string? managedSecretValue = resource.ResolveSecretValue(secretReference);
                     if (managedSecretValue is not null)
                     {
-                        resource.BindResolvedSecret(managedSecretId, managedSecret.RemoteName, managedSecretValue);
-                        logger.LogDebug("Bound declared reference to managed secret {SecretId} for '{SecretName}'.", managedSecretId, managedSecret.LocalName);
+                        resource.BindResolvedSecret(managedSecretId, secretReference.RemoteName, managedSecretValue);
+                        logger.LogDebug("Bound declared reference to managed secret {SecretId} for '{SecretName}'.", managedSecretId, secretReference.LocalName);
                     }
                 }
 
                 continue;
             }
 
-            if (secretReference.SecretId is Guid explicitSecretId)
+            // Unmanaged (reference-only) BitwardenSecretResource falls through to the ID or name lookup below.
+            if (secretReference.ResolvedSecretId is Guid explicitSecretId)
             {
                 logger.LogDebug("Processing declared reference to explicit secret {SecretId}.", explicitSecretId);
                 BitwardenSecretInfo? secret = lookupContext.GetSecret(explicitSecretId);
@@ -515,55 +723,6 @@ internal sealed class BitwardenSecretManagerProvisioner(
         return false;
     }
 
-    private static async Task<string> ResolveSecretValueAsync(
-        BitwardenSecretManagerResource resource,
-        object valueSource,
-        string secretName,
-        IServiceProvider services,
-        CancellationToken cancellationToken)
-    {
-        string? value = valueSource switch
-        {
-            ParameterResource parameter => await ResolveRequiredParameterValueAsync(
-                parameter,
-                resource,
-                $"managed secret '{secretName}'",
-                services,
-                cancellationToken).ConfigureAwait(false),
-            ReferenceExpression referenceExpression => await referenceExpression.GetValueAsync(cancellationToken).ConfigureAwait(false),
-            _ => throw new DistributedApplicationException($"Managed Bitwarden secret '{secretName}' uses unsupported value source type '{valueSource.GetType().Name}'.")
-        };
-
-        if (value is null)
-        {
-            throw new DistributedApplicationException($"Managed Bitwarden secret '{secretName}' did not resolve to a value.");
-        }
-
-        return value;
-    }
-
-    private static async Task<string> ResolveRequiredParameterValueAsync(
-        ParameterResource parameter,
-        BitwardenSecretManagerResource resource,
-        string purpose,
-        IServiceProvider services,
-        CancellationToken cancellationToken)
-    {
-        if (!parameter.HasValue())
-        {
-            await parameter.PromptAsync(services, cancellationToken).ConfigureAwait(false);
-        }
-
-        string? configuredValue = await parameter.GetValueAsync(cancellationToken).ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(configuredValue))
-        {
-            throw new DistributedApplicationException(
-                $"Bitwarden {purpose} parameter '{parameter.Name}' for resource '{resource.Name}' did not resolve to a value.");
-        }
-
-        return configuredValue;
-    }
-
     private static async Task<Guid> ResolveDuplicateAsync(
         IInteractionService? interactionService,
         BitwardenSecretManagerResource resource,
@@ -621,6 +780,49 @@ internal sealed class BitwardenSecretManagerProvisioner(
         {
             File.Delete(authCachePath);
         }
+    }
+
+    // Called after the Bitwarden provisioner has resolved a managed secret's value so the dashboard
+    // parameter state reflects the resolved value instead of staying in "ValueMissing".
+    private static async Task NotifySecretValueResolvedAsync(
+        BitwardenSecretResource secretResource,
+        string resolvedValue,
+        IServiceProvider services,
+        CancellationToken cancellationToken)
+    {
+#pragma warning disable ASPIREINTERACTION001
+        ParameterProcessor? paramProcessor = services.GetService<ParameterProcessor>();
+        if (paramProcessor is not null)
+        {
+            ParameterResourceExtensions.MarkParameterResolved(paramProcessor, secretResource);
+        }
+#pragma warning restore ASPIREINTERACTION001
+
+        ResourceNotificationService? notificationService = services.GetService<ResourceNotificationService>();
+        if (notificationService is null)
+        {
+            return;
+        }
+
+        await notificationService.PublishUpdateAsync(secretResource, s =>
+        {
+            // Update the "Value" property (IsSensitive because secrets are always masked in the dashboard).
+            const string valuePropName = "Value";
+            var props = s.Properties;
+            var valueProp = new ResourcePropertySnapshot(valuePropName, resolvedValue) { IsSensitive = secretResource.Secret };
+            int idx = -1;
+            for (int i = 0; i < props.Length; i++)
+            {
+                if (string.Equals(props[i].Name, valuePropName, StringComparison.OrdinalIgnoreCase))
+                {
+                    idx = i;
+                    break;
+                }
+            }
+            props = idx >= 0 ? props.SetItem(idx, valueProp) : [.. props, valueProp];
+
+            return s with { State = KnownResourceStates.Running, Properties = props };
+        }).ConfigureAwait(false);
     }
 
     private static async Task<string> ResolveAuthCachePathAsync(
@@ -740,9 +942,21 @@ internal sealed record SecretUpdateAudit(
     {
         string timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
         var changes = new List<string>();
-        if (NameChanged) changes.Add($"key renamed (previous: {PreviousName})");
-        if (ProjectChanged) changes.Add($"project changed (previous: {PreviousProjectId})");
-        if (ValueChanged) changes.Add($"value changed (previous: {PreviousValue})");
+        if (NameChanged)
+        {
+            changes.Add($"key renamed (previous: {PreviousName})");
+        }
+
+        if (ProjectChanged)
+        {
+            changes.Add($"project changed (previous: {PreviousProjectId})");
+        }
+
+        if (ValueChanged)
+        {
+            changes.Add($"value changed (previous: {PreviousValue})");
+        }
+
         string entry = $"[{timestamp}] {string.Join(", ", changes)}";
         return string.IsNullOrEmpty(existingNote) ? entry : $"{entry}\n{existingNote}";
     }

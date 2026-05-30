@@ -8,7 +8,6 @@ builder.AddDockerComposeEnvironment("docker")
 var organizationId = builder.AddParameter("bitwarden-organization-id");
 var projectName = builder.AddParameter("bitwarden-project-name");
 var accessToken = builder.AddParameter("bitwarden-access-token", secret: true);
-var demoApiKey = builder.AddParameter("demo-api-key", secret: true);
 
 // Set up a secrets project within the specified organization using the provided management access token.
 // The management token MUST have write permissions to the project if it already exists.
@@ -38,9 +37,11 @@ bitwarden.WithCacheFile($".bitwarden/secrets.{builder.Environment.EnvironmentNam
 // Relative paths are resolved from the Aspire store directory.
 //bitwarden.WithAuthCacheFile("...");
 
-// Add a secret to the project with the value of the demo API key parameter.
+// Add a secret to the project with the value of the generated secret parameter.
+// Configure this value with `Parameters:secrets-demo-api-key`, or let Aspire prompt for it.
 // The secret is created or updated on each run. Use `GetSecret` if you only want to read an existing secret.
-var demoApiKeySecret = bitwarden.AddSecret("demo-api-key", demoApiKey);
+var demoApiKeySecret = bitwarden.AddSecret("demo-api-key");
+var demoDbPasswordSecret = bitwarden.AddSecret("demo-db-password");
 
 // Register an API service that references the Bitwarden secret manager
 // There are two ways to reference secrets from the Bitwarden secret manager in Aspire.
@@ -54,6 +55,7 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
 api.WithReference(bitwarden, bw =>
 {
     bw.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource);
+    bw.WithBitwardenSecretId("DEMO_DB_PASSWORD_SECRET_ID", demoDbPasswordSecret.Resource);
 
     // Recommended: supply a least-privilege read-only access token so the client does not receive the management token.
     // IMPORTANT: the client token must be granted read permissions to the Bitwarden project.

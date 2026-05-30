@@ -80,17 +80,17 @@ public sealed class BitwardenReferenceBuilder<TDestination>
     /// The app uses the Bitwarden SDK to fetch the value by ID at runtime.
     /// </summary>
     /// <param name="environmentVariableName">The destination environment variable name.</param>
-    /// <param name="secretReference">The Bitwarden secret reference.</param>
+    /// <param name="secret">The Bitwarden secret resource.</param>
     /// <returns>This builder.</returns>
     public BitwardenReferenceBuilder<TDestination> WithBitwardenSecretId(
         string environmentVariableName,
-        IBitwardenSecretReference secretReference)
+        BitwardenSecretResource secret)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
-        ArgumentNullException.ThrowIfNull(secretReference);
+        ArgumentNullException.ThrowIfNull(secret);
 
-        BitwardenSecretManagerExtensions.AttachSecretDependencies(_builder, secretReference);
-        _builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secretReference));
+        BitwardenSecretManagerExtensions.AttachSecretDependencies(_builder, secret);
+        _builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secret));
         return this;
     }
 }

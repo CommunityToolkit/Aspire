@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 
+#pragma warning disable ASPIREINTERACTION001
 internal static class ParameterResourceExtensions
 {
     extension(ParameterResource parameter)
@@ -19,11 +20,17 @@ internal static class ParameterResourceExtensions
             }
 
             // No TCS means value comes from Func<string> synchronously, GetValueAsync won't block.
-            string? value = parameter.GetValueAsync(CancellationToken.None).GetAwaiter().GetResult();
-            return !string.IsNullOrWhiteSpace(value);
+            try
+            {
+                string? value = parameter.GetValueAsync(CancellationToken.None).GetAwaiter().GetResult();
+                return !string.IsNullOrWhiteSpace(value);
+            }
+            catch (MissingParameterValueException)
+            {
+                return false;
+            }
         }
 
-#pragma warning disable ASPIREINTERACTION001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         public async ValueTask PromptAsync(IServiceProvider services, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(services);
@@ -31,12 +38,41 @@ internal static class ParameterResourceExtensions
             ParameterProcessor parameterProcessor = services.GetRequiredService<ParameterProcessor>();
             await parameterProcessor.SetParameterAsync(parameter, cancellationToken).ConfigureAwait(false);
         }
-#pragma warning restore ASPIREINTERACTION001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        // Called by the Bitwarden provisioner after it resolves a secret value from the remote.
+        // Resolves the WaitForValueTcs so callers awaiting GetValueAsync() unblock immediately.
+        public void ResolveWaitForValue(string resolvedValue)
+        {
+            var tcs = GetWaitForValueTcs(parameter);
+            // Only set if pending; don't overwrite a value the user already provided via the dashboard.
+            if (tcs is not null && !tcs.Task.IsCompleted)
+            {
+                tcs.TrySetResult(resolvedValue);
+            }
+        }
+    }
+
+    // Removes a resolved parameter from ParameterProcessor's pending list and cancels the banner
+    // if all parameters are now satisfied. This prevents the "parameters need values" prompt from
+    // lingering after Bitwarden has already provided the value.
+    internal static void MarkParameterResolved(ParameterProcessor parameterProcessor, ParameterResource parameter)
+    {
+        ref List<ParameterResource> unresolved = ref GetUnresolvedParameters(parameterProcessor);
+        unresolved.Remove(parameter);
+
+        if (unresolved.Count == 0)
+        {
+            GetAllParametersResolvedCts(parameterProcessor)?.Cancel();
+        }
     }
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_WaitForValueTcs")]
     static extern TaskCompletionSource<string>? GetWaitForValueTcs(ParameterResource parameter);
 
-    [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "set_WaitForValueTcs")]
-    static extern void SetWaitForValueTcs(ParameterResource parameter, TaskCompletionSource<string>? value);
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_unresolvedParameters")]
+    static extern ref List<ParameterResource> GetUnresolvedParameters(ParameterProcessor processor);
+
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_allParametersResolvedCts")]
+    static extern ref CancellationTokenSource? GetAllParametersResolvedCts(ParameterProcessor processor);
 }
+#pragma warning restore ASPIREINTERACTION001

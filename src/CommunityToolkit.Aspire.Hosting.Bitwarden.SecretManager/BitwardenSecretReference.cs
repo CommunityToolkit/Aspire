@@ -1,70 +1,27 @@
-#pragma warning disable ASPIREATS001
-
 namespace Aspire.Hosting.ApplicationModel;
 
-/// <summary>
-/// Represents a reference to a Bitwarden Secrets Manager secret.
-/// </summary>
-[AspireExport]
-public interface IBitwardenSecretReference : IExpressionValue, IValueProvider, IManifestExpressionProvider, IValueWithReferences
+internal sealed class BitwardenSecretIdExpression(BitwardenSecretResource secret) : IManifestExpressionProvider, IValueProvider, IValueWithReferences
 {
-    /// <summary>
-    /// Gets the Bitwarden resource that owns the secret reference.
-    /// </summary>
-    BitwardenSecretManagerResource Resource { get; }
+    public string ValueExpression => secret.ResolvedSecretId is Guid secretId
+        ? secretId.ToString("D")
+        : $"{{{secret.Parent.Name}.secrets.{secret.RemoteName}.id}}";
 
-    /// <summary>
-    /// Gets the remote secret name, if the reference was declared by name.
-    /// </summary>
-    string? RemoteName { get; }
-
-    /// <summary>
-    /// Gets the remote secret identifier, if the reference was declared by identifier.
-    /// </summary>
-    Guid? SecretId { get; }
-
-    /// <summary>
-    /// Gets the secret owner resource, when the reference is backed by a managed secret resource.
-    /// </summary>
-    IResource? SecretOwner { get; }
-
-    IEnumerable<object> IValueWithReferences.References => SecretOwner is null ? [Resource] : [Resource, SecretOwner];
-}
-
-internal sealed class BitwardenSecretReference(string? remoteName, Guid? secretId, BitwardenSecretManagerResource resource) : IBitwardenSecretReference
-{
-    public BitwardenSecretManagerResource Resource => resource;
-
-    public string? RemoteName => remoteName;
-
-    public Guid? SecretId => secretId;
-
-    public IResource? SecretOwner => remoteName is null ? null : resource.FindManagedSecretByRemoteName(remoteName);
-
-    public string ValueExpression => secretId is Guid id
-        ? $"{{{resource.Name}.secrets.{id:D}}}"
-        : $"{{{resource.Name}.secrets.{remoteName}}}";
+    IEnumerable<object> IValueWithReferences.References => [secret.Parent, secret];
 
     public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken)
     {
-        return ValueTask.FromResult(resource.ResolveSecretValue(this));
+        return ValueTask.FromResult(secret.ResolvedSecretId?.ToString("D"));
     }
 }
 
-internal sealed class BitwardenSecretIdExpression(IBitwardenSecretReference secretReference) : IManifestExpressionProvider, IValueProvider, IValueWithReferences
+internal sealed class BitwardenSecretValueExpression(BitwardenSecretResource secret) : IManifestExpressionProvider, IValueProvider, IValueWithReferences
 {
-    public string ValueExpression => secretReference.SecretId is Guid secretId
-        ? secretId.ToString("D")
-        : secretReference.RemoteName is string remoteName
-            ? $"{{{secretReference.Resource.Name}.secrets.{remoteName}.id}}"
-            : string.Empty;
+    public string ValueExpression => ((IManifestExpressionProvider)secret).ValueExpression;
 
-    IEnumerable<object> IValueWithReferences.References => secretReference.SecretOwner is IResource secretOwner
-        ? [secretReference.Resource, secretOwner]
-        : [secretReference.Resource];
+    IEnumerable<object> IValueWithReferences.References => [secret.Parent, secret];
 
     public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken)
     {
-        return ValueTask.FromResult(secretReference.SecretId?.ToString("D"));
+        return ValueTask.FromResult(secret.Parent.ResolveSecretValue(secret));
     }
 }

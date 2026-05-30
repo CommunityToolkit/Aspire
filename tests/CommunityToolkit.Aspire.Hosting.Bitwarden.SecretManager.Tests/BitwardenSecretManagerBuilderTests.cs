@@ -21,34 +21,18 @@ public class BitwardenSecretManagerBuilderTests
     }
 
     [Fact]
-    public void AddSecret_ParameterValue_WhenBuilderIsNull_Throws()
+    public void AddSecret_WhenBuilderIsNull_Throws()
     {
-        var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.Configuration["Parameters:managed-secret"] = "managed-secret-value";
-
         IResourceBuilder<BitwardenSecretManagerResource> builder = null!;
-        var value = appBuilder.AddParameter("managed-secret", secret: true);
 
-        Action action = () => BitwardenSecretManagerExtensions.AddSecret(builder, "managed-secret", value);
+        Action action = () => BitwardenSecretManagerExtensions.AddSecret(builder, "managed-secret");
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal("builder", exception.ParamName);
     }
 
     [Fact]
-    public void AddSecret_ReferenceValue_WhenBuilderIsNull_Throws()
-    {
-        IResourceBuilder<BitwardenSecretManagerResource> builder = null!;
-        ReferenceExpression value = ReferenceExpression.Create($"test-value");
-
-        Action action = () => BitwardenSecretManagerExtensions.AddSecret(builder, "managed-secret", value);
-
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal("builder", exception.ParamName);
-    }
-
-    [Fact]
-    public void AddBitwardenSecretManager_StoresConfiguredProjectName()
+    public async Task AddBitwardenSecretManager_StoresConfiguredProjectName()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
@@ -67,8 +51,8 @@ public class BitwardenSecretManagerBuilderTests
         Assert.Equal("bitwarden", resource.Name);
         Assert.Equal(projectName, resource.RemoteProjectName);
         Assert.NotEqual(resource.Name, resource.RemoteProjectName);
-        Assert.Equal(BitwardenSecretManagerResource.DefaultApiUrl, resource.GetApiUrlOrDefault());
-        Assert.Equal(BitwardenSecretManagerResource.DefaultIdentityUrl, resource.GetIdentityUrlOrDefault());
+        Assert.Equal(BitwardenSecretManagerResource.DefaultApiUrl, await resource.GetApiUrlAsync(CancellationToken.None));
+        Assert.Equal(BitwardenSecretManagerResource.DefaultIdentityUrl, await resource.GetIdentityUrlAsync(CancellationToken.None));
         Assert.Null(resource.ProjectId);
     }
 
@@ -99,17 +83,15 @@ public class BitwardenSecretManagerBuilderTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
-        appBuilder.Configuration["Parameters:managed-secret"] = "secret-value";
 
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-        var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
 
         var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
-        var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
+        var managedSecret = bitwarden.AddSecret("managed-secret");
 
         var reference = bitwarden.GetSecret("managed-secret");
 
-        Assert.Same(managedSecret.Resource, reference);
+        Assert.Same(managedSecret.Resource, reference.Resource);
         Assert.Single(bitwarden.Resource.DeclaredSecretReferences);
     }
 
@@ -138,15 +120,13 @@ public class BitwardenSecretManagerBuilderTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
-        appBuilder.Configuration["Parameters:secret-a"] = "value-a";
 
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-        var secretValue = appBuilder.AddParameter("secret-a", secret: true);
 
         var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "shared-project", Guid.NewGuid(), accessToken);
-        bitwarden.AddSecret("secret-a", "shared-secret", secretValue);
+        bitwarden.AddSecret("secret-a", "shared-secret");
 
-        Action action = () => bitwarden.AddSecret("secret-b", "shared-secret", secretValue);
+        Action action = () => bitwarden.AddSecret("secret-b", "shared-secret");
 
         var exception = Assert.Throws<DistributedApplicationException>(action);
         Assert.Contains("shared-secret", exception.Message, StringComparison.Ordinal);
@@ -326,13 +306,11 @@ public class BitwardenSecretManagerBuilderTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
-        appBuilder.Configuration["Parameters:managed-secret"] = "managed-value";
 
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-        var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
 
         var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
-        var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
+        var managedSecret = bitwarden.AddSecret("managed-secret");
 
         Guid secretId = Guid.NewGuid();
         managedSecret.Resource.SecretId = secretId;
@@ -353,13 +331,11 @@ public class BitwardenSecretManagerBuilderTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
-        appBuilder.Configuration["Parameters:managed-secret"] = "managed-value";
 
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-        var managedSecretValue = appBuilder.AddParameter("managed-secret", secret: true);
 
         var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
-        var managedSecret = bitwarden.AddSecret("managed-secret", managedSecretValue);
+        var managedSecret = bitwarden.AddSecret("managed-secret");
 
         Guid secretId = Guid.NewGuid();
         managedSecret.Resource.SecretId = secretId;

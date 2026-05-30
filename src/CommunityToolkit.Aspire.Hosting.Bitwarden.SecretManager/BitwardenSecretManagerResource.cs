@@ -15,8 +15,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     internal const string ConfigurationKeyPrefix = "Aspire__Bitwarden__SecretManager";
 
     private readonly BitwardenProjectIdReference _projectIdReference;
-    private readonly List<BitwardenSecretResource> _managedSecrets = [];
-    private readonly List<IBitwardenSecretReference> _declaredSecretReferences = [];
+    private readonly List<BitwardenSecretResource> _secrets = [];
     private readonly Dictionary<Guid, string> _resolvedSecretValues = [];
     private readonly Dictionary<string, Guid> _resolvedSecretIdsByRemoteName = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConfiguredGuidValue _organizationId;
@@ -188,45 +187,41 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal string? ResolvedRemoteProjectName { get; set; }
 
-    internal IReadOnlyList<BitwardenSecretResource> ManagedSecrets => _managedSecrets;
+    internal IEnumerable<BitwardenSecretResource> ManagedSecrets => _secrets.Where(s => s.IsManaged);
 
-    internal IReadOnlyList<IBitwardenSecretReference> DeclaredSecretReferences => _declaredSecretReferences;
+    internal IEnumerable<BitwardenSecretResource> UnmanagedSecrets => _secrets.Where(s => !s.IsManaged);
 
-    internal IBitwardenSecretReference GetSecretReference(string remoteName)
+    internal IEnumerable<BitwardenSecretResource> DeclaredSecretReferences => _secrets;
+
+    internal BitwardenSecretResource GetOrCreateUnmanagedSecret(string remoteName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
 
-        BitwardenSecretResource? managedSecret = FindManagedSecretByRemoteName(remoteName);
-        if (managedSecret is not null)
+        BitwardenSecretResource? existing = _secrets.LastOrDefault(
+            s => string.Equals(s.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
         {
-            return managedSecret;
+            return existing;
         }
 
-        BitwardenSecretReference secretReference = new(remoteName, null, this);
-        RegisterSecretReference(secretReference);
-        return secretReference;
+        BitwardenSecretResource secret = new($"{Name}-{remoteName}", remoteName, this);
+        RegisterSecret(secret);
+        return secret;
     }
 
-    internal IBitwardenSecretReference GetSecretReference(Guid secretId)
+    internal BitwardenSecretResource GetOrCreateUnmanagedSecret(Guid secretId)
     {
-        BitwardenSecretReference secretReference = new(null, secretId, this);
-        RegisterSecretReference(secretReference);
-        return secretReference;
+        BitwardenSecretResource? existing = _secrets.FirstOrDefault(
+            s => !s.IsManaged && s.ExistingSecretId == secretId);
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        BitwardenSecretResource secret = new($"{Name}-{secretId:N}", secretId, this);
+        RegisterSecret(secret);
+        return secret;
     }
-
-    /// <summary>
-    /// Gets a Bitwarden secret reference by remote name.
-    /// </summary>
-    /// <param name="remoteName">The Bitwarden secret name.</param>
-    /// <returns>A Bitwarden secret reference.</returns>
-    public IBitwardenSecretReference GetSecret(string remoteName) => GetSecretReference(remoteName);
-
-    /// <summary>
-    /// Gets a Bitwarden secret reference by secret identifier.
-    /// </summary>
-    /// <param name="secretId">The Bitwarden secret identifier.</param>
-    /// <returns>A Bitwarden secret reference.</returns>
-    public IBitwardenSecretReference GetSecret(Guid secretId) => GetSecretReference(secretId);
 
     internal async Task<Guid> GetResolvedOrganizationIdAsync(
         IServiceProvider services,
@@ -289,20 +284,23 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     internal async ValueTask<string> GetIdentityUrlAsync(CancellationToken cancellationToken)
         => await IdentityUrl.GetValueAsync(cancellationToken).ConfigureAwait(false) ?? DefaultIdentityUrl;
 
+    internal string GetProjectNameDisplayValue()
+        => RemoteProjectName ?? ConfiguredRemoteProjectNameParameter?.Name ?? Name;
+
     internal string GetConfiguredProjectIdentityKey(string? resolvedProjectName = null)
         // Existing-project adoption must keep using the remote project ID as the stable key.
         => ExistingProjectId?.ToString("D")
             ?? _projectName.GetIdentityKey(Name, "project name", resolvedProjectName);
 
-    internal string? ResolveSecretValue(IBitwardenSecretReference secretReference)
+    internal string? ResolveSecretValue(BitwardenSecretResource secret)
     {
-        Guid? secretId = secretReference.SecretId;
+        Guid? secretId = secret.ResolvedSecretId;
         if (secretId is Guid explicitSecretId && _resolvedSecretValues.TryGetValue(explicitSecretId, out string? explicitValue))
         {
             return explicitValue;
         }
 
-        if (secretReference.RemoteName is string remoteName &&
+        if (secret.RemoteName is string remoteName &&
             _resolvedSecretIdsByRemoteName.TryGetValue(remoteName, out Guid resolvedSecretId) &&
             _resolvedSecretValues.TryGetValue(resolvedSecretId, out string? remoteNameValue))
         {
@@ -328,7 +326,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         _resolvedSecretValues.Clear();
         _resolvedSecretIdsByRemoteName.Clear();
 
-        foreach (BitwardenSecretResource secret in _managedSecrets)
+        foreach (BitwardenSecretResource secret in _secrets)
         {
             secret.SecretId = null;
         }
@@ -345,25 +343,17 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         _resolvedSecretIdsByRemoteName[remoteName] = secretId;
     }
 
-    internal void RegisterManagedSecret(BitwardenSecretResource secret)
+    internal void RegisterSecret(BitwardenSecretResource secret)
     {
         ArgumentNullException.ThrowIfNull(secret);
-        _managedSecrets.Add(secret);
-        RegisterSecretReference(secret);
-    }
-
-    internal void RegisterSecretReference(IBitwardenSecretReference secretReference)
-    {
-        ArgumentNullException.ThrowIfNull(secretReference);
-
-        if (!_declaredSecretReferences.Contains(secretReference))
+        if (!_secrets.Contains(secret))
         {
-            _declaredSecretReferences.Add(secretReference);
+            _secrets.Add(secret);
         }
     }
 
     internal BitwardenSecretResource? FindManagedSecretByRemoteName(string remoteName)
     {
-        return _managedSecrets.LastOrDefault(secret => string.Equals(secret.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase));
+        return _secrets.LastOrDefault(s => s.IsManaged && string.Equals(s.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase));
     }
 }
