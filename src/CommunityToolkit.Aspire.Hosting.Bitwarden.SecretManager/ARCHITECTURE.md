@@ -63,7 +63,7 @@ The resource reports the following states during a run:
 | State                  | Style   | Meaning                                                          |
 | ---------------------- | ------- | ---------------------------------------------------------------- |
 | `NotStarted`           | —       | Resource registered, initialization not yet started              |
-| `ValueMissing`         | Warning | Waiting for one or more parameter values (see phases below)      |
+| `Waiting`              | —       | Waiting for one or more parameter values (see phases below)      |
 | `Running`              | —       | All values collected; actively provisioning project and secrets  |
 | `Finished`             | Success | Provisioning succeeded; dependent resources may start            |
 | `Exited` (exit code 1) | Error   | Authentication or provisioning failed; dependent resources error |
@@ -72,7 +72,7 @@ Dependent resources declare `WaitForCompletion` on the Bitwarden resource. `Exit
 
 ### Two-phase parameter collection
 
-Run-mode initialization collects parameters in two phases, both expressed as `ValueMissing` state to the dashboard:
+Run-mode initialization collects parameters in two phases, both expressed as `Waiting` state to the dashboard:
 
 **Phase 1 — authentication inputs only.**
 The resource waits for the management access token (and the auth cache path, which is derived from it). It then authenticates with Bitwarden immediately. A bad or missing token fails fast here — before the user is asked for project name or secret values — and the resource transitions to `Exited` (exit code 1).
@@ -84,7 +84,7 @@ The resource never enters `Running` while parameters are still pending. `Running
 
 ### Sync command
 
-The "Sync" command repeats the full initialization sequence (both phases) on demand. It is available in any buildable terminal state (`Running`, `Finished`, `Exited`). Because parameter values are typically already resolved from the initial run, the resource moves through `ValueMissing` quickly before re-entering `Running`.
+The "Sync" command repeats the full initialization sequence (both phases) on demand. It is available in any buildable terminal state (`Running`, `Finished`, `Exited`). Because parameter values are typically already resolved from the initial run, the resource moves through `Waiting` quickly before re-entering `Running`.
 
 ## Access Tokens
 

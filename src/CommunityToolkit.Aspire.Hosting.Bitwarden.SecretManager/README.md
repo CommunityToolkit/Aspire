@@ -220,7 +220,7 @@ Provisioning runs in two phases before the resource enters `Running`:
 | State                  | Style   | Dependent resources          |
 | ---------------------- | ------- | ---------------------------- |
 | `NotStarted`           | —       | Blocked                      |
-| `ValueMissing`         | Warning | Blocked                      |
+| `Waiting`              | —       | Blocked                      |
 | `Running`              | —       | Blocked (still provisioning) |
 | `Finished`             | Success | Unblocked — start normally   |
 | `Exited` (exit code 1) | Error   | Error — fail to start        |
