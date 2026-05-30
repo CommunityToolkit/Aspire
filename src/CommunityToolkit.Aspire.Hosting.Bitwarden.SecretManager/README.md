@@ -311,3 +311,25 @@ Paths are tried in order: explicit adoption → persisted mapping → name searc
 | 1            | ✗                 | Sync secret                                        |
 | 1            | ✓                 | ⚠ Create new secret (local identity changed)       |
 | > 1          | —                 | Prompt user to pick one (error if non-interactive) |
+
+## Compatibility
+
+Tested with **Aspire 13.3.0**.
+
+This integration uses several experimental Aspire APIs and one `UnsafeAccessor`
+workaround. These are summarized below so that upgrading Aspire is a conscious
+decision rather than a silent breakage.
+
+| Diagnostic / Mechanism                         | Files                                                                      | Members / Types                                                                                   | Why                                                                                                                                                                                                                                                   |
+| ---------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ASPIREATS001`                                 | `BitwardenSecretManagerResource`, `BitwardenSecretResource`                | `[AspireExport]`, `[AspireExport(ExposeProperties = true)]`                                       | Registers resource types with Aspire's typed export system so they appear in the dashboard and deployment manifest as first-class resources.                                                                                                          |
+| `ASPIREPIPELINES001`, `ASPIREPIPELINES004`     | `BitwardenSecretManagerExtensions`, `BitwardenSecretManagerDeploymentStep` | `PipelineStepContext`, `IPipelineOutputService`, `IComputeEnvironmentResource`, `AddPipelineStep` | Hooks into `aspire deploy` to register five pipeline steps. The env-file patch step works around Aspire not calling `GetValueAsync` on custom `IValueProvider` sources during `prepare`, leaving Bitwarden-derived env vars blank in generated files. |
+| `ASPIREINTERACTION001`                         | `BitwardenSecretManagerProvisioner`, `ParameterResourceExtensions`         | `ParameterProcessor`                                                                              | Triggers dashboard prompts for unresolved parameters and dismisses the "parameters need values" banner once Bitwarden resolves a secret value.                                                                                                        |
+| `UnsafeAccessor` — `get_WaitForValueTcs`       | `ParameterResourceExtensions`                                              | `ParameterResource` private property                                                              | Synchronously checks whether a parameter has a value and resolves the `TaskCompletionSource<string>` to unblock `GetValueAsync` waiters after Bitwarden fetches the secret. No public equivalent.                                                     |
+| `UnsafeAccessor` — `_unresolvedParameters`     | `ParameterResourceExtensions`                                              | `ParameterProcessor` private field                                                                | Removes a resolved parameter from the pending list so the dashboard banner reflects actual state. No public equivalent.                                                                                                                               |
+| `UnsafeAccessor` — `_allParametersResolvedCts` | `ParameterResourceExtensions`                                              | `ParameterProcessor` private field                                                                | Cancels the banner `CancellationTokenSource` when all parameters are satisfied, dismissing it immediately. No public equivalent.                                                                                                                      |
+
+If Aspire renames or removes any of the `UnsafeAccessor` targets, the integration will fail at
+runtime with a `MissingMethodException` or `MissingFieldException`. Run the
+AppHost against a new Aspire version and watch for those exceptions before
+shipping a NuGet update.
