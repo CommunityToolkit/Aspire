@@ -750,18 +750,7 @@ public static class BitwardenSecretManagerExtensions
                 {
                     IconName = "KeyReset",
                     IconVariant = IconVariant.Regular,
-                    Description = "Delete the cached Bitwarden authentication session. The next run will perform a fresh login.",
-                    UpdateState = context =>
-                    {
-                        string? state = context.ResourceSnapshot?.State?.Text;
-                        if (state == KnownResourceStates.ValueMissing || state == KnownResourceStates.Running)
-                        {
-                            return ResourceCommandState.Disabled;
-                        }
-
-                        // Enabled in all terminal states: Finished, Exited, NotStarted, etc.
-                        return ResourceCommandState.Enabled;
-                    }
+                    Description = "Delete the cached Bitwarden authentication session. The next run will perform a fresh login."
                 });
         }
 
