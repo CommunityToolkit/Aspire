@@ -163,7 +163,66 @@ public static class BitwardenSecretManagerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ValidateAbsoluteUri(apiUrl, nameof(apiUrl));
 
-        builder.Resource.ApiUrl = apiUrl;
+        builder.Resource.ApiUrl = ReferenceExpression.Create($"{apiUrl}");
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden API URL using a parameter.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="apiUrl">The parameter that resolves to the absolute Bitwarden API URL.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        IResourceBuilder<ParameterResource> apiUrl)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(apiUrl);
+
+        builder.Resource.ApiUrl = ReferenceExpression.Create($"{apiUrl.Resource}");
+        builder.WithReferenceRelationship(apiUrl.Resource);
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden API URL using an external service resource.
+    /// The Bitwarden resource will wait for the external service before authenticating.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="server">The external service whose URL is used as the Bitwarden API URL.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        IResourceBuilder<ExternalServiceResource> server)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(server);
+
+        builder.Resource.ApiUrl = server.Resource.Uri is { } uri
+            ? ReferenceExpression.Create($"{uri.AbsoluteUri.TrimEnd('/')}")
+            : ReferenceExpression.Create($"{server.Resource.UrlParameter!}");
+        builder.WithReferenceRelationship(server.Resource);
+        builder.WaitFor(server);
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden API URL using an endpoint from another resource in the Aspire model.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="endpoint">The endpoint reference for the Bitwarden API.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        EndpointReference endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(endpoint);
+
+        builder.Resource.ApiUrl = ReferenceExpression.Create($"{endpoint}");
+        builder.WithReferenceRelationship(endpoint.Resource);
+        builder.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(endpoint.Resource));
         return builder;
     }
 
@@ -180,7 +239,66 @@ public static class BitwardenSecretManagerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ValidateAbsoluteUri(identityUrl, nameof(identityUrl));
 
-        builder.Resource.IdentityUrl = identityUrl;
+        builder.Resource.IdentityUrl = ReferenceExpression.Create($"{identityUrl}");
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden identity URL using a parameter.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="identityUrl">The parameter that resolves to the absolute Bitwarden identity URL.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        IResourceBuilder<ParameterResource> identityUrl)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(identityUrl);
+
+        builder.Resource.IdentityUrl = ReferenceExpression.Create($"{identityUrl.Resource}");
+        builder.WithReferenceRelationship(identityUrl.Resource);
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden identity URL using an external service resource.
+    /// The Bitwarden resource will wait for the external service before authenticating.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="server">The external service whose URL is used as the Bitwarden identity URL.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        IResourceBuilder<ExternalServiceResource> server)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(server);
+
+        builder.Resource.IdentityUrl = server.Resource.Uri is { } uri
+            ? ReferenceExpression.Create($"{uri.AbsoluteUri.TrimEnd('/')}")
+            : ReferenceExpression.Create($"{server.Resource.UrlParameter!}");
+        builder.WithReferenceRelationship(server.Resource);
+        builder.WaitFor(server);
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden identity URL using an endpoint from another resource in the Aspire model.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="endpoint">The endpoint reference for the Bitwarden identity service.</param>
+    /// <returns>The resource builder.</returns>
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        EndpointReference endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(endpoint);
+
+        builder.Resource.IdentityUrl = ReferenceExpression.Create($"{endpoint}");
+        builder.WithReferenceRelationship(endpoint.Resource);
+        builder.WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(endpoint.Resource));
         return builder;
     }
 
@@ -725,12 +843,29 @@ public static class BitwardenSecretManagerExtensions
     {
         DateTime startTime = DateTime.UtcNow;
 
+        // Resolve eagerly so URLs appear in the dashboard from the first state update.
+        // For EndpointReference-backed URLs, WaitFor ensures the endpoint is allocated by now.
+        string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
+        string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
+        ImmutableArray<UrlSnapshot> urls =
+        [
+            new("api", apiUrl, IsInternal: false)
+            {
+                DisplayProperties = new("API server URL", SortOrder: 0)
+            },
+            new("identity", identityUrl, IsInternal: false)
+            {
+                DisplayProperties = new("Identity server URL", SortOrder: 0)
+            }
+        ];
+
         await notifications.PublishUpdateAsync(resource, state => state with
         {
             State = new ResourceStateSnapshot(KnownResourceStates.ValueMissing, KnownResourceStateStyles.Warn),
             StartTimeStamp = null,
             StopTimeStamp = null,
             ExitCode = null,
+            Urls = urls,
             Properties = MergeProperties(state.Properties, remove: ["ProjectId", "Error"])
         }).ConfigureAwait(false);
 
@@ -748,6 +883,7 @@ public static class BitwardenSecretManagerExtensions
             {
                 State = KnownResourceStates.Running,
                 StartTimeStamp = startTime,
+                Urls = urls,
                 Properties = MergeProperties(state.Properties,
                     upsert:
                     [
@@ -763,6 +899,7 @@ public static class BitwardenSecretManagerExtensions
                 State = new ResourceStateSnapshot(KnownResourceStates.Finished, KnownResourceStateStyles.Success),
                 ExitCode = 0,
                 StopTimeStamp = DateTime.UtcNow,
+                Urls = urls,
                 Properties = MergeProperties(state.Properties,
                     upsert:
                     [
@@ -778,6 +915,7 @@ public static class BitwardenSecretManagerExtensions
                 State = new ResourceStateSnapshot(KnownResourceStates.Exited, KnownResourceStateStyles.Error),
                 ExitCode = 1,
                 StopTimeStamp = DateTime.UtcNow,
+                Urls = urls,
                 Properties = MergeProperties(state.Properties,
                     upsert: [new("Error", ex.Message)],
                     remove: ["ProjectId"])

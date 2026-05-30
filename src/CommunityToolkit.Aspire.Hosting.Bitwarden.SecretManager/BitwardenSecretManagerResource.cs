@@ -147,14 +147,14 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     public string? RemoteProjectName { get; internal set; }
 
     /// <summary>
-    /// Gets the Bitwarden API URL override.
+    /// Gets the Bitwarden API URL. Defaults to <see cref="DefaultApiUrl"/>.
     /// </summary>
-    public string? ApiUrl { get; internal set; }
+    internal ReferenceExpression ApiUrl { get; set; } = ReferenceExpression.Create($"{DefaultApiUrl}");
 
     /// <summary>
-    /// Gets the Bitwarden identity URL override.
+    /// Gets the Bitwarden identity URL. Defaults to <see cref="DefaultIdentityUrl"/>.
     /// </summary>
-    public string? IdentityUrl { get; internal set; }
+    internal ReferenceExpression IdentityUrl { get; set; } = ReferenceExpression.Create($"{DefaultIdentityUrl}");
 
     /// <summary>
     /// Gets the AppHost cache file path override (integration bookkeeping: project ID, secret ID mappings).
@@ -279,9 +279,15 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal object GetConfiguredProjectNameReference() => _projectName.GetReference(Name, "project name");
 
-    internal string GetApiUrlOrDefault() => ApiUrl ?? DefaultApiUrl;
+    internal ReferenceExpression GetApiUrlOrDefault() => ApiUrl;
 
-    internal string GetIdentityUrlOrDefault() => IdentityUrl ?? DefaultIdentityUrl;
+    internal ReferenceExpression GetIdentityUrlOrDefault() => IdentityUrl;
+
+    internal async ValueTask<string> GetApiUrlAsync(CancellationToken cancellationToken)
+        => await ApiUrl.GetValueAsync(cancellationToken).ConfigureAwait(false) ?? DefaultApiUrl;
+
+    internal async ValueTask<string> GetIdentityUrlAsync(CancellationToken cancellationToken)
+        => await IdentityUrl.GetValueAsync(cancellationToken).ConfigureAwait(false) ?? DefaultIdentityUrl;
 
     internal string GetConfiguredProjectIdentityKey(string? resolvedProjectName = null)
         // Existing-project adoption must keep using the remote project ID as the stable key.

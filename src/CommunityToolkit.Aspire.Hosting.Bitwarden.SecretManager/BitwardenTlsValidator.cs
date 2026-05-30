@@ -33,7 +33,11 @@ internal static class BitwardenTlsValidator
             }
         }
 
-        string[] httpsUrls = [.. new[] { resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault() }
+        string[] httpsUrls = [.. new[]
+            {
+                await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
+                await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false)
+            }
             .Where(url => Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) && uri.Scheme == Uri.UriSchemeHttps)
             .Distinct()];
 

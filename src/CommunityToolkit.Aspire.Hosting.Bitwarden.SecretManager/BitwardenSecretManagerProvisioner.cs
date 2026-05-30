@@ -49,8 +49,10 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
 
-            logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
-            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
+            string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
+            string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", apiUrl, identityUrl);
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(apiUrl, identityUrl);
 
             logger.LogDebug("Logging into Bitwarden provider for resource '{ResourceName}' using auth cache '{AppHostAuthCachePath}'.", resource.Name, cacheContext.AuthCachePath);
             try
@@ -98,7 +100,9 @@ internal sealed class BitwardenSecretManagerProvisioner(
             Guid organizationId = await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
             string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
 
-            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
+                await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
+                await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
             provider.Login(accessToken, cacheContext.AuthCachePath);
 
             BitwardenProjectInfo project = ReconcileProject(resource, remoteProjectName, cacheContext.Cache, provider, organizationId, logger);
@@ -141,7 +145,9 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             IInteractionService? interactionService = services.GetService<IInteractionService>();
 
-            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(resource.GetApiUrlOrDefault(), resource.GetIdentityUrlOrDefault());
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
+                await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
+                await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
             provider.Login(accessToken, cacheContext.AuthCachePath);
 
             Dictionary<string, Guid> staleManagedMappings = cacheContext.Cache.ManagedSecretIds

@@ -15,6 +15,14 @@ var demoApiKey = builder.AddParameter("demo-api-key", secret: true);
 // If the project doesn't exist, it will be automatically created with write access for the provided token.
 var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organizationId, accessToken);
 
+// For self-hosted installations, configure your API and Identity URLs here.
+// (Self-hosting requires an enterprise plan, so this example uses the default cloud-hosted Bitwarden instance.)
+var bitwardenApiServer = builder.AddExternalService("bitwarden-api", "https://api.bitwarden.com");
+var bitwardenIdentityServer = builder.AddExternalService("bitwarden-identity", "https://identity.bitwarden.com");
+
+bitwarden.WithApiUrl(bitwardenApiServer)
+    .WithIdentityUrl(bitwardenIdentityServer);
+
 // Optional: override the AppHost cache file location.
 // The cache stores the Bitwarden project ID and secret ID mappings between runs so the integration
 // can reuse existing Bitwarden resources rather than creating duplicates.

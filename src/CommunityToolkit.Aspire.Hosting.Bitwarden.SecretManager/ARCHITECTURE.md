@@ -97,6 +97,26 @@ The client token only needs read permissions to the project. Because Bitwarden d
 
 The AppHost provisioner never reads the client token. The deployed app never reads the management token.
 
+## URL Configuration
+
+The API and identity URLs are stored on `BitwardenSecretManagerResource` as `ReferenceExpression` properties, initialized to the public Bitwarden cloud defaults:
+
+```
+ApiUrl      = https://api.bitwarden.com
+IdentityUrl = https://identity.bitwarden.com
+```
+
+`WithApiUrl` and `WithIdentityUrl` each accept four forms:
+
+- **String literal** — a fixed URL known at build time.
+- **`ParameterResource`** — defers resolution until the parameter value is available. Intended for self-hosted instances whose URL varies by environment.
+- **`ExternalServiceResource`** — extracts the URL (static or parameter-backed) from an `AddExternalService` resource and calls `WaitFor` automatically. Preferred for self-hosted instances because the external service also provides dashboard visibility and health checks.
+- **`EndpointReference`** — points at an endpoint exposed by another resource in the AppHost. The Bitwarden resource calls `WaitFor` on that resource so authentication cannot start until it is running.
+
+`ReferenceExpression` is used as the unified backing type because all three inputs are compatible with it and because it is the type Aspire expects when injecting values into dependent resources via `IValueProvider`. The provisioner, TLS validator, and `ApplyReferenceConfiguration` all resolve the URL through a single `GetValueAsync()` call regardless of which form was used.
+
+The resolved URLs are published as `UrlSnapshot` entries in every `CustomResourceSnapshot` state update, so they appear as clickable links in the Aspire dashboard.
+
 ## Cache Files
 
 The integration maintains two cache files on the AppHost, and one optional cache file in the deployed app.
@@ -131,3 +151,4 @@ The note field is the only persistent record of what changed and when. It is sto
 - Making runtime reconciliation the primary architectural concept.
 
 The intended design is pipeline-step-first, declared-resource-first.
+
