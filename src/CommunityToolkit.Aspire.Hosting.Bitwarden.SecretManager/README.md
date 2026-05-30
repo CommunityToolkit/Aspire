@@ -44,31 +44,6 @@ You can further customize the resource with the following options:
   identity endpoints. Accepts a string, a parameter, an `ExternalServiceResource`,
   or an `EndpointReference`. Both default to the public Bitwarden cloud and are
   shown as clickable links in the Aspire dashboard.
-
-  For a self-hosted instance, model each endpoint as an `ExternalServiceResource`
-  and pass it directly. This sets the URL and wires up `WaitFor` in one call:
-
-  ```csharp
-  var bitwardenApiServer = builder.AddExternalService("bitwarden-api", "https://bitwarden.example.com/api")
-      .WithHttpHealthCheck("/alive");
-  var bitwardenIdentityServer = builder.AddExternalService("bitwarden-identity", "https://bitwarden.example.com/identity")
-      .WithHttpHealthCheck("/alive");
-
-  bitwarden
-      .WithApiUrl(bitwardenApiServer)
-      .WithIdentityUrl(bitwardenIdentityServer);
-  ```
-
-  When the URL varies by environment, use a parameter instead of a literal string:
-
-  ```csharp
-  var bitwardenApiUrl = builder.AddParameter("bitwarden-api-url");
-  var bitwardenApiServer = builder.AddExternalService("bitwarden-api", bitwardenApiUrl)
-      .WithHttpHealthCheck("/alive");
-
-  bitwarden.WithApiUrl(bitwardenApiServer);
-  ```
-
 - `WithCacheFile(...)` overrides the AppHost cache file location (default:
   `.bitwarden/{resourceName}.{environment}.json` relative to the AppHost
   directory). The AppHost cache tracks Bitwarden project and secret IDs
@@ -77,6 +52,30 @@ You can further customize the resource with the following options:
   (default: Aspire store, keyed by a hash of the access token). The AppHost
   auth cache persists the Bitwarden SDK auth session between runs on the
   AppHost. Relative paths are resolved from the Aspire store.
+
+For a self-hosted instance, model each endpoint as an `ExternalServiceResource`
+and pass it directly. This sets the URL and wires up `WaitFor` in one call:
+
+```csharp
+var bitwardenApiServer = builder.AddExternalService("bitwarden-api", "https://bitwarden.example.com/api")
+    .WithHttpHealthCheck("/alive");
+var bitwardenIdentityServer = builder.AddExternalService("bitwarden-identity", "https://bitwarden.example.com/identity")
+    .WithHttpHealthCheck("/alive");
+
+bitwarden
+    .WithApiUrl(bitwardenApiServer)
+    .WithIdentityUrl(bitwardenIdentityServer);
+```
+
+When the URL varies by environment, use a parameter instead of a literal string:
+
+```csharp
+var bitwardenApiUrl = builder.AddParameter("bitwarden-api-url");
+var bitwardenApiServer = builder.AddExternalService("bitwarden-api", bitwardenApiUrl)
+    .WithHttpHealthCheck("/alive");
+
+bitwarden.WithApiUrl(bitwardenApiServer);
+```
 
 ## Usage
 
