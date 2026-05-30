@@ -21,7 +21,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <typeparam name="TResource">The type of the Perl application resource.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
-    [AspireExport("withCpanMinus", Description = "Configures the Perl resource to use cpanm for package installation")]
+    [AspireExport]
     public static IResourceBuilder<TResource> WithCpanMinus<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -169,11 +169,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{TResource}"/>.</returns>
     /// <seealso cref="WithProjectDependencies{TResource}"/>
-<<<<<<< HEAD
     [AspireExport]
-=======
-    [AspireExport("withCarton", Description = "Configures the Perl resource to use Carton for project dependency installation")]
->>>>>>> e954eeb2 (Committing these to pivot boxes, this is steps 11-13, I do have a question about if these validate-typescript-apphost.ps1 changes are required.  Will interrogate later.)
     public static IResourceBuilder<TResource> WithCarton<TResource>(
         this IResourceBuilder<TResource> builder) where TResource : PerlAppResource
     {
@@ -216,7 +212,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// <c>cpan</c> by default, or <c>cpanm</c> if <see cref="WithCpanMinus{TResource}"/>
     /// was called.
     /// </remarks>
-    [AspireExport("withPackage", Description = "Installs a Perl package before the resource starts")]
+    [AspireExport]
     public static IResourceBuilder<TResource> WithPackage<TResource>(
         this IResourceBuilder<TResource> builder,
         string packageName,
@@ -262,11 +258,7 @@ public static partial class PerlAppResourceBuilderExtensions
     /// When using Carton with <paramref name="cartonDeployment"/> set to <c>true</c>,
     /// a <c>cpanfile.snapshot</c> must also be present.
     /// </remarks>
-<<<<<<< HEAD
     [AspireExport]
-=======
-    [AspireExport("withProjectDependencies", Description = "Installs Perl project dependencies before the resource starts")]
->>>>>>> e954eeb2 (Committing these to pivot boxes, this is steps 11-13, I do have a question about if these validate-typescript-apphost.ps1 changes are required.  Will interrogate later.)
     public static IResourceBuilder<TResource> WithProjectDependencies<TResource>(
         this IResourceBuilder<TResource> builder,
         bool cartonDeployment = false) where TResource : PerlAppResource

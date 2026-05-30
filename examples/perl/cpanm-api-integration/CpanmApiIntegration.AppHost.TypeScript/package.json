@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "eslint apphost.ts",
+    "lint": "eslint apphost.mts",
     "predev": "npm run lint",
     "dev": "aspire run",
     "prebuild": "npm run lint",
