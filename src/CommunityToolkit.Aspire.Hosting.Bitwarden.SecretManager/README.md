@@ -90,7 +90,7 @@ this order during startup:
 
 1. **Bitwarden upstream** — if the secret already exists in Bitwarden, its current value is
    synced automatically. No prompt, no configuration needed. In `aspire deploy`, the
-   `bitwarden-pre-sync-managed` step writes this value to the deployment state before
+   `bitwarden-pre-sync-managed-{name}` step writes this value to the deployment state before
    `process-parameters` runs, so the deploy command does not prompt either.
 2. **Configuration** — if no upstream value is found, the secret reads the configuration key
    `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
