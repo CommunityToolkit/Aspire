@@ -630,6 +630,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                             persistedSecret.Key);
                     }
 
+                    secretReference.SecretId = persistedSecret.Id;
                     resource.BindResolvedSecret(persistedSecret.Id, remoteName, persistedSecret.Value);
                     logger.LogDebug("Bound declared reference to persisted secret {SecretId} for name '{RemoteName}'.", persistedSecret.Id, remoteName);
                     continue;
@@ -667,6 +668,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 secretByName = candidates.Single(candidate => candidate.Id == selectedSecretId);
             }
 
+            secretReference.SecretId = secretByName.Id;
             state.NameBindings[remoteName] = secretByName.Id;
             resource.BindResolvedSecret(secretByName.Id, remoteName, secretByName.Value);
             logger.LogInformation("Successfully resolved declared reference to secret {SecretId} for name '{RemoteName}'.", secretByName.Id, remoteName);

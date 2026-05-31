@@ -79,18 +79,20 @@ internal static class BitwardenSecretManagerDeploymentStep
 
         foreach (var secretRef in bitwarden.DeclaredSecretReferences)
         {
-            if (secretRef is BitwardenSecretResource)
+            if (secretRef.IsManaged)
             {
-                continue; // already handled above
+                continue; // already handled in ManagedSecrets loop above
             }
 
-            if (secretRef.RemoteName is string remoteName)
+            string? secretValue = bitwarden.ResolveSecretValue(secretRef);
+            if (secretValue is not null)
             {
-                string? secretValue = bitwarden.ResolveSecretValue(secretRef);
-                if (secretValue is not null)
-                {
-                    patches[ToEnvKey($"{{{bitwarden.Name}.secrets.{remoteName}}}")] = secretValue;
-                }
+                patches[ToEnvKey($"{{{bitwarden.Name}.secrets.{secretRef.RemoteName}}}")] = secretValue;
+            }
+
+            if (secretRef.ResolvedSecretId is Guid secretId)
+            {
+                patches[ToEnvKey($"{{{bitwarden.Name}.secrets.{secretRef.RemoteName}.id}}")] = secretId.ToString("D");
             }
         }
 
