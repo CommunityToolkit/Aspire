@@ -35,6 +35,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(logger);
 
+        ParameterResourceExtensions.SetCompatibilityLogger(logger);
         resource.ResetResolvedValues();
         logger.LogDebug("Starting Bitwarden authentication for resource '{ResourceName}'.", resource.Name);
 

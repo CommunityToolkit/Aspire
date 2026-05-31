@@ -2,31 +2,58 @@ using System.Runtime.CompilerServices;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
 
 #pragma warning disable ASPIREINTERACTION001
 internal static class ParameterResourceExtensions
 {
+    // Registered by the provisioner at startup (AuthenticateAsync) so that compatibility-break
+    // warnings have somewhere to go. Defaults to NullLogger so the code never crashes on logging.
+    private static ILogger s_logger = NullLogger.Instance;
+
+    // Called once by BitwardenSecretManagerProvisioner.AuthenticateAsync, which is the first
+    // provisioner method invoked in both run mode and publish mode.
+    internal static void SetCompatibilityLogger(ILogger logger)
+    {
+        // Best-effort; a race between two provisioner instances is harmless.
+        if (s_logger is NullLogger)
+        {
+            s_logger = logger;
+        }
+    }
+
     extension(ParameterResource parameter)
     {
         public bool HasValue()
         {
             // Messy but there is no obvious better way to synchronously check if the parameter has a value
-            var tcs = GetWaitForValueTcs(parameter);
-            if (tcs is not null)
-            {
-                return tcs.Task.IsCompletedSuccessfully && !string.IsNullOrWhiteSpace(tcs.Task.Result);
-            }
-
-            // No TCS means value comes from Func<string> synchronously, GetValueAsync won't block.
             try
             {
-                string? value = parameter.GetValueAsync(CancellationToken.None).GetAwaiter().GetResult();
-                return !string.IsNullOrWhiteSpace(value);
+                var tcs = GetWaitForValueTcs(parameter);
+                if (tcs is not null)
+                {
+                    return tcs.Task.IsCompletedSuccessfully && !string.IsNullOrWhiteSpace(tcs.Task.Result);
+                }
+
+                // No TCS means GetValueAsync delegates synchronously to ValueInternal (the lazy
+                // Func<string> valueGetter). Check IsCompleted before calling GetResult per ValueTask rules.
+                try
+                {
+                    var valueTask = parameter.GetValueAsync(CancellationToken.None);
+                    string? value = valueTask.IsCompleted ? valueTask.GetAwaiter().GetResult() : null;
+                    return !string.IsNullOrWhiteSpace(value);
+                }
+                catch (MissingParameterValueException)
+                {
+                    return false;
+                }
             }
-            catch (MissingParameterValueException)
+            catch (MissingMemberException ex)
             {
+                WarnCompatibilityBreak(ex, "ParameterResource.WaitForValueTcs (getter)");
                 return false;
             }
         }
@@ -43,11 +70,18 @@ internal static class ParameterResourceExtensions
         // Resolves the WaitForValueTcs so callers awaiting GetValueAsync() unblock immediately.
         public void ResolveWaitForValue(string resolvedValue)
         {
-            var tcs = GetWaitForValueTcs(parameter);
-            // Only set if pending; don't overwrite a value the user already provided via the dashboard.
-            if (tcs is not null && !tcs.Task.IsCompleted)
+            try
             {
-                tcs.TrySetResult(resolvedValue);
+                var tcs = GetWaitForValueTcs(parameter);
+                // Only set if pending; don't overwrite a value the user already provided via the dashboard.
+                if (tcs is not null && !tcs.Task.IsCompleted)
+                {
+                    tcs.TrySetResult(resolvedValue);
+                }
+            }
+            catch (MissingMemberException ex)
+            {
+                WarnCompatibilityBreak(ex, "ParameterResource.WaitForValueTcs (getter)");
             }
         }
 
@@ -57,15 +91,30 @@ internal static class ParameterResourceExtensions
         // is lost. Call immediately before PromptAsync; retrieve the result with GetResolvedWaitForValue.
         internal void InitializeWaitForValue()
         {
-            SetWaitForValueTcs(parameter, new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously));
+            try
+            {
+                SetWaitForValueTcs(parameter, new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously));
+            }
+            catch (MissingMemberException ex)
+            {
+                WarnCompatibilityBreak(ex, "ParameterResource.WaitForValueTcs (setter)");
+            }
         }
 
         // Returns the value stored by PromptAsync after InitializeWaitForValue was called,
-        // or null if the prompt was cancelled or the TCS is not yet completed.
+        // or null if the prompt was cancelled, the TCS is not yet completed, or the accessor broke.
         internal string? GetResolvedWaitForValue()
         {
-            var tcs = GetWaitForValueTcs(parameter);
-            return tcs?.Task is { IsCompletedSuccessfully: true } t ? t.Result : null;
+            try
+            {
+                var tcs = GetWaitForValueTcs(parameter);
+                return tcs?.Task is { IsCompletedSuccessfully: true } t ? t.Result : null;
+            }
+            catch (MissingMemberException ex)
+            {
+                WarnCompatibilityBreak(ex, "ParameterResource.WaitForValueTcs (getter)");
+                return null;
+            }
         }
     }
 
@@ -74,14 +123,28 @@ internal static class ParameterResourceExtensions
     // lingering after Bitwarden has already provided the value.
     internal static void MarkParameterResolved(ParameterProcessor parameterProcessor, ParameterResource parameter)
     {
-        ref List<ParameterResource> unresolved = ref GetUnresolvedParameters(parameterProcessor);
-        unresolved.Remove(parameter);
-
-        if (unresolved.Count == 0)
+        try
         {
-            GetAllParametersResolvedCts(parameterProcessor)?.Cancel();
+            ref List<ParameterResource> unresolved = ref GetUnresolvedParameters(parameterProcessor);
+            unresolved.Remove(parameter);
+
+            if (unresolved.Count == 0)
+            {
+                GetAllParametersResolvedCts(parameterProcessor)?.Cancel();
+            }
+        }
+        catch (MissingMemberException ex)
+        {
+            WarnCompatibilityBreak(ex, "ParameterProcessor._unresolvedParameters / _allParametersResolvedCts");
         }
     }
+
+    private static void WarnCompatibilityBreak(MissingMemberException ex, string member) =>
+        s_logger.LogWarning(ex,
+            "Aspire internal member '{Member}' is no longer accessible. " +
+            "The Bitwarden integration may behave incorrectly with this version of Aspire. " +
+            "See ASPIRE-INTERNALS.md for upgrade guidance.",
+            member);
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_WaitForValueTcs")]
     static extern TaskCompletionSource<string>? GetWaitForValueTcs(ParameterResource parameter);
