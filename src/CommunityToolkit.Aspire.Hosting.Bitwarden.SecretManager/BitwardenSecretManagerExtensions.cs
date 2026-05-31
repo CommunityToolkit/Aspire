@@ -342,8 +342,7 @@ public static class BitwardenSecretManagerExtensions
     /// Overrides the AppHost auth cache directory (Bitwarden SDK auth session used by the AppHost reconciler).
     /// Defaults to the Aspire store when not set. Override to reuse a cached auth session across CI runs.
     /// To configure the auth cache directory inside the deployed app, use
-    /// <see cref="BitwardenReferenceBuilder{TDestination}.WithAuthCacheDirectory(string)"/> inside
-    /// a <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, System.Action{BitwardenReferenceBuilder{TDestination}}, string?)"/> callback.
+    /// <see cref="WithBitwardenAuthCacheDirectory{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string)"/>.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
     /// <param name="authCacheDirectory">The auth cache directory on the AppHost, relative to the Aspire store when not rooted.</param>
@@ -486,34 +485,6 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Injects structured Bitwarden client configuration into the destination resource and
-    /// invokes a callback to apply additional Bitwarden-specific configuration for this connection.
-    /// </summary>
-    /// <typeparam name="TDestination">The destination resource type.</typeparam>
-    /// <param name="builder">The destination resource builder.</param>
-    /// <param name="source">The Bitwarden resource builder.</param>
-    /// <param name="configure">A callback that receives a scoped builder for this connection.</param>
-    /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
-    /// <returns>The destination resource builder.</returns>
-    [AspireExportIgnore(Reason = "BitwardenReferenceBuilder<T> is a generic context type not yet registered in ATS")]
-    public static IResourceBuilder<TDestination> WithReference<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        IResourceBuilder<BitwardenSecretManagerResource> source,
-        Action<BitwardenReferenceBuilder<TDestination>> configure,
-        string? connectionName = null)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(configure);
-
-        connectionName ??= source.Resource.Name;
-        builder.WithReference(source, connectionName);
-        configure(new BitwardenReferenceBuilder<TDestination>(builder, connectionName));
-        return builder;
-    }
-
-    /// <summary>
     /// Injects a Bitwarden secret value into a destination environment variable.
     /// </summary>
     /// <typeparam name="TDestination">The destination resource type.</typeparam>
@@ -535,6 +506,246 @@ public static class BitwardenSecretManagerExtensions
         AttachSecretDependencies(builder, secret);
 
         return builder.WithEnvironment(environmentVariableName, new BitwardenSecretValueExpression(secret));
+    }
+
+    /// <summary>
+    /// Injects a Bitwarden secret identifier into a destination environment variable.
+    /// The app uses the Bitwarden SDK to fetch the value by ID at runtime.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="environmentVariableName">The destination environment variable name.</param>
+    /// <param name="secret">The Bitwarden secret resource.</param>
+    /// <returns>The destination resource builder.</returns>
+    [AspireExport]
+    public static IResourceBuilder<TDestination> WithBitwardenSecretId<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        string environmentVariableName,
+        BitwardenSecretResource secret)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
+        ArgumentNullException.ThrowIfNull(secret);
+
+        AttachSecretDependencies(builder, secret);
+
+        return builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secret));
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden access token injected into the connection for <paramref name="source"/>.
+    /// By default the management token is used. Supply a least-privilege read-only token here.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource whose connection name to target.</param>
+    /// <param name="accessToken">The access token parameter for this connection.</param>
+    /// <returns>The destination resource builder.</returns>
+    [AspireExport("withBitwardenReferenceAccessToken")]
+    public static IResourceBuilder<TDestination> WithBitwardenAccessToken<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        IResourceBuilder<ParameterResource> accessToken)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        return builder.WithBitwardenAccessToken(source.Resource.Name, accessToken);
+    }
+
+    /// <summary>
+    /// Overrides the Bitwarden access token injected into the specified connection.
+    /// By default the management token is used. Supply a least-privilege read-only token here.
+    /// Use the source-based overload when the connection name equals the Bitwarden resource name.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="connectionName">The logical connection name, matching the one passed to <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string?)"/>.</param>
+    /// <param name="accessToken">The access token parameter for this connection.</param>
+    /// <returns>The destination resource builder.</returns>
+    [AspireExportIgnore(Reason = "Use the source-based overload for the common case; this overload is for the edge case of a custom connection name passed to WithReference")]
+    public static IResourceBuilder<TDestination> WithBitwardenAccessToken<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        string connectionName,
+        IResourceBuilder<ParameterResource> accessToken)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        builder.WithEnvironment(
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AccessToken",
+            accessToken);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the directory where the Bitwarden SDK stores its auth cache inside the resource,
+    /// for the connection associated with <paramref name="source"/>.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource whose connection name to target.</param>
+    /// <param name="authCacheDirectory">The directory path inside the app where the auth cache file is stored.</param>
+    /// <returns>The destination resource builder.</returns>
+    [AspireExport("withBitwardenReferenceAuthCacheDirectory")]
+    public static IResourceBuilder<TDestination> WithBitwardenAuthCacheDirectory<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        string authCacheDirectory)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        return builder.WithBitwardenAuthCacheDirectory(source.Resource.Name, authCacheDirectory);
+    }
+
+    /// <summary>
+    /// Configures the directory where the Bitwarden SDK stores its auth cache inside the resource,
+    /// for the specified connection.
+    /// Use the source-based overload when the connection name equals the Bitwarden resource name.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="connectionName">The logical connection name.</param>
+    /// <param name="authCacheDirectory">The directory path inside the app where the auth cache file is stored.</param>
+    /// <returns>The destination resource builder.</returns>
+    [AspireExportIgnore(Reason = "Use the source-based overload for the common case; this overload is for the edge case of a custom connection name passed to WithReference")]
+    public static IResourceBuilder<TDestination> WithBitwardenAuthCacheDirectory<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        string connectionName,
+        string authCacheDirectory)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(authCacheDirectory);
+
+        builder.WithEnvironment(
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AuthCacheDirectory",
+            authCacheDirectory);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the directory where the Bitwarden SDK stores its auth cache inside the resource,
+    /// using a parameter, for the connection associated with <paramref name="source"/>.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource whose connection name to target.</param>
+    /// <param name="authCacheDirectory">A parameter whose value is the directory path inside the app.</param>
+    /// <returns>The destination resource builder.</returns>
+    [AspireExport("withBitwardenReferenceAuthCacheDirectoryFromParameter")]
+    public static IResourceBuilder<TDestination> WithBitwardenAuthCacheDirectory<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        IResourceBuilder<ParameterResource> authCacheDirectory)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        return builder.WithBitwardenAuthCacheDirectory(source.Resource.Name, authCacheDirectory);
+    }
+
+    /// <summary>
+    /// Configures the directory where the Bitwarden SDK stores its auth cache inside the resource,
+    /// using a parameter, for the specified connection.
+    /// Use the source-based overload when the connection name equals the Bitwarden resource name.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="connectionName">The logical connection name.</param>
+    /// <param name="authCacheDirectory">A parameter whose value is the directory path inside the app.</param>
+    /// <returns>The destination resource builder.</returns>
+    [AspireExportIgnore(Reason = "Use the source-based overload for the common case; this overload is for the edge case of a custom connection name passed to WithReference")]
+    public static IResourceBuilder<TDestination> WithBitwardenAuthCacheDirectory<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        string connectionName,
+        IResourceBuilder<ParameterResource> authCacheDirectory)
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        ArgumentNullException.ThrowIfNull(authCacheDirectory);
+
+        builder.WithEnvironment(
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AuthCacheDirectory",
+            ReferenceExpression.Create($"{authCacheDirectory.Resource}"));
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Mounts a named volume and configures the Bitwarden SDK to store its auth cache there,
+    /// for the connection associated with <paramref name="source"/>. Use this for container resources.
+    /// For process resources or when the container path is already known, use
+    /// <see cref="WithBitwardenAuthCacheDirectory{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, string)"/> instead.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="source">The Bitwarden resource whose connection name to target.</param>
+    /// <param name="volumeName">The Docker volume name. Defaults to <c>{resourceName}-{connectionName}-bitwarden-auth</c> when <see langword="null"/>.</param>
+    /// <param name="containerDirectory">The directory inside the container where the volume is mounted. Defaults to <c>/var/lib/bitwarden</c>.</param>
+    /// <returns>The destination resource builder.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the destination resource is not a container resource.</exception>
+    [AspireExport("withBitwardenReferenceAuthCacheVolume")]
+    public static IResourceBuilder<TDestination> WithBitwardenAuthCacheVolume<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<BitwardenSecretManagerResource> source,
+        string? volumeName = null,
+        string containerDirectory = "/var/lib/bitwarden")
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        return builder.WithBitwardenAuthCacheVolume(source.Resource.Name, volumeName, containerDirectory);
+    }
+
+    /// <summary>
+    /// Mounts a named volume and configures the Bitwarden SDK to store its auth cache there,
+    /// for the specified connection. Use this for container resources.
+    /// Use the source-based overload when the connection name equals the Bitwarden resource name.
+    /// </summary>
+    /// <typeparam name="TDestination">The destination resource type.</typeparam>
+    /// <param name="builder">The destination resource builder.</param>
+    /// <param name="connectionName">The logical connection name.</param>
+    /// <param name="volumeName">The Docker volume name. Defaults to <c>{resourceName}-{connectionName}-bitwarden-auth</c> when <see langword="null"/>.</param>
+    /// <param name="containerDirectory">The directory inside the container where the volume is mounted. Defaults to <c>/var/lib/bitwarden</c>.</param>
+    /// <returns>The destination resource builder.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the destination resource is not a container resource.</exception>
+    [AspireExportIgnore(Reason = "Use the source-based overload for the common case; this overload is for the edge case of a custom connection name passed to WithReference")]
+    public static IResourceBuilder<TDestination> WithBitwardenAuthCacheVolume<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        string connectionName,
+        string? volumeName = null,
+        string containerDirectory = "/var/lib/bitwarden")
+        where TDestination : IResourceWithEnvironment
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(containerDirectory);
+
+        if (builder.Resource is not ContainerResource)
+        {
+            throw new InvalidOperationException(
+                $"WithBitwardenAuthCacheVolume requires '{builder.Resource.Name}' to be a container resource. " +
+                $"Use WithBitwardenAuthCacheDirectory instead.");
+        }
+
+        volumeName ??= $"{builder.Resource.Name}-{connectionName}-bitwarden-auth";
+
+        builder.WithAnnotation(new ContainerMountAnnotation(
+            volumeName,
+            containerDirectory,
+            ContainerMountType.Volume,
+            isReadOnly: false));
+
+        builder.WithEnvironment(
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{connectionName}__AuthCacheDirectory",
+            containerDirectory);
+
+        return builder;
     }
 
     private static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManagerCore(

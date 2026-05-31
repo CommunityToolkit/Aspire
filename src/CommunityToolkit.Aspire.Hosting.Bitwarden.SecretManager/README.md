@@ -120,14 +120,14 @@ builder.AddProject<Projects.ApiService>("api")
 ```
 
 By default the management access token is injected into clients. To supply a
-least-privilege read-only token instead, use `WithAccessToken` inside the
-callback:
+least-privilege read-only token instead, chain `WithBitwardenAccessToken`:
 
 ```csharp
 IResourceBuilder<ParameterResource> readOnlyToken = builder.AddParameter("bitwarden-readonly-token", secret: true);
 
 builder.AddProject<Projects.ApiService>("api")
-    .WithReference(bitwarden, bw => bw.WithAccessToken(readOnlyToken));
+    .WithReference(bitwarden)
+    .WithBitwardenAccessToken(bitwarden, readOnlyToken);
 ```
 
 > **Note:** The read-only token must be granted read permissions to the
@@ -136,20 +136,16 @@ builder.AddProject<Projects.ApiService>("api")
 > created project, do this after the first AppHost run that creates the
 > project.
 
-Use `WithReference(bitwarden, bw => { ... })` to inject connection config and
-apply additional Bitwarden-specific configuration in one call. The scoped
-`bw` builder knows the connection name so you never repeat the source:
+Chain additional Bitwarden-specific configuration after `WithReference`:
 
 ```csharp
 IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("demo-api-key");
 
 // SDK approach: inject connection config + secret ID for runtime fetching
 builder.AddProject<Projects.ApiService>("api")
-    .WithReference(bitwarden, bw =>
-    {
-        bw.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
-        bw.WithAuthCacheDirectory("/data/bitwarden"); // optional
-    });
+    .WithReference(bitwarden)
+    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource)
+    .WithBitwardenAuthCacheDirectory(bitwarden, "/data/bitwarden"); // optional
 ```
 
 Use `WithBitwardenSecretValue(...)` to inject the resolved secret value
@@ -220,19 +216,22 @@ Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to p
 
 ### Secret references (injected into dependent resources)
 
-| API                                        | What it injects                                                                           | When to use                                                                                |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `WithReference(bitwarden)`                 | Connection config (`OrganizationId`, `ProjectId`, `AccessToken`, `ApiUrl`, `IdentityUrl`) | App uses the Bitwarden SDK to read secrets at runtime                                      |
-| `WithReference(bitwarden, bw => { ... })`  | Connection config + scoped Bitwarden configuration via the callback                       | Also need `bw.WithAccessToken`, `bw.WithBitwardenSecretId`, or `bw.WithAuthCacheDirectory` |
-| `WithBitwardenSecretValue(envVar, secret)` | The resolved secret value as an env var                                                   | Simple injection; no Bitwarden SDK needed in the app                                       |
+| API                                               | What it injects                                                                           | When to use                                                     |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `WithReference(bitwarden)`                        | Connection config (`OrganizationId`, `ProjectId`, `AccessToken`, `ApiUrl`, `IdentityUrl`) | App uses the Bitwarden SDK to read secrets at runtime           |
+| `WithBitwardenAccessToken(bitwarden, token)`      | Overrides the injected access token for this connection                                   | Supply a least-privilege read-only token                        |
+| `WithBitwardenSecretId(envVar, secret)`           | Injects a secret ID as an env var; app fetches the value via the SDK at runtime           | Dynamic secret retrieval without redeploying when values change |
+| `WithBitwardenAuthCacheDirectory(bitwarden, dir)` | Configures the app's Bitwarden SDK auth cache directory for this connection               | Persist auth session across restarts (process resources)        |
+| `WithBitwardenAuthCacheVolume(bitwarden)`         | Mounts a named volume as the auth cache for this connection                               | Persist auth session across restarts (container resources)      |
+| `WithBitwardenSecretValue(envVar, secret)`        | Injects the resolved secret value as an env var                                           | Simple injection; no Bitwarden SDK needed in the app            |
 
 ### Cache files
 
-| Cache              | Format                            | Stores                          | Default                                                      | Override                                                                                | Relative paths    | When to override                                    |
-| ------------------ | --------------------------------- | ------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
-| AppHost cache      | JSON (integration-managed)        | Project ID + secret ID mappings | `.bitwarden/{name}.{env}.json` relative to AppHost directory | `bitwarden.WithCacheFile(path)`                                                         | AppHost directory | Share cache across AppHost projects or CI pipelines |
-| AppHost auth cache | Encrypted (Bitwarden SDK-managed) | AppHost Bitwarden SDK session   | Aspire store, named by token UUID                            | `bitwarden.WithAuthCacheDirectory(path)`                                                | Aspire store      | Share session across CI runs                        |
-| App auth cache     | Encrypted (Bitwarden SDK-managed) | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `bw.WithAuthCacheVolume()` (containers) or `bw.WithAuthCacheDirectory(dir)` (processes) | —                 | Persist app session across restarts                 |
+| Cache              | Format                            | Stores                          | Default                                                      | Override                                                                                                                | Relative paths    | When to override                                    |
+| ------------------ | --------------------------------- | ------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
+| AppHost cache      | JSON (integration-managed)        | Project ID + secret ID mappings | `.bitwarden/{name}.{env}.json` relative to AppHost directory | `bitwarden.WithCacheFile(path)`                                                                                         | AppHost directory | Share cache across AppHost projects or CI pipelines |
+| AppHost auth cache | Encrypted (Bitwarden SDK-managed) | AppHost Bitwarden SDK session   | Aspire store, named by token UUID                            | `bitwarden.WithAuthCacheDirectory(path)`                                                                                | Aspire store      | Share session across CI runs                        |
+| App auth cache     | Encrypted (Bitwarden SDK-managed) | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `WithBitwardenAuthCacheVolume(bitwarden)` (containers) or `WithBitwardenAuthCacheDirectory(bitwarden, dir)` (processes) | —                 | Persist app session across restarts                 |
 
 ### App auth cache
 
@@ -243,30 +242,28 @@ each suited to a different deployment model.
 
 **Named volume (container resources)**
 
-Use `WithAuthCacheVolume` when the destination resource is a Docker container. It mounts a
+Use `WithBitwardenAuthCacheVolume` when the destination resource is a Docker container. It mounts a
 named volume and injects the file path automatically. The volume survives container restarts
 and is provisioned by the deploy tooling — no host-specific path is involved.
 
 ```csharp
 builder.AddContainer("api", "myregistry/api")
-    .WithReference(bitwarden, bw =>
-    {
-        bw.WithAuthCacheVolume(); // volume: api-bitwarden-bitwarden-auth, path: /var/lib/bitwarden/auth-cache
-    });
+    .WithReference(bitwarden)
+    .WithBitwardenAuthCacheVolume(bitwarden); // volume: api-bitwarden-bitwarden-auth, path: /var/lib/bitwarden
 ```
 
 Override the volume name or mount directory when needed:
 
 ```csharp
-bw.WithAuthCacheVolume(volumeName: "shared-bw-auth", containerDirectory: "/var/lib/bitwarden-shared");
+api.WithBitwardenAuthCacheVolume(bitwarden, volumeName: "shared-bw-auth", containerDirectory: "/var/lib/bitwarden-shared");
 ```
 
-> **Note:** `WithAuthCacheVolume` requires the destination resource to be a container
+> **Note:** `WithBitwardenAuthCacheVolume` requires the destination resource to be a container
 > resource. It throws at startup for process resources (e.g. `AddProject`).
 
 **Parameter (per-environment directory)**
 
-Use `WithAuthCacheDirectory` with a parameter when the directory must differ between
+Use `WithBitwardenAuthCacheDirectory` with a parameter when the directory must differ between
 environments — for example, a developer machine path in run mode vs. a container-internal
 path in production. The parameter reads from user secrets or configuration in run mode,
 and the deploy tooling resolves it per environment at deploy time.
@@ -275,10 +272,8 @@ and the deploy tooling resolves it per environment at deploy time.
 IResourceBuilder<ParameterResource> authCacheDir = builder.AddParameter("bw-auth-cache-dir");
 
 builder.AddProject<Projects.ApiService>("api")
-    .WithReference(bitwarden, bw =>
-    {
-        bw.WithAuthCacheDirectory(authCacheDir);
-    });
+    .WithReference(bitwarden)
+    .WithBitwardenAuthCacheDirectory(bitwarden, authCacheDir);
 ```
 
 Set the directory in user secrets for local development:
@@ -293,17 +288,15 @@ Set the directory in user secrets for local development:
 
 **Fixed string (same directory everywhere)**
 
-Use `WithAuthCacheDirectory` with a string literal when the directory is a
+Use `WithBitwardenAuthCacheDirectory` with a string literal when the directory is a
 container-internal path that is identical in all environments. This is appropriate when
 the app always runs as a container (not as a DCP process), so there is no host-specific
 path involved.
 
 ```csharp
 builder.AddContainer("api", "myregistry/api")
-    .WithReference(bitwarden, bw =>
-    {
-        bw.WithAuthCacheDirectory("/home/app/.bitwarden");
-    });
+    .WithReference(bitwarden)
+    .WithBitwardenAuthCacheDirectory(bitwarden, "/home/app/.bitwarden");
 ```
 
 > **Warning:** Do not pass a host-specific directory (e.g. `~/bitwarden` or
@@ -313,12 +306,12 @@ builder.AddContainer("api", "myregistry/api")
 
 **When to use each**
 
-| Scenario                                                                   | API                                                              |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| App is a Docker container and you want persistent auth across restarts     | `WithAuthCacheVolume()`                                          |
-| App runs as a process in dev and as a container in production, dirs differ | `WithAuthCacheDirectory(parameterBuilder)`                       |
-| App is always a container and the directory is the same everywhere         | `WithAuthCacheDirectory(string)`                                 |
-| App is a process resource (`AddProject`)                                   | `WithAuthCacheDirectory(string)` or parameter — no volume option |
+| Scenario                                                                   | API                                                                                  |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| App is a Docker container and you want persistent auth across restarts     | `WithBitwardenAuthCacheVolume(bitwarden)`                                            |
+| App runs as a process in dev and as a container in production, dirs differ | `WithBitwardenAuthCacheDirectory(bitwarden, parameterBuilder)`                       |
+| App is always a container and the directory is the same everywhere         | `WithBitwardenAuthCacheDirectory(bitwarden, string)`                                 |
+| App is a process resource (`AddProject`)                                   | `WithBitwardenAuthCacheDirectory(bitwarden, string)` or parameter — no volume option |
 
 ### Resource states
 

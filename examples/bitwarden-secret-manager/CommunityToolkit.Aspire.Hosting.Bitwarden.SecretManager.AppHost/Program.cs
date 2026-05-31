@@ -54,26 +54,23 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
 // 1. Using the secret manager client in code, which allows you to retrieve secrets at runtime and
 //    supports dynamic secret retrieval without redeploying the application when secrets change.
 // (See ApiService/Program.cs for an example of retrieving secrets from the client in code.)
-api.WithReference(bitwarden, bw =>
-{
-    bw.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource);
-    bw.WithBitwardenSecretId("DEMO_DB_PASSWORD_SECRET_ID", demoDbPasswordSecret.Resource);
-
+api.WithReference(bitwarden)
+    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource)
+    .WithBitwardenSecretId("DEMO_DB_PASSWORD_SECRET_ID", demoDbPasswordSecret.Resource)
     // Recommended: supply a least-privilege read-only access token so the client does not receive the management token.
     // IMPORTANT: the client token must be granted read permissions to the Bitwarden project.
     // This cannot be automated: Bitwarden does not expose an API for granting project access to a service account.
     // You must grant the service account read access to the project manually in the Bitwarden web vault or CLI.
     // For a newly created project this must be done after the first AppHost run that creates the project.
-    bw.WithAccessToken(accessToken /* replace with least privilege token */);
+    .WithBitwardenAccessToken(bitwarden, accessToken /* replace with least privilege token */);
 
-    // Optional: override the client auth cache directory (separate from the AppHost auth cache).
-    // The client auth cache stores the Bitwarden SDK auth session between restarts so the client can
-    // reuse the session and avoid re-authenticating on every start (which would hit Bitwarden rate limits).
-    if (builder.ExecutionContext.IsPublishMode)
-    {
-        bw.WithAuthCacheDirectory("/bitwarden/auth-cache");
-    }
-});
+// Optional: override the client auth cache directory (separate from the AppHost auth cache).
+// The client auth cache stores the Bitwarden SDK auth session between restarts so the client can
+// reuse the session and avoid re-authenticating on every start (which would hit Bitwarden rate limits).
+if (builder.ExecutionContext.IsPublishMode)
+{
+    api.WithBitwardenAuthCacheDirectory(bitwarden, "/bitwarden/auth-cache");
+}
 
 compose.ConfigureComposeFile(root =>
 {
