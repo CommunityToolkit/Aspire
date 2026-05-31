@@ -178,7 +178,10 @@ The integration maintains two cache files on the AppHost, and one optional cache
 
 ### App auth cache (deployed app side)
 
-- **App auth cache**: caches the Bitwarden SDK authentication session inside the deployed app. This is independent of the AppHost auth cache — the two run in different processes and on different machines. Configure via `WithReference(bitwarden, bw => bw.WithAuthCacheFile(...))`. Accepts a string for a fixed path or a parameter for an environment-specific path. The value is injected into the app via the `AuthCacheFile` configuration key under `Aspire:Bitwarden:SecretManager:{connectionName}`.
+- **App auth cache**: caches the Bitwarden SDK authentication session inside the deployed app. This is independent of the AppHost auth cache — the two run in different processes and on different machines. Three configuration paths exist, all injecting the resolved path via the `AuthCacheFile` key under `Aspire:Bitwarden:SecretManager:{connectionName}`:
+  - `bw.WithAuthCacheVolume()` — mounts a named Docker volume at `/var/lib/bitwarden` and sets the file path to `/var/lib/bitwarden/auth.json`. Requires the destination to be a container resource. The volume name defaults to `{resourceName}-{connectionName}-bitwarden-auth` and can be overridden. Preferred for container resources because no host-specific path is involved.
+  - `bw.WithAuthCacheFile(parameter)` — injects a parameter-backed path. The parameter resolves from user secrets or configuration in run mode, and the deploy tooling resolves it per environment. Use when the path must differ between developer machines or deployment targets.
+  - `bw.WithAuthCacheFile(string)` — injects a fixed string. Safe only when the app always runs as a container and the path is the same everywhere. Does not warn if a host-specific path is passed — that is a silent misconfiguration; use the parameter overload instead.
 
 The AppHost reconciler never reads the app auth cache path. The deployed app never reads the AppHost cache files.
 

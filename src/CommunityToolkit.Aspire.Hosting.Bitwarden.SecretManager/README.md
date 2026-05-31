@@ -231,7 +231,91 @@ Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to p
 | ------------------ | ------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
 | AppHost cache      | Project ID + secret ID mappings | `.bitwarden/{name}.{env}.json` relative to AppHost directory | `bitwarden.WithCacheFile(path)`                                  | AppHost directory | Share cache across AppHost projects or CI pipelines |
 | AppHost auth cache | AppHost Bitwarden SDK session   | Aspire store, named by token hash                            | `bitwarden.WithAuthCacheFile(path)`                              | Aspire store      | Share session across CI runs                        |
-| App auth cache     | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `api.WithReference(bitwarden, bw => bw.WithAuthCacheFile(path))` | —                 | Persist app session across restarts                 |
+| App auth cache     | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `bw.WithAuthCacheVolume()` (containers) or `bw.WithAuthCacheFile(path)` (processes) | —    | Persist app session across restarts                 |
+
+### App auth cache
+
+The app auth cache persists the Bitwarden SDK auth session inside the running application.
+Without it the app re-authenticates on every start. There are three ways to configure it,
+each suited to a different deployment model.
+
+**Named volume (container resources)**
+
+Use `WithAuthCacheVolume` when the destination resource is a Docker container. It mounts a
+named volume and injects the file path automatically. The volume survives container restarts
+and is provisioned by the deploy tooling — no host-specific path is involved.
+
+```csharp
+builder.AddContainer("api", "myregistry/api")
+    .WithReference(bitwarden, bw =>
+    {
+        bw.WithAuthCacheVolume(); // volume: api-bitwarden-bitwarden-auth, path: /var/lib/bitwarden/auth.json
+    });
+```
+
+Override the volume name or mount directory when needed:
+
+```csharp
+bw.WithAuthCacheVolume(volumeName: "shared-bw-auth", containerDirectory: "/var/lib/bitwarden-shared");
+```
+
+> **Note:** `WithAuthCacheVolume` requires the destination resource to be a container
+> resource. It throws at startup for process resources (e.g. `AddProject`).
+
+**Parameter (per-environment path)**
+
+Use `WithAuthCacheFile` with a parameter when the path must differ between environments —
+for example, a developer machine path in run mode vs. a container-internal path in
+production. The parameter reads from user secrets or configuration in run mode, and the
+deploy tooling resolves it per environment at deploy time.
+
+```csharp
+IResourceBuilder<ParameterResource> authCachePath = builder.AddParameter("bw-auth-cache-path");
+
+builder.AddProject<Projects.ApiService>("api")
+    .WithReference(bitwarden, bw =>
+    {
+        bw.WithAuthCacheFile(authCachePath);
+    });
+```
+
+Set the value in user secrets for local development:
+
+```json
+{
+  "Parameters": {
+    "bw-auth-cache-path": "/home/dev/.bitwarden/auth.json"
+  }
+}
+```
+
+**Fixed string (same path everywhere)**
+
+Use `WithAuthCacheFile` with a string literal when the path is a container-internal path
+that is identical in all environments. This is appropriate when the app always runs as a
+container (not as a DCP process), so there is no host-specific path involved.
+
+```csharp
+builder.AddContainer("api", "myregistry/api")
+    .WithReference(bitwarden, bw =>
+    {
+        bw.WithAuthCacheFile("/home/app/.bitwarden/auth.json");
+    });
+```
+
+> **Warning:** Do not pass a host-specific path (e.g. `~/bitwarden/auth.json` or
+> `C:\Users\dev\bitwarden`) to the string overload. Unlike `WithBindMount`, Aspire does not
+> warn about this — the literal value is injected as-is and will silently break in a
+> container. Use a parameter instead when the path differs between machines or modes.
+
+**When to use each**
+
+| Scenario | API |
+| --- | --- |
+| App is a Docker container and you want persistent auth across restarts | `WithAuthCacheVolume()` |
+| App runs as a process in dev and as a container in production, paths differ | `WithAuthCacheFile(parameterBuilder)` |
+| App is always a container and the path is the same everywhere | `WithAuthCacheFile(string)` |
+| App is a process resource (`AddProject`) | `WithAuthCacheFile(string)` or parameter — no volume option |
 
 ### Resource states
 
