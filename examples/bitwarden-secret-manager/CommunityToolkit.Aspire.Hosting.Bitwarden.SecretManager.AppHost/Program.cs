@@ -1,8 +1,9 @@
+using Aspire.Hosting.Docker.Resources.ServiceNodes;
 using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddDockerComposeEnvironment("docker")
+var compose = builder.AddDockerComposeEnvironment("compose")
     .WithDashboard(false);
 
 var organizationId = builder.AddParameter("bitwarden-organization-id");
@@ -68,7 +69,29 @@ api.WithReference(bitwarden, bw =>
     // Optional: override the client auth cache directory (separate from the AppHost auth cache).
     // The client auth cache stores the Bitwarden SDK auth session between restarts so the client can
     // reuse the session and avoid re-authenticating on every start (which would hit Bitwarden rate limits).
-    //bw.WithAuthCacheDirectory("...");
+    if (builder.ExecutionContext.IsPublishMode)
+    {
+        bw.WithAuthCacheDirectory("/bitwarden/auth-cache");
+    }
+});
+
+compose.ConfigureComposeFile(root =>
+{
+    root.AddVolume(new Volume
+    {
+        Name = "bitwarden-auth-cache"
+    });
+});
+
+api.PublishAsDockerComposeService((resource, service) =>
+{
+    service.AddVolume(new Volume
+    {
+        Name = "bitwarden-auth-cache",
+        Type = "volume",
+        Source = "bitwarden-auth-cache",
+        Target = "/bitwarden/auth-cache"
+    });
 });
 
 // 2. Using direct secret references in the project configuration, which injects the secret value as an environment variable at runtime.
