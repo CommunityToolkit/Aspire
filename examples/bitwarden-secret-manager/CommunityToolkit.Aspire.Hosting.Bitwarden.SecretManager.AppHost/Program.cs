@@ -63,6 +63,11 @@ api.WithReference(bitwarden, bw =>
     // You must grant the service account read access to the project manually in the Bitwarden web vault or CLI.
     // For a newly created project this must be done after the first AppHost run that creates the project.
     bw.WithAccessToken(accessToken /* replace with least privilege token */);
+
+    // Optional: override the client cache file location (separate from the AppHost cache file).
+    // The client auth cache stores the Bitwarden SDK auth session between runs so the client can
+    // reuse the session and avoid re-authenticating on every run.
+    //bw.WithAuthCacheFile("...");
 });
 
 // 2. Using direct secret references in the project configuration, which injects the secret value as an environment variable at runtime.
