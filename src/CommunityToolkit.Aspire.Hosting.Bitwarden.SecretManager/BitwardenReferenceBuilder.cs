@@ -50,7 +50,7 @@ public sealed class BitwardenReferenceBuilder<TDestination>
     /// <remarks>
     /// Requires the destination resource to be a container resource.
     /// For process resources or when the container path is already known, use
-    /// <see cref="WithAuthCacheFile(string)"/> or <see cref="WithAuthCacheFile(IResourceBuilder{ParameterResource})"/> instead.
+    /// <see cref="WithAuthCacheDirectory(string)"/> or <see cref="WithAuthCacheDirectory(IResourceBuilder{ParameterResource})"/> instead.
     /// </remarks>
     /// <param name="volumeName">
     /// The name of the Docker volume. Defaults to
@@ -58,7 +58,7 @@ public sealed class BitwardenReferenceBuilder<TDestination>
     /// </param>
     /// <param name="containerDirectory">
     /// The directory inside the container where the volume is mounted.
-    /// The auth cache file is placed at <c>{containerDirectory}/auth.json</c>.
+    /// The auth cache directory is set to <c>{containerDirectory}</c>.
     /// Defaults to <c>/var/lib/bitwarden</c>.
     /// </param>
     /// <returns>This builder.</returns>
@@ -75,7 +75,7 @@ public sealed class BitwardenReferenceBuilder<TDestination>
         {
             throw new InvalidOperationException(
                 $"WithAuthCacheVolume requires '{_builder.Resource.Name}' to be a container resource. " +
-                $"Use WithAuthCacheFile instead.");
+                $"Use WithAuthCacheDirectory instead.");
         }
 
         volumeName ??= $"{_builder.Resource.Name}-{_connectionName}-bitwarden-auth";
@@ -87,40 +87,45 @@ public sealed class BitwardenReferenceBuilder<TDestination>
             isReadOnly: false));
 
         _builder.WithEnvironment(
-            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{_connectionName}__AuthCacheFile",
-            $"{containerDirectory}/auth.json");
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{_connectionName}__AuthCacheDirectory",
+            containerDirectory);
 
         return this;
     }
 
     /// <summary>
-    /// Injects the Bitwarden SDK auth cache file path into the resource using a fixed path.
+    /// Configures the directory where the Bitwarden SDK stores its auth cache inside the resource.
+    /// The filename within the directory is managed by the integration.
+    /// Use this for process resources or when a fixed container path is known.
     /// </summary>
-    /// <param name="appAuthCacheFile">The auth cache file path inside the app.</param>
+    /// <param name="appAuthCacheDirectory">The directory path inside the app where the auth cache file is stored.</param>
     /// <returns>This builder.</returns>
-    public BitwardenReferenceBuilder<TDestination> WithAuthCacheFile(string appAuthCacheFile)
+    public BitwardenReferenceBuilder<TDestination> WithAuthCacheDirectory(string appAuthCacheDirectory)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(appAuthCacheFile);
+        ArgumentException.ThrowIfNullOrWhiteSpace(appAuthCacheDirectory);
 
         _builder.WithEnvironment(
-            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{_connectionName}__AuthCacheFile",
-            appAuthCacheFile);
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{_connectionName}__AuthCacheDirectory",
+            appAuthCacheDirectory);
 
         return this;
     }
 
     /// <summary>
-    /// Injects the Bitwarden SDK auth cache file path into the resource using a parameter.
+    /// Configures the directory where the Bitwarden SDK stores its auth cache inside the resource,
+    /// using a parameter whose value is the directory path.
+    /// The filename within the directory is managed by the integration.
+    /// Use this when the path must differ between environments or developer machines.
     /// </summary>
-    /// <param name="appAuthCacheFile">A parameter whose value is the auth cache file path inside the app.</param>
+    /// <param name="appAuthCacheDirectory">A parameter whose value is the directory path inside the app.</param>
     /// <returns>This builder.</returns>
-    public BitwardenReferenceBuilder<TDestination> WithAuthCacheFile(IResourceBuilder<ParameterResource> appAuthCacheFile)
+    public BitwardenReferenceBuilder<TDestination> WithAuthCacheDirectory(IResourceBuilder<ParameterResource> appAuthCacheDirectory)
     {
-        ArgumentNullException.ThrowIfNull(appAuthCacheFile);
+        ArgumentNullException.ThrowIfNull(appAuthCacheDirectory);
 
         _builder.WithEnvironment(
-            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{_connectionName}__AuthCacheFile",
-            appAuthCacheFile);
+            $"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__{_connectionName}__AuthCacheDirectory",
+            ReferenceExpression.Create($"{appAuthCacheDirectory.Resource}"));
 
         return this;
     }

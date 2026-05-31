@@ -31,14 +31,14 @@ Each declared Bitwarden resource contributes six pipeline steps via
 
 The steps run in order and are scoped to the resource by name:
 
-| #   | Step name                               | What it does                                                                                                                                                                                                    |
-| --- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #   | Step name                               | What it does                                                                                                                                                                                        |
+| --- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | `bitwarden-pre-sync-managed-{name}`     | Prompts for any missing credentials, authenticates, and fetches existing managed secret values from Bitwarden; writes everything to the deployment state before `process-parameters` evaluates them |
-| 2   | `bitwarden-authenticate-{name}`         | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden                                                                                                                                     |
-| 3   | `bitwarden-provision-project-{name}`    | Creates or updates the remote Bitwarden project; binds the resolved project ID                                                                                                                                  |
-| 4   | `bitwarden-sync-managed-secrets-{name}` | Binds upstream values for managed secrets whose local parameter values are missing                                                                                                                              |
-| 5   | `bitwarden-provision-secrets-{name}`    | Creates or updates managed secrets, validates declared references, saves cache                                                                                                                                  |
-| 6   | `bitwarden-patch-env-{name}`            | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files                                                                                                                                        |
+| 2   | `bitwarden-authenticate-{name}`         | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden                                                                                                                         |
+| 3   | `bitwarden-provision-project-{name}`    | Creates or updates the remote Bitwarden project; binds the resolved project ID                                                                                                                      |
+| 4   | `bitwarden-sync-managed-secrets-{name}` | Binds upstream values for managed secrets whose local parameter values are missing                                                                                                                  |
+| 5   | `bitwarden-provision-secrets-{name}`    | Creates or updates managed secrets, validates declared references, saves cache                                                                                                                      |
+| 6   | `bitwarden-patch-env-{name}`            | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files                                                                                                                            |
 
 Step 1 must run before `process-parameters` because step 2 (`bitwarden-authenticate`) depends on `DeployPrereq`, which depends on `process-parameters` — there is no way to place a step that formally depends on authentication before the parameter prompt. Step 1 therefore performs its own inline authentication, prompting for any missing credentials via `ParameterProcessor` and saving them to the deployment state so `process-parameters` does not re-prompt for them. `process-parameters` is made to depend on step 1 (via `WithPipelineConfiguration`) so all values are written to the deployment state and reflected in `IConfiguration` before `ParameterProcessor` evaluates them.
 
@@ -169,19 +169,57 @@ The resolved URLs are published as `UrlSnapshot` entries in every `CustomResourc
 
 The integration maintains two cache files on the AppHost, and one optional cache file in the deployed app.
 
-### AppHost cache files (AppHost side)
+### AppHost cache
 
-- **AppHost cache** (`{resourceName}.{environment}.json` in `.bitwarden/`): the integration's own bookkeeping — persists the Bitwarden project ID and secret ID mappings between runs. Located in `.bitwarden/` relative to the AppHost directory by default, so it is naturally tracked in version control alongside the AppHost. Override with `WithCacheFile(...)`; relative paths resolve from the AppHost directory.
-- **AppHost auth cache** (`{sha256(accessToken)}.auth-cache`): caches the Bitwarden SDK authentication session between runs so the AppHost does not need to re-authenticate on every run. Located in `.bitwarden/` under the Aspire store by default, keyed by a hash of the access token so that rotating the token automatically starts a fresh session. Override with `WithAuthCacheFile(...)`; relative paths resolve from the Aspire store.
+The AppHost cache (`{resourceName}.{environment}.json` in `.bitwarden/`) is the integration's own bookkeeping file. It persists the Bitwarden project ID and secret ID mappings between runs so the AppHost can locate existing resources without querying Bitwarden on every start. Format: JSON, written and read by this integration.
 
-`WithCacheFile(...)` and `WithAuthCacheFile(...)` are escape hatches that replace the default paths with an explicit location. These are intended for cases where the cache must be shared across multiple AppHost projects or stored in a CI cache directory.
+Located in `.bitwarden/` relative to the AppHost directory by default, so it is naturally tracked in version control alongside the AppHost. Override with `WithCacheFile(...)`; relative paths resolve from the AppHost directory. Use the override to share the cache across multiple AppHost projects or to store it in a CI cache directory.
 
-### App auth cache (deployed app side)
+### AppHost auth cache
 
-- **App auth cache**: caches the Bitwarden SDK authentication session inside the deployed app. This is independent of the AppHost auth cache — the two run in different processes and on different machines. Three configuration paths exist, all injecting the resolved path via the `AuthCacheFile` key under `Aspire:Bitwarden:SecretManager:{connectionName}`:
-  - `bw.WithAuthCacheVolume()` — mounts a named Docker volume at `/var/lib/bitwarden` and sets the file path to `/var/lib/bitwarden/auth.json`. Requires the destination to be a container resource. The volume name defaults to `{resourceName}-{connectionName}-bitwarden-auth` and can be overridden. Preferred for container resources because no host-specific path is involved.
-  - `bw.WithAuthCacheFile(parameter)` — injects a parameter-backed path. The parameter resolves from user secrets or configuration in run mode, and the deploy tooling resolves it per environment. Use when the path must differ between developer machines or deployment targets.
-  - `bw.WithAuthCacheFile(string)` — injects a fixed string. Safe only when the app always runs as a container and the path is the same everywhere. Does not warn if a host-specific path is passed — that is a silent misconfiguration; use the parameter overload instead.
+The AppHost auth cache persists the Bitwarden SDK authentication session between AppHost runs. Its primary purpose is to circumvent Bitwarden's rate limits on frequent logins: without the cache the AppHost would call the identity server on every run, which triggers rate limiting under rapid iteration or CI pipelines. Format: opaque encrypted text (Bitwarden `EncString`), written and read by the Bitwarden SDK — not plain JSON.
+
+Located in `.bitwarden/` under the Aspire store by default, keyed by the UUID component embedded in the access token (the second `.`-delimited segment of `0.<uuid>.<secret>:<base64_key>`). The per-token filename means rotating the access token automatically produces a fresh cache file; the old one is silently abandoned.
+
+Override with `WithAuthCacheDirectory(...)`; relative paths resolve from the Aspire store. Use the override to reuse a cached session across CI runs.
+
+### Auth cache file internals
+
+Both auth cache files (AppHost and app-side) are written and read exclusively by the Bitwarden SDK. The file on disk is a Bitwarden `EncString` — an AES-256-CBC-HMAC encrypted blob encoded as a single-line text string:
+
+```
+2.<base64-IV>|<base64-ciphertext>|<base64-HMAC>
+```
+
+The decrypted payload is JSON with three fields:
+
+| Field            | Contents                                                            |
+| ---------------- | ------------------------------------------------------------------- |
+| `version`        | Format version integer (currently `1`)                              |
+| `token`          | The JWT bearer token returned by the Bitwarden identity server      |
+| `encryption_key` | The organization's symmetric encryption key used to decrypt secrets |
+
+Source: [`crates/bitwarden-core/src/secrets_manager/state.rs`](https://github.com/bitwarden/sdk-internal/blob/aa8316827d1ea17f258b342ad2933286bcf2be1f/crates/bitwarden-core/src/secrets_manager/state.rs) in `bitwarden/sdk-internal`.
+
+**Per-token isolation.** The file is encrypted using a key derived from the access token string itself. An access token has the structure `0.<uuid>.<client_secret>:<base64_key>`, and the embedded `<base64_key>` is HKDF-expanded into the AES-256-CBC-HMAC key that protects the cache file. Every distinct token string therefore produces a distinct encryption key. If a process tries to read a cache file written by a different token, AES-CBC-HMAC decryption fails and the SDK silently falls back to a fresh network authentication, overwriting the file — no crash, no error surfaced to the caller, just one extra round-trip.
+
+The `bws` CLI uses this same convention: it names each state file after the token's UUID component (`~/.config/bws/state/<access_token_id>`). This integration follows suit, using the UUID from the second `.`-delimited segment of the access token string as the cache filename.
+
+**Token rotation.** Rotating the access token changes the UUID, so the new token automatically gets a fresh cache file and the old one is never read again. However, the cached JWT inside the old file remains valid until its natural expiry (typically around one hour for Bitwarden). There is no server-side revocation check during cache file load — the SDK performs only a local expiry check against the stored JWT. This is Bitwarden SDK behaviour, not a gap in this integration.
+
+### App auth cache
+
+The app auth cache persists the Bitwarden SDK authentication session inside the deployed app. Its primary purpose is the same as the AppHost auth cache: circumventing Bitwarden's rate limits on frequent logins. Without it the app calls the identity server on every start. Format: opaque encrypted text (Bitwarden `EncString`), written and read by the Bitwarden SDK — not plain JSON. This is independent of the AppHost auth cache; the two run in different processes and on different machines.
+
+The path is injected into the app via the `AuthCacheDirectory` key under `Aspire:Bitwarden:SecretManager:{connectionName}`. Three configuration paths exist:
+
+All three configuration paths accept a **directory**; the filename within that directory is always `auth-cache`, managed by the integration.
+
+**`bw.WithAuthCacheVolume()`** mounts a named Docker volume at `/var/lib/bitwarden` and sets the auth cache path to `/var/lib/bitwarden/auth-cache`. The volume name defaults to `{resourceName}-{connectionName}-bitwarden-auth` and can be overridden. Requires the destination to be a container resource. Preferred for container resources because no host-specific path is involved.
+
+**`bw.WithAuthCacheDirectory(parameter)`** injects a parameter-backed directory path. The parameter resolves from user secrets or configuration in run mode, and the deploy tooling resolves it per environment. Use when the directory must differ between developer machines or deployment targets.
+
+**`bw.WithAuthCacheDirectory(string)`** injects a fixed directory path. Safe only when the app always runs as a container and the directory is the same everywhere. Does not warn if a host-specific path is passed — that is a silent misconfiguration; use the parameter overload instead.
 
 The AppHost reconciler never reads the app auth cache path. The deployed app never reads the AppHost cache files.
 

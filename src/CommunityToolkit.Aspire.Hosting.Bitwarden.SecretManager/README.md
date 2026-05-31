@@ -48,10 +48,11 @@ You can further customize the resource with the following options:
   `.bitwarden/{resourceName}.{environment}.json` relative to the AppHost
   directory). The AppHost cache tracks Bitwarden project and secret IDs
   between runs. Relative paths are resolved from the AppHost directory.
-- `WithAuthCacheFile(...)` overrides the AppHost auth cache file location
-  (default: Aspire store, keyed by a hash of the access token). The AppHost
-  auth cache persists the Bitwarden SDK auth session between runs on the
-  AppHost. Relative paths are resolved from the Aspire store.
+- `WithAuthCacheDirectory(...)` overrides the AppHost auth cache file location
+  (default: Aspire store, named by the UUID embedded in the access token). The AppHost
+  auth cache persists the Bitwarden SDK auth session between runs to avoid
+  hitting Bitwarden's rate limits on frequent logins. Relative paths are
+  resolved from the Aspire store.
 
 For a self-hosted instance, model each endpoint as an `ExternalServiceResource`
 and pass it directly. This sets the URL and wires up `WaitFor` in one call:
@@ -147,7 +148,7 @@ builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden, bw =>
     {
         bw.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
-        bw.WithAuthCacheFile("/data/bitwarden/auth-cache"); // optional
+        bw.WithAuthCacheDirectory("/data/bitwarden"); // optional
     });
 ```
 
@@ -219,24 +220,25 @@ Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to p
 
 ### Secret references (injected into dependent resources)
 
-| API                                        | What it injects                                                                           | When to use                                                                           |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `WithReference(bitwarden)`                 | Connection config (`OrganizationId`, `ProjectId`, `AccessToken`, `ApiUrl`, `IdentityUrl`) | App uses the Bitwarden SDK to read secrets at runtime                                 |
-| `WithReference(bitwarden, bw => { ... })`  | Connection config + scoped Bitwarden configuration via the callback                       | Also need `bw.WithAccessToken`, `bw.WithBitwardenSecretId`, or `bw.WithAuthCacheFile` |
-| `WithBitwardenSecretValue(envVar, secret)` | The resolved secret value as an env var                                                   | Simple injection; no Bitwarden SDK needed in the app                                  |
+| API                                        | What it injects                                                                           | When to use                                                                                |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `WithReference(bitwarden)`                 | Connection config (`OrganizationId`, `ProjectId`, `AccessToken`, `ApiUrl`, `IdentityUrl`) | App uses the Bitwarden SDK to read secrets at runtime                                      |
+| `WithReference(bitwarden, bw => { ... })`  | Connection config + scoped Bitwarden configuration via the callback                       | Also need `bw.WithAccessToken`, `bw.WithBitwardenSecretId`, or `bw.WithAuthCacheDirectory` |
+| `WithBitwardenSecretValue(envVar, secret)` | The resolved secret value as an env var                                                   | Simple injection; no Bitwarden SDK needed in the app                                       |
 
 ### Cache files
 
-| Cache              | Stores                          | Default                                                      | Override                                                         | Relative paths    | When to override                                    |
-| ------------------ | ------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
-| AppHost cache      | Project ID + secret ID mappings | `.bitwarden/{name}.{env}.json` relative to AppHost directory | `bitwarden.WithCacheFile(path)`                                  | AppHost directory | Share cache across AppHost projects or CI pipelines |
-| AppHost auth cache | AppHost Bitwarden SDK session   | Aspire store, named by token hash                            | `bitwarden.WithAuthCacheFile(path)`                              | Aspire store      | Share session across CI runs                        |
-| App auth cache     | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `bw.WithAuthCacheVolume()` (containers) or `bw.WithAuthCacheFile(path)` (processes) | —    | Persist app session across restarts                 |
+| Cache              | Format                            | Stores                          | Default                                                      | Override                                                                                | Relative paths    | When to override                                    |
+| ------------------ | --------------------------------- | ------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------- |
+| AppHost cache      | JSON (integration-managed)        | Project ID + secret ID mappings | `.bitwarden/{name}.{env}.json` relative to AppHost directory | `bitwarden.WithCacheFile(path)`                                                         | AppHost directory | Share cache across AppHost projects or CI pipelines |
+| AppHost auth cache | Encrypted (Bitwarden SDK-managed) | AppHost Bitwarden SDK session   | Aspire store, named by token UUID                            | `bitwarden.WithAuthCacheDirectory(path)`                                                | Aspire store      | Share session across CI runs                        |
+| App auth cache     | Encrypted (Bitwarden SDK-managed) | App Bitwarden SDK session       | Not set — app re-authenticates each start                    | `bw.WithAuthCacheVolume()` (containers) or `bw.WithAuthCacheDirectory(dir)` (processes) | —                 | Persist app session across restarts                 |
 
 ### App auth cache
 
 The app auth cache persists the Bitwarden SDK auth session inside the running application.
-Without it the app re-authenticates on every start. There are three ways to configure it,
+Without it the app calls the Bitwarden identity server on every start, which triggers rate
+limiting under frequent restarts or rolling deployments. There are three ways to configure it,
 each suited to a different deployment model.
 
 **Named volume (container resources)**
@@ -249,7 +251,7 @@ and is provisioned by the deploy tooling — no host-specific path is involved.
 builder.AddContainer("api", "myregistry/api")
     .WithReference(bitwarden, bw =>
     {
-        bw.WithAuthCacheVolume(); // volume: api-bitwarden-bitwarden-auth, path: /var/lib/bitwarden/auth.json
+        bw.WithAuthCacheVolume(); // volume: api-bitwarden-bitwarden-auth, path: /var/lib/bitwarden/auth-cache
     });
 ```
 
@@ -262,60 +264,61 @@ bw.WithAuthCacheVolume(volumeName: "shared-bw-auth", containerDirectory: "/var/l
 > **Note:** `WithAuthCacheVolume` requires the destination resource to be a container
 > resource. It throws at startup for process resources (e.g. `AddProject`).
 
-**Parameter (per-environment path)**
+**Parameter (per-environment directory)**
 
-Use `WithAuthCacheFile` with a parameter when the path must differ between environments —
-for example, a developer machine path in run mode vs. a container-internal path in
-production. The parameter reads from user secrets or configuration in run mode, and the
-deploy tooling resolves it per environment at deploy time.
+Use `WithAuthCacheDirectory` with a parameter when the directory must differ between
+environments — for example, a developer machine path in run mode vs. a container-internal
+path in production. The parameter reads from user secrets or configuration in run mode,
+and the deploy tooling resolves it per environment at deploy time.
 
 ```csharp
-IResourceBuilder<ParameterResource> authCachePath = builder.AddParameter("bw-auth-cache-path");
+IResourceBuilder<ParameterResource> authCacheDir = builder.AddParameter("bw-auth-cache-dir");
 
 builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden, bw =>
     {
-        bw.WithAuthCacheFile(authCachePath);
+        bw.WithAuthCacheDirectory(authCacheDir);
     });
 ```
 
-Set the value in user secrets for local development:
+Set the directory in user secrets for local development:
 
 ```json
 {
-  "Parameters": {
-    "bw-auth-cache-path": "/home/dev/.bitwarden/auth.json"
-  }
+    "Parameters": {
+        "bw-auth-cache-dir": "/home/dev/.bitwarden"
+    }
 }
 ```
 
-**Fixed string (same path everywhere)**
+**Fixed string (same directory everywhere)**
 
-Use `WithAuthCacheFile` with a string literal when the path is a container-internal path
-that is identical in all environments. This is appropriate when the app always runs as a
-container (not as a DCP process), so there is no host-specific path involved.
+Use `WithAuthCacheDirectory` with a string literal when the directory is a
+container-internal path that is identical in all environments. This is appropriate when
+the app always runs as a container (not as a DCP process), so there is no host-specific
+path involved.
 
 ```csharp
 builder.AddContainer("api", "myregistry/api")
     .WithReference(bitwarden, bw =>
     {
-        bw.WithAuthCacheFile("/home/app/.bitwarden/auth.json");
+        bw.WithAuthCacheDirectory("/home/app/.bitwarden");
     });
 ```
 
-> **Warning:** Do not pass a host-specific path (e.g. `~/bitwarden/auth.json` or
+> **Warning:** Do not pass a host-specific directory (e.g. `~/bitwarden` or
 > `C:\Users\dev\bitwarden`) to the string overload. Unlike `WithBindMount`, Aspire does not
-> warn about this — the literal value is injected as-is and will silently break in a
-> container. Use a parameter instead when the path differs between machines or modes.
+> warn about this — the value is injected as-is and will silently break in a container.
+> Use a parameter instead when the directory differs between machines or modes.
 
 **When to use each**
 
-| Scenario | API |
-| --- | --- |
-| App is a Docker container and you want persistent auth across restarts | `WithAuthCacheVolume()` |
-| App runs as a process in dev and as a container in production, paths differ | `WithAuthCacheFile(parameterBuilder)` |
-| App is always a container and the path is the same everywhere | `WithAuthCacheFile(string)` |
-| App is a process resource (`AddProject`) | `WithAuthCacheFile(string)` or parameter — no volume option |
+| Scenario                                                                   | API                                                              |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| App is a Docker container and you want persistent auth across restarts     | `WithAuthCacheVolume()`                                          |
+| App runs as a process in dev and as a container in production, dirs differ | `WithAuthCacheDirectory(parameterBuilder)`                       |
+| App is always a container and the directory is the same everywhere         | `WithAuthCacheDirectory(string)`                                 |
+| App is a process resource (`AddProject`)                                   | `WithAuthCacheDirectory(string)` or parameter — no volume option |
 
 ### Resource states
 
@@ -408,4 +411,3 @@ Paths are tried in order: explicit adoption → persisted mapping → name searc
 Tested with **Aspire 13.3.0**.
 
 This integration relies on several experimental Aspire APIs (`ASPIREATS001`, `ASPIREPIPELINES001/002/004`, `ASPIREINTERACTION001`) and four `UnsafeAccessor` workarounds against private members of `ParameterResource` and `ParameterProcessor`. See [ASPIRE-INTERNALS.md](ASPIRE-INTERNALS.md) for the full explanation of each one, why no public API covers it, and what breaks when Aspire changes it.
-

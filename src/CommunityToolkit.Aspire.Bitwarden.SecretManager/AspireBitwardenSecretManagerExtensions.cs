@@ -84,18 +84,34 @@ public static class AspireBitwardenSecretManagerExtensions
             IdentityUrl = settings.IdentityUrl
         });
 
-        string authCacheFile = settings.AuthCacheFile ?? string.Empty;
-        if (authCacheFile is { Length: > 0 })
+        string authCacheFile = string.Empty;
+        if (settings.AuthCacheDirectory is { Length: > 0 } authCacheDirectory)
         {
-            string? authCacheDir = Path.GetDirectoryName(authCacheFile);
-            if (authCacheDir is { Length: > 0 })
-            {
-                Directory.CreateDirectory(authCacheDir);
-            }
+            Directory.CreateDirectory(authCacheDirectory);
+            string tokenId = ParseTokenId(settings.AccessToken) ?? "auth-cache";
+            authCacheFile = Path.Combine(authCacheDirectory, tokenId);
         }
 
         client.Auth.LoginAccessToken(settings.AccessToken, authCacheFile);
         return client;
+    }
+
+    // Access token format: 0.<uuid>.<secret>:<base64_key>
+    // Returns the UUID component used as the auth cache filename, matching the AppHost convention.
+    private static string? ParseTokenId(string accessToken)
+    {
+        ReadOnlySpan<char> span = accessToken.AsSpan();
+        int firstDot = span.IndexOf('.');
+        if (firstDot >= 0)
+        {
+            ReadOnlySpan<char> rest = span[(firstDot + 1)..];
+            int secondDot = rest.IndexOf('.');
+            if (secondDot >= 0 && Guid.TryParse(rest[..secondDot], out Guid tokenId))
+            {
+                return tokenId.ToString("D");
+            }
+        }
+        return null;
     }
 
     private static void RegisterHealthCheck(

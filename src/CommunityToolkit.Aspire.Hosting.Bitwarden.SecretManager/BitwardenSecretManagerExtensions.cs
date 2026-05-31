@@ -324,23 +324,23 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Overrides the AppHost auth cache file path (Bitwarden SDK auth session used by the AppHost reconciler).
+    /// Overrides the AppHost auth cache directory (Bitwarden SDK auth session used by the AppHost reconciler).
     /// Defaults to the Aspire store when not set. Override to reuse a cached auth session across CI runs.
-    /// To configure the auth cache path inside the deployed app, use
-    /// <see cref="BitwardenReferenceBuilder{TDestination}.WithAuthCacheFile(string)"/> inside
+    /// To configure the auth cache directory inside the deployed app, use
+    /// <see cref="BitwardenReferenceBuilder{TDestination}.WithAuthCacheDirectory(string)"/> inside
     /// a <see cref="WithReference{TDestination}(IResourceBuilder{TDestination}, IResourceBuilder{BitwardenSecretManagerResource}, System.Action{BitwardenReferenceBuilder{TDestination}}, string?)"/> callback.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="authCacheFile">The auth cache file path on the AppHost, relative to the Aspire store directory when not rooted.</param>
+    /// <param name="authCacheDirectory">The auth cache directory on the AppHost, relative to the Aspire store when not rooted.</param>
     /// <returns>The resource builder.</returns>
-    public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthCacheFile(
+    public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthCacheDirectory(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
-        string authCacheFile)
+        string authCacheDirectory)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(authCacheFile);
+        ArgumentException.ThrowIfNullOrWhiteSpace(authCacheDirectory);
 
-        builder.Resource.AuthCacheFile = authCacheFile;
+        builder.Resource.AuthCacheDirectory = authCacheDirectory;
 
         return builder;
     }

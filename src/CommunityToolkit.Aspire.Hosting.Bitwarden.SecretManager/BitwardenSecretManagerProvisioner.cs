@@ -2,8 +2,6 @@
 #pragma warning disable ASPIREPIPELINES002
 
 using System.Collections.Immutable;
-using System.Security.Cryptography;
-using System.Text;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
@@ -1008,30 +1006,45 @@ internal sealed class BitwardenSecretManagerProvisioner(
         IServiceProvider services,
         CancellationToken cancellationToken)
     {
-        if (resource.AuthCacheFile is { Length: > 0 } authCacheFile)
-        {
-            if (Path.IsPathRooted(authCacheFile))
-            {
-                return authCacheFile;
-            }
-
-            IAspireStore aspireStore = services.GetRequiredService<IAspireStore>();
-            return Path.GetFullPath(Path.Combine(aspireStore.BasePath, authCacheFile));
-        }
-
-        // Key the default auth cache on the access token value so that rotating the token
-        // automatically starts a fresh session, and different tokens never share a session file.
+        // The filename is always the token UUID — only the directory can be overridden.
         string? accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrEmpty(accessToken))
         {
             throw new DistributedApplicationException($"Bitwarden access token for resource '{resource.Name}' did not resolve to a value.");
         }
 
-        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(accessToken));
-        string tokenHash = Convert.ToHexString(hash).ToLowerInvariant()[..7];
+        string tokenId = ParseTokenId(resource.Name, accessToken);
+
+        if (resource.AuthCacheDirectory is { Length: > 0 } authCacheDirectory)
+        {
+            string resolvedDirectory = Path.IsPathRooted(authCacheDirectory)
+                ? authCacheDirectory
+                : Path.GetFullPath(Path.Combine(services.GetRequiredService<IAspireStore>().BasePath, authCacheDirectory));
+            return Path.Combine(resolvedDirectory, tokenId);
+        }
 
         IAspireStore store = services.GetRequiredService<IAspireStore>();
-        return Path.Combine(store.BasePath, ".bitwarden", $"{tokenHash}.auth-cache");
+        return Path.Combine(store.BasePath, ".bitwarden", tokenId);
+    }
+
+    // Access token format: 0.<uuid>.<secret>:<base64_key>
+    // Returns the UUID component (e.g. "ec2c1d46-6a4b-4751-a310-af9601317f2d").
+    private static string ParseTokenId(string resourceName, string accessToken)
+    {
+        ReadOnlySpan<char> span = accessToken.AsSpan();
+        int firstDot = span.IndexOf('.');
+        if (firstDot >= 0)
+        {
+            ReadOnlySpan<char> rest = span[(firstDot + 1)..];
+            int secondDot = rest.IndexOf('.');
+            if (secondDot >= 0 && Guid.TryParse(rest[..secondDot], out Guid tokenId))
+            {
+                return tokenId.ToString("D");
+            }
+        }
+
+        throw new DistributedApplicationException(
+            $"Bitwarden access token for resource '{resourceName}' does not match the expected format '0.<uuid>.<secret>:<base64_key>'.");
     }
 }
 

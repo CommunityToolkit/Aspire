@@ -25,7 +25,7 @@ public class BitwardenSecretManagerPublishingTests
 
         Assert.Same(managedSecret.Resource, secretResource);
         Assert.Single(bitwarden.Resource.DeclaredSecretReferences);
-        Assert.Same(managedSecret.Resource, bitwarden.Resource.DeclaredSecretReferences[0]);
+        Assert.Same(managedSecret.Resource, bitwarden.Resource.DeclaredSecretReferences.Single());
         Assert.Contains(ManifestPublishingCallbackAnnotation.Ignore, secretResource.Annotations);
     }
 }

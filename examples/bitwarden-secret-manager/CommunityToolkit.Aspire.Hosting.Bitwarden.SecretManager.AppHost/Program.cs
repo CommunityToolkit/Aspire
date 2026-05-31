@@ -26,16 +26,17 @@ bitwarden.WithApiUrl(bitwardenApiServer)
 // The cache stores the Bitwarden project ID and secret ID mappings between runs so the integration
 // can reuse existing Bitwarden resources rather than creating duplicates.
 // Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
+// Relative paths are resolved from the AppHost directory.
 // Default: .bitwarden/{resourceName}.{environment}.json relative to the AppHost directory.
 bitwarden.WithCacheFile($".bitwarden/secrets.{builder.Environment.EnvironmentName}.json");
 
-// Optional: override the AppHost auth cache file location.
+// Optional: override the AppHost auth cache directory.
 // The auth cache stores the Bitwarden SDK auth session between runs so the integration can reuse the
 // session and avoid re-authenticating on every run.
 // Override to share the cache across multiple AppHost projects, or to store it in a CI cache directory.
-// Default: Aspire store, keyed by a hash of the access token (rotating the token starts a fresh session).
 // Relative paths are resolved from the Aspire store directory.
-//bitwarden.WithAuthCacheFile("...");
+// Default: .bitwarden relative to the Aspire store directory.
+bitwarden.WithAuthCacheDirectory(".bitwarden");
 
 // Add a secret to the project with the value of the generated secret parameter.
 // Configure this value with `Parameters:secrets-demo-api-key`, or let Aspire prompt for it.
@@ -64,10 +65,10 @@ api.WithReference(bitwarden, bw =>
     // For a newly created project this must be done after the first AppHost run that creates the project.
     bw.WithAccessToken(accessToken /* replace with least privilege token */);
 
-    // Optional: override the client cache file location (separate from the AppHost cache file).
-    // The client auth cache stores the Bitwarden SDK auth session between runs so the client can
-    // reuse the session and avoid re-authenticating on every run.
-    //bw.WithAuthCacheFile("...");
+    // Optional: override the client auth cache directory (separate from the AppHost auth cache).
+    // The client auth cache stores the Bitwarden SDK auth session between restarts so the client can
+    // reuse the session and avoid re-authenticating on every start (which would hit Bitwarden rate limits).
+    //bw.WithAuthCacheDirectory("...");
 });
 
 // 2. Using direct secret references in the project configuration, which injects the secret value as an environment variable at runtime.

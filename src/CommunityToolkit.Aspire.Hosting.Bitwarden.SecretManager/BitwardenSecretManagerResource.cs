@@ -161,9 +161,9 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     public string? CacheFile { get; internal set; }
 
     /// <summary>
-    /// Gets the AppHost auth cache file path override (Bitwarden SDK auth session on the AppHost).
+    /// Gets the AppHost auth cache directory override (Bitwarden SDK auth session on the AppHost).
     /// </summary>
-    public string? AuthCacheFile { get; internal set; }
+    public string? AuthCacheDirectory { get; internal set; }
 
     /// <summary>
     /// Gets the existing Bitwarden project identifier to adopt.

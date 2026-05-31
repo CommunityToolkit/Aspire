@@ -96,23 +96,23 @@ public class BitwardenSecretManagerBuilderTests
     }
 
     [Fact]
-    public void WithAuthCacheFile_StoresConfiguredPath()
+    public void WithAuthCacheDirectory_StoresConfiguredDirectory()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
 
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-        const string authCachePath = "./.state/bitwarden-auth.bin";
+        const string authCacheDirectory = "./.state/bitwarden-auth";
 
         appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken)
-            .WithAuthCacheFile(authCachePath);
+            .WithAuthCacheDirectory(authCacheDirectory);
 
         using var app = appBuilder.Build();
 
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var resource = Assert.Single(model.Resources.OfType<BitwardenSecretManagerResource>());
 
-        Assert.Equal(authCachePath, resource.AuthCacheFile);
+        Assert.Equal(authCacheDirectory, resource.AuthCacheDirectory);
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public class BitwardenSecretManagerBuilderTests
         Assert.Equal("management-access-token", environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AccessToken"]);
         Assert.Equal(BitwardenSecretManagerResource.DefaultApiUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__ApiUrl"]);
         Assert.Equal(BitwardenSecretManagerResource.DefaultIdentityUrl, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__IdentityUrl"]);
-        Assert.False(environmentVariables.ContainsKey($"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheFile"));
+        Assert.False(environmentVariables.ContainsKey($"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheDirectory"));
     }
 
     [Fact]
@@ -218,16 +218,16 @@ public class BitwardenSecretManagerBuilderTests
     }
 
     [Fact]
-    public async Task WithAuthCacheFile_Parameter_InjectsAuthCacheFileIntoApp()
+    public async Task WithAuthCacheDirectory_Parameter_InjectsAuthCachePathIntoApp()
     {
         var organizationId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
-        const string appAuthCachePath = "/data/bitwarden/auth-cache";
+        const string appAuthCacheDirectory = "/data/bitwarden";
 
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "runtime-access-token";
-        appBuilder.Configuration["Parameters:bitwarden-auth-cache-location"] = appAuthCachePath;
+        appBuilder.Configuration["Parameters:bitwarden-auth-cache-location"] = appAuthCacheDirectory;
 
         var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
@@ -237,21 +237,20 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheFile(authCacheLocation));
+        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheDirectory(authCacheLocation));
 
         using var app = appBuilder.Build();
 
         var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.Equal(appAuthCachePath, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheFile"]);
+        Assert.Equal(appAuthCacheDirectory, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheDirectory"]);
     }
 
     [Fact]
-    public async Task WithAuthCacheFile_String_InjectsAuthCacheFileIntoApp()
+    public async Task WithAuthCacheVolume_DefaultArgs_MountsVolumeAndInjectsAuthCacheDirectory()
     {
         var organizationId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
-        const string appAuthCachePath = "/data/bitwarden/auth-cache";
 
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
@@ -264,21 +263,109 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheFile(appAuthCachePath));
+        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheVolume());
 
         using var app = appBuilder.Build();
 
         var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.Equal(appAuthCachePath, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheFile"]);
+        // Env var points at the default path inside the container
+        Assert.Equal(
+            "/var/lib/bitwarden",
+            environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheDirectory"]);
+
+        // A volume mount is present for the default directory
+        var mounts = consumer.Resource.Annotations.OfType<ContainerMountAnnotation>().ToList();
+        var volumeMount = mounts.SingleOrDefault(m => m.Type == ContainerMountType.Volume && m.Target == "/var/lib/bitwarden");
+        Assert.NotNull(volumeMount);
+        Assert.Equal("consumer-bitwarden-bitwarden-auth", volumeMount.Source);
+        Assert.False(volumeMount.IsReadOnly);
     }
 
     [Fact]
-    public async Task WithAuthCacheFile_DoesNotInjectIntoApp()
+    public async Task WithAuthCacheVolume_CustomArgs_MountsVolumeAtCustomDirectory()
     {
         var organizationId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
-        var appHostAuthCachePath = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.auth-cache");
+        const string customVolumeName = "shared-bw-auth";
+        const string customDirectory = "/mnt/bitwarden";
+
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "runtime-access-token";
+
+        var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "consumer-project", organizationParameter, accessToken);
+        bitwarden.Resource.BindResolvedProjectId(projectId);
+
+        var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
+        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheVolume(volumeName: customVolumeName, containerDirectory: customDirectory));
+
+        using var app = appBuilder.Build();
+
+        var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal(
+            customDirectory,
+            environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheDirectory"]);
+
+        var mounts = consumer.Resource.Annotations.OfType<ContainerMountAnnotation>().ToList();
+        var volumeMount = mounts.SingleOrDefault(m => m.Type == ContainerMountType.Volume && m.Target == customDirectory);
+        Assert.NotNull(volumeMount);
+        Assert.Equal(customVolumeName, volumeMount.Source);
+    }
+
+    [Fact]
+    public void WithAuthCacheVolume_OnNonContainerResource_Throws()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "my-project", Guid.NewGuid(), accessToken);
+
+        // AddProject requires a project assembly reference; use ExecutableResource as a non-container stand-in.
+        var nonContainer = appBuilder.AddExecutable("worker", "dotnet", ".");
+
+        Assert.Throws<InvalidOperationException>(
+            () => nonContainer.WithReference(bitwarden, bw => bw.WithAuthCacheVolume()));
+    }
+
+    [Fact]
+    public async Task WithAuthCacheDirectory_String_InjectsAuthCachePathIntoApp()
+    {
+        var organizationId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+        const string appAuthCacheDirectory = "/data/bitwarden";
+
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = "runtime-access-token";
+
+        var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "consumer-project", organizationParameter, accessToken);
+        bitwarden.Resource.BindResolvedProjectId(projectId);
+
+        var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
+        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheDirectory(appAuthCacheDirectory));
+
+        using var app = appBuilder.Build();
+
+        var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal(appAuthCacheDirectory, environmentVariables[$"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheDirectory"]);
+    }
+
+    [Fact]
+    public async Task WithAuthCacheDirectory_DoesNotInjectIntoApp()
+    {
+        var organizationId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+        var appHostAuthCacheDir = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}");
 
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
@@ -288,7 +375,7 @@ public class BitwardenSecretManagerBuilderTests
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
 
         var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "consumer-project", organizationParameter, accessToken)
-            .WithAuthCacheFile(appHostAuthCachePath);
+            .WithAuthCacheDirectory(appHostAuthCacheDir);
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
@@ -298,7 +385,7 @@ public class BitwardenSecretManagerBuilderTests
 
         var environmentVariables = await consumer.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.False(environmentVariables.ContainsKey($"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheFile"));
+        Assert.False(environmentVariables.ContainsKey($"{BitwardenSecretManagerResource.ConfigurationKeyPrefix}__bitwarden__AuthCacheDirectory"));
     }
 
     [Fact]

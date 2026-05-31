@@ -33,11 +33,12 @@ public sealed class BitwardenSecretManagerClientSettings
     public string IdentityUrl { get; set; } = "https://identity.bitwarden.com";
 
     /// <summary>
-    /// Gets or sets the optional auth cache file path used by the Bitwarden SDK to persist the auth session across restarts.
-    /// Set this to a persistent storage path (e.g. <c>/data/bitwarden/auth-cache</c>) to avoid re-authenticating on every start.
-    /// Injected automatically by the AppHost integration via the <c>AuthCacheFile</c> configuration key when using <c>WithAuthCacheFile</c>.
+    /// Gets or sets the optional directory where the Bitwarden SDK stores its auth cache file to persist the session across restarts.
+    /// Set this to a persistent directory (e.g. <c>/data/bitwarden</c>) to avoid re-authenticating on every start, which would
+    /// otherwise hit Bitwarden's rate limits. The filename within the directory is derived from the access token UUID and is
+    /// managed automatically. Injected by the AppHost integration via the <c>AuthCacheDirectory</c> configuration key.
     /// </summary>
-    public string? AuthCacheFile { get; set; }
+    public string? AuthCacheDirectory { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether health checks should be disabled.
