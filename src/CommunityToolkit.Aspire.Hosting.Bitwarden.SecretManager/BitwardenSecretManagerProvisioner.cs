@@ -1,12 +1,15 @@
 #pragma warning disable ASPIREINTERACTION001
+#pragma warning disable ASPIREPIPELINES002
 
 using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Text;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Pipelines;
 using Bitwarden.Sdk;
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -264,6 +267,178 @@ internal sealed class BitwardenSecretManagerProvisioner(
         }
 
         logger.LogInformation("Synced {SyncedSecretCount} managed secret values from upstream for resource '{ResourceName}'.", syncedCount, resource.Name);
+    }
+
+    /// <summary>
+    /// Prompts for any missing credentials, then fetches existing managed secret values from Bitwarden
+    /// and writes everything to the deployment state so that <c>process-parameters</c> finds the values
+    /// in <see cref="IConfiguration"/> and does not re-prompt the user. Runs before <c>process-parameters</c>.
+    /// Skips the Bitwarden fetch (but not the credential prompts) when the project ID is not yet cached.
+    /// </summary>
+    /// <remarks>
+    /// Why IConfiguration and not TCS: <c>ParameterProcessor.InitializeParametersAsync</c> unconditionally
+    /// creates a fresh <c>WaitForValueTcs</c> then immediately calls <c>ValueInternal</c>, which reads the
+    /// lazy-evaluated <c>_valueGetter</c>. That getter reads <see cref="IConfiguration"/>. Writing the value
+    /// to the deployment state file and calling <see cref="IConfigurationRoot.Reload"/> before
+    /// <c>process-parameters</c> runs is the only way to pre-populate the value without racing against
+    /// TCS creation.
+    /// </remarks>
+    public async Task PreSyncManagedSecretValuesAsync(
+        BitwardenSecretManagerResource resource,
+        IServiceProvider services,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        if (!resource.ManagedSecrets.Any())
+        {
+            return;
+        }
+
+        IConfiguration configuration = services.GetRequiredService<IConfiguration>();
+        IDeploymentStateManager deploymentStateManager = services.GetRequiredService<IDeploymentStateManager>();
+        int savedCount = 0;
+
+        // Resolve the access token via IConfiguration first (avoids HasValue() which would evaluate
+        // _lazyValue and potentially poison it). Prompt via ParameterProcessor if absent, then
+        // persist to deployment state so process-parameters finds it there and does not prompt again.
+        string accessTokenConfigKey = $"Parameters:{resource.ManagementAccessToken.Name}";
+        string? accessToken = configuration[accessTokenConfigKey];
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            logger.LogDebug("Access token not in configuration; prompting before pre-sync for '{ResourceName}'.", resource.Name);
+            resource.ManagementAccessToken.InitializeWaitForValue();
+            await resource.ManagementAccessToken.PromptAsync(services, cancellationToken).ConfigureAwait(false);
+            accessToken = resource.ManagementAccessToken.GetResolvedWaitForValue();
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                logger.LogDebug("Access token prompt dismissed; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                return;
+            }
+            var tokenSlot = await deploymentStateManager.AcquireSectionAsync(accessTokenConfigKey, cancellationToken).ConfigureAwait(false);
+            tokenSlot.SetValue(accessToken);
+            await deploymentStateManager.SaveSectionAsync(tokenSlot, cancellationToken).ConfigureAwait(false);
+            savedCount++;
+        }
+
+        // Resolve the organization ID the same way — literal or via IConfiguration; prompt if needed.
+        Guid organizationId;
+        if (resource.ConfiguredOrganizationId is Guid literalOrgId)
+        {
+            organizationId = literalOrgId;
+        }
+        else if (resource.ConfiguredOrganizationIdParameter is ParameterResource orgIdParam)
+        {
+            string orgIdConfigKey = $"Parameters:{orgIdParam.Name}";
+            string? orgIdString = configuration[orgIdConfigKey];
+            if (string.IsNullOrEmpty(orgIdString))
+            {
+                logger.LogDebug("Organization ID not in configuration; prompting before pre-sync for '{ResourceName}'.", resource.Name);
+                orgIdParam.InitializeWaitForValue();
+                await orgIdParam.PromptAsync(services, cancellationToken).ConfigureAwait(false);
+                orgIdString = orgIdParam.GetResolvedWaitForValue();
+                if (string.IsNullOrEmpty(orgIdString))
+                {
+                    logger.LogDebug("Organization ID prompt dismissed; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                    return;
+                }
+                var orgIdSlot = await deploymentStateManager.AcquireSectionAsync(orgIdConfigKey, cancellationToken).ConfigureAwait(false);
+                orgIdSlot.SetValue(orgIdString);
+                await deploymentStateManager.SaveSectionAsync(orgIdSlot, cancellationToken).ConfigureAwait(false);
+                savedCount++;
+            }
+            if (!Guid.TryParse(orgIdString, out organizationId))
+            {
+                logger.LogDebug("Organization ID '{Value}' is not a valid GUID; skipping pre-sync for '{ResourceName}'.", orgIdString, resource.Name);
+                return;
+            }
+        }
+        else
+        {
+            return;
+        }
+
+        string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
+        BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
+
+        // Need a project ID from a previous run's cache or an explicitly configured one.
+        Guid? projectId = cacheContext.Cache.ProjectId ?? resource.ExistingProjectId;
+        if (projectId is null)
+        {
+            logger.LogDebug("Project ID not available from cache or explicit configuration; skipping managed secret pre-sync for '{ResourceName}'.", resource.Name);
+            // Still reload for any credentials written above so process-parameters skips them.
+            if (savedCount > 0 && configuration is IConfigurationRoot earlyRoot)
+                earlyRoot.Reload();
+            return;
+        }
+
+        logger.LogDebug("Pre-syncing managed secret values for resource '{ResourceName}' from project {ProjectId}.", resource.Name, projectId);
+
+        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
+            await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
+            await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
+        provider.Login(accessToken, cacheContext.AuthCachePath);
+
+        BitwardenLookupContext lookupContext = new(provider, organizationId);
+        int preResolvedCount = 0;
+
+        foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+        {
+            // ConfigurationKey is internal to Aspire.Hosting; replicate it — managed secrets are never connection strings.
+            string configKey = $"Parameters:{secret.Name}";
+
+            // Check IConfiguration directly — never call HasValue() or ValueInternal here.
+            // Lazy<string> caches exceptions under ExecutionAndPublication (the default), so evaluating
+            // _lazyValue before process-parameters runs (which would find no value yet) permanently
+            // poisons it. Subsequent calls by ParameterProcessor would re-throw the cached exception
+            // and ignore the reloaded IConfiguration value.
+            if (!string.IsNullOrWhiteSpace(configuration[configKey]))
+            {
+                logger.LogDebug("Skipping pre-sync for managed secret '{SecretName}': value already in configuration.", secret.LocalName);
+                continue;
+            }
+
+            BitwardenSecretInfo? existing = await ResolveExistingManagedSecretAsync(
+                resource,
+                projectId.Value,
+                secret,
+                cacheContext.Cache,
+                lookupContext,
+                interactionService: null, // never prompt during pre-sync
+                logger,
+                cancellationToken).ConfigureAwait(false);
+
+            if (existing is null)
+            {
+                logger.LogDebug("No upstream value found for managed secret '{SecretName}' during pre-sync.", secret.LocalName);
+                continue;
+            }
+
+            var slot = await deploymentStateManager.AcquireSectionAsync(configKey, cancellationToken).ConfigureAwait(false);
+            slot.SetValue(existing.Value);
+            await deploymentStateManager.SaveSectionAsync(slot, cancellationToken).ConfigureAwait(false);
+            preResolvedCount++;
+
+            logger.LogInformation("Pre-resolved managed secret '{SecretName}' from Bitwarden secret {SecretId}.", secret.LocalName, existing.Id);
+        }
+
+        savedCount += preResolvedCount;
+        if (savedCount > 0)
+        {
+            // Force IConfiguration to re-read the updated deployment state file.
+            // AddJsonFile is registered with reloadOnChange:false so manual Reload() is required.
+            // _lazyValue in ParameterResource has not been evaluated yet at this point (process-parameters
+            // hasn't run), so the next call to _valueGetter will pick up the fresh values.
+            if (configuration is IConfigurationRoot configRoot)
+            {
+                configRoot.Reload();
+            }
+
+            logger.LogInformation("Pre-synced {Count} managed secret values from Bitwarden for resource '{ResourceName}'; IConfiguration reloaded.", preResolvedCount, resource.Name);
+        }
     }
 
     /// <summary>

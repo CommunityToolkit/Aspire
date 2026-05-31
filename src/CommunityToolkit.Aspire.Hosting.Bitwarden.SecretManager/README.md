@@ -89,7 +89,9 @@ Each managed secret appears in the Aspire dashboard parameters tab. Its value is
 this order during startup:
 
 1. **Bitwarden upstream** — if the secret already exists in Bitwarden, its current value is
-   synced automatically. No prompt, no configuration needed.
+   synced automatically. No prompt, no configuration needed. In `aspire deploy`, the
+   `bitwarden-pre-sync-managed` step writes this value to the deployment state before
+   `process-parameters` runs, so the deploy command does not prompt either.
 2. **Configuration** — if no upstream value is found, the secret reads the configuration key
    `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
 3. **Interactive prompt** — if the configuration key is also absent, the dashboard prompts for
@@ -176,17 +178,22 @@ Typical flow:
 1. Declare the Bitwarden project and any managed secrets in the AppHost graph.
 2. Run `aspire deploy` for the AppHost.
 
-During `aspire deploy`, the integration runs five pipeline steps per Bitwarden
+During `aspire deploy`, the integration runs six pipeline steps per Bitwarden
 resource:
 
-1. **Authenticate** — resolves credentials and authenticates with Bitwarden
+1. **Pre-sync managed secrets** — prompts for any missing credentials, then
+   authenticates and fetches existing Bitwarden values for managed secrets,
+   writing everything to the deployment state before `process-parameters` runs.
+   This prevents `aspire deploy` from re-prompting for secrets that already
+   exist in Bitwarden.
+2. **Authenticate** — resolves credentials and authenticates with Bitwarden
    Secrets Manager.
-2. **Provision project** — creates or updates the remote Bitwarden project.
-3. **Sync managed secrets** — reads existing upstream values for managed
+3. **Provision project** — creates or updates the remote Bitwarden project.
+4. **Sync managed secrets** — reads existing upstream values for managed
    secrets whose local parameter values are missing.
-4. **Provision secrets** — creates or updates managed secrets and validates
+5. **Provision secrets** — creates or updates managed secrets and validates
    declared references.
-5. **Patch env files** — applies resolved values to Docker Compose environment
+6. **Patch env files** — applies resolved values to Docker Compose environment
    files (Docker Compose deployments only).
 
 This keeps the experience declaration-first: resources and references are your
@@ -316,20 +323,5 @@ Paths are tried in order: explicit adoption → persisted mapping → name searc
 
 Tested with **Aspire 13.3.0**.
 
-This integration uses several experimental Aspire APIs and one `UnsafeAccessor`
-workaround. These are summarized below so that upgrading Aspire is a conscious
-decision rather than a silent breakage.
+This integration relies on several experimental Aspire APIs (`ASPIREATS001`, `ASPIREPIPELINES001/002/004`, `ASPIREINTERACTION001`) and four `UnsafeAccessor` workarounds against private members of `ParameterResource` and `ParameterProcessor`. See [ASPIRE-INTERNALS.md](ASPIRE-INTERNALS.md) for the full explanation of each one, why no public API covers it, and what breaks when Aspire changes it.
 
-| Diagnostic / Mechanism                         | Files                                                                      | Members / Types                                                                                   | Why                                                                                                                                                                                                                                                   |
-| ---------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ASPIREATS001`                                 | `BitwardenSecretManagerResource`, `BitwardenSecretResource`                | `[AspireExport]`, `[AspireExport(ExposeProperties = true)]`                                       | Registers resource types with Aspire's typed export system so they appear in the dashboard and deployment manifest as first-class resources.                                                                                                          |
-| `ASPIREPIPELINES001`, `ASPIREPIPELINES004`     | `BitwardenSecretManagerExtensions`, `BitwardenSecretManagerDeploymentStep` | `PipelineStepContext`, `IPipelineOutputService`, `IComputeEnvironmentResource`, `AddPipelineStep` | Hooks into `aspire deploy` to register five pipeline steps. The env-file patch step works around Aspire not calling `GetValueAsync` on custom `IValueProvider` sources during `prepare`, leaving Bitwarden-derived env vars blank in generated files. |
-| `ASPIREINTERACTION001`                         | `BitwardenSecretManagerProvisioner`, `ParameterResourceExtensions`         | `ParameterProcessor`                                                                              | Triggers dashboard prompts for unresolved parameters and dismisses the "parameters need values" banner once Bitwarden resolves a secret value.                                                                                                        |
-| `UnsafeAccessor` — `get_WaitForValueTcs`       | `ParameterResourceExtensions`                                              | `ParameterResource` private property                                                              | Synchronously checks whether a parameter has a value and resolves the `TaskCompletionSource<string>` to unblock `GetValueAsync` waiters after Bitwarden fetches the secret. No public equivalent.                                                     |
-| `UnsafeAccessor` — `_unresolvedParameters`     | `ParameterResourceExtensions`                                              | `ParameterProcessor` private field                                                                | Removes a resolved parameter from the pending list so the dashboard banner reflects actual state. No public equivalent.                                                                                                                               |
-| `UnsafeAccessor` — `_allParametersResolvedCts` | `ParameterResourceExtensions`                                              | `ParameterProcessor` private field                                                                | Cancels the banner `CancellationTokenSource` when all parameters are satisfied, dismissing it immediately. No public equivalent.                                                                                                                      |
-
-If Aspire renames or removes any of the `UnsafeAccessor` targets, the integration will fail at
-runtime with a `MissingMethodException` or `MissingFieldException`. Run the
-AppHost against a new Aspire version and watch for those exceptions before
-shipping a NuGet update.

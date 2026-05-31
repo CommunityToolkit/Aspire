@@ -555,6 +555,7 @@ public static class BitwardenSecretManagerExtensions
 
         var resource = builder.Resource;
         string n = resource.Name;
+        string preSyncManagedStepName = $"bitwarden-pre-sync-managed-{n}";
         string authenticateStepName = $"bitwarden-authenticate-{n}";
         string provisionProjectStepName = $"bitwarden-provision-project-{n}";
         string syncManagedSecretsStepName = $"bitwarden-sync-managed-secrets-{n}";
@@ -563,6 +564,25 @@ public static class BitwardenSecretManagerExtensions
 
         builder.WithPipelineStepFactory(async _ =>
         {
+            // Runs before process-parameters (wired in WithPipelineConfiguration below).
+            // Only handles managed (AddSecret) secrets — unmanaged (GetSecret) secrets return
+            // string.Empty from their valueGetter so ParameterProcessor never adds them to
+            // _unresolvedParameters and process-parameters never prompts for them.
+            // Prompts for any missing credentials, then fetches existing managed secret values
+            // from Bitwarden and writes them to deployment state. Calls IConfigurationRoot.Reload()
+            // so _valueGetter reads the fresh values when ParameterProcessor first evaluates them.
+            PipelineStep preSyncManagedStep = new()
+            {
+                Name = preSyncManagedStepName,
+                Description = $"Pre-sync Bitwarden managed secret values for '{n}' before parameter prompting",
+                Action = async ctx =>
+                {
+                    var provisioner = ctx.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+                    await provisioner.PreSyncManagedSecretValuesAsync(resource, ctx.Services, ctx.Logger, ctx.CancellationToken).ConfigureAwait(false);
+                },
+                Resource = resource
+            };
+
             PipelineStep authenticateStep = new()
             {
                 Name = authenticateStepName,
@@ -636,11 +656,17 @@ public static class BitwardenSecretManagerExtensions
                 Resource = resource
             };
 
-            return new[] { authenticateStep, provisionProjectStep, syncManagedSecretsStep, provisionSecretsStep, patchEnvStep };
+            return new[] { preSyncManagedStep, authenticateStep, provisionProjectStep, syncManagedSecretsStep, provisionSecretsStep, patchEnvStep };
         });
 
         builder.WithPipelineConfiguration(context =>
         {
+            // Make process-parameters wait for pre-sync so Bitwarden values are in IConfiguration
+            // before ParameterProcessor evaluates _valueGetter on managed secrets.
+            context.Steps
+                .FirstOrDefault(s => s.Name == WellKnownPipelineSteps.ProcessParameters)
+                ?.DependsOn(preSyncManagedStepName);
+
             var patchEnvStep = context.Steps.FirstOrDefault(s => s.Name == patchEnvStepName);
             if (patchEnvStep is null)
             {

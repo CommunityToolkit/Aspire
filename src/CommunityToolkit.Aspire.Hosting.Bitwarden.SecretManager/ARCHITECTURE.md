@@ -14,8 +14,8 @@ This design intentionally treats custom publish-manifest schema as legacy. The i
    AppHost resources are the source of truth.
 
 2. Publish-time materialization:
-   Publishing registers four Bitwarden pipeline steps per declared Bitwarden resource.
-   The steps collectively deploy the graph by authenticating, provisioning the project, provisioning secrets, and patching environment files.
+   Publishing registers six Bitwarden pipeline steps per declared Bitwarden resource.
+   The steps collectively deploy the graph by pre-syncing existing values, authenticating, provisioning the project, provisioning secrets, and patching environment files.
 
 3. Provisioner as implementation detail:
    Provisioning logic is the internal mechanism used by the publishing steps (and local run path), not part of the public architecture contract.
@@ -26,22 +26,25 @@ This design intentionally treats custom publish-manifest schema as legacy. The i
 ## Publishing
 
 `aspire deploy` is the deployment moment for Bitwarden resources.
-Each declared Bitwarden resource contributes five pipeline steps via
+Each declared Bitwarden resource contributes six pipeline steps via
 `WithPipelineStepFactory(...)`.
 
 The steps run in order and are scoped to the resource by name:
 
-| #   | Step name                            | What it does                                                                   |
-| --- | ------------------------------------ | ------------------------------------------------------------------------------ |
-| 1   | `bitwarden-authenticate-{name}`      | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden    |
-| 2   | `bitwarden-provision-project-{name}` | Creates or updates the remote Bitwarden project; binds the resolved project ID |
-| 3   | `bitwarden-sync-managed-secrets-{name}` | Binds upstream values for managed secrets whose local parameter values are missing |
-| 4   | `bitwarden-provision-secrets-{name}` | Creates or updates managed secrets, validates declared references, saves cache |
-| 5   | `bitwarden-patch-env-{name}`         | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files       |
+| #   | Step name                               | What it does                                                                                                                                                                                                    |
+| --- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `bitwarden-pre-sync-managed-{name}`     | Prompts for any missing credentials, authenticates, and fetches existing managed secret values from Bitwarden; writes everything to the deployment state before `process-parameters` evaluates them |
+| 2   | `bitwarden-authenticate-{name}`         | Resolves credentials, loads the AppHost cache, authenticates with Bitwarden                                                                                                                                     |
+| 3   | `bitwarden-provision-project-{name}`    | Creates or updates the remote Bitwarden project; binds the resolved project ID                                                                                                                                  |
+| 4   | `bitwarden-sync-managed-secrets-{name}` | Binds upstream values for managed secrets whose local parameter values are missing                                                                                                                              |
+| 5   | `bitwarden-provision-secrets-{name}`    | Creates or updates managed secrets, validates declared references, saves cache                                                                                                                                  |
+| 6   | `bitwarden-patch-env-{name}`            | Patches Bitwarden-resolved values into Docker Compose `.env.{env}` files                                                                                                                                        |
 
-Steps 1–4 depend on `DeployPrereq`. Step 4 is tagged `ProvisionInfrastructure` and is required by `Deploy`. Because steps 1–4 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
+Step 1 must run before `process-parameters` because step 2 (`bitwarden-authenticate`) depends on `DeployPrereq`, which depends on `process-parameters` — there is no way to place a step that formally depends on authentication before the parameter prompt. Step 1 therefore performs its own inline authentication, prompting for any missing credentials via `ParameterProcessor` and saving them to the deployment state so `process-parameters` does not re-prompt for them. `process-parameters` is made to depend on step 1 (via `WithPipelineConfiguration`) so all values are written to the deployment state and reflected in `IConfiguration` before `ParameterProcessor` evaluates them.
 
-Step 5 is a Docker Compose workaround: `PrepareAsync` in `Aspire.Hosting.Docker` only resolves `ParameterResource` and `ContainerImageReference` sources, leaving Bitwarden-derived env vars blank. Step 5 patches those blanks after `prepare-{env}` runs and before `docker-compose-up-{env}` starts. It will be removed once the upstream issue is resolved.
+Steps 2–5 depend on `DeployPrereq`. Step 5 is tagged `ProvisionInfrastructure` and is required by `Deploy`. Because steps 2–5 carry no dependency on `prepare-{env}`, they can run concurrently with the Docker image prepare phase.
+
+Step 6 is a Docker Compose workaround: `PrepareAsync` in `Aspire.Hosting.Docker` only resolves `ParameterResource` and `ContainerImageReference` sources, leaving Bitwarden-derived env vars blank. Step 6 patches those blanks after `prepare-{env}` runs and before `docker-compose-up-{env}` starts. It will be removed once the upstream issue is resolved.
 
 Happy path:
 
@@ -49,7 +52,7 @@ Happy path:
 2. Declare any managed secrets with `AddSecret(...)`.
 3. Reference the Bitwarden resource from dependent resources with `WithReference(...)` or `WithBitwardenSecretValue(...)`.
 4. Run `aspire deploy`.
-5. During pipeline execution, the four Bitwarden steps materialize the declared graph in Bitwarden.
+5. During pipeline execution, the six Bitwarden steps materialize the declared graph in Bitwarden.
 6. The deployed graph is stable and available for consumers.
 
 ## Run Mode
@@ -105,7 +108,7 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 
 **Dashboard visibility.** Both kinds use `ResourceType = "Parameter"` in their initial snapshot so they appear in the Aspire dashboard parameters tab. For managed secrets, the `Source` property shows the configuration key (`Parameters:{resourceName}`) where a value can be pre-supplied. For reference-only secrets, the `Source` shows `Bitwarden: {remoteName}` to signal that the value comes exclusively from Bitwarden.
 
-**`ParameterProcessor` integration.** Aspire's built-in `ParameterProcessor` processes every `ParameterResource` on startup. For **managed secrets**: the value getter throws `MissingParameterValueException` when no config key is set, so the secret is added to `_unresolvedParameters`; Phase 2 sync removes resolved secrets from that list. For **reference-only secrets**: `IValueProvider.GetValueAsync` returns `null` before Phase 2.5 resolves the value, preventing `ParameterProcessor` from prompting; Phase 2.5 calls `ResolveWaitForValue` so the value is available by the time `ParameterProcessor` checks.
+**`ParameterProcessor` integration.** Aspire's built-in `ParameterProcessor` processes every `ParameterResource` on startup. For **managed secrets**: the value getter throws `MissingParameterValueException` when no config key is set, so the secret is added to `_unresolvedParameters`; Phase 2 sync removes resolved secrets from that list. For **reference-only secrets**: the value getter returns `string.Empty` (never throws), so `ParameterProcessor` resolves the TCS immediately with an empty string and never adds the secret to `_unresolvedParameters`. The real value flows through `IValueProvider.GetValueAsync`, which reads from the Bitwarden resolved-secret cache populated by Phase 2.5.
 
 **Value resolution order.** `IValueProvider.GetValueAsync` is overridden on `BitwardenSecretResource`:
 
@@ -114,6 +117,22 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 3. **Reference-only** — returns `null` if the Bitwarden cache is empty (pre-Phase 2.5); Phase 2.5 always populates the cache before the resource enters `Running`.
 
 The Bitwarden cache always takes precedence because it represents the authoritative remote state. The `ParameterResource` fallback for managed secrets serves as the write path: the value the user or config supplies is what the provisioner pushes to Bitwarden when the secret does not yet exist.
+
+## Deploy-mode parameter suppression
+
+`process-parameters` (the Aspire built-in step that prompts for unresolved parameters) runs before `DeployPrereq` and therefore before all Bitwarden steps that depend on it. `bitwarden-authenticate` depends on `DeployPrereq`, so there is no way to formally place authentication before the parameter prompt. This creates a timing problem: managed secrets that exist in Bitwarden cannot be resolved through the normal pipeline ordering before `process-parameters` evaluates them, causing `aspire deploy` to prompt for values it could have fetched automatically.
+
+The `bitwarden-pre-sync-managed-{name}` step addresses this by running before `process-parameters` (wired via `WithPipelineConfiguration`). It has no formal pipeline dependencies and performs its own inline authentication. It:
+
+1. Reads any missing credentials (access token, organization ID) from `IConfiguration`. If a credential is absent, prompts via `ParameterProcessor.SetParameterAsync`, pre-initializes `WaitForValueTcs` (via `UnsafeAccessor`) so the entered value is captured, then saves the value to the deployment state.
+2. Authenticates with Bitwarden using the resolved credentials; looks up each managed secret's current value, and writes each found value to the deployment state via `IDeploymentStateManager`.
+3. Calls `IConfigurationRoot.Reload()` to force the JSON configuration provider (which loaded the deployment state file at startup with `reloadOnChange: false`) to re-read the updated file.
+
+When `process-parameters` then calls `ParameterProcessor.InitializeParametersAsync`, each managed secret's `_valueGetter` reads `IConfiguration[key]` and finds the Bitwarden value — no prompt.
+
+**`_lazyValue` hazard.** `ParameterResource._lazyValue` is a `Lazy<string>` with `LazyThreadSafetyMode.ExecutionAndPublication` (the default). This mode permanently caches exceptions: if the factory throws `MissingParameterValueException` on the first call, all subsequent calls re-throw the same cached exception, even after `IConfiguration` is reloaded. Therefore the pre-sync step must never call `HasValue()`, `ValueInternal`, or any path that evaluates `_lazyValue` on the managed secrets being pre-resolved. The step reads `IConfiguration[key]` directly to check whether a local value is already present.
+
+The pre-sync step prompts for any missing credentials (access token, organization ID) via `ParameterProcessor` and saves the entered values to the deployment state before proceeding. This means the first `aspire deploy` is also prompt-minimizing: credentials are asked for once in step 1, and `process-parameters` finds them in `IConfiguration` and does not ask again. Secrets that do not yet exist in Bitwarden still require a value — those are prompted by `process-parameters` as usual.
 
 ## Access Tokens
 
@@ -180,4 +199,3 @@ The note field is the only persistent record of what changed and when. It is sto
 - Making runtime reconciliation the primary architectural concept.
 
 The intended design is pipeline-step-first, declared-resource-first.
-

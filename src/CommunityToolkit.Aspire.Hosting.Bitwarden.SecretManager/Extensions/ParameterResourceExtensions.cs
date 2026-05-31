@@ -50,6 +50,23 @@ internal static class ParameterResourceExtensions
                 tcs.TrySetResult(resolvedValue);
             }
         }
+
+        // Creates a WaitForValueTcs on the parameter so that a subsequent PromptAsync call can store
+        // the entered value before ParameterProcessor.InitializeParametersAsync runs. Without this,
+        // TrySetResult in ApplyParameterValueAsync is a no-op (TCS is null) and the entered value
+        // is lost. Call immediately before PromptAsync; retrieve the result with GetResolvedWaitForValue.
+        internal void InitializeWaitForValue()
+        {
+            SetWaitForValueTcs(parameter, new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously));
+        }
+
+        // Returns the value stored by PromptAsync after InitializeWaitForValue was called,
+        // or null if the prompt was cancelled or the TCS is not yet completed.
+        internal string? GetResolvedWaitForValue()
+        {
+            var tcs = GetWaitForValueTcs(parameter);
+            return tcs?.Task is { IsCompletedSuccessfully: true } t ? t.Result : null;
+        }
     }
 
     // Removes a resolved parameter from ParameterProcessor's pending list and cancels the banner
@@ -68,6 +85,9 @@ internal static class ParameterResourceExtensions
 
     [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "get_WaitForValueTcs")]
     static extern TaskCompletionSource<string>? GetWaitForValueTcs(ParameterResource parameter);
+
+    [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "set_WaitForValueTcs")]
+    static extern void SetWaitForValueTcs(ParameterResource parameter, TaskCompletionSource<string>? value);
 
     [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_unresolvedParameters")]
     static extern ref List<ParameterResource> GetUnresolvedParameters(ParameterProcessor processor);
