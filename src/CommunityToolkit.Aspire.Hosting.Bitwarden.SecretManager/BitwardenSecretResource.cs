@@ -35,7 +35,12 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// Initializes a new instance of the <see cref="BitwardenSecretResource"/> class for an unmanaged (reference-only) secret by remote name.
     /// </summary>
     internal BitwardenSecretResource(string name, string remoteName, BitwardenSecretManagerResource parent)
-        : base(name, _ => throw new MissingParameterValueException($"Bitwarden reference secret '{name}' has no local value — its value is resolved from Bitwarden at runtime."), secret: true)
+        // Empty string instead of throwing MissingParameterValueException: ParameterProcessor.ProcessParameterAsync
+        // adds parameters to _unresolvedParameters when their valueGetter throws, which causes them to appear in
+        // the process-parameters prompt form. Unmanaged secrets have no local value by design — their value comes
+        // exclusively from Bitwarden — so they must never be prompted. Returning empty string keeps the TCS
+        // resolved without entering the unresolved list; the real value flows through IValueProvider.GetValueAsync.
+        : base(name, _ => string.Empty, secret: true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
@@ -51,7 +56,8 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// Initializes a new instance of the <see cref="BitwardenSecretResource"/> class for an unmanaged (reference-only) secret by secret identifier.
     /// </summary>
     internal BitwardenSecretResource(string name, Guid secretId, BitwardenSecretManagerResource parent)
-        : base(name, _ => throw new MissingParameterValueException($"Bitwarden reference secret '{name}' has no local value — its value is resolved from Bitwarden at runtime."), secret: true)
+        // See comment on the other unmanaged constructor.
+        : base(name, _ => string.Empty, secret: true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(parent);
@@ -109,8 +115,7 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
         }
 
         // For unmanaged (reference-only) secrets, the value comes exclusively from Bitwarden.
-        // Return null here — SyncReferenceSecretValuesAsync in Phase 2 will populate the value
-        // before ParameterProcessor needs it, preventing interactive prompting.
+        // Return null until the provisioner binds the value via BindResolvedSecret.
         if (!IsManaged)
         {
             return ValueTask.FromResult<string?>(null);
