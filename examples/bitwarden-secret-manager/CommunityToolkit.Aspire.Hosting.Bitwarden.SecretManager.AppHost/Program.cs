@@ -96,6 +96,10 @@ api.PublishAsDockerComposeService((resource, service) =>
 
 // 2. Using direct secret references in the project configuration, which injects the secret value as an environment variable at runtime.
 //    This approach is simpler (no Bitwarden code in the application) but requires redeploying the application whenever the secret value changes.
-api.WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret.Resource);
+var client = builder.AddContainer("client", "curlimages/curl")
+    .WithReference(api)
+    .WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret.Resource)
+    .WithEntrypoint("sh")
+    .WithArgs("-c", "curl -sv $API_HTTP?apiKey=$DEMO_API_KEY");
 
 builder.Build().Run();
