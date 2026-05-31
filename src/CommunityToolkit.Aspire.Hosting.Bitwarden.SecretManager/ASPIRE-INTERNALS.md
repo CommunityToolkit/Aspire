@@ -10,13 +10,13 @@ These are public APIs guarded by `[Experimental]` attributes. They are stable en
 
 ### `ASPIREATS001` — `[AspireExport]`
 
-**Files:** `BitwardenSecretManagerResource.cs`, `BitwardenSecretResource.cs`
+**Files:** `BitwardenSecretManagerResource.cs`, `BitwardenSecretResource.cs`, `BitwardenSecretManagerExtensions.cs`
 
-**What it does:** Registers resource types with Aspire's typed resource export system so they appear in the dashboard and deployment manifest as first-class types rather than untyped `Resource` entries.
+**What it does:** Registers types and methods with the Aspire Type System (ATS) so they are callable from polyglot apphosts (TypeScript, Python, etc.) via the JSON-RPC remote host. Both resource types carry `[AspireExport]` to register their type IDs. The exported extension methods (`AddBitwardenSecretManager`, `GetSecret`, `AddSecret`, `WithReference`, etc.) carry `[AspireExport]` or `[AspireExportIgnore]` to define the polyglot API surface. C# ergonomics overloads and methods with ATS-incompatible parameters (`EndpointReference`, generic callback types) are marked `[AspireExportIgnore]` with an explicit reason.
 
-**Why needed:** Without `[AspireExport]`, both resource types are invisible to manifest tooling and the dashboard's resource-type filter.
+**Why needed:** Without `[AspireExport]` on extension methods, the integration has no ATS-callable surface and is inaccessible from non-C# apphosts. The ATS analyzer (ASPIREEXPORT008) also warns on extension methods that extend builder/resource types but lack either attribute — `[AspireExportIgnore]` documents a deliberate decision not to export, distinguishing it from an oversight.
 
-**Breakage signal:** `ASPIREATS001` diagnostic stops compiling. Resources appear as plain `Resource` in the dashboard and manifest.
+**Breakage signal:** `ASPIREATS001` diagnostic stops compiling.
 
 ---
 

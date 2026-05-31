@@ -1,4 +1,5 @@
 #pragma warning disable ASPIREPIPELINES001
+#pragma warning disable ASPIREATS001
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
@@ -24,6 +25,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="organizationId">The Bitwarden organization identifier.</param>
     /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -53,6 +55,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="organizationId">The Bitwarden organization identifier.</param>
     /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExportIgnore(Reason = "Mixed-input overload not exported to ATS; use addBitwardenSecretManager (string/Guid) or addBitwardenSecretManagerFromParameters (all IResourceBuilder) depending on how inputs are supplied")]
     public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -82,6 +85,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="organizationId">The parameter that resolves to the Bitwarden organization identifier.</param>
     /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExportIgnore(Reason = "Mixed-input overload not exported to ATS; use addBitwardenSecretManager (string/Guid) or addBitwardenSecretManagerFromParameters (all IResourceBuilder) depending on how inputs are supplied")]
     public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -112,6 +116,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="organizationId">The parameter that resolves to the Bitwarden organization identifier.</param>
     /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport("addBitwardenSecretManagerFromParameters")]
     public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -139,6 +144,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="projectId">The Bitwarden project identifier.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithExistingProject(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         Guid projectId)
@@ -155,6 +161,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="apiUrl">The absolute Bitwarden API URL.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         string apiUrl)
@@ -172,6 +179,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="apiUrl">The parameter that resolves to the absolute Bitwarden API URL.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport("withApiUrlFromParameter")]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         IResourceBuilder<ParameterResource> apiUrl)
@@ -191,6 +199,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="server">The external service whose URL is used as the Bitwarden API URL.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport("withApiUrlFromExternalService")]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         IResourceBuilder<ExternalServiceResource> server)
@@ -212,6 +221,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="endpoint">The endpoint reference for the Bitwarden API.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExportIgnore(Reason = "EndpointReference is not ATS-compatible; polyglot apphosts use the string variant")]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithApiUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         EndpointReference endpoint)
@@ -231,6 +241,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="identityUrl">The absolute Bitwarden identity URL.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         string identityUrl)
@@ -248,6 +259,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="identityUrl">The parameter that resolves to the absolute Bitwarden identity URL.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport("withIdentityUrlFromParameter")]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         IResourceBuilder<ParameterResource> identityUrl)
@@ -267,6 +279,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="server">The external service whose URL is used as the Bitwarden identity URL.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport("withIdentityUrlFromExternalService")]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         IResourceBuilder<ExternalServiceResource> server)
@@ -288,6 +301,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="endpoint">The endpoint reference for the Bitwarden identity service.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExportIgnore(Reason = "EndpointReference is not ATS-compatible; polyglot apphosts use the string variant")]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithIdentityUrl(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         EndpointReference endpoint)
@@ -309,6 +323,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="cacheFile">The cache file path, relative to the AppHost directory when not rooted.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithCacheFile(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         string cacheFile)
@@ -333,6 +348,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="authCacheDirectory">The auth cache directory on the AppHost, relative to the Aspire store when not rooted.</param>
     /// <returns>The resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretManagerResource> WithAuthCacheDirectory(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         string authCacheDirectory)
@@ -353,6 +369,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="remoteName">The Bitwarden secret name.</param>
     /// <returns>A resource builder for the secret reference.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretResource> GetSecret(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         string remoteName)
@@ -370,6 +387,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="secretId">The Bitwarden secret identifier.</param>
     /// <returns>A resource builder for the secret reference.</returns>
+    [AspireExport("getSecretById")]
     public static IResourceBuilder<BitwardenSecretResource> GetSecret(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         Guid secretId)
@@ -385,6 +403,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The parent Bitwarden resource builder.</param>
     /// <param name="name">The Aspire resource name and Bitwarden secret name.</param>
     /// <returns>The managed secret resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretResource> AddSecret(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         [ResourceName] string name)
@@ -402,6 +421,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="name">The Aspire resource name.</param>
     /// <param name="remoteName">The Bitwarden secret name.</param>
     /// <returns>The managed secret resource builder.</returns>
+    [AspireExport("addSecretWithRemoteName")]
     public static IResourceBuilder<BitwardenSecretResource> AddSecret(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
         [ResourceName] string name,
@@ -419,6 +439,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="builder">The managed secret resource builder.</param>
     /// <param name="secretId">The Bitwarden secret identifier.</param>
     /// <returns>The managed secret resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<BitwardenSecretResource> WithExistingSecret(
         this IResourceBuilder<BitwardenSecretResource> builder,
         Guid secretId)
@@ -437,6 +458,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="source">The Bitwarden resource builder.</param>
     /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
     /// <returns>The destination resource builder.</returns>
+    [AspireExport("withBitwardenSecretManagerReference")]
     public static IResourceBuilder<TDestination> WithReference<TDestination>(
         this IResourceBuilder<TDestination> builder,
         IResourceBuilder<BitwardenSecretManagerResource> source,
@@ -473,6 +495,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="configure">A callback that receives a scoped builder for this connection.</param>
     /// <param name="connectionName">The logical connection name. Defaults to the Bitwarden resource name.</param>
     /// <returns>The destination resource builder.</returns>
+    [AspireExportIgnore(Reason = "BitwardenReferenceBuilder<T> is a generic context type not yet registered in ATS")]
     public static IResourceBuilder<TDestination> WithReference<TDestination>(
         this IResourceBuilder<TDestination> builder,
         IResourceBuilder<BitwardenSecretManagerResource> source,
@@ -498,6 +521,7 @@ public static class BitwardenSecretManagerExtensions
     /// <param name="environmentVariableName">The destination environment variable name.</param>
     /// <param name="secret">The Bitwarden secret resource.</param>
     /// <returns>The destination resource builder.</returns>
+    [AspireExport]
     public static IResourceBuilder<TDestination> WithBitwardenSecretValue<TDestination>(
         this IResourceBuilder<TDestination> builder,
         string environmentVariableName,

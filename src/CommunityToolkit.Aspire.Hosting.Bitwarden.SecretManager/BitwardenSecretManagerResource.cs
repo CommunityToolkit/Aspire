@@ -7,7 +7,7 @@ namespace Aspire.Hosting.ApplicationModel;
 /// <summary>
 /// Represents a Bitwarden Secrets Manager project and secret graph.
 /// </summary>
-[AspireExport(ExposeProperties = true)]
+[AspireExport]
 public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 {
     internal const string DefaultApiUrl = "https://api.bitwarden.com";
