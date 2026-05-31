@@ -363,9 +363,9 @@ Paths are tried in order: explicit adoption → persisted mapping → create new
 
 Create new project. There is no name-search path here: the AppHost is the source of truth for the project, so a missing cache means a new project is created. Use `WithExistingProject` to adopt a project that was created outside the declared graph.
 
-### Secret provisioning decisions
+### Managed secret provisioning decisions
 
-Runs once per managed secret, during the `bitwarden-provision-secrets` pipeline step.
+Runs once per managed secret (`AddSecret`), during the `bitwarden-provision-secrets` pipeline step.
 Paths are tried in order: explicit adoption → persisted mapping → name search.
 
 **Path A — explicit adoption (`WithExistingSecret`)**
@@ -391,6 +391,28 @@ Paths are tried in order: explicit adoption → persisted mapping → name searc
 | 1            | ✗                 | Sync secret                                        |
 | 1            | ✓                 | ⚠ Create new secret (local identity changed)       |
 | > 1          | —                 | Prompt user to pick one (error if non-interactive) |
+
+### Unmanaged secret resolution
+
+Runs once per unmanaged secret (`GetSecret`), during the `bitwarden-provision-secrets` pipeline step.
+The value is read from Bitwarden and never written. Paths are tried in order: explicit adoption → name search.
+There is no persisted mapping path and no interactive prompt — duplicate names always cause an error.
+
+**Path A — explicit adoption (`WithExistingSecret`)**
+
+| Secret found | In project | Outcome                            |
+| ------------ | ---------- | ---------------------------------- |
+| ✓            | ✓          | Sync secret value                  |
+| ✓            | ✗          | Error: secret not in project       |
+| ✗            | —          | Error: configured secret not found |
+
+**Path B — name search**
+
+| Name matches | Outcome                                                                                |
+| ------------ | -------------------------------------------------------------------------------------- |
+| 0            | Error: secret not found                                                                |
+| 1            | Sync secret value                                                                      |
+| > 1          | Error: duplicate names (resolve in Bitwarden or adopt by ID with `WithExistingSecret`) |
 
 ### Audit trail
 
