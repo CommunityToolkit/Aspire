@@ -10,13 +10,13 @@ namespace Aspire.Hosting
 {
     public static partial class MailPitHostingExtension
     {
-        [AspireExport("addMailPit", Description = "Adds a MailPit container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> AddMailPit(this IDistributedApplicationBuilder builder, string name, int? httpPort = null, int? smtpPort = null) { throw null; }
 
-        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a MailPit container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
-        [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a MailPit container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.MailPitContainerResource> builder, string name, bool isReadOnly = false) { throw null; }
     }
 }

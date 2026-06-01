@@ -16,13 +16,19 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "The configure callback is not ATS-compatible. Use the overload without the configure callback instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoAppResource> AddApp(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> builder, string name, string? filter = null, System.Func<ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoAppResource>, ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoAppResource>>? configure = null) { throw null; }
 
-        [AspireExport("addNxApp", Description = "Adds an Nx monorepo workspace to the distributed application builder")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> AddNxApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null) { throw null; }
 
-        [AspireExport("addTurborepoApp", Description = "Adds a Turborepo monorepo workspace to the distributed application builder")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> AddTurborepoApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null) { throw null; }
 
-        [AspireExport("withMappedEndpointPort", Description = "Maps the endpoint port for the JavaScript app resource to the appropriate command line argument")]
+        [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> WithBun(this ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> builder, bool install = false, System.Action<ApplicationModel.IResourceBuilder<JavaScript.JavaScriptInstallerResource>>? configureInstaller = null) { throw null; }
+
+        [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> WithBun(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> builder, bool install = false, System.Action<ApplicationModel.IResourceBuilder<JavaScript.JavaScriptInstallerResource>>? configureInstaller = null) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithMappedEndpointPort<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder, string? endpointName = null)
             where TResource : JavaScript.JavaScriptAppResource { throw null; }
 
@@ -32,10 +38,10 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> WithNpm(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> builder, bool install = false, System.Action<ApplicationModel.IResourceBuilder<JavaScript.JavaScriptInstallerResource>>? configureInstaller = null) { throw null; }
 
-        [AspireExport("withNxPackageManagerLaunch", MethodName = "withPackageManagerLaunch", Description = "Configures the Nx workspace to use the specified JavaScript package manager when starting apps")]
+        [AspireExport("withNxPackageManagerLaunch", MethodName = "withPackageManagerLaunch")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> WithPackageManagerLaunch(this ApplicationModel.IResourceBuilder<ApplicationModel.NxResource> builder, string? packageManager = null) { throw null; }
 
-        [AspireExport("withTurborepoPackageManagerLaunch", MethodName = "withPackageManagerLaunch", Description = "Configures the Turborepo workspace to use the specified JavaScript package manager when starting apps")]
+        [AspireExport("withTurborepoPackageManagerLaunch", MethodName = "withPackageManagerLaunch")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> WithPackageManagerLaunch(this ApplicationModel.IResourceBuilder<ApplicationModel.TurborepoResource> builder, string? packageManager = null) { throw null; }
 
         [AspireExportIgnore(Reason = "The installer configuration callback is not ATS-compatible. Use the overload without the configure callback instead.")]

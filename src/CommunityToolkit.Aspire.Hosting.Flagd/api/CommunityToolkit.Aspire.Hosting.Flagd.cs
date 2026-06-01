@@ -10,10 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class FlagdBuilderExtensions
     {
-        [AspireExport("addFlagd", Description = "Adds a flagd container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> AddFlagd(this IDistributedApplicationBuilder builder, string name, int? port = null, int? ofrepPort = null) { throw null; }
 
-        [AspireExport("withBindFileSync", Description = "Configures flagd to use a bind-mounted flag configuration file")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> WithBindFileSync(this ApplicationModel.IResourceBuilder<ApplicationModel.FlagdResource> builder, string fileSource, string filename = "flagd.json") { throw null; }
 
         [AspireExportIgnore(Reason = "Microsoft.Extensions.Logging.LogLevel is defined in an external assembly and is not compatible with ATS.")]

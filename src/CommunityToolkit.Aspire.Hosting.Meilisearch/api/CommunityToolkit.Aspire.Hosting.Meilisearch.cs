@@ -10,13 +10,13 @@ namespace Aspire.Hosting
 {
     public static partial class MeilisearchBuilderExtensions
     {
-        [AspireExport("addMeilisearch", Description = "Adds a Meilisearch container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> AddMeilisearch(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? masterKey = null, int? port = null) { throw null; }
 
-        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a Meilisearch container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> builder, string source) { throw null; }
 
-        [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a Meilisearch container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.MeilisearchResource> builder, string? name = null) { throw null; }
     }
 }

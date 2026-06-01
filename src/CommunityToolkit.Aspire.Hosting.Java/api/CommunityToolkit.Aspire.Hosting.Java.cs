@@ -16,13 +16,13 @@ namespace Aspire.Hosting
         [System.Obsolete("Use AddJavaApp(string, string, string, string[]?) instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, ApplicationModel.JavaAppExecutableResourceOptions options) { throw null; }
 
-        [AspireExport("addJavaAppWithJar", Description = "Adds a Java application resource that runs a JAR file")]
+        [AspireExport("addJavaAppWithJar")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string jarPath, string[]? args = null) { throw null; }
 
-        [AspireExport("addJavaApp", Description = "Adds a Java application resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddJavaApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory) { throw null; }
 
-        [AspireExport("addJavaContainerApp", Description = "Adds a containerized Java application resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppContainerResource> AddJavaContainerApp(this IDistributedApplicationBuilder builder, string name, string image, string? imageTag = null) { throw null; }
 
         [System.Obsolete("Use AddJavaContainerApp instead. This method will be removed in a future version.")]
@@ -31,30 +31,30 @@ namespace Aspire.Hosting
         [System.Obsolete("Use AddJavaApp instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> AddSpringApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, ApplicationModel.JavaAppExecutableResourceOptions options) { throw null; }
 
-        [AspireExport("withGradleBuild", Description = "Adds a Gradle build step to the Java application")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithGradleBuild(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, params string[] args) { throw null; }
 
-        [AspireExport("withGradleTask", Description = "Configures the Java application to run using a Gradle task")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithGradleTask(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, string task, params string[] args) { throw null; }
 
-        [AspireExport("withJvmArgs", Description = "Configures Java Virtual Machine arguments for the resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<T> WithJvmArgs<T>(this ApplicationModel.IResourceBuilder<T> builder, string[] args)
             where T : ApplicationModel.IResourceWithEnvironment { throw null; }
 
         [System.Obsolete("Use WithMavenBuild(string?, params string[]) instead. This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithMavenBuild(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, MavenOptions mavenOptions) { throw null; }
 
-        [AspireExport("withMavenBuild", Description = "Adds a Maven build step to the Java application")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithMavenBuild(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, params string[] args) { throw null; }
 
-        [AspireExport("withMavenGoal", Description = "Configures the Java application to run using a Maven goal")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithMavenGoal(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, string goal, params string[] args) { throw null; }
 
-        [AspireExport("withOtelAgent", Description = "Configures the OpenTelemetry Java agent for the resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<T> WithOtelAgent<T>(this ApplicationModel.IResourceBuilder<T> builder, string? agentPath = null)
             where T : ApplicationModel.IResourceWithEnvironment { throw null; }
 
-        [AspireExport("withWrapperPath", Description = "Configures a custom build tool wrapper script path")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> WithWrapperPath(this ApplicationModel.IResourceBuilder<ApplicationModel.JavaAppExecutableResource> builder, string wrapperScript) { throw null; }
     }
 

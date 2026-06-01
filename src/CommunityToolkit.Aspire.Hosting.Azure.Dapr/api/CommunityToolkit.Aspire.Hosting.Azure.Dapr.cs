@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class AzureContainerAppEnvironmentResourceBuilderExtensions
     {
-        [AspireExport("withDaprComponents", Description = "Configures an Azure Container App environment to publish Dapr components")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<Azure.AppContainers.AzureContainerAppEnvironmentResource> WithDaprComponents(this ApplicationModel.IResourceBuilder<Azure.AppContainers.AzureContainerAppEnvironmentResource> builder) { throw null; }
     }
 
