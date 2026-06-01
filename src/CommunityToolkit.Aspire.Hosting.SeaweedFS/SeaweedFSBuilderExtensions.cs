@@ -28,7 +28,8 @@ public static class SeaweedFSBuilderExtensions
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{SeaweedFSContainerResource}"/>.</returns>
 #pragma warning disable ASPIREATS001
-    [AspireExport("addSeaweedFS", Description = "Adds a base SeaweedFS container resource")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> AddSeaweedFS(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name)
@@ -113,13 +114,13 @@ public static class SeaweedFSBuilderExtensions
 
         return builderWithResource;
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Enables the SeaweedFS S3-Compatible API Gateway.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withS3", Description = "Enables the SeaweedFS S3-Compatible API Gateway")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithS3(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         int? s3Port = null)
@@ -144,13 +145,13 @@ public static class SeaweedFSBuilderExtensions
 
         return builder;
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Enables the SeaweedFS Native Filer API.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withFiler", Description = "Enables the SeaweedFS Native Filer API")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithFiler(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         int? filerPort = null)
@@ -167,13 +168,13 @@ public static class SeaweedFSBuilderExtensions
 
         return builder;
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Configures the Master API host port that the SeaweedFS resource is exposed on.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withHostPort", Description = "Configures the host port that the SeaweedFS Master API is exposed on")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithHostPort(this IResourceBuilder<SeaweedFSContainerResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -183,13 +184,13 @@ public static class SeaweedFSBuilderExtensions
             endpoint.Port = port;
         });
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Configures the Access Key that the SeaweedFS S3 resource uses.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withAccessKey", Description = "Configures the Access Key that the SeaweedFS S3 resource uses")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithAccessKey(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         IResourceBuilder<ParameterResource> accessKey)
@@ -200,13 +201,13 @@ public static class SeaweedFSBuilderExtensions
         builder.Resource.AccessKey = accessKey.Resource;
         return builder;
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Configures the Secret Key that the SeaweedFS S3 resource uses.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withSecretKey", Description = "Configures the Secret Key that the SeaweedFS S3 resource uses")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithSecretKey(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         IResourceBuilder<ParameterResource> secretKey)
@@ -217,13 +218,13 @@ public static class SeaweedFSBuilderExtensions
         builder.Resource.SecretKey = secretKey.Resource;
         return builder;
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Configures the SeaweedFS S3 API to use a specific external security configuration file.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withS3ConfigFile", Description = "Configures the SeaweedFS S3 API to use a specific external security configuration file")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithS3ConfigFile(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         string configFilePath)
@@ -245,13 +246,13 @@ public static class SeaweedFSBuilderExtensions
 
         return builder.WithBindMount(configFilePath, containerPath, isReadOnly: true);
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Adds a bind mount for the SeaweedFS data folder.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the SeaweedFS data folder")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithDataBindMount(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         string source,
@@ -262,13 +263,13 @@ public static class SeaweedFSBuilderExtensions
 
         return builder.WithBindMount(source, "/data", isReadOnly);
     }
-#pragma warning restore ASPIREATS001
 
     /// <summary>
     /// Adds a named volume for the SeaweedFS data folder.
     /// </summary>
 #pragma warning disable ASPIREATS001
-    [AspireExport("withDataVolume", Description = "Adds a named volume for the SeaweedFS data folder")]
+    [AspireExport]
+#pragma warning restore ASPIREATS001
     public static IResourceBuilder<SeaweedFSContainerResource> WithDataVolume(
         this IResourceBuilder<SeaweedFSContainerResource> builder,
         string? name = null,
@@ -280,5 +281,4 @@ public static class SeaweedFSBuilderExtensions
 
         return builder.WithVolume(volumeName, "/data", isReadOnly);
     }
-#pragma warning restore ASPIREATS001
 }
