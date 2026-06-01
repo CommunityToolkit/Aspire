@@ -1,6 +1,7 @@
 #!/usr/bin/env dotnet run
 
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -56,6 +57,7 @@ static class App
             var packageToTests = BuildPackageToTests(packageRefs, nodeToTests);
             var packageToProjects = BuildPackageToProjects(packageRefs);
             var testInfraPackages = LoadTestInfraPackages(repoRoot);
+            var typeScriptAppHostToTests = BuildTypeScriptAppHostToTests(repoRoot, projectPaths);
 
             foreach (var filePath in diffFiles)
             {
@@ -151,6 +153,22 @@ static class App
                         }
                     }
 
+                    continue;
+                }
+
+                var typeScriptAppHostProject = ResolveTypeScriptAppHostProject(filePath, projectPaths);
+                if (typeScriptAppHostProject is not null &&
+                    nodeToTests.TryGetValue(typeScriptAppHostProject, out var impactedTypeScriptTests))
+                {
+                    selected.UnionWith(impactedTypeScriptTests);
+                    reasons.Add($"Selected {impactedTypeScriptTests.Count} tests because {filePath} belongs to {typeScriptAppHostProject}.");
+                    continue;
+                }
+
+                if (TryGetTypeScriptAppHostTests(filePath, typeScriptAppHostToTests, out impactedTypeScriptTests))
+                {
+                    selected.UnionWith(impactedTypeScriptTests);
+                    reasons.Add($"Selected {impactedTypeScriptTests.Count} tests because {filePath} belongs to a TypeScript app host test fixture.");
                     continue;
                 }
 
@@ -441,138 +459,151 @@ static class App
         return packageToProjects;
     }
 
-    private static HashSet<string> SelectChangedProjectTests(
-        string project,
-        ChangedProjectData changedProjectData,
-        Dictionary<string, HashSet<string>> nodeToTests,
-        Dictionary<string, HashSet<string>> packageToTests)
+    private static string? ResolveTypeScriptAppHostProject(string filePath, List<string> projectPaths)
     {
-        var impacted = new HashSet<string>(StringComparer.Ordinal);
-        var queue = new Stack<string>();
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        queue.Push(project);
-
-        while (queue.Count > 0)
+        if (!filePath.StartsWith("examples/", StringComparison.Ordinal))
         {
-            var current = queue.Pop();
-            if (!seen.Add(current))
+            return null;
+        }
+
+        var segments = filePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 3)
+        {
+            return null;
+        }
+
+        var firstDirectoryUnderExample = segments[2];
+        if (!firstDirectoryUnderExample.EndsWith(".TypeScript", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var examplePrefix = $"examples/{segments[1]}/";
+        var appHostDirectoryName = firstDirectoryUnderExample[..^".TypeScript".Length];
+        var appHostProjects = projectPaths
+            .Where(projectPath => projectPath.StartsWith(examplePrefix, StringComparison.Ordinal))
+            .Where(static projectPath => projectPath.EndsWith(".csproj", StringComparison.Ordinal))
+            .Where(projectPath =>
+            {
+                var relative = projectPath[examplePrefix.Length..];
+                var firstSeparatorIndex = relative.IndexOf('/');
+                var firstDirectory = firstSeparatorIndex >= 0 ? relative[..firstSeparatorIndex] : relative;
+                return firstDirectory.EndsWith(".AppHost", StringComparison.Ordinal);
+            })
+            .ToList();
+
+        if (appHostProjects.Count == 0)
+        {
+            return null;
+        }
+
+        var exactMatch = appHostProjects
+            .FirstOrDefault(projectPath =>
+            {
+                var relative = projectPath[examplePrefix.Length..];
+                var firstSeparatorIndex = relative.IndexOf('/');
+                var firstDirectory = firstSeparatorIndex >= 0 ? relative[..firstSeparatorIndex] : relative;
+                return string.Equals(firstDirectory, appHostDirectoryName, StringComparison.Ordinal);
+            });
+
+        if (exactMatch is not null)
+        {
+            return exactMatch;
+        }
+
+        return appHostProjects.Count == 1 ? appHostProjects[0] : null;
+    }
+
+    private static Dictionary<string, HashSet<string>> BuildTypeScriptAppHostToTests(string repoRoot, List<string> projectPaths)
+    {
+        var appHostToTests = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+        var testsRoot = Path.Combine(repoRoot, "tests");
+        if (!Directory.Exists(testsRoot))
+        {
+            return appHostToTests;
+        }
+
+        foreach (var testFilePath in Directory.EnumerateFiles(testsRoot, "TypeScriptAppHostTests.cs", SearchOption.AllDirectories).OrderBy(static path => path, StringComparer.Ordinal))
+        {
+            var relativeTestFilePath = RelativePath(repoRoot, testFilePath);
+            var testProjectPath = NearestProject(relativeTestFilePath, projectPaths);
+            if (testProjectPath is null)
             {
                 continue;
             }
 
-            if (nodeToTests.TryGetValue(current, out var tests))
+            var contents = File.ReadAllText(testFilePath);
+            var constants = ParseStringConstants(contents);
+            if (!TryResolveNamedArgument(contents, constants, "appHostProject", out var appHostProject) ||
+                !TryResolveNamedArgument(contents, constants, "exampleName", out var exampleName))
             {
-                impacted.UnionWith(tests);
+                continue;
             }
 
-            if (changedProjectData.PackageRefsByProject.TryGetValue(current, out var packages))
+            var appHostDirectory = $"examples/{exampleName}/{appHostProject}";
+            if (!appHostToTests.TryGetValue(appHostDirectory, out var tests))
             {
-                foreach (var package in packages)
-                {
-                    if (packageToTests.TryGetValue(package, out var packageTests))
-                    {
-                        impacted.UnionWith(packageTests);
-                    }
-                }
+                tests = new HashSet<string>(StringComparer.Ordinal);
+                appHostToTests[appHostDirectory] = tests;
             }
 
-            if (changedProjectData.ProjectRefsByProject.TryGetValue(current, out var refs))
-            {
-                foreach (var reference in refs)
-                {
-                    queue.Push(reference);
-                }
-            }
+            tests.Add(TestNameFromProjectPath(testProjectPath));
         }
 
-        return impacted;
+        return appHostToTests;
     }
 
-    private static async Task<ChangedProjectData> ChangedProjectDataAsync(
-        string repoRoot,
-        string baseSha,
-        string headSha,
-        IReadOnlyList<string> diffFiles)
+    private static bool TryGetTypeScriptAppHostTests(
+        string filePath,
+        Dictionary<string, HashSet<string>> appHostToTests,
+        out HashSet<string> tests)
     {
-        var packageRefsByProject = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-        var projectRefsByProject = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-
-        foreach (var filePath in diffFiles.Where(static filePath => filePath.EndsWith(".csproj", StringComparison.Ordinal)))
+        foreach (var (appHostDirectory, mappedTests) in appHostToTests)
         {
-            var output = await RunGitAsync(repoRoot, "diff", "--unified=0", $"{baseSha}...{headSha}", "--", filePath);
-
-            foreach (var rawLine in output.Split('\n', StringSplitOptions.TrimEntries))
+            if (filePath == appHostDirectory || filePath.StartsWith($"{appHostDirectory}/", StringComparison.Ordinal))
             {
-                if (string.IsNullOrEmpty(rawLine) ||
-                    rawLine.StartsWith("diff --git", StringComparison.Ordinal) ||
-                    rawLine.StartsWith("index ", StringComparison.Ordinal) ||
-                    rawLine.StartsWith("--- ", StringComparison.Ordinal) ||
-                    rawLine.StartsWith("+++ ", StringComparison.Ordinal) ||
-                    rawLine.StartsWith("@@", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (rawLine[0] is not ('+' or '-'))
-                {
-                    continue;
-                }
-
-                var line = rawLine[1..].Trim();
-                if (line.Contains("PackageReference", StringComparison.Ordinal) &&
-                    TryGetAttributeValue(line, "Include", out var include))
-                {
-                    if (!packageRefsByProject.TryGetValue(filePath, out var packages))
-                    {
-                        packages = new HashSet<string>(StringComparer.Ordinal);
-                        packageRefsByProject[filePath] = packages;
-                    }
-
-                    packages.Add(include);
-                }
-                else if (line.Contains("ProjectReference", StringComparison.Ordinal) &&
-                    TryGetAttributeValue(line, "Include", out var reference))
-                {
-                    var projectPath = NormalizeDirectory(Path.GetFullPath(Path.Combine(repoRoot, Path.GetDirectoryName(filePath)!, reference.Replace('\\', Path.DirectorySeparatorChar))));
-                    projectPath = RelativePath(repoRoot, projectPath);
-
-                    if (!projectRefsByProject.TryGetValue(filePath, out var projectRefs))
-                    {
-                        projectRefs = new HashSet<string>(StringComparer.Ordinal);
-                        projectRefsByProject[filePath] = projectRefs;
-                    }
-
-                    projectRefs.Add(projectPath);
-                }
+                tests = mappedTests;
+                return true;
             }
         }
 
-        var packageToProjects = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-        foreach (var (project, packages) in packageRefsByProject)
-        {
-            foreach (var package in packages)
-            {
-                if (!packageToProjects.TryGetValue(package, out var projects))
-                {
-                    projects = new HashSet<string>(StringComparer.Ordinal);
-                    packageToProjects[package] = projects;
-                }
-
-                projects.Add(project);
-            }
-        }
-
-        var projectPaths = new HashSet<string>(packageRefsByProject.Keys, StringComparer.Ordinal);
-        projectPaths.UnionWith(projectRefsByProject.Keys);
-
-        return new ChangedProjectData(packageRefsByProject, packageToProjects, projectRefsByProject, projectPaths);
+        tests = [];
+        return false;
     }
 
-    private sealed record ChangedProjectData(
-        Dictionary<string, HashSet<string>> PackageRefsByProject,
-        Dictionary<string, HashSet<string>> PackageToProjects,
-        Dictionary<string, HashSet<string>> ProjectRefsByProject,
-        HashSet<string> ProjectPaths);
+    private static Dictionary<string, string> ParseStringConstants(string contents)
+    {
+        var constants = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (Match match in Regex.Matches(contents, @"\bconst\s+string\s+(\w+)\s*=\s*""([^""]+)""\s*;", RegexOptions.CultureInvariant))
+        {
+            constants[match.Groups[1].Value] = match.Groups[2].Value;
+        }
+
+        return constants;
+    }
+
+    private static bool TryResolveNamedArgument(
+        string contents,
+        Dictionary<string, string> constants,
+        string argumentName,
+        out string value)
+    {
+        var match = Regex.Match(contents, @$"\b{Regex.Escape(argumentName)}\s*:\s*([^,\r\n\)]+)", RegexOptions.CultureInvariant);
+        if (!match.Success)
+        {
+            value = string.Empty;
+            return false;
+        }
+
+        var token = match.Groups[1].Value.Trim();
+        if (token.StartsWith('"') && token.EndsWith('"') && token.Length >= 2)
+        {
+            value = token[1..^1];
+            return true;
+        }
+
+        return constants.TryGetValue(token, out value!);
+    }
 
     private static HashSet<string> LoadTestInfraPackages(string repoRoot)
     {
@@ -690,6 +721,9 @@ static class App
 
     private static string NormalizeDirectory(string? path) =>
         string.IsNullOrEmpty(path) ? string.Empty : path.Replace('\\', '/');
+
+    private static string TestNameFromProjectPath(string projectPath) =>
+        Path.GetFileNameWithoutExtension(projectPath).Replace("CommunityToolkit.Aspire.", string.Empty, StringComparison.Ordinal);
 
     private static bool MatchesGlobalFullRun(string path) =>
         GlobalFullRunPaths.Any(entry => path == entry || path.StartsWith(entry, StringComparison.Ordinal));
