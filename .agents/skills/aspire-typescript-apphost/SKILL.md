@@ -53,7 +53,7 @@ For one integration, produce:
    - Add `TypeScriptAppHostTests.cs` in the integration test project if missing.
    - Use:
      - `TypeScriptAppHostTest.Run(...)`
-     - `appHostProject` = `<Integration>.AppHost.TypeScript` folder name
+     - `appHostProject` = `CommunityToolkit.Aspire.Hosting.<Integration>.AppHost.TypeScript` folder name
      - `packageName` = integration package name
      - `exampleName` = example folder name
      - `waitForResources` = resources required to verify startup in Aspire
