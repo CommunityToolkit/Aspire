@@ -35,6 +35,35 @@ public class AspireBitwardenSecretManagerExtensionsTests
         var secondProjectId = Guid.NewGuid();
 
         var builder = CreateBuilder([
+            ("bitwarden-first", firstOrganizationId, firstProjectId, "first-token"),
+            ("bitwarden-second", secondOrganizationId, secondProjectId, "second-token"),
+        ]);
+
+        builder.AddKeyedBitwardenSecretManagerClient("bitwarden-first", settings => settings.DisableHealthChecks = true);
+        builder.AddKeyedBitwardenSecretManagerClient("bitwarden-second", settings => settings.DisableHealthChecks = true);
+
+        using var host = builder.Build();
+
+        var firstSettings = host.Services.GetRequiredKeyedService<BitwardenSecretManagerClientSettings>("bitwarden-first");
+        var secondSettings = host.Services.GetRequiredKeyedService<BitwardenSecretManagerClientSettings>("bitwarden-second");
+
+        Assert.Equal(firstOrganizationId, firstSettings.OrganizationId);
+        Assert.Equal(firstProjectId, firstSettings.ProjectId);
+        Assert.Equal("first-token", firstSettings.AccessToken);
+        Assert.Equal(secondOrganizationId, secondSettings.OrganizationId);
+        Assert.Equal(secondProjectId, secondSettings.ProjectId);
+        Assert.Equal("second-token", secondSettings.AccessToken);
+    }
+
+    [Fact]
+    public void AddBitwardenSecretManagerClients_KeyedAndUnkeyedCanCoexist()
+    {
+        var firstOrganizationId = Guid.NewGuid();
+        var firstProjectId = Guid.NewGuid();
+        var secondOrganizationId = Guid.NewGuid();
+        var secondProjectId = Guid.NewGuid();
+
+        var builder = CreateBuilder([
             ("bitwarden", firstOrganizationId, firstProjectId, "first-token"),
             ("bitwarden-second", secondOrganizationId, secondProjectId, "second-token"),
         ]);
