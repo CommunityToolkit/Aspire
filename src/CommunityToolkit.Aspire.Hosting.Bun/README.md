@@ -5,7 +5,7 @@
 >
 > **Migration Guide:**
 > - Install `Aspire.Hosting.JavaScript` and remove `CommunityToolkit.Aspire.Hosting.Bun`.
-> - Keep your existing `builder.AddBunApp(...)` calls, but use the core package implementation.
+> - Review existing `builder.AddBunApp(...)` calls carefully: if you pass arguments positionally, you may need to reorder them or convert them to named arguments when moving to the core package implementation.
 > - If you're using TypeScript AppHost bindings, continue using `builder.addBunApp(...)` from the generated core bindings.
 >
 > This package will be removed in a future release. Please migrate to `Aspire.Hosting.JavaScript`.
