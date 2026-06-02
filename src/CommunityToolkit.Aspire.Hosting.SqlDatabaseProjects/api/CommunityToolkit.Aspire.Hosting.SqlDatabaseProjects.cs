@@ -23,7 +23,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> AddSqlPackage<TPackage>(this IDistributedApplicationBuilder builder, string name)
             where TPackage : IPackageMetadata, new() { throw null; }
 
-        [AspireExport("addSqlProject", Description = "Adds a SQL Server database project resource.")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> AddSqlProject(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
         [AspireExportIgnore(Reason = "Polyglot app hosts cannot supply IProjectMetadata types.")]
@@ -37,24 +37,24 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithConfigureDacDeployOptions<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, System.Action<Microsoft.SqlServer.Dac.DacDeployOptions> configureDeploymentOptions)
             where TPackage : IPackageMetadata { throw null; }
 
-        [AspireExport("withDacDeployOptions", Description = "Sets the publish profile path used for DAC deployment options.")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithDacDeployOptions(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder, string optionsPath) { throw null; }
 
         [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithDacDeployOptions<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, string optionsPath)
             where TPackage : IPackageMetadata { throw null; }
 
-        [AspireExport("withDacpac", Description = "Sets the path to the .dacpac file to deploy.")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithDacpac(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder, string dacpacPath) { throw null; }
 
         [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithDacpac<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, string dacpacPath)
             where TPackage : IPackageMetadata { throw null; }
 
-        [AspireExport("withConnectionStringReference", MethodName = "withConnectionReference", Description = "Publishes the SQL Server database project to a connection string resource.")]
+        [AspireExport("withConnectionStringReference", MethodName = "withConnectionReference")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithReference(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.IResourceWithConnectionString> target) { throw null; }
 
-        [AspireExport("withSqlServerDatabaseReference", MethodName = "withReference", Description = "Publishes the SQL Server database project to a SQL Server database resource.")]
+        [AspireExport("withSqlServerDatabaseReference", MethodName = "withReference")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithReference(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.SqlServerDatabaseResource> target) { throw null; }
 
         [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]
@@ -65,7 +65,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> WithReference<TPackage>(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlPackageResource<TPackage>> builder, ApplicationModel.IResourceBuilder<ApplicationModel.SqlServerDatabaseResource> target)
             where TPackage : IPackageMetadata { throw null; }
 
-        [AspireExport("withSkipWhenDeployed", Description = "Skips deployment when the target database already matches the dacpac.")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> WithSkipWhenDeployed(this ApplicationModel.IResourceBuilder<ApplicationModel.SqlProjectResource> builder) { throw null; }
 
         [AspireExportIgnore(Reason = "Polyglot app hosts cannot create SQL package resources that require IPackageMetadata types.")]

@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class BunAppExtensions
     {
-        [AspireExport("addBunApp", Description = "Adds a Bun app")]
+        [AspireExport]
         [System.Obsolete("CommunityToolkit.Aspire.Hosting.Bun is deprecated. Use Aspire.Hosting.JavaScript and builder.AddBunApp(...) instead. This package will be removed in a future release.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.BunAppResource> AddBunApp(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string entryPoint = "index.ts", bool watch = false) { throw null; }
 
