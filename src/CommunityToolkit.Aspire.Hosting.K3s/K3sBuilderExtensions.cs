@@ -25,9 +25,10 @@ public static class K3sBuilderExtensions
     /// Host port to bind the Kubernetes API server (port 6443) to.
     /// When <see langword="null"/> (the default) a random available port is assigned.
     /// </param>
-    /// <param name="configure">
-    /// Optional callback to configure agent count, image versions, custom CIDR ranges,
-    /// disabled components, and other cluster options. See <see cref="K3sClusterOptions"/>.
+    /// <param name="agentCount">
+    /// Number of k3s agent (worker) nodes to add. When <see langword="null"/> (the default)
+    /// a single-node cluster is created — the server node acts as both control-plane and worker.
+    /// Equivalent to calling <see cref="WithAgentCount"/> on the returned builder.
     /// </param>
     /// <returns>A builder for the <see cref="K3sClusterResource"/>.</returns>
     /// <remarks>
@@ -45,29 +46,33 @@ public static class K3sBuilderExtensions
     /// Call <c>WithReference(cluster)</c> on a dependent resource builder to inject
     /// these credentials automatically.
     /// </para>
+    /// <para>
+    /// All other cluster options are available as fluent builder methods:
+    /// <see cref="WithK3sVersion"/>, <see cref="WithAgentCount"/>, <see cref="WithPodSubnet"/>,
+    /// <see cref="WithServiceSubnet"/>, <see cref="WithDisabledComponent"/>,
+    /// <see cref="WithExtraArg"/>, <see cref="WithDataVolume"/>, <see cref="WithHelmImage"/>,
+    /// <see cref="WithKubectlImage"/>, and <see cref="WithLifetime"/>.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException">
     /// <paramref name="builder"/> or <paramref name="name"/> is <see langword="null"/>.
     /// </exception>
-    [AspireExport(RunSyncOnBackgroundThread = true)]
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> AddK3sCluster(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
         int? apiServerPort = null,
-        Action<K3sClusterOptions>? configure = null)
+        int? agentCount = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        var options = new K3sClusterOptions();
-        configure?.Invoke(options);
-
         var resource = new K3sClusterResource(name)
         {
-            HelmImageInfo = (options.HelmRegistry, options.HelmImage, options.HelmTag),
-            KubectlImageInfo = (options.KubectlRegistry, options.KubectlImage, options.KubectlTag),
+            HelmImageInfo = (HelmContainerImageTags.Registry, HelmContainerImageTags.Image, HelmContainerImageTags.Tag),
+            KubectlImageInfo = (KubectlContainerImageTags.Registry, KubectlContainerImageTags.Image, KubectlContainerImageTags.Tag),
         };
-        var tag = options.ImageTag ?? K3sContainerImageTags.Tag;
+        var tag = K3sContainerImageTags.Tag;
 
         // ── Kubeconfig directory on the host ──────────────────────────────────
         // AppHostDirectory/.k3s/{name}/ holds three sub-directories:
@@ -169,71 +174,9 @@ public static class K3sBuilderExtensions
 
             .WithIconName("Kubernetes");
 
-        if (options.ClusterCidr is not null)
-        {
-            resourceBuilder.WithArgs($"--cluster-cidr={options.ClusterCidr}");
-        }
-
-        if (options.ServiceCidr is not null)
-        {
-            resourceBuilder.WithArgs($"--service-cidr={options.ServiceCidr}");
-        }
-
-        foreach (var component in options.DisabledComponents)
-        {
-            resourceBuilder.WithArgs($"--disable={component}");
-        }
-
-        foreach (var arg in options.ExtraArgs)
-        {
-            resourceBuilder.WithArgs(arg);
-        }
-
-        // Create agent nodes specified via options.AgentCount.
-        // Agents use DCP DNS: K3S_URL=https://{name}:6443 resolves to the server container.
-        // NO WaitFor — k3s agent retries indefinitely until the server is reachable.
-        // This avoids a deadlock where the cluster health check waits for nodes to be Ready
-        // while nodes wait for the cluster to be healthy.
-        for (var i = 0; i < options.AgentCount; i++)
-        {
-            resource.AgentCount++;
-            var agentName = $"{name}-agent-{i}";
-            var agentResource = new K3sAgentResource(agentName, resource);
-            resource.AddAgentResource(agentResource);
-
-            builder.AddResource(agentResource)
-                .WithImage(K3sContainerImageTags.Image, tag)
-                .WithImageRegistry(K3sContainerImageTags.Registry)
-                .WithContainerFiles("/", [new ContainerFile
-                {
-                    Name = "aspire-k3s-entrypoint.sh",
-                    Contents = K3sInitEntrypointScript,
-                    Mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
-                         | UnixFileMode.GroupRead | UnixFileMode.GroupExecute
-                         | UnixFileMode.OtherRead | UnixFileMode.OtherExecute,
-                }])
-                .WithEntrypoint("/bin/sh")
-                .WithArgs("/aspire-k3s-entrypoint.sh")
-                .WithArgs("agent")
-                .WithArgs("-v", "0")
-                .WithArgs("--kubelet-arg=v=0")
-                .WithEnvironment("K3S_URL", $"https://{name}:6443")
-                .WithEnvironment("K3S_TOKEN", $"aspire-k3s-{name}-token")
-                .WithEnvironment("K3S_NODE_NAME", agentName)
-                .WithContainerRuntimeArgs("--privileged")
-                .WithContainerRuntimeArgs("--init")
-                .WithContainerRuntimeArgs("--userns=host")
-                .WithContainerRuntimeArgs("--cgroupns=host")
-                .WithContainerRuntimeArgs("--volume=/sys/fs/cgroup:/sys/fs/cgroup:rw")
-                .WithContainerRuntimeArgs("--tmpfs=/run", "--tmpfs=/var/run")
-                .ExcludeFromManifest()
-                .WithInitialState(new CustomResourceSnapshot
-                {
-                    ResourceType = "K3s Agent",
-                    State = KnownResourceStates.Starting,
-                    Properties = [new ResourcePropertySnapshot("Cluster", name)],
-                });
-        }
+        // Create agent nodes if agentCount was supplied directly to AddK3sCluster.
+        if (agentCount is > 0)
+            AddAgentNodes(resourceBuilder, agentCount.Value, tag);
 
         resourceBuilder.WithHealthCheck($"k3s_{name}_ready");
 
@@ -500,19 +443,100 @@ public static class K3sBuilderExtensions
     }
 
     /// <summary>
+    /// Sets the number of k3s agent (worker) nodes to add to the cluster.
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="count">
+    /// The number of agent nodes. Zero or greater. Defaults to <c>0</c> (single-node cluster —
+    /// the server node acts as both control-plane and worker).
+    /// </param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// Agent nodes connect to the server via DCP DNS (<c>https://{name}:6443</c>) and use
+    /// k3s's built-in retry loop, so no explicit <c>WaitFor</c> is needed. The cluster health
+    /// check waits for <c>1 + count</c> nodes to reach <c>Ready</c> state before reporting
+    /// healthy. Use <see cref="WithLifetime"/> with <see cref="ContainerLifetime.Persistent"/>
+    /// to keep agents alive across AppHost restarts and avoid node password hash mismatches.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> is negative.</exception>
+    [AspireExport]
+    public static IResourceBuilder<K3sClusterResource> WithAgentCount(
+        this IResourceBuilder<K3sClusterResource> builder,
+        int count)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentOutOfRangeException.ThrowIfNegative(count, nameof(count));
+
+        if (count == 0) return builder;
+
+        // Use the tag already set on the cluster (either the default or from WithK3sVersion).
+        var tag = builder.Resource.Annotations
+            .OfType<ContainerImageAnnotation>()
+            .FirstOrDefault()?.Tag ?? K3sContainerImageTags.Tag;
+
+        AddAgentNodes(builder, count, tag);
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the container image used to run <c>helm upgrade --install</c> for
+    /// all <see cref="HelmReleaseResource"/> children of this cluster.
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="tag">Image tag, e.g. <c>3.18.0</c>. <see langword="null"/> keeps the current value.</param>
+    /// <param name="image">Image name, e.g. <c>alpine/helm</c>. <see langword="null"/> keeps the current value.</param>
+    /// <param name="registry">Registry, e.g. <c>docker.io</c>. <see langword="null"/> keeps the current value.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    [AspireExport]
+    public static IResourceBuilder<K3sClusterResource> WithHelmImage(
+        this IResourceBuilder<K3sClusterResource> builder,
+        string? tag = null,
+        string? image = null,
+        string? registry = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        var (r, i, t) = builder.Resource.HelmImageInfo;
+        builder.Resource.HelmImageInfo = (registry ?? r, image ?? i, tag ?? t);
+        return builder;
+    }
+
+    /// <summary>
+    /// Overrides the container image used to run <c>kubectl apply</c> for all
+    /// <see cref="K8sManifestResource"/> children of this cluster.
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="tag">Image tag, e.g. <c>1.37.0</c>. <see langword="null"/> keeps the current value.</param>
+    /// <param name="image">Image name, e.g. <c>alpine/kubectl</c>. <see langword="null"/> keeps the current value.</param>
+    /// <param name="registry">Registry, e.g. <c>docker.io</c>. <see langword="null"/> keeps the current value.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    [AspireExport]
+    public static IResourceBuilder<K3sClusterResource> WithKubectlImage(
+        this IResourceBuilder<K3sClusterResource> builder,
+        string? tag = null,
+        string? image = null,
+        string? registry = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        var (r, i, t) = builder.Resource.KubectlImageInfo;
+        builder.Resource.KubectlImageInfo = (registry ?? r, image ?? i, tag ?? t);
+        return builder;
+    }
+
+    /// <summary>
     /// Sets the container lifetime for the k3s cluster <em>and all its agent nodes</em>.
     /// </summary>
     /// <param name="builder">The k3s cluster resource builder.</param>
     /// <param name="lifetime">The container lifetime to apply.</param>
     /// <returns>The same builder, for chaining.</returns>
     /// <remarks>
-    /// <para>
-    /// Agent nodes are propagated immediately because DCP uses the
+    /// Agent nodes are propagated immediately because DCP uses
     /// <see cref="ContainerLifetimeAnnotation"/> to compute container identity. Deferring
     /// propagation to <c>BeforeStartEvent</c> would be too late — DCP determines whether
     /// to reuse or recreate a persistent container before that event fires, so agents
     /// would lose their persistent identity and be recreated as new containers each run.
-    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
     [AspireExport]
@@ -572,6 +596,61 @@ public static class K3sBuilderExtensions
 
         exec k3s "$@"
         """;
+
+    // ── Agent node creation ───────────────────────────────────────────────────
+
+    // Shared by AddK3sCluster (via options.AgentCount) and WithAgentCount.
+    // Agents use DCP DNS (K3S_URL=https://{name}:6443) and retry until the server is
+    // reachable — no WaitFor to avoid a deadlock where the cluster health check waits
+    // for nodes to be Ready while nodes wait for the cluster to be healthy.
+    private static void AddAgentNodes(
+        IResourceBuilder<K3sClusterResource> clusterBuilder,
+        int count,
+        string tag)
+    {
+        var resource = clusterBuilder.Resource;
+        var name = resource.Name;
+        var startIndex = resource.AgentCount;
+
+        for (var i = startIndex; i < startIndex + count; i++)
+        {
+            resource.AgentCount++;
+            var agentName = $"{name}-agent-{i}";
+            var agentResource = new K3sAgentResource(agentName, resource);
+            resource.AddAgentResource(agentResource);
+
+            clusterBuilder.ApplicationBuilder.AddResource(agentResource)
+                .WithImage(K3sContainerImageTags.Image, tag)
+                .WithImageRegistry(K3sContainerImageTags.Registry)
+                .WithContainerFiles("/", [new ContainerFile
+                {
+                    Name = "aspire-k3s-entrypoint.sh",
+                    Contents = K3sInitEntrypointScript,
+                    Mode = K3sFileHelpers.ExecutableScriptMode,
+                }])
+                .WithEntrypoint("/bin/sh")
+                .WithArgs("/aspire-k3s-entrypoint.sh")
+                .WithArgs("agent")
+                .WithArgs("-v", "0")
+                .WithArgs("--kubelet-arg=v=0")
+                .WithEnvironment("K3S_URL", $"https://{name}:6443")
+                .WithEnvironment("K3S_TOKEN", $"aspire-k3s-{name}-token")
+                .WithEnvironment("K3S_NODE_NAME", agentName)
+                .WithContainerRuntimeArgs("--privileged")
+                .WithContainerRuntimeArgs("--init")
+                .WithContainerRuntimeArgs("--userns=host")
+                .WithContainerRuntimeArgs("--cgroupns=host")
+                .WithContainerRuntimeArgs("--volume=/sys/fs/cgroup:/sys/fs/cgroup:rw")
+                .WithContainerRuntimeArgs("--tmpfs=/run", "--tmpfs=/var/run")
+                .ExcludeFromManifest()
+                .WithInitialState(new CustomResourceSnapshot
+                {
+                    ResourceType = "K3s Agent",
+                    State = KnownResourceStates.Starting,
+                    Properties = [new ResourcePropertySnapshot("Cluster", name)],
+                });
+        }
+    }
 
     // ── BeforeStartEvent helpers ──────────────────────────────────────────────
 

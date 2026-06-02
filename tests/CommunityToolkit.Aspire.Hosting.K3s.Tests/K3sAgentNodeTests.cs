@@ -12,7 +12,7 @@ public class K3sAgentNodeTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 2);
+        appBuilder.AddK3sCluster("k8s", agentCount: 2);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -29,7 +29,7 @@ public class K3sAgentNodeTests
     {
         // Implements IResourceWithParent so they appear nested under k8s in the dashboard.
         var appBuilder = DistributedApplication.CreateBuilder();
-        var cluster = appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 1);
+        var cluster = appBuilder.AddK3sCluster("k8s", agentCount: 1);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -47,7 +47,7 @@ public class K3sAgentNodeTests
     public void AgentCountZeroProducesNoAgentResources()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 0);
+        appBuilder.AddK3sCluster("k8s");
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -59,7 +59,7 @@ public class K3sAgentNodeTests
     public void AgentCountUpdatesClusterAgentCount()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        var cluster = appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 3);
+        var cluster = appBuilder.AddK3sCluster("k8s", agentCount: 3);
 
         Assert.Equal(3, cluster.Resource.AgentCount);
     }
@@ -71,7 +71,7 @@ public class K3sAgentNodeTests
         // cluster health check waits for all nodes (including agents) to be Ready.
         // Instead, k3s agent retries connecting to the server independently.
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 1);
+        appBuilder.AddK3sCluster("k8s", agentCount: 1);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -86,7 +86,7 @@ public class K3sAgentNodeTests
     public void AgentNodesUseSameImageAsServer()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 1);
+        appBuilder.AddK3sCluster("k8s", agentCount: 1);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -101,7 +101,7 @@ public class K3sAgentNodeTests
     public void AgentNodesAreExcludedFromManifest()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 1);
+        appBuilder.AddK3sCluster("k8s", agentCount: 1);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -114,7 +114,7 @@ public class K3sAgentNodeTests
     public void AgentNodesHaveEnvironmentAnnotations()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = 1);
+        appBuilder.AddK3sCluster("k8s", agentCount: 1);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -141,7 +141,7 @@ public class K3sAgentNodeTests
     public void AgentNodeNamesFollowConvention()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddK3sCluster("mycluster", configure: opts => opts.AgentCount = 3);
+        appBuilder.AddK3sCluster("mycluster", agentCount: 3);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -155,12 +155,109 @@ public class K3sAgentNodeTests
     public void NegativeAgentCountIsIgnored()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
-        appBuilder.AddK3sCluster("k8s", configure: opts => opts.AgentCount = -1);
+        appBuilder.AddK3sCluster("k8s", agentCount: -1);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         Assert.Empty(model.Resources.OfType<K3sAgentResource>());
+    }
+
+    // ── WithAgentCount ────────────────────────────────────────────────────────
+
+    [Fact]
+    public void WithAgentCountAddsCorrectNumberOfAgentResources()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s").WithAgentCount(3);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var agents = model.Resources.OfType<K3sAgentResource>().ToList();
+        Assert.Equal(3, agents.Count);
+    }
+
+    [Fact]
+    public void WithAgentCountZeroIsNoOp()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s").WithAgentCount(0);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        Assert.Empty(model.Resources.OfType<K3sAgentResource>());
+    }
+
+    [Fact]
+    public void WithAgentCountNamesAgentsSequentially()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s").WithAgentCount(2);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var names = model.Resources.OfType<K3sAgentResource>().Select(r => r.Name).ToList();
+        Assert.Contains("k8s-agent-0", names);
+        Assert.Contains("k8s-agent-1", names);
+    }
+
+    [Fact]
+    public void WithAgentCountAgentsUseClusterImageTag()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s")
+            .WithK3sVersion("v1.30.0-k3s1")
+            .WithAgentCount(1);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var agent = Assert.Single(model.Resources.OfType<K3sAgentResource>());
+        var img = Assert.Single(agent.Annotations.OfType<ContainerImageAnnotation>());
+        Assert.Equal("v1.30.0-k3s1", img.Tag);
+    }
+
+    [Fact]
+    public void WithAgentCountIsEquivalentToConfigureAgentCount()
+    {
+        // WithAgentCount(2) should produce the same agent resources as
+        // AddK3sCluster with configure: cfg => cfg.AgentCount = 2
+        var b1 = DistributedApplication.CreateBuilder();
+        b1.AddK3sCluster("k8s", agentCount: 2);
+        using var app1 = b1.Build();
+        var agents1 = app1.Services.GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<K3sAgentResource>().ToList();
+
+        var b2 = DistributedApplication.CreateBuilder();
+        b2.AddK3sCluster("k8s").WithAgentCount(2);
+        using var app2 = b2.Build();
+        var agents2 = app2.Services.GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<K3sAgentResource>().ToList();
+
+        Assert.Equal(agents1.Count, agents2.Count);
+        Assert.Equal(
+            agents1.Select(a => a.Name).OrderBy(n => n),
+            agents2.Select(a => a.Name).OrderBy(n => n));
+    }
+
+    [Fact]
+    public void WithAgentCountShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<K3sClusterResource> builder = null!;
+        var action = () => builder.WithAgentCount(2);
+        Assert.Throws<ArgumentNullException>(action);
+    }
+
+    [Fact]
+    public void WithAgentCountShouldThrowWhenCountIsNegative()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var action = () => cluster.WithAgentCount(-1);
+        Assert.Throws<ArgumentOutOfRangeException>(action);
     }
 
     [Fact]
@@ -170,7 +267,7 @@ public class K3sAgentNodeTests
         // DCP uses it to compute container identity before BeforeStartEvent fires.
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder
-            .AddK3sCluster("k8s", configure: opts => opts.AgentCount = 2)
+            .AddK3sCluster("k8s", agentCount: 2)
             .WithLifetime(ContainerLifetime.Persistent);
 
         using var app = appBuilder.Build();
@@ -190,7 +287,7 @@ public class K3sAgentNodeTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder
-            .AddK3sCluster("k8s", configure: opts => opts.AgentCount = 1)
+            .AddK3sCluster("k8s", agentCount: 1)
             .WithLifetime(ContainerLifetime.Session);
 
         using var app = appBuilder.Build();

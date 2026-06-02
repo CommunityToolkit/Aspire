@@ -166,20 +166,20 @@ public class K3sClusterResourceTests
     }
 
     [Fact]
-    public void AddK3sClusterWithClusterCidrViaOptions()
+    public void AddK3sClusterWithAgentCountParam()
     {
+        // agentCount is now a direct nullable parameter on AddK3sCluster,
+        // equivalent to calling WithAgentCount() on the returned builder.
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        appBuilder.AddK3sCluster("k8s", configure: opts =>
-        {
-            opts.ClusterCidr = "10.99.0.0/16";
-        });
+        appBuilder.AddK3sCluster("k8s", agentCount: 2);
 
         using var app = appBuilder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
         var resource = Assert.Single(appModel.Resources.OfType<K3sClusterResource>());
-        Assert.NotNull(resource);
+        Assert.Equal(2, resource.AgentCount);
+        Assert.Equal(2, appModel.Resources.OfType<K3sAgentResource>().Count());
     }
 
     [Fact]
@@ -409,7 +409,7 @@ public class K3sClusterResourceTests
         var appBuilder = DistributedApplication.CreateBuilder();
 
         appBuilder
-            .AddK3sCluster("k8s", configure: opts => opts.AgentCount = 2)
+            .AddK3sCluster("k8s", agentCount: 2)
             .WithK3sVersion("v1.30.0-k3s1");
 
         using var app = appBuilder.Build();
@@ -557,6 +557,145 @@ public class K3sClusterResourceTests
         Assert.DoesNotContain(ctx.Args, arg => arg is string s && s.StartsWith("--service-cidr="));
     }
 
+    // ── IResourceWithConnectionString (K3sClusterResource) ───────────────────
+
+    [Fact]
+    public void ConnectionStringEnvironmentVariableIsKUBECONFIG()
+    {
+        var resource = new K3sClusterResource("k8s");
+        Assert.Equal("KUBECONFIG", resource.ConnectionStringEnvironmentVariable);
+    }
+
+    [Fact]
+    public async Task GetConnectionStringAsyncReturnsNullWhenDirectoryNotSet()
+    {
+        var resource = new K3sClusterResource("k8s") { KubeconfigDirectory = null };
+        var result = await resource.GetConnectionStringAsync();
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetConnectionStringAsyncReturnsLocalKubeconfigPath()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"k8s-{Guid.NewGuid():N}");
+        var resource = new K3sClusterResource("k8s") { KubeconfigDirectory = dir };
+
+        var result = await resource.GetConnectionStringAsync();
+
+        Assert.Equal(Path.Combine(dir, "local", "kubeconfig.yaml"), result);
+    }
+
+    // ── AddK3sCluster with agentCount param ──────────────────────────────────
+
+    [Fact]
+    public void AddK3sClusterWithAgentCountCreatesAgents()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s", agentCount: 2);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        Assert.Equal(2, model.Resources.OfType<K3sAgentResource>().Count());
+    }
+
+    // ── WithHelmImage / WithKubectlImage ──────────────────────────────────────
+
+    [Fact]
+    public void WithHelmImageSetsTagOnly()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s").WithHelmImage(tag: "3.18.0");
+
+        using var app = appBuilder.Build();
+        var resource = Assert.Single(app.Services
+            .GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<K3sClusterResource>());
+
+        var (_, _, tag) = resource.HelmImageInfo;
+        Assert.Equal("3.18.0", tag);
+    }
+
+    [Fact]
+    public void WithHelmImageSetsAllComponents()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s")
+            .WithHelmImage(tag: "3.18.0", image: "my/helm", registry: "my.registry.io");
+
+        using var app = appBuilder.Build();
+        var resource = Assert.Single(app.Services
+            .GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<K3sClusterResource>());
+
+        var (registry, image, tag) = resource.HelmImageInfo;
+        Assert.Equal("my.registry.io", registry);
+        Assert.Equal("my/helm", image);
+        Assert.Equal("3.18.0", tag);
+    }
+
+    [Fact]
+    public void WithHelmImageNullParametersPreserveCurrentValues()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var (origRegistry, origImage, _) = cluster.Resource.HelmImageInfo;
+
+        cluster.WithHelmImage(tag: "3.18.0"); // only tag changed
+
+        var (registry, image, tag) = cluster.Resource.HelmImageInfo;
+        Assert.Equal(origRegistry, registry);
+        Assert.Equal(origImage, image);
+        Assert.Equal("3.18.0", tag);
+    }
+
+    [Fact]
+    public void WithHelmImageShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<K3sClusterResource> builder = null!;
+        Assert.Throws<ArgumentNullException>(() => builder.WithHelmImage("3.18.0"));
+    }
+
+    [Fact]
+    public void WithKubectlImageSetsTagOnly()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s").WithKubectlImage(tag: "1.37.0");
+
+        using var app = appBuilder.Build();
+        var resource = Assert.Single(app.Services
+            .GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<K3sClusterResource>());
+
+        var (_, _, tag) = resource.KubectlImageInfo;
+        Assert.Equal("1.37.0", tag);
+    }
+
+    [Fact]
+    public void WithKubectlImageSetsAllComponents()
+    {
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.AddK3sCluster("k8s")
+            .WithKubectlImage(tag: "1.37.0", image: "my/kubectl", registry: "my.registry.io");
+
+        using var app = appBuilder.Build();
+        var resource = Assert.Single(app.Services
+            .GetRequiredService<DistributedApplicationModel>()
+            .Resources.OfType<K3sClusterResource>());
+
+        var (registry, image, tag) = resource.KubectlImageInfo;
+        Assert.Equal("my.registry.io", registry);
+        Assert.Equal("my/kubectl", image);
+        Assert.Equal("1.37.0", tag);
+    }
+
+    [Fact]
+    public void WithKubectlImageShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<K3sClusterResource> builder = null!;
+        Assert.Throws<ArgumentNullException>(() => builder.WithKubectlImage("1.37.0"));
+    }
+
     // ── Options configure callback ────────────────────────────────────────────
 
     [Fact]
@@ -564,10 +703,7 @@ public class K3sClusterResourceTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        appBuilder.AddK3sCluster("k8s", configure: opts =>
-        {
-            opts.ServiceCidr = "10.99.0.0/16";
-        });
+        appBuilder.AddK3sCluster("k8s").WithServiceSubnet("10.99.0.0/16");
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -585,11 +721,9 @@ public class K3sClusterResourceTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        appBuilder.AddK3sCluster("k8s", configure: opts =>
-        {
-            opts.DisabledComponents.Add("traefik");
-            opts.DisabledComponents.Add("coredns");
-        });
+        appBuilder.AddK3sCluster("k8s")
+            .WithDisabledComponent("traefik")
+            .WithDisabledComponent("coredns");
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -608,10 +742,7 @@ public class K3sClusterResourceTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
 
-        appBuilder.AddK3sCluster("k8s", configure: opts =>
-        {
-            opts.ExtraArgs.Add("--write-kubeconfig-mode=644");
-        });
+        appBuilder.AddK3sCluster("k8s").WithExtraArg("--write-kubeconfig-mode=644");
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();

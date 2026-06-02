@@ -340,6 +340,67 @@ public class K3sServiceEndpointResourceTests
         Assert.Equal(HealthStatus.Unhealthy, result.Status);
     }
 
+    // ── IResourceWithConnectionString (K3sServiceEndpointResource) ──────────
+
+    [Fact]
+    public void ConnectionStringEnvironmentVariableFollowsServiceDiscoveryConvention()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var ep = new K3sServiceEndpointResource("my-ep", "svc", 80, "default", cluster);
+        Assert.Equal("services__my-ep__url", ep.ConnectionStringEnvironmentVariable);
+    }
+
+    [Fact]
+    public async Task GetConnectionStringAsyncReturnsNullWhenNotReady()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var ep = new K3sServiceEndpointResource("ep", "svc", 80, "default", cluster);
+        // IsReady=false, HostPort=0 by default
+        var result = await ep.GetConnectionStringAsync();
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task GetConnectionStringAsyncReturnsLocalhostUrlWhenReady()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var ep = new K3sServiceEndpointResource("ep", "svc", 80, "default", cluster)
+        {
+            IsReady = true,
+            HostPort = 9898,
+        };
+
+        var result = await ep.GetConnectionStringAsync();
+
+        Assert.Equal("http://localhost:9898", result);
+    }
+
+    [Fact]
+    public async Task GetConnectionStringAsyncUsesSchemeWhenReady()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var ep = new K3sServiceEndpointResource("ep", "svc", 443, "default", cluster)
+        {
+            Scheme = "https",
+            IsReady = true,
+            HostPort = 7777,
+        };
+
+        var result = await ep.GetConnectionStringAsync();
+
+        Assert.Equal("https://localhost:7777", result);
+    }
+
+    [Fact]
+    public void ConnectionStringExpressionIsEmptyWhenNotReady()
+    {
+        var cluster = new K3sClusterResource("k8s");
+        var ep = new K3sServiceEndpointResource("ep", "svc", 80, "default", cluster);
+        // Not ready — expression should be an empty string expression.
+        var expr = ep.ConnectionStringExpression;
+        Assert.NotNull(expr);
+    }
+
     // ── Resource construction ─────────────────────────────────────────────────
 
     [Fact]

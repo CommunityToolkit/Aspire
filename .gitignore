@@ -37,3 +37,6 @@ affected-tests
 examples/**/.modules/*
 examples/**/.aspire/modules/*
 examples/**/.aspire/integrations/*
+playground/**/.modules/*
+playground/**/.aspire/modules/*
+playground/**/.aspire/integrations/*

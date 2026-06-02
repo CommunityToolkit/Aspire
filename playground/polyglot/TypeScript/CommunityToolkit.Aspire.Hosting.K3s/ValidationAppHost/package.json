@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "aspire run",
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "tsc --noEmit",
+    "dev": "tsc --noEmit --watch"
   },
   "dependencies": {
     "vscode-jsonrpc": "^8.2.0"
