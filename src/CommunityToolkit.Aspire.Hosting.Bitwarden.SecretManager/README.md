@@ -2,11 +2,7 @@
 
 ## Overview
 
-`CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager` helps you work with
-Bitwarden Secrets Manager in your Aspire AppHost.
-
-Use it to define your Bitwarden project and secrets in one place, then apply
-them with `aspire deploy`.
+Integrates Bitwarden Secrets Manager into your Aspire AppHost. Declare your Bitwarden project and secrets in the AppHost graph and apply them with `aspire deploy`.
 
 ## Getting Started
 
@@ -17,10 +13,6 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager
 ```
 
 ### Basic setup
-
-Create parameters for the project name, organization ID, and access token,
-then add the Bitwarden resource to your AppHost. The Aspire resource name and
-the Bitwarden project name are independent.
 
 ```csharp
 IResourceBuilder<ParameterResource> organizationId = builder.AddParameter("bitwarden-organization-id");
@@ -36,26 +28,13 @@ IResourceBuilder<BitwardenSecretManagerResource> bitwarden = builder.AddBitwarde
 
 ### Optional configuration
 
-You can further customize the resource with the following options:
+Use `WithExistingProject` to adopt a Bitwarden project that was created outside the AppHost graph, identified by its GUID.
 
-- `WithExistingProject(...)` adopts an existing Bitwarden project by
-  identifier.
-- `WithApiUrl(...)` and `WithIdentityUrl(...)` override the Bitwarden API and
-  identity endpoints. Accepts a string, a parameter, an `ExternalServiceResource`,
-  or an `EndpointReference`. Both default to the public Bitwarden cloud and are
-  shown as clickable links in the Aspire dashboard.
-- `WithCacheFile(...)` overrides the AppHost cache file location (default:
-  `.bitwarden/{resourceName}.{environment}.json` relative to the AppHost
-  directory). The AppHost cache tracks Bitwarden project and secret IDs
-  between runs. Relative paths are resolved from the AppHost directory.
-- `WithAuthCacheDirectory(...)` overrides the AppHost auth cache file location
-  (default: Aspire store, named by the UUID embedded in the access token). The AppHost
-  auth cache persists the Bitwarden SDK auth session between runs to avoid
-  hitting Bitwarden's rate limits on frequent logins. Relative paths are
-  resolved from the Aspire store.
+```csharp
+bitwarden.WithExistingProject(Guid.Parse("00000000-0000-0000-0000-000000000000"));
+```
 
-For a self-hosted instance, model each endpoint as an `ExternalServiceResource`
-and pass it directly. This sets the URL and wires up `WaitFor` in one call:
+Use `WithApiUrl` and `WithIdentityUrl` to override the Bitwarden endpoints. Both default to the public Bitwarden cloud. For a self-hosted instance, pass an `ExternalServiceResource` to set the URL and wire up `WaitFor` in one call:
 
 ```csharp
 var bitwardenApiServer = builder.AddExternalService("bitwarden-api", "https://bitwarden.example.com/api")
@@ -68,7 +47,7 @@ bitwarden
     .WithIdentityUrl(bitwardenIdentityServer);
 ```
 
-When the URL varies by environment, use a parameter instead of a literal string:
+When the URL varies by environment, use a parameter instead:
 
 ```csharp
 var bitwardenApiUrl = builder.AddParameter("bitwarden-api-url");
@@ -78,127 +57,95 @@ var bitwardenApiServer = builder.AddExternalService("bitwarden-api", bitwardenAp
 bitwarden.WithApiUrl(bitwardenApiServer);
 ```
 
-## Usage
-
-Use `AddSecret(...)` to declare managed Bitwarden secrets.
+Use `WithCacheFile` to override the AppHost cache location. The cache tracks Bitwarden project and secret IDs between runs. Default is `.bitwarden/{name}.{env}.json` relative to the AppHost directory; relative paths resolve from there.
 
 ```csharp
-IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("api-key");
+bitwarden.WithCacheFile(".bitwarden/shared.Development.json");
 ```
 
-Each managed secret appears in the Aspire dashboard parameters tab. Its value is resolved in
-this order during startup:
+Use `WithAuthCacheDirectory` to override the AppHost auth cache location. The auth cache persists the Bitwarden SDK session between runs to avoid login rate-limiting. Default is the Aspire store, named by the token UUID; relative paths resolve from there.
 
-1. **Bitwarden upstream** — if the secret already exists in Bitwarden, its current value is
-   synced automatically. No prompt, no configuration needed. In `aspire deploy`, the
-   `bitwarden-pre-sync-managed-{name}` step writes this value to the deployment state before
-   `process-parameters` runs, so the deploy command does not prompt either.
-2. **Configuration** — if no upstream value is found, the secret reads the configuration key
-   `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
-3. **Interactive prompt** — if the configuration key is also absent, the dashboard prompts for
-   the value. Once supplied, Bitwarden creates the secret with that value.
+```csharp
+bitwarden.WithAuthCacheDirectory("/ci/bitwarden-auth");
+```
 
-The dashboard parameter state transitions to `Running` as soon as the value is resolved by any
-of these paths, so the "Parameters need values" banner disappears automatically after the
-upstream sync phase completes for existing secrets.
+## Usage
 
-Use `GetSecret(...)` to reference an existing remote secret.
+Use `AddSecret(...)` to declare AppHost-owned secrets.
 
 ```csharp
 // Aspire resource name and Bitwarden secret name are the same
-IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("shared-api-key");
+IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("api-key");
 
 // Aspire resource name and Bitwarden secret name differ
-IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("api-key", remoteName: "shared-api-key");
+IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("api-key", remoteName: "API Key");
 ```
 
-Both `AddSecret` and `GetSecret`
-return `IResourceBuilder<BitwardenSecretResource>`, the difference is that `AddSecret` creates a managed secret that is synced and updated by Aspire, while `GetSecret` is unmanaged (read-only) and must already exist in Bitwarden.
+The value is resolved in this order during startup:
 
-Use `WithReference(...)` to inject Bitwarden client configuration into
-dependent resources.
+1. **Bitwarden upstream** — if the secret already exists, its current value is synced automatically. No prompt or configuration needed.
+2. **Configuration** — reads `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
+3. **Interactive prompt** — the dashboard prompts for the value. Once supplied, Bitwarden creates the secret.
+
+Use `GetSecret(...)` to reference an externally owned secret that already exists in Bitwarden.
+
+```csharp
+// Aspire resource name and Bitwarden secret name are the same
+IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("api-key");
+
+// Aspire resource name and Bitwarden secret name differ
+IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("api-key", remoteName: "API Key");
+```
+
+Use `WithReference(...)` to inject Bitwarden client configuration into dependent resources.
 
 ```csharp
 builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden);
 ```
 
-By default the management access token is injected into clients. To supply a
-least-privilege read-only token instead, chain `WithBitwardenAccessToken`:
+The injected configuration is under `Aspire:Bitwarden:SecretManager:{connectionName}` and includes `OrganizationId`, `ProjectId`, `AccessToken`, `ApiUrl`, and `IdentityUrl`.
+
+By default the management token is injected. To supply a least-privilege read-only token instead:
 
 ```csharp
 IResourceBuilder<ParameterResource> readOnlyToken = builder.AddParameter("bitwarden-readonly-token", secret: true);
 
 builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden)
-    .WithBitwardenAccessToken(bitwarden, readOnlyToken);
+    .WithBitwardenAccessToken(bitwarden, readOnlyToken)
+    .WithBitwardenAuthCacheDirectory(bitwarden, "/data/bitwarden"); // optional, use if you encounter login rate limits
 ```
 
-> **Note:** The read-only token must be granted read permissions to the
-> Bitwarden project manually in the Bitwarden web vault or CLI — Bitwarden
-> does not expose an API for this, so it cannot be automated. For a newly
-> created project, do this after the first AppHost run that creates the
-> project.
+> **Note:** The read-only token must be granted read permissions to the Bitwarden project manually — Bitwarden does not expose an API for this. Do this after the first AppHost run that creates the project.
 
-Chain additional Bitwarden-specific configuration after `WithReference`:
+To inject a secret ID for runtime fetching via the Bitwarden SDK:
 
 ```csharp
 IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("demo-api-key");
 
-// SDK approach: inject connection config + secret ID for runtime fetching
 builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden)
-    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource)
-    .WithBitwardenAuthCacheDirectory(bitwarden, "/data/bitwarden"); // optional
+    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
 ```
 
-Use `WithBitwardenSecretValue(...)` to inject the resolved secret value
-directly as an environment variable. No Bitwarden SDK required in the app,
-but the app must be redeployed when the value changes:
+To inject the resolved value directly (no SDK required in the app, but requires redeploy when the value changes):
 
 ```csharp
 builder.AddProject<Projects.ApiService>("api")
     .WithBitwardenSecretValue("DEMO_API_KEY", managedSecret.Resource);
 ```
 
-The injected configuration is available under
-`Aspire:Bitwarden:SecretManager:{connectionName}` and includes:
-
-- `OrganizationId`
-- `ProjectId`
-- `AccessToken`
-- `ApiUrl`
-- `IdentityUrl`
-
 ## Deployment
 
-Deployment applies your declared Bitwarden resources.
+Run `aspire deploy`. The integration adds six pipeline steps per Bitwarden resource:
 
-Typical flow:
-
-1. Declare the Bitwarden project and any managed secrets in the AppHost graph.
-2. Run `aspire deploy` for the AppHost.
-
-During `aspire deploy`, the integration runs six pipeline steps per Bitwarden
-resource:
-
-1. **Pre-sync managed secrets** — prompts for any missing credentials, then
-   authenticates and fetches existing Bitwarden values for managed secrets,
-   writing everything to the deployment state before `process-parameters` runs.
-   This prevents `aspire deploy` from re-prompting for secrets that already
-   exist in Bitwarden.
-2. **Authenticate** — resolves credentials and authenticates with Bitwarden
-   Secrets Manager.
+1. **Pre-sync managed secrets** — authenticates and fetches existing Bitwarden values for managed secrets before `process-parameters` runs. Prevents re-prompting for secrets that already exist.
+2. **Authenticate** — resolves credentials and authenticates with Bitwarden Secrets Manager.
 3. **Provision project** — creates or updates the remote Bitwarden project.
-4. **Sync managed secrets** — reads existing upstream values for managed
-   secrets whose local parameter values are missing.
-5. **Provision secrets** — creates or updates managed secrets and validates
-   declared references.
-6. **Patch env files** — applies resolved values to Docker Compose environment
-   files (Docker Compose deployments only).
-
-This keeps the experience declaration-first: resources and references are your
-contract, and deployment materializes that contract.
+4. **Sync managed secrets** — reads upstream values for managed secrets whose local parameter values are missing.
+5. **Provision secrets** — creates or updates managed secrets and validates declared references.
+6. **Patch env files** — applies resolved values to Docker Compose environment files (Docker Compose deployments only).
 
 ## Reference
 
@@ -211,7 +158,7 @@ contract, and deployment materializes that contract.
 
 ### Secret declarations
 
-Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to pass the secret resource to `WithBitwardenSecretValue` or `WithBitwardenSecretId`.
+Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to pass to `WithBitwardenSecretValue` or `WithBitwardenSecretId`.
 
 | API                           | What it does                                    | When to use                       |
 | ----------------------------- | ----------------------------------------------- | --------------------------------- |
@@ -241,16 +188,11 @@ Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to p
 
 ### App auth cache
 
-The app auth cache persists the Bitwarden SDK auth session inside the running application.
-Without it the app calls the Bitwarden identity server on every start, which triggers rate
-limiting under frequent restarts or rolling deployments. There are three ways to configure it,
-each suited to a different deployment model.
+Without an auth cache the app re-authenticates with Bitwarden on every start, which triggers rate limiting under frequent restarts or rolling deployments.
 
-**Named volume (container resources)**
+**Named volume (containers)**
 
-Use `WithBitwardenAuthCacheVolume` when the destination resource is a Docker container. It mounts a
-named volume and injects the file path automatically. The volume survives container restarts
-and is provisioned by the deploy tooling — no host-specific path is involved.
+`WithBitwardenAuthCacheVolume` mounts a named volume and injects the path automatically. The volume survives restarts and is provisioned by the deploy tooling.
 
 ```csharp
 builder.AddContainer("api", "myregistry/api")
@@ -258,21 +200,17 @@ builder.AddContainer("api", "myregistry/api")
     .WithBitwardenAuthCacheVolume(bitwarden); // volume: api-bitwarden-bitwarden-auth, path: /var/lib/bitwarden
 ```
 
-Override the volume name or mount directory when needed:
+Override the volume name or mount path when needed:
 
 ```csharp
 api.WithBitwardenAuthCacheVolume(bitwarden, volumeName: "shared-bw-auth", containerDirectory: "/var/lib/bitwarden-shared");
 ```
 
-> **Note:** `WithBitwardenAuthCacheVolume` requires the destination resource to be a container
-> resource. It throws at startup for process resources (e.g. `AddProject`).
+> **Note:** `WithBitwardenAuthCacheVolume` requires a container resource and throws at startup for process resources (e.g. `AddProject`).
 
-**Parameter (per-environment directory)**
+**Parameter (directory varies by environment)**
 
-Use `WithBitwardenAuthCacheDirectory` with a parameter when the directory must differ between
-environments — for example, a developer machine path in run mode vs. a container-internal
-path in production. The parameter reads from user secrets or configuration in run mode,
-and the deploy tooling resolves it per environment at deploy time.
+Use a parameter when the path differs between dev and production.
 
 ```csharp
 IResourceBuilder<ParameterResource> authCacheDir = builder.AddParameter("bw-auth-cache-dir");
@@ -292,12 +230,9 @@ Set the directory in user secrets for local development:
 }
 ```
 
-**Fixed string (same directory everywhere)**
+**Fixed string (same path everywhere)**
 
-Use `WithBitwardenAuthCacheDirectory` with a string literal when the directory is a
-container-internal path that is identical in all environments. This is appropriate when
-the app always runs as a container (not as a DCP process), so there is no host-specific
-path involved.
+Use a string literal only when the app always runs as a container and the path is the same in all environments.
 
 ```csharp
 builder.AddContainer("api", "myregistry/api")
@@ -305,10 +240,7 @@ builder.AddContainer("api", "myregistry/api")
     .WithBitwardenAuthCacheDirectory(bitwarden, "/home/app/.bitwarden");
 ```
 
-> **Warning:** Do not pass a host-specific directory (e.g. `~/bitwarden` or
-> `C:\Users\dev\bitwarden`) to the string overload. Unlike `WithBindMount`, Aspire does not
-> warn about this — the value is injected as-is and will silently break in a container.
-> Use a parameter instead when the directory differs between machines or modes.
+> **Warning:** Do not pass a host-specific path to the string overload — the value is injected as-is and silently breaks in a container. Use a parameter when the path differs between machines or modes.
 
 **When to use each**
 
@@ -321,14 +253,14 @@ builder.AddContainer("api", "myregistry/api")
 
 ### Resource states
 
-The Bitwarden resource is a one-shot provisioner. Dependent resources use `WaitForCompletion`, so they block until provisioning finishes and then start.
+The Bitwarden resource is a one-shot provisioner; dependent resources block on `WaitForCompletion` and start only when it reaches `Finished`.
 
-Provisioning runs in four phases before the resource enters `Running`:
+Provisioning runs in four phases before `Running`:
 
-1. **Authentication** — waits only for the management access token, then authenticates with Bitwarden. Fails fast here so you learn about a bad token before providing the remaining values.
+1. **Authentication** — waits for the management access token, then authenticates. Fails fast so a bad token surfaces before you supply remaining values.
 2. **Upstream managed secret sync** — resolves the project and reads existing Bitwarden values for managed secrets whose local parameter values are missing.
-3. **Upstream reference secret sync** — fetches values for all reference-only secrets (declared via `GetSecret`). Fails here if a referenced secret does not exist in Bitwarden.
-4. **Parameter collection** — waits for any remaining project name, organization ID, and managed secret values. The resource enters `Running` only once every value is in hand.
+3. **Upstream reference secret sync** — fetches values for all `GetSecret` secrets. Fails here if a referenced secret does not exist in Bitwarden.
+4. **Parameter collection** — waits for any remaining project name, organization ID, and managed secret values. `Running` is entered only once every value is in hand.
 
 | State                  | Style   | Dependent resources          |
 | ---------------------- | ------- | ---------------------------- |
@@ -340,8 +272,7 @@ Provisioning runs in four phases before the resource enters `Running`:
 
 ### Project provisioning decisions
 
-Runs once per AppHost run, during the `bitwarden-provision-project` pipeline step.
-Paths are tried in order: explicit adoption → persisted mapping → create new.
+Runs once per AppHost run during `bitwarden-provision-project`. Paths tried in order: explicit adoption → persisted mapping → create new.
 
 **Path A — explicit adoption (`WithExistingProject`)**
 
@@ -360,12 +291,11 @@ Paths are tried in order: explicit adoption → persisted mapping → create new
 
 **Path C — no cache**
 
-Create new project. There is no name-search path here: the AppHost is the source of truth for the project, so a missing cache means a new project is created. Use `WithExistingProject` to adopt a project that was created outside the declared graph.
+Create new project. Use `WithExistingProject` to adopt a project created outside the declared graph.
 
 ### Managed secret provisioning decisions
 
-Runs once per managed secret (`AddSecret`), during the `bitwarden-provision-secrets` pipeline step.
-Paths are tried in order: explicit adoption → persisted mapping → name search.
+Runs once per `AddSecret` secret during `bitwarden-provision-secrets`. Paths tried in order: explicit adoption → persisted mapping → name search.
 
 **Path A — explicit adoption (`WithExistingSecret`)**
 
@@ -393,9 +323,7 @@ Paths are tried in order: explicit adoption → persisted mapping → name searc
 
 ### Unmanaged secret resolution
 
-Runs once per unmanaged secret (`GetSecret`), during the `bitwarden-provision-secrets` pipeline step.
-The value is read from Bitwarden and never written. Paths are tried in order: explicit adoption → name search.
-There is no persisted mapping path and no interactive prompt — duplicate names always cause an error.
+Runs once per `GetSecret` secret during `bitwarden-provision-secrets`. Read-only — no writes, no cache, no interactive prompt. Paths tried in order: explicit adoption → name search.
 
 **Path A — explicit adoption (`WithExistingSecret`)**
 
@@ -415,7 +343,7 @@ There is no persisted mapping path and no interactive prompt — duplicate names
 
 ### Audit trail
 
-Every time a managed secret is created or updated, the provisioner writes or prepends a timestamped entry to its Bitwarden note field:
+Every time a managed secret is created or updated, the provisioner prepends a timestamped entry to the Bitwarden note field:
 
 ```
 [2026-05-29T12:34:56Z] value changed (previous: old-value)
@@ -423,9 +351,7 @@ Every time a managed secret is created or updated, the provisioner writes or pre
 [2026-05-27T08:00:00Z] Created
 ```
 
-Every change kind records its previous value: `key renamed (previous: …)`, `project changed (previous: …)`, `value changed (previous: …)`. When multiple fields change in a single update, all changes are listed in the same entry.
-
-The audit trail grows at the top of the note on each update. It is visible in the Bitwarden web vault and CLI alongside the current secret value.
+Each entry lists all fields that changed and their previous values. The trail is visible in the Bitwarden web vault and CLI alongside the current secret value.
 
 ## Compatibility
 
