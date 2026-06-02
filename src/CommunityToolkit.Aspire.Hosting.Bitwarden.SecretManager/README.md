@@ -105,7 +105,11 @@ upstream sync phase completes for existing secrets.
 Use `GetSecret(...)` to reference an existing remote secret.
 
 ```csharp
+// Aspire resource name and Bitwarden secret name are the same
 IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("shared-api-key");
+
+// Aspire resource name and Bitwarden secret name differ
+IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("api-key", remoteName: "shared-api-key");
 ```
 
 Both `AddSecret` and `GetSecret`
@@ -209,10 +213,12 @@ contract, and deployment materializes that contract.
 
 Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to pass the secret resource to `WithBitwardenSecretValue` or `WithBitwardenSecretId`.
 
-| API               | What it does                                                                       | When to use                                                 |
-| ----------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `AddSecret(name)` | Declares a managed secret — value is written to Bitwarden on every run             | When Aspire owns the secret value                           |
-| `GetSecret(name)` | References an existing remote secret — value is read from Bitwarden, never written | When the secret already exists and you only need to read it |
+| API                           | What it does                                    | When to use                       |
+| ----------------------------- | ----------------------------------------------- | --------------------------------- |
+| `AddSecret(name)`             | AppHost-owned, read-write; names are the same   | Both names are the same           |
+| `AddSecret(name, remoteName)` | AppHost-owned, read-write; names differ         | Aspire and Bitwarden names differ |
+| `GetSecret(name)`             | Externally owned, read-only; names are the same | Both names are the same           |
+| `GetSecret(name, remoteName)` | Externally owned, read-only; names differ       | Aspire and Bitwarden names differ |
 
 ### Secret references (injected into dependent resources)
 

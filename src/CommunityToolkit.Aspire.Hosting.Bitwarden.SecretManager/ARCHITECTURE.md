@@ -4,7 +4,7 @@ Bitwarden Secrets Manager is modeled as a declared AppHost resource graph.
 The graph is the primary contract. Deployment happens through explicit Aspire pipeline steps that materialize the declared graph in Bitwarden.
 
 - `BitwardenSecretManagerResource` declares a Bitwarden project and its configuration.
-- `BitwardenSecretResource` declares either a managed secret (created or updated on every run, `IsManaged = true`) or a reference-only secret (read from an existing Bitwarden secret, `IsManaged = false`). Both modes inherit `ParameterResource` and are returned by `AddSecret` and `GetSecret` respectively as `IResourceBuilder<BitwardenSecretResource>`. Pass `.Resource` to `WithBitwardenSecretValue` or `WithBitwardenSecretId` to inject the secret into a dependent resource.
+- `BitwardenSecretResource` declares either a managed secret (created or updated on every run, `IsManaged = true`) or a reference-only secret (read from an existing Bitwarden secret, `IsManaged = false`). Both modes inherit `ParameterResource` and are returned by `AddSecret` and `GetSecret` respectively as `IResourceBuilder<BitwardenSecretResource>`. Both APIs share the same overload shape: a single-name form where the Aspire resource name and the Bitwarden secret name are identical, and a two-name form (`name`, `remoteName`) where they differ. Pass `.Resource` to `WithBitwardenSecretValue` or `WithBitwardenSecretId` to inject the secret into a dependent resource.
 
 This design intentionally treats custom publish-manifest schema as legacy. The integration does not rely on a bespoke manifest payload as its architectural center.
 
@@ -106,7 +106,7 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 
 `BitwardenSecretResource` inherits `ParameterResource`. Both managed (`IsManaged = true`, from `AddSecret`) and reference-only (`IsManaged = false`, from `GetSecret`) instances use this same type. The `IsManaged` flag drives provisioner dispatch and value-resolution behavior.
 
-**Dashboard visibility.** Both kinds use `ResourceType = "Parameter"` in their initial snapshot so they appear in the Aspire dashboard parameters tab. For managed secrets, the `Source` property shows the configuration key (`Parameters:{resourceName}`) where a value can be pre-supplied. For reference-only secrets, the `Source` shows `Bitwarden: {remoteName}` to signal that the value comes exclusively from Bitwarden.
+**Dashboard visibility.** Both kinds use `ResourceType = "Parameter"` in their initial snapshot so they appear in the Aspire dashboard parameters tab. For managed secrets, the `Source` property shows the configuration key (`Parameters:{resourceName}`) where a value can be pre-supplied. For reference-only secrets, the `Source` shows `Bitwarden: {remoteName}` (the Bitwarden secret name) to signal that the value comes exclusively from Bitwarden.
 
 **`ParameterProcessor` integration.** Aspire's built-in `ParameterProcessor` processes every `ParameterResource` on startup. For **managed secrets**: the value getter throws `MissingParameterValueException` when no config key is set, so the secret is added to `_unresolvedParameters`; Phase 2 sync removes resolved secrets from that list. For **reference-only secrets**: the value getter returns `string.Empty` (never throws), so `ParameterProcessor` resolves the TCS immediately with an empty string and never adds the secret to `_unresolvedParameters`. The real value flows through `IValueProvider.GetValueAsync`, which reads from the Bitwarden resolved-secret cache populated by Phase 2.5.
 

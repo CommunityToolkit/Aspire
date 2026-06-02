@@ -361,21 +361,44 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Gets or creates a Bitwarden secret reference by remote name. The secret must already exist in Bitwarden;
-    /// use <see cref="AddSecret(IResourceBuilder{BitwardenSecretManagerResource}, string)"/> if Aspire should
+    /// Gets or creates a Bitwarden secret reference whose Aspire and remote names are the same.
+    /// The secret must already exist in Bitwarden; use
+    /// <see cref="AddSecret(IResourceBuilder{BitwardenSecretManagerResource}, string)"/> if Aspire should
     /// own and write the secret value.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="remoteName">The Bitwarden secret name.</param>
+    /// <param name="name">The Aspire resource name and Bitwarden secret name.</param>
     /// <returns>A resource builder for the secret reference.</returns>
     [AspireExport]
     public static IResourceBuilder<BitwardenSecretResource> GetSecret(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return GetSecretCore(builder, name, name);
+    }
+
+    /// <summary>
+    /// Gets or creates a Bitwarden secret reference with distinct Aspire and remote names.
+    /// The secret must already exist in Bitwarden; use
+    /// <see cref="AddSecret(IResourceBuilder{BitwardenSecretManagerResource}, string, string)"/> if Aspire should
+    /// own and write the secret value.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="name">The Aspire resource name.</param>
+    /// <param name="remoteName">The Bitwarden secret name.</param>
+    /// <returns>A resource builder for the secret reference.</returns>
+    [AspireExport("getSecretWithRemoteName")]
+    public static IResourceBuilder<BitwardenSecretResource> GetSecret(
+        this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
         string remoteName)
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
-        return GetSecretCore(builder, remoteName);
+        return GetSecretCore(builder, name, remoteName);
     }
 
     /// <summary>
@@ -1002,9 +1025,10 @@ public static class BitwardenSecretManagerExtensions
 
     private static IResourceBuilder<BitwardenSecretResource> GetSecretCore(
         IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string name,
         string remoteName)
     {
-        BitwardenSecretResource secret = builder.Resource.GetOrCreateUnmanagedSecret(remoteName);
+        BitwardenSecretResource secret = builder.Resource.GetOrCreateUnmanagedSecret(name, remoteName);
 
         // If the secret is already in the model (managed or previously registered unmanaged), wrap it.
         IResource? existing = builder.ApplicationBuilder.Resources

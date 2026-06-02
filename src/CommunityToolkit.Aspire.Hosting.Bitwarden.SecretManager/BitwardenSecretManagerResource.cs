@@ -193,18 +193,19 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
 
     internal IEnumerable<BitwardenSecretResource> DeclaredSecretReferences => _secrets;
 
-    internal BitwardenSecretResource GetOrCreateUnmanagedSecret(string remoteName)
+    internal BitwardenSecretResource GetOrCreateUnmanagedSecret(string name, string remoteName)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
 
         BitwardenSecretResource? existing = _secrets.LastOrDefault(
-            s => string.Equals(s.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase));
+            s => string.Equals(s.LocalName, name, StringComparison.OrdinalIgnoreCase));
         if (existing is not null)
         {
             return existing;
         }
 
-        BitwardenSecretResource secret = new($"{Name}-{remoteName}", remoteName, this);
+        BitwardenSecretResource secret = new($"{Name}-{name}", name, remoteName, this);
         RegisterSecret(secret);
         return secret;
     }
