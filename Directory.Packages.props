@@ -14,7 +14,7 @@
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
-    <PackageVersion Include="Aspire.Hosting.Integration.Analyzers" Version="13.4.0-preview.1.26276.10" />
+    <PackageVersion Include="Aspire.Hosting.Integration.Analyzers" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Python" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Rabbitmq" Version="$(AspireVersion)" />

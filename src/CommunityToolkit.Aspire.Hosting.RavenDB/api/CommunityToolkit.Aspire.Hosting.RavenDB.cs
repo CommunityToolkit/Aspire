@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class RavenDBBuilderExtensions
     {
-        [AspireExport("addDatabase", Description = "Adds a RavenDB database resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBDatabaseResource> AddDatabase(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string name, string? databaseName = null, bool ensureCreated = false) { throw null; }
 
         [AspireExportIgnore(Reason = "RavenDBServerSettings includes secured certificate and licensing configuration that is not fully compatible with ATS.")]
@@ -19,19 +19,19 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "Dictionary<string, object> environment variables and manual secured configuration are not supported by ATS for this overload.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder, string name, bool secured, System.Collections.Generic.Dictionary<string, object> environmentVariables, int? port = null) { throw null; }
 
-        [AspireExport("addRavenDB", Description = "Adds a RavenDB server resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
-        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the RavenDB data directory")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
-        [AspireExport("withDataVolume", Description = "Adds a named volume for the RavenDB data directory")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
 
-        [AspireExport("withLogBindMount", Description = "Adds a bind mount for the RavenDB logs directory")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithLogBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
-        [AspireExport("withLogVolume", Description = "Adds a named volume for the RavenDB logs directory")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> WithLogVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.RavenDBServerResource> builder, string? name = null, bool isReadOnly = false) { throw null; }
     }
 }

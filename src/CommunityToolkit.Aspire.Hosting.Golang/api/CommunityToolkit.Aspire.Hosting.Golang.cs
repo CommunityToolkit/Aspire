@@ -8,27 +8,33 @@
 //------------------------------------------------------------------------------
 namespace Aspire.Hosting
 {
+    [System.Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp, WithModTidy, and WithModDownload instead. This type will be removed in a future version.")]
     public static partial class GolangAppHostingExtension
     {
-        [AspireExport("addGolangApp", Description = "Adds a Golang app resource")]
+        [AspireExport]
+        [System.Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp(name, appDirectory, packagePath, buildTags).WithAppArgs(args). The executable argument is now represented by packagePath, and runtime arguments are now supplied with WithAppArgs(...). This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string executable, string[]? args = null, string[]? buildTags = null) { throw null; }
 
         [AspireExportIgnore(Reason = "Use the overload that includes the executable parameter to keep the polyglot addGolangApp surface on a single capability.")]
+        [System.Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp(name, appDirectory, packagePath, buildTags).WithAppArgs(args). Runtime arguments are now supplied with WithAppArgs(...). This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[]? args = null, string[]? buildTags = null) { throw null; }
 
-        [System.Obsolete("Use AddGolangApp with buildTags parameter instead. This method will be removed in a future version.")]
+        [System.Obsolete("Replaced by the Aspire.Hosting.Go package. Use AddGoApp(name, appDirectory, packagePath, buildTags).WithAppArgs(args). Runtime arguments are now supplied with WithAppArgs(...). This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> AddGolangApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[] args) { throw null; }
 
         [AspireExportIgnore(Reason = "Action<IResourceBuilder<GoModInstallerResource>> is not supported in polyglot app hosts. Use the overload without configureInstaller instead.")]
+        [System.Obsolete("Replaced by the Aspire.Hosting.Go package. Use WithModDownload(). This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> WithGoModDownload(this ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> builder, bool install = true, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.GoModInstallerResource>>? configureInstaller = null) { throw null; }
 
         [AspireExportIgnore(Reason = "Action<IResourceBuilder<GoModInstallerResource>> is not supported in polyglot app hosts. Use the overload without configureInstaller instead.")]
+        [System.Obsolete("Replaced by the Aspire.Hosting.Go package. Use WithModTidy(). This method will be removed in a future version.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> WithGoModTidy(this ApplicationModel.IResourceBuilder<ApplicationModel.GolangAppExecutableResource> builder, bool install = true, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.GoModInstallerResource>>? configureInstaller = null) { throw null; }
     }
 }
 
 namespace Aspire.Hosting.ApplicationModel
 {
+    [System.Obsolete("Replaced by GoAppResource in the Aspire.Hosting.Go package. This type will be removed in a future version.")]
     public partial class GolangAppExecutableResource : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource, IContainerFilesDestinationResource
     {
         public GolangAppExecutableResource(string name, string workingDirectory) : base(default!, default!, default!) { }
@@ -36,6 +42,7 @@ namespace Aspire.Hosting.ApplicationModel
         public string ContainerFilesDestination { get { throw null; } }
     }
 
+    [System.Obsolete("Replaced the Aspire.Hosting.Go package. This type will be removed in a future version.")]
     public partial class GoModInstallerResource : ExecutableResource
     {
         public GoModInstallerResource(string name, string workingDirectory) : base(default!, default!, default!) { }

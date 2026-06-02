@@ -10,37 +10,37 @@ namespace Aspire.Hosting
 {
     public static partial class SurrealDbBuilderExtensions
     {
-        [AspireExport("addDatabase", Description = "Adds a SurrealDB database resource to the application model")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbDatabaseResource> AddDatabase(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbNamespaceResource> builder, string name, string? databaseName = null) { throw null; }
 
-        [AspireExport("addNamespace", Description = "Adds a SurrealDB namespace resource to the application model")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbNamespaceResource> AddNamespace(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string name, string? namespaceName = null) { throw null; }
 
-        [AspireExport("addSurrealServer", Description = "Adds a SurrealDB server resource to the application model")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> AddSurrealServer(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? userName = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, int? port = null, string path = "memory", bool strictMode = false) { throw null; }
 
-        [AspireExport("withDatabaseCreationScript", MethodName = "withCreationScript", Description = "Defines the SQL script used to create the database")]
+        [AspireExport("withDatabaseCreationScript", MethodName = "withCreationScript")]
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbDatabaseResource> WithCreationScript(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbDatabaseResource> builder, string script) { throw null; }
 
-        [AspireExport("withNamespaceCreationScript", MethodName = "withCreationScript", Description = "Defines the SQL script used to create the namespace")]
+        [AspireExport("withNamespaceCreationScript", MethodName = "withCreationScript")]
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbNamespaceResource> WithCreationScript(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbNamespaceResource> builder, string script) { throw null; }
 
-        [AspireExport("withDataBindMount", Description = "Adds a bind mount for the data folder to a SurrealDB resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string source) { throw null; }
 
-        [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a SurrealDB resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string? name = null) { throw null; }
 
-        [AspireExport("withInitFiles", Description = "Copies init files into a SurrealDB container resource")]
+        [AspireExport]
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithInitFiles(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string source) { throw null; }
 
         [AspireExportIgnore(Reason = "Uses Microsoft.Extensions.Logging.LogLevel, which is not ATS-compatible. Use the exported string-based overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithLogLevel(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, Microsoft.Extensions.Logging.LogLevel logLevel) { throw null; }
 
-        [AspireExport("withSurrealDbOtlpExporter", MethodName = "withSurrealDbOtlpExporter", Description = "Configures the SurrealDB resource to export telemetry to the Aspire dashboard")]
+        [AspireExport("withSurrealDbOtlpExporter", MethodName = "withSurrealDbOtlpExporter")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> WithOtlpExporter(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder) { throw null; }
 
         [AspireExportIgnore(Reason = "Uses Action<IResourceBuilder<SurrealistContainerResource>>, which is not ATS-compatible. Use the exported overload instead.")]

@@ -10,25 +10,25 @@ namespace Aspire.Hosting
 {
     public static partial class AzureBlobStorageResourceBuilderExtensions
     {
-        [AspireExport("withBlobAzureStorageExplorer", MethodName = "withAzureStorageExplorer", Description = "Adds an Azure Storage Explorer instance to a Blob storage resource.")]
+        [AspireExport("withBlobAzureStorageExplorer", MethodName = "withAzureStorageExplorer", RunSyncOnBackgroundThread = true)]
         public static ApplicationModel.IResourceBuilder<Azure.AzureBlobStorageResource> WithAzureStorageExplorer(this ApplicationModel.IResourceBuilder<Azure.AzureBlobStorageResource> blobs, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.AzureStorageExplorerResource>>? configureContainer = null, string? name = null) { throw null; }
     }
 
     public static partial class AzureQueueStorageResourceBuilderExtensions
     {
-        [AspireExport("withQueueAzureStorageExplorer", MethodName = "withAzureStorageExplorer", Description = "Adds an Azure Storage Explorer instance to a Queue storage resource.")]
+        [AspireExport("withQueueAzureStorageExplorer", MethodName = "withAzureStorageExplorer", RunSyncOnBackgroundThread = true)]
         public static ApplicationModel.IResourceBuilder<Azure.AzureQueueStorageResource> WithAzureStorageExplorer(this ApplicationModel.IResourceBuilder<Azure.AzureQueueStorageResource> queues, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.AzureStorageExplorerResource>>? configureContainer = null, string? name = null) { throw null; }
     }
 
     public static partial class AzureStorageExplorerBuilderExtensions
     {
-        [AspireExport("withHostPort", Description = "Configures the host port that the Azure Storage Explorer resource is exposed on.")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.AzureStorageExplorerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.AzureStorageExplorerResource> builder, int? port) { throw null; }
     }
 
     public static partial class AzureTableStorageResourceBuilderExtensions
     {
-        [AspireExport("withTableAzureStorageExplorer", MethodName = "withAzureStorageExplorer", Description = "Adds an Azure Storage Explorer instance to a Table storage resource.")]
+        [AspireExport("withTableAzureStorageExplorer", MethodName = "withAzureStorageExplorer", RunSyncOnBackgroundThread = true)]
         public static ApplicationModel.IResourceBuilder<Azure.AzureTableStorageResource> WithAzureStorageExplorer(this ApplicationModel.IResourceBuilder<Azure.AzureTableStorageResource> tables, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.AzureStorageExplorerResource>>? configureContainer = null, string? name = null) { throw null; }
     }
 }

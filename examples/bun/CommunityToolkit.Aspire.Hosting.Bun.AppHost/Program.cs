@@ -1,3 +1,5 @@
+#pragma warning disable CS0618
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var api = builder.AddBunApp("api")
@@ -6,3 +8,5 @@ var api = builder.AddBunApp("api")
     .WithHttpHealthCheck("/");
 
 builder.Build().Run();
+
+#pragma warning restore CS0618

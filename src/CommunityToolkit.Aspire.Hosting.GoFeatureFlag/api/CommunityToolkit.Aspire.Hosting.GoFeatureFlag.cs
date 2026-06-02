@@ -10,13 +10,13 @@ namespace Aspire.Hosting
 {
     public static partial class GoFeatureFlagBuilderExtensions
     {
-        [AspireExport("addGoFeatureFlag", Description = "Adds a GO Feature Flag container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> AddGoFeatureFlag(this IDistributedApplicationBuilder builder, string name, string? pathToConfigFile = null, int? port = null) { throw null; }
 
-        [AspireExport("withDataVolume", Description = "Adds a named volume for the data folder to a GO Feature Flag container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, string? name = null) { throw null; }
 
-        [AspireExport("withGoffBindMount", Description = "Adds a bind mount for the GO Feature Flag configuration folder to a GO Feature Flag container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> WithGoffBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.GoFeatureFlagResource> builder, string source) { throw null; }
 
         [AspireExportIgnore(Reason = "LogLevel is defined in Microsoft.Extensions.Logging and is not ATS-compatible. Use the enum-based overload instead.")]
