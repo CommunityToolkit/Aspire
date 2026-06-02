@@ -10,59 +10,68 @@ namespace Aspire.Hosting
 {
     public static partial class K3sBuilderExtensions
     {
-        [AspireExport("addK3sCluster", Description = "Adds a k3s Kubernetes cluster resource")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> AddK3sCluster(this IDistributedApplicationBuilder builder, string name, int? apiServerPort = null, System.Action<CommunityToolkit.Aspire.Hosting.K3sClusterOptions>? configure = null) { throw null; }
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> AddK3sCluster(this IDistributedApplicationBuilder builder, string name, int? apiServerPort = null, int? agentCount = null) { throw null; }
 
-        [AspireExport("withDataVolume", Description = "Adds a named volume for the k3s cluster data directory so state survives AppHost restarts")]
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithAgentCount(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, int count) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string? name = null) { throw null; }
 
-        [AspireExport("withDisabledComponent", Description = "Disables a built-in k3s component")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithDisabledComponent(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string component) { throw null; }
 
-        [AspireExport("withExtraArg", Description = "Appends a raw argument to the k3s server command")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithExtraArg(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string arg) { throw null; }
 
-        [AspireExport("withK3sVersion", Description = "Overrides the k3s server image version")]
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithHelmImage(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string? tag = null, string? image = null, string? registry = null) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithK3sVersion(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string tag) { throw null; }
 
-        [AspireExport("withLifetime", Description = "Sets the container lifetime for the k3s cluster and all its agent nodes")]
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithKubectlImage(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string? tag = null, string? image = null, string? registry = null) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithLifetime(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, ApplicationModel.ContainerLifetime lifetime) { throw null; }
 
-        [AspireExport("withPodSubnet", Description = "Sets the pod subnet CIDR for the k3s cluster")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithPodSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
 
-        [AspireExport("withReference", Description = "Injects kubeconfig credentials into the dependent resource")]
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithServiceSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
+
+        [AspireExportIgnore(Reason = "Marker only. The actual injection (KUBECONFIG env var, container bind-mount) is applied by the BeforeStartEvent subscriber registered in AddK3sCluster, which owns the behavior because the cluster knows what to inject.")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> destination, ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> source)
             where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
-
-        [AspireExport("withServiceSubnet", Description = "Sets the service subnet CIDR for the k3s cluster")]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> WithServiceSubnet(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string cidr) { throw null; }
     }
 
     public static partial class K3sHelmBuilderExtensions
     {
-        [AspireExport("addHelmRelease", Description = "Adds a Helm chart release to the k3s cluster")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> AddHelmRelease(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string chart, string? repo = null, string? version = null, string @namespace = "default") { throw null; }
 
-        [AspireExport("withHelmValue", Description = "Adds a --set key=value argument to the Helm release")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValue(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string key, string value) { throw null; }
 
-        [AspireExport("withHelmValuesFile", Description = "Injects a host-side YAML values file into the Helm installer container")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> WithHelmValuesFile(this ApplicationModel.IResourceBuilder<ApplicationModel.HelmReleaseResource> builder, string path) { throw null; }
     }
 
     public static partial class K3sManifestBuilderExtensions
     {
-        [AspireExport("addK8sManifest", Description = "Applies Kubernetes YAML manifests to the k3s cluster")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K8sManifestResource> AddK8sManifest(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string path) { throw null; }
     }
 
     public static partial class K3sServiceEndpointExtensions
     {
-        [AspireExport("addServiceEndpoint", Description = "Exposes a Kubernetes service as an Aspire endpoint resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.K3sServiceEndpointResource> AddServiceEndpoint(this ApplicationModel.IResourceBuilder<ApplicationModel.K3sClusterResource> builder, string name, string serviceName, int servicePort, string @namespace = "default", string? scheme = null) { throw null; }
 
-        [AspireExport("withReference", Description = "Injects the k3s service URL into a dependent resource")]
+        [AspireExportIgnore(Reason = "Marker only. The actual injection (services__name__url env var, --add-host for containers) is applied by the BeforeStartEvent subscriber registered in AddK3sCluster, which owns the behavior.")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> destination, ApplicationModel.IResourceBuilder<ApplicationModel.K3sServiceEndpointResource> source)
             where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
     }
@@ -90,23 +99,33 @@ namespace Aspire.Hosting.ApplicationModel
     }
 
     [AspireExport(ExposeProperties = true)]
-    public sealed partial class K3sClusterResource : ContainerResource
+    public sealed partial class K3sClusterResource : ContainerResource, IResourceWithConnectionString
     {
         public K3sClusterResource(string name) : base(default!, default) { }
 
         public EndpointReference ApiEndpoint { get { throw null; } }
+
+        public string? ConnectionStringEnvironmentVariable { get { throw null; } }
+
+        public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
         [AspireExportIgnore(Reason = "Internal tracking collection; not needed by guest SDK consumers.")]
         public System.Collections.Generic.IReadOnlyDictionary<string, string> HelmReleases { get { throw null; } }
 
         [AspireExportIgnore(Reason = "Internal tracking collection; not needed by guest SDK consumers.")]
         public System.Collections.Generic.IReadOnlyList<string> Manifests { get { throw null; } }
+
+        public System.Threading.Tasks.ValueTask<string?> GetConnectionStringAsync(System.Threading.CancellationToken cancellationToken = default) { throw null; }
     }
 
     [AspireExport(ExposeProperties = true)]
-    public sealed partial class K3sServiceEndpointResource : Resource, IResourceWithParent<K3sClusterResource>, IResourceWithParent, IResource, IResourceWithWaitSupport
+    public sealed partial class K3sServiceEndpointResource : Resource, IResourceWithParent<K3sClusterResource>, IResourceWithParent, IResource, IResourceWithWaitSupport, IResourceWithConnectionString
     {
         public K3sServiceEndpointResource(string name, string serviceName, int servicePort, string @namespace, K3sClusterResource cluster) : base(default!) { }
+
+        public string? ConnectionStringEnvironmentVariable { get { throw null; } }
+
+        public ReferenceExpression ConnectionStringExpression { get { throw null; } }
 
         public int HostPort { get { throw null; } }
 
@@ -117,6 +136,8 @@ namespace Aspire.Hosting.ApplicationModel
         public string ServiceName { get { throw null; } }
 
         public int ServicePort { get { throw null; } }
+
+        public System.Threading.Tasks.ValueTask<string?> GetConnectionStringAsync(System.Threading.CancellationToken cancellationToken = default) { throw null; }
     }
 
     [AspireExport(ExposeProperties = true)]
