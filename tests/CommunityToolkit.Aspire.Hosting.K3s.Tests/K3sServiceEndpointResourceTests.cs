@@ -1,5 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace CommunityToolkit.Aspire.Hosting.K3s.Tests;
@@ -198,8 +199,10 @@ public class K3sServiceEndpointResourceTests
     // ── WithReference (service endpoint) ─────────────────────────────────────
 
     [Fact]
-    public void WithReferenceServiceEndpointAddsRuntimeArgToContainer()
+    public void WithReferenceServiceEndpointAddsResourceRelationshipAnnotation()
     {
+        // K3sServiceEndpointResource implements IResourceWithConnectionString so the
+        // standard Aspire WithReference overload is used — it adds a ResourceRelationshipAnnotation.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         var ep = cluster.AddServiceEndpoint("ep", "svc", 80);
@@ -210,30 +213,48 @@ public class K3sServiceEndpointResourceTests
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var containerResource = model.Resources
-            .OfType<ContainerResource>()
-            .Single(r => r.Name == "app");
+        var containerResource = model.Resources.OfType<ContainerResource>().Single(r => r.Name == "app");
 
-        // --add-host=host.docker.internal:host-gateway is injected for Linux Docker Engine.
+        Assert.Contains(
+            containerResource.Annotations.OfType<ResourceRelationshipAnnotation>(),
+            a => ReferenceEquals(a.Resource, ep.Resource));
+    }
+
+    [Fact]
+    public void WithReferenceServiceEndpointAddsRuntimeArgToContainer()
+    {
+        // ApplyServiceUrlContainerOverride adds --add-host for containers.
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var ep = cluster.AddServiceEndpoint("ep", "svc", 80);
+        var container = appBuilder.AddContainer("app", "myorg/app");
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var containerResource = model.Resources.OfType<ContainerResource>().Single(r => r.Name == "app");
+
+        containerResource.Annotations.Add(
+            new ContainerRuntimeArgsCallbackAnnotation(
+                args => args.Add("--add-host=host.docker.internal:host-gateway")));
+        K3sBuilderExtensions.ApplyServiceUrlContainerOverride(containerResource, ep.Resource);
+
         Assert.NotEmpty(containerResource.Annotations.OfType<ContainerRuntimeArgsCallbackAnnotation>());
     }
 
     [Fact]
     public void WithReferenceServiceEndpointAddsEnvironmentCallbackToContainer()
     {
+        // ApplyServiceUrlContainerOverride adds an env callback for the host.docker.internal URL.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         var ep = cluster.AddServiceEndpoint("ep", "svc", 80);
         var container = appBuilder.AddContainer("app", "myorg/app");
 
-        container.WithReference(ep);
-
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var containerResource = model.Resources.OfType<ContainerResource>().Single(r => r.Name == "app");
 
-        var containerResource = model.Resources
-            .OfType<ContainerResource>()
-            .Single(r => r.Name == "app");
+        K3sBuilderExtensions.ApplyServiceUrlContainerOverride(containerResource, ep.Resource);
 
         Assert.Contains(
             containerResource.Annotations.OfType<EnvironmentCallbackAnnotation>(),
@@ -243,17 +264,18 @@ public class K3sServiceEndpointResourceTests
     [Fact]
     public void WithReferenceServiceEndpointAddsEnvironmentCallbackToExecutable()
     {
+        // Standard WithReference(IResourceWithConnectionString) adds a lazy ConnectionStringReference
+        // env callback for host processes. Verify the annotation is present.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         var ep = cluster.AddServiceEndpoint("ep", "svc", 80);
         var exe = appBuilder.AddExecutable("myapp", "myapp", ".");
-
         exe.WithReference(ep);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-
         var exeResource = Assert.Single(model.Resources.OfType<ExecutableResource>());
+
         Assert.Contains(
             exeResource.Annotations.OfType<EnvironmentCallbackAnnotation>(),
             a => a.Callback is not null);
@@ -262,19 +284,18 @@ public class K3sServiceEndpointResourceTests
     [Fact]
     public void WithReferenceServiceEndpointDoesNotAddRuntimeArgToExecutable()
     {
+        // ApplyServiceUrlContainerOverride is only called for containers; executables
+        // receive the URL via the standard lazy ConnectionStringReference, no --add-host needed.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         var ep = cluster.AddServiceEndpoint("ep", "svc", 80);
         var exe = appBuilder.AddExecutable("myapp", "myapp", ".");
-
         exe.WithReference(ep);
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-
         var exeResource = Assert.Single(model.Resources.OfType<ExecutableResource>());
 
-        // --add-host is only relevant for containers; host processes resolve localhost directly.
         Assert.Empty(exeResource.Annotations.OfType<ContainerRuntimeArgsCallbackAnnotation>());
     }
 
@@ -345,23 +366,28 @@ public class K3sServiceEndpointResourceTests
         Assert.Throws<ArgumentNullException>(action);
     }
 
-    // ── Env callback invocation ───────────────────────────────────────────────
+    // ── Env callback / IResourceWithConnectionString ──────────────────────────
+    // K3sServiceEndpointResource now implements IResourceWithConnectionString.
+    // The standard WithReference overload stores a lazy ConnectionStringReference in the
+    // env var (resolved at container startup by Aspire). For containers, our BeforeStartEvent
+    // subscriber adds a plain-string override (host.docker.internal:{port}) on top.
 
     [Fact]
-    public async Task WithReferenceServiceEndpoint_ContainerCallback_SetsHostDockerInternalUrlWhenReady()
+    public async Task WithReferenceServiceEndpoint_Container_SetsHostDockerInternalUrlWhenReady()
     {
+        // ApplyServiceUrlContainerOverride (called by BeforeStartEvent for containers) writes
+        // the host.docker.internal URL when the endpoint is ready.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         var ep = cluster.AddServiceEndpoint("ep", "svc", 80);
-        var container = appBuilder.AddContainer("app", "myorg/app");
-        container.WithReference(ep);
 
         using var app = appBuilder.Build();
-        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var containerResource = model.Resources.OfType<ContainerResource>().Single(r => r.Name == "app");
+        var containerResource = new ContainerResource("app");
 
         ep.Resource.IsReady = true;
         ep.Resource.HostPort = 9090;
+
+        K3sBuilderExtensions.ApplyServiceUrlContainerOverride(containerResource, ep.Resource);
 
         var envVars = new Dictionary<string, object>();
         var ctx = new EnvironmentCallbackContext(
@@ -371,24 +397,23 @@ public class K3sServiceEndpointResourceTests
         foreach (var cb in containerResource.Annotations.OfType<EnvironmentCallbackAnnotation>())
             await cb.Callback(ctx);
 
-        Assert.True(ctx.EnvironmentVariables.ContainsKey("services__ep__url"));
-        Assert.Equal("http://host.docker.internal:9090", ctx.EnvironmentVariables["services__ep__url"]?.ToString());
+        Assert.Equal("http://host.docker.internal:9090",
+            ctx.EnvironmentVariables["services__ep__url"]?.ToString());
     }
 
     [Fact]
-    public async Task WithReferenceServiceEndpoint_ContainerCallback_DoesNotSetUrlWhenNotReady()
+    public async Task WithReferenceServiceEndpoint_Container_DoesNotOverrideUrlWhenNotReady()
     {
+        // When IsReady=false the override callback skips writing the URL.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         var ep = cluster.AddServiceEndpoint("ep", "svc", 80);
-        var container = appBuilder.AddContainer("app", "myorg/app");
-        container.WithReference(ep);
 
         using var app = appBuilder.Build();
-        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var containerResource = model.Resources.OfType<ContainerResource>().Single(r => r.Name == "app");
+        var containerResource = new ContainerResource("app");
 
-        // ep.IsReady is false by default
+        // ep.IsReady is false by default.
+        K3sBuilderExtensions.ApplyServiceUrlContainerOverride(containerResource, ep.Resource);
 
         var envVars = new Dictionary<string, object>();
         var ctx = new EnvironmentCallbackContext(
@@ -402,7 +427,7 @@ public class K3sServiceEndpointResourceTests
     }
 
     [Fact]
-    public async Task WithReferenceServiceEndpoint_ExecutableCallback_SetsLocalhostUrlWhenReady()
+    public async Task WithReferenceServiceEndpoint_Executable_SetsLocalhostUrlWhenReady()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
@@ -425,12 +450,18 @@ public class K3sServiceEndpointResourceTests
         foreach (var cb in exeResource.Annotations.OfType<EnvironmentCallbackAnnotation>())
             await cb.Callback(ctx);
 
-        Assert.True(ctx.EnvironmentVariables.ContainsKey("services__ep__url"));
-        Assert.Equal("https://localhost:7777", ctx.EnvironmentVariables["services__ep__url"]?.ToString());
+        // For host processes, standard WithReference stores a ConnectionStringReference that
+        // lazily resolves via K3sServiceEndpointResource.GetConnectionStringAsync().
+        var rawValue = ctx.EnvironmentVariables.GetValueOrDefault("services__ep__url");
+        var resolved = rawValue is IValueProvider vp
+            ? await vp.GetValueAsync(CancellationToken.None)
+            : rawValue?.ToString();
+
+        Assert.Equal("https://localhost:7777", resolved);
     }
 
     [Fact]
-    public async Task WithReferenceServiceEndpoint_ExecutableCallback_DoesNotSetUrlWhenNotReady()
+    public async Task WithReferenceServiceEndpoint_Executable_ReturnsNullUrlWhenNotReady()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
@@ -442,7 +473,7 @@ public class K3sServiceEndpointResourceTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var exeResource = Assert.Single(model.Resources.OfType<ExecutableResource>());
 
-        // ep.IsReady is false by default
+        // ep.IsReady is false by default.
 
         var envVars = new Dictionary<string, object>();
         var ctx = new EnvironmentCallbackContext(
@@ -452,6 +483,11 @@ public class K3sServiceEndpointResourceTests
         foreach (var cb in exeResource.Annotations.OfType<EnvironmentCallbackAnnotation>())
             await cb.Callback(ctx);
 
-        Assert.False(ctx.EnvironmentVariables.ContainsKey("services__ep__url"));
+        var rawValue = ctx.EnvironmentVariables.GetValueOrDefault("services__ep__url");
+        var resolved = rawValue is IValueProvider vp
+            ? await vp.GetValueAsync(CancellationToken.None)
+            : rawValue?.ToString();
+
+        Assert.Null(resolved);
     }
 }

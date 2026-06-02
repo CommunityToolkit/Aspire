@@ -3,17 +3,17 @@
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// Represents one or more Kubernetes YAML manifests applied to the parent k3s cluster via
-/// <c>kubectl apply --server-side</c> running inside a <c>alpine/kubectl</c> container.
-/// <para>
-/// The container polls for the cluster kubeconfig (written when the cluster health check
-/// first passes), applies the manifests, waits for any CRDs to reach <c>Established</c>,
-/// then exits with code 0. Use <c>WaitForCompletion(manifest)</c> on dependent resources.
-/// </para>
+/// Represents a Kubernetes manifest (or Kustomize overlay) applied to the parent k3s cluster.
 /// </summary>
 /// <param name="name">The Aspire resource name.</param>
-/// <param name="path">Absolute path to a single YAML file or a directory.</param>
+/// <param name="path">Absolute path to the YAML file, plain directory, or Kustomize directory.</param>
 /// <param name="cluster">The parent k3s cluster resource.</param>
+/// <remarks>
+/// The resource runs as an <c>alpine/kubectl</c> container. It polls until the cluster
+/// kubeconfig is available, then applies the manifests with <c>kubectl apply --server-side</c>
+/// and waits for any CRDs to reach the <c>Established</c> condition before exiting with code 0.
+/// Use <c>WaitForCompletion(manifest)</c> on resources that depend on these manifests being applied.
+/// </remarks>
 [AspireExport(ExposeProperties = true)]
 public sealed class K8sManifestResource(string name, string path, K3sClusterResource cluster)
     : ContainerResource(name), IResourceWithParent<K3sClusterResource>
@@ -21,6 +21,9 @@ public sealed class K8sManifestResource(string name, string path, K3sClusterReso
     /// <inheritdoc />
     public K3sClusterResource Parent { get; } = cluster ?? throw new ArgumentNullException(nameof(cluster));
 
-    /// <summary>Gets the manifest path or directory on the host.</summary>
+    /// <summary>
+    /// Gets the absolute host path to the YAML file, plain directory, or Kustomize directory
+    /// that contains the manifests to apply.
+    /// </summary>
     public string Path { get; } = path ?? throw new ArgumentNullException(nameof(path));
 }

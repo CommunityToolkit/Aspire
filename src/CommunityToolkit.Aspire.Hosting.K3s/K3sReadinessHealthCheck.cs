@@ -35,10 +35,42 @@ internal sealed class K3sReadinessHealthCheck(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
-        if (!endpoint.IsAllocated)
-            return HealthCheckResult.Unhealthy("k3s API server endpoint not yet allocated");
+        int port;
 
-        return await CheckCoreAsync(endpoint.Port, cancellationToken).ConfigureAwait(false);
+        if (endpoint.IsAllocated)
+        {
+            // Use the async reference-expression path — the same mechanism PostgreSQL uses
+            // for its connection string port. This resolves through DCP's actual allocation
+            // rather than the synchronous AllocatedEndpoint.Port shortcut, which for proxied
+            // HTTPS endpoints in Aspire 13.4.0+ may return the proxy port (= target port 6443)
+            // rather than the Docker host port that is actually reachable from the AppHost.
+            // Only call GetValueAsync when IsAllocated is true — in test/non-DCP contexts the
+            // call would block indefinitely waiting for an allocation that never arrives.
+            var portExpression = endpoint.Property(EndpointProperty.Port);
+            var portStr = await ((IValueProvider)portExpression)
+                .GetValueAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!int.TryParse(portStr, out port) || port <= 0)
+                port = endpoint.Port; // synchronous fallback within same allocation context
+        }
+        else
+        {
+            // EndpointReference.IsAllocated is false — either the endpoint has not yet been
+            // allocated, or DCP reconnected to a persistent container without firing the normal
+            // allocation event. Fall back to EndpointAnnotation.Port, which DCP updates even
+            // in the reconnect path.
+            var annotation = resource.Annotations
+                .OfType<EndpointAnnotation>()
+                .FirstOrDefault(a => a.Name == K3sClusterResource.ApiServerEndpointName);
+
+            if (annotation?.Port is not > 0)
+                return HealthCheckResult.Unhealthy("k3s API server endpoint not yet allocated");
+
+            port = annotation.Port!.Value;
+        }
+
+        return await CheckCoreAsync(port, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

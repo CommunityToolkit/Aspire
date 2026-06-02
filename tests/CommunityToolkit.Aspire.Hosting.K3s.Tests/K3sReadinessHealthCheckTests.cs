@@ -19,13 +19,41 @@ public class K3sReadinessHealthCheckTests
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
-        // In unit-test context there is no DCP, so endpoint.IsAllocated is always false.
+        // In unit-test context there is no DCP, so the port expression resolves to null/empty
+        // and EndpointAnnotation.Port is also unset — both paths return Unhealthy.
         var healthCheck = new K3sReadinessHealthCheck(cluster.Resource, cluster.Resource.ApiEndpoint);
 
         var result = await healthCheck.CheckHealthAsync(null!);
 
         Assert.Equal(HealthStatus.Unhealthy, result.Status);
         Assert.Contains("not yet allocated", result.Description);
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WhenEndpointAnnotationHasPort_UsesAnnotationPortAsFallback()
+    {
+        // Simulates a persistent container reconnect: endpoint.IsAllocated is false but
+        // DCP has already set EndpointAnnotation.Port on the resource.
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
+        // Manually set the allocated port on the EndpointAnnotation (DCP does this
+        // even when reconnecting to a persistent container).
+        var annotation = cluster.Resource.Annotations
+            .OfType<EndpointAnnotation>()
+            .First(a => a.Name == K3sClusterResource.ApiServerEndpointName);
+        annotation.Port = 32773;
+
+        var (hc, dir, _) = MakeCheck(writeKubeconfig: false, nodeCount: 0, agentCount: 0);
+        // Re-create the health check using the cluster that has the annotation set.
+        var healthCheck = new K3sReadinessHealthCheck(cluster.Resource, cluster.Resource.ApiEndpoint);
+
+        var result = await healthCheck.CheckHealthAsync(null!);
+
+        // With no kubeconfig file it returns "Waiting for k3s to write kubeconfig"
+        // — proving it got past the IsAllocated check and reached CheckCoreAsync.
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
+        Assert.DoesNotContain("not yet allocated", result.Description);
     }
 
     // ── CheckCoreAsync — file-system and Kubernetes paths ────────────────────

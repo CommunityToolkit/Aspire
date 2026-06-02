@@ -18,17 +18,56 @@ namespace Aspire.Hosting;
 public static class K3sServiceEndpointExtensions
 {
     /// <summary>
-    /// Exposes a Kubernetes service as a first-class Aspire endpoint resource.
-    /// <para>
-    /// An in-process KubernetesClient WebSocket port-forward is started when the cluster is ready,
-    /// binding to <c>0.0.0.0:{hostPort}</c>. The endpoint only becomes healthy after the
-    /// Kubernetes service has a ready pod — use <c>WaitForCompletion</c> on a
-    /// <see cref="HelmReleaseResource"/> or <see cref="K8sManifestResource"/> to sequence the
-    /// install before starting the port-forward.
-    /// </para>
+    /// Exposes a Kubernetes Service from the cluster as an Aspire endpoint resource.
     /// </summary>
-    [AspireExport("addServiceEndpoint",
-        Description = "Exposes a Kubernetes service as an Aspire endpoint resource")]
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="name">The Aspire resource name for this endpoint.</param>
+    /// <param name="serviceName">
+    /// The name of the Kubernetes Service to forward, as it appears in <c>kubectl get svc</c>.
+    /// </param>
+    /// <param name="servicePort">
+    /// The port number declared on the Kubernetes Service (the <c>port</c> field, not
+    /// <c>targetPort</c>). Must be in the range 1–65535.
+    /// </param>
+    /// <param name="namespace">
+    /// The Kubernetes namespace that contains the Service. Defaults to <c>default</c>.
+    /// </param>
+    /// <param name="scheme">
+    /// The URL scheme (<c>http</c> or <c>https</c>) for the injected environment variable.
+    /// When <see langword="null"/> (the default), the scheme is inferred from the port:
+    /// ports 443 and 8443 use <c>https</c>, all others use <c>http</c>.
+    /// </param>
+    /// <returns>A builder for the <see cref="K3sServiceEndpointResource"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// An in-process WebSocket port-forward is started when the cluster becomes ready,
+    /// binding to <c>0.0.0.0:{allocatedHostPort}</c> so both host processes and DCP-network
+    /// containers can reach the service.
+    /// </para>
+    /// <para>
+    /// The endpoint transitions to <c>Running</c> only after the target Kubernetes Service
+    /// has at least one ready pod. Sequence chart installs or manifest applies before this
+    /// resource using <c>WaitForCompletion</c> on <see cref="HelmReleaseResource"/> or
+    /// <see cref="K8sManifestResource"/> to prevent the port-forward from polling indefinitely.
+    /// </para>
+    /// <para>
+    /// Use <c>WithReference(endpoint)</c> on a dependent resource builder to inject the
+    /// service URL as <c>services__{name}__url</c>. Host processes receive
+    /// <c>http(s)://localhost:{port}</c>; containers receive
+    /// <c>http(s)://host.docker.internal:{port}</c>.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/>, <paramref name="name"/>, or <paramref name="serviceName"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="serviceName"/> or <paramref name="namespace"/> is empty or whitespace.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="servicePort"/> is not in the range 1–65535.
+    /// </exception>
+    [AspireExport]
     public static IResourceBuilder<K3sServiceEndpointResource> AddServiceEndpoint(
         this IResourceBuilder<K3sClusterResource> builder,
         [ResourceName] string name,
@@ -94,53 +133,12 @@ public static class K3sServiceEndpointExtensions
             });
     }
 
-    /// <summary>
-    /// Injects the service URL exposed by <paramref name="source"/> into
-    /// <paramref name="destination"/> using the Aspire <c>services__{name}__url</c> convention.
-    /// <list type="bullet">
-    ///   <item>Host processes receive <c>http(s)://localhost:{port}</c>.</item>
-    ///   <item>Container resources receive <c>http(s)://host.docker.internal:{port}</c>.
-    ///     The <c>--add-host=host.docker.internal:host-gateway</c> runtime arg is injected
-    ///     automatically so the hostname resolves on Linux Docker Engine.</item>
-    /// </list>
-    /// </summary>
-    [AspireExport("withReference",
-        Description = "Injects the k3s service URL into a dependent resource")]
-    public static IResourceBuilder<TDestination> WithReference<TDestination>(
-        this IResourceBuilder<TDestination> destination,
-        IResourceBuilder<K3sServiceEndpointResource> source)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(destination);
-        ArgumentNullException.ThrowIfNull(source);
-
-        var ep = source.Resource;
-        var scheme = ep.Scheme;
-        var envKey = $"services__{ep.Name}__url";
-
-        if (destination.Resource is ContainerResource)
-        {
-            // Inject --add-host so host.docker.internal resolves inside Linux containers.
-            // DCP does not inject this automatically; Docker Desktop on Mac/Windows resolves
-            // it natively, but Docker Engine on Linux requires the explicit mapping.
-            // ContainerRuntimeArgsCallbackAnnotation receives IList<object> directly.
-            destination.Resource.Annotations.Add(
-                new ContainerRuntimeArgsCallbackAnnotation(
-                    args => args.Add("--add-host=host.docker.internal:host-gateway")));
-
-            return destination.WithEnvironment(ctx =>
-            {
-                if (ep.IsReady)
-                    ctx.EnvironmentVariables[envKey] = $"{scheme}://host.docker.internal:{ep.HostPort}";
-            });
-        }
-
-        return destination.WithEnvironment(ctx =>
-        {
-            if (ep.IsReady)
-                ctx.EnvironmentVariables[envKey] = $"{scheme}://localhost:{ep.HostPort}";
-        });
-    }
+    // WithReference(K3sServiceEndpointResource) is no longer a custom extension.
+    // K3sServiceEndpointResource implements IResourceWithConnectionString, so the standard
+    // Aspire WithReference(IResourceBuilder<IResourceWithConnectionString>) overload injects
+    // services__{name}__url=http://localhost:{port} for host processes automatically.
+    // The BeforeStartEvent subscriber in AddK3sCluster overrides the URL to
+    // http://host.docker.internal:{port} for containers and adds --add-host.
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 

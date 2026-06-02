@@ -12,25 +12,40 @@ namespace Aspire.Hosting;
 public static class K3sManifestBuilderExtensions
 {
     /// <summary>
-    /// Applies one or more Kubernetes YAML files — or a Kustomize overlay — to the cluster
-    /// via a <c>alpine/kubectl</c> container. No host-side <c>kubectl</c> binary is required.
+    /// Applies Kubernetes YAML manifests or a Kustomize overlay to the cluster.
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="name">The Aspire resource name for this manifest application.</param>
+    /// <param name="path">
+    /// Path to a single <c>.yaml</c>/<c>.yml</c> file, a directory of YAML files, or a
+    /// Kustomize overlay directory (containing <c>kustomization.yaml</c>). Relative paths
+    /// are resolved against the AppHost project directory.
+    /// </param>
+    /// <returns>A builder for the <see cref="K8sManifestResource"/>.</returns>
+    /// <remarks>
     /// <para>
-    /// The container exits with code 0 after manifests are applied and any CRDs reach the
-    /// <c>Established</c> condition. Use <c>WaitForCompletion(manifest)</c> on dependent resources.
-    /// </para>
-    /// <para>
-    /// Three modes, selected automatically based on <paramref name="path"/>:
+    /// The apply mode is detected automatically from <paramref name="path"/>:
     /// <list type="bullet">
-    ///   <item><b>Single file</b> — injected via <c>WithContainerFiles</c>, applied with <c>kubectl apply -f</c>.</item>
-    ///   <item><b>Directory without <c>kustomization.yaml</c></b> — all <c>.yaml</c>/<c>.yml</c> files
-    ///     injected via <c>WithContainerFiles</c>, applied with <c>kubectl apply -f</c>.</item>
+    ///   <item><b>Single file</b> — applied with <c>kubectl apply -f</c>.</item>
+    ///   <item><b>Directory</b> (no <c>kustomization.yaml</c>) — all <c>.yaml</c>/<c>.yml</c>
+    ///     files in the directory are applied with <c>kubectl apply -f</c>.</item>
     ///   <item><b>Kustomize overlay</b> (directory contains <c>kustomization.yaml</c> or
-    ///     <c>kustomization.yml</c>) — directory bind-mounted (preserving relative base references),
-    ///     applied with <c>kubectl apply -k</c>.</item>
+    ///     <c>kustomization.yml</c>) — applied with <c>kubectl apply -k</c>. The directory
+    ///     is bind-mounted so that relative references to base manifests are preserved.</item>
     /// </list>
     /// </para>
-    /// </summary>
-    [AspireExport("addK8sManifest", Description = "Applies Kubernetes YAML manifests to the k3s cluster")]
+    /// <para>
+    /// The container exits with code 0 after all manifests are applied and any CRDs have
+    /// reached the <c>Established</c> condition. No host-side <c>kubectl</c> binary is required.
+    /// Use <c>WaitForCompletion(manifest)</c> on resources that must start only after the
+    /// manifests are applied.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/>, <paramref name="name"/>, or <paramref name="path"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    [AspireExport]
     public static IResourceBuilder<K8sManifestResource> AddK8sManifest(
         this IResourceBuilder<K3sClusterResource> builder,
         [ResourceName] string name,
@@ -53,9 +68,9 @@ public static class K3sManifestBuilderExtensions
         var manifest = new K8sManifestResource(name, absolutePath, cluster);
         cluster.AddManifest(manifest.Name);
 
-        var containerKubeconfigDir = Path.Combine(cluster.KubeconfigDirectory!, "container");
-        Directory.CreateDirectory(containerKubeconfigDir);
-        var containerKubeconfigFile = Path.Combine(containerKubeconfigDir, "kubeconfig.yaml");
+        var containerKubeconfigFile = Path.Combine(cluster.KubeconfigDirectory!, "container", "kubeconfig.yaml");
+        // Placeholder ensures Docker creates a file-level bind-mount, not a directory.
+        K3sBuilderExtensions.EnsureKubeconfigPlaceholder(containerKubeconfigFile);
 
         var (kubectlRegistry, kubectlImage, kubectlTag) = cluster.KubectlImageInfo;
 

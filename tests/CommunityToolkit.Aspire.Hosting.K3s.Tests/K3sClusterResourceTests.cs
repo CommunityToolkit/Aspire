@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Eventing;
 using CommunityToolkit.Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.K3s.Tests;
@@ -182,13 +183,14 @@ public class K3sClusterResourceTests
     }
 
     [Fact]
-    public void WithReferenceSetsKubeconfigEnvForProject()
+    public void WithReferenceAddsResourceRelationshipAnnotationForProject()
     {
+        // K3sClusterResource implements IResourceWithConnectionString so the standard
+        // Aspire WithReference overload is used — it adds a ResourceRelationshipAnnotation.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
-
-        // ProjectResource would need a project file; use ExecutableResource as a proxy.
         var exe = appBuilder.AddExecutable("myapp", "myapp", ".");
+
         exe.WithReference(cluster);
 
         using var app = appBuilder.Build();
@@ -196,7 +198,26 @@ public class K3sClusterResourceTests
 
         var exeResource = Assert.Single(model.Resources.OfType<ExecutableResource>());
 
-        // Executables receive KUBECONFIG pointing to local/kubeconfig.yaml on the host.
+        // Standard WithReference adds a ResourceRelationshipAnnotation pointing to the cluster.
+        Assert.Contains(
+            exeResource.Annotations.OfType<ResourceRelationshipAnnotation>(),
+            a => ReferenceEquals(a.Resource, cluster.Resource));
+    }
+
+    [Fact]
+    public void WithReferenceSetsKubeconfigEnvForProject()
+    {
+        // Standard WithReference(K3sClusterResource) uses IResourceWithConnectionString to inject
+        // KUBECONFIG for host processes. Verify the env callback annotation is present.
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+        var exe = appBuilder.AddExecutable("myapp", "myapp", ".");
+        exe.WithReference(cluster);
+
+        using var app = appBuilder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var exeResource = Assert.Single(model.Resources.OfType<ExecutableResource>());
+
         Assert.Contains(
             exeResource.Annotations.OfType<EnvironmentCallbackAnnotation>(),
             a => a.Callback is not null);
@@ -205,22 +226,19 @@ public class K3sClusterResourceTests
     [Fact]
     public void WithReferenceMountsKubeconfigFileForContainer()
     {
+        // ApplyKubeconfigContainerOverride is what BeforeStartEvent calls for containers that
+        // have a ResourceRelationshipAnnotation pointing to the cluster.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
-        var container = appBuilder.AddContainer("operator", "myorg/operator");
-        container.WithReference(cluster);
+        appBuilder.AddContainer("operator", "myorg/operator");
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var clusterResource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var containerResource = model.Resources.OfType<ContainerResource>().Single(r => r.Name == "operator");
 
-        var containerResource = model.Resources
-            .OfType<ContainerResource>()
-            .Single(r => r.Name == "operator");
+        K3sBuilderExtensions.ApplyKubeconfigContainerOverride(containerResource, clusterResource);
 
-        // Containers receive a file-level bind-mount of container/kubeconfig.yaml at
-        // /tmp/k3s-kubeconfig.yaml (not the directory). Mounting only the file prevents
-        // kubectl's cache directories (cache/, http-cache/) from appearing on the host
-        // and avoids concurrent-container cache corruption.
         var mount = containerResource.Annotations
             .OfType<ContainerMountAnnotation>()
             .FirstOrDefault(m => m.Target == "/tmp/k3s-kubeconfig.yaml");
@@ -228,7 +246,6 @@ public class K3sClusterResourceTests
         Assert.NotNull(mount);
         Assert.Equal(ContainerMountType.BindMount, mount.Type);
         Assert.True(mount.IsReadOnly);
-        // Source is the specific file, not the directory.
         Assert.EndsWith(Path.Combine(".k3s", "k8s", "container", "kubeconfig.yaml"), mount.Source);
     }
 
@@ -359,22 +376,21 @@ public class K3sClusterResourceTests
     [Fact]
     public void WithReferenceContainerCalledTwiceProducesOnlyOneBindMount()
     {
+        // ApplyKubeconfigContainerOverride is idempotent — the second call skips the
+        // mount because the target path is already mounted.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
         var container = appBuilder.AddContainer("app", "myorg/app");
 
-        container.WithReference(cluster);
-        container.WithReference(cluster);
-
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var clusterResource = Assert.Single(model.Resources.OfType<K3sClusterResource>());
+        var containerResource = model.Resources.OfType<ContainerResource>().Single(r => r.Name == "app");
 
-        var containerResource = model.Resources
-            .OfType<ContainerResource>()
-            .Single(r => r.Name == "app");
+        // Simulate two WithReference calls via two direct invocations of the override.
+        K3sBuilderExtensions.ApplyKubeconfigContainerOverride(containerResource, clusterResource);
+        K3sBuilderExtensions.ApplyKubeconfigContainerOverride(containerResource, clusterResource);
 
-        // File-level bind-mount at /tmp/k3s-kubeconfig.yaml must not be duplicated —
-        // Docker rejects containers with duplicate mount targets.
         var kubeconfigMounts = containerResource.Annotations
             .OfType<ContainerMountAnnotation>()
             .Where(m => m.Target == "/tmp/k3s-kubeconfig.yaml")
@@ -388,6 +404,8 @@ public class K3sClusterResourceTests
     [Fact]
     public void WithK3sVersionSyncsAllAgentImageTags()
     {
+        // Image tag must propagate immediately — DCP uses ContainerImageAnnotation to
+        // compute container identity before BeforeStartEvent fires.
         var appBuilder = DistributedApplication.CreateBuilder();
 
         appBuilder
@@ -396,7 +414,6 @@ public class K3sClusterResourceTests
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-
         var agents = model.Resources.OfType<K3sAgentResource>().ToList();
         Assert.Equal(2, agents.Count);
 
@@ -429,6 +446,8 @@ public class K3sClusterResourceTests
     [Fact]
     public void WithLifetimePersistentSetsClusterLifetimeAnnotation()
     {
+        // Standard Aspire WithLifetime<ContainerResource> sets the annotation immediately
+        // on the cluster. Agent propagation happens in BeforeStartEvent.
         var appBuilder = DistributedApplication.CreateBuilder();
 
         appBuilder.AddK3sCluster("k8s").WithLifetime(ContainerLifetime.Persistent);

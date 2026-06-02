@@ -4,10 +4,19 @@ namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a k3s Kubernetes cluster running as a privileged container resource.
+/// Injects the cluster's kubeconfig into a dependent resource.
+/// <list type="bullet">
+///   <item>Host processes receive <c>KUBECONFIG=&lt;host-path&gt;/local/kubeconfig.yaml</c>.</item>
+///   <item>Containers receive <c>KUBECONFIG=/tmp/k3s-kubeconfig.yaml</c> and a file-level
+///     bind-mount of the container-network kubeconfig variant. Both are applied by the
+///     <c>BeforeStartEvent</c> subscriber registered in <c>AddK3sCluster</c>.
+///   </item>
+/// </list>
 /// </summary>
 /// <param name="name">The resource name.</param>
 [AspireExport(ExposeProperties = true)]
-public sealed class K3sClusterResource(string name) : ContainerResource(name)
+public sealed class K3sClusterResource(string name)
+    : ContainerResource(name), IResourceWithConnectionString
 {
     internal const string ApiServerEndpointName = "api";
 
@@ -30,6 +39,27 @@ public sealed class K3sClusterResource(string name) : ContainerResource(name)
     /// </list>
     /// </summary>
     internal string? KubeconfigDirectory { get; set; }
+
+    // ── IResourceWithConnectionString ─────────────────────────────────────────
+    // Exposes the kubeconfig path as the connection string so the standard
+    // WithReference(cluster) overload injects KUBECONFIG for host processes.
+    // Containers get a bind-mount + container-network path via BeforeStartEvent.
+
+    /// <summary>Overrides the default <c>ConnectionStrings__</c> prefix so Aspire injects <c>KUBECONFIG</c>.</summary>
+    public string? ConnectionStringEnvironmentVariable => "KUBECONFIG";
+
+    /// <summary>Manifest expression for the local kubeconfig path.</summary>
+    public ReferenceExpression ConnectionStringExpression =>
+        KubeconfigDirectory is null
+            ? ReferenceExpression.Create($"")
+            : ReferenceExpression.Create($"{KubeconfigDirectory}/local/kubeconfig.yaml");
+
+    /// <summary>Returns the host-accessible kubeconfig path for this cluster.</summary>
+    public ValueTask<string?> GetConnectionStringAsync(CancellationToken cancellationToken = default) =>
+        ValueTask.FromResult(
+            KubeconfigDirectory is null
+                ? null
+                : Path.Combine(KubeconfigDirectory, "local", "kubeconfig.yaml"));
 
     private EndpointReference? _apiEndpoint;
 

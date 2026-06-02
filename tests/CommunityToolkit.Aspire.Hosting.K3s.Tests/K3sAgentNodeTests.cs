@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.Eventing;
 
 namespace CommunityToolkit.Aspire.Hosting.K3s.Tests;
 
@@ -165,6 +166,8 @@ public class K3sAgentNodeTests
     [Fact]
     public void WithLifetimePersistentPropagatestoAgentNodes()
     {
+        // ContainerLifetimeAnnotation must propagate immediately at call time —
+        // DCP uses it to compute container identity before BeforeStartEvent fires.
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder
             .AddK3sCluster("k8s", configure: opts => opts.AgentCount = 2)
@@ -172,7 +175,6 @@ public class K3sAgentNodeTests
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-
         var agents = model.Resources.OfType<K3sAgentResource>().ToList();
         Assert.Equal(2, agents.Count);
 
@@ -193,7 +195,6 @@ public class K3sAgentNodeTests
 
         using var app = appBuilder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-
         var agent = Assert.Single(model.Resources.OfType<K3sAgentResource>());
         var annotation = Assert.Single(agent.Annotations.OfType<ContainerLifetimeAnnotation>());
         Assert.Equal(ContainerLifetime.Session, annotation.Lifetime);

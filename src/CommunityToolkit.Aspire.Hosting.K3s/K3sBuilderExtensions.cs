@@ -14,17 +14,42 @@ namespace Aspire.Hosting;
 public static class K3sBuilderExtensions
 {
     /// <summary>
-    /// Adds a k3s Kubernetes cluster resource to the distributed application.
+    /// Adds a k3s Kubernetes cluster to the distributed application.
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
-    /// <param name="name">The resource name used for DNS resolution within the DCP network.</param>
-    /// <param name="apiServerPort">
-    /// Optional host port to bind the Kubernetes API server (port 6443) to.
-    /// When <see langword="null"/> a random available port is assigned.
+    /// <param name="name">
+    /// The resource name. Also used as the DNS hostname by which containers in the DCP network
+    /// reach the cluster's API server (e.g. <c>https://{name}:6443</c>).
     /// </param>
-    /// <param name="configure">Optional callback to configure <see cref="K3sClusterOptions"/>.</param>
+    /// <param name="apiServerPort">
+    /// Host port to bind the Kubernetes API server (port 6443) to.
+    /// When <see langword="null"/> (the default) a random available port is assigned.
+    /// </param>
+    /// <param name="configure">
+    /// Optional callback to configure agent count, image versions, custom CIDR ranges,
+    /// disabled components, and other cluster options. See <see cref="K3sClusterOptions"/>.
+    /// </param>
     /// <returns>A builder for the <see cref="K3sClusterResource"/>.</returns>
-    [AspireExport("addK3sCluster", Description = "Adds a k3s Kubernetes cluster resource")]
+    /// <remarks>
+    /// <para>
+    /// The cluster runs as a privileged container using the <c>rancher/k3s</c> image.
+    /// No host-side <c>kubectl</c>, <c>helm</c>, or <c>k3s</c> binaries are required.
+    /// </para>
+    /// <para>
+    /// Three kubeconfig variants are written to <c>{AppHostDirectory}/.k3s/{name}/</c>
+    /// when the cluster becomes ready:
+    /// <list type="bullet">
+    ///   <item><c>local/kubeconfig.yaml</c> — injected into host processes via <c>KUBECONFIG</c>.</item>
+    ///   <item><c>container/kubeconfig.yaml</c> — bind-mounted into containers via <c>KUBECONFIG</c>.</item>
+    /// </list>
+    /// Call <c>WithReference(cluster)</c> on a dependent resource builder to inject
+    /// these credentials automatically.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/> or <paramref name="name"/> is <see langword="null"/>.
+    /// </exception>
+    [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<K3sClusterResource> AddK3sCluster(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -52,6 +77,13 @@ public static class K3sBuilderExtensions
         var kubeconfigDir = Path.Combine(builder.AppHostDirectory, ".k3s", name);
         var clusterDir = Path.Combine(kubeconfigDir, "cluster");
         Directory.CreateDirectory(clusterDir);
+
+        // Pre-create placeholder files for all bind-mount sources. Docker creates a
+        // DIRECTORY at the source path when the file does not yet exist, which then
+        // prevents the health check from writing the real kubeconfig atomically.
+        // The health check overwrites these placeholders once the cluster is ready.
+        EnsureKubeconfigPlaceholder(Path.Combine(kubeconfigDir, "container", "kubeconfig.yaml"));
+        EnsureKubeconfigPlaceholder(Path.Combine(kubeconfigDir, "local", "kubeconfig.yaml"));
 
         resource.KubeconfigDirectory = kubeconfigDir;
 
@@ -216,6 +248,62 @@ public static class K3sBuilderExtensions
             failureStatus: HealthStatus.Unhealthy,
             tags: null));
 
+        // BeforeStartEvent: apply KUBECONFIG and service-URL injections declared via
+        // WithReference. The cluster owns this behavior — it knows what to inject and when.
+        // Processing is deferred to BeforeStartEvent so that resources can be wired up in
+        // any order in Program.cs without worrying about whether the cluster is configured yet.
+        builder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
+        {
+            var appModel = evt.Services.GetRequiredService<DistributedApplicationModel>();
+
+            foreach (var dependent in appModel.Resources)
+            {
+                // ── Container KUBECONFIG override ─────────────────────────────
+                // Standard WithReference(cluster) already injected KUBECONFIG=<local-path>
+                // for all resource types (via IResourceWithConnectionString). For containers
+                // we additionally need: a file-level bind-mount of the container-network
+                // kubeconfig variant, plus an env override that points to it.
+                //
+                // Detect via the ResourceRelationshipAnnotation that standard WithReference
+                // adds when called with our cluster (which implements IResourceWithConnectionString).
+                bool referencesThisCluster = dependent.Annotations
+                    .OfType<ResourceRelationshipAnnotation>()
+                    .Any(a => ReferenceEquals(a.Resource, resource));
+
+                if (referencesThisCluster && dependent is ContainerResource)
+                {
+                    ApplyKubeconfigContainerOverride(dependent, resource);
+                }
+
+                // ── Service-URL container override ────────────────────────────
+                // K3sServiceEndpointResource implements IResourceWithConnectionString, so
+                // standard WithReference injects services__ep__url=http://localhost:PORT for
+                // all resource types. For containers the URL must use host.docker.internal.
+                // Detect via the ResourceRelationshipAnnotation that standard WithReference
+                // adds when called with our endpoint (which implements IResourceWithConnectionString).
+                var endpointRefs = dependent.Annotations
+                    .OfType<ResourceRelationshipAnnotation>()
+                    .Select(a => a.Resource)
+                    .OfType<K3sServiceEndpointResource>()
+                    .Where(ep => ReferenceEquals(ep.Parent, resource))
+                    .ToList();
+
+                if (endpointRefs.Count > 0 && dependent is ContainerResource)
+                {
+                    // --add-host is needed once per container regardless of how many
+                    // endpoints are referenced.
+                    dependent.Annotations.Add(
+                        new ContainerRuntimeArgsCallbackAnnotation(
+                            args => args.Add("--add-host=host.docker.internal:host-gateway")));
+                }
+
+                foreach (var ep in endpointRefs)
+                    ApplyServiceUrlContainerOverride(dependent, ep);
+            }
+
+            return Task.CompletedTask;
+        });
+
         // The cluster's ResourceReadyEvent drives service endpoint port-forwards.
         // HelmReleaseResource and K8sManifestResource containers are managed directly
         // by DCP — they WaitFor the cluster and exit when their work completes.
@@ -241,8 +329,23 @@ public static class K3sBuilderExtensions
         return resourceBuilder;
     }
 
-    /// <summary>Overrides the k3s server image version.</summary>
-    [AspireExport("withK3sVersion", Description = "Overrides the k3s server image version")]
+    /// <summary>
+    /// Sets the k3s image version used by the cluster server and all its agent nodes.
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="tag">
+    /// The k3s container image tag, e.g. <c>v1.32.3-k3s1</c>.
+    /// Must follow the <c>v{major}.{minor}.{patch}-k3s{n}</c> format.
+    /// </param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// All agent nodes are immediately synced to the same tag to prevent version skew
+    /// beyond the Kubernetes-supported ±1 minor version limit. The image tag is part of
+    /// the DCP container identity, so synchronisation must happen at configuration time.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="tag"/> is <see langword="null"/> or whitespace.</exception>
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> WithK3sVersion(
         this IResourceBuilder<K3sClusterResource> builder,
         string tag)
@@ -250,11 +353,11 @@ public static class K3sBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(tag);
 
-        // Update the server image tag.
         builder.WithImageTag(tag);
 
-        // Sync all agent nodes to the same tag — mismatched server/agent versions can
-        // break node joins and exceed Kubernetes' supported ±1 minor version skew.
+        // Sync agents immediately — DCP uses the ContainerImageAnnotation to compute
+        // container identity, so the tag must be set at configuration time, not deferred
+        // to BeforeStartEvent (which fires after DCP has already determined the identity).
         foreach (var agent in builder.Resource.AgentResources)
         {
             var existing = agent.Annotations.OfType<ContainerImageAnnotation>().FirstOrDefault();
@@ -273,8 +376,15 @@ public static class K3sBuilderExtensions
         return builder;
     }
 
-    /// <summary>Sets the pod subnet CIDR (<c>--cluster-cidr</c>).</summary>
-    [AspireExport("withPodSubnet", Description = "Sets the pod subnet CIDR for the k3s cluster")]
+    /// <summary>
+    /// Sets the CIDR range for pod IP addresses (<c>--cluster-cidr</c>).
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="cidr">The pod subnet in CIDR notation, e.g. <c>10.42.0.0/16</c>.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="cidr"/> is <see langword="null"/> or whitespace.</exception>
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> WithPodSubnet(
         this IResourceBuilder<K3sClusterResource> builder,
         string cidr)
@@ -285,8 +395,15 @@ public static class K3sBuilderExtensions
         return builder.WithArgs($"--cluster-cidr={cidr}");
     }
 
-    /// <summary>Sets the service subnet CIDR (<c>--service-cidr</c>).</summary>
-    [AspireExport("withServiceSubnet", Description = "Sets the service subnet CIDR for the k3s cluster")]
+    /// <summary>
+    /// Sets the CIDR range for Service cluster IPs (<c>--service-cidr</c>).
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="cidr">The service subnet in CIDR notation, e.g. <c>10.43.0.0/16</c>.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="cidr"/> is <see langword="null"/> or whitespace.</exception>
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> WithServiceSubnet(
         this IResourceBuilder<K3sClusterResource> builder,
         string cidr)
@@ -297,8 +414,19 @@ public static class K3sBuilderExtensions
         return builder.WithArgs($"--service-cidr={cidr}");
     }
 
-    /// <summary>Disables a built-in k3s component (e.g. <c>traefik</c>).</summary>
-    [AspireExport("withDisabledComponent", Description = "Disables a built-in k3s component")]
+    /// <summary>
+    /// Disables a built-in k3s component (<c>--disable=&lt;component&gt;</c>).
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="component">
+    /// The component name to disable. Common values include <c>traefik</c>,
+    /// <c>servicelb</c>, <c>metrics-server</c>, <c>coredns</c>, and <c>local-storage</c>.
+    /// Call this method multiple times to disable more than one component.
+    /// </param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="component"/> is <see langword="null"/> or whitespace.</exception>
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> WithDisabledComponent(
         this IResourceBuilder<K3sClusterResource> builder,
         string component)
@@ -309,8 +437,22 @@ public static class K3sBuilderExtensions
         return builder.WithArgs($"--disable={component}");
     }
 
-    /// <summary>Appends a raw argument to the <c>k3s server</c> command.</summary>
-    [AspireExport("withExtraArg", Description = "Appends a raw argument to the k3s server command")]
+    /// <summary>
+    /// Appends a raw argument to the <c>k3s server</c> command line.
+    /// </summary>
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="arg">
+    /// The raw argument to append, e.g. <c>--write-kubeconfig-mode=644</c>.
+    /// Call this method multiple times to append additional arguments.
+    /// </param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// Use <see cref="WithDisabledComponent"/> or the dedicated CIDR methods when possible.
+    /// This method is intended for flags that have no dedicated helper.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="arg"/> is <see langword="null"/> or whitespace.</exception>
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> WithExtraArg(
         this IResourceBuilder<K3sClusterResource> builder,
         string arg)
@@ -322,10 +464,23 @@ public static class K3sBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a named volume for the k3s cluster data directory (<c>/var/lib/rancher/k3s</c>)
-    /// so the cluster state (SQLite database, certificates, kubeconfig) survives AppHost restarts.
+    /// Mounts a named Docker volume at the k3s data directory so cluster state persists across
+    /// AppHost restarts.
     /// </summary>
-    [AspireExport("withDataVolume", Description = "Adds a named volume for the k3s cluster data directory so state survives AppHost restarts")]
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="name">
+    /// Optional volume name. When <see langword="null"/> (the default) a name is generated
+    /// from the application and resource names.
+    /// </param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// The volume covers <c>/var/lib/rancher/k3s</c>, which contains the SQLite database,
+    /// TLS certificates, and kubeconfig. Without this volume the cluster starts fresh on
+    /// every AppHost launch. Combine with <c>ContainerLifetime.Persistent</c> on the cluster
+    /// resource and its dependent Helm releases to avoid re-installing charts on every start.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> WithDataVolume(
         this IResourceBuilder<K3sClusterResource> builder,
         string? name = null)
@@ -345,79 +500,22 @@ public static class K3sBuilderExtensions
     }
 
     /// <summary>
-    /// Injects the k3s kubeconfig into <paramref name="destination"/> so it can authenticate
-    /// to the cluster. The injection method is selected automatically based on the resource type:
-    /// <list type="bullet">
-    ///   <item>
-    ///     <see cref="ContainerResource"/>s receive a physical kubeconfig file copied to
-    ///     <c>/tmp/k3s-kubeconfig.yaml</c> (container-network variant,
-    ///     <c>server: https://{resourceName}:6443</c>). <c>KUBECONFIG=/tmp/k3s-kubeconfig.yaml</c>
-    ///     is set automatically so all standard Kubernetes tooling (<c>kubectl</c>, <c>helm</c>,
-    ///     KubernetesClient SDK) works without any custom bootstrap code.
-    ///   </item>
-    ///   <item>
-    ///     Projects and executables receive <c>KUBECONFIG=&lt;host path&gt;/local/kubeconfig.yaml</c>
-    ///     pointing directly to a file on the host filesystem.
-    ///   </item>
-    /// </list>
-    /// Both files are written by the health check after all nodes reach <c>Ready</c> state.
-    /// Use <c>WaitFor(cluster)</c> on the dependent resource to guarantee the files exist
-    /// before the resource starts.
-    /// </summary>
-    [AspireExport("withReference", Description = "Injects kubeconfig credentials into the dependent resource")]
-    public static IResourceBuilder<TDestination> WithReference<TDestination>(
-        this IResourceBuilder<TDestination> destination,
-        IResourceBuilder<K3sClusterResource> source)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(destination);
-        ArgumentNullException.ThrowIfNull(source);
-
-        var cluster = source.Resource;
-
-        if (destination.Resource is ContainerResource)
-        {
-            // Idempotent: skip if the file bind-mount was already added (e.g. by a second
-            // WithReference call) — Docker rejects duplicate mounts at the same target.
-            var alreadyMounted = destination.Resource.Annotations
-                .OfType<ContainerMountAnnotation>()
-                .Any(m => m.Target == K3sFileHelpers.ContainerKubeconfigPath);
-
-            if (!alreadyMounted)
-            {
-                // File-level mount: only the kubeconfig YAML is visible inside the container.
-                // Mounting the entire container/ directory would expose kubectl's cache
-                // directories (cache/, http-cache/) on the host and cause concurrent-container
-                // cache corruption when multiple containers share the same kubeconfig directory.
-                var containerKubeconfigFile = Path.Combine(
-                    cluster.KubeconfigDirectory!, "container", "kubeconfig.yaml");
-                Directory.CreateDirectory(Path.GetDirectoryName(containerKubeconfigFile)!);
-
-                destination.Resource.Annotations.Add(
-                    new ContainerMountAnnotation(
-                        containerKubeconfigFile,
-                        K3sFileHelpers.ContainerKubeconfigPath,
-                        ContainerMountType.BindMount,
-                        isReadOnly: true));
-            }
-
-            return destination.WithEnvironment("KUBECONFIG", K3sFileHelpers.ContainerKubeconfigPath);
-        }
-
-        // Projects and executables: KUBECONFIG points to the host-accessible local kubeconfig.
-        // This file is regenerated on every AppHost start (port may change).
-        return destination.WithEnvironment(ctx =>
-        {
-            if (cluster.KubeconfigDirectory is null) return;
-            var path = Path.Combine(cluster.KubeconfigDirectory, "local", "kubeconfig.yaml");
-            ctx.EnvironmentVariables["KUBECONFIG"] = path;
-        });
-    }
-
-    /// <summary>
     /// Sets the container lifetime for the k3s cluster <em>and all its agent nodes</em>.
     /// </summary>
-    [AspireExport("withLifetime", Description = "Sets the container lifetime for the k3s cluster and all its agent nodes")]
+    /// <param name="builder">The k3s cluster resource builder.</param>
+    /// <param name="lifetime">The container lifetime to apply.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// <para>
+    /// Agent nodes are propagated immediately because DCP uses the
+    /// <see cref="ContainerLifetimeAnnotation"/> to compute container identity. Deferring
+    /// propagation to <c>BeforeStartEvent</c> would be too late — DCP determines whether
+    /// to reuse or recreate a persistent container before that event fires, so agents
+    /// would lose their persistent identity and be recreated as new containers each run.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    [AspireExport]
     public static IResourceBuilder<K3sClusterResource> WithLifetime(
         this IResourceBuilder<K3sClusterResource> builder,
         ContainerLifetime lifetime)
@@ -430,12 +528,8 @@ public static class K3sBuilderExtensions
 
         foreach (var agent in builder.Resource.AgentResources)
         {
-            var existing = agent.Annotations.OfType<ContainerLifetimeAnnotation>().ToList();
-            foreach (var ann in existing)
-            {
+            foreach (var ann in agent.Annotations.OfType<ContainerLifetimeAnnotation>().ToList())
                 agent.Annotations.Remove(ann);
-            }
-
             agent.Annotations.Add(new ContainerLifetimeAnnotation { Lifetime = lifetime });
         }
 
@@ -478,6 +572,71 @@ public static class K3sBuilderExtensions
 
         exec k3s "$@"
         """;
+
+    // ── BeforeStartEvent helpers ──────────────────────────────────────────────
+
+    // Called only for containers — standard WithReference(IResourceWithConnectionString) already
+    // handles host processes by injecting KUBECONFIG=<local-path> via GetConnectionStringAsync().
+    internal static void ApplyKubeconfigContainerOverride(IResource dependent, K3sClusterResource cluster)
+    {
+        // File-level bind-mount: only the kubeconfig YAML is visible inside the container.
+        // Mounting the full container/ dir would expose kubectl's cache dirs and cause
+        // concurrent-container cache corruption when multiple containers share the directory.
+        var alreadyMounted = dependent.Annotations
+            .OfType<ContainerMountAnnotation>()
+            .Any(m => m.Target == K3sFileHelpers.ContainerKubeconfigPath);
+
+        if (!alreadyMounted)
+        {
+            var containerKubeconfigFile = Path.Combine(
+                cluster.KubeconfigDirectory!, "container", "kubeconfig.yaml");
+            // Placeholder ensures Docker creates a file-level mount, not a directory.
+            // AddK3sCluster already creates this; the guard handles late callers.
+            EnsureKubeconfigPlaceholder(containerKubeconfigFile);
+
+            dependent.Annotations.Add(new ContainerMountAnnotation(
+                containerKubeconfigFile,
+                K3sFileHelpers.ContainerKubeconfigPath,
+                ContainerMountType.BindMount,
+                isReadOnly: true));
+        }
+
+        // Override the KUBECONFIG env var that standard WithReference already set to the
+        // local path — containers need the container-network variant mounted at a fixed path.
+        // This callback runs after the standard one (added later in BeforeStartEvent), so last
+        // write wins in the environment variable dictionary.
+        dependent.Annotations.Add(new EnvironmentCallbackAnnotation(
+            ctx => ctx.EnvironmentVariables["KUBECONFIG"] = K3sFileHelpers.ContainerKubeconfigPath));
+    }
+
+    // Creates an empty placeholder file so Docker's bind-mount sees a file at the source
+    // path rather than creating a directory there. If a directory already exists from a
+    // previous bad run it is removed first. The health check overwrites the placeholder
+    // with the real kubeconfig content once the cluster is ready.
+    internal static void EnsureKubeconfigPlaceholder(string filePath)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        if (Directory.Exists(filePath))
+            Directory.Delete(filePath, recursive: true);
+        if (!File.Exists(filePath))
+            File.WriteAllText(filePath, string.Empty);
+    }
+
+    // Called only for containers. Standard WithReference(IResourceWithConnectionString)
+    // already injected services__ep__url=http://localhost:PORT for host processes via
+    // GetConnectionStringAsync(). This override switches the URL to host.docker.internal
+    // so DCP-network containers can reach the port-forward listener.
+    internal static void ApplyServiceUrlContainerOverride(IResource dependent, K3sServiceEndpointResource ep)
+    {
+        var scheme = ep.Scheme;
+        var envKey = $"services__{ep.Name}__url";
+
+        dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
+        {
+            if (ep.IsReady)
+                ctx.EnvironmentVariables[envKey] = $"{scheme}://host.docker.internal:{ep.HostPort}";
+        }));
+    }
 }
 
 #pragma warning restore ASPIREATS001

@@ -12,22 +12,47 @@ namespace Aspire.Hosting;
 public static class K3sHelmBuilderExtensions
 {
     /// <summary>
-    /// Adds a Helm release as a child resource of the k3s cluster.
-    /// <para>
-    /// The release runs as a <c>bitnami/helm</c> container on the DCP network, executing
-    /// <c>helm upgrade --install --wait</c> then exiting. No host-side <c>helm</c> binary
-    /// is required. Use <c>WaitForCompletion(helmRelease)</c> on resources that depend on
-    /// the release being fully installed.
-    /// </para>
+    /// Installs a Helm chart into the k3s cluster.
     /// </summary>
     /// <param name="builder">The k3s cluster resource builder.</param>
-    /// <param name="name">Resource name — also used as the Helm release name.</param>
-    /// <param name="chart">Chart name. Add <paramref name="repo"/> for remote charts.</param>
-    /// <param name="repo">Optional Helm repository URL.</param>
-    /// <param name="version">Optional chart version.</param>
-    /// <param name="namespace">Target namespace (created automatically).</param>
+    /// <param name="name">
+    /// The Aspire resource name; also used as the Helm release name passed to
+    /// <c>helm upgrade --install</c>.
+    /// </param>
+    /// <param name="chart">
+    /// The chart name, e.g. <c>argo-cd</c> for a repo chart or <c>oci://registry/chart</c>
+    /// for an OCI reference. Provide <paramref name="repo"/> when using a named repo chart.
+    /// </param>
+    /// <param name="repo">
+    /// Optional Helm repository URL, e.g. <c>https://argoproj.github.io/argo-helm</c>.
+    /// When provided, the repo is added and updated before installation.
+    /// </param>
+    /// <param name="version">
+    /// Optional chart version to pin, e.g. <c>7.8.0</c>. When <see langword="null"/> the
+    /// latest version available in the repository is installed.
+    /// </param>
+    /// <param name="namespace">
+    /// The Kubernetes namespace to install the release into. The namespace is created
+    /// automatically if it does not exist. Defaults to <c>default</c>.
+    /// </param>
     /// <returns>A builder for the <see cref="HelmReleaseResource"/>.</returns>
-    [AspireExport("addHelmRelease", Description = "Adds a Helm chart release to the k3s cluster")]
+    /// <remarks>
+    /// <para>
+    /// The release runs as an <c>alpine/helm</c> container on the DCP network. No host-side
+    /// <c>helm</c> binary is required. The container exits with code 0 when the release is
+    /// fully installed and all workloads are ready. Use <c>WaitForCompletion(helmRelease)</c>
+    /// on resources that must start only after the chart is ready.
+    /// </para>
+    /// <para>
+    /// Customize the release with <see cref="WithHelmValue"/> for individual key/value pairs
+    /// or <see cref="WithHelmValuesFile"/> to supply a full YAML values file.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/>, <paramref name="name"/>, or <paramref name="chart"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    [AspireExport]
     public static IResourceBuilder<HelmReleaseResource> AddHelmRelease(
         this IResourceBuilder<K3sClusterResource> builder,
         [ResourceName] string name,
@@ -56,9 +81,9 @@ public static class K3sHelmBuilderExtensions
         // by AddK3sCluster; the kubeconfig file is written by K3sReadinessHealthCheck on
         // first successful health check. WaitFor(cluster) guarantees the file exists.
         // Ensure the host-side container/ directory exists so the health check can write to it.
-        var containerKubeconfigDir = Path.Combine(cluster.KubeconfigDirectory!, "container");
-        Directory.CreateDirectory(containerKubeconfigDir);
-        var containerKubeconfigFile = Path.Combine(containerKubeconfigDir, "kubeconfig.yaml");
+        var containerKubeconfigFile = Path.Combine(cluster.KubeconfigDirectory!, "container", "kubeconfig.yaml");
+        // Placeholder ensures Docker creates a file-level bind-mount, not a directory.
+        K3sBuilderExtensions.EnsureKubeconfigPlaceholder(containerKubeconfigFile);
 
         var (helmRegistry, helmImage, helmTag) = cluster.HelmImageInfo;
 
@@ -118,16 +143,24 @@ public static class K3sHelmBuilderExtensions
     }
 
     /// <summary>
-    /// Injects a host-side YAML values file into the Helm installer container and
-    /// passes it as <c>--values /helm-values/{filename}</c> to <c>helm upgrade --install</c>.
-    /// Multiple files are applied in the order they are declared (last wins for overlapping keys).
+    /// Supplies a YAML values file to the Helm release (<c>--values</c>).
     /// </summary>
     /// <param name="builder">The Helm release resource builder.</param>
     /// <param name="path">
-    /// Path to the values YAML file on the host. Relative paths are resolved against
-    /// <c>AppHostDirectory</c>.
+    /// Path to the YAML values file on the host. Relative paths are resolved against the
+    /// AppHost project directory. Call this method multiple times to supply additional files;
+    /// they are applied in declaration order and later files win for duplicate keys.
     /// </param>
-    [AspireExport("withHelmValuesFile", Description = "Injects a host-side YAML values file into the Helm installer container")]
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// Use this method for structured overrides — particularly values containing commas,
+    /// braces, or backslashes that cannot be safely expressed with <see cref="WithHelmValue"/>.
+    /// Values files are applied before <c>--set</c> flags, so <see cref="WithHelmValue"/>
+    /// always takes precedence.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="path"/> is <see langword="null"/> or whitespace.</exception>
+    [AspireExport]
     public static IResourceBuilder<HelmReleaseResource> WithHelmValuesFile(
         this IResourceBuilder<HelmReleaseResource> builder,
         string path)
@@ -146,9 +179,26 @@ public static class K3sHelmBuilderExtensions
     }
 
     /// <summary>
-    /// Adds a Helm <c>--set key=value</c> argument to this release.
+    /// Adds a Helm <c>--set key=value</c> override to the release.
     /// </summary>
-    [AspireExport("withHelmValue", Description = "Adds a --set key=value argument to the Helm release")]
+    /// <param name="builder">The Helm release resource builder.</param>
+    /// <param name="key">
+    /// The Helm value path using dot notation, e.g. <c>server.service.type</c>.
+    /// If the same key is set more than once, the last call wins.
+    /// </param>
+    /// <param name="value">The value to assign.</param>
+    /// <returns>The same builder, for chaining.</returns>
+    /// <remarks>
+    /// Helm <c>--set</c> metacharacters (<c>,</c>, <c>{</c>, <c>}</c>, <c>\</c>) in
+    /// <paramref name="key"/> or <paramref name="value"/> are automatically escaped.
+    /// For values that contain these characters in ways Helm cannot represent safely,
+    /// use <see cref="WithHelmValuesFile"/> instead.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="builder"/>, <paramref name="key"/>, or <paramref name="value"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    [AspireExport]
     public static IResourceBuilder<HelmReleaseResource> WithHelmValue(
         this IResourceBuilder<HelmReleaseResource> builder,
         string key,

@@ -21,7 +21,10 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cluster = builder
-    .AddK3sCluster("k8s")
+    .AddK3sCluster("k8s", configure: cfg =>
+    {
+        cfg.AgentCount = 2;
+    })
     .WithDataVolume()
     .WithLifetime(ContainerLifetime.Persistent);
 
