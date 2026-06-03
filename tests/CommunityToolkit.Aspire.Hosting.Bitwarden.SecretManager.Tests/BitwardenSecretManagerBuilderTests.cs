@@ -182,7 +182,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithAccessToken(runtimeToken));
+        consumer.WithReference(bitwarden).WithBitwardenAccessToken(bitwarden, runtimeToken);
 
         using var app = appBuilder.Build();
 
@@ -237,7 +237,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheDirectory(authCacheLocation));
+        consumer.WithReference(bitwarden).WithBitwardenAuthCacheDirectory(bitwarden, authCacheLocation);
 
         using var app = appBuilder.Build();
 
@@ -263,7 +263,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheVolume());
+        consumer.WithReference(bitwarden).WithBitwardenAuthCacheVolume(bitwarden);
 
         using var app = appBuilder.Build();
 
@@ -301,7 +301,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheVolume(volumeName: customVolumeName, containerDirectory: customDirectory));
+        consumer.WithReference(bitwarden).WithBitwardenAuthCacheVolume(bitwarden, volumeName: customVolumeName, containerDirectory: customDirectory);
 
         using var app = appBuilder.Build();
 
@@ -330,7 +330,7 @@ public class BitwardenSecretManagerBuilderTests
         var nonContainer = appBuilder.AddExecutable("worker", "dotnet", ".");
 
         Assert.Throws<InvalidOperationException>(
-            () => nonContainer.WithReference(bitwarden, bw => bw.WithAuthCacheVolume()));
+            () => nonContainer.WithReference(bitwarden).WithBitwardenAuthCacheVolume(bitwarden));
     }
 
     [Fact]
@@ -351,7 +351,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedProjectId(projectId);
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithAuthCacheDirectory(appAuthCacheDirectory));
+        consumer.WithReference(bitwarden).WithBitwardenAuthCacheDirectory(bitwarden, appAuthCacheDirectory);
 
         using var app = appBuilder.Build();
 
@@ -429,7 +429,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithReference(bitwarden, bw => bw.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource));
+        consumer.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
 
         using var app = appBuilder.Build();
 
