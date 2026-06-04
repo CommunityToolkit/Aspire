@@ -10,13 +10,13 @@ var postgres2 = builder.AddPostgres("postgres2")
 postgres2.AddDatabase("db3");
 postgres2.AddDatabase("db4");
 
-// var mongodb1 = builder.AddMongoDB("mongodb1").WithDbx();
-// mongodb1.AddDatabase("db5");
-// mongodb1.AddDatabase("db6");
-//
-// var mongodb2 = builder.AddMongoDB("mongodb2").WithDbx();
-// mongodb2.AddDatabase("db7");
-// mongodb2.AddDatabase("db8");
+var mongodb1 = builder.AddMongoDB("mongodb1").WithDbx();
+mongodb1.AddDatabase("db5");
+mongodb1.AddDatabase("db6");
+
+var mongodb2 = builder.AddMongoDB("mongodb2").WithDbx();
+mongodb2.AddDatabase("db7");
+mongodb2.AddDatabase("db8");
 
 var redis1 = builder.AddRedis("redis1").WithDbx();
 var redis2 = builder.AddRedis("redis2").WithDbx();
