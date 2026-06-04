@@ -107,6 +107,8 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 
 `BitwardenSecretResource` inherits `ParameterResource`. Both managed (`IsManaged = true`, from `AddSecret`) and reference-only (`IsManaged = false`, from `GetSecret`) instances use this same type. The `IsManaged` flag drives provisioner dispatch and value-resolution behavior.
 
+**`GetSecret` deduplication.** When `GetSecret` is called with a remote name that matches an existing managed secret (`AddSecret`), the same `BitwardenSecretResource` is returned — no second resource is created. The match is on `RemoteName`, not `LocalName`, so `AddSecret("app-key", "shared-secret")` followed by `GetSecret("shared-secret")` yields the same resource. This allows different parts of the AppHost to declare the write path and the read path independently without registering duplicates.
+
 **Dashboard visibility.** Both kinds use `ResourceType = "Parameter"` in their initial snapshot so they appear in the Aspire dashboard parameters tab. For managed secrets, the `Source` property shows the configuration key (`Parameters:{resourceName}`) where a value can be pre-supplied. For reference-only secrets, the `Source` shows `Bitwarden: {remoteName}` (the Bitwarden secret name) to signal that the value comes exclusively from Bitwarden.
 
 **`ParameterProcessor` integration.** Aspire's built-in `ParameterProcessor` processes every `ParameterResource` on startup. For **managed secrets**: the value getter throws `MissingParameterValueException` when no config key is set, so the secret is added to `_unresolvedParameters`; Phase 2 sync removes resolved secrets from that list. For **reference-only secrets**: the value getter returns `string.Empty` (never throws), so `ParameterProcessor` resolves the TCS immediately with an empty string and never adds the secret to `_unresolvedParameters`. The real value flows through `IValueProvider.GetValueAsync`, which reads from the Bitwarden resolved-secret cache populated by Phase 2.5.
@@ -140,7 +142,7 @@ The pre-sync step prompts for any missing credentials (access token, organizatio
 The integration uses two distinct access tokens with different scopes:
 
 - **Management token** — supplied to `AddBitwardenSecretManager(...)`. Used exclusively by the AppHost provisioner to create and update the Bitwarden project and its secrets. It must have write permissions to the project.
-- **Client token** — optionally supplied via `WithReference(bitwarden, bw => bw.WithAccessToken(token))`. Injected into the dependent resource as `AccessToken` under `Aspire:Bitwarden:SecretManager:{connectionName}`. Defaults to the management token when omitted.
+- **Client token** — optionally supplied via `WithBitwardenAccessToken(bitwarden, token)` (chained after `WithReference`). Injected into the dependent resource as `AccessToken` under `Aspire:Bitwarden:SecretManager:{connectionName}`. Defaults to the management token when omitted.
 
 The client token only needs read permissions to the project. Because Bitwarden does not expose an API for granting project access to a service account, this grant must be performed manually in the Bitwarden web vault. For a newly created project the grant must be done after the first AppHost run that creates the project.
 
@@ -216,11 +218,11 @@ The path is injected into the app via the `AuthCacheDirectory` key under `Aspire
 
 All three configuration paths accept a **directory**; the filename within that directory is always `auth-cache`, managed by the integration.
 
-**`bw.WithAuthCacheVolume()`** mounts a named Docker volume at `/var/lib/bitwarden` and sets the auth cache path to `/var/lib/bitwarden/auth-cache`. The volume name defaults to `{resourceName}-{connectionName}-bitwarden-auth` and can be overridden. Requires the destination to be a container resource. Preferred for container resources because no host-specific path is involved.
+**`WithBitwardenAuthCacheVolume(bitwarden)`** mounts a named Docker volume at `/var/lib/bitwarden` and sets the auth cache path to `/var/lib/bitwarden/auth-cache`. The volume name defaults to `{resourceName}-{connectionName}-bitwarden-auth` and can be overridden. Requires the destination to be a container resource. Preferred for container resources because no host-specific path is involved.
 
-**`bw.WithAuthCacheDirectory(parameter)`** injects a parameter-backed directory path. The parameter resolves from user secrets or configuration in run mode, and the deploy tooling resolves it per environment. Use when the directory must differ between developer machines or deployment targets.
+**`WithBitwardenAuthCacheDirectory(bitwarden, parameter)`** injects a parameter-backed directory path. The parameter resolves from user secrets or configuration in run mode, and the deploy tooling resolves it per environment. Use when the directory must differ between developer machines or deployment targets.
 
-**`bw.WithAuthCacheDirectory(string)`** injects a fixed directory path. Safe only when the app always runs as a container and the directory is the same everywhere. Does not warn if a host-specific path is passed — that is a silent misconfiguration; use the parameter overload instead.
+**`WithBitwardenAuthCacheDirectory(bitwarden, string)`** injects a fixed directory path. Safe only when the app always runs as a container and the directory is the same everywhere. Does not warn if a host-specific path is passed — that is a silent misconfiguration; use the parameter overload instead.
 
 The AppHost reconciler never reads the app auth cache path. The deployed app never reads the AppHost cache files.
 

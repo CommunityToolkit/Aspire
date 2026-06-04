@@ -153,10 +153,10 @@ Run `aspire deploy`. The integration adds six pipeline steps per Bitwarden resou
 
 ### Access tokens
 
-| Token            | Set with                                                    | Used by            | Permissions needed      | When to use                                                              |
-| ---------------- | ----------------------------------------------------------- | ------------------ | ----------------------- | ------------------------------------------------------------------------ |
-| Management token | `AddBitwardenSecretManager(..., accessToken)`               | AppHost reconciler | Read + write to project | Always required                                                          |
-| Client token     | `WithReference(bitwarden, bw => bw.WithAccessToken(token))` | Deployed app       | Read-only to project    | Supply a least-privilege token so the deployed app cannot modify secrets |
+| Token            | Set with                                      | Used by            | Permissions needed      | When to use                                                              |
+| ---------------- | --------------------------------------------- | ------------------ | ----------------------- | ------------------------------------------------------------------------ |
+| Management token | `AddBitwardenSecretManager(..., accessToken)` | AppHost reconciler | Read + write to project | Always required                                                          |
+| Client token     | `WithBitwardenAccessToken(bitwarden, token)`  | Deployed app       | Read-only to project    | Supply a least-privilege token so the deployed app cannot modify secrets |
 
 ### Secret declarations
 
