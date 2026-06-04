@@ -148,11 +148,11 @@ public class AddDbxTests
         builder.AddPostgres("postgres2")
             .WithDbx();
         
-        // builder.AddRedis("redis1")
-        //     .WithDbx();
-        //
-        // builder.AddRedis("redis2")
-        //     .WithDbx();
+        builder.AddRedis("redis1")
+            .WithDbx();
+        
+        builder.AddRedis("redis2")
+            .WithDbx();
 
         builder.AddSqlServer("sqlserver1")
             .WithDbx();
