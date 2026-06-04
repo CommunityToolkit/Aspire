@@ -944,7 +944,7 @@ public static class BitwardenSecretManagerExtensions
                 },
                 new CommandOptions
                 {
-                    IsHighlighted = false,
+                    IsHighlighted = true,
                     IconName = "ArrowSync",
                     IconVariant = IconVariant.Regular,
                     Description = "Re-run authentication and secret provisioning.",
@@ -967,7 +967,6 @@ public static class BitwardenSecretManagerExtensions
                 },
                 new CommandOptions
                 {
-                    IsHighlighted = true,
                     IconName = "KeyReset",
                     IconVariant = IconVariant.Regular,
                     Description = "Delete the cached Bitwarden authentication session. The next run will perform a fresh login.",
