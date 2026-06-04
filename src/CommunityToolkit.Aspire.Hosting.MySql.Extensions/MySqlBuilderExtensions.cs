@@ -139,7 +139,7 @@ public static class MySqlBuilderExtensions
     /// <summary>
     /// Adds an administration and development platform for MySql to the application model using dbx.
     /// </summary>
-    /// <param name="builder">The SqlServer server resource builder.</param>
+    /// <param name="builder">The MySql server resource builder.</param>
     /// <param name="containerName">The name of the container (Optional).</param>
     /// <param name="imageTag">Optional image tag override for the dbx container.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>

@@ -17,9 +17,9 @@ postgres2.AddDatabase("db4");
 // var mongodb2 = builder.AddMongoDB("mongodb2").WithDbx();
 // mongodb2.AddDatabase("db7");
 // mongodb2.AddDatabase("db8");
-//
-// var redis1 = builder.AddRedis("redis1").WithDbx();
-// var redis2 = builder.AddRedis("redis2").WithDbx();
+
+var redis1 = builder.AddRedis("redis1").WithDbx();
+var redis2 = builder.AddRedis("redis2").WithDbx();
 
 var sqlserver1 = builder.AddSqlServer("sqlserver1")
     .WithDbx(c => c.WithHostPort(8068));
@@ -30,7 +30,6 @@ var sqlserver2 = builder.AddSqlServer("sqlserver2")
     .WithDbx();
 sqlserver2.AddDatabase("db11");
 sqlserver2.AddDatabase("db12");
-
 
 var mysql1 = builder.AddMySql("mysql1")
     .WithDbx(c => c.WithHostPort(8068));
