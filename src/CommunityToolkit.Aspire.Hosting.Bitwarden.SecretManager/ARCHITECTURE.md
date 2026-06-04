@@ -4,7 +4,8 @@ Bitwarden Secrets Manager is modeled as a declared AppHost resource graph.
 The graph is the primary contract. Deployment happens through explicit Aspire pipeline steps that materialize the declared graph in Bitwarden.
 
 - `BitwardenSecretManagerResource` declares a Bitwarden project and its configuration.
-- `BitwardenSecretResource` declares either a managed secret (created or updated on every run, `IsManaged = true`) or a reference-only secret (read from an existing Bitwarden secret, `IsManaged = false`). Both modes inherit `ParameterResource` and are returned by `AddSecret` and `GetSecret` respectively as `IResourceBuilder<BitwardenSecretResource>`. Both APIs share the same overload shape: a single-name form where the Aspire resource name and the Bitwarden secret name are identical, and a two-name form (`name`, `remoteName`) where they differ. Pass `.Resource` to `WithBitwardenSecretValue` or `WithBitwardenSecretId` to inject the secret into a dependent resource.
+- `BitwardenSecretResource` declares either a managed secret (created or updated on every run, `IsManaged = true`) or a reference-only secret (read from an existing Bitwarden secret, `IsManaged = false`). Both modes inherit `ParameterResource` and are returned by `AddSecret` and `GetSecret` respectively as `IResourceBuilder<BitwardenSecretResource>`. Both APIs share the same overload shape: a single-name form where the Aspire resource name and the Bitwarden secret name are identical, and a two-name form (`name`, `remoteName`) where they differ. Pass the builder directly to `WithBitwardenSecretValue` or `WithBitwardenSecretId` to inject the secret into a dependent resource.
+- Dependent resources must call `.WaitForCompletion(bitwarden)` explicitly to block until provisioning completes.
 
 This design intentionally treats custom publish-manifest schema as legacy. The integration does not rely on a bespoke manifest payload as its architectural center.
 
@@ -71,7 +72,7 @@ The resource reports the following states during a run:
 | `Finished`             | Success | Provisioning succeeded; dependent resources may start            |
 | `Exited` (exit code 1) | Error   | Authentication or provisioning failed; dependent resources error |
 
-Dependent resources declare `WaitForCompletion` on the Bitwarden resource. `Exited` with a non-zero exit code causes `WaitForCompletion` to propagate the failure to those dependents; `Finished` unblocks them.
+Dependent resources must call `.WaitForCompletion(bitwarden)` explicitly in apphost code. `Exited` with a non-zero exit code propagates the failure to dependents; `Finished` unblocks them.
 
 ### Four-phase parameter collection
 
@@ -110,7 +111,7 @@ The "Reprovision" command repeats the full initialization sequence on demand. It
 
 **`ParameterProcessor` integration.** Aspire's built-in `ParameterProcessor` processes every `ParameterResource` on startup. For **managed secrets**: the value getter throws `MissingParameterValueException` when no config key is set, so the secret is added to `_unresolvedParameters`; Phase 2 sync removes resolved secrets from that list. For **reference-only secrets**: the value getter returns `string.Empty` (never throws), so `ParameterProcessor` resolves the TCS immediately with an empty string and never adds the secret to `_unresolvedParameters`. The real value flows through `IValueProvider.GetValueAsync`, which reads from the Bitwarden resolved-secret cache populated by Phase 2.5.
 
-**Value resolution order.** `IValueProvider.GetValueAsync` is overridden on `BitwardenSecretResource`:
+**Value resolution order.** Both `IValueProvider.GetValueAsync(CancellationToken)` and `IValueProvider.GetValueAsync(ValueProviderContext, CancellationToken)` are explicitly overridden on `BitwardenSecretResource`. The context overload is necessary because `ParameterResource` implements it to call the public (non-interface) `GetValueAsync(CancellationToken)`, which goes directly to `WaitForValueTcs` and bypasses the Bitwarden cache. The override redirects the framework dispatch path through the interface implementation, which applies the priority below:
 
 1. Bitwarden resolved-secret cache (populated by `BindResolvedSecret` after Phase 2/2.5 sync or Phase 4 provisioning).
 2. **Managed only** — `ParameterResource.GetValueAsync` — waits on `WaitForValueTcs`, which is set by either `ParameterProcessor` (from config or user input) or by the provisioner (from upstream sync).
@@ -240,3 +241,4 @@ The note field is the only persistent record of what changed and when. It is sto
 - Making runtime reconciliation the primary architectural concept.
 
 The intended design is pipeline-step-first, declared-resource-first.
+

@@ -126,14 +126,16 @@ IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("d
 
 builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden)
-    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
+    .WaitForCompletion(bitwarden)
+    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret);
 ```
 
 To inject the resolved value directly (no SDK required in the app, but requires redeploy when the value changes):
 
 ```csharp
 builder.AddProject<Projects.ApiService>("api")
-    .WithBitwardenSecretValue("DEMO_API_KEY", managedSecret.Resource);
+    .WaitForCompletion(bitwarden)
+    .WithBitwardenSecretValue("DEMO_API_KEY", managedSecret);
 ```
 
 ## Deployment
@@ -158,7 +160,7 @@ Run `aspire deploy`. The integration adds six pipeline steps per Bitwarden resou
 
 ### Secret declarations
 
-Both return `IResourceBuilder<BitwardenSecretResource>`. Access `.Resource` to pass to `WithBitwardenSecretValue` or `WithBitwardenSecretId`.
+Both return `IResourceBuilder<BitwardenSecretResource>`. Pass the builder directly to `WithBitwardenSecretValue` or `WithBitwardenSecretId`.
 
 | API                           | What it does                                    | When to use                       |
 | ----------------------------- | ----------------------------------------------- | --------------------------------- |
@@ -253,7 +255,7 @@ builder.AddContainer("api", "myregistry/api")
 
 ### Resource states
 
-The Bitwarden resource is a one-shot provisioner; dependent resources block on `WaitForCompletion` and start only when it reaches `Finished`.
+The Bitwarden resource is a one-shot provisioner. Dependent resources must call `.WaitForCompletion(bitwarden)` explicitly to block until it reaches `Finished`.
 
 Provisioning runs in four phases before `Running`:
 
@@ -358,3 +360,4 @@ Each entry lists all fields that changed and their previous values. The trail is
 Tested with **Aspire 13.3.0**.
 
 This integration relies on several experimental Aspire APIs (`ASPIREATS001`, `ASPIREPIPELINES001/002/004`, `ASPIREINTERACTION001`) and four `UnsafeAccessor` workarounds against private members of `ParameterResource` and `ParameterProcessor`. See [ASPIRE-INTERNALS.md](ASPIRE-INTERNALS.md) for the full explanation of each one, why no public API covers it, and what breaks when Aspire changes it.
+

@@ -499,11 +499,6 @@ public static class BitwardenSecretManagerExtensions
 
         builder.WithReferenceRelationship(source);
 
-        if (builder.Resource is IResourceWithWaitSupport waitResource)
-        {
-            builder.ApplicationBuilder.CreateResourceBuilder(waitResource).WaitForCompletion(source);
-        }
-
         return builder.WithEnvironment(context => source.Resource.ApplyReferenceConfiguration(context.EnvironmentVariables, connectionName));
     }
 
@@ -525,8 +520,6 @@ public static class BitwardenSecretManagerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
         ArgumentNullException.ThrowIfNull(secret);
-
-        AttachSecretDependencies(builder, secret.Resource);
 
         return builder.WithEnvironment(environmentVariableName, (IExpressionValue)secret.Resource);
     }
@@ -550,8 +543,6 @@ public static class BitwardenSecretManagerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
         ArgumentNullException.ThrowIfNull(secret);
-
-        AttachSecretDependencies(builder, secret.Resource);
 
         return builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secret.Resource));
     }
@@ -1282,17 +1273,4 @@ public static class BitwardenSecretManagerExtensions
         }
     }
 
-    internal static void AttachSecretDependencies<TDestination>(
-        IResourceBuilder<TDestination> builder,
-        BitwardenSecretResource secret)
-        where TDestination : IResourceWithEnvironment
-    {
-        // Reference relationships (secret.Parent and secret itself) are tracked implicitly via
-        // IValueWithReferences.References when WithEnvironment routes through WithEnvironmentValueProvider.
-        if (builder.Resource is IResourceWithWaitSupport waitResource)
-        {
-            builder.ApplicationBuilder.CreateResourceBuilder(waitResource)
-                .WaitForCompletion(builder.ApplicationBuilder.CreateResourceBuilder(secret.Parent));
-        }
-    }
 }
