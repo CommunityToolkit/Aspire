@@ -136,11 +136,11 @@ public class AddDbxTests
     {
         var builder = DistributedApplication.CreateBuilder();
 
-        // builder.AddMongoDB("mongodb1")
-        //     .WithDbx();
-        //
-        // builder.AddMongoDB("mongodb2")
-        //     .WithDbx();
+        builder.AddMongoDB("mongodb1")
+            .WithDbx();
+        
+        builder.AddMongoDB("mongodb2")
+            .WithDbx();
 
         builder.AddPostgres("postgres1")
             .WithDbx();
