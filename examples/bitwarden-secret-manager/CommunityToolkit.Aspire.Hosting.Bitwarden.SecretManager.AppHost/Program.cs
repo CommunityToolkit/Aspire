@@ -55,8 +55,8 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
 //    supports dynamic secret retrieval without redeploying the application when secrets change.
 // (See ApiService/Program.cs for an example of retrieving secrets from the client in code.)
 api.WithReference(bitwarden)
-    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.Resource)
-    .WithBitwardenSecretId("DEMO_DB_PASSWORD_SECRET_ID", demoDbPasswordSecret.Resource)
+    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret)
+    .WithBitwardenSecretId("DEMO_DB_PASSWORD_SECRET_ID", demoDbPasswordSecret)
     // Recommended: supply a least-privilege read-only access token so the client does not receive the management token.
     // IMPORTANT: the client token must be granted read permissions to the Bitwarden project.
     // This cannot be automated: Bitwarden does not expose an API for granting project access to a service account.
@@ -95,7 +95,7 @@ api.PublishAsDockerComposeService((resource, service) =>
 //    This approach is simpler (no Bitwarden code in the application) but requires redeploying the application whenever the secret value changes.
 var client = builder.AddContainer("client", "curlimages/curl")
     .WithReference(api)
-    .WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret.Resource)
+    .WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret)
     .WithEntrypoint("sh")
     .WithArgs("-c", "curl -sv $API_HTTP?apiKey=$DEMO_API_KEY");
 

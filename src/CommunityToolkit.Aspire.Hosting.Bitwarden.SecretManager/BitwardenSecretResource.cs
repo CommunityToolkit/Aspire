@@ -127,4 +127,14 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
 
         return GetValueAsync(cancellationToken);
     }
+
+    // ParameterResource.GetValueAsync(ValueProviderContext, CancellationToken) calls the public
+    // GetValueAsync(CancellationToken), NOT the interface override above. The public path resolves
+    // via WaitForValueTcs — which for unmanaged secrets is pre-set to empty string (the value getter
+    // returns "" so ParameterProcessor doesn't prompt for them). Without this override, the framework
+    // dispatch path would inject empty string instead of the Bitwarden-resolved value.
+    ValueTask<string?> IValueProvider.GetValueAsync(ValueProviderContext context, CancellationToken cancellationToken)
+    {
+        return ((IValueProvider)this).GetValueAsync(cancellationToken);
+    }
 }

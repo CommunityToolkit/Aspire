@@ -404,7 +404,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithBitwardenSecretValue("DEMO_API_KEY", managedSecret.Resource);
+        consumer.WithBitwardenSecretValue("DEMO_API_KEY", managedSecret);
 
         using var app = appBuilder.Build();
 
@@ -429,7 +429,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret.Resource);
+        consumer.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret);
 
         using var app = appBuilder.Build();
 

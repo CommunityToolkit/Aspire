@@ -13,15 +13,3 @@ internal sealed class BitwardenSecretIdExpression(BitwardenSecretResource secret
         return ValueTask.FromResult(secret.ResolvedSecretId?.ToString("D"));
     }
 }
-
-internal sealed class BitwardenSecretValueExpression(BitwardenSecretResource secret) : IManifestExpressionProvider, IValueProvider, IValueWithReferences
-{
-    public string ValueExpression => ((IManifestExpressionProvider)secret).ValueExpression;
-
-    IEnumerable<object> IValueWithReferences.References => [secret.Parent, secret];
-
-    public ValueTask<string?> GetValueAsync(CancellationToken cancellationToken)
-    {
-        return ValueTask.FromResult(secret.Parent.ResolveSecretValue(secret));
-    }
-}

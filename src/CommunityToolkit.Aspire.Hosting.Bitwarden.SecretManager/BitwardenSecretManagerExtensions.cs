@@ -513,22 +513,22 @@ public static class BitwardenSecretManagerExtensions
     /// <typeparam name="TDestination">The destination resource type.</typeparam>
     /// <param name="builder">The destination resource builder.</param>
     /// <param name="environmentVariableName">The destination environment variable name.</param>
-    /// <param name="secret">The Bitwarden secret resource.</param>
+    /// <param name="secret">The Bitwarden secret resource builder.</param>
     /// <returns>The destination resource builder.</returns>
     [AspireExport]
     public static IResourceBuilder<TDestination> WithBitwardenSecretValue<TDestination>(
         this IResourceBuilder<TDestination> builder,
         string environmentVariableName,
-        BitwardenSecretResource secret)
+        IResourceBuilder<BitwardenSecretResource> secret)
         where TDestination : IResourceWithEnvironment
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
         ArgumentNullException.ThrowIfNull(secret);
 
-        AttachSecretDependencies(builder, secret);
+        AttachSecretDependencies(builder, secret.Resource);
 
-        return builder.WithEnvironment(environmentVariableName, new BitwardenSecretValueExpression(secret));
+        return builder.WithEnvironment(environmentVariableName, (IExpressionValue)secret.Resource);
     }
 
     /// <summary>
@@ -538,22 +538,22 @@ public static class BitwardenSecretManagerExtensions
     /// <typeparam name="TDestination">The destination resource type.</typeparam>
     /// <param name="builder">The destination resource builder.</param>
     /// <param name="environmentVariableName">The destination environment variable name.</param>
-    /// <param name="secret">The Bitwarden secret resource.</param>
+    /// <param name="secret">The Bitwarden secret resource builder.</param>
     /// <returns>The destination resource builder.</returns>
     [AspireExport]
     public static IResourceBuilder<TDestination> WithBitwardenSecretId<TDestination>(
         this IResourceBuilder<TDestination> builder,
         string environmentVariableName,
-        BitwardenSecretResource secret)
+        IResourceBuilder<BitwardenSecretResource> secret)
         where TDestination : IResourceWithEnvironment
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
         ArgumentNullException.ThrowIfNull(secret);
 
-        AttachSecretDependencies(builder, secret);
+        AttachSecretDependencies(builder, secret.Resource);
 
-        return builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secret));
+        return builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secret.Resource));
     }
 
     /// <summary>
@@ -1287,9 +1287,8 @@ public static class BitwardenSecretManagerExtensions
         BitwardenSecretResource secret)
         where TDestination : IResourceWithEnvironment
     {
-        builder.WithReferenceRelationship(secret.Parent);
-        builder.WithReferenceRelationship(secret);
-
+        // Reference relationships (secret.Parent and secret itself) are tracked implicitly via
+        // IValueWithReferences.References when WithEnvironment routes through WithEnvironmentValueProvider.
         if (builder.Resource is IResourceWithWaitSupport waitResource)
         {
             builder.ApplicationBuilder.CreateResourceBuilder(waitResource)
