@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Zitadel library
 
-Provides extension methods and resource definitions for a .NET Aspire AppHost to configure Zitadel.
+Provides extension methods and resource definitions for an Aspire AppHost to configure Zitadel.
 
 ## Getting Started
 

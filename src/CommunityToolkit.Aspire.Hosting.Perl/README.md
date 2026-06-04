@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Perl library
 
-Provides extensions methods and resource definitions for the .NET Aspire AppHost to support running Perl.
+Provides extensions methods and resource definitions for the Aspire AppHost to support running Perl.
 
 ## Using the Perl Hosting Integration
 

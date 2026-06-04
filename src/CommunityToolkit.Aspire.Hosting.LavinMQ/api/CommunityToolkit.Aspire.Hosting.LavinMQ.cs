@@ -10,13 +10,13 @@ namespace Aspire.Hosting
 {
     public static partial class LavinMQHostingExtension
     {
-        [AspireExport("addLavinMQ", Description = "Adds a LavinMQ container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> AddLavinMQ(this IDistributedApplicationBuilder builder, string name, int amqpPort = 5672, int managementPort = 15672) { throw null; }
 
-        [AspireExport("withDataBindMount", Description = "Adds a data bind mount to a LavinMQ container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithDataBindMount(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, string source, bool isReadOnly = false) { throw null; }
 
-        [AspireExport("withDataVolume", Description = "Adds a data volume to a LavinMQ container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> WithDataVolume(this ApplicationModel.IResourceBuilder<ApplicationModel.LavinMQContainerResource> builder, string name, bool isReadOnly = false) { throw null; }
     }
 }

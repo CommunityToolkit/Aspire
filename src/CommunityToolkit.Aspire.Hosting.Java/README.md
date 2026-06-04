@@ -1,6 +1,6 @@
 # CommunityToolkit.Aspire.Hosting.Java
 
-Provides extension methods and resource definitions for the .NET Aspire AppHost to support running Java applications. The integration supports Maven, Gradle, and standalone JAR-based applications.
+Provides extension methods and resource definitions for the Aspire AppHost to support running Java applications. The integration supports Maven, Gradle, and standalone JAR-based applications.
 
 ## Install the package
 

@@ -11,6 +11,8 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class BunAppExtensions
 {
+    private const string BunDeprecationMessage = "CommunityToolkit.Aspire.Hosting.Bun is deprecated. Use Aspire.Hosting.JavaScript and builder.AddBunApp(...) instead. This package will be removed in a future release.";
+
     /// <summary>
     /// Adds a Bun app to the builder.
     /// </summary>
@@ -21,6 +23,7 @@ public static class BunAppExtensions
     /// <param name="watch">Whether to watch for changes.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
+    [Obsolete(BunDeprecationMessage)]
     public static IResourceBuilder<BunAppResource> AddBunApp(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -51,6 +54,7 @@ public static class BunAppExtensions
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>This overload is not available in polyglot app hosts. Use <see cref="WithBunPackageInstallation(IResourceBuilder{BunAppResource})"/> instead.</remarks>
     [AspireExportIgnore(Reason = "Action<IResourceBuilder<BunInstallerResource>> is not ATS-compatible. Use the overload without configureInstaller instead.")]
+    [Obsolete(BunDeprecationMessage)]
     public static IResourceBuilder<BunAppResource> WithBunPackageInstallation(this IResourceBuilder<BunAppResource> resource, Action<IResourceBuilder<BunInstallerResource>>? configureInstaller = null)
         => WithBunPackageInstallationCore(resource, configureInstaller);
 

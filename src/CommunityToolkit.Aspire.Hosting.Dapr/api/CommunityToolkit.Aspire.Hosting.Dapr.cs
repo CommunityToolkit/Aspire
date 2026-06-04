@@ -13,16 +13,16 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "IValueProvider is too broad for stable polyglot code generation. Use the endpoint, reference expression, or parameter overloads instead.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.IValueProvider valueProvider) { throw null; }
 
-        [AspireExport("withMetadataParameter", MethodName = "withMetadataParameter", Description = "Adds parameter-backed metadata to a Dapr component")]
+        [AspireExport("withMetadataParameter", MethodName = "withMetadataParameter")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, ApplicationModel.ParameterResource parameterResource) { throw null; }
 
-        [AspireExport("withMetadata", Description = "Adds static metadata to a Dapr component")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> WithMetadata(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> builder, string name, string value) { throw null; }
     }
 
     public static partial class IDistributedApplicationBuilderExtensions
     {
-        [AspireExport("addDapr", Description = "Adds Dapr support to the distributed application builder")]
+        [AspireExport]
         public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, System.Action<CommunityToolkit.Aspire.Hosting.Dapr.DaprOptions>? configure = null) { throw null; }
 
         [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
@@ -41,7 +41,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<T> WithDaprSidecar<T>(this ApplicationModel.IResourceBuilder<T> builder, CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions? options = null)
             where T : ApplicationModel.IResource { throw null; }
 
-        [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", Description = "Adds a Dapr sidecar to the resource and exposes it for callback configuration")]
+        [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", RunSyncOnBackgroundThread = true)]
         public static ApplicationModel.IResourceBuilder<T> WithDaprSidecar<T>(this ApplicationModel.IResourceBuilder<T> builder, System.Action<ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource>> configureSidecar)
             where T : ApplicationModel.IResource { throw null; }
 
@@ -52,7 +52,7 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> WithOptions(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> builder, CommunityToolkit.Aspire.Hosting.Dapr.DaprSidecarOptions options) { throw null; }
 
-        [AspireExport("withReference", Description = "Associates a Dapr component with a Dapr sidecar resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> WithReference(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprSidecarResource> builder, ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Dapr.IDaprComponentResource> component) { throw null; }
 
         [System.Obsolete("Add reference to the sidecar resource instead of the project resource")]

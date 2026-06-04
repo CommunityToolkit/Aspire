@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class DistributedApplicationBuilderExtensions
     {
-        [AspireExport("addFlyway", Description = "Adds a Flyway container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> AddFlyway(this IDistributedApplicationBuilder builder, string name, string migrationScriptsPath) { throw null; }
 
         public sealed partial class <G>$2768207B2D58D0758B760BF9865B3152
@@ -18,7 +18,7 @@ namespace Aspire.Hosting
             internal <G>$2768207B2D58D0758B760BF9865B3152() { }
 
             [System.Runtime.CompilerServices.ExtensionMarker("<M>$7E82668A53676F97137EF4F844E46C25")]
-            [AspireExport("addFlyway", Description = "Adds a Flyway container resource")]
+            [AspireExport]
             public ApplicationModel.IResourceBuilder<ApplicationModel.FlywayResource> AddFlyway(string name, string migrationScriptsPath) { throw null; }
 
             public static partial class <M>$7E82668A53676F97137EF4F844E46C25
@@ -47,7 +47,7 @@ namespace CommunityToolkit.Aspire.Hosting.Flyway
 {
     public static partial class FlywayResourceBuilderExtensions
     {
-        [global::Aspire.Hosting.AspireExport("withTelemetryOptIn", Description = "Opts in to Redgate telemetry for a Flyway resource")]
+        [global::Aspire.Hosting.AspireExport]
         public static global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.FlywayResource> WithTelemetryOptIn(this global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.FlywayResource> builder) { throw null; }
 
         public sealed partial class <G>$3630027837079DBDB4C7B2F0326D1811
@@ -55,7 +55,7 @@ namespace CommunityToolkit.Aspire.Hosting.Flyway
             internal <G>$3630027837079DBDB4C7B2F0326D1811() { }
 
             [System.Runtime.CompilerServices.ExtensionMarker("<M>$3C0C55E6ADDC766E6566DD2928E738EF")]
-            [global::Aspire.Hosting.AspireExport("withTelemetryOptIn", Description = "Opts in to Redgate telemetry for a Flyway resource")]
+            [global::Aspire.Hosting.AspireExport]
             public global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.FlywayResource> WithTelemetryOptIn() { throw null; }
 
             public static partial class <M>$3C0C55E6ADDC766E6566DD2928E738EF
