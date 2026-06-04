@@ -161,7 +161,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             Guid? secretId = secret.ExistingSecretId ?? secret.SecretId;
             if (secretId is Guid id)
             {
-                logger.LogDebug("Looking up reference secret '{SecretName}' by ID {SecretId}.", secret.LocalName, id);
+                logger.LogDebug("Looking up reference secret '{RemoteName}' by ID {SecretId}.", secret.RemoteName, id);
                 BitwardenSecretInfo? found = lookupContext.GetSecret(id);
                 if (found is null)
                 {
@@ -177,7 +177,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             }
             else
             {
-                logger.LogDebug("Looking up reference secret '{SecretName}' by name '{RemoteName}' in project {ProjectId}.", secret.LocalName, secret.RemoteName, projectId);
+                logger.LogDebug("Looking up reference secret '{RemoteName}' in project {ProjectId}.", secret.RemoteName, projectId);
                 IReadOnlyList<BitwardenSecretInfo> candidates = lookupContext.FindSecretsByNameInProject(secret.RemoteName, projectId);
                 if (candidates.Count == 0)
                 {
@@ -196,7 +196,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             resource.BindResolvedSecret(secretInfo.Id, secretInfo.Key, secretInfo.Value);
             secret.ResolveWaitForValue(secretInfo.Value);
             await NotifySecretValueResolvedAsync(secret, secretInfo.Value, services, cancellationToken).ConfigureAwait(false);
-            logger.LogInformation("Synced reference secret '{SecretName}' from Bitwarden secret {SecretId}.", secret.LocalName, secretInfo.Id);
+            logger.LogInformation("Synced reference secret '{RemoteName}' from Bitwarden secret {SecretId}.", secret.RemoteName, secretInfo.Id);
         }
 
         logger.LogInformation("Synced {Count} reference secret values from Bitwarden for resource '{ResourceName}'.", resource.UnmanagedSecrets.Count(), resource.Name);
@@ -237,7 +237,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         {
             if (secret.HasValue())
             {
-                logger.LogDebug("Skipping upstream sync for managed secret '{SecretName}' because a local value is already configured.", secret.LocalName);
+                logger.LogDebug("Skipping upstream sync for managed secret '{RemoteName}' because a local value is already configured.", secret.RemoteName);
                 continue;
             }
 
@@ -253,7 +253,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             if (upstreamSecret is null)
             {
-                logger.LogDebug("No upstream value found for managed secret '{SecretName}'. A local parameter value is still required.", secret.LocalName);
+                logger.LogDebug("No upstream value found for managed secret '{RemoteName}'. A local parameter value is still required.", secret.RemoteName);
                 continue;
             }
 
@@ -262,7 +262,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             secret.ResolveWaitForValue(upstreamSecret.Value);
             await NotifySecretValueResolvedAsync(secret, upstreamSecret.Value, services, cancellationToken).ConfigureAwait(false);
             syncedCount++;
-            logger.LogInformation("Synced managed secret '{SecretName}' from existing Bitwarden secret {SecretId}.", secret.LocalName, upstreamSecret.Id);
+            logger.LogInformation("Synced managed secret '{RemoteName}' from existing Bitwarden secret {SecretId}.", secret.RemoteName, upstreamSecret.Id);
         }
 
         logger.LogInformation("Synced {SyncedSecretCount} managed secret values from upstream for resource '{ResourceName}'.", syncedCount, resource.Name);
@@ -396,7 +396,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             // and ignore the reloaded IConfiguration value.
             if (!string.IsNullOrWhiteSpace(configuration[configKey]))
             {
-                logger.LogDebug("Skipping pre-sync for managed secret '{SecretName}': value already in configuration.", secret.LocalName);
+                logger.LogDebug("Skipping pre-sync for managed secret '{RemoteName}': value already in configuration.", secret.RemoteName);
                 continue;
             }
 
@@ -412,7 +412,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             if (existing is null)
             {
-                logger.LogDebug("No upstream value found for managed secret '{SecretName}' during pre-sync.", secret.LocalName);
+                logger.LogDebug("No upstream value found for managed secret '{RemoteName}' during pre-sync.", secret.RemoteName);
                 continue;
             }
 
@@ -421,7 +421,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             await deploymentStateManager.SaveSectionAsync(slot, cancellationToken).ConfigureAwait(false);
             preResolvedCount++;
 
-            logger.LogInformation("Pre-resolved managed secret '{SecretName}' from Bitwarden secret {SecretId}.", secret.LocalName, existing.Id);
+            logger.LogInformation("Pre-resolved managed secret '{RemoteName}' from Bitwarden secret {SecretId}.", secret.RemoteName, existing.Id);
         }
 
         savedCount += preResolvedCount;
@@ -475,7 +475,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             provider.Login(accessToken, cacheContext.AuthCachePath);
 
             Dictionary<string, Guid> staleManagedMappings = cacheContext.Cache.ManagedSecretIds
-                .Where(entry => resource.ManagedSecrets.All(secret => !string.Equals(secret.LocalName, entry.Key, StringComparison.OrdinalIgnoreCase)))
+                .Where(entry => resource.ManagedSecrets.All(secret => !string.Equals(secret.RemoteName, entry.Key, StringComparison.OrdinalIgnoreCase)))
                 .ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.OrdinalIgnoreCase);
 
             if (staleManagedMappings.Count > 0)
@@ -488,13 +488,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
             logger.LogInformation("Provisioning {ManagedSecretCount} managed secrets for resource '{ResourceName}'.", resource.ManagedSecrets.Count(), resource.Name);
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
             {
-                logger.LogDebug("Processing managed secret '{SecretName}' (remote name: {RemoteName}).", secret.LocalName, secret.RemoteName);
+                logger.LogDebug("Processing managed secret '{RemoteName}'.", secret.RemoteName);
                 await ReconcileManagedSecretAsync(resource, organizationId, secret, cacheContext.Cache, lookupContext, provider, interactionService, logger, staleManagedMappings, services, cancellationToken).ConfigureAwait(false);
             }
 
             cacheContext.Cache.ManagedSecretIds = resource.ManagedSecrets
                 .Where(secret => secret.SecretId is not null)
-                .ToDictionary(secret => secret.LocalName, secret => secret.SecretId!.Value, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(secret => secret.RemoteName, secret => secret.SecretId!.Value, StringComparer.OrdinalIgnoreCase);
 
             logger.LogInformation("Validating {DeclaredSecretCount} declared secret references for resource '{ResourceName}'.", resource.DeclaredSecretReferences.Count(), resource.Name);
             await ValidateDeclaredSecretReferencesAsync(resource, cacheContext.Cache, lookupContext, interactionService, logger, cancellationToken).ConfigureAwait(false);
@@ -581,84 +581,82 @@ internal sealed class BitwardenSecretManagerProvisioner(
         IServiceProvider services,
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Resolving value for managed secret '{SecretName}'.", secretResource.LocalName);
+        logger.LogDebug("Resolving value for managed secret '{RemoteName}'.", secretResource.RemoteName);
         string resolvedValue = await ((IValueProvider)secretResource).GetValueAsync(cancellationToken).ConfigureAwait(false)
-            ?? throw new DistributedApplicationException($"Managed Bitwarden secret '{secretResource.LocalName}' did not resolve to a value.");
-        logger.LogDebug("Successfully resolved value for managed secret '{SecretName}'.", secretResource.LocalName);
+            ?? throw new DistributedApplicationException($"Managed Bitwarden secret '{secretResource.RemoteName}' did not resolve to a value.");
+        logger.LogDebug("Successfully resolved value for managed secret '{RemoteName}'.", secretResource.RemoteName);
 
         Guid projectId = resource.ProjectId ?? throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' has not resolved a project identifier.");
 
         BitwardenSecretInfo secret;
         if (secretResource.ExistingSecretId is Guid explicitSecretId)
         {
-            logger.LogDebug("Using explicitly configured secret ID {SecretId} for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
+            logger.LogDebug("Using explicitly configured secret ID {SecretId} for managed secret '{RemoteName}'.", explicitSecretId, secretResource.RemoteName);
             BitwardenSecretInfo? explicitSecret = lookupContext.GetSecret(explicitSecretId);
             if (explicitSecret is null)
             {
-                logger.LogError("Configured secret {SecretId} was not found for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
-                throw new DistributedApplicationException($"Bitwarden secret '{explicitSecretId:D}' configured for managed secret '{secretResource.LocalName}' was not found.");
+                logger.LogError("Configured secret {SecretId} was not found for managed secret '{RemoteName}'.", explicitSecretId, secretResource.RemoteName);
+                throw new DistributedApplicationException($"Bitwarden secret '{explicitSecretId:D}' configured for managed secret '{secretResource.RemoteName}' was not found.");
             }
 
-            logger.LogDebug("Ensuring configured secret {SecretId} matches desired configuration for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
+            logger.LogDebug("Ensuring configured secret {SecretId} matches desired configuration for managed secret '{RemoteName}'.", explicitSecretId, secretResource.RemoteName);
             secret = EnsureSecretMatches(provider, explicitSecret, projectId, secretResource.RemoteName, resolvedValue);
         }
-        else if (state.ManagedSecretIds.TryGetValue(secretResource.LocalName, out Guid persistedSecretId))
+        else if (state.ManagedSecretIds.TryGetValue(secretResource.RemoteName, out Guid persistedSecretId))
         {
-            logger.LogDebug("Found persisted secret ID {SecretId} for managed secret '{SecretName}'.", persistedSecretId, secretResource.LocalName);
+            logger.LogDebug("Found persisted secret ID {SecretId} for managed secret '{RemoteName}'.", persistedSecretId, secretResource.RemoteName);
             BitwardenSecretInfo? persistedSecret = lookupContext.GetSecret(persistedSecretId);
             if (persistedSecret is null || persistedSecret.ProjectId != projectId)
             {
                 logger.LogWarning(
-                    "Managed Bitwarden secret '{SecretName}' (remote: {RemoteName}) has drifted out of project {ProjectId}. A replacement secret will be created.",
-                    secretResource.LocalName,
+                    "Managed Bitwarden secret '{RemoteName}' has drifted out of project {ProjectId}. A replacement secret will be created.",
                     secretResource.RemoteName,
                     projectId);
 
                 secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId], SecretUpdateAudit.CreationNote());
-                logger.LogInformation("Created replacement secret {SecretId} for managed secret '{SecretName}'.", secret.Id, secretResource.LocalName);
+                logger.LogInformation("Created replacement secret {SecretId} for managed secret '{RemoteName}'.", secret.Id, secretResource.RemoteName);
             }
             else
             {
-                logger.LogDebug("Ensuring persisted secret {SecretId} matches desired configuration for managed secret '{SecretName}'.", persistedSecretId, secretResource.LocalName);
+                logger.LogDebug("Ensuring persisted secret {SecretId} matches desired configuration for managed secret '{RemoteName}'.", persistedSecretId, secretResource.RemoteName);
                 secret = EnsureSecretMatches(provider, persistedSecret, projectId, secretResource.RemoteName, resolvedValue);
             }
         }
         else
         {
-            logger.LogDebug("Searching for existing secrets named '{RemoteName}' in project {ProjectId} for managed secret '{SecretName}'.", secretResource.RemoteName, projectId, secretResource.LocalName);
+            logger.LogDebug("Searching for existing secrets named '{RemoteName}' in project {ProjectId}.", secretResource.RemoteName, projectId);
             IReadOnlyList<BitwardenSecretInfo> candidates = lookupContext.FindSecretsByNameInProject(secretResource.RemoteName, projectId);
 
             if (candidates.Count == 0)
             {
-                logger.LogInformation("No existing secret found for managed secret '{SecretName}' (remote: {RemoteName}). Creating new secret.", secretResource.LocalName, secretResource.RemoteName);
+                logger.LogInformation("No existing secret found for managed secret '{RemoteName}'. Creating new secret.", secretResource.RemoteName);
                 secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId], SecretUpdateAudit.CreationNote());
-                logger.LogInformation("Created new secret {SecretId} for managed secret '{SecretName}'.", secret.Id, secretResource.LocalName);
+                logger.LogInformation("Created new secret {SecretId} for managed secret '{RemoteName}'.", secret.Id, secretResource.RemoteName);
             }
             else if (candidates.Count == 1)
             {
                 if (HasHistoricalManagedMapping(staleManagedMappings, lookupContext, secretResource.RemoteName))
                 {
                     logger.LogWarning(
-                        "Creating a new Bitwarden secret for managed secret '{SecretName}' because the previous local identity was renamed and no explicit adoption was configured.",
-                        secretResource.LocalName);
+                        "Creating a new Bitwarden secret for managed secret '{RemoteName}' because the previous remote name was renamed and no explicit adoption was configured.",
+                        secretResource.RemoteName);
 
                     secret = provider.CreateSecret(organizationId, secretResource.RemoteName, resolvedValue, [projectId], SecretUpdateAudit.CreationNote());
-                    logger.LogInformation("Created new secret {SecretId} for renamed managed secret '{SecretName}'.", secret.Id, secretResource.LocalName);
+                    logger.LogInformation("Created new secret {SecretId} for renamed managed secret '{RemoteName}'.", secret.Id, secretResource.RemoteName);
                 }
                 else
                 {
-                    logger.LogDebug("Ensuring single matching secret {SecretId} matches desired configuration for managed secret '{SecretName}'.", candidates[0].Id, secretResource.LocalName);
+                    logger.LogDebug("Ensuring single matching secret {SecretId} matches desired configuration for managed secret '{RemoteName}'.", candidates[0].Id, secretResource.RemoteName);
                     secret = EnsureSecretMatches(provider, candidates[0], projectId, secretResource.RemoteName, resolvedValue);
                 }
             }
             else
             {
                 logger.LogWarning(
-                    "Found {CandidateCount} existing secrets named '{RemoteName}' in project {ProjectId} for managed secret '{SecretName}'. User interaction required to resolve.",
+                    "Found {CandidateCount} existing secrets named '{RemoteName}' in project {ProjectId}. User interaction required to resolve.",
                     candidates.Count,
                     secretResource.RemoteName,
-                    projectId,
-                    secretResource.LocalName);
+                    projectId);
 
                 Guid selectedSecretId = await ResolveDuplicateAsync(
                     interactionService,
@@ -667,7 +665,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     candidates,
                     cancellationToken).ConfigureAwait(false);
 
-                logger.LogInformation("User selected secret {SecretId} for managed secret '{SecretName}'.", selectedSecretId, secretResource.LocalName);
+                logger.LogInformation("User selected secret {SecretId} for managed secret '{RemoteName}'.", selectedSecretId, secretResource.RemoteName);
                 BitwardenSecretInfo selectedSecret = candidates.Single(candidate => candidate.Id == selectedSecretId);
                 secret = EnsureSecretMatches(provider, selectedSecret, projectId, secretResource.RemoteName, resolvedValue);
             }
@@ -678,7 +676,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
         resource.BindResolvedSecret(secret.Id, secretResource.RemoteName, secret.Value);
         secretResource.ResolveWaitForValue(secret.Value);
         await NotifySecretValueResolvedAsync(secretResource, secret.Value, services, cancellationToken).ConfigureAwait(false);
-        logger.LogInformation("Successfully provisioned managed secret '{SecretName}' with ID {SecretId}.", secretResource.LocalName, secret.Id);
+        logger.LogInformation("Successfully provisioned managed secret '{RemoteName}' with ID {SecretId}.", secretResource.RemoteName, secret.Id);
     }
 
     private static async Task<BitwardenSecretInfo?> ResolveExistingManagedSecretAsync(
@@ -693,7 +691,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
     {
         if (secretResource.ExistingSecretId is Guid explicitSecretId)
         {
-            logger.LogDebug("Checking explicitly configured upstream secret {SecretId} for managed secret '{SecretName}'.", explicitSecretId, secretResource.LocalName);
+            logger.LogDebug("Checking explicitly configured upstream secret {SecretId} for managed secret '{RemoteName}'.", explicitSecretId, secretResource.RemoteName);
             BitwardenSecretInfo? explicitSecret = lookupContext.GetSecret(explicitSecretId);
             if (explicitSecret is not null)
             {
@@ -703,9 +701,9 @@ internal sealed class BitwardenSecretManagerProvisioner(
             return null;
         }
 
-        if (state.ManagedSecretIds.TryGetValue(secretResource.LocalName, out Guid persistedSecretId))
+        if (state.ManagedSecretIds.TryGetValue(secretResource.RemoteName, out Guid persistedSecretId))
         {
-            logger.LogDebug("Checking persisted upstream secret {SecretId} for managed secret '{SecretName}'.", persistedSecretId, secretResource.LocalName);
+            logger.LogDebug("Checking persisted upstream secret {SecretId} for managed secret '{RemoteName}'.", persistedSecretId, secretResource.RemoteName);
             BitwardenSecretInfo? persistedSecret = lookupContext.GetSecret(persistedSecretId);
             if (persistedSecret is not null && persistedSecret.ProjectId == projectId)
             {
@@ -713,7 +711,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
             }
         }
 
-        logger.LogDebug("Searching upstream for managed secret '{SecretName}' with remote name '{RemoteName}' in project {ProjectId}.", secretResource.LocalName, secretResource.RemoteName, projectId);
+        logger.LogDebug("Searching upstream for managed secret '{RemoteName}' in project {ProjectId}.", secretResource.RemoteName, projectId);
         IReadOnlyList<BitwardenSecretInfo> candidates = lookupContext.FindSecretsByNameInProject(secretResource.RemoteName, projectId);
         if (candidates.Count == 0)
         {
@@ -749,14 +747,14 @@ internal sealed class BitwardenSecretManagerProvisioner(
         {
             if (secretReference.IsManaged)
             {
-                logger.LogDebug("Processing declared reference to managed secret '{SecretName}'.", secretReference.LocalName);
+                logger.LogDebug("Processing declared reference to managed secret '{RemoteName}'.", secretReference.RemoteName);
                 if (secretReference.SecretId is Guid managedSecretId)
                 {
                     string? managedSecretValue = resource.ResolveSecretValue(secretReference);
                     if (managedSecretValue is not null)
                     {
                         resource.BindResolvedSecret(managedSecretId, secretReference.RemoteName, managedSecretValue);
-                        logger.LogDebug("Bound declared reference to managed secret {SecretId} for '{SecretName}'.", managedSecretId, secretReference.LocalName);
+                        logger.LogDebug("Bound declared reference to managed secret {SecretId} for '{RemoteName}'.", managedSecretId, secretReference.RemoteName);
                     }
                 }
 

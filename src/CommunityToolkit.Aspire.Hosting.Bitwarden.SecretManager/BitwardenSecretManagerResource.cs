@@ -198,14 +198,14 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
 
-        BitwardenSecretResource? existing = _secrets.LastOrDefault(
-            s => string.Equals(s.LocalName, name, StringComparison.OrdinalIgnoreCase));
+        BitwardenSecretResource? existing =
+            _secrets.LastOrDefault(s => string.Equals(s.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase));
         if (existing is not null)
         {
             return existing;
         }
 
-        BitwardenSecretResource secret = new($"{Name}-{name}", name, remoteName, this);
+        BitwardenSecretResource secret = new($"{Name}-{name}", remoteName, this);
         RegisterSecret(secret);
         return secret;
     }

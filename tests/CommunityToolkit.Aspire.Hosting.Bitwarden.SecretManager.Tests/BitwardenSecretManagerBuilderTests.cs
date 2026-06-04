@@ -78,18 +78,20 @@ public class BitwardenSecretManagerBuilderTests
         Assert.Equal("bitwarden-project-name", resource.GetProjectNameDisplayValue());
     }
 
-    [Fact]
-    public void GetSecret_WhenManagedSecretExists_ReturnsManagedSecretResource()
+    [Theory]
+    [InlineData("key", "key", "key", "key")]                                   // same Aspire name and remote name
+    [InlineData("app-key", "shared-secret", "shared-secret", "shared-secret")] // GetSecret by remote name only
+    [InlineData("app-key", "shared-secret", "my-ref", "shared-secret")]        // GetSecret with a different Aspire name, same remote name
+    public void GetSecret_WhenManagedSecretExists_ReturnsManagedSecretResource(
+        string addName, string addRemoteName, string getName, string getRemoteName)
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
-
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-
         var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
-        var managedSecret = bitwarden.AddSecret("managed-secret");
 
-        var reference = bitwarden.GetSecret("managed-secret");
+        var managedSecret = bitwarden.AddSecret(addName, addRemoteName);
+        var reference = bitwarden.GetSecret(getName, getRemoteName);
 
         Assert.Same(managedSecret.Resource, reference.Resource);
         Assert.Single(bitwarden.Resource.DeclaredSecretReferences);

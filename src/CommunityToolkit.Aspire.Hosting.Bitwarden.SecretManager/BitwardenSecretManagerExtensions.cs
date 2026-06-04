@@ -1045,11 +1045,6 @@ public static class BitwardenSecretManagerExtensions
         string name,
         string remoteName)
     {
-        if (builder.Resource.ManagedSecrets.Any(secret => string.Equals(secret.LocalName, name, StringComparison.OrdinalIgnoreCase)))
-        {
-            throw new DistributedApplicationException($"Bitwarden resource '{builder.Resource.Name}' already declares a managed secret with local name '{name}'. Managed local names must be unique per Bitwarden resource.");
-        }
-
         if (builder.Resource.ManagedSecrets.Any(secret => string.Equals(secret.RemoteName, remoteName, StringComparison.OrdinalIgnoreCase)))
         {
             throw new DistributedApplicationException($"Bitwarden resource '{builder.Resource.Name}' already declares a managed secret with remote name '{remoteName}'. Managed remote names must be unique per Bitwarden resource.");
@@ -1057,7 +1052,7 @@ public static class BitwardenSecretManagerExtensions
 
         string secretResourceName = $"{builder.Resource.Name}-{name}";
         var config = builder.ApplicationBuilder.Configuration;
-        BitwardenSecretResource secret = new(secretResourceName, name, remoteName, builder.Resource, paramDefault =>
+        BitwardenSecretResource secret = new(secretResourceName, remoteName, builder.Resource, paramDefault =>
         {
             string key = $"Parameters:{secretResourceName}";
             string? value = config[key];

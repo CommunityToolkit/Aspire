@@ -12,20 +12,17 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// Initializes a new instance of the <see cref="BitwardenSecretResource"/> class for a managed secret.
     /// </summary>
     /// <param name="name">The internal Aspire resource name.</param>
-    /// <param name="localName">The caller-provided local secret name.</param>
     /// <param name="remoteName">The Bitwarden secret name.</param>
     /// <param name="parent">The owning Bitwarden resource.</param>
     /// <param name="valueGetter">Callback that resolves the secret's value from configuration.</param>
-    public BitwardenSecretResource(string name, string localName, string remoteName, BitwardenSecretManagerResource parent, Func<ParameterDefault?, string> valueGetter)
+    public BitwardenSecretResource(string name, string remoteName, BitwardenSecretManagerResource parent, Func<ParameterDefault?, string> valueGetter)
         : base(name, valueGetter, secret: true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(localName);
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
         ArgumentNullException.ThrowIfNull(parent);
         ArgumentNullException.ThrowIfNull(valueGetter);
 
-        LocalName = localName;
         RemoteName = remoteName;
         Parent = parent;
         IsManaged = true;
@@ -34,7 +31,7 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// <summary>
     /// Initializes a new instance of the <see cref="BitwardenSecretResource"/> class for an unmanaged (reference-only) secret by remote name.
     /// </summary>
-    internal BitwardenSecretResource(string name, string localName, string remoteName, BitwardenSecretManagerResource parent)
+    internal BitwardenSecretResource(string name, string remoteName, BitwardenSecretManagerResource parent)
         // Empty string instead of throwing MissingParameterValueException: ParameterProcessor.ProcessParameterAsync
         // adds parameters to _unresolvedParameters when their valueGetter throws, which causes them to appear in
         // the process-parameters prompt form. Unmanaged secrets have no local value by design — their value comes
@@ -43,11 +40,9 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
         : base(name, _ => string.Empty, secret: true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(localName);
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
         ArgumentNullException.ThrowIfNull(parent);
 
-        LocalName = localName;
         RemoteName = remoteName;
         Parent = parent;
         IsManaged = false;
@@ -63,7 +58,6 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(parent);
 
-        LocalName = name;
         RemoteName = name; // placeholder; actual name resolved from Bitwarden
         Parent = parent;
         ExistingSecretId = secretId;
@@ -75,8 +69,6 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// as opposed to a reference-only secret (read from an existing Bitwarden secret).
     /// </summary>
     public bool IsManaged { get; }
-
-    internal string LocalName { get; }
 
     /// <summary>
     /// Gets the Bitwarden secret name.
