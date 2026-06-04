@@ -4,7 +4,7 @@ Bitwarden Secrets Manager is modeled as a declared AppHost resource graph.
 The graph is the primary contract. Deployment happens through explicit Aspire pipeline steps that materialize the declared graph in Bitwarden.
 
 - `BitwardenSecretManagerResource` declares a Bitwarden project and its configuration.
-- `BitwardenSecretResource` declares either a managed secret (created or updated on every run, `IsManaged = true`) or a reference-only secret (read from an existing Bitwarden secret, `IsManaged = false`). Both modes inherit `ParameterResource` and are returned by `AddSecret` and `GetSecret` respectively as `IResourceBuilder<BitwardenSecretResource>`. Both APIs share the same overload shape: a single-name form where the Aspire resource name and the Bitwarden secret name are identical, and a two-name form (`name`, `remoteName`) where they differ. Pass the builder directly to `WithBitwardenSecretValue` or `WithBitwardenSecretId` to inject the secret into a dependent resource.
+- `BitwardenSecretResource` declares either a managed secret (created or updated on every run, `IsManaged = true`) or a reference-only secret (read from an existing Bitwarden secret, `IsManaged = false`). Both modes inherit `ParameterResource` and are returned by `AddSecret` and `GetSecret` respectively as `IResourceBuilder<BitwardenSecretResource>`. Both APIs share the same overload shape: a single-name form where the Aspire resource name and the Bitwarden secret name are identical, and a two-name form (`name`, `remoteName`) where they differ. To inject the resolved secret value into a dependent resource, pass the secret builder directly to `WithEnvironment`. To inject the secret ID instead, call `.AsSecretId()` on the builder and pass the result to `WithEnvironment`.
 - Dependent resources must call `.WaitForCompletion(bitwarden)` explicitly to block until provisioning completes.
 
 This design intentionally treats custom publish-manifest schema as legacy. The integration does not rely on a bespoke manifest payload as its architectural center.
@@ -51,7 +51,7 @@ Happy path:
 
 1. Declare the Bitwarden project with `AddBitwardenSecretManager(...)`.
 2. Declare any managed secrets with `AddSecret(...)`.
-3. Reference the Bitwarden resource from dependent resources with `WithReference(...)` or `WithBitwardenSecretValue(...)`.
+3. Reference the Bitwarden resource from dependent resources with `WithReference(...)` or `WithEnvironment(...)`.
 4. Run `aspire deploy`.
 5. During pipeline execution, the six Bitwarden steps materialize the declared graph in Bitwarden.
 6. The deployed graph is stable and available for consumers.

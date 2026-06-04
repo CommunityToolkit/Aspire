@@ -503,48 +503,17 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Injects a Bitwarden secret value into a destination environment variable.
+    /// Returns an <see cref="IExpressionValue"/> that resolves to the Bitwarden secret identifier.
+    /// Pass it to <c>WithEnvironment</c> to inject the secret ID as an environment variable.
+    /// The app then uses the Bitwarden SDK to fetch the secret value at runtime.
     /// </summary>
-    /// <typeparam name="TDestination">The destination resource type.</typeparam>
-    /// <param name="builder">The destination resource builder.</param>
-    /// <param name="environmentVariableName">The destination environment variable name.</param>
     /// <param name="secret">The Bitwarden secret resource builder.</param>
-    /// <returns>The destination resource builder.</returns>
+    /// <returns>An expression value that resolves to the Bitwarden secret identifier.</returns>
     [AspireExport]
-    public static IResourceBuilder<TDestination> WithBitwardenSecretValue<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        string environmentVariableName,
-        IResourceBuilder<BitwardenSecretResource> secret)
-        where TDestination : IResourceWithEnvironment
+    public static IExpressionValue AsSecretId(this IResourceBuilder<BitwardenSecretResource> secret)
     {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
         ArgumentNullException.ThrowIfNull(secret);
-
-        return builder.WithEnvironment(environmentVariableName, (IExpressionValue)secret.Resource);
-    }
-
-    /// <summary>
-    /// Injects a Bitwarden secret identifier into a destination environment variable.
-    /// The app uses the Bitwarden SDK to fetch the value by ID at runtime.
-    /// </summary>
-    /// <typeparam name="TDestination">The destination resource type.</typeparam>
-    /// <param name="builder">The destination resource builder.</param>
-    /// <param name="environmentVariableName">The destination environment variable name.</param>
-    /// <param name="secret">The Bitwarden secret resource builder.</param>
-    /// <returns>The destination resource builder.</returns>
-    [AspireExport]
-    public static IResourceBuilder<TDestination> WithBitwardenSecretId<TDestination>(
-        this IResourceBuilder<TDestination> builder,
-        string environmentVariableName,
-        IResourceBuilder<BitwardenSecretResource> secret)
-        where TDestination : IResourceWithEnvironment
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(environmentVariableName);
-        ArgumentNullException.ThrowIfNull(secret);
-
-        return builder.WithEnvironment(environmentVariableName, new BitwardenSecretIdExpression(secret.Resource));
+        return new BitwardenSecretIdExpression(secret.Resource);
     }
 
     /// <summary>

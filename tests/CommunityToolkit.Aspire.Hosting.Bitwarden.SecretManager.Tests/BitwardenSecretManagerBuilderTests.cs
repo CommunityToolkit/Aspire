@@ -389,7 +389,7 @@ public class BitwardenSecretManagerBuilderTests
     }
 
     [Fact]
-    public async Task WithBitwardenSecretValue_InjectsResolvedSecretValue()
+    public async Task WithEnvironment_SecretBuilder_InjectsResolvedSecretValue()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
@@ -404,7 +404,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithBitwardenSecretValue("DEMO_API_KEY", managedSecret);
+        consumer.WithEnvironment("DEMO_API_KEY", managedSecret);
 
         using var app = appBuilder.Build();
 
@@ -414,7 +414,7 @@ public class BitwardenSecretManagerBuilderTests
     }
 
     [Fact]
-    public async Task WithBitwardenSecretId_InjectsResolvedSecretId()
+    public async Task AsSecretId_InjectsResolvedSecretId()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
@@ -429,7 +429,7 @@ public class BitwardenSecretManagerBuilderTests
         bitwarden.Resource.BindResolvedSecret(secretId, managedSecret.Resource.RemoteName, "resolved-managed-value");
 
         var consumer = appBuilder.AddContainer("consumer", "busybox", "1.37.0");
-        consumer.WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret);
+        consumer.WithEnvironment("DEMO_API_KEY_SECRET_ID", managedSecret.AsSecretId());
 
         using var app = appBuilder.Build();
 

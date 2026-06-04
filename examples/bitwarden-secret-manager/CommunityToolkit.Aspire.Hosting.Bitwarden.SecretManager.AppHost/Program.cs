@@ -56,8 +56,8 @@ var api = builder.AddProject<CommunityToolkit_Aspire_Hosting_Bitwarden_SecretMan
 // (See ApiService/Program.cs for an example of retrieving secrets from the client in code.)
 api.WithReference(bitwarden)
     .WaitForCompletion(bitwarden)
-    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", demoApiKeySecret)
-    .WithBitwardenSecretId("DEMO_DB_PASSWORD_SECRET_ID", demoDbPasswordSecret)
+    .WithEnvironment("DEMO_API_KEY_SECRET_ID", demoApiKeySecret.AsSecretId())
+    .WithEnvironment("DEMO_DB_PASSWORD_SECRET_ID", demoDbPasswordSecret.AsSecretId())
     // Recommended: supply a least-privilege read-only access token so the client does not receive the management token.
     // IMPORTANT: the client token must be granted read permissions to the Bitwarden project.
     // This cannot be automated: Bitwarden does not expose an API for granting project access to a service account.
@@ -97,7 +97,7 @@ api.PublishAsDockerComposeService((resource, service) =>
 var client = builder.AddContainer("client", "curlimages/curl")
     .WithReference(api)
     .WaitForCompletion(bitwarden)
-    .WithBitwardenSecretValue("DEMO_API_KEY", demoApiKeySecret)
+    .WithEnvironment("DEMO_API_KEY", demoApiKeySecret)
     .WithEntrypoint("sh")
     .WithArgs("-c", "curl -sv $API_HTTP?apiKey=$DEMO_API_KEY");
 

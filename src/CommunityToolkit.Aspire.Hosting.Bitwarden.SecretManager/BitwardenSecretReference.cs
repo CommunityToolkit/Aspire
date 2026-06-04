@@ -1,6 +1,6 @@
 namespace Aspire.Hosting.ApplicationModel;
 
-internal sealed class BitwardenSecretIdExpression(BitwardenSecretResource secret) : IManifestExpressionProvider, IValueProvider, IValueWithReferences
+internal sealed class BitwardenSecretIdExpression(BitwardenSecretResource secret) : IExpressionValue, IValueWithReferences
 {
     public string ValueExpression => secret.ResolvedSecretId is Guid secretId
         ? secretId.ToString("D")

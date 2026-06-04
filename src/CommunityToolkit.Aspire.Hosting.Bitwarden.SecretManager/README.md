@@ -127,7 +127,7 @@ IResourceBuilder<BitwardenSecretResource> managedSecret = bitwarden.AddSecret("d
 builder.AddProject<Projects.ApiService>("api")
     .WithReference(bitwarden)
     .WaitForCompletion(bitwarden)
-    .WithBitwardenSecretId("DEMO_API_KEY_SECRET_ID", managedSecret);
+    .WithEnvironment("DEMO_API_KEY_SECRET_ID", managedSecret.AsSecretId());
 ```
 
 To inject the resolved value directly (no SDK required in the app, but requires redeploy when the value changes):
@@ -135,7 +135,7 @@ To inject the resolved value directly (no SDK required in the app, but requires 
 ```csharp
 builder.AddProject<Projects.ApiService>("api")
     .WaitForCompletion(bitwarden)
-    .WithBitwardenSecretValue("DEMO_API_KEY", managedSecret);
+    .WithEnvironment("DEMO_API_KEY", managedSecret);
 ```
 
 ## Deployment
@@ -160,7 +160,7 @@ Run `aspire deploy`. The integration adds six pipeline steps per Bitwarden resou
 
 ### Secret declarations
 
-Both return `IResourceBuilder<BitwardenSecretResource>`. Pass the builder directly to `WithBitwardenSecretValue` or `WithBitwardenSecretId`.
+Both return `IResourceBuilder<BitwardenSecretResource>`. Pass the builder directly to `WithEnvironment` to inject the resolved secret value, or call `.AsSecretId()` on the builder to inject the secret ID instead.
 
 | API                           | What it does                                    | When to use                       |
 | ----------------------------- | ----------------------------------------------- | --------------------------------- |
@@ -175,10 +175,10 @@ Both return `IResourceBuilder<BitwardenSecretResource>`. Pass the builder direct
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | `WithReference(bitwarden)`                        | Connection config (`OrganizationId`, `ProjectId`, `AccessToken`, `ApiUrl`, `IdentityUrl`) | App uses the Bitwarden SDK to read secrets at runtime           |
 | `WithBitwardenAccessToken(bitwarden, token)`      | Overrides the injected access token for this connection                                   | Supply a least-privilege read-only token                        |
-| `WithBitwardenSecretId(envVar, secret)`           | Injects a secret ID as an env var; app fetches the value via the SDK at runtime           | Dynamic secret retrieval without redeploying when values change |
+| `WithEnvironment(envVar, secret.AsSecretId())`    | Injects a secret ID as an env var; app fetches the value via the SDK at runtime           | Dynamic secret retrieval without redeploying when values change |
 | `WithBitwardenAuthCacheDirectory(bitwarden, dir)` | Configures the app's Bitwarden SDK auth cache directory for this connection               | Persist auth session across restarts (process resources)        |
 | `WithBitwardenAuthCacheVolume(bitwarden)`         | Mounts a named volume as the auth cache for this connection                               | Persist auth session across restarts (container resources)      |
-| `WithBitwardenSecretValue(envVar, secret)`        | Injects the resolved secret value as an env var                                           | Simple injection; no Bitwarden SDK needed in the app            |
+| `WithEnvironment(envVar, secret)`                 | Injects the resolved secret value as an env var                                           | Simple injection; no Bitwarden SDK needed in the app            |
 
 ### Cache files
 
@@ -360,4 +360,3 @@ Each entry lists all fields that changed and their previous values. The trail is
 Tested with **Aspire 13.3.0**.
 
 This integration relies on several experimental Aspire APIs (`ASPIREATS001`, `ASPIREPIPELINES001/002/004`, `ASPIREINTERACTION001`) and four `UnsafeAccessor` workarounds against private members of `ParameterResource` and `ParameterProcessor`. See [ASPIRE-INTERNALS.md](ASPIRE-INTERNALS.md) for the full explanation of each one, why no public API covers it, and what breaks when Aspire changes it.
-
