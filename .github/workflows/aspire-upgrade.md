@@ -21,7 +21,7 @@ safe-outputs:
 
 # aspire-upgrade
 
-The target version prefix is **13.3**.
+The target version prefix is **13.4**.
 
 # aspire-upgrade
 
@@ -67,11 +67,19 @@ Each one must be updated to the full version string:
 
 Use a command like `grep -rl "Aspire.AppHost.Sdk" --include="*.csproj"` to find all files that need updating.
 
-## Step 3: Validate the changes
+## Step 3: Update TypeScript AppHost `aspire.config.json` files
+
+Search the entire repository for all `aspire.config.json` files (typically under `examples/` in directories ending with `.AppHost.TypeScript`). Each file has an `sdk.version` field that must be updated to the new version.
+
+The `sdk.version` value should be the full version string (e.g., `13.4.0-preview.1.25280.1`).
+
+Use a command like `find . -name "aspire.config.json"` to locate all files, then update the `"version"` value inside the `"sdk"` object in each one.
+
+## Step 4: Validate the changes
 
 Run `dotnet restore` at the repository root to verify the new version resolves correctly. Fix any errors before proceeding.
 
-## Step 4: Create a pull request
+## Step 5: Create a pull request
 
 After all changes are made and validated, create a pull request with the title "Update Aspire version to X.Y.Z" where X.Y.Z is the full version you updated to.
 

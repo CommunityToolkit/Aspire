@@ -33,7 +33,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="name">The name of the RavenDB server resource.</param>
     /// <returns>A resource builder for the newly added RavenDB server resource.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="builder"/> is null.</exception>
-    [AspireExport("addRavenDB", Description = "Adds a RavenDB server resource")]
+    [AspireExport]
     public static IResourceBuilder<RavenDBServerResource> AddRavenDB(this IDistributedApplicationBuilder builder, [ResourceName] string name)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -221,7 +221,7 @@ public static class RavenDBBuilderExtensions
     /// <returns>A resource builder for the newly added RavenDB database resource.</returns>
     /// <exception cref="DistributedApplicationException">Thrown when the connection string cannot be retrieved during configuration.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the connection string is unavailable.</exception>
-    [AspireExport("addDatabase", Description = "Adds a RavenDB database resource")]
+    [AspireExport]
     public static IResourceBuilder<RavenDBDatabaseResource> AddDatabase(this IResourceBuilder<RavenDBServerResource> builder,
         [ResourceName] string name,
         string? databaseName = null,
@@ -293,7 +293,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">Indicates whether the bind mount should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
-    [AspireExport("withDataBindMount", Description = "Adds a bind mount for the RavenDB data directory")]
+    [AspireExport]
     public static IResourceBuilder<RavenDBServerResource> WithDataBindMount(this IResourceBuilder<RavenDBServerResource> builder, string source, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -309,7 +309,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="name">Optional name for the volume. Defaults to a generated name if not provided.</param>
     /// <param name="isReadOnly">Indicates whether the volume should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
-    [AspireExport("withDataVolume", Description = "Adds a named volume for the RavenDB data directory")]
+    [AspireExport]
     public static IResourceBuilder<RavenDBServerResource> WithDataVolume(this IResourceBuilder<RavenDBServerResource> builder, string? name = null, bool isReadOnly = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -324,7 +324,7 @@ public static class RavenDBBuilderExtensions
     /// <param name="source">The source directory on the host to mount into the container.</param>
     /// <param name="isReadOnly">Indicates whether the bind mount should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
-    [AspireExport("withLogBindMount", Description = "Adds a bind mount for the RavenDB logs directory")]
+    [AspireExport]
     public static IResourceBuilder<RavenDBServerResource> WithLogBindMount(
         this IResourceBuilder<RavenDBServerResource> builder,
         string source,
@@ -345,7 +345,7 @@ public static class RavenDBBuilderExtensions
     /// </param>
     /// <param name="isReadOnly">Indicates whether the volume should be read-only. Defaults to false.</param>
     /// <returns>The <see cref="IResourceBuilder{T}"/> for the RavenDB server resource.</returns>
-    [AspireExport("withLogVolume", Description = "Adds a named volume for the RavenDB logs directory")]
+    [AspireExport]
     public static IResourceBuilder<RavenDBServerResource> WithLogVolume(
         this IResourceBuilder<RavenDBServerResource> builder,
         string? name = null,

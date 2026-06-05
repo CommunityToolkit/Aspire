@@ -4,7 +4,6 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 
@@ -16,17 +15,17 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell;
 public static class DistributedApplicationBuilderExtensions
 {
     /// <summary>
-    /// Adds a PowerShell runspace pool resource to the distributed application.
+    /// Adds a PowerShell runspace pool resource to the distributed application, enabling managed execution of
+    /// PowerShell scripts with configurable language mode and runspace limits.
     /// </summary>
-    /// <param name="builder"></param>
-    /// <param name="name"></param>
-    /// <param name="languageMode"></param>
-    /// <param name="minRunspaces"></param>
-    /// <param name="maxRunspaces"></param>
-    /// <returns></returns>
-    /// <remarks>This overload is not available in polyglot app hosts. Use the string-based overload instead.</remarks>
-    /// <exception cref="ArgumentException"></exception>
-    /// <exception cref="DistributedApplicationException"></exception>
+    /// <remarks>This overload is not ATS-compatible due to the use of PSLanguageMode. For ATS scenarios, use
+    /// the string-based overload instead.</remarks>
+    /// <param name="builder">The distributed application builder to which the PowerShell runspace pool resource will be added.</param>
+    /// <param name="name">The name of the PowerShell runspace pool resource. Cannot be null or whitespace.</param>
+    /// <param name="languageMode">The language mode to use for the PowerShell runspace pool. Defaults to PSLanguageMode.ConstrainedLanguage.</param>
+    /// <param name="minRunspaces">The minimum number of runspaces to maintain in the pool. Must be at least 1.</param>
+    /// <param name="maxRunspaces">The maximum number of runspaces allowed in the pool. Must be greater than or equal to minRunspaces.</param>
+    /// <returns>An IResourceBuilder instance for further configuration of the PowerShell runspace pool resource.</returns>
     [AspireExportIgnore(Reason = "PSLanguageMode is not ATS-compatible. Use the string-based overload instead.")]
     public static IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(
         this IDistributedApplicationBuilder builder,
@@ -62,6 +61,15 @@ public static class DistributedApplicationBuilderExtensions
             var sessionState = InitialSessionState.CreateDefault();
             sessionState.UseFullLanguageModeInDebugger = true;
 
+            await notificationService.PublishUpdateAsync(res,
+                state => state with
+                {
+                    State = KnownResourceStates.Starting,
+                    Properties = [
+                        .. state.Properties,
+                    ],
+                });
+
             // This will block until explicit and implied WaitFor calls are completed
             await builder.Eventing.PublishAsync(
                 new BeforeResourceStartedEvent(res, e.Services), ct);
@@ -81,13 +89,14 @@ public static class DistributedApplicationBuilderExtensions
             var poolName = res.Name;
             var poolLogger = loggerService.GetLogger(poolName);
 
-            _ = res.StartAsync(sessionState, notificationService, poolLogger, hostLifetime, ct);
+            // The runspace pool should open rather quickly, so it's ok to await here.
+            await res.StartAsync(sessionState, notificationService, poolLogger, hostLifetime, ct);
         });
 
         return poolBuilder;
     }
 
-    [AspireExport("addPowerShell", Description = "Adds a PowerShell runspace pool resource")]
+    [AspireExport]
     internal static IResourceBuilder<PowerShellRunspacePoolResource> AddPowerShell(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,

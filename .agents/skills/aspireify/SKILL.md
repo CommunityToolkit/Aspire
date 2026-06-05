@@ -26,15 +26,16 @@ The default stance is **adapt the AppHost to fit the app, not the other way arou
 Sometimes a small code change unlocks significantly better Aspire integration. When this happens, **present the tradeoff to the user and let them decide**. Examples:
 
 - **Connection strings**: A service reads `DATABASE_URL` but Aspire injects `ConnectionStrings__mydb`. You can use `WithEnvironment("DATABASE_URL", db.Resource.ConnectionStringExpression)` (zero code change) or suggest the service reads from config so `WithReference(db)` just works (enables service discovery, health checks, auto-retry).
-  → Ask: *"Your API reads DATABASE_URL. I can map that with WithEnvironment (no code change) or you could switch to reading ConnectionStrings:mydb which unlocks WithReference and automatic service discovery. Which do you prefer?"*
+  → Ask: _"Your API reads DATABASE_URL. I can map that with WithEnvironment (no code change) or you could switch to reading ConnectionStrings:mydb which unlocks WithReference and automatic service discovery. Which do you prefer?"_
 
 - **Port binding**: A service hardcodes `PORT=3000`. You can preserve that with `WithHttpsEndpoint(port: 3000)` (zero code change) or switch the service to read `PORT` from env so Aspire can manage ports dynamically and avoid conflicts.
-  → Ask: *"Your frontend is currently fixed to port 3000. Unless that exact port is important for something external, I recommend switching it to read PORT from env so Aspire can manage the port and avoid conflicts. If you need 3000 to stay stable, I can preserve it. Which do you want?"*
+  → Ask: _"Your frontend is currently fixed to port 3000. Unless that exact port is important for something external, I recommend switching it to read PORT from env so Aspire can manage the port and avoid conflicts. If you need 3000 to stay stable, I can preserve it. Which do you want?"_
 
 - **OTel setup**: Service has its own tracing config pointing to Jaeger. You can leave it (Aspire won't show its traces) or suggest switching the exporter to read `OTEL_EXPORTER_OTLP_ENDPOINT` (which Aspire injects).
-  → Ask: *"Your API exports traces to Jaeger directly. I can leave that, or switch it to use the OTEL_EXPORTER_OTLP_ENDPOINT env var so traces show up in the Aspire dashboard. The Jaeger endpoint would still work in non-Aspire environments. Want me to update it?"*
+  → Ask: _"Your API exports traces to Jaeger directly. I can leave that, or switch it to use the OTEL_EXPORTER_OTLP_ENDPOINT env var so traces show up in the Aspire dashboard. The Jaeger endpoint would still work in non-Aspire environments. Want me to update it?"_
 
 **Format for presenting tradeoffs:**
+
 1. Explain what the current code does
 2. Show the zero-change option and what it gives you
 3. Show the small-change option and the extra benefits
@@ -131,6 +132,7 @@ var api = builder.AddCSharpApp("api", "../src/Api")
 ```
 
 **Important: Never delete `.env` files automatically.** After migrating all values into the AppHost, explicitly ask the user:
+
 > "I've migrated all the values from your `.env` file into the AppHost. The `.env` file is no longer needed for running via Aspire, but it still works for non-Aspire workflows. Would you like me to remove it, or keep it around?"
 
 Some teams still need `.env` files for CI, Docker Compose, or developers who haven't switched to Aspire yet. Respect that.
@@ -152,7 +154,7 @@ Migration approach:
 1. **Inventory existing secrets** — check `secrets.json.example` files or setup scripts to understand what secrets the repo expects
 2. **Classify each secret** — same as `.env` migration: connection strings become Aspire resources, API keys become parameters, plain config becomes `WithEnvironment()`
 3. **Present the migration** — show the user which secrets will become AppHost parameters and which will become Aspire resources:
-   → *"Your services use dotnet user-secrets with 8 configured values. I'll migrate the SQL connection string to an Aspire Postgres resource, the 3 API keys to secret parameters, and the remaining config to environment variables. The secrets will still be stored in user-secrets but centralized under the AppHost. Sound good?"*
+   → _"Your services use dotnet user-secrets with 8 configured values. I'll migrate the SQL connection string to an Aspire Postgres resource, the 3 API keys to secret parameters, and the remaining config to environment variables. The secrets will still be stored in user-secrets but centralized under the AppHost. Sound good?"_
 
 **Important:** Don't delete or modify existing `UserSecretsId` entries in service `.csproj` files — other tooling or non-Aspire workflows may still depend on them.
 
@@ -160,7 +162,7 @@ Migration approach:
 
 Before running this skill, `aspire init` must have already:
 
-- Dropped a skeleton AppHost file (`apphost.ts` or `apphost.cs`) at the configured location
+- Dropped a skeleton AppHost file (`apphost.mts` or `apphost.cs`) at the configured location
 - Created `aspire.config.json` at the repository root
 
 Verify both exist before proceeding.
@@ -216,12 +218,12 @@ For C# AppHosts, there are two sub-modes:
 
 **Do not confuse these files. Do not create or modify config files for the user's service projects — only for the AppHost.**
 
-| File | Where it lives | What it's for | Who uses it |
-|------|---------------|---------------|-------------|
-| `aspire.config.json` | Repo root | AppHost path, language, profiles (ports, env vars) | Single-file and polyglot AppHosts only |
-| `Properties/launchSettings.json` | Inside the AppHost project dir | Launch profiles (ports, env vars) | Full project mode `.csproj` AppHosts (standard .NET) |
-| `appsettings.json` | Inside service projects | Service-specific configuration | The services themselves — **do not create or modify these** |
-| `launchSettings.json` in service projects | Inside service project dirs | Service launch config | The services themselves — **do not create or modify these** |
+| File                                      | Where it lives                 | What it's for                                      | Who uses it                                                 |
+| ----------------------------------------- | ------------------------------ | -------------------------------------------------- | ----------------------------------------------------------- |
+| `aspire.config.json`                      | Repo root                      | AppHost path, language, profiles (ports, env vars) | Single-file and polyglot AppHosts only                      |
+| `Properties/launchSettings.json`          | Inside the AppHost project dir | Launch profiles (ports, env vars)                  | Full project mode `.csproj` AppHosts (standard .NET)        |
+| `appsettings.json`                        | Inside service projects        | Service-specific configuration                     | The services themselves — **do not create or modify these** |
+| `launchSettings.json` in service projects | Inside service project dirs    | Service launch config                              | The services themselves — **do not create or modify these** |
 
 **Key rule:** When the AppHost is a `.csproj` project, it's a standard .NET project. It uses `Properties/launchSettings.json` for launch profiles, just like any other .NET project. `aspire init` creates this file with the correct ports. Do not create a duplicate `aspire.config.json` for project-mode AppHosts.
 
@@ -246,38 +248,38 @@ Analyze the repository to discover all projects and services that could be model
 **What to look for:**
 
 - **.NET projects**: `*.csproj` files. For each, run:
-  - `dotnet msbuild <project> -getProperty:OutputType` — `Exe`/`WinExe` = runnable service, `Library` = skip
-  - `dotnet msbuild <project> -getProperty:TargetFramework` — must be `net8.0` or newer
-  - `dotnet msbuild <project> -getProperty:IsAspireHost` — skip if `true`
+    - `dotnet msbuild <project> -getProperty:OutputType` — `Exe`/`WinExe` = runnable service, `Library` = skip
+    - `dotnet msbuild <project> -getProperty:TargetFramework` — must be `net8.0` or newer
+    - `dotnet msbuild <project> -getProperty:IsAspireHost` — skip if `true`
 - **Solution files**: `*.sln` or `*.slnx` — if found, the C# AppHost **must** use full project mode (with `.csproj`) so it can be opened in Visual Studio alongside the rest of the solution. This is a hard requirement.
 - **Node.js/TypeScript apps**: directories with `package.json` containing a `start`, `dev`, or `main`/`module` entry. For each, also check:
-  - Does it have a `vite.config.*` file? → use `AddViteApp`
-  - Does it have a specific entry file (e.g., `src/index.ts`, `server.js`) and a `build` script that compiles TypeScript? → use `AddNodeApp` with `.WithRunScript()` and `.WithBuildScript()`
-  - Otherwise → use `AddJavaScriptApp`
+    - Does it have a `vite.config.*` file? → use `AddViteApp`
+    - Does it have a specific entry file (e.g., `src/index.ts`, `server.js`) and a `build` script that compiles TypeScript? → use `AddNodeApp` with `.WithRunScript()` and `.WithBuildScript()`
+    - Otherwise → use `AddJavaScriptApp`
 - **Monorepo/workspace detection**: Check root `package.json` for `"workspaces"` field (Yarn/npm) or `pnpm-workspace.yaml` (pnpm). If this is a monorepo:
-  - **Map workspace packages** — each workspace with a runnable script (`start`, `dev`) is a potential Aspire resource
-  - **Root scripts that delegate** — some monorepos have root-level scripts like `"start": "yarn --cwd ./subdir start"`. Model the *actual app directory* as the resource, not the root
-  - **Path resolution** — `appDirectory` is relative to the AppHost location. In monorepos you often need `../`, `../../`, or similar paths. Double-check these
-  - **Shared dependencies** — `.WithYarn()` / `.WithPnpm()` on each resource handles workspace-aware installs automatically
+    - **Map workspace packages** — each workspace with a runnable script (`start`, `dev`) is a potential Aspire resource
+    - **Root scripts that delegate** — some monorepos have root-level scripts like `"start": "yarn --cwd ./subdir start"`. Model the _actual app directory_ as the resource, not the root
+    - **Path resolution** — `appDirectory` is relative to the AppHost location. In monorepos you often need `../`, `../../`, or similar paths. Double-check these
+    - **Shared dependencies** — `.WithYarn()` / `.WithPnpm()` on each resource handles workspace-aware installs automatically
 - **Python apps**: directories with `pyproject.toml`, `requirements.txt`, or `main.py`/`app.py`
 - **Go apps**: directories with `go.mod`
 - **Java apps**: directories with `pom.xml` or `build.gradle`
 - **Dockerfiles**: standalone `Dockerfile` entries representing services
 - **Docker Compose**: `docker-compose.yml` or `compose.yml` files — these are a goldmine. Parse them to extract:
-  - **Profiles**: if any service has a `profiles:` key, the compose file uses profiles to organize services into groups (e.g., `cloud`, `storage`, `mssql`, `postgres`). When profiles exist:
-    1. List the available profiles and what services each includes
-    2. Ask the user which profile(s) to target for the AppHost (e.g., *"Your docker-compose uses profiles: cloud, mssql, postgres, storage, redis. Which represent your local dev stack?"*)
-    3. Only model services that belong to the selected profile(s) — skip the rest
-    4. If a service has no `profiles:` key, it runs in all profiles — always include it
-  - **Services**: each named service (in the selected profiles) maps to a potential AppHost resource
-  - **Images**: container images used (e.g., `postgres:16`, `redis:7`) → these become `AddContainer()` or typed Aspire integrations (e.g., `AddPostgres()`, `AddRedis()`)
-  - **Ports**: published port mappings → `WithHttpsEndpoint()` or `WithEndpoint()`
-  - **Environment variables**: env vars and `.env` file references → `WithEnvironment()`. Watch for `${VAR}` interpolation syntax — trace these back to `.env` files and migrate them to AppHost parameters
-  - **Volumes**: named/bind volumes → `WithVolume()` or `WithBindMount()`
-  - **Dependencies**: `depends_on` → `WithReference()` and `WaitFor()`
-  - **Build contexts**: `build:` entries → `AddDockerfile()` pointing to the build context directory
-  - Prefer typed Aspire integrations over raw `AddContainer()` when the image matches a known integration (use `aspire docs search` to check). For example, `postgres:16` → `AddPostgres()`, `redis:7` → `AddRedis()`, `rabbitmq:3` → `AddRabbitMQ()`.
-  - For complex compose files, also load [references/docker-compose.md](references/docker-compose.md) for detailed migration patterns.
+    - **Profiles**: if any service has a `profiles:` key, the compose file uses profiles to organize services into groups (e.g., `cloud`, `storage`, `mssql`, `postgres`). When profiles exist:
+        1. List the available profiles and what services each includes
+        2. Ask the user which profile(s) to target for the AppHost (e.g., _"Your docker-compose uses profiles: cloud, mssql, postgres, storage, redis. Which represent your local dev stack?"_)
+        3. Only model services that belong to the selected profile(s) — skip the rest
+        4. If a service has no `profiles:` key, it runs in all profiles — always include it
+    - **Services**: each named service (in the selected profiles) maps to a potential AppHost resource
+    - **Images**: container images used (e.g., `postgres:16`, `redis:7`) → these become `AddContainer()` or typed Aspire integrations (e.g., `AddPostgres()`, `AddRedis()`)
+    - **Ports**: published port mappings → `WithHttpsEndpoint()` or `WithEndpoint()`
+    - **Environment variables**: env vars and `.env` file references → `WithEnvironment()`. Watch for `${VAR}` interpolation syntax — trace these back to `.env` files and migrate them to AppHost parameters
+    - **Volumes**: named/bind volumes → `WithVolume()` or `WithBindMount()`
+    - **Dependencies**: `depends_on` → `WithReference()` and `WaitFor()`
+    - **Build contexts**: `build:` entries → `AddDockerfile()` pointing to the build context directory
+    - Prefer typed Aspire integrations over raw `AddContainer()` when the image matches a known integration (use `aspire docs search` to check). For example, `postgres:16` → `AddPostgres()`, `redis:7` → `AddRedis()`, `rabbitmq:3` → `AddRabbitMQ()`.
+    - For complex compose files, also load [references/docker-compose.md](references/docker-compose.md) for detailed migration patterns.
 - **Static frontends**: Vite, Next.js, Create React App, or other frontend framework configs
 - **`.env` files**: Scan for `.env`, `.env.local`, `.env.development`, `.env.example`, etc. These contain configuration that should be migrated into AppHost parameters (see Guiding Principles above)
 - **User Secrets**: Scan for `secrets.json.example` files and `<UserSecretsId>` in `.csproj` files. These indicate .NET User Secrets are in use — migrate them into AppHost parameters (see Guiding Principles above)
@@ -286,7 +288,7 @@ Analyze the repository to discover all projects and services that could be model
 **Ignore:**
 
 - The AppHost directory/file itself
-- `node_modules/`, `.modules/`, `dist/`, `build/`, `bin/`, `obj/`, `.git/`
+- `node_modules/`, `.aspire/modules/`, `dist/`, `build/`, `bin/`, `obj/`, `.git/`
 - Test projects (directories named `test`/`tests`/`__tests__`, projects referencing xUnit/NUnit/MSTest, or test-only package.json scripts)
 
 ### Step 2: Check prerequisites and smoke-test the skeleton
@@ -297,9 +299,10 @@ Before investing time in wiring, run `aspire doctor` to verify the environment i
 aspire doctor
 ```
 
-This checks for a working .NET SDK, container runtime (Docker/Podman), trusted dev certificates, and deprecated workloads. **Fix any failures before proceeding** — discovering that Docker isn't running *after* you've wired 10 services wastes significant time.
+This checks for a working .NET SDK, container runtime (Docker/Podman), trusted dev certificates, and deprecated workloads. **Fix any failures before proceeding** — discovering that Docker isn't running _after_ you've wired 10 services wastes significant time.
 
 Common issues caught by `aspire doctor`:
+
 - **Container runtime not running**: Start Docker Desktop or Podman before proceeding — container resources will fail to start without it.
 - **Deprecated aspire workload installed**: If installed by Visual Studio, it can't be removed via CLI — this is a warning, not a blocker.
 - **Untrusted dev certificate**: Run `aspire certs trust` to fix HTTPS endpoint failures.
@@ -320,7 +323,7 @@ For full project mode, the AppHost was created from the `aspire-apphost` templat
 For single-file mode:
 
 - **Missing profiles in `aspire.config.json`**: The file must have a `profiles` section with `applicationUrl`. Re-run `aspire init` to regenerate.
-- **Missing dependencies**: For TypeScript, ensure the `.modules/aspire.js` SDK is available. Run `aspire restore` if needed.
+- **Missing dependencies**: For TypeScript, ensure the `.aspire/modules/aspire.js` SDK is available. Run `aspire restore` if needed.
 
 Once it boots, stop it (Ctrl+C) and continue.
 
@@ -353,7 +356,7 @@ If the AppHost is in **full project mode**, consult [references/full-solution-ap
 
 If the repo already has OTel/health checks/resilience in a shared extension, **strip those from the generated ServiceDefaults** to avoid duplication. Only keep the parts that don't overlap. For example, if `UseBitwardenSdk()` already sets up OTel tracing and metrics, the ServiceDefaults should skip the OTel builder calls and only add service discovery and health endpoint mapping.
 
-Present the overlap to the user: *"Your services already set up OpenTelemetry via `UseBitwardenSdk()`. I'll create ServiceDefaults without the OTel setup to avoid duplication."*
+Present the overlap to the user: _"Your services already set up OpenTelemetry via `UseBitwardenSdk()`. I'll create ServiceDefaults without the OTel setup to avoid duplication."_
 
 **Placement is your decision.** Where to put ServiceDefaults depends on the repo's structure:
 
@@ -377,19 +380,19 @@ dotnet sln <solution> add <ServiceDefaults.csproj>
 
 Edit the skeleton AppHost file to add resource definitions for each selected project. Use the appropriate syntax based on language.
 
-#### TypeScript AppHost (`apphost.ts`)
+#### TypeScript AppHost (`apphost.mts`)
 
 ```typescript
-import { createBuilder } from './.modules/aspire.js';
+import { createBuilder } from "./.aspire/modules/aspire.mjs";
 
 const builder = await createBuilder();
 
 // Express/Node.js API with TypeScript — needs build for publish
 const api = await builder
-    .addNodeApp("api", "./api", "dist/index.js")   // production entry point
-    .withRunScript("start:dev")                      // dev: runs ts-node-dev or similar
-    .withBuildScript("build")                        // publish: compiles TS first
-    .withYarn()                                      // or .withPnpm() — match the repo
+    .addNodeApp("api", "./api", "dist/index.js") // production entry point
+    .withRunScript("start:dev") // dev: runs ts-node-dev or similar
+    .withBuildScript("build") // publish: compiles TS first
+    .withYarn() // or .withPnpm() — match the repo
     .withHttpsDeveloperCertificate()
     .withHttpsEndpoint({ env: "PORT" });
 
@@ -399,17 +402,15 @@ const frontend = await builder
     .withBuildScript("build")
     .withYarn()
     .withHttpsDeveloperCertificate()
-    .withEnvironment("BROWSER", "none")              // prevent auto-opening browser
+    .withEnvironment("BROWSER", "none") // prevent auto-opening browser
     .withReference(api)
     .waitFor(api);
 
 // .NET project — HTTPS works out of the box
-const dotnetSvc = await builder
-    .addCSharpApp("catalog", "./src/Catalog");
+const dotnetSvc = await builder.addCSharpApp("catalog", "./src/Catalog");
 
 // Dockerfile-based service
-const worker = await builder
-    .addDockerfile("worker", "./worker");
+const worker = await builder.addDockerfile("worker", "./worker");
 
 // Python app — HTTPS with dev cert
 const pyApi = await builder
@@ -508,7 +509,7 @@ Always check `aspire list integrations` and `aspire docs search "<language>"` to
 See [references/javascript-apps.md](references/javascript-apps.md) for `package.json`, `tsconfig.json`, and ESLint configuration patterns. Key points:
 
 - Augment existing files, never overwrite
-- Run `aspire restore` to generate `.modules/`, then install deps with the repo's package manager
+- Run `aspire restore` to generate `.aspire/modules/`, then install deps with the repo's package manager
 - Do not manually add Aspire SDK packages — `aspire restore` handles those
 
 #### C# AppHost
@@ -552,6 +553,7 @@ For .NET services, ServiceDefaults handles OTel automatically. For everything el
 **Present this to the user as an option, not a mandatory step.** Some users may want to add OTel later, and that's fine — their services will still run, they just won't appear in the dashboard's trace/metrics views.
 
 **For each service that doesn't already have OTel, ask:**
+
 > "Would you like me to add OpenTelemetry instrumentation to `<service>`? This lets the Aspire dashboard show its traces, metrics, and logs. I'll need to add a few packages and an instrumentation setup file."
 
 If they say yes, follow the per-language setup guides in [references/opentelemetry.md](references/opentelemetry.md).
@@ -563,54 +565,55 @@ Before validating, present the user with optional quality-of-life improvements. 
 **Suggest each of these individually — don't apply without asking:**
 
 1. **Cookie and session isolation with `dev.localhost`**: When multiple services run on `localhost`, they share cookies and session storage — which can cause hard-to-debug auth problems. Using `*.dev.localhost` subdomains isolates each service's cookies and storage. Note: URLs still include ports (e.g., `frontend.dev.localhost:5173`), but the subdomain isolation prevents cross-service cookie collisions.
-   > "Would you like me to set up `dev.localhost` subdomains for your services? This gives each service its own cookie/session scope so they don't interfere with each other. URLs will look like `frontend.dev.localhost:5173` — the `*.dev.localhost` domain resolves to 127.0.0.1 automatically on most systems, no `/etc/hosts` changes needed."
 
-   **How to do it — pick the right config file based on AppHost mode** (see "Configuration files — which is which" earlier in this doc):
+    > "Would you like me to set up `dev.localhost` subdomains for your services? This gives each service its own cookie/session scope so they don't interfere with each other. URLs will look like `frontend.dev.localhost:5173` — the `*.dev.localhost` domain resolves to 127.0.0.1 automatically on most systems, no `/etc/hosts` changes needed."
 
-   - **Single-file mode** (`apphost.cs` with `#:sdk` directive) and **polyglot AppHosts** (TypeScript, Python, Go, …): edit the `profiles` section in `aspire.config.json` at the repo root.
-   - **Full project mode** (`.csproj` AppHost): edit `Properties/launchSettings.json` inside the AppHost project directory. **Do not edit `aspire.config.json` for project-mode AppHosts** — they read launch profiles from `launchSettings.json`, so changes to `aspire.config.json` will be ignored.
+    **How to do it — pick the right config file based on AppHost mode** (see "Configuration files — which is which" earlier in this doc):
+    - **Single-file mode** (`apphost.cs` with `#:sdk` directive) and **polyglot AppHosts** (TypeScript, Python, Go, …): edit the `profiles` section in `aspire.config.json` at the repo root.
+    - **Full project mode** (`.csproj` AppHost): edit `Properties/launchSettings.json` inside the AppHost project directory. **Do not edit `aspire.config.json` for project-mode AppHosts** — they read launch profiles from `launchSettings.json`, so changes to `aspire.config.json` will be ignored.
 
-   In both cases, replace `localhost` with `<projectname>.dev.localhost` in `applicationUrl`, and use descriptive subdomains like `otlp.dev.localhost` and `resources.dev.localhost` for the infrastructure URLs. This is the same mechanism `aspire new` uses.
+    In both cases, replace `localhost` with `<projectname>.dev.localhost` in `applicationUrl`, and use descriptive subdomains like `otlp.dev.localhost` and `resources.dev.localhost` for the infrastructure URLs. This is the same mechanism `aspire new` uses.
 
-   Example — `aspire.config.json` (single-file / polyglot):
+    Example — `aspire.config.json` (single-file / polyglot):
 
-   ```json
-   {
-     "profiles": {
-       "https": {
-         "applicationUrl": "https://myproject.dev.localhost:17042;http://myproject.dev.localhost:15042",
-         "environmentVariables": {
-           "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://otlp.dev.localhost:21042",
-           "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://resources.dev.localhost:22042"
-         }
-       }
-     }
-   }
-   ```
+    ```json
+    {
+        "profiles": {
+            "https": {
+                "applicationUrl": "https://myproject.dev.localhost:17042;http://myproject.dev.localhost:15042",
+                "environmentVariables": {
+                    "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://otlp.dev.localhost:21042",
+                    "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://resources.dev.localhost:22042"
+                }
+            }
+        }
+    }
+    ```
 
-   Equivalent — `Properties/launchSettings.json` (full project mode):
+    Equivalent — `Properties/launchSettings.json` (full project mode):
 
-   ```json
-   {
-     "profiles": {
-       "https": {
-         "commandName": "Project",
-         "applicationUrl": "https://myproject.dev.localhost:17042;http://myproject.dev.localhost:15042",
-         "environmentVariables": {
-           "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://otlp.dev.localhost:21042",
-           "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://resources.dev.localhost:22042"
-         }
-       }
-     }
-   }
-   ```
+    ```json
+    {
+        "profiles": {
+            "https": {
+                "commandName": "Project",
+                "applicationUrl": "https://myproject.dev.localhost:17042;http://myproject.dev.localhost:15042",
+                "environmentVariables": {
+                    "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://otlp.dev.localhost:21042",
+                    "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://resources.dev.localhost:22042"
+                }
+            }
+        }
+    }
+    ```
 
-   Use the project/repo name (lowercased) as the subdomain prefix for `applicationUrl`. Use `otlp` and `resources` for the infrastructure URLs. Keep the existing port numbers — just swap `localhost` for the appropriate `*.dev.localhost` subdomain.
+    Use the project/repo name (lowercased) as the subdomain prefix for `applicationUrl`. Use `otlp` and `resources` for the infrastructure URLs. Keep the existing port numbers — just swap `localhost` for the appropriate `*.dev.localhost` subdomain.
 
 2. **Custom URL labels in the dashboard** (display text only): Rename endpoint URLs in the Aspire dashboard for clarity:
-   ```csharp
-   .WithUrlForEndpoint("https", url => url.DisplayText = "Web UI")
-   ```
+
+    ```csharp
+    .WithUrlForEndpoint("https", url => url.DisplayText = "Web UI")
+    ```
 
 3. **OpenTelemetry** (if not done in Step 8): "Would you like me to add observability to your services so they appear in the Aspire dashboard's traces and metrics views?"
 
@@ -630,10 +633,10 @@ Once the app is running, use the Aspire CLI to verify everything is wired up cor
 4. **No startup errors**: `aspire logs <resource>` — check logs for each resource to ensure clean startup with no crashes, missing config, or connection failures.
 5. **Dashboard is accessible**: Confirm the dashboard URL is printed and can be opened (remember: include the login token — see "Dashboard URL must include auth token" above).
 6. **Telemetry reaches the dashboard**: After resources are running, verify that traces and structured logs appear in the Aspire dashboard. Open the dashboard, navigate to the Traces view, and confirm at least one trace is visible from a service. If no telemetry flows:
-   - Check whether the service's OTel setup conditionally disables export (e.g., based on a `selfHosted` flag, a config key like `OpenTelemetry:Enabled`, or an environment check). Many SDKs default OTel OFF for self-hosted/local modes — set the enabling flag explicitly via `WithEnvironment()`.
-   - Check that `OTEL_EXPORTER_OTLP_ENDPOINT` is being injected by Aspire (it should be automatic for services modeled with `AddCSharpApp`/`AddProject`).
-   - Generate a trace by making an HTTP request to one of the services (e.g., `curl https://localhost:<port>/healthz` or any known endpoint). Some services don't emit traces until they receive traffic.
-   - Check service logs for OTLP exporter errors (connection refused, TLS handshake failures).
+    - Check whether the service's OTel setup conditionally disables export (e.g., based on a `selfHosted` flag, a config key like `OpenTelemetry:Enabled`, or an environment check). Many SDKs default OTel OFF for self-hosted/local modes — set the enabling flag explicitly via `WithEnvironment()`.
+    - Check that `OTEL_EXPORTER_OTLP_ENDPOINT` is being injected by Aspire (it should be automatic for services modeled with `AddCSharpApp`/`AddProject`).
+    - Generate a trace by making an HTTP request to one of the services (e.g., `curl https://localhost:<port>/healthz` or any known endpoint). Some services don't emit traces until they receive traffic.
+    - Check service logs for OTLP exporter errors (connection refused, TLS handshake failures).
 
 **This skill is not done until `aspire start` runs without errors and every resource is in an expected terminal/runtime state.** Acceptable end states are:
 

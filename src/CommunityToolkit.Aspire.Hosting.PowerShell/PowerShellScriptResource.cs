@@ -114,13 +114,20 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
         }
 
         /// <summary>
-        /// Starts the PowerShell script execution.
+        /// Starts the execution of the PowerShell script asynchronously, publishing state updates and handling script
+        /// arguments as needed.
         /// </summary>
-        /// <param name="scriptLogger"></param>
-        /// <param name="notificationService"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <remarks>State changes during script execution are published using the provided notification
+        /// service. Script arguments are resolved and added prior to invocation. If the script pipeline is stopped
+        /// intentionally, the resulting exception is ignored. If awaited, this method will complete when the script execution finishes, either successfully,
+        /// with an error, or by being stopped. The method also sets up event handlers to log output and errors from the script
+        /// execution, and to publish state updates using the provided notification service.
+        /// </remarks>
+        /// <param name="scriptLogger">The logger used to record informational and error messages related to the script execution. Cannot be null.</param>
+        /// <param name="notificationService">The service used to publish resource state updates during script execution. Cannot be null.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the script execution.</param>
+        /// <returns>A task that represents the asynchronous operation of starting and monitoring the PowerShell script.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the PowerShell invocation state is not recognized when handling state changes.</exception>
         public async Task StartAsync(ILogger scriptLogger,
             ResourceNotificationService notificationService,
             CancellationToken cancellationToken = default)
@@ -151,20 +158,24 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
                         "Unknown PowerShell invocation state")
                 };
 
-                scriptLogger.LogDebug("Publishing script {ScriptName} state as known state: {ScriptState}", Name, knownState);
+                // Only publish state updates for known states that are not the initial state.
+                if (knownState != KnownResourceStates.NotStarted)
+                {
+                    scriptLogger.LogDebug("Publishing script {ScriptName} state as known state: {ScriptState}", Name, knownState);
 
-                await notificationService.PublishUpdateAsync(this,
-                    state => state with
-                    {
-                        State = knownState,
-                        Properties = [
-                                .. state.Properties,
+                    await notificationService.PublishUpdateAsync(this,
+                        state => state with
+                        {
+                            State = knownState,
+                            Properties = [
+                                    .. state.Properties,
                                 new( "PSInvocationState", args.InvocationStateInfo.State.ToString() ),
                                 new( "Reason", args.InvocationStateInfo.Reason?.Message ?? string.Empty ),
-                            ],
-                        StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
-                        StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
-                    });
+                                ],
+                            StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
+                            StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
+                        });
+                }
             };
 
             if (this.TryGetLastAnnotation<PowerShellScriptArgsAnnotation>(out var scriptArgsAnnotation))
@@ -194,8 +205,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
             }
             catch (Exception ex)
             {
-                scriptLogger.LogError(ex, "Error invoking PowerShell script: {Message}", ex.Message);
-                throw;
+                scriptLogger.LogError(ex, "Error invoking PowerShell script: {Message}", ex.Message);                
             }
         }
 
@@ -253,7 +263,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
             _isDisposed = true;
             _ps.Stop();
             _ps.Dispose();
-            _cts?.Dispose();
+            _cts.Dispose();
         }
     }
 }

@@ -23,7 +23,7 @@ public static partial class IDistributedApplicationBuilderExtensions
     /// <param name="builder">The distributed application builder instance.</param>
     /// <param name="configure">Callback to configure dapr options.</param>
     /// <returns>The distributed application builder instance.</returns>
-    [AspireExport("addDapr", Description = "Adds Dapr support to the distributed application builder")]
+    [AspireExport]
     public static IDistributedApplicationBuilder AddDapr(this IDistributedApplicationBuilder builder, Action<DaprOptions>? configure = null)
     {
         if (configure is not null)
@@ -66,7 +66,7 @@ public static partial class IDistributedApplicationBuilderExtensions
         return resourceBuilder;
     }
 
-    [AspireExport("addDaprComponent", MethodName = "addDaprComponent", Description = "Adds a Dapr component resource to the distributed application model")]
+    [AspireExport("addDaprComponent", MethodName = "addDaprComponent")]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprComponentExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, string type, DaprComponentExportOptions? componentOptions = null)
     {
         return builder.AddDaprComponent(name, type, componentOptions?.ToDaprComponentOptions());
@@ -124,7 +124,7 @@ public static partial class IDistributedApplicationBuilderExtensions
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.PubSub, options);
     }
 
-    [AspireExport("addDaprPubSub", MethodName = "addDaprPubSub", Description = "Adds a generic Dapr pub-sub component resource")]
+    [AspireExport("addDaprPubSub", MethodName = "addDaprPubSub")]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprPubSubExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentExportOptions? componentOptions = null)
     {
         return builder.AddDaprPubSub(name, componentOptions?.ToDaprComponentOptions());
@@ -144,7 +144,7 @@ public static partial class IDistributedApplicationBuilderExtensions
         return builder.AddDaprComponent(name, DaprConstants.BuildingBlocks.StateStore, options);
     }
 
-    [AspireExport("addDaprStateStore", MethodName = "addDaprStateStore", Description = "Adds a generic Dapr state store component resource")]
+    [AspireExport("addDaprStateStore", MethodName = "addDaprStateStore")]
     internal static IResourceBuilder<IDaprComponentResource> AddDaprStateStoreExport(this IDistributedApplicationBuilder builder, [ResourceName] string name, DaprComponentExportOptions? componentOptions = null)
     {
         return builder.AddDaprStateStore(name, componentOptions?.ToDaprComponentOptions());
