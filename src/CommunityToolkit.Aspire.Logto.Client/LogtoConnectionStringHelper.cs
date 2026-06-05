@@ -7,7 +7,7 @@ namespace CommunityToolkit.Aspire.Logto.Client;
 /// from connection strings in various formats. This helper is specifically designed
 /// to assist with parsing connection strings for use with the Logto client configuration.
 /// </summary>
-public class LogtoConnectionStringHelper
+public static class LogtoConnectionStringHelper
 {
     private const string ConnectionStringEndpointKey = "Endpoint";
 
@@ -33,7 +33,15 @@ public class LogtoConnectionStringHelper
             return uri.ToString();
         }
 
-        var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
+        DbConnectionStringBuilder builder;
+        try
+        {
+            builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
 
         if (builder.TryGetValue(ConnectionStringEndpointKey, out var endpointObj) &&
             endpointObj is string endpoint &&

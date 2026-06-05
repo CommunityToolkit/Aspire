@@ -55,4 +55,12 @@ public class LogtoConnectionStringHelperTests
         
         Assert.Null(result);
     }
+
+    [Fact]
+    public void GetEndpointFromConnectionString_ReturnsNull_WhenConnectionStringIsMalformed()
+    {
+        var result = LogtoConnectionStringHelper.GetEndpointFromConnectionString("Endpoint=https://logto.example.com;=");
+
+        Assert.Null(result);
+    }
 }

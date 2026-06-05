@@ -1,5 +1,3 @@
-using CommunityToolkit.Aspire.Hosting.Logto;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
@@ -9,7 +7,8 @@ var cache = builder.AddRedis("redis")
     .WithDataVolume();
 
 var logto = builder.AddLogto("logto", postgres)
-    .WithRedis(cache);
+    .WithRedis(cache)
+    .WithDatabaseSeeding();
 
 
 var clientOIDC = builder.AddProject<Projects.CommunityToolkit_Aspire_Logto_ClientOIDC>("clientOIDC")

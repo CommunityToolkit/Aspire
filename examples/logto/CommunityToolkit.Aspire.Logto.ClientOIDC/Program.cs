@@ -1,6 +1,6 @@
-using CommunityToolkit.Aspire.Logto.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Hosting;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,12 +8,11 @@ builder.AddServiceDefaults();
 
 builder.AddLogtoOIDC("logto", logtoOptions: config =>
 {
-    config.AppId = "s6zda5bqn1qlsjzaiklqn";
-    config.AppSecret = "Df77aDt13MG3nSTgo8eKZP2HdeSfbed0";
-    
-},oidcOptions: opt =>
+    config.AppId = builder.Configuration["Logto:AppId"] ?? string.Empty;
+    config.AppSecret = builder.Configuration["Logto:AppSecret"] ?? string.Empty;
+}, oidcOptions: opt =>
 {
-    opt.RequireHttpsMetadata = false;
+    opt.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
 });
 builder.Services.AddAuthorization();
 

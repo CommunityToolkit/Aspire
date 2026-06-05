@@ -6,7 +6,7 @@ namespace CommunityToolkit.Aspire.Logto.Client.Tests;
 public class LogtoClientBuilderTests
 {
     [Fact]
-    public void AddLogtoSDKClient_ThrowsArgumentNull_WhenBuilderIsNull()
+    public void AddLogtoOIDC_ThrowsArgumentNull_WhenBuilderIsNull()
     {
         IHostApplicationBuilder? builder = null;
 
@@ -17,7 +17,7 @@ public class LogtoClientBuilderTests
     }
 
     [Fact]
-    public void AddLogtoSDKClient_ThrowsInvalidOperation_WhenEndpointNotConfiguredAnywhere()
+    public void AddLogtoOIDC_ThrowsInvalidOperation_WhenEndpointNotConfiguredAnywhere()
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
@@ -32,7 +32,7 @@ public class LogtoClientBuilderTests
     }
 
     [Fact]
-    public void AddLogtoSDKClient_UsesEndpointFromConfiguration_WhenPresent()
+    public void AddLogtoOIDC_UsesEndpointFromConfiguration_WhenPresent()
     {
         var builder = Host.CreateApplicationBuilder();
 
@@ -50,7 +50,7 @@ public class LogtoClientBuilderTests
     }
 
     [Fact]
-    public void AddLogtoSDKClient_UsesEndpointFromConnectionString_WhenConfigDoesNotContainEndpoint()
+    public void AddLogtoOIDC_UsesEndpointFromConnectionString_WhenConfigDoesNotContainEndpoint()
     {
         var builder = Host.CreateApplicationBuilder();
 
@@ -68,7 +68,7 @@ public class LogtoClientBuilderTests
     }
 
     [Fact]
-    public void AddLogtoSDKClient_ThrowsInvalidOperation_WhenConfigureSettingsClearsEndpoint()
+    public void AddLogtoOIDC_ThrowsInvalidOperation_WhenConfigureSettingsClearsEndpoint()
     {
         var builder = Host.CreateApplicationBuilder();
 
@@ -89,7 +89,7 @@ public class LogtoClientBuilderTests
     }
 
     [Fact]
-    public void AddLogtoSDKClient_ThrowsInvalidOperation_WhenAppIdIsMissingAfterConfigureSettings()
+    public void AddLogtoOIDC_ThrowsInvalidOperation_WhenAppIdIsMissingAfterConfigureSettings()
     {
         var builder = Host.CreateApplicationBuilder();
 

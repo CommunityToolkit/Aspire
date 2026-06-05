@@ -1,6 +1,6 @@
-﻿using Aspire.Hosting.ApplicationModel;
+﻿#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
-namespace CommunityToolkit.Aspire.Hosting.Logto;
+namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Represents a containerized resource specific to Logto that extends the base functionality
@@ -10,6 +10,7 @@ namespace CommunityToolkit.Aspire.Hosting.Logto;
 /// This class is designed for use in an application hosting environment and incorporates
 /// a primary HTTP endpoint with predefined default port configurations.
 /// </remarks>
+[AspireExport(ExposeProperties = true)]
 public sealed class LogtoResource(string name)
     : ContainerResource(name), IResourceWithConnectionString
 {
@@ -18,13 +19,14 @@ public sealed class LogtoResource(string name)
     internal const int DefaultHttpPort = 3001;
     internal const int DefaultHttpAdminPort = 3002;
 
+    private EndpointReference? _primaryEndpointReference;
 
     /// Gets the primary endpoint associated with the container resource.
     /// This property provides a reference to the primary HTTP endpoint for the resource,
     /// facilitating network communication and identifying the primary access point.
     /// The endpoint is tied to the default configuration for HTTP-based interactions
     /// and is predefined with a specific protocol and port settings.
-    public EndpointReference PrimaryEndpoint => new(this, PrimaryEndpointName);
+    public EndpointReference PrimaryEndpoint => _primaryEndpointReference ??= new(this, PrimaryEndpointName);
 
     /// Gets the host associated with the primary endpoint of the container resource.
     /// This property allows access to the host definition of the primary HTTP endpoint,
@@ -46,21 +48,29 @@ public sealed class LogtoResource(string name)
     public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
 
 
-    private ReferenceExpression GetConnectionString()
-    {
-        var builder = new ReferenceExpressionBuilder();
-
-        builder.Append(
-            $"Endpoint={PrimaryEndpointName}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
-
-        return builder.Build();
-    }
-
     /// Gets the connection string expression for the Logto container resource.
     /// The connection string is dynamically constructed based on the resource's
     /// endpoint configuration and includes details such as the protocol, host,
     /// and port. This property provides a reference to the connection string,
     /// allowing integration with external resources or clients requiring
     /// connection details formatted as a string expression.
-    public ReferenceExpression ConnectionStringExpression => GetConnectionString();
+    public ReferenceExpression ConnectionStringExpression =>
+        ReferenceExpression.Create(
+            $"Endpoint={PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+
+    /// <summary>
+    /// Gets the connection URI expression for the Logto container resource.
+    /// </summary>
+    public ReferenceExpression UriExpression =>
+        ReferenceExpression.Create(
+            $"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+
+    IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
+    {
+        yield return new("Host", ReferenceExpression.Create($"{Host}"));
+        yield return new("Port", ReferenceExpression.Create($"{Port}"));
+        yield return new("Uri", UriExpression);
+    }
 }
+
+#pragma warning restore ASPIREATS001

@@ -41,4 +41,41 @@ public class ResourceCreationTests
         Assert.True(result);
         Assert.NotNull(annotations);
     }
+
+    [Fact]
+    public void LogtoResourceDoesNotOverrideEntrypointByDefault()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var postgres = builder.AddPostgres("postgres");
+
+        builder.AddLogto("logto", postgres);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<LogtoResource>());
+
+        Assert.False(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out _));
+    }
+
+    [Fact]
+    public void LogtoResourceCanUseSeededStartup()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var postgres = builder.AddPostgres("postgres");
+
+        builder.AddLogto("logto", postgres)
+            .WithDatabaseSeeding();
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<LogtoResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType<CommandLineArgsCallbackAnnotation>(out _));
+    }
 }

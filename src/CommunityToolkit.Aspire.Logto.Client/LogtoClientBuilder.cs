@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using CommunityToolkit.Aspire.Logto.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
-namespace CommunityToolkit.Aspire.Logto.Client;
+namespace Microsoft.Extensions.Hosting;
 
 /// <summary>
 /// Provides methods to configure and add Logto client services to an application builder.
@@ -59,7 +60,6 @@ public static class LogtoClientBuilder
             opt.Endpoint = options.Endpoint;
             opt.AppId = options.AppId;
             opt.AppSecret = options.AppSecret;
-            logtoOptions?.Invoke(opt);
         });
         builder.Services.Configure<OpenIdConnectOptions>(authenticationScheme, opt =>
         {
@@ -94,6 +94,10 @@ public static class LogtoClientBuilder
         string? configurationSectionName = DefaultConfigSectionName,
         Action<JwtBearerOptions>? configureOptions = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
+        ArgumentException.ThrowIfNullOrEmpty(appIdentification);
+
         return AddLogtoJwtBearer(builder, serviceName, [appIdentification], authenticationScheme,
             configurationSectionName, configureOptions);
     }
@@ -125,7 +129,7 @@ public static class LogtoClientBuilder
     /// </returns>
     /// <exception cref="ArgumentNullException">Thrown when the builder is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when serviceName or appIndeficator is missing or invalid.
+    /// Thrown when serviceName or appIdentification is missing or invalid.
     /// </exception>
     public static AuthenticationBuilder AddLogtoJwtBearer(this AuthenticationBuilder builder,
         string serviceName,
@@ -134,6 +138,16 @@ public static class LogtoClientBuilder
         string? configurationSectionName = DefaultConfigSectionName,
         Action<JwtBearerOptions>? configureOptions = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(serviceName);
+        ArgumentNullException.ThrowIfNull(appIdentification);
+
+        var audiences = appIdentification as string[] ?? appIdentification.ToArray();
+        if (audiences.Length == 0 || audiences.Any(string.IsNullOrWhiteSpace))
+        {
+            throw new ArgumentException("At least one non-empty application identifier must be provided.", nameof(appIdentification));
+        }
+
         builder.Services
             .AddOptions<JwtBearerOptions>(authenticationScheme)
             .Configure<IConfiguration>((jwt, configuration) =>
@@ -147,7 +161,7 @@ public static class LogtoClientBuilder
                     ValidateIssuer = true,
                     ValidIssuer = issuer,
                     ValidateAudience = true,
-                    ValidAudiences = appIdentification
+                    ValidAudiences = audiences
                 };
                 configureOptions?.Invoke(jwt);
             });
@@ -208,7 +222,7 @@ public static class LogtoClientBuilder
         if (string.IsNullOrWhiteSpace(options.Endpoint))
         {
             throw new InvalidOperationException(
-                $"Logto Endpoint must be configured in configuration section '{configurationSectionName ?? DefaultConfigSectionName}' or via configureOptions.");
+                $"Logto Endpoint must be configured in configuration section '{configurationSectionName ?? DefaultConfigSectionName}' or in connection string '{connectionName}'.");
         }
 
         return options;

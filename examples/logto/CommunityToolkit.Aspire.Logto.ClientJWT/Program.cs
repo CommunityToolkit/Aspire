@@ -1,6 +1,6 @@
-using CommunityToolkit.Aspire.Logto.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -9,7 +9,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddLogtoJwtBearer("logto", appIdentification: apiAudience,
         configureOptions: opt =>
         {
-            opt.RequireHttpsMetadata = false;
+            opt.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         });
 
 builder.Services.AddAuthorization();

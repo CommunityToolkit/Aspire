@@ -9,7 +9,7 @@ It includes helpers for wiring Logto to **PostgreSQL** (via `Aspire.Hosting.Post
 
 ## Features
 
-- Configure **Logto** to use **PostgreSQL** via `AddLogtoContainer(...)`.
+- Configure **Logto** to use **PostgreSQL** via `AddLogto(...)`.
 - Optional **Redis** integration for caching via `.WithRedis(...)`.
 - Fluent helpers to set environment variables:
   - `DB_URL` (Postgres connection string)
@@ -29,27 +29,25 @@ It includes helpers for wiring Logto to **PostgreSQL** (via `Aspire.Hosting.Post
 ```csharp
 using Aspire.Hosting;
 using Aspire.Hosting.Postgres;
-using CommunityToolkit.Aspire.Hosting.Logto;
-
 var postgres = builder.AddPostgres("postgres");
 
 // Basic setup connecting to Postgres
 var logto = builder
-    .AddLogtoContainer("logto", postgres, databaseName: "logto_db")
-    .WithDataVolume();
+    .AddLogto("logto", postgres)
+    .WithDatabaseSeeding();
 
 // Advanced setup with Redis and specific configurations
 var redis = builder.AddRedis("redis");
 
 var logtoSecure = builder
-    .AddLogtoContainer("logto-secure", postgres, databaseName: "logto_secure_db")
+    .AddLogto("logto-secure", postgres, databaseName: "logto_secure_db")
     .WithRedis(redis)
     .WithAdminEndpoint("https://admin.example.com")
     .WithDisableAdminConsole(false)
     .WithTrustProxyHeader(true)      // optional override, default is already true
     .WithSensitiveUsername(true)
     .WithNodeEnv("production");
-````
+```
 
 Logto will be configured with:
 
@@ -63,7 +61,7 @@ Logto will be configured with:
 
 ## Notes
 
-* Extension methods are in the `CommunityToolkit.Aspire.Hosting.Logto` namespace.
-* The resource automatically runs the database seeding command
+* Extension methods are in the `Aspire.Hosting` namespace.
+* Call `.WithDatabaseSeeding()` to run the database seeding command
   `npm run cli db seed -- --swe && npm start` on startup.
-* Default ports are **3001** (HTTP) and **3002** (Admin).
+* Container ports are **3001** (HTTP) and **3002** (Admin). Host ports are random by default unless explicitly configured.
