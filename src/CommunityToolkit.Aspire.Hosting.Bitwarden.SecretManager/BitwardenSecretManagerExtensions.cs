@@ -402,20 +402,25 @@ public static class BitwardenSecretManagerExtensions
     }
 
     /// <summary>
-    /// Gets or creates a Bitwarden secret reference by secret identifier. The secret must already exist in
-    /// Bitwarden; use <see cref="AddSecret(IResourceBuilder{BitwardenSecretManagerResource}, string)"/> if
-    /// Aspire should own and write the secret value.
+    /// Gets or creates a Bitwarden secret reference by secret identifier.
+    /// Use this when multiple secrets share the same name and the identifier is the only unambiguous key.
+    /// The secret must already exist in Bitwarden; use
+    /// <see cref="AddSecret(IResourceBuilder{BitwardenSecretManagerResource}, string)"/> if Aspire should
+    /// own and write the secret value.
     /// </summary>
     /// <param name="builder">The resource builder.</param>
+    /// <param name="name">The Aspire resource name.</param>
     /// <param name="secretId">The Bitwarden secret identifier.</param>
     /// <returns>A resource builder for the secret reference.</returns>
     [AspireExport("getSecretById")]
     public static IResourceBuilder<BitwardenSecretResource> GetSecret(
         this IResourceBuilder<BitwardenSecretManagerResource> builder,
+        [ResourceName] string name,
         Guid secretId)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return GetSecretCore(builder, secretId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        return GetSecretCore(builder, name, secretId);
     }
 
     /// <summary>
@@ -453,23 +458,6 @@ public static class BitwardenSecretManagerExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(remoteName);
         return AddSecretCore(builder, name, remoteName);
-    }
-
-    /// <summary>
-    /// Configures a managed Bitwarden secret to adopt an existing remote secret.
-    /// </summary>
-    /// <param name="builder">The managed secret resource builder.</param>
-    /// <param name="secretId">The Bitwarden secret identifier.</param>
-    /// <returns>The managed secret resource builder.</returns>
-    [AspireExport]
-    public static IResourceBuilder<BitwardenSecretResource> WithExistingSecret(
-        this IResourceBuilder<BitwardenSecretResource> builder,
-        Guid secretId)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        builder.Resource.ExistingSecretId = secretId;
-        return builder;
     }
 
     /// <summary>
@@ -1015,9 +1003,10 @@ public static class BitwardenSecretManagerExtensions
 
     private static IResourceBuilder<BitwardenSecretResource> GetSecretCore(
         IResourceBuilder<BitwardenSecretManagerResource> builder,
+        string name,
         Guid secretId)
     {
-        BitwardenSecretResource secret = builder.Resource.GetOrCreateUnmanagedSecret(secretId);
+        BitwardenSecretResource secret = builder.Resource.GetOrCreateUnmanagedSecret(name, secretId);
 
         IResource? existing = builder.ApplicationBuilder.Resources
             .FirstOrDefault(r => ReferenceEquals(r, secret));

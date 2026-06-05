@@ -85,7 +85,7 @@ public class BitwardenSecretResource : ParameterResource, IResourceWithParent<Bi
     /// </summary>
     public BitwardenSecretManagerResource Parent { get; }
 
-    internal Guid? ExistingSecretId { get; set; }
+    internal Guid? ExistingSecretId { get; }
 
     /// <summary>
     /// Gets the effective Bitwarden secret identifier: the explicitly configured ID if set, otherwise the resolved ID.

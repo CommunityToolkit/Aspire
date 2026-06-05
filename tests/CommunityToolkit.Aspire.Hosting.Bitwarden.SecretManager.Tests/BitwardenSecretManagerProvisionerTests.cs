@@ -148,104 +148,6 @@ public class BitwardenSecretManagerProvisionerTests
     }
 
     [Fact]
-    public async Task ProvisionAsync_AdoptsExplicitExistingSecret()
-    {
-        var organizationId = Guid.NewGuid();
-        var existingProjectId = Guid.NewGuid();
-        var existingSecretId = Guid.NewGuid();
-        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
-
-        try
-        {
-            var appBuilder = DistributedApplication.CreateBuilder();
-            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
-            appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
-            appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "updated-value";
-
-            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
-                .WithCacheFile(stateFile);
-
-            var managedSecret = bitwarden.AddSecret("managed-secret")
-                .WithExistingSecret(existingSecretId);
-
-            var fakeProvider = new FakeBitwardenProvider();
-            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "existing-project-name", organizationId);
-            fakeProvider.Secrets[existingSecretId] = new BitwardenSecretInfo(existingSecretId, "managed-secret", "stale-value", string.Empty, organizationId, existingProjectId);
-            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
-
-            using var app = appBuilder.Build();
-            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
-
-            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
-            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
-            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
-
-            Assert.Equal(existingSecretId, managedSecret.Resource.SecretId);
-            Assert.Contains(existingSecretId, fakeProvider.UpdatedSecrets);
-            Assert.Equal("updated-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
-        }
-        finally
-        {
-            if (File.Exists(stateFile))
-            {
-                File.Delete(stateFile);
-            }
-        }
-    }
-
-    [Fact]
-    public async Task ProvisionAsync_AdoptsExplicitExistingSecret_DoesNotUpdateWhenUnchanged()
-    {
-        var organizationId = Guid.NewGuid();
-        var existingProjectId = Guid.NewGuid();
-        var existingSecretId = Guid.NewGuid();
-        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
-
-        try
-        {
-            var appBuilder = DistributedApplication.CreateBuilder();
-            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
-            appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
-            appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "unchanged-value";
-
-            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
-                .WithCacheFile(stateFile);
-
-            var managedSecret = bitwarden.AddSecret("managed-secret")
-                .WithExistingSecret(existingSecretId);
-
-            var fakeProvider = new FakeBitwardenProvider();
-            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "existing-project-name", organizationId);
-            fakeProvider.Secrets[existingSecretId] = new BitwardenSecretInfo(existingSecretId, "managed-secret", "unchanged-value", string.Empty, organizationId, existingProjectId);
-            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
-
-            using var app = appBuilder.Build();
-            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
-            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
-
-            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
-            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
-            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
-
-            Assert.Equal(existingSecretId, managedSecret.Resource.SecretId);
-            Assert.DoesNotContain(existingSecretId, fakeProvider.UpdatedSecrets);
-            Assert.Equal("unchanged-value", bitwarden.Resource.ResolveSecretValue(managedSecret.Resource));
-        }
-        finally
-        {
-            if (File.Exists(stateFile))
-            {
-                File.Delete(stateFile);
-            }
-        }
-    }
-
-    [Fact]
     public async Task ProvisionAsync_WhenManagedSecretIsAlsoReferencedByName_TreatsItAsSingleSecret()
     {
         var organizationId = Guid.NewGuid();
@@ -389,6 +291,209 @@ public class BitwardenSecretManagerProvisionerTests
             }
         }
     }
+
+    [Fact]
+    public async Task ProvisionSecretsAsync_DuplicateManagedSecretNames_NonInteractive_Throws()
+    {
+        var organizationId = Guid.NewGuid();
+        var existingProjectId = Guid.NewGuid();
+        var dup1Id = Guid.NewGuid();
+        var dup2Id = Guid.NewGuid();
+        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
+
+            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
+                .WithExistingProject(existingProjectId)
+                .WithCacheFile(stateFile);
+
+            bitwarden.AddSecret("managed-secret");
+
+            var fakeProvider = new FakeBitwardenProvider();
+            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "application-secrets", organizationId);
+            fakeProvider.Secrets[dup1Id] = new BitwardenSecretInfo(dup1Id, "managed-secret", "value-1", string.Empty, organizationId, existingProjectId);
+            fakeProvider.Secrets[dup2Id] = new BitwardenSecretInfo(dup2Id, "managed-secret", "value-2", string.Empty, organizationId, existingProjectId);
+            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+            using var app = appBuilder.Build();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+
+            var ex = await Assert.ThrowsAsync<DistributedApplicationException>(
+                () => provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default));
+
+            Assert.Contains("bitwarden", ex.Message);
+            Assert.Contains("managed-secret", ex.Message);
+            Assert.Contains(dup1Id.ToString("D"), ex.Message);
+            Assert.Contains(dup2Id.ToString("D"), ex.Message);
+        }
+        finally
+        {
+            if (File.Exists(stateFile)) File.Delete(stateFile);
+        }
+    }
+
+    [Fact]
+    public async Task ProvisionSecretsAsync_DuplicateManagedSecretNames_Interactive_UserPicksCandidate_SyncsSelected()
+    {
+        var organizationId = Guid.NewGuid();
+        var existingProjectId = Guid.NewGuid();
+        var dup1Id = Guid.NewGuid();
+        var dup2Id = Guid.NewGuid();
+        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
+
+            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
+                .WithExistingProject(existingProjectId)
+                .WithCacheFile(stateFile);
+
+            var managedSecret = bitwarden.AddSecret("managed-secret");
+
+            var fakeProvider = new FakeBitwardenProvider();
+            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "application-secrets", organizationId);
+            fakeProvider.Secrets[dup1Id] = new BitwardenSecretInfo(dup1Id, "managed-secret", "value-1", string.Empty, organizationId, existingProjectId);
+            fakeProvider.Secrets[dup2Id] = new BitwardenSecretInfo(dup2Id, "managed-secret", "value-2", string.Empty, organizationId, existingProjectId);
+            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+#pragma warning disable ASPIREINTERACTION001
+            appBuilder.Services.AddSingleton<IInteractionService>(new FakeInteractionService(dup2Id.ToString("D")));
+#pragma warning restore ASPIREINTERACTION001
+
+            using var app = appBuilder.Build();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default);
+
+            Assert.Equal(dup2Id, managedSecret.Resource.SecretId);
+            Assert.Contains(dup2Id, fakeProvider.UpdatedSecrets);
+            Assert.DoesNotContain(dup1Id, fakeProvider.UpdatedSecrets);
+        }
+        finally
+        {
+            if (File.Exists(stateFile)) File.Delete(stateFile);
+        }
+    }
+
+    [Fact]
+    public async Task ProvisionSecretsAsync_DuplicateManagedSecretNames_Interactive_UserCancels_Throws()
+    {
+        var organizationId = Guid.NewGuid();
+        var existingProjectId = Guid.NewGuid();
+        var dup1Id = Guid.NewGuid();
+        var dup2Id = Guid.NewGuid();
+        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
+
+            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
+                .WithExistingProject(existingProjectId)
+                .WithCacheFile(stateFile);
+
+            bitwarden.AddSecret("managed-secret");
+
+            var fakeProvider = new FakeBitwardenProvider();
+            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "application-secrets", organizationId);
+            fakeProvider.Secrets[dup1Id] = new BitwardenSecretInfo(dup1Id, "managed-secret", "value-1", string.Empty, organizationId, existingProjectId);
+            fakeProvider.Secrets[dup2Id] = new BitwardenSecretInfo(dup2Id, "managed-secret", "value-2", string.Empty, organizationId, existingProjectId);
+            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+#pragma warning disable ASPIREINTERACTION001
+            appBuilder.Services.AddSingleton<IInteractionService>(new FakeInteractionService(canceled: true));
+#pragma warning restore ASPIREINTERACTION001
+
+            using var app = appBuilder.Build();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+
+            var ex = await Assert.ThrowsAsync<DistributedApplicationException>(
+                () => provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default));
+
+            Assert.Contains("canceled", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (File.Exists(stateFile)) File.Delete(stateFile);
+        }
+    }
+
+    [Fact]
+    public async Task ProvisionSecretsAsync_DuplicateManagedSecretNames_Interactive_InvalidInput_Throws()
+    {
+        var organizationId = Guid.NewGuid();
+        var existingProjectId = Guid.NewGuid();
+        var dup1Id = Guid.NewGuid();
+        var dup2Id = Guid.NewGuid();
+        var stateFile = Path.Combine(Path.GetTempPath(), $"bitwarden-{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var appBuilder = DistributedApplication.CreateBuilder();
+            appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
+
+            var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
+                .WithExistingProject(existingProjectId)
+                .WithCacheFile(stateFile);
+
+            bitwarden.AddSecret("managed-secret");
+
+            var fakeProvider = new FakeBitwardenProvider();
+            fakeProvider.Projects[existingProjectId] = new BitwardenProjectInfo(existingProjectId, "application-secrets", organizationId);
+            fakeProvider.Secrets[dup1Id] = new BitwardenSecretInfo(dup1Id, "managed-secret", "value-1", string.Empty, organizationId, existingProjectId);
+            fakeProvider.Secrets[dup2Id] = new BitwardenSecretInfo(dup2Id, "managed-secret", "value-2", string.Empty, organizationId, existingProjectId);
+            appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+#pragma warning disable ASPIREINTERACTION001
+            appBuilder.Services.AddSingleton<IInteractionService>(new FakeInteractionService("not-a-guid"));
+#pragma warning restore ASPIREINTERACTION001
+
+            using var app = appBuilder.Build();
+            var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+            var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+
+            await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+            await provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default);
+
+            var ex = await Assert.ThrowsAsync<DistributedApplicationException>(
+                () => provisioner.ProvisionSecretsAsync(bitwarden.Resource, app.Services, logger, default));
+
+            Assert.Contains("not-a-guid", ex.Message);
+        }
+        finally
+        {
+            if (File.Exists(stateFile)) File.Delete(stateFile);
+        }
+    }
 }
 
 internal sealed class FakeBitwardenProviderFactory(FakeBitwardenProvider provider) : IBitwardenSecretManagerProviderFactory
@@ -476,5 +581,52 @@ internal sealed class FakeBitwardenProvider : IBitwardenSecretManagerProvider
         return secret;
     }
 
+    public IReadOnlyList<BitwardenSecretInfo> SyncSecrets(Guid organizationId)
+        => Secrets.Values.Where(s => s.OrganizationId == organizationId).ToArray();
+
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }
+
+#pragma warning disable ASPIREINTERACTION001
+internal sealed class FakeInteractionService : IInteractionService
+{
+    private readonly string? _returnValue;
+    private readonly bool _canceled;
+
+    public FakeInteractionService(string returnValue) => _returnValue = returnValue;
+    public FakeInteractionService(bool canceled) => _canceled = canceled;
+
+    public bool IsAvailable => true;
+
+    public Task<InteractionResult<InteractionInput>> PromptInputAsync(
+        string title,
+        string? message,
+        InteractionInput input,
+        InputsDialogInteractionOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (_canceled)
+        {
+            return Task.FromResult(InteractionResult.Cancel(input));
+        }
+
+        input.Value = _returnValue;
+        return Task.FromResult(InteractionResult.Ok(input));
+    }
+
+    public Task<InteractionResult<bool>> PromptConfirmationAsync(string title, string message, MessageBoxInteractionOptions? options = null, CancellationToken cancellationToken = default)
+        => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
+
+    public Task<InteractionResult<bool>> PromptMessageBoxAsync(string title, string message, MessageBoxInteractionOptions? options = null, CancellationToken cancellationToken = default)
+        => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
+
+    public Task<InteractionResult<InteractionInput>> PromptInputAsync(string title, string? message, string inputLabel, string placeHolder, InputsDialogInteractionOptions? options = null, CancellationToken cancellationToken = default)
+        => Task.FromException<InteractionResult<InteractionInput>>(new NotSupportedException());
+
+    public Task<InteractionResult<InteractionInputCollection>> PromptInputsAsync(string title, string? message, IReadOnlyList<InteractionInput> inputs, InputsDialogInteractionOptions? options = null, CancellationToken cancellationToken = default)
+        => Task.FromException<InteractionResult<InteractionInputCollection>>(new NotSupportedException());
+
+    public Task<InteractionResult<bool>> PromptNotificationAsync(string title, string message, NotificationInteractionOptions? options = null, CancellationToken cancellationToken = default)
+        => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
+}
+#pragma warning restore ASPIREINTERACTION001

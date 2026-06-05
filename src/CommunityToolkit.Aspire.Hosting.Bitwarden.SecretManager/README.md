@@ -69,9 +69,9 @@ Use `WithAuthCacheDirectory` to override the AppHost auth cache location. The au
 bitwarden.WithAuthCacheDirectory("/ci/bitwarden-auth");
 ```
 
-## Usage
+## Managed secrets
 
-Use `AddSecret(...)` to declare AppHost-owned secrets.
+Use `AddSecret(...)` to declare AppHost-owned secrets. Aspire creates the secret if it does not exist and updates it when the local value changes.
 
 ```csharp
 // Aspire resource name and Bitwarden secret name are the same
@@ -87,7 +87,11 @@ The value is resolved in this order during startup:
 2. **Configuration** — reads `Parameters:{bitwardenResourceName}-{secretName}` (e.g. `Parameters:bitwarden-api-key`).
 3. **Interactive prompt** — the dashboard prompts for the value. Once supplied, Bitwarden creates the secret.
 
-Use `GetSecret(...)` to reference an externally owned secret that already exists in Bitwarden.
+Aspire finds or creates the secret entirely by name and cached ID. There is no explicit GUID adoption for managed secrets — if the same secret was created in a previous run it will be found automatically.
+
+## Externally managed secrets
+
+Use `GetSecret(...)` to reference a secret that already exists in Bitwarden and is owned outside the AppHost. Aspire reads the value but never writes to it.
 
 ```csharp
 // Aspire resource name and Bitwarden secret name are the same
@@ -95,7 +99,13 @@ IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("
 
 // Aspire resource name and Bitwarden secret name differ
 IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("api-key", remoteName: "API Key");
+
+// Multiple secrets share the same name — Bitwarden does not enforce name uniqueness,
+// so use the GUID to identify the specific secret
+IResourceBuilder<BitwardenSecretResource> existingSecret = bitwarden.GetSecret("api-key", Guid.Parse("00000000-0000-0000-0000-000000000000"));
 ```
+
+## Injecting secrets into dependent resources
 
 Use `WithReference(...)` to inject Bitwarden client configuration into dependent resources.
 
@@ -162,12 +172,13 @@ Run `aspire deploy`. The integration adds six pipeline steps per Bitwarden resou
 
 Both return `IResourceBuilder<BitwardenSecretResource>`. Pass the builder directly to `WithEnvironment` to inject the resolved secret value, or call `.AsSecretId()` on the builder to inject the secret ID instead.
 
-| API                           | What it does                                    | When to use                       |
-| ----------------------------- | ----------------------------------------------- | --------------------------------- |
-| `AddSecret(name)`             | AppHost-owned, read-write; names are the same   | Both names are the same           |
-| `AddSecret(name, remoteName)` | AppHost-owned, read-write; names differ         | Aspire and Bitwarden names differ |
-| `GetSecret(name)`             | Externally owned, read-only; names are the same | Both names are the same           |
-| `GetSecret(name, remoteName)` | Externally owned, read-only; names differ       | Aspire and Bitwarden names differ |
+| API                           | Ownership | Bitwarden writes | When to use                                      |
+| ----------------------------- | --------- | ---------------- | ------------------------------------------------ |
+| `AddSecret(name)`             | AppHost   | Yes (upsert)     | Both names are the same                          |
+| `AddSecret(name, remoteName)` | AppHost   | Yes (upsert)     | Aspire and Bitwarden names differ                |
+| `GetSecret(name)`             | External  | No               | Both names are the same                          |
+| `GetSecret(name, remoteName)` | External  | No               | Aspire and Bitwarden names differ                |
+| `GetSecret(name, secretId)`   | External  | No               | Multiple secrets share the same name (Bitwarden does not enforce uniqueness) |
 
 ### Secret references (injected into dependent resources)
 
@@ -297,16 +308,9 @@ Create new project. Use `WithExistingProject` to adopt a project created outside
 
 ### Managed secret provisioning decisions
 
-Runs once per `AddSecret` secret during `bitwarden-provision-secrets`. Paths tried in order: explicit adoption → persisted mapping → name search.
+Runs once per `AddSecret` secret during `bitwarden-provision-secrets`. Paths tried in order: persisted mapping → name search → create new.
 
-**Path A — explicit adoption (`WithExistingSecret`)**
-
-| Secret found | Outcome                            |
-| ------------ | ---------------------------------- |
-| ✓            | Sync secret                        |
-| ✗            | Error: configured secret not found |
-
-**Path B — persisted mapping exists in cache**
+**Path A — persisted mapping exists in cache**
 
 | Secret found | In project | Outcome                     |
 | ------------ | ---------- | --------------------------- |
@@ -314,7 +318,7 @@ Runs once per `AddSecret` secret during `bitwarden-provision-secrets`. Paths tri
 | ✓            | ✗          | ⚠ Create replacement secret |
 | ✗            | —          | ⚠ Create replacement secret |
 
-**Path C — name search**
+**Path B — name search**
 
 | Name matches | Historical rename | Outcome                                            |
 | ------------ | ----------------- | -------------------------------------------------- |
@@ -323,11 +327,11 @@ Runs once per `AddSecret` secret during `bitwarden-provision-secrets`. Paths tri
 | 1            | ✓                 | ⚠ Create new secret (local identity changed)       |
 | > 1          | —                 | Prompt user to pick one (error if non-interactive) |
 
-### Unmanaged secret resolution
+### Externally managed secret resolution
 
-Runs once per `GetSecret` secret during `bitwarden-provision-secrets`. Read-only — no writes, no cache, no interactive prompt. Paths tried in order: explicit adoption → name search.
+Runs once per `GetSecret` secret during `bitwarden-provision-secrets`. Read-only — no writes, no cache, no interactive prompt. Paths tried in order: explicit GUID → name search.
 
-**Path A — explicit adoption (`WithExistingSecret`)**
+**Path A — explicit GUID (`GetSecret(name, secretId)`)**
 
 | Secret found | In project | Outcome                            |
 | ------------ | ---------- | ---------------------------------- |
@@ -335,13 +339,13 @@ Runs once per `GetSecret` secret during `bitwarden-provision-secrets`. Read-only
 | ✓            | ✗          | Error: secret not in project       |
 | ✗            | —          | Error: configured secret not found |
 
-**Path B — name search**
+**Path B — name search (`GetSecret(name)` or `GetSecret(name, remoteName)`)**
 
-| Name matches | Outcome                                                                                |
-| ------------ | -------------------------------------------------------------------------------------- |
-| 0            | Error: secret not found                                                                |
-| 1            | Sync secret value                                                                      |
-| > 1          | Error: duplicate names (resolve in Bitwarden or adopt by ID with `WithExistingSecret`) |
+| Name matches | Outcome                                                                          |
+| ------------ | -------------------------------------------------------------------------------- |
+| 0            | Error: secret not found                                                          |
+| 1            | Sync secret value                                                                |
+| > 1          | Error: Bitwarden does not enforce name uniqueness — use `GetSecret(name, secretId)` to target one |
 
 ### Audit trail
 

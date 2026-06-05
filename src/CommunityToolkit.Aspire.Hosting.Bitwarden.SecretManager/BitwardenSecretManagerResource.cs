@@ -210,8 +210,10 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         return secret;
     }
 
-    internal BitwardenSecretResource GetOrCreateUnmanagedSecret(Guid secretId)
+    internal BitwardenSecretResource GetOrCreateUnmanagedSecret(string name, Guid secretId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
         BitwardenSecretResource? existing = _secrets.FirstOrDefault(
             s => !s.IsManaged && s.ExistingSecretId == secretId);
         if (existing is not null)
@@ -219,7 +221,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
             return existing;
         }
 
-        BitwardenSecretResource secret = new($"{Name}-{secretId:N}", secretId, this);
+        BitwardenSecretResource secret = new($"{Name}-{name}", secretId, this);
         RegisterSecret(secret);
         return secret;
     }
