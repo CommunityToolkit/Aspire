@@ -103,9 +103,10 @@ internal sealed class BitwardenSecretManagerProvisioner(
             Guid organizationId = await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
             string accessToken = await resource.GetResolvedManagementAccessTokenAsync(services, cancellationToken).ConfigureAwait(false);
 
-            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
-                await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
-                await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
+            string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
+            string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", apiUrl, identityUrl);
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(apiUrl, identityUrl);
             provider.Login(accessToken, cacheContext.AuthCachePath);
 
             BitwardenProjectInfo project = ReconcileProject(resource, remoteProjectName, cacheContext.Cache, provider, organizationId, logger);
@@ -147,12 +148,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
         string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
         BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
-        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
-            await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
-            await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
+        string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
+        string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
+        logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", apiUrl, identityUrl);
+        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(apiUrl, identityUrl);
         provider.Login(accessToken, cacheContext.AuthCachePath);
 
-        BitwardenLookupContext lookupContext = new(provider, organizationId);
+        BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
 
         foreach (BitwardenSecretResource secret in resource.UnmanagedSecrets)
         {
@@ -225,12 +227,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
         BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
         IInteractionService? interactionService = services.GetService<IInteractionService>();
 
-        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
-            await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
-            await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
+        string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
+        string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
+        logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", apiUrl, identityUrl);
+        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(apiUrl, identityUrl);
         provider.Login(accessToken, cacheContext.AuthCachePath);
 
-        BitwardenLookupContext lookupContext = new(provider, organizationId);
+        BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
         int syncedCount = 0;
 
         foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
@@ -272,7 +275,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
     /// Prompts for any missing credentials, then fetches existing managed secret values from Bitwarden
     /// and writes everything to the deployment state so that <c>process-parameters</c> finds the values
     /// in <see cref="IConfiguration"/> and does not re-prompt the user. Runs before <c>process-parameters</c>.
-    /// Skips the Bitwarden fetch (but not the credential prompts) when the project ID is not yet cached.
+    /// When the project ID is not yet cached, performs an org-wide lookup for managed secrets.
     /// </summary>
     /// <remarks>
     /// Why IConfiguration and not TCS: <c>ParameterProcessor.InitializeParametersAsync</c> unconditionally
@@ -292,151 +295,248 @@ internal sealed class BitwardenSecretManagerProvisioner(
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(logger);
 
+        logger.LogDebug("Starting pre-sync for managed secrets of resource '{ResourceName}'.", resource.Name);
+
         if (!resource.ManagedSecrets.Any())
         {
+            logger.LogDebug("No managed secrets declared for resource '{ResourceName}'; skipping pre-sync.", resource.Name);
             return;
         }
 
         IConfiguration configuration = services.GetRequiredService<IConfiguration>();
         IDeploymentStateManager deploymentStateManager = services.GetRequiredService<IDeploymentStateManager>();
+        IInteractionService? interactionService = services.GetService<IInteractionService>();
         int savedCount = 0;
 
-        // Resolve the access token via IConfiguration first (avoids HasValue() which would evaluate
-        // _lazyValue and potentially poison it). Prompt via ParameterProcessor if absent, then
-        // persist to deployment state so process-parameters finds it there and does not prompt again.
-        string accessTokenConfigKey = $"Parameters:{resource.ManagementAccessToken.Name}";
-        string? accessToken = configuration[accessTokenConfigKey];
-        if (string.IsNullOrEmpty(accessToken))
+        // Never call HasValue() or ValueInternal on credential parameters here.
+        // Both evaluate _lazyValue (Lazy<string> with ExecutionAndPublication caching). If _lazyValue
+        // throws MissingParameterValueException, the exception is cached permanently: when
+        // process-parameters later creates a fresh WaitForValueTcs and reads ValueInternal, it re-throws
+        // the cached exception and the user is prompted again even though the value is in IConfiguration.
+        //
+        // When credentials are absent, prompt via IInteractionService.PromptInputAsync directly — not
+        // PromptAsync/SetParameterAsync, which call ValueInternal and would poison _lazyValue.
+        // After collecting, save to deployment state and set WaitForValueTcs so that in-process calls
+        // (e.g. ResolveAuthCachePathAsync) resolve without re-prompting before IConfiguration is reloaded.
+        try
         {
-            logger.LogDebug("Access token not in configuration; prompting before pre-sync for '{ResourceName}'.", resource.Name);
-            resource.ManagementAccessToken.InitializeWaitForValue();
-            await resource.ManagementAccessToken.PromptAsync(services, cancellationToken).ConfigureAwait(false);
-            accessToken = resource.ManagementAccessToken.GetResolvedWaitForValue();
+            string accessTokenConfigKey = $"Parameters:{resource.ManagementAccessToken.Name}";
+            string? accessToken = configuration[accessTokenConfigKey];
             if (string.IsNullOrEmpty(accessToken))
             {
-                logger.LogDebug("Access token prompt dismissed; skipping pre-sync for '{ResourceName}'.", resource.Name);
-                return;
-            }
-            var tokenSlot = await deploymentStateManager.AcquireSectionAsync(accessTokenConfigKey, cancellationToken).ConfigureAwait(false);
-            tokenSlot.SetValue(accessToken);
-            await deploymentStateManager.SaveSectionAsync(tokenSlot, cancellationToken).ConfigureAwait(false);
-            savedCount++;
-        }
-
-        // Resolve the organization ID the same way — literal or via IConfiguration; prompt if needed.
-        Guid organizationId;
-        if (resource.ConfiguredOrganizationId is Guid literalOrgId)
-        {
-            organizationId = literalOrgId;
-        }
-        else if (resource.ConfiguredOrganizationIdParameter is ParameterResource orgIdParam)
-        {
-            string orgIdConfigKey = $"Parameters:{orgIdParam.Name}";
-            string? orgIdString = configuration[orgIdConfigKey];
-            if (string.IsNullOrEmpty(orgIdString))
-            {
-                logger.LogDebug("Organization ID not in configuration; prompting before pre-sync for '{ResourceName}'.", resource.Name);
-                orgIdParam.InitializeWaitForValue();
-                await orgIdParam.PromptAsync(services, cancellationToken).ConfigureAwait(false);
-                orgIdString = orgIdParam.GetResolvedWaitForValue();
-                if (string.IsNullOrEmpty(orgIdString))
+                if (interactionService is null || !interactionService.IsAvailable)
                 {
-                    logger.LogDebug("Organization ID prompt dismissed; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                    logger.LogDebug("Access token not in configuration and interaction is unavailable; skipping pre-sync for '{ResourceName}'.", resource.Name);
                     return;
                 }
-                var orgIdSlot = await deploymentStateManager.AcquireSectionAsync(orgIdConfigKey, cancellationToken).ConfigureAwait(false);
-                orgIdSlot.SetValue(orgIdString);
-                await deploymentStateManager.SaveSectionAsync(orgIdSlot, cancellationToken).ConfigureAwait(false);
+
+                InteractionInput tokenInput = new()
+                {
+                    Name = resource.ManagementAccessToken.Name,
+                    Label = resource.ManagementAccessToken.Name,
+                    InputType = InputType.SecretText,
+                    Required = true,
+                };
+
+                InteractionResult<InteractionInput> tokenResult = await interactionService.PromptInputAsync(
+                    "Bitwarden authentication",
+                    "Enter your Bitwarden Secrets Manager access token.",
+                    tokenInput,
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                if (tokenResult.Canceled || tokenResult.Data?.Value is not { Length: > 0 } promptedToken)
+                {
+                    logger.LogDebug("Access token prompt was canceled; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                    return;
+                }
+
+                accessToken = promptedToken;
+
+                var tokenSlot = await deploymentStateManager.AcquireSectionAsync(accessTokenConfigKey, cancellationToken).ConfigureAwait(false);
+                tokenSlot.SetValue(accessToken);
+                await deploymentStateManager.SaveSectionAsync(tokenSlot, cancellationToken).ConfigureAwait(false);
                 savedCount++;
+
+                // Set TCS so in-process callers get the value before IConfiguration is reloaded.
+                resource.ManagementAccessToken.InitializeWaitForValue();
+                resource.ManagementAccessToken.ResolveWaitForValue(accessToken);
             }
-            if (!Guid.TryParse(orgIdString, out organizationId))
+            else
             {
-                logger.LogDebug("Organization ID '{Value}' is not a valid GUID; skipping pre-sync for '{ResourceName}'.", orgIdString, resource.Name);
+                logger.LogDebug("Access token for resource '{ResourceName}' found in configuration.", resource.Name);
+            }
+
+            Guid organizationId;
+            if (resource.ConfiguredOrganizationId is Guid literalOrgId)
+            {
+                organizationId = literalOrgId;
+            }
+            else if (resource.ConfiguredOrganizationIdParameter is ParameterResource orgIdParam)
+            {
+                string orgIdConfigKey = $"Parameters:{orgIdParam.Name}";
+                string? orgIdString = configuration[orgIdConfigKey];
+                if (string.IsNullOrEmpty(orgIdString))
+                {
+                    if (interactionService is null || !interactionService.IsAvailable)
+                    {
+                        logger.LogDebug("Organization ID not in configuration and interaction is unavailable; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                        return;
+                    }
+
+                    InteractionInput orgIdInput = new()
+                    {
+                        Name = orgIdParam.Name,
+                        Label = orgIdParam.Name,
+                        InputType = InputType.Text,
+                        Required = true,
+                    };
+
+                    InteractionResult<InteractionInput> orgIdResult = await interactionService.PromptInputAsync(
+                        "Bitwarden authentication",
+                        "Enter your Bitwarden organization ID (GUID).",
+                        orgIdInput,
+                        cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                    if (orgIdResult.Canceled || orgIdResult.Data?.Value is not { Length: > 0 } promptedOrgId)
+                    {
+                        logger.LogDebug("Organization ID prompt was canceled; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                        return;
+                    }
+
+                    if (!Guid.TryParse(promptedOrgId, out organizationId))
+                    {
+                        logger.LogDebug("Organization ID '{Value}' is not a valid GUID; skipping pre-sync for '{ResourceName}'.", promptedOrgId, resource.Name);
+                        return;
+                    }
+
+                    orgIdString = promptedOrgId;
+                    var orgIdSlot = await deploymentStateManager.AcquireSectionAsync(orgIdConfigKey, cancellationToken).ConfigureAwait(false);
+                    orgIdSlot.SetValue(orgIdString);
+                    await deploymentStateManager.SaveSectionAsync(orgIdSlot, cancellationToken).ConfigureAwait(false);
+                    savedCount++;
+
+                    orgIdParam.InitializeWaitForValue();
+                    orgIdParam.ResolveWaitForValue(orgIdString);
+                }
+                else if (!Guid.TryParse(orgIdString, out organizationId))
+                {
+                    logger.LogDebug("Organization ID '{Value}' is not a valid GUID; skipping pre-sync for '{ResourceName}'.", orgIdString, resource.Name);
+                    return;
+                }
+                else
+                {
+                    logger.LogDebug("Organization ID for resource '{ResourceName}' found in configuration: {OrganizationId}.", resource.Name, organizationId);
+                }
+            }
+            else
+            {
                 return;
             }
-        }
-        else
-        {
-            return;
-        }
 
-        string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
-        BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
+            string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
+            BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
-        // Need a project ID from a previous run's cache or an explicitly configured one.
-        Guid? projectId = cacheContext.Cache.ProjectId ?? resource.ExistingProjectId;
-        if (projectId is null)
-        {
-            logger.LogDebug("Project ID not available from cache or explicit configuration; skipping managed secret pre-sync for '{ResourceName}'.", resource.Name);
-            // Still reload for any credentials written above so process-parameters skips them.
-            if (savedCount > 0 && configuration is IConfigurationRoot earlyRoot)
-                earlyRoot.Reload();
-            return;
-        }
-
-        logger.LogDebug("Pre-syncing managed secret values for resource '{ResourceName}' from project {ProjectId}.", resource.Name, projectId);
-
-        await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
-            await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
-            await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
-        provider.Login(accessToken, cacheContext.AuthCachePath);
-
-        BitwardenLookupContext lookupContext = new(provider, organizationId);
-        int preResolvedCount = 0;
-
-        foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
-        {
-            // ConfigurationKey is internal to Aspire.Hosting; replicate it — managed secrets are never connection strings.
-            string configKey = $"Parameters:{secret.Name}";
-
-            // Check IConfiguration directly — never call HasValue() or ValueInternal here.
-            // Lazy<string> caches exceptions under ExecutionAndPublication (the default), so evaluating
-            // _lazyValue before process-parameters runs (which would find no value yet) permanently
-            // poisons it. Subsequent calls by ParameterProcessor would re-throw the cached exception
-            // and ignore the reloaded IConfiguration value.
-            if (!string.IsNullOrWhiteSpace(configuration[configKey]))
+            // When the project ID is unknown (first deploy, no cache yet), fall back to an org-wide
+            // name search so managed secrets can still be pre-populated if they exist in any project.
+            Guid? projectId = cacheContext.Cache.ProjectId ?? resource.ExistingProjectId;
+            if (projectId is null)
             {
-                logger.LogDebug("Skipping pre-sync for managed secret '{RemoteName}': value already in configuration.", secret.RemoteName);
-                continue;
+                logger.LogDebug("Project ID not cached; will search org-wide for managed secrets during pre-sync for '{ResourceName}'.", resource.Name);
+            }
+            else
+            {
+                logger.LogDebug("Pre-syncing managed secret values for resource '{ResourceName}' from project {ProjectId}.", resource.Name, projectId);
             }
 
-            BitwardenSecretInfo? existing = await ResolveExistingManagedSecretAsync(
-                resource,
-                projectId.Value,
-                secret,
-                cacheContext.Cache,
-                lookupContext,
-                interactionService: null, // never prompt during pre-sync
-                logger,
-                cancellationToken).ConfigureAwait(false);
+            string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
+            string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", apiUrl, identityUrl);
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(apiUrl, identityUrl);
+            logger.LogDebug("Logging into Bitwarden provider for pre-sync of resource '{ResourceName}' using auth cache '{AuthCachePath}'.", resource.Name, cacheContext.AuthCachePath);
+            provider.Login(accessToken, cacheContext.AuthCachePath);
 
-            if (existing is null)
+            BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
+
+            // When the project ID is known and the remote project name is parameter-backed, fetch the
+            // actual name from Bitwarden so process-parameters finds it in IConfiguration and does not prompt.
+            if (projectId is Guid knownProjectId && resource.ConfiguredRemoteProjectNameParameter is ParameterResource projectNameParam)
             {
-                logger.LogDebug("No upstream value found for managed secret '{RemoteName}' during pre-sync.", secret.RemoteName);
-                continue;
+                string projectNameConfigKey = $"Parameters:{projectNameParam.Name}";
+                if (string.IsNullOrWhiteSpace(configuration[projectNameConfigKey]))
+                {
+                    BitwardenProjectInfo? project = provider.GetProject(knownProjectId);
+                    if (project is not null)
+                    {
+                        var projectNameSlot = await deploymentStateManager.AcquireSectionAsync(projectNameConfigKey, cancellationToken).ConfigureAwait(false);
+                        projectNameSlot.SetValue(project.Name);
+                        await deploymentStateManager.SaveSectionAsync(projectNameSlot, cancellationToken).ConfigureAwait(false);
+                        savedCount++;
+                        logger.LogInformation("Pre-resolved remote project name '{ProjectName}' from Bitwarden project {ProjectId}.", project.Name, knownProjectId);
+                    }
+                }
             }
 
-            var slot = await deploymentStateManager.AcquireSectionAsync(configKey, cancellationToken).ConfigureAwait(false);
-            slot.SetValue(existing.Value);
-            await deploymentStateManager.SaveSectionAsync(slot, cancellationToken).ConfigureAwait(false);
-            preResolvedCount++;
+            int preResolvedCount = 0;
+            logger.LogDebug("Pre-syncing {ManagedSecretCount} managed secret(s) for resource '{ResourceName}'.", resource.ManagedSecrets.Count(), resource.Name);
 
-            logger.LogInformation("Pre-resolved managed secret '{RemoteName}' from Bitwarden secret {SecretId}.", secret.RemoteName, existing.Id);
+            foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
+            {
+                // ConfigurationKey is internal to Aspire.Hosting; replicate it — managed secrets are never connection strings.
+                string configKey = $"Parameters:{secret.Name}";
+
+                // Check IConfiguration directly — never call HasValue() or ValueInternal here (see above).
+                if (!string.IsNullOrWhiteSpace(configuration[configKey]))
+                {
+                    logger.LogDebug("Skipping pre-sync for managed secret '{RemoteName}': value already in configuration.", secret.RemoteName);
+                    continue;
+                }
+
+                BitwardenSecretInfo? existing;
+                try
+                {
+                    existing = projectId is Guid pid
+                        ? await ResolveExistingManagedSecretAsync(
+                            resource, pid, secret, cacheContext.Cache, lookupContext,
+                            interactionService: null, logger, cancellationToken).ConfigureAwait(false)
+                        : lookupContext.FindSecretByNameInOrg(secret.RemoteName);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Pre-sync lookup failed for managed secret '{RemoteName}'; skipping.", secret.RemoteName);
+                    continue;
+                }
+
+                if (existing is null)
+                {
+                    logger.LogDebug("No upstream value found for managed secret '{RemoteName}' during pre-sync.", secret.RemoteName);
+                    continue;
+                }
+
+                var slot = await deploymentStateManager.AcquireSectionAsync(configKey, cancellationToken).ConfigureAwait(false);
+                slot.SetValue(existing.Value);
+                await deploymentStateManager.SaveSectionAsync(slot, cancellationToken).ConfigureAwait(false);
+                preResolvedCount++;
+                savedCount++;
+
+                logger.LogInformation("Pre-resolved managed secret '{RemoteName}' from Bitwarden secret {SecretId}.", secret.RemoteName, existing.Id);
+            }
+
+            if (preResolvedCount > 0)
+            {
+                logger.LogInformation("Pre-synced {Count} managed secret values from Bitwarden for resource '{ResourceName}'.", preResolvedCount, resource.Name);
+            }
         }
-
-        savedCount += preResolvedCount;
-        if (savedCount > 0)
+        finally
         {
-            // Force IConfiguration to re-read the updated deployment state file.
-            // AddJsonFile is registered with reloadOnChange:false so manual Reload() is required.
-            // _lazyValue in ParameterResource has not been evaluated yet at this point (process-parameters
-            // hasn't run), so the next call to _valueGetter will pick up the fresh values.
-            if (configuration is IConfigurationRoot configRoot)
+            // Force IConfiguration to re-read the updated deployment state file regardless of how this
+            // method exits. AddJsonFile is registered with reloadOnChange:false so manual Reload() is
+            // required. _lazyValue in ParameterResource is unevaluated at this point (pre-sync only reads
+            // IConfiguration directly), so process-parameters' _valueGetter will pick up the fresh values.
+            if (savedCount > 0 && configuration is IConfigurationRoot configRoot)
             {
                 configRoot.Reload();
+                logger.LogInformation("IConfiguration reloaded after pre-sync saved {Count} value(s) for resource '{ResourceName}'.", savedCount, resource.Name);
             }
-
-            logger.LogInformation("Pre-synced {Count} managed secret values from Bitwarden for resource '{ResourceName}'; IConfiguration reloaded.", preResolvedCount, resource.Name);
         }
     }
 
@@ -469,9 +569,10 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             IInteractionService? interactionService = services.GetService<IInteractionService>();
 
-            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(
-                await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false),
-                await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false));
+            string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
+            string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogDebug("Creating Bitwarden provider with API URL '{ApiUrl}' and Identity URL '{IdentityUrl}'.", apiUrl, identityUrl);
+            await using IBitwardenSecretManagerProvider provider = providerFactory.Create(apiUrl, identityUrl);
             provider.Login(accessToken, cacheContext.AuthCachePath);
 
             Dictionary<string, Guid> staleManagedMappings = cacheContext.Cache.ManagedSecretIds
@@ -483,7 +584,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 logger.LogInformation("Found {StaleSecretCount} stale managed secret mappings that will be cleaned up.", staleManagedMappings.Count);
             }
 
-            BitwardenLookupContext lookupContext = new(provider, organizationId);
+            BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
 
             logger.LogInformation("Provisioning {ManagedSecretCount} managed secrets for resource '{ResourceName}'.", resource.ManagedSecrets.Count(), resource.Name);
             foreach (BitwardenSecretResource secret in resource.ManagedSecrets)
@@ -1046,7 +1147,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
     }
 }
 
-internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider provider, Guid organizationId)
+internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider provider, Guid organizationId, ILogger? logger = null)
 {
     private IReadOnlyList<BitwardenSecretIdentifierInfo>? _secretIdentifiers;
     private readonly Dictionary<Guid, BitwardenSecretInfo?> _secretsById = [];
@@ -1065,9 +1166,9 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
 
     public IReadOnlyList<BitwardenSecretInfo> FindSecretsByNameInProject(string remoteName, Guid projectId)
     {
-        _secretIdentifiers ??= provider.ListSecrets(organizationId);
+        EnsureSecretIdentifiers();
 
-        Guid[] secretIds = _secretIdentifiers
+        Guid[] secretIds = _secretIdentifiers!
             .Where(secret => string.Equals(secret.Key, remoteName, StringComparison.OrdinalIgnoreCase))
             .Select(secret => secret.Id)
             .ToArray();
@@ -1077,19 +1178,7 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
             return [];
         }
 
-        Guid[] missingSecretIds = secretIds.Where(secretId => !_secretsById.ContainsKey(secretId)).ToArray();
-        if (missingSecretIds.Length > 0)
-        {
-            foreach (BitwardenSecretInfo secret in provider.GetSecretsByIds(missingSecretIds))
-            {
-                _secretsById[secret.Id] = secret;
-            }
-
-            foreach (Guid missingSecretId in missingSecretIds.Where(secretId => !_secretsById.ContainsKey(secretId)))
-            {
-                _secretsById[missingSecretId] = null;
-            }
-        }
+        FetchMissingSecrets(secretIds);
 
         return secretIds
             .Select(secretId => _secretsById[secretId])
@@ -1098,9 +1187,97 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
             .ToArray();
     }
 
+    // Used during pre-sync when no project ID is available yet (first deploy before cache exists).
+    // Returns the first org-wide match by name; does not filter by project.
+    public BitwardenSecretInfo? FindSecretByNameInOrg(string remoteName)
+    {
+        EnsureSecretIdentifiers();
+
+        Guid[] secretIds = _secretIdentifiers!
+            .Where(secret => string.Equals(secret.Key, remoteName, StringComparison.OrdinalIgnoreCase))
+            .Select(secret => secret.Id)
+            .ToArray();
+
+        if (secretIds.Length == 0)
+        {
+            return null;
+        }
+
+        FetchMissingSecrets(secretIds);
+
+        return secretIds
+            .Select(secretId => _secretsById[secretId])
+            .OfType<BitwardenSecretInfo>()
+            .FirstOrDefault(s => string.Equals(s.Key, remoteName, StringComparison.OrdinalIgnoreCase));
+    }
+
     public void CacheSecret(BitwardenSecretInfo secret)
     {
         _secretsById[secret.Id] = secret;
+    }
+
+    // Populates _secretIdentifiers, falling back to Sync when List throws or returns empty.
+    // List(organizationId) uses the org-level admin API which 404s for machine accounts;
+    // Sync(organizationId, null) is the machine-account-accessible alternative and returns
+    // full secrets, so the Sync path also pre-populates _secretsById to avoid re-fetching.
+    private void EnsureSecretIdentifiers()
+    {
+        if (_secretIdentifiers is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            _secretIdentifiers = provider.ListSecrets(organizationId);
+            logger?.LogDebug("ListSecrets({OrganizationId}) returned {Count} identifier(s).", organizationId, _secretIdentifiers.Count);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogDebug(ex, "ListSecrets({OrganizationId}) failed; falling back to Sync.", organizationId);
+        }
+
+        if (_secretIdentifiers is null || _secretIdentifiers.Count == 0)
+        {
+            try
+            {
+                IReadOnlyList<BitwardenSecretInfo> synced = provider.SyncSecrets(organizationId);
+                logger?.LogDebug("Sync({OrganizationId}) returned {Count} secret(s).", organizationId, synced.Count);
+                foreach (BitwardenSecretInfo secret in synced)
+                {
+                    _secretsById[secret.Id] = secret;
+                }
+                _secretIdentifiers = [.. synced.Select(s => new BitwardenSecretIdentifierInfo(s.Id, s.Key, s.OrganizationId))];
+            }
+            catch (Exception ex)
+            {
+                logger?.LogDebug(ex, "Sync({OrganizationId}) failed: {Message}", organizationId, ex.Message);
+                _secretIdentifiers = [];
+            }
+        }
+    }
+
+    // Populates _secretsById for any IDs not already cached.
+    // Tries a batch call first; falls back to individual GetSecret calls for any IDs
+    // the batch did not return. The Bitwarden SDK may return null Data (instead of throwing)
+    // for some error responses, causing the batch to silently omit valid secrets.
+    private void FetchMissingSecrets(Guid[] secretIds)
+    {
+        Guid[] missing = secretIds.Where(id => !_secretsById.ContainsKey(id)).ToArray();
+        if (missing.Length == 0)
+        {
+            return;
+        }
+
+        foreach (BitwardenSecretInfo secret in provider.GetSecretsByIds(missing))
+        {
+            _secretsById[secret.Id] = secret;
+        }
+
+        foreach (Guid id in missing.Where(id => !_secretsById.ContainsKey(id)))
+        {
+            _secretsById[id] = provider.GetSecret(id);
+        }
     }
 }
 

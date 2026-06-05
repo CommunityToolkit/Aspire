@@ -33,6 +33,8 @@ internal interface IBitwardenSecretManagerProvider : IAsyncDisposable
 
     IReadOnlyList<BitwardenSecretIdentifierInfo> ListSecrets(Guid organizationId);
 
+    IReadOnlyList<BitwardenSecretInfo> SyncSecrets(Guid organizationId);
+
     BitwardenSecretInfo CreateSecret(Guid organizationId, string remoteName, string value, Guid[] projectIds, string note = "");
 
     BitwardenSecretInfo UpdateSecret(Guid organizationId, Guid secretId, string remoteName, string value, string note, Guid[] projectIds);
@@ -122,11 +124,28 @@ internal sealed class BitwardenSecretManagerProvider : IBitwardenSecretManagerPr
             return [];
         }
 
-        return _pipeline.Execute(() => _client.Secrets.GetByIds(secretIds).Data.Select(Map).ToArray());
+        try
+        {
+            SecretsResponse response = _pipeline.Execute(() => _client.Secrets.GetByIds(secretIds));
+            return [.. response.Data.Select(Map)];
+        }
+        catch (BitwardenException ex) when (!IsTransientError(ex))
+        {
+            return [];
+        }
     }
 
     public IReadOnlyList<BitwardenSecretIdentifierInfo> ListSecrets(Guid organizationId)
-        => _pipeline.Execute(() => _client.Secrets.List(organizationId).Data.Select(Map).ToArray());
+    {
+        SecretIdentifiersResponse response = _pipeline.Execute(() => _client.Secrets.List(organizationId));
+        return [.. response.Data.Select(Map)];
+    }
+
+    public IReadOnlyList<BitwardenSecretInfo> SyncSecrets(Guid organizationId)
+    {
+        SecretsSyncResponse secrets = _pipeline.Execute(() => _client.Secrets.Sync(organizationId, null));
+        return [.. secrets.Secrets.Select(Map)];
+    }
 
     public BitwardenSecretInfo CreateSecret(Guid organizationId, string remoteName, string value, Guid[] projectIds, string note = "")
         => _pipeline.Execute(() => Map(_client.Secrets.Create(organizationId, remoteName, value, note, projectIds)));

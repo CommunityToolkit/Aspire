@@ -50,13 +50,11 @@ The deployment state file is loaded as a JSON configuration source at AppHost st
 
 **Files:** `BitwardenSecretManagerProvisioner.cs`, `ParameterResourceExtensions.cs`
 
-**What it does:** Drives the dashboard's parameter-resolution UI. Used in two ways:
+**What it does:** Drives the dashboard's parameter-resolution UI. Used for banner dismissal: after the provisioner resolves a secret value from Bitwarden in run mode, it calls `MarkParameterResolved` (which removes the parameter from `ParameterProcessor._unresolvedParameters` and cancels `_allParametersResolvedCts`). Without this, the "Parameters need values" banner stays open even though all values are now available.
 
-1. **Prompting.** `ParameterProcessor.SetParameterAsync` is called (via `parameter.PromptAsync(...)`) to show the "enter a value" dialog for missing credentials in the pre-sync step, and for managed secrets whose values are not available at all.
+**Why `SetParameterAsync` is not used for credential prompting:** `ParameterProcessor.SetParameterAsync` (available as `parameter.PromptAsync(...)`) calls `ValueInternal` internally to pre-fill the input form. `ValueInternal` evaluates `_lazyValue`, permanently caching `MissingParameterValueException` if the value is absent. After that call, no amount of saving to the deployment state and calling `IConfigurationRoot.Reload()` prevents `process-parameters` from re-prompting — the cached exception always re-throws. The pre-sync step uses `IInteractionService.PromptInputAsync` directly instead, which never touches `_lazyValue`.
 
-2. **Banner dismissal.** After the provisioner resolves a secret value from Bitwarden in run mode, it calls `MarkParameterResolved` (which removes the parameter from `ParameterProcessor._unresolvedParameters` and cancels `_allParametersResolvedCts`). Without this, the "Parameters need values" banner stays open even though all values are now available.
-
-**Breakage signal:** `ASPIREINTERACTION001` diagnostic stops compiling. The `ParameterProcessor` constructor signature or `SetParameterAsync` method may change.
+**Breakage signal:** `ASPIREINTERACTION001` diagnostic stops compiling. The `ParameterProcessor` constructor signature or internal fields accessed via `MarkParameterResolved` may change.
 
 ---
 
@@ -86,7 +84,9 @@ These access private members of `ParameterResource` and `ParameterProcessor` tha
 
 **File:** `ParameterResourceExtensions.cs`
 
-**Why needed:** `ParameterProcessor.ApplyParameterValueAsync` stores a prompted value by calling `WaitForValueTcs?.TrySetResult(value)`. Before `ParameterProcessor.InitializeParametersAsync` runs, `WaitForValueTcs` is `null`, so `TrySetResult` is a no-op and the entered value is lost. The pre-sync step must prompt for credentials (access token, org ID) before `process-parameters` runs, so it pre-creates the TCS itself via `InitializeWaitForValue()`. After `PromptAsync` returns, the value is retrievable from the TCS via `GetResolvedWaitForValue()`.
+**Why needed:** After the pre-sync step collects a credential via `IInteractionService.PromptInputAsync` and saves it to the deployment state, in-process callers within the same pre-sync execution (e.g. `ResolveAuthCachePathAsync` → `GetResolvedManagementAccessTokenAsync`) need the value before `IConfigurationRoot.Reload()` has been called. The step calls `InitializeWaitForValue()` to create the TCS, then immediately `ResolveWaitForValue(value)` to complete it with the collected value. Callers that read credentials via `GetValueAsync` then return the TCS result rather than attempting to re-prompt.
+
+`GetResolvedWaitForValue()` is no longer used in this flow: the value is captured directly in the prompting code and passed to `ResolveWaitForValue`. The `GetResolvedWaitForValue()` helper is still present for symmetry but is currently unused.
 
 **Why `_lazyValue` cannot be used instead:** `ParameterResource._lazyValue` is a `Lazy<string>` with `LazyThreadSafetyMode.ExecutionAndPublication` (the default), which permanently caches exceptions. If the lazy factory is evaluated before `process-parameters` creates the TCS and the config key is absent, it throws and caches `MissingParameterValueException`. All subsequent calls — including `ParameterProcessor.ProcessParameterAsync` after `Reload()` — re-throw the cached exception and never see the updated `IConfiguration` value. The pre-sync step therefore reads `IConfiguration` directly and never calls `HasValue()`, `ValueInternal`, or any path that evaluates `_lazyValue` on the parameters it is pre-resolving.
 
