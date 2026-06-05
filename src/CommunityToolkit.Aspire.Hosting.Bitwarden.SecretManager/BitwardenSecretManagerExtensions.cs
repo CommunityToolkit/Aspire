@@ -17,142 +17,31 @@ namespace Aspire.Hosting;
 public static class BitwardenSecretManagerExtensions
 {
     /// <summary>
-    /// Adds a Bitwarden Secrets Manager resource with a fixed project name and fixed organization identifier.
+    /// Adds a Bitwarden Secrets Manager resource. The <paramref name="projectNameOrId"/> parameter
+    /// resolves to either a project name (creates or finds by name) or a project identifier GUID
+    /// (adopts the existing project by ID).
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
     /// <param name="name">The resource name.</param>
-    /// <param name="projectName">The required remote Bitwarden project name.</param>
-    /// <param name="organizationId">The Bitwarden organization identifier.</param>
+    /// <param name="projectNameOrId">The parameter that resolves to the Bitwarden project name or project identifier (GUID).</param>
+    /// <param name="organizationId">The parameter that resolves to the Bitwarden organization identifier.</param>
     /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
     /// <returns>The resource builder.</returns>
     [AspireExport]
     public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        string projectName,
-        Guid organizationId,
-        IResourceBuilder<ParameterResource> accessToken)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
-        ArgumentNullException.ThrowIfNull(accessToken);
-
-        return AddBitwardenSecretManagerCore(
-            builder,
-            name,
-            ConfiguredStringValue.FromLiteral(projectName),
-            ConfiguredGuidValue.FromLiteral(organizationId),
-            accessToken);
-    }
-
-    /// <summary>
-    /// Adds a Bitwarden Secrets Manager resource with a parameter-backed project name and fixed organization identifier.
-    /// </summary>
-    /// <param name="builder">The distributed application builder.</param>
-    /// <param name="name">The resource name.</param>
-    /// <param name="projectName">The parameter that resolves to the required remote Bitwarden project name.</param>
-    /// <param name="organizationId">The Bitwarden organization identifier.</param>
-    /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
-    /// <returns>The resource builder.</returns>
-    [AspireExportIgnore(Reason = "Mixed-input overload not exported to ATS; use addBitwardenSecretManager (string/Guid) or addBitwardenSecretManagerFromParameters (all IResourceBuilder) depending on how inputs are supplied")]
-    public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
-        this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        IResourceBuilder<ParameterResource> projectName,
-        Guid organizationId,
-        IResourceBuilder<ParameterResource> accessToken)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(projectName);
-        ArgumentNullException.ThrowIfNull(accessToken);
-
-        return AddBitwardenSecretManagerCore(
-            builder,
-            name,
-            ConfiguredStringValue.FromParameter(projectName.Resource),
-            ConfiguredGuidValue.FromLiteral(organizationId),
-            accessToken);
-    }
-
-    /// <summary>
-    /// Adds a Bitwarden Secrets Manager resource with a fixed project name and parameter-backed organization identifier.
-    /// </summary>
-    /// <param name="builder">The distributed application builder.</param>
-    /// <param name="name">The resource name.</param>
-    /// <param name="projectName">The required remote Bitwarden project name.</param>
-    /// <param name="organizationId">The parameter that resolves to the Bitwarden organization identifier.</param>
-    /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
-    /// <returns>The resource builder.</returns>
-    [AspireExportIgnore(Reason = "Mixed-input overload not exported to ATS; use addBitwardenSecretManager (string/Guid) or addBitwardenSecretManagerFromParameters (all IResourceBuilder) depending on how inputs are supplied")]
-    public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
-        this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        string projectName,
+        IResourceBuilder<ParameterResource> projectNameOrId,
         IResourceBuilder<ParameterResource> organizationId,
         IResourceBuilder<ParameterResource> accessToken)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
+        ArgumentNullException.ThrowIfNull(projectNameOrId);
         ArgumentNullException.ThrowIfNull(organizationId);
         ArgumentNullException.ThrowIfNull(accessToken);
 
-        return AddBitwardenSecretManagerCore(
-            builder,
-            name,
-            ConfiguredStringValue.FromLiteral(projectName),
-            ConfiguredGuidValue.FromParameter(organizationId.Resource),
-            accessToken);
-    }
-
-    /// <summary>
-    /// Adds a Bitwarden Secrets Manager resource with parameter-backed project and organization identifiers.
-    /// </summary>
-    /// <param name="builder">The distributed application builder.</param>
-    /// <param name="name">The resource name.</param>
-    /// <param name="projectName">The parameter that resolves to the required remote Bitwarden project name.</param>
-    /// <param name="organizationId">The parameter that resolves to the Bitwarden organization identifier.</param>
-    /// <param name="accessToken">The access token parameter used to manage the Bitwarden project and managed secrets.</param>
-    /// <returns>The resource builder.</returns>
-    [AspireExport("addBitwardenSecretManagerFromParameters")]
-    public static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManager(
-        this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        IResourceBuilder<ParameterResource> projectName,
-        IResourceBuilder<ParameterResource> organizationId,
-        IResourceBuilder<ParameterResource> accessToken)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        ArgumentNullException.ThrowIfNull(projectName);
-        ArgumentNullException.ThrowIfNull(organizationId);
-        ArgumentNullException.ThrowIfNull(accessToken);
-
-        return AddBitwardenSecretManagerCore(
-            builder,
-            name,
-            ConfiguredStringValue.FromParameter(projectName.Resource),
-            ConfiguredGuidValue.FromParameter(organizationId.Resource),
-            accessToken);
-    }
-
-    /// <summary>
-    /// Configures the resource to adopt an existing Bitwarden project.
-    /// </summary>
-    /// <param name="builder">The resource builder.</param>
-    /// <param name="projectId">The Bitwarden project identifier.</param>
-    /// <returns>The resource builder.</returns>
-    [AspireExport]
-    public static IResourceBuilder<BitwardenSecretManagerResource> WithExistingProject(
-        this IResourceBuilder<BitwardenSecretManagerResource> builder,
-        Guid projectId)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-
-        builder.Resource.ExistingProjectId = projectId;
-        return builder;
+        return AddBitwardenSecretManagerCore(builder, name, projectNameOrId, organizationId, accessToken);
     }
 
     /// <summary>
@@ -722,15 +611,14 @@ public static class BitwardenSecretManagerExtensions
     private static IResourceBuilder<BitwardenSecretManagerResource> AddBitwardenSecretManagerCore(
         IDistributedApplicationBuilder builder,
         string name,
-        ConfiguredStringValue projectName,
-        ConfiguredGuidValue organizationId,
+        IResourceBuilder<ParameterResource> projectNameOrId,
+        IResourceBuilder<ParameterResource> organizationId,
         IResourceBuilder<ParameterResource> accessToken)
     {
-        // Keep the public overloads explicit, but normalize their implementation here.
         BitwardenSecretManagerResource resource = new(
             name,
-            projectName,
-            organizationId,
+            projectNameOrId.Resource,
+            organizationId.Resource,
             accessToken.Resource,
             builder.AppHostDirectory);
         resource.CacheFile = BuildDefaultCachePath(resource, builder.Environment.EnvironmentName);
@@ -738,15 +626,8 @@ public static class BitwardenSecretManagerExtensions
         var resourceBuilder = ConfigureBitwardenSecretManager(builder.AddResource(resource));
 
         resourceBuilder.WithReferenceRelationship(accessToken.Resource);
-        if (projectName.Parameter is { } projectNameParam)
-        {
-            resourceBuilder.WithReferenceRelationship(projectNameParam);
-        }
-
-        if (organizationId.Parameter is { } orgIdParam)
-        {
-            resourceBuilder.WithReferenceRelationship(orgIdParam);
-        }
+        resourceBuilder.WithReferenceRelationship(projectNameOrId.Resource);
+        resourceBuilder.WithReferenceRelationship(organizationId.Resource);
 
         return resourceBuilder;
     }
@@ -1197,7 +1078,11 @@ public static class BitwardenSecretManagerExtensions
     {
         // The access token was already awaited inside AuthenticateAsync.
         // Collect everything else before entering Running state.
-        await resource.GetResolvedRemoteProjectNameAsync(services, cancellationToken).ConfigureAwait(false);
+        if (resource.ResolvedRemoteProjectName is null && resource.ExistingProjectId is null)
+        {
+            resource.ResolvedRemoteProjectName = await resource.ResolveProjectIdentityAsync(services, cancellationToken).ConfigureAwait(false);
+        }
+
         await resource.GetResolvedOrganizationIdAsync(services, cancellationToken).ConfigureAwait(false);
 
         // Each BitwardenSecretResource is a ParameterResource; GetValueAsync waits for

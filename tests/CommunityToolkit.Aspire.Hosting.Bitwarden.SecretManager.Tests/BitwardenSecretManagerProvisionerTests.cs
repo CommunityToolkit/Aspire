@@ -1,5 +1,4 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Tests;
@@ -23,12 +22,14 @@ public class BitwardenSecretManagerProvisionerTests
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = "team-secrets";
             appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "managed-secret-value";
 
             var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
 
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "team-secrets", organizationParameter, accessToken)
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile)
                 .WithAuthCacheDirectory(authStateDir);
             var managedSecret = bitwarden.AddSecret("managed-secret");
@@ -71,13 +72,15 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
             appBuilder.Configuration["Parameters:bitwarden-project-name"] = "shared-team-secrets";
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
             var projectName = appBuilder.AddParameter("bitwarden-project-name");
 
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectName, organizationId, accessToken)
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectName, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             var fakeProvider = new FakeBitwardenProvider();
@@ -105,7 +108,7 @@ public class BitwardenSecretManagerProvisionerTests
     }
 
     [Fact]
-    public async Task ProvisionAsync_UsesExistingProjectWithoutRenaming()
+    public async Task ProvisionAsync_WhenProjectNameOrIdIsGuid_AdoptsExistingProjectById()
     {
         var organizationId = Guid.NewGuid();
         var existingProjectId = Guid.NewGuid();
@@ -115,11 +118,15 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "different-name", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             var fakeProvider = new FakeBitwardenProvider();
@@ -157,11 +164,16 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = "application-secrets";
             appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "managed-secret-value";
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             var managedSecret = bitwarden.AddSecret("managed-secret", "shared-secret");
@@ -206,11 +218,15 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             var managedSecret = bitwarden.AddSecret("managed-secret");
@@ -255,12 +271,16 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "configured-value";
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             var managedSecret = bitwarden.AddSecret("managed-secret");
@@ -305,12 +325,16 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             bitwarden.AddSecret("managed-secret");
@@ -355,12 +379,16 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             var managedSecret = bitwarden.AddSecret("managed-secret");
@@ -406,12 +434,16 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             bitwarden.AddSecret("managed-secret");
@@ -457,12 +489,16 @@ public class BitwardenSecretManagerProvisionerTests
         {
             var appBuilder = DistributedApplication.CreateBuilder();
             appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+            appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+            appBuilder.Configuration["Parameters:bitwarden-project"] = existingProjectId.ToString("D");
             appBuilder.Configuration["Parameters:bitwarden-managed-secret"] = "new-value";
 
+            var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
             var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
-            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "application-secrets", organizationId, accessToken)
-                .WithExistingProject(existingProjectId)
+            var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+            var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken)
                 .WithCacheFile(stateFile);
 
             bitwarden.AddSecret("managed-secret");

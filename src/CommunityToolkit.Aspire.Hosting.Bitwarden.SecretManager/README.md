@@ -15,24 +15,18 @@ dotnet add package CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager
 ### Basic setup
 
 ```csharp
+IResourceBuilder<ParameterResource> projectNameOrId = builder.AddParameter("bitwarden-project");
 IResourceBuilder<ParameterResource> organizationId = builder.AddParameter("bitwarden-organization-id");
 IResourceBuilder<ParameterResource> accessToken = builder.AddParameter("bitwarden-access-token", secret: true);
-IResourceBuilder<ParameterResource> projectName = builder.AddParameter("bitwarden-project-name");
 
 IResourceBuilder<BitwardenSecretManagerResource> bitwarden = builder.AddBitwardenSecretManager(
     "bitwarden",
-    projectName,
+    projectNameOrId,
     organizationId,
     accessToken);
 ```
 
-### Optional configuration
-
-Use `WithExistingProject` to adopt a Bitwarden project that was created outside the AppHost graph, identified by its GUID.
-
-```csharp
-bitwarden.WithExistingProject(Guid.Parse("00000000-0000-0000-0000-000000000000"));
-```
+The `projectNameOrId` parameter accepts either a **project name** (creates or finds the project by name) or a **project identifier GUID** (adopts the existing project by ID without renaming it). The routing is automatic: if the resolved value parses as a GUID it is treated as an ID, otherwise it is treated as a name.
 
 Use `WithApiUrl` and `WithIdentityUrl` to override the Bitwarden endpoints. Both default to the public Bitwarden cloud. For a self-hosted instance, pass an `ExternalServiceResource` to set the URL and wire up `WaitFor` in one call:
 
@@ -163,21 +157,21 @@ Run `aspire deploy`. The integration adds six pipeline steps per Bitwarden resou
 
 ### Access tokens
 
-| Token            | Set with                                      | Used by            | Permissions needed      | When to use                                                              |
-| ---------------- | --------------------------------------------- | ------------------ | ----------------------- | ------------------------------------------------------------------------ |
-| Management token | `AddBitwardenSecretManager(..., accessToken)` | AppHost reconciler | Read + write to project | Always required                                                          |
-| Client token     | `WithBitwardenAccessToken(bitwarden, token)`  | Deployed app       | Read-only to project    | Supply a least-privilege token so the deployed app cannot modify secrets |
+| Token            | Set with                                                            | Used by            | Permissions needed      | When to use                                                              |
+| ---------------- | ------------------------------------------------------------------- | ------------------ | ----------------------- | ------------------------------------------------------------------------ |
+| Management token | `AddBitwardenSecretManager(..., projectNameOrId, ..., accessToken)` | AppHost reconciler | Read + write to project | Always required                                                          |
+| Client token     | `WithBitwardenAccessToken(bitwarden, token)`                        | Deployed app       | Read-only to project    | Supply a least-privilege token so the deployed app cannot modify secrets |
 
 ### Secret declarations
 
 Both return `IResourceBuilder<BitwardenSecretResource>`. Pass the builder directly to `WithEnvironment` to inject the resolved secret value, or call `.AsSecretId()` on the builder to inject the secret ID instead.
 
-| API                           | Ownership | Bitwarden writes | When to use                                      |
-| ----------------------------- | --------- | ---------------- | ------------------------------------------------ |
-| `AddSecret(name)`             | AppHost   | Yes (upsert)     | Both names are the same                          |
-| `AddSecret(name, remoteName)` | AppHost   | Yes (upsert)     | Aspire and Bitwarden names differ                |
-| `GetSecret(name)`             | External  | No               | Both names are the same                          |
-| `GetSecret(name, remoteName)` | External  | No               | Aspire and Bitwarden names differ                |
+| API                           | Ownership | Bitwarden writes | When to use                                                                  |
+| ----------------------------- | --------- | ---------------- | ---------------------------------------------------------------------------- |
+| `AddSecret(name)`             | AppHost   | Yes (upsert)     | Both names are the same                                                      |
+| `AddSecret(name, remoteName)` | AppHost   | Yes (upsert)     | Aspire and Bitwarden names differ                                            |
+| `GetSecret(name)`             | External  | No               | Both names are the same                                                      |
+| `GetSecret(name, remoteName)` | External  | No               | Aspire and Bitwarden names differ                                            |
 | `GetSecret(name, secretId)`   | External  | No               | Multiple secrets share the same name (Bitwarden does not enforce uniqueness) |
 
 ### Secret references (injected into dependent resources)
@@ -285,9 +279,9 @@ Provisioning runs in four phases before `Running`:
 
 ### Project provisioning decisions
 
-Runs once per AppHost run during `bitwarden-provision-project`. Paths tried in order: explicit adoption → persisted mapping → create new.
+Runs once per AppHost run during `bitwarden-provision-project`. Paths tried in order: ID-based adoption → persisted mapping → create new.
 
-**Path A — explicit adoption (`WithExistingProject`)**
+**Path A — ID-based adoption (`projectNameOrId` resolves to a GUID)**
 
 | Found in Bitwarden | Outcome                             |
 | ------------------ | ----------------------------------- |
@@ -304,7 +298,7 @@ Runs once per AppHost run during `bitwarden-provision-project`. Paths tried in o
 
 **Path C — no cache**
 
-Create new project. Use `WithExistingProject` to adopt a project created outside the declared graph.
+Create new project. To adopt a project created outside the declared graph, set `projectNameOrId` to its GUID.
 
 ### Managed secret provisioning decisions
 
@@ -341,10 +335,10 @@ Runs once per `GetSecret` secret during `bitwarden-provision-secrets`. Read-only
 
 **Path B — name search (`GetSecret(name)` or `GetSecret(name, remoteName)`)**
 
-| Name matches | Outcome                                                                          |
-| ------------ | -------------------------------------------------------------------------------- |
-| 0            | Error: secret not found                                                          |
-| 1            | Sync secret value                                                                |
+| Name matches | Outcome                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------- |
+| 0            | Error: secret not found                                                                           |
+| 1            | Sync secret value                                                                                 |
 | > 1          | Error: Bitwarden does not enforce name uniqueness — use `GetSecret(name, secretId)` to target one |
 
 ### Audit trail

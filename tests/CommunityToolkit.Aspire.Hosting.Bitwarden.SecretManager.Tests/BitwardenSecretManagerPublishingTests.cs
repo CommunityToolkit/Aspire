@@ -12,10 +12,14 @@ public class BitwardenSecretManagerPublishingTests
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
         appBuilder.Configuration["Parameters:bitwarden-access-token"] = "access-token";
+        appBuilder.Configuration["Parameters:bitwarden-organization-id"] = Guid.NewGuid().ToString("D");
+        appBuilder.Configuration["Parameters:bitwarden-project"] = "managed-project";
 
         var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        var organizationId = appBuilder.AddParameter("bitwarden-organization-id");
+        var projectParam = appBuilder.AddParameter("bitwarden-project");
 
-        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", "managed-project", Guid.NewGuid(), accessToken);
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationId, accessToken);
         var managedSecret = bitwarden.AddSecret("api-key");
 
         using var app = appBuilder.Build();

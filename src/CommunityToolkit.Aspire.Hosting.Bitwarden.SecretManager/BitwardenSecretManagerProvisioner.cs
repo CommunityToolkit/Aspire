@@ -94,8 +94,12 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
         try
         {
-            string remoteProjectName = resource.ResolvedRemoteProjectName
-                ?? await resource.GetResolvedRemoteProjectNameAsync(services, cancellationToken).ConfigureAwait(false);
+            if (resource.ResolvedRemoteProjectName is null && resource.ExistingProjectId is null)
+            {
+                resource.ResolvedRemoteProjectName = await resource.ResolveProjectIdentityAsync(services, cancellationToken).ConfigureAwait(false);
+            }
+
+            string? remoteProjectName = resource.ResolvedRemoteProjectName;
 
             string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
@@ -367,12 +371,8 @@ internal sealed class BitwardenSecretManagerProvisioner(
             }
 
             Guid organizationId;
-            if (resource.ConfiguredOrganizationId is Guid literalOrgId)
             {
-                organizationId = literalOrgId;
-            }
-            else if (resource.ConfiguredOrganizationIdParameter is ParameterResource orgIdParam)
-            {
+                ParameterResource orgIdParam = resource.ConfiguredOrganizationIdParameter;
                 string orgIdConfigKey = $"Parameters:{orgIdParam.Name}";
                 string? orgIdString = configuration[orgIdConfigKey];
                 if (string.IsNullOrEmpty(orgIdString))
@@ -428,17 +428,22 @@ internal sealed class BitwardenSecretManagerProvisioner(
                     logger.LogDebug("Organization ID for resource '{ResourceName}' found in configuration: {OrganizationId}.", resource.Name, organizationId);
                 }
             }
-            else
-            {
-                return;
-            }
 
             string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
-            // When the project ID is unknown (first deploy, no cache yet), fall back to an org-wide
-            // name search so managed secrets can still be pre-populated if they exist in any project.
-            Guid? projectId = cacheContext.Cache.ProjectId ?? resource.ExistingProjectId;
+            // When the project ID is unknown (first deploy, no cache yet), check if the projectNameOrId
+            // parameter already resolves to a GUID. Fall back to an org-wide name search otherwise.
+            Guid? projectId = cacheContext.Cache.ProjectId;
+            if (projectId is null && resource.ConfiguredProjectNameOrIdParameter is ParameterResource nameOrIdParam)
+            {
+                string? nameOrIdValue = configuration[$"Parameters:{nameOrIdParam.Name}"];
+                if (Guid.TryParse(nameOrIdValue, out Guid parsedProjectId))
+                {
+                    projectId = parsedProjectId;
+                }
+            }
+
             if (projectId is null)
             {
                 logger.LogDebug("Project ID not cached; will search org-wide for managed secrets during pre-sync for '{ResourceName}'.", resource.Name);
@@ -457,11 +462,11 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
 
-            // When the project ID is known and the remote project name is parameter-backed, fetch the
-            // actual name from Bitwarden so process-parameters finds it in IConfiguration and does not prompt.
-            if (projectId is Guid knownProjectId && resource.ConfiguredRemoteProjectNameParameter is ParameterResource projectNameParam)
+            // When the project ID is known from cache and the projectNameOrId parameter is missing,
+            // fetch the project name from Bitwarden so process-parameters finds it in IConfiguration.
+            if (projectId is Guid knownProjectId && resource.ConfiguredProjectNameOrIdParameter is ParameterResource projectNameOrIdParam)
             {
-                string projectNameConfigKey = $"Parameters:{projectNameParam.Name}";
+                string projectNameConfigKey = $"Parameters:{projectNameOrIdParam.Name}";
                 if (string.IsNullOrWhiteSpace(configuration[projectNameConfigKey]))
                 {
                     BitwardenProjectInfo? project = provider.GetProject(knownProjectId);
@@ -558,9 +563,6 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
         try
         {
-            string remoteProjectName = resource.ResolvedRemoteProjectName
-                ?? await resource.GetResolvedRemoteProjectNameAsync(services, cancellationToken).ConfigureAwait(false);
-
             string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
@@ -617,7 +619,7 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
     private static BitwardenProjectInfo ReconcileProject(
         BitwardenSecretManagerResource resource,
-        string remoteProjectName,
+        string? remoteProjectName,
         BitwardenCache cache,
         IBitwardenSecretManagerProvider provider,
         Guid organizationId,
@@ -625,16 +627,21 @@ internal sealed class BitwardenSecretManagerProvisioner(
     {
         if (resource.ExistingProjectId is Guid existingProjectId)
         {
-            logger.LogInformation("Attempting to use explicitly configured project {ProjectId} for resource '{ResourceName}'.", existingProjectId, resource.Name);
+            logger.LogInformation("Attempting to use project {ProjectId} by ID for resource '{ResourceName}'.", existingProjectId, resource.Name);
             BitwardenProjectInfo? existingProject = provider.GetProject(existingProjectId);
             if (existingProject is null)
             {
-                logger.LogError("Configured project {ProjectId} was not found for resource '{ResourceName}'.", existingProjectId, resource.Name);
+                logger.LogError("Project {ProjectId} was not found for resource '{ResourceName}'.", existingProjectId, resource.Name);
                 throw new DistributedApplicationException($"Bitwarden project '{existingProjectId:D}' configured for resource '{resource.Name}' was not found.");
             }
 
             logger.LogInformation("Using existing Bitwarden project {ProjectId} for resource {ResourceName}.", existingProject.Id, resource.Name);
             return existingProject;
+        }
+
+        if (remoteProjectName is null)
+        {
+            throw new DistributedApplicationException($"Bitwarden resource '{resource.Name}' did not resolve a project name or ID.");
         }
 
         if (cache.ProjectId is Guid persistedProjectId)
