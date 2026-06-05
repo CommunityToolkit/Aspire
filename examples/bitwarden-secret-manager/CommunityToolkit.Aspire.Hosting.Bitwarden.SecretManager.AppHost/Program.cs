@@ -7,13 +7,14 @@ var compose = builder.AddDockerComposeEnvironment("compose")
     .WithDashboard(false);
 
 var organizationId = builder.AddParameter("bitwarden-organization-id");
-var projectName = builder.AddParameter("bitwarden-project-name");
+var project = builder.AddParameter("bitwarden-project");
 var accessToken = builder.AddParameter("bitwarden-access-token", secret: true);
 
 // Set up a secrets project within the specified organization using the provided management access token.
+// Project can be specified by name (for managed projects) or ID (for existing projects).
 // The management token MUST have write permissions to the project if it already exists.
 // If the project doesn't exist, it will be automatically created with write access for the provided token.
-var bitwarden = builder.AddBitwardenSecretManager("secrets", projectName, organizationId, accessToken);
+var bitwarden = builder.AddBitwardenSecretManager("secrets", project, organizationId, accessToken);
 
 // For self-hosted installations, configure your API and Identity URLs here.
 // (Self-hosting requires an enterprise plan, so this example uses the default cloud-hosted Bitwarden instance.)
