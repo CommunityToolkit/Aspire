@@ -456,7 +456,7 @@ public class BitwardenSecretManagerBuilderTests
             resource.Annotations.OfType<ResourceCommandAnnotation>(),
             a => a.Name == "reset-auth-cache");
         Assert.Equal("Reset auth cache", command.DisplayName);
-        Assert.True(command.IsHighlighted);
+        Assert.False(command.IsHighlighted);
     }
 
     [Fact]
@@ -475,7 +475,7 @@ public class BitwardenSecretManagerBuilderTests
             resource.Annotations.OfType<ResourceCommandAnnotation>(),
             a => a.Name == KnownResourceCommands.RebuildCommand);
         Assert.Equal("Reprovision", command.DisplayName);
-        Assert.False(command.IsHighlighted);
+        Assert.True(command.IsHighlighted);
     }
 
     [Theory]
