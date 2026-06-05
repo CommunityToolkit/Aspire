@@ -40,7 +40,7 @@ public static class AzureBlobStorageResourceBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
-    [AspireExport("withBlobAzureStorageExplorer", MethodName = "withAzureStorageExplorer", Description = "Adds an Azure Storage Explorer instance to a Blob storage resource.")]
+    [AspireExport("withBlobAzureStorageExplorer", MethodName = "withAzureStorageExplorer", RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<AzureBlobStorageResource> WithAzureStorageExplorer(
         this IResourceBuilder<AzureBlobStorageResource> blobs,
         Action<IResourceBuilder<AzureStorageExplorerResource>>? configureContainer = null,

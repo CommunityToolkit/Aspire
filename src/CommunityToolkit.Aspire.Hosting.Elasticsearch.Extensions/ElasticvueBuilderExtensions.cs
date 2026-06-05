@@ -16,7 +16,7 @@ public static class ElasticvueBuilderExtensions
     /// <param name="builder">The resource builder for Elasticvue.</param>
     /// <param name="port">The port to bind on the host. If <see langword="null"/> is used random port will be assigned.</param>
     /// <returns>The resource builder for Elasticvue.</returns>
-    [AspireExport("withHostPort", Description = "Configures the host port that the Elasticvue resource is exposed on")]
+    [AspireExport]
     public static IResourceBuilder<ElasticvueContainerResource> WithHostPort(this IResourceBuilder<ElasticvueContainerResource> builder, int? port)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -83,7 +83,7 @@ public static class ElasticvueBuilderExtensions
     /// </code>
     /// </example>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("withElasticvue", Description = "Adds Elasticvue for administering an Elasticsearch resource")]
+    [AspireExport(RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<ElasticsearchResource> WithElasticvue(this IResourceBuilder<ElasticsearchResource> builder, Action<IResourceBuilder<ElasticvueContainerResource>>? configureContainer = null, string? containerName = null)
     {
         ArgumentNullException.ThrowIfNull(builder);

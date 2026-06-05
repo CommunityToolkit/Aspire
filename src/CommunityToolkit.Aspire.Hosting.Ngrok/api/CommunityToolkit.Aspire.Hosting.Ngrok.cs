@@ -10,13 +10,13 @@ namespace Aspire.Hosting
 {
     public static partial class NgrokExtensions
     {
-        [AspireExport("addNgrok", Description = "Adds an ngrok container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> AddNgrok(this IDistributedApplicationBuilder builder, string name, string? configurationFolder = null, int? endpointPort = null, string? endpointName = null, int? configurationVersion = null) { throw null; }
 
-        [AspireExport("withAuthToken", Description = "Adds a ngrok auth token from a parameter resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> WithAuthToken(this ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource> ngrokAuthToken) { throw null; }
 
-        [AspireExport("withAuthTokenValue", MethodName = "withAuthTokenValue", Description = "Adds a ngrok auth token from a literal string")]
+        [AspireExport("withAuthTokenValue", MethodName = "withAuthTokenValue")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> WithAuthToken(this ApplicationModel.IResourceBuilder<ApplicationModel.NgrokResource> builder, string ngrokAuthToken) { throw null; }
 
         [AspireExportIgnore(Reason = "IDictionary<string, string> is not ATS-compatible. Use the IReadOnlyDictionary<string, string> overload instead.")]

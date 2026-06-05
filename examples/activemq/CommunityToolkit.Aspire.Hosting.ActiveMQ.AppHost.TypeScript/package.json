@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "aspire start --apphost apphost.ts",
-    "stop": "aspire stop --apphost apphost.ts",
+    "start": "aspire start --apphost apphost.mts",
+    "stop": "aspire stop --apphost apphost.mts",
     "validate": "npm ci && npx tsc --noEmit",
     "dev": "tsc --watch"
   },

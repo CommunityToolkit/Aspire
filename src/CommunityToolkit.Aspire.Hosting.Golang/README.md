@@ -2,11 +2,22 @@
 
 Provides extensions methods and resource definitions for the Aspire AppHost to support running Golang applications.
 
+> [!IMPORTANT]
+> This package is obsolete and has been replaced by `Aspire.Hosting.Go`.
+> For new applications, use `Aspire.Hosting.Go` and its documentation instead.
+> This package is retained for compatibility and may be marked as deprecated in a future release.
+
 ## Getting Started
 
 ### Install the package
 
-In your AppHost project, install the package using the following command:
+For new applications, install the replacement package in your AppHost project:
+
+```dotnetcli
+dotnet add package Aspire.Hosting.Go
+```
+
+This package remains available only for existing applications that already depend on it. We strongly recommend migrating to `Aspire.Hosting.Go`. In your AppHost project, install the package using the following command:
 
 ```dotnetcli
 dotnet add package CommunityToolkit.Aspire.Hosting.Golang

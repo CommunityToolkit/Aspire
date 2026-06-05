@@ -161,3 +161,7 @@ jobs:
         with:
           name: ts-app-host-logs-${{ matrix.name }}-${{ matrix.os }}
           path: ${{ runner.os == 'Windows' && 'C:\\Users\\runneradmin\\.aspire\\logs\\**' || '/home/runner/.aspire/logs/**' }}
+
+      - name: Aspire doctor
+        if: failure()
+        run: aspire doctor

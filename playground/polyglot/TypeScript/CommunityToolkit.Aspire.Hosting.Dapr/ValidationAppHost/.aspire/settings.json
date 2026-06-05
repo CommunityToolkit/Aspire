@@ -1,5 +1,5 @@
 {
-  "appHostPath": "../apphost.ts",
+  "appHostPath": "../apphost.mts",
   "language": "typescript/nodejs",
   "packages": {
     "CommunityToolkit.Aspire.Hosting.Dapr": ""

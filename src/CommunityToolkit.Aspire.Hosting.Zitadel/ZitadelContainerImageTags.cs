@@ -8,6 +8,6 @@ internal static class ZitadelContainerImageTags
     /// <remarks>zitadel/zitadel</remarks>
     public const string Image = "zitadel/zitadel";
 
-    /// <remarks>v4.9.0</remarks>
-    public const string Tag = "v4.10.1";
+    /// <remarks>v4.15.0</remarks>
+    public const string Tag = "v4.15.0";
 }
