@@ -345,6 +345,12 @@ public class BitwardenSecretManagerProvisionerTests
             fakeProvider.Secrets[dup2Id] = new BitwardenSecretInfo(dup2Id, "managed-secret", "value-2", string.Empty, organizationId, existingProjectId);
             appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
 
+            // Aspire 13 registers IInteractionService with IsAvailable=true by default.
+            // Override it to simulate a non-interactive environment.
+#pragma warning disable ASPIREINTERACTION001
+            appBuilder.Services.AddSingleton<IInteractionService>(new FakeInteractionService(canceled: false, isAvailable: false));
+#pragma warning restore ASPIREINTERACTION001
+
             using var app = appBuilder.Build();
             var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
             var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
@@ -628,11 +634,12 @@ internal sealed class FakeInteractionService : IInteractionService
 {
     private readonly string? _returnValue;
     private readonly bool _canceled;
+    private readonly bool _isAvailable;
 
-    public FakeInteractionService(string returnValue) => _returnValue = returnValue;
-    public FakeInteractionService(bool canceled) => _canceled = canceled;
+    public FakeInteractionService(string returnValue, bool isAvailable = true) { _returnValue = returnValue; _isAvailable = isAvailable; }
+    public FakeInteractionService(bool canceled, bool isAvailable = true) { _canceled = canceled; _isAvailable = isAvailable; }
 
-    public bool IsAvailable => true;
+    public bool IsAvailable => _isAvailable;
 
     public Task<InteractionResult<InteractionInput>> PromptInputAsync(
         string title,
@@ -666,3 +673,4 @@ internal sealed class FakeInteractionService : IInteractionService
         => Task.FromException<InteractionResult<bool>>(new NotSupportedException());
 }
 #pragma warning restore ASPIREINTERACTION001
+
