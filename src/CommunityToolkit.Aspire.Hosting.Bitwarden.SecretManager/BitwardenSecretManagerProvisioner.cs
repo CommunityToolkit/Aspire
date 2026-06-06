@@ -432,13 +432,57 @@ internal sealed class BitwardenSecretManagerProvisioner(
             string authCachePath = await ResolveAuthCachePathAsync(resource, services, cancellationToken).ConfigureAwait(false);
             BitwardenCacheContext cacheContext = await BitwardenStore.LoadAsync(resource, authCachePath, cancellationToken).ConfigureAwait(false);
 
-            // When the project ID is unknown (first deploy, no cache yet), check if the projectNameOrId
-            // parameter already resolves to a GUID. Fall back to an org-wide name search otherwise.
+            // Resolve the project ID. Check the cache first, then the config parameter value.
+            // If the parameter is also missing, prompt now — same as for the access token and
+            // org ID above — so that the value is available for process-parameters and the
+            // managed-secret loop below.
+            bool projectIdFromCache = cacheContext.Cache.ProjectId is not null;
             Guid? projectId = cacheContext.Cache.ProjectId;
-            if (projectId is null && resource.ConfiguredProjectNameOrIdParameter is ParameterResource nameOrIdParam)
+            if (projectId is null && resource.ConfiguredProjectNameOrIdParameter is ParameterResource projectNameOrIdParam)
             {
-                string? nameOrIdValue = configuration[$"Parameters:{nameOrIdParam.Name}"];
-                if (Guid.TryParse(nameOrIdValue, out Guid parsedProjectId))
+                string projectConfigKey = $"Parameters:{projectNameOrIdParam.Name}";
+                string? projectNameOrId = configuration[projectConfigKey];
+
+                if (string.IsNullOrEmpty(projectNameOrId))
+                {
+                    if (interactionService is null || !interactionService.IsAvailable)
+                    {
+                        logger.LogDebug("Project not in configuration and interaction is unavailable; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                        return;
+                    }
+
+                    InteractionInput projectInput = new()
+                    {
+                        Name = projectNameOrIdParam.Name,
+                        Label = projectNameOrIdParam.Name,
+                        InputType = InputType.Text,
+                        Required = true,
+                    };
+
+                    InteractionResult<InteractionInput> projectResult = await interactionService.PromptInputAsync(
+                        "Bitwarden authentication",
+                        "Enter your Bitwarden project name or project ID (GUID).",
+                        projectInput,
+                        cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                    if (projectResult.Canceled || projectResult.Data?.Value is not { Length: > 0 } promptedProject)
+                    {
+                        logger.LogDebug("Project prompt was canceled; skipping pre-sync for '{ResourceName}'.", resource.Name);
+                        return;
+                    }
+
+                    projectNameOrId = promptedProject;
+
+                    var projectSlot = await deploymentStateManager.AcquireSectionAsync(projectConfigKey, cancellationToken).ConfigureAwait(false);
+                    projectSlot.SetValue(projectNameOrId);
+                    await deploymentStateManager.SaveSectionAsync(projectSlot, cancellationToken).ConfigureAwait(false);
+                    savedCount++;
+
+                    projectNameOrIdParam.InitializeWaitForValue();
+                    projectNameOrIdParam.ResolveWaitForValue(projectNameOrId);
+                }
+
+                if (Guid.TryParse(projectNameOrId, out Guid parsedProjectId))
                 {
                     projectId = parsedProjectId;
                 }
@@ -446,12 +490,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             if (projectId is null)
             {
-                logger.LogDebug("Project ID not cached; will search org-wide for managed secrets during pre-sync for '{ResourceName}'.", resource.Name);
+                // Project specified by name (not a GUID) with no cached ID yet.
+                // Managed secret values will be fetched after the project is provisioned.
+                logger.LogDebug("Project ID not yet known for '{ResourceName}'; skipping managed secret pre-sync.", resource.Name);
+                return;
             }
-            else
-            {
-                logger.LogDebug("Pre-syncing managed secret values for resource '{ResourceName}' from project {ProjectId}.", resource.Name, projectId);
-            }
+
+            logger.LogDebug("Pre-syncing managed secret values for resource '{ResourceName}' from project {ProjectId}.", resource.Name, projectId);
 
             string apiUrl = await resource.GetApiUrlAsync(cancellationToken).ConfigureAwait(false);
             string identityUrl = await resource.GetIdentityUrlAsync(cancellationToken).ConfigureAwait(false);
@@ -462,11 +507,13 @@ internal sealed class BitwardenSecretManagerProvisioner(
 
             BitwardenLookupContext lookupContext = new(provider, organizationId, logger);
 
-            // When the project ID is known from cache and the projectNameOrId parameter is missing,
-            // fetch the project name from Bitwarden so process-parameters finds it in IConfiguration.
-            if (projectId is Guid knownProjectId && resource.ConfiguredProjectNameOrIdParameter is ParameterResource projectNameOrIdParam)
+            // When the project ID came from the cache and the projectNameOrId parameter is missing
+            // from config, fetch the project name from Bitwarden so process-parameters finds it
+            // in IConfiguration. Skip if projectId came from config or was just prompted — in
+            // that case the value in state already identifies the project and must not be overwritten.
+            if (projectIdFromCache && projectId is Guid knownProjectId && resource.ConfiguredProjectNameOrIdParameter is ParameterResource projectNameLookupParam)
             {
-                string projectNameConfigKey = $"Parameters:{projectNameOrIdParam.Name}";
+                string projectNameConfigKey = $"Parameters:{projectNameLookupParam.Name}";
                 if (string.IsNullOrWhiteSpace(configuration[projectNameConfigKey]))
                 {
                     BitwardenProjectInfo? project = provider.GetProject(knownProjectId);
@@ -477,6 +524,12 @@ internal sealed class BitwardenSecretManagerProvisioner(
                         await deploymentStateManager.SaveSectionAsync(projectNameSlot, cancellationToken).ConfigureAwait(false);
                         savedCount++;
                         logger.LogInformation("Pre-resolved remote project name '{ProjectName}' from Bitwarden project {ProjectId}.", project.Name, knownProjectId);
+                    }
+                    else
+                    {
+                        logger.LogWarning(
+                            "Cached project {ProjectId} was not found in Bitwarden for resource '{ResourceName}'. The cache may be stale. Provisioning will attempt to recover.",
+                            knownProjectId, resource.Name);
                     }
                 }
             }
@@ -499,11 +552,9 @@ internal sealed class BitwardenSecretManagerProvisioner(
                 BitwardenSecretInfo? existing;
                 try
                 {
-                    existing = projectId is Guid pid
-                        ? await ResolveExistingManagedSecretAsync(
-                            resource, pid, secret, cacheContext.Cache, lookupContext,
-                            interactionService: null, logger, cancellationToken).ConfigureAwait(false)
-                        : lookupContext.FindSecretByNameInOrg(secret.RemoteName);
+                    existing = await ResolveExistingManagedSecretAsync(
+                        resource, projectId.Value, secret, cacheContext.Cache, lookupContext,
+                        interactionService: null, logger, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -1203,30 +1254,6 @@ internal sealed class BitwardenLookupContext(IBitwardenSecretManagerProvider pro
             .Where(secret => secret is not null && secret.ProjectId == projectId && string.Equals(secret.Key, remoteName, StringComparison.OrdinalIgnoreCase))
             .Cast<BitwardenSecretInfo>()
             .ToArray();
-    }
-
-    // Used during pre-sync when no project ID is available yet (first deploy before cache exists).
-    // Returns the first org-wide match by name; does not filter by project.
-    public BitwardenSecretInfo? FindSecretByNameInOrg(string remoteName)
-    {
-        EnsureSecretIdentifiers();
-
-        Guid[] secretIds = _secretIdentifiers!
-            .Where(secret => string.Equals(secret.Key, remoteName, StringComparison.OrdinalIgnoreCase))
-            .Select(secret => secret.Id)
-            .ToArray();
-
-        if (secretIds.Length == 0)
-        {
-            return null;
-        }
-
-        FetchMissingSecrets(secretIds);
-
-        return secretIds
-            .Select(secretId => _secretsById[secretId])
-            .OfType<BitwardenSecretInfo>()
-            .FirstOrDefault(s => string.Equals(s.Key, remoteName, StringComparison.OrdinalIgnoreCase));
     }
 
     public void CacheSecret(BitwardenSecretInfo secret)
