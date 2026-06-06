@@ -536,6 +536,80 @@ public class BitwardenSecretManagerProvisionerTests
             if (File.Exists(stateFile)) File.Delete(stateFile);
         }
     }
+
+    [Fact]
+    public async Task ProvisionProjectAsync_MissingProjectName_NonInteractive_ThrowsDescriptiveError()
+    {
+        // Credentials are present but the project name is not — simulates a state file
+        // that was partially set up before the project was ever configured.
+        var organizationId = Guid.NewGuid();
+
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+        appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
+        appBuilder.Configuration["Parameters:bitwarden-access-token"] = FakeAccessToken;
+        // bitwarden-project intentionally absent from config
+
+        var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken);
+
+        var fakeProvider = new FakeBitwardenProvider();
+        appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+#pragma warning disable ASPIREINTERACTION001
+        appBuilder.Services.AddSingleton<IInteractionService>(new FakeInteractionService(canceled: false, isAvailable: false));
+#pragma warning restore ASPIREINTERACTION001
+
+        using var app = appBuilder.Build();
+        var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+
+        await provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default);
+
+        var ex = await Assert.ThrowsAsync<DistributedApplicationException>(
+            () => provisioner.ProvisionProjectAsync(bitwarden.Resource, app.Services, logger, default));
+
+        Assert.Contains("bitwarden-project", ex.Message);
+        Assert.Contains("non-interactive", ex.Message);
+    }
+
+    [Fact]
+    public async Task AuthenticateAsync_MissingAccessToken_NonInteractive_ThrowsDescriptiveError()
+    {
+        // Access token is absent — simulates running --non-interactive before first interactive run.
+        var organizationId = Guid.NewGuid();
+
+        var appBuilder = DistributedApplication.CreateBuilder();
+        appBuilder.Configuration["Aspire:Store:Path"] = Path.GetTempPath();
+        appBuilder.Configuration["Parameters:bitwarden-organization-id"] = organizationId.ToString("D");
+        // bitwarden-access-token intentionally absent from config
+
+        var organizationParameter = appBuilder.AddParameter("bitwarden-organization-id");
+        var accessToken = appBuilder.AddParameter("bitwarden-access-token", secret: true);
+        var projectParam = appBuilder.AddParameter("bitwarden-project");
+
+        var bitwarden = appBuilder.AddBitwardenSecretManager("bitwarden", projectParam, organizationParameter, accessToken);
+
+        var fakeProvider = new FakeBitwardenProvider();
+        appBuilder.Services.AddSingleton<IBitwardenSecretManagerProviderFactory>(new FakeBitwardenProviderFactory(fakeProvider));
+
+#pragma warning disable ASPIREINTERACTION001
+        appBuilder.Services.AddSingleton<IInteractionService>(new FakeInteractionService(canceled: false, isAvailable: false));
+#pragma warning restore ASPIREINTERACTION001
+
+        using var app = appBuilder.Build();
+        var provisioner = app.Services.GetRequiredService<BitwardenSecretManagerProvisioner>();
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<BitwardenSecretManagerProvisioner>();
+
+        var ex = await Assert.ThrowsAsync<DistributedApplicationException>(
+            () => provisioner.AuthenticateAsync(bitwarden.Resource, app.Services, logger, default));
+
+        Assert.Contains("bitwarden-access-token", ex.Message);
+        Assert.Contains("non-interactive", ex.Message);
+    }
 }
 
 internal sealed class FakeBitwardenProviderFactory(FakeBitwardenProvider provider) : IBitwardenSecretManagerProviderFactory

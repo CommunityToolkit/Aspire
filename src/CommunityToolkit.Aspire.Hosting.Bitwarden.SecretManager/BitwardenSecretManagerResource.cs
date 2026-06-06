@@ -1,6 +1,8 @@
 #pragma warning disable ASPIREATS001
+#pragma warning disable ASPIREINTERACTION001
 
 using CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -134,6 +136,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     {
         if (!ConfiguredOrganizationIdParameter.HasValue())
         {
+            ThrowIfNonInteractive(services, ConfiguredOrganizationIdParameter.Name);
             await ConfiguredOrganizationIdParameter.PromptAsync(services, cancellationToken).ConfigureAwait(false);
         }
 
@@ -151,6 +154,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     {
         if (!ManagementAccessToken.HasValue())
         {
+            ThrowIfNonInteractive(services, ManagementAccessToken.Name);
             await ManagementAccessToken.PromptAsync(services, cancellationToken).ConfigureAwait(false);
         }
 
@@ -174,6 +178,7 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
     {
         if (!ConfiguredProjectNameOrIdParameter.HasValue())
         {
+            ThrowIfNonInteractive(services, ConfiguredProjectNameOrIdParameter.Name);
             await ConfiguredProjectNameOrIdParameter.PromptAsync(services, cancellationToken).ConfigureAwait(false);
         }
 
@@ -236,6 +241,17 @@ public class BitwardenSecretManagerResource : Resource, IResourceWithWaitSupport
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__AccessToken"] = ManagementAccessToken;
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__ApiUrl"] = GetApiUrlOrDefault();
         environmentVariables[$"{ConfigurationKeyPrefix}__{connectionName}__IdentityUrl"] = GetIdentityUrlOrDefault();
+    }
+
+    private void ThrowIfNonInteractive(IServiceProvider services, string parameterName)
+    {
+        var interactionService = services.GetService<IInteractionService>();
+        if (interactionService is null || !interactionService.IsAvailable)
+        {
+            throw new DistributedApplicationException(
+                $"Parameter '{parameterName}' for Bitwarden resource '{Name}' has no value and cannot be prompted in non-interactive mode. " +
+                $"Provide it with '--parameter {parameterName}=<value>', or run 'aspire deploy' interactively to configure the deployment first.");
+        }
     }
 
     internal void ResetResolvedValues()
