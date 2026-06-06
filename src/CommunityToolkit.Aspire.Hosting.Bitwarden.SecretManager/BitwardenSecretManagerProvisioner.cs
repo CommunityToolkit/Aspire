@@ -537,8 +537,19 @@ internal sealed class BitwardenSecretManagerProvisioner(
             // method exits. AddJsonFile is registered with reloadOnChange:false so manual Reload() is
             // required. _lazyValue in ParameterResource is unevaluated at this point (pre-sync only reads
             // IConfiguration directly), so process-parameters' _valueGetter will pick up the fresh values.
+            //
+            // On the first deployment the state file does not exist at startup, so Aspire skips
+            // AddJsonFile and the file is not a configuration source. Register it now so Reload()
+            // picks up the values we just saved, preventing a second prompt from process-parameters.
             if (savedCount > 0 && configuration is IConfigurationRoot configRoot)
             {
+                if (configuration is IConfigurationBuilder configBuilder &&
+                    deploymentStateManager.StateFilePath is string stateFilePath &&
+                    File.Exists(stateFilePath))
+                {
+                    configBuilder.AddJsonFile(stateFilePath, optional: true, reloadOnChange: false);
+                }
+
                 configRoot.Reload();
                 logger.LogInformation("IConfiguration reloaded after pre-sync saved {Count} value(s) for resource '{ResourceName}'.", savedCount, resource.Name);
             }
