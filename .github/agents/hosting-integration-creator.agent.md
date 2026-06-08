@@ -50,7 +50,7 @@ Here is an example of a basic `csproj` file for a hosting integration, where the
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting bun javascript</AdditionalPackageTags>
-    <Description>A .NET Aspire integration for hosting Bun apps.</Description>
+    <Description>An Aspire integration for hosting Bun apps.</Description>
   </PropertyGroup>
 
   <ItemGroup>

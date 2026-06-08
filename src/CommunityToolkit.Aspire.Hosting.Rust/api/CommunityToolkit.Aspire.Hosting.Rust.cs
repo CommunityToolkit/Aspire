@@ -10,7 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class RustAppHostingExtension
     {
-        [AspireExport("addRustApp", Description = "Adds a Rust application to the application model")]
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.RustAppExecutableResource> AddBaconApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[]? args = null) { throw null; }
+
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.RustAppExecutableResource> AddRustApp(this IDistributedApplicationBuilder builder, string name, string workingDirectory, string[]? args = null) { throw null; }
     }
 }
@@ -19,6 +22,6 @@ namespace Aspire.Hosting.ApplicationModel
 {
     public partial class RustAppExecutableResource : ExecutableResource, IResourceWithServiceDiscovery, IResourceWithEndpoints, IResource
     {
-        public RustAppExecutableResource(string name, string workingDirectory) : base(default!, default!, default!) { }
+        public RustAppExecutableResource(string name, string workingDirectory, string command = "cargo") : base(default!, default!, default!) { }
     }
 }
