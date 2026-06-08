@@ -43,13 +43,14 @@ runs:
         EXPECTED_ASPIRE_CLI_VERSION: ${{ steps.aspire-version.outputs.cli-version }}
       run: |
         INSTALLED_ASPIRE_CLI_VERSION="$(aspire --version)"
-        case "${INSTALLED_ASPIRE_CLI_VERSION}" in
-          "${EXPECTED_ASPIRE_CLI_VERSION}"|"${EXPECTED_ASPIRE_CLI_VERSION}"+*) ;;
-          *)
-            echo "Expected Aspire CLI version ${EXPECTED_ASPIRE_CLI_VERSION}, but found ${INSTALLED_ASPIRE_CLI_VERSION}."
-            exit 1
-            ;;
-        esac
+        # Strip build metadata (e.g. 13.4.3+becb48e → 13.4.3) before comparing so that
+        # a newer patch release installed by the action does not fail this check.
+        INSTALLED_BASE="${INSTALLED_ASPIRE_CLI_VERSION%%+*}"
+        # Pass when installed base version >= expected version (sort -V = version ordering).
+        if ! printf '%s\n' "${EXPECTED_ASPIRE_CLI_VERSION}" "${INSTALLED_BASE}" | sort -V -C; then
+          echo "Expected Aspire CLI version >= ${EXPECTED_ASPIRE_CLI_VERSION}, but found ${INSTALLED_ASPIRE_CLI_VERSION}."
+          exit 1
+        fi
 
     - name: Set up Python
       uses: actions/setup-python@v5
