@@ -22,7 +22,6 @@ namespace CommunityToolkit.Aspire.Hosting;
 /// </summary>
 internal sealed class K3sReadinessHealthCheck(
     K3sClusterResource resource,
-    EndpointReference endpoint,
     Func<string, IKubernetes>? kubernetesFactory = null) : IHealthCheck
 {
     private IKubernetes CreateClient(string path) =>
@@ -35,39 +34,35 @@ internal sealed class K3sReadinessHealthCheck(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
+        // Resolve the API server port. We try two sources in order:
+        //
+        // 1. EndpointAnnotation.AllocatedEndpoint.Port — set by DCP when it allocates the
+        //    endpoint. Non-blocking (returns null if not yet set) and NOT cached, so it picks
+        //    up DCP's allocation on any tick after the event fires.
+        //    We intentionally avoid EndpointReference.IsAllocated here because that property
+        //    caches its result on first call; if the health check ticks before DCP fires the
+        //    allocation event the cached false would persist forever.
+        //
+        // 2. EndpointAnnotation.Port — the statically configured host port (only non-null
+        //    when the caller passed an explicit apiServerPort to AddK3sCluster). Works for
+        //    both C# and polyglot AppHosts.
+
+        var annotation = resource.Annotations
+            .OfType<EndpointAnnotation>()
+            .FirstOrDefault(a => a.Name == K3sClusterResource.ApiServerEndpointName);
+
         int port;
-
-        if (endpoint.IsAllocated)
+        if (annotation?.AllocatedEndpoint is { Port: > 0 } alloc)
         {
-            // Use the async reference-expression path — the same mechanism PostgreSQL uses
-            // for its connection string port. This resolves through DCP's actual allocation
-            // rather than the synchronous AllocatedEndpoint.Port shortcut, which for proxied
-            // HTTPS endpoints in Aspire 13.4.0+ may return the proxy port (= target port 6443)
-            // rather than the Docker host port that is actually reachable from the AppHost.
-            // Only call GetValueAsync when IsAllocated is true — in test/non-DCP contexts the
-            // call would block indefinitely waiting for an allocation that never arrives.
-            var portExpression = endpoint.Property(EndpointProperty.Port);
-            var portStr = await ((IValueProvider)portExpression)
-                .GetValueAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            if (!int.TryParse(portStr, out port) || port <= 0)
-                port = endpoint.Port; // synchronous fallback within same allocation context
+            port = alloc.Port;
+        }
+        else if (annotation?.Port is > 0)
+        {
+            port = annotation.Port!.Value;
         }
         else
         {
-            // EndpointReference.IsAllocated is false — either the endpoint has not yet been
-            // allocated, or DCP reconnected to a persistent container without firing the normal
-            // allocation event. Fall back to EndpointAnnotation.Port, which DCP updates even
-            // in the reconnect path.
-            var annotation = resource.Annotations
-                .OfType<EndpointAnnotation>()
-                .FirstOrDefault(a => a.Name == K3sClusterResource.ApiServerEndpointName);
-
-            if (annotation?.Port is not > 0)
-                return HealthCheckResult.Unhealthy("k3s API server endpoint not yet allocated");
-
-            port = annotation.Port!.Value;
+            return HealthCheckResult.Unhealthy("k3s API server endpoint not yet allocated");
         }
 
         return await CheckCoreAsync(port, cancellationToken).ConfigureAwait(false);
@@ -75,9 +70,7 @@ internal sealed class K3sReadinessHealthCheck(
 
     /// <summary>
     /// Core readiness check given an already-known API server <paramref name="port"/>.
-    /// Extracted so unit tests can exercise the full check path without requiring DCP
-    /// to allocate the endpoint (i.e. without <see cref="EndpointReference.IsAllocated"/>
-    /// being true).
+    /// Extracted so unit tests can call it directly with an explicit port.
     /// </summary>
     internal async Task<HealthCheckResult> CheckCoreAsync(int port, CancellationToken cancellationToken = default)
     {

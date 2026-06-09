@@ -184,7 +184,7 @@ public static class K3sBuilderExtensions
         // state survive across health-check ticks. Using a factory (sp => new ...) would
         // create a fresh instance on every check, making _cachedClient dead state and
         // leaking a Kubernetes/HttpClient on every tick.
-        var healthCheck = new K3sReadinessHealthCheck(resource, resource.ApiEndpoint);
+        var healthCheck = new K3sReadinessHealthCheck(resource);
         builder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
             $"k3s_{name}_ready",
             _ => healthCheck,

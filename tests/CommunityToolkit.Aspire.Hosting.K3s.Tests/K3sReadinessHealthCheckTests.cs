@@ -15,13 +15,12 @@ public class K3sReadinessHealthCheckTests
     // ── CheckHealthAsync — early exit (no DCP allocation) ────────────────────
 
     [Fact]
-    public async Task CheckHealthAsync_WhenEndpointNotAllocated_ReturnsUnhealthy()
+    public async Task CheckHealthAsync_WhenNeitherAllocatedEndpointNorStaticPort_ReturnsUnhealthy()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
-        // In unit-test context there is no DCP, so the port expression resolves to null/empty
-        // and EndpointAnnotation.Port is also unset — both paths return Unhealthy.
-        var healthCheck = new K3sReadinessHealthCheck(cluster.Resource, cluster.Resource.ApiEndpoint);
+        // No DCP, no static port — both annotation.AllocatedEndpoint and annotation.Port are null.
+        var healthCheck = new K3sReadinessHealthCheck(cluster.Resource);
 
         var result = await healthCheck.CheckHealthAsync(null!);
 
@@ -30,30 +29,50 @@ public class K3sReadinessHealthCheckTests
     }
 
     [Fact]
-    public async Task CheckHealthAsync_WhenEndpointAnnotationHasPort_UsesAnnotationPortAsFallback()
+    public async Task CheckHealthAsync_WhenAllocatedEndpointSet_ProceedsToCheckCore()
     {
-        // Simulates a persistent container reconnect: endpoint.IsAllocated is false but
-        // DCP has already set EndpointAnnotation.Port on the resource.
+        // Simulates DCP having fired the endpoint allocation event.
         var appBuilder = DistributedApplication.CreateBuilder();
         var cluster = appBuilder.AddK3sCluster("k8s");
 
-        // Manually set the allocated port on the EndpointAnnotation (DCP does this
-        // even when reconnecting to a persistent container).
+        var annotation = cluster.Resource.Annotations
+            .OfType<EndpointAnnotation>()
+            .First(a => a.Name == K3sClusterResource.ApiServerEndpointName);
+        // Set AllocatedEndpoint directly — the same property DCP sets when it allocates the port.
+        annotation.AllocatedEndpoint = new AllocatedEndpoint(annotation, "localhost", 32773);
+
+        var healthCheck = new K3sReadinessHealthCheck(cluster.Resource);
+
+        var result = await healthCheck.CheckHealthAsync(null!);
+
+        // cluster/kubeconfig.yaml doesn't exist in the test dir → reaches CheckCoreAsync
+        // and returns "write kubeconfig", not "not yet allocated".
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
+        Assert.DoesNotContain("not yet allocated", result.Description);
+        Assert.Contains("write kubeconfig", result.Description);
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WhenStaticPortConfigured_ProceedsToCheckCore()
+    {
+        // Simulates AddK3sCluster("k8s", apiServerPort: 32773): AllocatedEndpoint is null
+        // but annotation.Port carries the explicit static port.
+        var appBuilder = DistributedApplication.CreateBuilder();
+        var cluster = appBuilder.AddK3sCluster("k8s");
+
         var annotation = cluster.Resource.Annotations
             .OfType<EndpointAnnotation>()
             .First(a => a.Name == K3sClusterResource.ApiServerEndpointName);
         annotation.Port = 32773;
 
-        var (hc, dir, _) = MakeCheck(writeKubeconfig: false, nodeCount: 0, agentCount: 0);
-        // Re-create the health check using the cluster that has the annotation set.
-        var healthCheck = new K3sReadinessHealthCheck(cluster.Resource, cluster.Resource.ApiEndpoint);
+        var healthCheck = new K3sReadinessHealthCheck(cluster.Resource);
 
         var result = await healthCheck.CheckHealthAsync(null!);
 
-        // With no kubeconfig file it returns "Waiting for k3s to write kubeconfig"
-        // — proving it got past the IsAllocated check and reached CheckCoreAsync.
+        // cluster/kubeconfig.yaml doesn't exist → "write kubeconfig", not "not yet allocated".
         Assert.Equal(HealthStatus.Unhealthy, result.Status);
         Assert.DoesNotContain("not yet allocated", result.Description);
+        Assert.Contains("write kubeconfig", result.Description);
     }
 
     // ── CheckCoreAsync — file-system and Kubernetes paths ────────────────────
@@ -62,7 +81,7 @@ public class K3sReadinessHealthCheckTests
     public async Task CheckCoreAsync_WhenKubeconfigDirectoryIsNull_ReturnsUnhealthy()
     {
         var cluster = new K3sClusterResource("k8s") { KubeconfigDirectory = null };
-        var healthCheck = new K3sReadinessHealthCheck(cluster, cluster.ApiEndpoint, _ => Mock.Of<IKubernetes>());
+        var healthCheck = new K3sReadinessHealthCheck(cluster, _ => Mock.Of<IKubernetes>());
 
         var result = await healthCheck.CheckCoreAsync(port: 6443);
 
@@ -367,7 +386,7 @@ public class K3sReadinessHealthCheckTests
                 });
         }
 
-        var check = new K3sReadinessHealthCheck(cluster, cluster.ApiEndpoint, _ => mockK8s.Object);
+        var check = new K3sReadinessHealthCheck(cluster, _ => mockK8s.Object);
         return (check, dir, mockK8s);
     }
 }
