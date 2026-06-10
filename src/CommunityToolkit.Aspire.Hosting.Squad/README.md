@@ -31,6 +31,34 @@ builder.AddProject<Projects.MyApi>("api")
 builder.Build().Run();
 ```
 
+### Consume the team from a service project
+
+In a referenced service project, parse the connection string Aspire injects under
+`ConnectionStrings:{resourceName}` (format `squad://resource/{name}?teamRoot=...&agents=...&protocol=maf-1.0`)
+and use [`Squad.Agents.AI`](https://www.nuget.org/packages/Squad.Agents.AI) to construct
+a `SquadAgent` over the referenced team:
+
+```csharp
+var teamRoot = ParseTeamRoot(builder.Configuration.GetConnectionString("research-squad")!);
+
+builder.Services.AddSquadAgent(opts =>
+{
+    opts.SquadFolderPath = teamRoot;
+    opts.Instructions = "You are a research assistant. Be concise.";
+});
+
+app.MapPost("/ask", async (string prompt, SquadAgent agent) =>
+{
+    var session = await agent.CreateSessionAsync();
+    var response = await agent.RunAsync(prompt, session);
+    return Results.Ok(new { response = response.Text });
+});
+```
+
+A complete runnable example lives under
+[`examples/squad/`](https://github.com/CommunityToolkit/Aspire/tree/main/examples/squad) —
+AppHost + ApiApp wired together with a self-contained sample team.
+
 ## What it does
 
 `AddSquad(name, teamRoot)` registers a `SquadResource` that:

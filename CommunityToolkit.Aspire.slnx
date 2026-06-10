@@ -178,7 +178,9 @@
     <Project Path="examples/sqlserver-ext/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/squad/">
+    <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.ApiApp/CommunityToolkit.Aspire.Hosting.Squad.ApiApp.csproj" />
     <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.AppHost/CommunityToolkit.Aspire.Hosting.Squad.AppHost.csproj" />
+    <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/stripe/">
     <Project Path="examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.Api/CommunityToolkit.Aspire.Hosting.Stripe.Api.csproj" />

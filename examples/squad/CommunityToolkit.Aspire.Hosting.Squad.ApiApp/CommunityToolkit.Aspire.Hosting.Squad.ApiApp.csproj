@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <!-- Squad.Agents.AI ships from the upstream Squad repo via OIDC Trusted
+         Publishing. The 0.1.0-preview.3 release exposes ConfigureSession +
+         a default OnPermissionRequest, which is what makes the example below
+         actually drive a 3-turn conversation against a real Squad team. -->
+    <PackageReference Include="Squad.Agents.AI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
