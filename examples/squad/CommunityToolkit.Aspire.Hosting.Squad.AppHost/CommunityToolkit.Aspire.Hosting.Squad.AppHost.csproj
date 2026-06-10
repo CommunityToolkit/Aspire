@@ -1,0 +1,17 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>5a9c3d6b-1f1e-4f9e-a3ba-7d9e1f3a2b1a</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Squad\CommunityToolkit.Aspire.Hosting.Squad.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="sample-squad\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
