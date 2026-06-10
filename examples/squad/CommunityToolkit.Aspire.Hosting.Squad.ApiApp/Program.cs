@@ -39,8 +39,7 @@ builder.Services.AddSquadAgent(opts =>
     opts.SquadFolderPath = teamRoot;
     opts.AgentName = "research-squad";
     opts.Instructions = "You are a research assistant. Be concise.";
-    // The default OnPermissionRequest is PermissionHandler.ApproveAll (shipped
-    // in Squad.Agents.AI 0.1.0-preview.3). Production hosts should override
+    // The default OnPermissionRequest is PermissionHandler.ApproveAll (shipped. Production hosts should override
     // this via opts.ConfigureSession to gate file/shell/MCP access.
 });
 
