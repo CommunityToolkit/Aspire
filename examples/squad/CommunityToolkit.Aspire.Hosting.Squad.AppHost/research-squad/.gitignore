@@ -7,3 +7,9 @@
 .squad/.cache/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+# Copilot CLI SDK: per-session state created at runtime
+.squad/session-state/
+.squad/session-store.db
+.squad/session-store.db-shm
+.squad/session-store.db-wal
