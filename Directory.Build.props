@@ -18,7 +18,7 @@
     <DotNetExtensionsVersion>10.0.8</DotNetExtensionsVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
     <MEAIVersion>10.6.0</MEAIVersion>
-    <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
+    <ServiceDiscoveryVersion>10.6.0</ServiceDiscoveryVersion>
     <IsPackable>false</IsPackable>
     <MoqVersion>4.20.72</MoqVersion>
 
