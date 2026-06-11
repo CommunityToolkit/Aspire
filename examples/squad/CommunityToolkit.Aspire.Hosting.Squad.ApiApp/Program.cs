@@ -32,11 +32,15 @@ builder.Services.AddOpenTelemetry()
 
 // Resolve both squads from the WithReference-supplied connection strings (Aspire
 // injects them under ConnectionStrings:{resourceName}). Each becomes a keyed
-// SquadAgent so the /ask and /dispatch endpoints can pick by ?squad= at request time.
-const string ResearchSquad = "research-squad";
-const string DevSquad      = "dev-squad";
+// SquadAgent so the /ask and /dispatch endpoints can pick by ?squad= at request
+// time. The Aspire resource name is "{name}-squad" (e.g. "research-squad") and
+// the query-param-friendly short name ("research") is the keyed-DI key.
 var squadTeamRoots = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-foreach (var resource in new[] { ResearchSquad, DevSquad })
+foreach (var (key, resource, instructions) in new[]
+{
+    ("research", "research-squad", "You are the coordinator of an AI/ML research squad. Be concise."),
+    ("dev",      "dev-squad",      "You are the coordinator of a full-stack development squad. Be concise."),
+})
 {
     var cs = builder.Configuration.GetConnectionString(resource)
         ?? throw new InvalidOperationException(
@@ -47,15 +51,15 @@ foreach (var resource in new[] { ResearchSquad, DevSquad })
         ?? throw new InvalidOperationException(
             $"Could not parse teamRoot from connection string '{cs}'.");
 
-    squadTeamRoots[resource] = root;
+    squadTeamRoots[key] = root;
 
-    builder.Services.AddKeyedSquadAgent(resource, opts =>
+    var capturedKey = key;
+    var capturedInstructions = instructions;
+    builder.Services.AddKeyedSquadAgent(key, opts =>
     {
         opts.SquadFolderPath = root;
         opts.AgentName = resource;
-        opts.Instructions = resource == ResearchSquad
-            ? "You are the coordinator of an AI/ML research squad. Be concise."
-            : "You are the coordinator of a full-stack development squad. Be concise.";
+        opts.Instructions = capturedInstructions;
 
         // Forward subagent dispatch events to the Aspire dashboard via Console
         // (which the .NET hosting integration captures as structured logs) so each
@@ -65,15 +69,15 @@ foreach (var resource in new[] { ResearchSquad, DevSquad })
             switch (trace.Kind)
             {
                 case SquadAgentTraceEventKind.SubagentStarted:
-                    Console.WriteLine($"[{resource}] >> subagent start: {trace.SubagentName} (sdkId={trace.SdkAgentId})");
+                    Console.WriteLine($"[{capturedKey}] >> subagent start: {trace.SubagentName} (sdkId={trace.SdkAgentId})");
                     break;
                 case SquadAgentTraceEventKind.SubagentCompleted:
-                    Console.WriteLine($"[{resource}] << subagent done:  {trace.SubagentName} (sdkId={trace.SdkAgentId})");
+                    Console.WriteLine($"[{capturedKey}] << subagent done:  {trace.SubagentName} (sdkId={trace.SdkAgentId})");
                     break;
                 case SquadAgentTraceEventKind.AssistantMessage when !string.IsNullOrEmpty(trace.SdkAgentId):
                     var preview = (trace.Content ?? "").Replace("\n", " ");
                     if (preview.Length > 200) preview = preview.Substring(0, 200) + "...";
-                    Console.WriteLine($"[{resource}]    msg from {trace.SubagentName ?? trace.SdkAgentId}: {preview}");
+                    Console.WriteLine($"[{capturedKey}]    msg from {trace.SubagentName ?? trace.SdkAgentId}: {preview}");
                     break;
             }
         };
@@ -139,7 +143,7 @@ app.MapPost("/dispatch",
         // "use the task tool to dispatch ..." phrasing that reliably triggers
         // real subagent spawning (a casual "team, ..." phrasing tends to make
         // the coordinator role-play subagents in a single response instead).
-        var prompt = string.Equals(q.Squad, ResearchSquad, StringComparison.OrdinalIgnoreCase)
+        var prompt = string.Equals(q.Squad, "research", StringComparison.OrdinalIgnoreCase)
             ? "Use the task tool to dispatch two parallel subagents. " +
               "Send the Research Lead (Morpheus) this exact prompt: " +
               "\"In one sentence, what is the most important property of a good research hypothesis?\" " +
