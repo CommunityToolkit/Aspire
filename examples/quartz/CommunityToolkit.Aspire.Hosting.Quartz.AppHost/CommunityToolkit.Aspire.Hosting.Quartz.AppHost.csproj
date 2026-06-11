@@ -1,0 +1,17 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>3b9445d7-5b90-48dd-a039-be05f16fbbb3</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Quartz\CommunityToolkit.Aspire.Hosting.Quartz.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Quartz.ApiService\CommunityToolkit.Aspire.Hosting.Quartz.ApiService.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Quartz.Web\CommunityToolkit.Aspire.Hosting.Quartz.Web.csproj" />
+  </ItemGroup>
+
+</Project>
