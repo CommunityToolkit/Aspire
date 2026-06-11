@@ -15,12 +15,12 @@ public class ConformanceCollection;
 
 [Collection("Conformance")]
 public class ConformanceTests :
-    ConformanceTests<SurrealDbClient, SurrealDbClientSettings>,
+    ConformanceTests<SurrealDbSession, SurrealDbClientSettings>,
     IClassFixture<SurrealDbContainerFixture>
 {
     private readonly SurrealDbContainerFixture _containerFixture;
 
-    protected override ServiceLifetime ServiceLifetime => ServiceLifetime.Singleton;
+    protected override ServiceLifetime ServiceLifetime => ServiceLifetime.Scoped;
 
     protected override string ActivitySourceName => string.Empty;
 
@@ -104,7 +104,7 @@ public class ConformanceTests :
         throw new NotImplementedException();
     }
 
-    protected override void TriggerActivity(SurrealDbClient service)
+    protected override void TriggerActivity(SurrealDbSession service)
     {
         using var source = new CancellationTokenSource(100);
 

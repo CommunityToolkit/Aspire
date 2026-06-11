@@ -3,7 +3,7 @@
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.ApiService.Models;
 
 /// <summary>
-/// Faker test class to generate fake WeatherForecast objects.
+/// Faker test class to generate fake <see cref="WeatherForecast"/> objects.
 /// </summary>
 public class WeatherForecastFaker : Faker<WeatherForecast>
 {
@@ -21,9 +21,6 @@ public class WeatherForecastFaker : Faker<WeatherForecast>
         "Scorching"
     };
 
-    /// <summary>
-    /// Constructor
-    /// </summary>
     public WeatherForecastFaker()
     {
         RuleFor(o => o.Date, f => f.Date.Recent());
