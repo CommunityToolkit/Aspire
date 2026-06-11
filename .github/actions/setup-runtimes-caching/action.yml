@@ -35,7 +35,7 @@ runs:
     - name: Install Aspire CLI
       uses: timheuer/setup-aspire@v0.1.0
       with:
-        quality: staging
+        version: ${{ steps.aspire-version.outputs.version }}
 
     - name: Verify Aspire CLI version
       shell: bash
