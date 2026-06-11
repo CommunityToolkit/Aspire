@@ -1,36 +1,33 @@
 // CommunityToolkit.Aspire.Hosting.Squad — example consumer ApiApp
 //
 // Receives TWO `squad://...` connection strings from the AppHost (research-squad
-// and dev-squad, both via WithReference) and registers a SquadAgent for each
-// under a keyed DI service. The /ask and /dispatch endpoints take a
-// ?squad=research|dev query parameter to pick which team handles the request,
-// so you can hit the same API with two completely different multi-agent
-// personalities and see them as separate traces in the Aspire dashboard.
+// and dev-squad, both via WithReference). Each becomes a keyed SquadAgent via
+// AddKeyedSquadAgent("{resource-name}") — Squad.Agents.AI 0.4.0+ looks up the
+// Aspire-injected connection string under ConnectionStrings:{resource-name}
+// directly, so the example does not need any GetConnectionString / Uri-parse
+// boilerplate. The /ask and /dispatch endpoints take a ?squad=research|dev
+// query parameter to pick which team handles the request.
 //
 // Two layers of observability are wired up here:
 //
 //  1. OpenTelemetry tracing — two activity sources show up in the Aspire
 //     dashboard Traces view:
 //
-//       • Microsoft.Agents.AI.Squad   (emitted by Squad.Agents.AI)
-//         One "squad.subagent {Name}" span per subagent dispatch, tagged with
-//         squad.subagent.name / display_name / sdk_agent_id / reply_preview.
+//       • Microsoft.Agents.AI.Squad   (emitted by Squad.Agents.AI 0.4.0)
+//         One "squad.subagent {Name}" span per subagent dispatch, with
+//         "squad.subagent.start", "squad.subagent.message",
+//         "squad.subagent.completed", "squad.subagent.failed" ActivityEvents
+//         annotated on the span timeline. NO consumer wiring required — just
+//         AddSource(SquadAgentDiagnostics.ActivitySourceName) on the tracer.
 //
 //       • Squad.Hosting.ApiApp        (emitted by THIS app)
 //         One "squad.dispatch {endpoint} {squad}" span wraps each request so
-//         the per-request trace tree has a clear parent and every subagent
-//         lifecycle event (start / message / completed) lands on it as an
-//         OpenTelemetry ActivityEvent annotation visible on the span timeline.
+//         the trace tree has a clear root the user's trace search can land on.
 //
-//  2. ILogger structured logs — each subagent start / message / done is
-//     emitted via ILogger<Program>, so it shows up in the Aspire dashboard's
-//     Structured Logs view with the squad name, subagent name, and message
-//     preview as structured fields (queryable via the Filter bar).
-//
-// Why both? The SDK's spans may end up as orphan traces because the SDK's
-// event pump (OnEvent) can fire on a background thread where Activity.Current
-// has been cleared by AsyncLocal flow. The "squad.dispatch ..." wrapper span
-// guarantees a single root per request that the user's trace search lands on.
+//  2. ILogger structured logs — per-squad subagent start / message / done is
+//     emitted via a typed OnSubagentTrace callback that delegates to ILogger.
+//     Visible in the Aspire dashboard's Structured Logs view with the squad
+//     name, subagent name, and message preview as queryable structured fields.
 
 using System.Diagnostics;
 using Microsoft.Agents.AI;
@@ -46,112 +43,72 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Surface both activity sources in the Aspire dashboard:
-//  - Microsoft.Agents.AI.Squad → per-subagent spans (emitted by Squad.Agents.AI)
+//  - Microsoft.Agents.AI.Squad → per-subagent spans (default-on as of 0.4.0)
 //  - Squad.Hosting.ApiApp      → per-request wrapper span (emitted below)
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
         .AddSource(SquadAgentDiagnostics.ActivitySourceName)
         .AddSource(ApiAppDiagnostics.ActivitySourceName));
 
-// Resolve both squads from the WithReference-supplied connection strings (Aspire
-// injects them under ConnectionStrings:{resourceName}). Each becomes a keyed
-// SquadAgent so the /ask and /dispatch endpoints can pick by ?squad= at request
-// time. The Aspire resource name is "{name}-squad" (e.g. "research-squad") and
-// the query-param-friendly short name ("research") is the keyed-DI key.
-var squadTeamRoots = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-foreach (var (key, resource, instructions) in new[]
+// Register one keyed SquadAgent per Aspire-injected squad resource. The
+// resource name IS the keyed-DI key AND the IConfiguration connection-string
+// key (Squad.Agents.AI 0.4.0 picks up ConnectionStrings:{name} directly).
+// No need to fetch the connection string, parse the URI, or pull SquadFolderPath
+// out by hand — the SDK does all of that.
+foreach (var (key, instructions) in new[]
 {
-    ("research", "research-squad", "You are the coordinator of an AI/ML research squad. Be concise."),
-    ("dev",      "dev-squad",      "You are the coordinator of a full-stack development squad. Be concise."),
+    ("research-squad", "You are the coordinator of an AI/ML research squad. Be concise."),
+    ("dev-squad",      "You are the coordinator of a full-stack development squad. Be concise."),
 })
 {
-    var cs = builder.Configuration.GetConnectionString(resource)
-        ?? throw new InvalidOperationException(
-            $"Missing connection string for '{resource}'. " +
-            $"Confirm the AppHost wires the Squad resource via .WithReference({resource}).");
-
-    var root = ParseSquadTeamRoot(cs)
-        ?? throw new InvalidOperationException(
-            $"Could not parse teamRoot from connection string '{cs}'.");
-
-    squadTeamRoots[key] = root;
-
-    // Step 1: register the keyed SquadAgent with its squad-specific config.
     builder.Services.AddKeyedSquadAgent(key, opts =>
     {
-        opts.SquadFolderPath = root;
-        opts.AgentName = resource;
+        opts.AgentName = key;
         opts.Instructions = instructions;
     });
 
-    // Step 2: wire OnSubagentTrace via Configure<ILoggerFactory> so the
-    // callback can use a real ILogger (vs Console.WriteLine, which does
-    // not always surface in the Aspire dashboard). Options post-configure
-    // runs after the host is built, so ILoggerFactory is fully constructed
-    // by the time SquadAgent first calls .Get(optionsName).
+    // Optional: forward typed trace events to ILogger as structured logs. Telemetry
+    // (the OTel spans + ActivityEvents) is independent of this callback — it is
+    // already on by default and renders in the Aspire dashboard's Traces view.
+    // We only set this callback to also surface a per-subagent line in the
+    // Structured Logs view (queryable by squad name + subagent name).
     var capturedKey = key;
-    var capturedResource = resource;
     builder.Services.AddOptions<SquadAgentOptions>(key)
         .Configure<ILoggerFactory>((opts, loggerFactory) =>
         {
-            var logger = loggerFactory.CreateLogger($"Squad.Subagent.{capturedResource}");
-
+            var logger = loggerFactory.CreateLogger($"Squad.Subagent.{capturedKey}");
             opts.OnSubagentTrace = trace =>
             {
-                // Snapshot Activity.Current — this is the SDK's per-subagent span
-                // when it is open (callback fires from inside the SDK's event pump
-                // right after StartActivity), or whatever ambient span exists.
-                var current = Activity.Current;
-
                 switch (trace.Kind)
                 {
                     case SquadAgentTraceEventKind.SubagentStarted:
                         logger.LogInformation(
                             "[{Squad}] >> subagent start: {SubagentName} (sdkId={SdkAgentId})",
                             capturedKey, trace.SubagentName, trace.SdkAgentId);
-                        current?.AddEvent(new ActivityEvent(
-                            "squad.subagent.start",
-                            tags: new ActivityTagsCollection
-                            {
-                                ["squad.name"] = capturedKey,
-                                ["squad.subagent.name"] = trace.SubagentName,
-                                ["squad.subagent.sdk_agent_id"] = trace.SdkAgentId,
-                            }));
                         break;
-
                     case SquadAgentTraceEventKind.SubagentCompleted:
                         logger.LogInformation(
                             "[{Squad}] << subagent done:  {SubagentName} (sdkId={SdkAgentId})",
                             capturedKey, trace.SubagentName, trace.SdkAgentId);
-                        current?.AddEvent(new ActivityEvent(
-                            "squad.subagent.completed",
-                            tags: new ActivityTagsCollection
-                            {
-                                ["squad.name"] = capturedKey,
-                                ["squad.subagent.name"] = trace.SubagentName,
-                                ["squad.subagent.sdk_agent_id"] = trace.SdkAgentId,
-                            }));
                         break;
-
                     case SquadAgentTraceEventKind.AssistantMessage when !string.IsNullOrEmpty(trace.SdkAgentId):
                         var preview = (trace.Content ?? "").Replace("\n", " ");
                         if (preview.Length > 200) preview = preview.Substring(0, 200) + "...";
                         logger.LogInformation(
                             "[{Squad}]    msg from {SubagentName}: {Preview}",
                             capturedKey, trace.SubagentName ?? trace.SdkAgentId, preview);
-                        current?.AddEvent(new ActivityEvent(
-                            "squad.subagent.message",
-                            tags: new ActivityTagsCollection
-                            {
-                                ["squad.name"] = capturedKey,
-                                ["squad.subagent.name"] = trace.SubagentName ?? trace.SdkAgentId,
-                                ["squad.subagent.message_preview"] = preview,
-                            }));
                         break;
                 }
             };
         });
 }
+
+// Reverse map ?squad=research|dev → Aspire resource name for keyed resolution.
+var squadKeysByShortName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+{
+    ["research"] = "research-squad",
+    ["dev"]      = "dev-squad",
+};
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
@@ -164,7 +121,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => Results.Ok(new
 {
-    squads = squadTeamRoots,
+    squads = squadKeysByShortName,
     endpoints = new[]
     {
         "/ask?squad=research      POST  — 3-turn conversation with one squad (session memory demo)",
@@ -200,7 +157,7 @@ app.MapPost("/ask",
             turns.Add(new TurnResult(prompt, response.Text));
         }
 
-        return Results.Ok(new { squad = q.Squad, teamRoot = squadTeamRoots[q.Squad], turns });
+        return Results.Ok(new { squad = q.Squad, turns });
     })
     .WithName("Ask")
     .WithOpenApi();
@@ -253,7 +210,6 @@ app.MapPost("/dispatch",
         return Results.Ok(new
         {
             squad = q.Squad,
-            teamRoot = squadTeamRoots[q.Squad],
             prompt,
             response = response.Text,
             hint = "Open the Aspire dashboard's Traces view to see the squad.dispatch + squad.subagent spans, and Structured Logs for the per-subagent log lines.",
@@ -266,30 +222,15 @@ app.Run();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-SquadAgent? ResolveSquad(IServiceProvider sp, string key, out string? error)
+SquadAgent? ResolveSquad(IServiceProvider sp, string shortName, out string? error)
 {
-    if (!squadTeamRoots.ContainsKey(key))
+    if (!squadKeysByShortName.TryGetValue(shortName, out var resourceName))
     {
-        error = $"Unknown squad '{key}'. Use squad=research or squad=dev.";
+        error = $"Unknown squad '{shortName}'. Use squad=research or squad=dev.";
         return null;
     }
     error = null;
-    return sp.GetRequiredKeyedService<SquadAgent>(key);
-}
-
-static string? ParseSquadTeamRoot(string connectionString)
-{
-    if (!Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
-        return null;
-
-    var query = uri.Query.TrimStart('?');
-    foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
-    {
-        var parts = pair.Split('=', 2);
-        if (parts.Length == 2 && parts[0].Equals("teamRoot", StringComparison.OrdinalIgnoreCase))
-            return Uri.UnescapeDataString(parts[1]);
-    }
-    return null;
+    return sp.GetRequiredKeyedService<SquadAgent>(resourceName);
 }
 
 internal sealed record SquadQuery(string Squad = "research");
