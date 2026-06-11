@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+      <PackageReference Include="Logto.AspNetCore.Authentication" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"  />
+    </ItemGroup>
+</Project>
