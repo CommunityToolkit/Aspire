@@ -1,0 +1,27 @@
+{
+  "universe_usage_history": [
+    {
+      "universe": "The Simpsons",
+      "assigned_at": "2026-06-11T15:07:36+03:00",
+      "assignment_id": "2026-06-11T15-07-36-initial-cast"
+    }
+  ],
+  "assignment_cast_snapshots": {
+    "2026-06-11T15-07-36-initial-cast": {
+      "assignment_id": "2026-06-11T15-07-36-initial-cast",
+      "created_at": "2026-06-11T15:07:36+03:00",
+      "universe": "The Simpsons",
+      "project": "dev-squad",
+      "shape": "full-stack software development team (lead + frontend + backend + QA)",
+      "selected_by": "user-directive (autonomous init with explicit universe + character constraints)",
+      "size": 4,
+      "cast": {
+        "lisa": "Tech Lead / Architect",
+        "marge": "Frontend Developer",
+        "frink": "Backend / API Developer",
+        "comicbookguy": "Tester / QA Engineer"
+      },
+      "exempt_from_casting": ["Scribe", "Ralph", "Rai"]
+    }
+  }
+}

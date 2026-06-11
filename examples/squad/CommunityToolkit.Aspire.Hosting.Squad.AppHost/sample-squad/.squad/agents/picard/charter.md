@@ -1,1 +1,0 @@
-# Picard - Lead (fixture)
