@@ -96,6 +96,7 @@
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
   </ItemGroup>
