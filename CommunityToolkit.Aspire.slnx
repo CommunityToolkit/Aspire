@@ -157,6 +157,12 @@
     <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.AppHost/CommunityToolkit.Aspire.Hosting.Rust.AppHost.csproj" />
     <Project Path="examples/rust/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Rust.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/seaweedfs/">
+    <File Path="examples/seaweedfs/README.md" />
+    <Project Path="examples/seaweedfs/SeaweedFS.ApiService/SeaweedFS.ApiService.csproj" />
+    <Project Path="examples/seaweedfs/SeaweedFS.AppHost/SeaweedFS.AppHost.csproj" Id="6e0ec4a6-d1d2-4aed-9a5b-b053c46e41b3" />
+    <Project Path="examples/seaweedfs/SeaweedFS.ServiceDefaults/SeaweedFS.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/sftp/">
     <Project Path="examples/sftp/CommunityToolkit.Aspire.Hosting.Sftp.ApiService/CommunityToolkit.Aspire.Hosting.Sftp.ApiService.csproj" />
     <Project Path="examples/sftp/CommunityToolkit.Aspire.Hosting.Sftp.AppHost/CommunityToolkit.Aspire.Hosting.Sftp.AppHost.csproj" />
@@ -236,6 +242,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.RavenDB/CommunityToolkit.Aspire.Hosting.RavenDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.SeaweedFS/CommunityToolkit.Aspire.Hosting.SeaweedFS.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Sftp/CommunityToolkit.Aspire.Hosting.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Solr/CommunityToolkit.Aspire.Hosting.Solr.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
@@ -253,6 +260,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Minio.Client/CommunityToolkit.Aspire.Minio.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.OllamaSharp/CommunityToolkit.Aspire.OllamaSharp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.RavenDB.Client/CommunityToolkit.Aspire.RavenDB.Client.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.SeaweedFS.Client/CommunityToolkit.Aspire.SeaweedFS.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Sftp/CommunityToolkit.Aspire.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.SurrealDb/CommunityToolkit.Aspire.SurrealDb.csproj" />
     <Project Path="src\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.csproj" />
@@ -293,12 +301,13 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests/CommunityToolkit.Aspire.Hosting.Ollama.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests/CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests/CommunityToolkit.Aspire.Hosting.PapercutSmtp.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/CommunityToolkit.Aspire.Hosting.Perl.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests/CommunityToolkit.Aspire.Hosting.PowerShell.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/CommunityToolkit.Aspire.Hosting.Perl.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests/CommunityToolkit.Aspire.Hosting.RavenDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests/CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sftp.Tests/CommunityToolkit.Aspire.Hosting.Sftp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Solr.Tests/CommunityToolkit.Aspire.Hosting.Solr.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests.csproj" />
@@ -316,6 +325,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Minio.Client.Tests/CommunityToolkit.Aspire.Minio.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.OllamaSharp.Tests/CommunityToolkit.Aspire.OllamaSharp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.RavenDB.Client.Tests/CommunityToolkit.Aspire.RavenDB.Client.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.SeaweedFS.Client.Tests/CommunityToolkit.Aspire.SeaweedFS.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Sftp.Tests/CommunityToolkit.Aspire.Sftp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.SurrealDb.Tests/CommunityToolkit.Aspire.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
