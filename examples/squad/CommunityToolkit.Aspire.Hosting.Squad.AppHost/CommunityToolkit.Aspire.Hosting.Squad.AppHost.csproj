@@ -11,8 +11,22 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Squad.ApiApp\CommunityToolkit.Aspire.Hosting.Squad.ApiApp.csproj" />
   </ItemGroup>
 
+  <!--
+    The research-squad/ and dev-squad/ folders are Squad team scaffolding (.squad/,
+    .github/, .copilot/, .mcp.json), not C# source. The Aspire AppHost SDK's
+    default <Compile>, <Content>, <None>, and <EmbeddedResource> globs would
+    otherwise pull in any .cs / .csproj / .resx files the team creates inside
+    those folders during a session — which produces CS8802 ("Only one
+    compilation unit can have top-level statements") and CS0579
+    ("Duplicate AssemblyInfo") errors on the next build. Exclude them so the
+    squads stay strictly scaffolding and never accidentally pollute the AppHost
+    project's compile graph.
+  -->
   <ItemGroup>
-    <None Update="sample-squad\**" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Remove="research-squad\**;dev-squad\**" />
+    <Content Remove="research-squad\**;dev-squad\**" />
+    <None Remove="research-squad\**;dev-squad\**" />
+    <EmbeddedResource Remove="research-squad\**;dev-squad\**" />
   </ItemGroup>
 
 </Project>
