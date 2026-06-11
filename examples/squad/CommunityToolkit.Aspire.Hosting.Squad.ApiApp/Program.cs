@@ -55,16 +55,29 @@ builder.Services.AddOpenTelemetry()
 // key (Squad.Agents.AI 0.4.0 picks up ConnectionStrings:{name} directly).
 // No need to fetch the connection string, parse the URI, or pull SquadFolderPath
 // out by hand — the SDK does all of that.
-foreach (var (key, instructions) in new[]
-{
-    ("research-squad", "You are the coordinator of an AI/ML research squad. Be concise."),
-    ("dev-squad",      "You are the coordinator of a full-stack development squad. Be concise."),
-})
+//
+// Two important configuration bits that make the coordinator behave the way it
+// does when you run `copilot --agent squad` in a terminal:
+//
+//   --agent squad        Tells the Copilot CLI to load .github/agents/squad.agent.md
+//                        as the agent definition. Without this the CLI uses its
+//                        default agent and gets no squad-coordinator instructions,
+//                        so it role-plays the team in a single reply instead of
+//                        firing the `task` tool to spawn real subagents.
+//
+//   (no Instructions override) The terse "Be concise" instruction we used before
+//                        was overriding the full 1k-line squad.agent.md system
+//                        prompt (which is what teaches the coordinator to
+//                        eager-execute, fan out, and dispatch through the task
+//                        tool). Leaving Instructions unset lets the .agent.md
+//                        file own the system prompt.
+foreach (var key in new[] { "research-squad", "dev-squad" })
 {
     builder.Services.AddKeyedSquadAgent(key, opts =>
     {
         opts.AgentName = key;
-        opts.Instructions = instructions;
+        opts.CliArgs.Add("--agent");
+        opts.CliArgs.Add("squad");
     });
 
     // Optional: forward typed trace events to ILogger as structured logs. Telemetry
