@@ -72,8 +72,10 @@ public sealed class SquadResource : Resource, IResourceWithConnectionString
         }
 
         var content = File.ReadAllText(rosterPath);
-        var agents = AgentTableRowRegex.Matches(content)
-            .Concat(AgentLineRegex.Matches(content))
+        // Cast<Match>() makes the LINQ binding explicit and portable across TFMs:
+        // older targets expose MatchCollection only as non-generic IEnumerable.
+        var agents = AgentTableRowRegex.Matches(content).Cast<Match>()
+            .Concat(AgentLineRegex.Matches(content).Cast<Match>())
             .Select(m => NormalizeAgentName(m.Groups[1].Value))
             .Where(agent => IsKnownAgent(teamRoot, agent))
             .Distinct()

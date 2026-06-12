@@ -4,8 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Squad.Tests;
 
-public class SquadResourceCreationTests
+public class SquadResourceCreationTests : IDisposable
 {
+    // Track every temp dir created during a test so the disposer can delete them.
+    // Prevents test residue from accumulating in %TEMP% across runs (especially in CI).
+    private readonly List<string> _tempRoots = new();
+
     [Fact]
     public void AddSquad_RegistersSquadResource_WithGivenName()
     {
@@ -100,16 +104,35 @@ public class SquadResourceCreationTests
         Assert.Contains("protocol=maf-1.0", expression);
     }
 
+    public void Dispose()
+    {
+        foreach (var dir in _tempRoots)
+        {
+            try
+            {
+                if (Directory.Exists(dir))
+                {
+                    Directory.Delete(dir, recursive: true);
+                }
+            }
+            catch
+            {
+                // Best-effort cleanup. Never let teardown fail a test run.
+            }
+        }
+    }
+
     // Helpers
 
-    private static string CreateEmptyTeamRoot()
+    private string CreateEmptyTeamRoot()
     {
         var dir = Path.Combine(Path.GetTempPath(), "ctk-aspire-squad-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
+        _tempRoots.Add(dir);
         return dir;
     }
 
-    private static string CreateTeamRootWithRoster(string teamMd, IEnumerable<string> agentNames)
+    private string CreateTeamRootWithRoster(string teamMd, IEnumerable<string> agentNames)
     {
         var root = CreateEmptyTeamRoot();
         var squadDir = Path.Combine(root, ".squad");

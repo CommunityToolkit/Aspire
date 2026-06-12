@@ -272,21 +272,26 @@ public static class SquadBuilderExtensions
 
     private static void StartConsoleWindow(string workingDirectory, string windowTitle, string copilotCommand)
     {
+        // Launch PowerShell directly with UseShellExecute=true (which opens a new console window
+        // for non-console parents) instead of going through `cmd /c start "<title>" ...`.
+        // `start` treats the first quoted argument as the window title, but cmd's quote-stripping
+        // rules make passing a title that contains spaces (e.g., "Copilot - research-squad")
+        // fragile — the title can be swallowed into the command. Setting the title inside the new
+        // shell via $Host.UI.RawUI.WindowTitle removes that fragility entirely.
+        var escapedTitle = windowTitle.Replace("'", "''");
+        var inlineCommand = $"$Host.UI.RawUI.WindowTitle = '{escapedTitle}'; {copilotCommand}";
+
         var startInfo = new ProcessStartInfo
         {
-            FileName = "cmd.exe",
+            FileName = "powershell.exe",
             WorkingDirectory = workingDirectory,
-            UseShellExecute = false,
+            UseShellExecute = true,
         };
 
-        startInfo.ArgumentList.Add("/c");
-        startInfo.ArgumentList.Add("start");
-        startInfo.ArgumentList.Add(windowTitle);
-        startInfo.ArgumentList.Add("powershell.exe");
         startInfo.ArgumentList.Add("-NoLogo");
         startInfo.ArgumentList.Add("-NoExit");
         startInfo.ArgumentList.Add("-Command");
-        startInfo.ArgumentList.Add(copilotCommand);
+        startInfo.ArgumentList.Add(inlineCommand);
 
         Process.Start(startInfo);
     }
