@@ -5,6 +5,14 @@
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
+    <PackageVersion Include="Squad.Agents.AI" Version="0.5.1-preview.8" />
+    <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
+         Microsoft.Agents.AI.GitHub.Copilot preview ships with the buildTransitive
+         bridge from https://github.com/microsoft/agent-framework/pull/6457 (merged
+         2026-06-10). Without it, copilot.exe never lands in bin/.../runtimes/
+         {rid}/native/ and the SDK throws on first RunAsync. Drop this entry once
+         MAF cuts the next preview. -->
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.0" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />

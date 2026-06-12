@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Squad/CommunityToolkit.Aspire.Hosting.Squad.csproj" />
+  </Folder>
+  <Folder Name="/examples/">
+    <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.AppHost/CommunityToolkit.Aspire.Hosting.Squad.AppHost.csproj" />
+    <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.ApiApp/CommunityToolkit.Aspire.Hosting.Squad.ApiApp.csproj" />
+    <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Squad.Tests/CommunityToolkit.Aspire.Hosting.Squad.Tests.csproj" />
+  </Folder>
+</Solution>

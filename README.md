@@ -56,6 +56,7 @@ This repository contains the source code for the Aspire Community Toolkit, a col
 | - **Learn More**: [`Hosting.Elasticsearch.Extensions`][elasticsearch-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields]][elasticsearch-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions][elasticsearch-ext-shields-preview]][elasticsearch-ext-nuget-preview]      | An integration that contains some additional extensions for hosting Elasticsearch container.                                                                                |
 | - **Learn More**: [`Hosting.Umami`][umami-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields]][umami-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields-preview]][umami-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [Umami](https://umami.is/) container.                                                                                 |
 | - **Learn More**: [`Hosting.Azure.Extensions`][azure-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Azure.Extensions][azure-ext-shields]][azure-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Azure.Extensions][azure-ext-shields-preview]][azure-ext-nuget-preview]                                              | An integration that contains some additional extensions for hosting Azure container.                                                                                    |
+| - **Learn More**: [`Hosting.Squad`][squad-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Squad][squad-shields]][squad-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Squad][squad-shields-preview]][squad-nuget-preview]                                                                                          | An Aspire hosting integration that models a [Squad](https://github.com/bradygaster/squad) AI-agent team as a first-class resource.                                                                                  |
 
 ## 🙌 Getting Started
 
@@ -298,3 +299,8 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [azure-ext-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Extensions/
 [azure-ext-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Azure.Extensions?label=nuget%20(preview)
 [azure-ext-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Azure.Extensions/absoluteLatest
+[squad-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-squad
+[squad-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Squad
+[squad-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Squad/
+[squad-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Squad?label=nuget%20(preview)
+[squad-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Squad/absoluteLatest
