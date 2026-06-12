@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.MongoDB" />
+    <PackageReference Include="MessagePack" />
     <PackageReference Include="MongoDB.Driver" />
     <PackageReference Include="SharpCompress" />
   </ItemGroup>

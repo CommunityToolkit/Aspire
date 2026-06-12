@@ -5,4 +5,7 @@
     <ProjectReference Include="../../examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.AppHost/CommunityToolkit.Aspire.Hosting.Stripe.AppHost.csproj" />
     <ProjectReference Include="../CommunityToolkit.Aspire.Testing/CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 </Project>

@@ -7,4 +7,7 @@
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.DbGate\DbGateContainerImageTags.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 </Project>
