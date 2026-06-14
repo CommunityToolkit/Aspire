@@ -28,7 +28,17 @@ The connection string injected into the referencing resource is the Kafka bootst
 var redpanda = builder.AddRedPanda("redpanda", port: 9092);
 ```
 
-### Example 3: Persist data with a volume or bind mount
+### Example 3: Tune the broker CPU and memory
+
+```csharp
+var redpanda = builder.AddRedPanda("redpanda", options =>
+{
+    options.CpuCount = 2;     // Redpanda --smp, defaults to 1
+    options.Memory = "2G";    // Redpanda --memory, defaults to "1G"
+});
+```
+
+### Example 4: Persist data with a volume or bind mount
 
 ```csharp
 var redpanda = builder.AddRedPanda("redpanda")
@@ -40,7 +50,7 @@ var redpanda = builder.AddRedPanda("redpanda")
                       .WithDataBindMount("./redpanda-data");
 ```
 
-### Example 4: Add the Redpanda Console web UI
+### Example 5: Add the Redpanda Console web UI
 
 ```csharp
 var redpanda = builder.AddRedPanda("redpanda")

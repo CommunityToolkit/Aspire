@@ -33,6 +33,48 @@ public static class RedPandaBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
 
+        return builder.AddRedPandaCore(name, new RedPandaServerOptions(), port);
+    }
+
+    /// <summary>
+    /// Adds a Redpanda container resource to the application, using a delegate to configure broker options
+    /// such as the CPU and memory limits. Redpanda is a Kafka API compatible streaming platform, so the
+    /// resource can be referenced by any Kafka client integration.
+    /// </summary>
+    /// <remarks>
+    /// This version of the package defaults to the <inheritdoc cref="RedPandaContainerImageTags.Tag"/> tag of the <inheritdoc cref="RedPandaContainerImageTags.Image"/> container image.
+    /// </remarks>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to add the resource to.</param>
+    /// <param name="name">The name of the resource. This name is used as the connection string name when referenced in a dependency.</param>
+    /// <param name="configureOptions">A delegate that configures the <see cref="RedPandaServerOptions"/> for the broker.</param>
+    /// <param name="port">The host port that the Kafka API is exposed on. If <see langword="null"/> a random port is assigned.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "Action<RedPandaServerOptions> is not ATS-compatible. Use the AddRedPanda(builder, name, port) overload instead.")]
+    public static IResourceBuilder<RedPandaServerResource> AddRedPanda(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        Action<RedPandaServerOptions> configureOptions,
+        int? port = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        RedPandaServerOptions options = new();
+        configureOptions(options);
+
+        return builder.AddRedPandaCore(name, options, port);
+    }
+
+    private static IResourceBuilder<RedPandaServerResource> AddRedPandaCore(
+        this IDistributedApplicationBuilder builder,
+        string name,
+        RedPandaServerOptions options,
+        int? port)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(options.CpuCount, $"{nameof(options)}.{nameof(options.CpuCount)}");
+        ArgumentException.ThrowIfNullOrEmpty(options.Memory, $"{nameof(options)}.{nameof(options.Memory)}");
+
         RedPandaServerResource resource = new(name);
 
         return builder.AddResource(resource)
@@ -43,7 +85,7 @@ public static class RedPandaBuilderExtensions
             .WithHttpEndpoint(targetPort: RedPandaServerResource.SchemaRegistryPort, name: RedPandaServerResource.SchemaRegistryEndpointName)
             .WithHttpEndpoint(targetPort: RedPandaServerResource.AdminPort, name: RedPandaServerResource.AdminEndpointName)
             .WithEntrypoint("/usr/bin/rpk")
-            .WithArgs(context => ConfigureRedPandaArgs(context, resource))
+            .WithArgs(context => ConfigureRedPandaArgs(context, resource, options))
             .WithHttpHealthCheck("/v1/status/ready", endpointName: RedPandaServerResource.AdminEndpointName);
     }
 
@@ -135,7 +177,7 @@ public static class RedPandaBuilderExtensions
         return builder.WithEndpoint(RedPandaConsoleContainerResource.HttpEndpointName, endpoint => endpoint.Port = port);
     }
 
-    private static void ConfigureRedPandaArgs(CommandLineArgsCallbackContext context, RedPandaServerResource resource)
+    private static void ConfigureRedPandaArgs(CommandLineArgsCallbackContext context, RedPandaServerResource resource, RedPandaServerOptions options)
     {
         // Start a single-node Redpanda broker tuned for local development.
         // See https://docs.redpanda.com/current/reference/rpk/rpk-redpanda/rpk-redpanda-start/
@@ -144,9 +186,9 @@ public static class RedPandaBuilderExtensions
         context.Args.Add("--mode");
         context.Args.Add("dev-container");
         context.Args.Add("--smp");
-        context.Args.Add("1");
+        context.Args.Add(options.CpuCount.ToString(CultureInfo.InvariantCulture));
         context.Args.Add("--memory");
-        context.Args.Add("1G");
+        context.Args.Add(options.Memory);
 
         // Two Kafka listeners: an "internal" listener for container-to-container traffic over the
         // Aspire container network, and an "external" listener that is reachable from the host.
