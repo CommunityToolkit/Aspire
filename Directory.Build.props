@@ -55,5 +55,7 @@
     <!-- SQLitePCLRaw.lib.e_sqlite3 <= 2.1.11 depends on vulnerable SQLite < 3.50.2 (memory corruption).
          No patched NuGet version available yet. Suppress until upstream ships a fix. -->
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+    <!-- MessagePack 2.5.192 is pulled transitively via Aspire.Hosting; the advisory is suppressed repo-wide. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-hv8m-jj95-wg3x" />
   </ItemGroup>
 </Project>
