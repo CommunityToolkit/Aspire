@@ -104,6 +104,38 @@ public class ResourceCreationTests
     }
 
     [Fact]
+    public void WithKafkaUIAddsKafkaUiResource()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        builder.AddRedPanda("redpanda").WithKafkaUI();
+
+        using DistributedApplication app = builder.Build();
+        DistributedApplicationModel appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        RedPandaKafkaUiContainerResource kafkaUi = Assert.Single(appModel.Resources.OfType<RedPandaKafkaUiContainerResource>());
+        Assert.Equal("redpanda-kafka-ui", kafkaUi.Name);
+
+        Assert.True(kafkaUi.TryGetLastAnnotation(out ContainerImageAnnotation? image));
+        Assert.Equal("kafbat/kafka-ui", image.Image);
+        Assert.Equal("v1.5.0", image.Tag);
+        Assert.Equal("docker.io", image.Registry);
+    }
+
+    [Fact]
+    public void WithKafkaUIHostPortSetsEndpointPort()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        builder.AddRedPanda("redpanda").WithKafkaUI(kafkaUi => kafkaUi.WithHostPort(9000));
+
+        using DistributedApplication app = builder.Build();
+        DistributedApplicationModel appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        RedPandaKafkaUiContainerResource kafkaUi = Assert.Single(appModel.Resources.OfType<RedPandaKafkaUiContainerResource>());
+        EndpointAnnotation http = kafkaUi.GetEndpoint("http").EndpointAnnotation;
+        Assert.Equal(9000, http.Port);
+    }
+
+    [Fact]
     public void WithConsoleHostPortSetsEndpointPort()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
