@@ -52,5 +52,7 @@
 
   <ItemGroup>
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-4mjw-xr5x-prpc" />
+    <!-- MessagePack 2.5.192 is pulled transitively via Aspire.Hosting; the advisory is suppressed repo-wide. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-hv8m-jj95-wg3x" />
   </ItemGroup>
 </Project>
