@@ -134,4 +134,88 @@ public class ResourceCreationTests
         Assert.Equal("/var/lib/redpanda/data", mount.Target);
         Assert.Equal(ContainerMountType.Volume, mount.Type);
     }
+
+    [Fact]
+    public void WithDataBindMountAddsBindMountAnnotation()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        builder.AddRedPanda("redpanda").WithDataBindMount("./redpanda-data");
+
+        using DistributedApplication app = builder.Build();
+        DistributedApplicationModel appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        RedPandaServerResource resource = Assert.Single(appModel.Resources.OfType<RedPandaServerResource>());
+
+        Assert.True(resource.TryGetAnnotationsOfType(out IEnumerable<ContainerMountAnnotation>? mounts));
+        ContainerMountAnnotation mount = Assert.Single(mounts!);
+        Assert.EndsWith("redpanda-data", mount.Source);
+        Assert.Equal("/var/lib/redpanda/data", mount.Target);
+        Assert.Equal(ContainerMountType.BindMount, mount.Type);
+        Assert.False(mount.IsReadOnly);
+    }
+
+    [Fact]
+    public async Task AddRedPandaUsesDefaultCpuAndMemoryArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        builder.AddRedPanda("redpanda");
+
+        using DistributedApplication app = builder.Build();
+        DistributedApplicationModel appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        RedPandaServerResource resource = Assert.Single(appModel.Resources.OfType<RedPandaServerResource>());
+
+        IList<object> args = await GetRedPandaArgsAsync(resource);
+
+        AssertArgValue(args, "--smp", "1");
+        AssertArgValue(args, "--memory", "1G");
+    }
+
+    [Fact]
+    public async Task AddRedPandaWithOptionsConfiguresCpuAndMemoryArgs()
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        builder.AddRedPanda("redpanda", options =>
+        {
+            options.CpuCount = 4;
+            options.Memory = "2G";
+        });
+
+        using DistributedApplication app = builder.Build();
+        DistributedApplicationModel appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        RedPandaServerResource resource = Assert.Single(appModel.Resources.OfType<RedPandaServerResource>());
+
+        IList<object> args = await GetRedPandaArgsAsync(resource);
+
+        AssertArgValue(args, "--smp", "4");
+        AssertArgValue(args, "--memory", "2G");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void AddRedPandaThrowsWhenCpuCountIsNotPositive(int cpuCount)
+    {
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        Assert.Throws<ArgumentOutOfRangeException>(() => builder.AddRedPanda("redpanda", options => options.CpuCount = cpuCount));
+    }
+
+    private static async Task<IList<object>> GetRedPandaArgsAsync(RedPandaServerResource resource)
+    {
+        CommandLineArgsCallbackAnnotation annotation = Assert.Single(resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>());
+        CommandLineArgsCallbackContext context = new([], resource, CancellationToken.None)
+        {
+            ExecutionContext = new DistributedApplicationExecutionContext(DistributedApplicationOperation.Run)
+        };
+        await annotation.Callback(context);
+        return context.Args;
+    }
+
+    private static void AssertArgValue(IList<object> args, string flag, string expectedValue)
+    {
+        int index = args.IndexOf(flag);
+        Assert.True(index >= 0 && index + 1 < args.Count, $"Expected argument '{flag}' to be present with a value.");
+        Assert.Equal(expectedValue, args[index + 1]);
+    }
 }
