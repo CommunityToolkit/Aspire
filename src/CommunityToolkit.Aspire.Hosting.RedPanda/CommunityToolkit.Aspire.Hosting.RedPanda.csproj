@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire hosting package for the Redpanda Kafka-compatible streaming platform.</Description>
+    <AdditionalPackageTags>hosting redpanda kafka streaming messaging</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.RedPanda.Tests" />
+  </ItemGroup>
+
+</Project>
