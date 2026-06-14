@@ -59,6 +59,15 @@ var redpanda = builder.AddRedPanda("redpanda")
 
 The console is configured automatically to connect to the broker's Kafka API, Schema Registry, and Admin API.
 
+### Example 6: Add the Kafka UI web UI
+
+```csharp
+var redpanda = builder.AddRedPanda("redpanda")
+                      .WithKafkaUI(kafkaUi => kafkaUi.WithHostPort(9000));
+```
+
+`WithKafkaUI` runs the same Kafka management UI (the `kafbat/kafka-ui` image) used by the official Aspire Kafka integration. It is wired automatically to the broker's Kafka API and Schema Registry, and can be used as an alternative to the Redpanda Console.
+
 ## Endpoints
 
 | Name             | Description                                  |
@@ -70,4 +79,4 @@ The console is configured automatically to connect to the broker's Kafka API, Sc
 
 ## Upstream Image
 
-This integration pins the `redpandadata/redpanda` image (from `docker.redpanda.com`) to a specific version tag (`v26.1.10`) rather than a floating tag, and the optional console uses `redpandadata/console` pinned to `v3.7.4`. Redpanda publishes immutable, fully-versioned tags (`vYY.M.P`); update the pinned tags to adopt newer releases.
+This integration pins the `redpandadata/redpanda` image (from `docker.redpanda.com`) to a specific version tag (`v26.1.10`) rather than a floating tag, and the optional console uses `redpandadata/console` pinned to `v3.7.4`. Redpanda publishes immutable, fully-versioned tags (`vYY.M.P`); update the pinned tags to adopt newer releases. The optional Kafka UI uses `kafbat/kafka-ui` (from `docker.io`) pinned to `v1.5.0`.

@@ -177,6 +177,59 @@ public static class RedPandaBuilderExtensions
         return builder.WithEndpoint(RedPandaConsoleContainerResource.HttpEndpointName, endpoint => endpoint.Port = port);
     }
 
+    /// <summary>
+    /// Adds a Kafka UI container to the application, configured to connect to the Redpanda broker. This is the
+    /// same Kafka management UI (the <c>kafbat/kafka-ui</c> image) used by the official Aspire Kafka integration,
+    /// so it works against any Kafka API compatible broker.
+    /// </summary>
+    /// <remarks>
+    /// This version of the package defaults to the <inheritdoc cref="RedPandaContainerImageTags.KafkaUiTag"/> tag of the <inheritdoc cref="RedPandaContainerImageTags.KafkaUiImage"/> container image.
+    /// </remarks>
+    /// <param name="builder">The Redpanda server resource builder.</param>
+    /// <param name="configureContainer">An optional callback to configure the Kafka UI container resource.</param>
+    /// <param name="containerName">The name of the container (optional).</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/> for the Redpanda server resource.</returns>
+    [AspireExport(RunSyncOnBackgroundThread = true)]
+    public static IResourceBuilder<RedPandaServerResource> WithKafkaUI(
+        this IResourceBuilder<RedPandaServerResource> builder,
+        Action<IResourceBuilder<RedPandaKafkaUiContainerResource>>? configureContainer = null,
+        string? containerName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        containerName ??= $"{builder.Resource.Name}-kafka-ui";
+
+        RedPandaKafkaUiContainerResource kafkaUi = new(containerName);
+
+        IResourceBuilder<RedPandaKafkaUiContainerResource> kafkaUiBuilder = builder.ApplicationBuilder.AddResource(kafkaUi)
+            .WithImage(RedPandaContainerImageTags.KafkaUiImage, RedPandaContainerImageTags.KafkaUiTag)
+            .WithImageRegistry(RedPandaContainerImageTags.KafkaUiRegistry)
+            .WithHttpEndpoint(targetPort: RedPandaKafkaUiContainerResource.HttpPort, name: RedPandaKafkaUiContainerResource.HttpEndpointName)
+            .WithEnvironment(context => ConfigureKafkaUiContainer(context, builder.Resource))
+            .WaitFor(builder)
+            .ExcludeFromManifest();
+
+        configureContainer?.Invoke(kafkaUiBuilder);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures the host port that the Kafka UI resource is exposed on instead of using a randomly assigned port.
+    /// </summary>
+    /// <param name="builder">The resource builder for the Kafka UI.</param>
+    /// <param name="port">The port to bind on the host. If <see langword="null"/> a random port is assigned.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "The exported 'withHostPort' capability is already provided by the RedPandaConsoleContainerResource overload; this overload remains available to C# callers.")]
+    public static IResourceBuilder<RedPandaKafkaUiContainerResource> WithHostPort(
+        this IResourceBuilder<RedPandaKafkaUiContainerResource> builder,
+        int? port)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithEndpoint(RedPandaKafkaUiContainerResource.HttpEndpointName, endpoint => endpoint.Port = port);
+    }
+
     private static void ConfigureRedPandaArgs(CommandLineArgsCallbackContext context, RedPandaServerResource resource, RedPandaServerOptions options)
     {
         // Start a single-node Redpanda broker tuned for local development.
@@ -233,6 +286,23 @@ public static class RedPandaBuilderExtensions
         context.EnvironmentVariables["KAFKA_SCHEMAREGISTRY_URLS"] = schemaRegistry;
         context.EnvironmentVariables["REDPANDA_ADMINAPI_ENABLED"] = "true";
         context.EnvironmentVariables["REDPANDA_ADMINAPI_URLS"] = adminApi;
+    }
+
+    private static void ConfigureKafkaUiContainer(EnvironmentCallbackContext context, RedPandaServerResource resource)
+    {
+        // Kafka UI runs in its own container, so it reaches Redpanda over the default Aspire container
+        // network in run mode (using the resource name + target ports) and over the host otherwise.
+        var bootstrapServers = context.ExecutionContext.IsRunMode
+            ? ReferenceExpression.Create($"{resource.Name}:{resource.InternalEndpoint.Property(EndpointProperty.TargetPort)}")
+            : ReferenceExpression.Create($"{resource.InternalEndpoint.Property(EndpointProperty.HostAndPort)}");
+
+        var schemaRegistry = context.ExecutionContext.IsRunMode
+            ? ReferenceExpression.Create($"http://{resource.Name}:{resource.SchemaRegistryEndpoint.Property(EndpointProperty.TargetPort)}")
+            : ReferenceExpression.Create($"{resource.SchemaRegistryEndpoint.Property(EndpointProperty.Scheme)}://{resource.SchemaRegistryEndpoint.Property(EndpointProperty.HostAndPort)}");
+
+        context.EnvironmentVariables["KAFKA_CLUSTERS_0_NAME"] = resource.Name;
+        context.EnvironmentVariables["KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS"] = bootstrapServers;
+        context.EnvironmentVariables["KAFKA_CLUSTERS_0_SCHEMAREGISTRY"] = schemaRegistry;
     }
 }
 
