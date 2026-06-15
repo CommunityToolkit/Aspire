@@ -4,6 +4,8 @@ using CommunityToolkit.Aspire.Hosting.RustFs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport is experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -24,6 +26,7 @@ public static class RustFsBuilderExtensions
     /// <param name="port">The host port for the RustFs S3-compatible API endpoint.</param>
     /// <param name="consolePort">The host port for the RustFs console endpoint.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{RustFsResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<RustFsResource> AddRustFs(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -91,6 +94,7 @@ public static class RustFsBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport]
     public static IResourceBuilder<RustFsResource> WithDataVolume(this IResourceBuilder<RustFsResource> builder, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -120,6 +124,7 @@ public static class RustFsBuilderExtensions
     /// </code>
     /// </example>
     /// </remarks>
+    [AspireExport]
     public static IResourceBuilder<RustFsResource> WithDataBindMount(this IResourceBuilder<RustFsResource> builder, string source)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -135,6 +140,7 @@ public static class RustFsBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="region">The AWS signing region (e.g. <c>us-east-1</c>, <c>ap-northeast-1</c>).</param>
     /// <returns>The <see cref="IResourceBuilder{RustFsResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<RustFsResource> WithSigningRegion(this IResourceBuilder<RustFsResource> builder, string region)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -151,6 +157,7 @@ public static class RustFsBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="bucketName">The name of the bucket to create.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/> for the bucket resource.</returns>
+    [AspireExport]
     public static IResourceBuilder<RustFsBucketResource> AddBucket(this IResourceBuilder<RustFsResource> builder, string bucketName)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -169,6 +176,7 @@ public static class RustFsBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="bucketNames">The names of the buckets to create.</param>
     /// <returns>The original <see cref="IResourceBuilder{RustFsResource}"/> for further chaining.</returns>
+    [AspireExport("addBuckets")]
     public static IResourceBuilder<RustFsResource> AddBucket(this IResourceBuilder<RustFsResource> builder, IReadOnlyList<string> bucketNames)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -342,3 +350,5 @@ public static class RustFsBuilderExtensions
     private static string SanitizeForResourceName(string name) =>
         new(name.Select(static c => char.IsLetterOrDigit(c) || c == '-' ? c : '-').ToArray());
 }
+
+#pragma warning restore ASPIREATS001 // AspireExport is experimental
