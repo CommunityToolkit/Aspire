@@ -56,14 +56,13 @@ public sealed class LogtoResource(string name)
     /// connection details formatted as a string expression.
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create(
-            $"Endpoint={PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+            $"Endpoint={PrimaryEndpoint.Property(EndpointProperty.Url)}");
 
     /// <summary>
     /// Gets the connection URI expression for the Logto container resource.
     /// </summary>
     public ReferenceExpression UriExpression =>
-        ReferenceExpression.Create(
-            $"{PrimaryEndpoint.Property(EndpointProperty.Scheme)}://{PrimaryEndpoint.Property(EndpointProperty.Host)}:{PrimaryEndpoint.Property(EndpointProperty.Port)}");
+        ReferenceExpression.Create($"{PrimaryEndpoint.Property(EndpointProperty.Url)}");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {

@@ -18,8 +18,8 @@ public class AppHostTest(
             .WaitAsync(TimeSpan.FromMinutes(5));
 
         var httpClient = fixture.CreateHttpClient(resourceName);
-        var response = await httpClient.GetAsync("/");
+        var response = await httpClient.GetAsync("/api/status");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 }

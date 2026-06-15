@@ -1,10 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres")
-    .WithDataVolume();
+var postgres = builder.AddPostgres("postgres");
 
-var cache = builder.AddRedis("redis")
-    .WithDataVolume();
+var cache = builder.AddRedis("redis");
 
 var logto = builder.AddLogto("logto", postgres)
     .WithRedis(cache)
