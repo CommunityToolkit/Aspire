@@ -1,4 +1,4 @@
-﻿<Project Sdk="Aspire.AppHost.Sdk/13.4.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -13,6 +13,10 @@
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Java.ApiApp/CommunityToolkit.Aspire.Hosting.Java.ApiApp.csproj" />
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Java.WebApp/CommunityToolkit.Aspire.Hosting.Java.WebApp.csproj" />
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Java\CommunityToolkit.Aspire.Hosting.Java.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
 </Project>

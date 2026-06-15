@@ -135,6 +135,8 @@
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+    <!-- Override to address https://github.com/advisories/GHSA-hv8m-jj95-wg3x -->
+    <PackageVersion Include="MessagePack" Version="2.5.301" />
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
     <PackageVersion Include="MongoDB.Driver" Version="3.8.1" />
     <!-- Override to address  https://github.com/advisories/GHSA-6c8g-7p36-r338 -->

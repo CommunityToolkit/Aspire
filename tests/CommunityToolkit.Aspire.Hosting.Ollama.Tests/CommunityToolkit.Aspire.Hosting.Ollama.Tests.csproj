@@ -7,5 +7,9 @@
     <ProjectReference Include="..\..\tests-app-hosts\Ollama.AppHost\Ollama.AppHost.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
 </Project>
  

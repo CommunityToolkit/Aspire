@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector\CommunityToolkit.Aspire.Hosting.OpenTelemetryCollector.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
 </Project>

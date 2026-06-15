@@ -6,5 +6,9 @@
     <ProjectReference Include="..\..\examples\dapr\CommunityToolkit.Aspire.Hosting.Dapr.AppHost\CommunityToolkit.Aspire.Hosting.Dapr.AppHost.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
 
 </Project>

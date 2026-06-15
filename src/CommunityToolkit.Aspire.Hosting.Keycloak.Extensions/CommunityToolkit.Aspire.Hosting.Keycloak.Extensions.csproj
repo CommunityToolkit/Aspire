@@ -10,6 +10,7 @@
       <PackageReference Include="Aspire.Hosting" />
       <PackageReference Include="Aspire.Hosting.Keycloak" />
       <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+      <PackageReference Include="MessagePack" />
     </ItemGroup>
 
 </Project>
