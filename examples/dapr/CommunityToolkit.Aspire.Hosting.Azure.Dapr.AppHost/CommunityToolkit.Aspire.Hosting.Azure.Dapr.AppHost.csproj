@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.4.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,6 +14,10 @@
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceB/CommunityToolkit.Aspire.Hosting.Dapr.ServiceB.csproj" />
     <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Dapr.ServiceC/CommunityToolkit.Aspire.Hosting.Dapr.ServiceC.csproj" />
 
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
 </Project>

@@ -12,8 +12,8 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).4.0</AspireVersion>
-    <AspirePreviewSuffix>-preview.1.26281.18</AspirePreviewSuffix> <!-- Used for Aspire packages that still only ship as prerelease packages on nuget.org. -->
+    <AspireVersion>$(AspireMajorVersion).4.3</AspireVersion>
+    <AspirePreviewSuffix>-preview.1.26305.13</AspirePreviewSuffix> <!-- Used for Aspire packages that still only ship as prerelease packages on nuget.org. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
     <DotNetExtensionsVersion>10.0.8</DotNetExtensionsVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
