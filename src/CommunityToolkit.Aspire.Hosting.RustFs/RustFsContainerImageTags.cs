@@ -6,6 +6,6 @@ internal static class RustFsContainerImageTags
     public const string Registry = "docker.io";
     /// <summary>rustfs/rustfs</summary>
     public const string Image = "rustfs/rustfs";
-    /// <summary>1.0.0-alpha.82</summary>
-    public const string Tag = "1.0.0-alpha.82";
+    /// <summary>1.0.0-beta.8</summary>
+    public const string Tag = "1.0.0-beta.8";
 }
