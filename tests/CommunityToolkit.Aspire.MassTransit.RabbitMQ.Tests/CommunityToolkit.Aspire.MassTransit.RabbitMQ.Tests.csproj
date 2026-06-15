@@ -13,4 +13,9 @@
       <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.MassTransit.RabbitMQ\CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
     </ItemGroup>
 
+
+    <ItemGroup>
+      <PackageReference Include="MessagePack" />
+    </ItemGroup>
+
 </Project>

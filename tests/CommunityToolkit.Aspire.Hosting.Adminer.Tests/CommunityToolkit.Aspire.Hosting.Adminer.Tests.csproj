@@ -9,4 +9,8 @@
     <Compile Include="$(SharedDir)\Adminer\AdminerLoginServer.cs" Link="AdminerLoginServer.cs" />
     <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.Adminer\AdminerContainerImageTags.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 </Project>

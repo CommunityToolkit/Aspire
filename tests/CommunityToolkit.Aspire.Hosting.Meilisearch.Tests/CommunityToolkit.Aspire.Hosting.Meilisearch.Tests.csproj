@@ -11,5 +11,9 @@
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Meilisearch\CommunityToolkit.Aspire.Meilisearch.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
   
 </Project>
