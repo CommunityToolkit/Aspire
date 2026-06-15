@@ -11,4 +11,8 @@
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.K3s\CommunityToolkit.Aspire.Hosting.K3s.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
 </Project>

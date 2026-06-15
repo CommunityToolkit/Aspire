@@ -9,11 +9,11 @@
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="KubernetesClient" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.K3s.Tests" />
   </ItemGroup>
-
 
 </Project>
