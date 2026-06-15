@@ -3,5 +3,8 @@
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite\CommunityToolkit.Aspire.Microsoft.EntityFrameworkCore.Sqlite.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 
 </Project>
