@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Logto.Client\CommunityToolkit.Aspire.Logto.Client.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MessagePack" />
+    </ItemGroup>
+
+</Project>
