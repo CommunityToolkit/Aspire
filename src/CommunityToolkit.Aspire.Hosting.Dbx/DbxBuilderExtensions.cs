@@ -59,6 +59,7 @@ public static class DbxBuilderExtensions
                                            .WithHttpEndpoint(targetPort: 4224, port: port, name: DbxContainerResource.PrimaryEndpointName)
                                            .WithUrlForEndpoint(DbxContainerResource.PrimaryEndpointName, e => e.DisplayText = "dbx Dashboard")
                                            .WithIconName("WindowDatabase")
+                                           .WithEnvironment("DBX_DISABLE_PASSWORD", "true")
                                            .ExcludeFromManifest();
 
         dbxContainerBuilder.WithContainerFiles(
