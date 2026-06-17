@@ -8,6 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SeaweedFS\CommunityToolkit.Aspire.Hosting.SeaweedFS.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\SeaweedFS.ApiService\SeaweedFS.ApiService.csproj" />
+    <PackageReference Include="MessagePack" />
+    
   </ItemGroup>
 
 </Project>

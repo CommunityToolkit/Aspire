@@ -103,12 +103,12 @@ filerGroup.MapGet("/list", async (SeaweedFSFilerClient filerClient) =>
 
 filerGroup.MapPost("/upload", async ([FromQuery] string fileName, [FromBody] string content, SeaweedFSFilerClient filerClient) =>
 {
-    StringContent stringContent = new(content);
+    StringContent stringContent = new(content, System.Text.Encoding.UTF8, "text/plain");
 
     string safeFileName = Uri.EscapeDataString(fileName.TrimStart('/'));
 
-    // Uploads the file directly to the root of the Filer
     HttpResponseMessage response = await filerClient.HttpClient.PutAsync($"/{safeFileName}", stringContent);
+
     response.EnsureSuccessStatusCode();
 
     return Results.Ok(new { Message = "File successfully uploaded via native Filer API." });
