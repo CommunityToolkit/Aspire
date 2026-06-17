@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AdditionalPackageTags>hosting bun javascript</AdditionalPackageTags>
-    <Description>An Aspire integration for hosting Bun apps.</Description>
+    <AdditionalPackageTags>hosting bun javascript deprecated</AdditionalPackageTags>
+    <Description>An Aspire integration for hosting Bun apps. DEPRECATED: Use Aspire.Hosting.JavaScript and builder.AddBunApp(...) instead. This package will be removed in a future release.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
 </Project>

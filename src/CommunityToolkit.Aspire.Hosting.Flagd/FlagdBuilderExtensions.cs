@@ -24,7 +24,7 @@ public static class FlagdBuilderExtensions
     /// <param name="ofrepPort">The host port for flagd OFREP endpoint. If not provided, a random port will be assigned.</param>
     /// <remarks>The flagd container requires a sync source to be configured.</remarks>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
-    [AspireExport("addFlagd", Description = "Adds a flagd container resource")]
+    [AspireExport]
     public static IResourceBuilder<FlagdResource> AddFlagd(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -80,7 +80,7 @@ public static class FlagdBuilderExtensions
     /// <param name="fileSource">The path to the host directory that contains the flag configuration file.</param>
     /// <param name="filename">The name of the flag configuration file. Defaults to "flagd.json".</param>
     /// <returns>The <see cref="IResourceBuilder{FlagdResource}"/>.</returns>
-    [AspireExport("withBindFileSync", Description = "Configures flagd to use a bind-mounted flag configuration file")]
+    [AspireExport]
     public static IResourceBuilder<FlagdResource> WithBindFileSync(
         this IResourceBuilder<FlagdResource> builder,
         string fileSource,

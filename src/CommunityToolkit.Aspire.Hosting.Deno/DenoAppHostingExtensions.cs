@@ -20,7 +20,7 @@ public static class DenoAppHostingExtensions
     /// <param name="permissionFlags">The permissions to grant to the program run.</param>
     /// <param name="args">The arguments to pass to the command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("addDenoApp", Description = "Adds a Deno app resource")]
+    [AspireExport]
     public static IResourceBuilder<DenoAppResource> AddDenoApp(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -56,7 +56,7 @@ public static class DenoAppHostingExtensions
     /// <param name="taskName">The deno task to execute. Defaults to "start".</param>
     /// <param name="args">The arguments to pass to the command.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport("addDenoTask", Description = "Adds a Deno task resource")]
+    [AspireExport]
     public static IResourceBuilder<DenoAppResource> AddDenoTask(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
@@ -96,7 +96,7 @@ public static class DenoAppHostingExtensions
     /// <summary>
     /// Ensures the Deno packages are installed before the application starts using Deno as the package manager.
     /// </summary>
-    [AspireExport("withDenoPackageInstallation", Description = "Ensures Deno packages are installed before the application starts.")]
+    [AspireExport]
     internal static IResourceBuilder<DenoAppResource> WithDenoPackageInstallation(this IResourceBuilder<DenoAppResource> resource)
         => WithDenoPackageInstallationCore(resource, configureInstaller: null);
 

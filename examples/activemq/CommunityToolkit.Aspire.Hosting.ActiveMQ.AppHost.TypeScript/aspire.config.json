@@ -1,10 +1,10 @@
 {
   "appHost": {
-    "path": "apphost.ts",
+    "path": "apphost.mts",
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.3.0"
+    "version": "13.4.3"
   },
   "profiles": {
     "https": {
@@ -19,3 +19,4 @@
     "CommunityToolkit.Aspire.Hosting.ActiveMQ": "../../../src/CommunityToolkit.Aspire.Hosting.ActiveMQ/CommunityToolkit.Aspire.Hosting.ActiveMQ.csproj"
   }
 }
+

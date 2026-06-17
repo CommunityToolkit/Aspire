@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>client duckdb analytics olap ado.net</AdditionalPackageTags>
+    <Description>An Aspire client integration for the DuckDB.NET.Data package.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DuckDB.NET.Data.Full" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(SharedDir)\HealthChecksExtensions.cs" Link="Utils\HealthChecksExtensions.cs" />
+    <Compile Include="$(SharedDir)\ConnectionStringValidation.cs" Link="Utils\ConnectionStringValidation.cs" />
+  </ItemGroup>
+
+</Project>

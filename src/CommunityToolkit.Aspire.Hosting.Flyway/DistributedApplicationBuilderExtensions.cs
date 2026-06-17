@@ -1,6 +1,7 @@
 using Aspire.Hosting.ApplicationModel;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
+#pragma warning disable ASPIREEXPORT001 // AspireExport supports C# extension blocks even though the analyzer currently requires static methods.
 
 namespace Aspire.Hosting;
 
@@ -32,7 +33,7 @@ public static class DistributedApplicationBuilderExtensions
         /// </code>
         /// </example>
         /// </remarks>
-        [AspireExport("addFlyway", Description = "Adds a Flyway container resource")]
+        [AspireExport]
         public IResourceBuilder<FlywayResource> AddFlyway([ResourceName] string name, string migrationScriptsPath)
         {
             ArgumentNullException.ThrowIfNull(name);
@@ -55,3 +56,4 @@ public static class DistributedApplicationBuilderExtensions
 }
 
 #pragma warning restore ASPIREATS001
+#pragma warning restore ASPIREEXPORT001

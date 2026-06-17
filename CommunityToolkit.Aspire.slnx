@@ -33,6 +33,11 @@
   <Folder Name="/examples/deno/">
     <Project Path="examples/deno/CommunityToolkit.Aspire.Hosting.Deno.AppHost/CommunityToolkit.Aspire.Hosting.Deno.AppHost.csproj" />
   </Folder>
+  <Folder Name="/examples/duckdb/">
+    <Project Path="examples/duckdb/CommunityToolkit.Aspire.DuckDB.Api/CommunityToolkit.Aspire.DuckDB.Api.csproj" />
+    <Project Path="examples/duckdb/CommunityToolkit.Aspire.DuckDB.AppHost/CommunityToolkit.Aspire.DuckDB.AppHost.csproj" />
+    <Project Path="examples/duckdb/CommunityToolkit.Aspire.DuckDB.ServiceDefaults/CommunityToolkit.Aspire.DuckDB.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/examples/elasticsearch-ext/">
     <Project Path="examples/elasticsearch-ext/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.AppHost.csproj" />
   </Folder>
@@ -48,10 +53,6 @@
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ApiService.csproj" />
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.AppHost.csproj" />
     <Project Path="examples/goff/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.ServiceDefaults.csproj" />
-  </Folder>
-  <Folder Name="/examples/golang/">
-    <Project Path="examples/golang/CommunityToolkit.Aspire.Hosting.Golang.AppHost/CommunityToolkit.Aspire.Hosting.Golang.AppHost.csproj" />
-    <Project Path="examples/golang/CommunityToolkit.Aspire.Hosting.Golang.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Golang.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/java/">
     <Project Path="examples/java/CommunityToolkit.Aspire.Hosting.Java.ApiApp/CommunityToolkit.Aspire.Hosting.Java.ApiApp.csproj" />
@@ -82,6 +83,12 @@
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost/CommunityToolkit.Aspire.Hosting.LavinMQ.AppHost.csproj" />
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit/CommunityToolkit.Aspire.Hosting.LavinMQ.MassTransit.csproj" />
     <Project Path="examples/lavinmq/CommunityToolkit.Aspire.Hosting.LavinMQ.ServiceDefaults/CommunityToolkit.Aspire.Hosting.LavinMQ.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/examples/logto/">
+    <Project Path="examples/logto/CommunityToolkit.Aspire.Hosting.Logto.AppHost/CommunityToolkit.Aspire.Hosting.Logto.AppHost.csproj" />
+    <Project Path="examples/logto/CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Logto.ServiceDefaults.csproj" />
+    <Project Path="examples/logto/CommunityToolkit.Aspire.Logto.ClientJWT/CommunityToolkit.Aspire.Logto.ClientJWT.csproj" />
+    <Project Path="examples/logto/CommunityToolkit.Aspire.Logto.ClientOIDC/CommunityToolkit.Aspire.Logto.ClientOIDC.csproj" />
   </Folder>
   <Folder Name="/examples/mailpit/">
     <Project Path="examples/mailpit/CommunityToolkit.Aspire.Hosting.MailPit.AppHost/CommunityToolkit.Aspire.Hosting.MailPit.AppHost.csproj" />
@@ -210,6 +217,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Bun/CommunityToolkit.Aspire.Hosting.Bun.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.DbGate/CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Deno/CommunityToolkit.Aspire.Hosting.Deno.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.DuckDB/CommunityToolkit.Aspire.Hosting.DuckDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flagd/CommunityToolkit.Aspire.Hosting.Flagd.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Flyway/CommunityToolkit.Aspire.Hosting.Flyway.csproj" />
@@ -221,6 +229,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Kind/CommunityToolkit.Aspire.Hosting.Kind.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.KurrentDB/CommunityToolkit.Aspire.Hosting.KurrentDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Logto/CommunityToolkit.Aspire.Hosting.Logto.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.MailPit/CommunityToolkit.Aspire.Hosting.MailPit.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.McpInspector/CommunityToolkit.Aspire.Hosting.McpInspector.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Meilisearch/CommunityToolkit.Aspire.Hosting.Meilisearch.csproj" />
@@ -246,7 +255,9 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.DuckDB.NET.Data/CommunityToolkit.Aspire.DuckDB.NET.Data.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.KurrentDB/CommunityToolkit.Aspire.KurrentDB.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Logto.Client/CommunityToolkit.Aspire.Logto.Client.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.MassTransit.RabbitMQ/CommunityToolkit.Aspire.MassTransit.RabbitMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Meilisearch/CommunityToolkit.Aspire.Meilisearch.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Microsoft.Data.Sqlite/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.csproj" />
@@ -273,11 +284,11 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Bun.Tests/CommunityToolkit.Aspire.Hosting.Bun.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests/CommunityToolkit.Aspire.Hosting.DbGate.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Deno.Tests/CommunityToolkit.Aspire.Hosting.Deno.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.DuckDB.Tests/CommunityToolkit.Aspire.Hosting.DuckDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Elasticsearch.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests/CommunityToolkit.Aspire.Hosting.Flagd.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests/CommunityToolkit.Aspire.Hosting.Flyway.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests/CommunityToolkit.Aspire.Hosting.GoFeatureFlag.Tests.csproj" />
-    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Golang.Tests/CommunityToolkit.Aspire.Hosting.Golang.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Java.Tests/CommunityToolkit.Aspire.Hosting.Java.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.k6.Tests/CommunityToolkit.Aspire.Hosting.k6.Tests.csproj" />
@@ -285,6 +296,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Kind.Tests/CommunityToolkit.Aspire.Hosting.Kind.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Logto.Tests/CommunityToolkit.Aspire.Hosting.Logto.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests/CommunityToolkit.Aspire.Hosting.MailPit.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests/CommunityToolkit.Aspire.Hosting.McpInspector.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests/CommunityToolkit.Aspire.Hosting.Meilisearch.Tests.csproj" />
@@ -309,7 +321,9 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests/CommunityToolkit.Aspire.DuckDB.NET.Data.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.KurrentDB.Tests/CommunityToolkit.Aspire.KurrentDB.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Logto.Client.Tests/CommunityToolkit.Aspire.Logto.Client.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests/CommunityToolkit.Aspire.MassTransit.RabbitMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Meilisearch.Tests/CommunityToolkit.Aspire.Meilisearch.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests/CommunityToolkit.Aspire.Microsoft.Data.Sqlite.Tests.csproj" />

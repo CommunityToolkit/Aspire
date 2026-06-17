@@ -1,13 +1,13 @@
 ---
 name: aspire
-description: "Use this skill when the user is working with an Aspire distributed application and needs to operate the AppHost or its resources through the Aspire CLI: start, restart, stop, or wait on the app; inspect resources, logs, traces, docs, or health; add integrations; manage secrets or config; publish, deploy, or rerun a named pipeline step; initialize Aspire in an existing app; recover missing `.modules` files in a TypeScript AppHost; discover the right frontend URL for Playwright from Aspire state; expose custom dashboard/resource commands; or understand unfamiliar Aspire AppHost APIs in C# or TypeScript. Use it even if they describe the task in terms of an AppHost, resources, dashboard, existing app bootstrap, missing generated modules, Playwright URL discovery, C# API understanding, or local distributed app workflow without explicitly naming Aspire. Do not use it for non-Aspire .NET apps, container-only repos with no AppHost, or ordinary build and test tasks."
+description: "Use this skill when the user is working with an Aspire distributed application and needs to operate the AppHost or its resources through the Aspire CLI: start, restart, stop, or wait on the app; inspect resources, logs, traces, docs, or health; add integrations; manage secrets or config; publish, deploy, or rerun a named pipeline step; initialize Aspire in an existing app; recover missing `.aspire/modules` files in a TypeScript AppHost; discover the right frontend URL for Playwright from Aspire state; expose custom dashboard/resource commands; or understand unfamiliar Aspire AppHost APIs in C# or TypeScript. Use it even if they describe the task in terms of an AppHost, resources, dashboard, existing app bootstrap, missing generated modules, Playwright URL discovery, C# API understanding, or local distributed app workflow without explicitly naming Aspire. Do not use it for non-Aspire .NET apps, container-only repos with no AppHost, or ordinary build and test tasks."
 ---
 
 # Aspire Skill
 
 Use this skill when the task is about operating an Aspire distributed application through the Aspire CLI rather than falling back to ad-hoc `dotnet`, `docker`, or shell workflows.
 
-Resources are typically defined in an AppHost such as, `AppHost.cs`, `apphost.ts`, or `AppHost/AppHost.csproj (Program.cs)`.
+Resources are typically defined in an AppHost such as, `AppHost.cs`, `apphost.mts`, or `AppHost/AppHost.csproj (Program.cs)`.
 
 ## Use this skill for
 
@@ -48,12 +48,12 @@ When the AppHost is implemented in C# such as `AppHost.cs`, `apphost.cs`, or a `
 
 ## TypeScript AppHosts
 
-When the AppHost is `apphost.ts`, the `.modules/` folder at the project root contains generated TypeScript modules that expose the Aspire APIs available to the AppHost. Common files include `.modules/aspire.ts`, `base.ts`, and `transport.ts`.
+When the AppHost is `apphost.mts`, the `.aspire/modules/` folder at the project root contains generated TypeScript modules that expose the Aspire APIs available to the AppHost. Common files include `.aspire/modules/aspire.ts`, `base.ts`, and `transport.ts`.
 
-- Do not edit `.modules/` directly.
+- Do not edit `.aspire/modules/` directly.
 - Use `aspire add <package>` to add integrations and regenerate the available APIs.
-- Inspect `.modules/aspire.ts` after `aspire add` to see the refreshed API surface.
-- The local `tsconfig.json` often includes `.modules/**/*.ts` in its compilation scope.
+- Inspect `.aspire/modules/aspire.ts` after `aspire add` to see the refreshed API surface.
+- The local `tsconfig.json` often includes `.aspire/modules/**/*.ts` in its compilation scope.
 
 ## Key rules
 
@@ -64,7 +64,7 @@ When the AppHost is `apphost.ts`, the `.modules/` folder at the project root con
 - Do not guess the integration or command shape for unfamiliar AppHost changes. Use `aspire docs search` and `aspire docs get` for the documented pattern, then use `aspire docs api search` and `aspire docs api get` when you need the specific reference entry.
 - For unfamiliar C# AppHost APIs, use Aspire API docs as the primary reference and, if available, use `dotnet-inspect` only to inspect local symbols, overloads, and builder chains.
 - Never install the obsolete Aspire workload.
-- When a TypeScript AppHost uses `.modules/`, do not edit generated files directly. Use `aspire add` to regenerate APIs and inspect `.modules/aspire.ts` afterward.
+- When a TypeScript AppHost uses `.aspire/modules/`, do not edit generated files directly. Use `aspire add` to regenerate APIs and inspect `.aspire/modules/aspire.ts` afterward.
 - Prefer official docs from `aspire.dev`.
 
 ## Common capabilities
@@ -90,3 +90,4 @@ If Playwright CLI is already configured in the environment, use Aspire first to 
 - For TypeScript AppHost guidance, see [references/typescript-apphosts.md](references/typescript-apphosts.md).
 - For Playwright handoff after Aspire endpoint discovery, see [references/playwright-handoff.md](references/playwright-handoff.md).
 - For investigation order and common agent workflows, see [references/agent-workflows.md](references/agent-workflows.md).
+

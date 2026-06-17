@@ -10,10 +10,12 @@
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Redis" Version="$(AspireVersion)" />
+    <!-- Aspire.Hosting.Elasticsearch doesn't currently ship a 13.4 package. -->
     <PackageVersion Include="Aspire.Hosting.Elasticsearch" Version="13.3.0" />
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Keycloak.Authentication" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Integration.Analyzers" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Python" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Rabbitmq" Version="$(AspireVersion)" />
@@ -21,7 +23,9 @@
     <PackageVersion Include="Aspire.Hosting.MongoDB" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.MySql" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
+    <PackageVersion Include="Logto.AspNetCore.Authentication" Version="0.2.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
+
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -33,10 +37,12 @@
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
     <PackageVersion Include="Dapr.AspNetCore" Version="1.15.3" />
     <PackageVersion Include="Dapr.Client" Version="1.15.3" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.20" />
     <PackageVersion Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
@@ -77,6 +83,7 @@
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.5" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
     <PackageVersion Include="MeiliSearch" Version="0.18.0" />
+    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.3" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetExtensionsVersion)" />
@@ -134,9 +141,11 @@
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+    <!-- Override to address https://github.com/advisories/GHSA-hv8m-jj95-wg3x -->
+    <PackageVersion Include="MessagePack" Version="2.5.301" />
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
     <PackageVersion Include="MongoDB.Driver" Version="3.8.1" />
     <!-- Override to address  https://github.com/advisories/GHSA-6c8g-7p36-r338 -->
-    <PackageVersion Include="SharpCompress" Version="0.48.0" />
+    <PackageVersion Include="SharpCompress" Version="1.0.0" />
   </ItemGroup>
 </Project>

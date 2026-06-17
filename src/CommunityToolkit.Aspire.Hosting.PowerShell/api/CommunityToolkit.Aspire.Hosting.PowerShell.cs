@@ -31,7 +31,7 @@ namespace CommunityToolkit.Aspire.Hosting.PowerShell
 
     public static partial class PowerShellRunspacePoolResourceBuilderExtensions
     {
-        [global::Aspire.Hosting.AspireExport("addScript", Description = "Adds a PowerShell script resource")]
+        [global::Aspire.Hosting.AspireExport]
         public static global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellScriptResource> AddScript(this global::Aspire.Hosting.ApplicationModel.IResourceBuilder<PowerShellRunspacePoolResource> builder, string name, string script) { throw null; }
 
         [global::Aspire.Hosting.AspireExportIgnore(Reason = "IResourceBuilder<IResourceWithConnectionString> is not currently validated for ATS export in this integration.")]

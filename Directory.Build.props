@@ -12,18 +12,23 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
-    <AspireVersion>$(AspireMajorVersion).3.0</AspireVersion>
-    <AspirePreviewSuffix>-preview.1.26256.5</AspirePreviewSuffix>
+    <AspireVersion>$(AspireMajorVersion).4.3</AspireVersion>
+    <AspirePreviewSuffix>-preview.1.26305.13</AspirePreviewSuffix> <!-- Used for Aspire packages that still only ship as prerelease packages on nuget.org. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>
-    <DotNetExtensionsVersion>10.0.7</DotNetExtensionsVersion>
+    <DotNetExtensionsVersion>10.0.8</DotNetExtensionsVersion>
     <TestContainersVersion>4.8.1</TestContainersVersion>
-    <MEAIVersion>10.0.0</MEAIVersion>
+    <MEAIVersion>10.6.0</MEAIVersion>
     <ServiceDiscoveryVersion>10.0.0</ServiceDiscoveryVersion>
     <IsPackable>false</IsPackable>
     <MoqVersion>4.20.72</MoqVersion>
 
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
     <SharedDir>$(RepoRoot)src\Shared</SharedDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Work around the missing in-proc RID selection task in the current .NET 10 SDKs. -->
+    <_AspireUseSdkPickBestRid>false</_AspireUseSdkPickBestRid>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -38,8 +43,8 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <ToolkitMinorVersion>3</ToolkitMinorVersion>
-    <ToolkitPatchVersion>1</ToolkitPatchVersion>
+    <ToolkitMinorVersion>4</ToolkitMinorVersion>
+    <ToolkitPatchVersion>0</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>

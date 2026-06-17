@@ -85,21 +85,28 @@ public class PowerShellRunspacePoolResource(
                     nameof(poolState), poolState, $"Unexpected runspace pool state {poolState}")
             };
 
-            logger.LogDebug(
-                "Runspace pool '{PoolName}' state mapped to known state '{KnownState}'", Name, knownState);
+            // only publish the update if the state is not NotStarted,
+            // since that's already the initial state. The "Starting" state
+            // is published in OnInitializeResource to allow WaitFor to work.
+            if (knownState != KnownResourceStates.NotStarted &&
+                knownState != KnownResourceStates.Starting)
+            {
+                logger.LogDebug(
+                    "Runspace pool '{PoolName}' state mapped to known state '{KnownState}'", Name, knownState);
 
-            await notificationService.PublishUpdateAsync(this,
-                state => state with
-                {
-                    State = knownState,
-                    Properties = [
-                        .. state.Properties,
+                await notificationService.PublishUpdateAsync(this,
+                    state => state with
+                    {
+                        State = knownState,
+                        Properties = [
+                            .. state.Properties,
                         new("RunspacePoolState", poolState.ToString()),
                         new("Reason", reason?.ToString() ?? string.Empty)
-                    ],
-                    StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
-                    StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
-                });
+                        ],
+                        StartTimeStamp = knownState == KnownResourceStates.Running ? DateTime.Now : state.StartTimeStamp,
+                        StopTimeStamp = KnownResourceStates.TerminalStates.Contains(knownState) ? DateTime.Now : state.StopTimeStamp,
+                    });
+            }
         };
     }
 

@@ -19,7 +19,7 @@ public static class AzureContainerAppEnvironmentResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The Azure Container App Environment resource builder.</param>
     /// <returns>The updated Azure Container App Environment resource builder.</returns>
-    [AspireExport("withDaprComponents", Description = "Configures an Azure Container App environment to publish Dapr components")]
+    [AspireExport]
     public static IResourceBuilder<AzureContainerAppEnvironmentResource> WithDaprComponents(
         this IResourceBuilder<AzureContainerAppEnvironmentResource> builder)
     {
