@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MessagePack" />
     <PackageReference Include="Polly" />
     <PackageReference Include="SSH.NET" />
   </ItemGroup>

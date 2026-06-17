@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

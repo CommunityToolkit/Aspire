@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="MessagePack" />
     <PackageReference Include="OpenFeature.Providers.Flagd" />
     <PackageReference Include="OpenFeature.Providers.Ofrep" />
   </ItemGroup>

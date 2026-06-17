@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
-        <Using Include="Xunit"/>
+        <Using Include="Xunit" />
     </ItemGroup>
 
     <ItemGroup>
@@ -9,6 +9,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="MessagePack" />
       <PackageReference Include="Moq" />
     </ItemGroup>
 </Project>
