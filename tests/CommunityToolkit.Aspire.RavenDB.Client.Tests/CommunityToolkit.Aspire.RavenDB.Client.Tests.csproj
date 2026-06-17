@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="MessagePack" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="RavenDB.Client" />
     <PackageReference Include="RavenDB.TestDriver" />
   </ItemGroup>
