@@ -692,13 +692,23 @@ public static class K3sBuilderExtensions
     // path rather than creating a directory there. If a directory already exists from a
     // previous bad run it is removed first. The health check overwrites the placeholder
     // with the real kubeconfig content once the cluster is ready.
+    //
+    // FileMode.CreateNew atomically creates the file if it does not exist and throws
+    // IOException if it already does. Swallowing that IOException makes the call
+    // idempotent under concurrent invocations (multiple tests parallel on Windows).
     internal static void EnsureKubeconfigPlaceholder(string filePath)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
         if (Directory.Exists(filePath))
             Directory.Delete(filePath, recursive: true);
-        if (!File.Exists(filePath))
-            File.WriteAllText(filePath, string.Empty);
+        try
+        {
+            using (new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
+        }
+        catch (IOException)
+        {
+            // File already exists or was just created by a concurrent call — placeholder is in place.
+        }
     }
 
     // Called only for containers. Standard WithReference(IResourceWithConnectionString)
