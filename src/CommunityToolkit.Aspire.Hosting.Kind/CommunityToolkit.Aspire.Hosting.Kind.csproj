@@ -16,4 +16,7 @@
     <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Kind.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 </Project>
