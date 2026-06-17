@@ -5,4 +5,7 @@
     <ProjectReference Include="../../examples/duckdb/CommunityToolkit.Aspire.DuckDB.AppHost/CommunityToolkit.Aspire.DuckDB.AppHost.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.DuckDB.NET.Data\CommunityToolkit.Aspire.DuckDB.NET.Data.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 </Project>

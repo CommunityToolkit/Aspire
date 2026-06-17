@@ -4,7 +4,7 @@
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.4.0-preview.1.26275.15"
+    "version": "13.4.3"
   },
   "channel": "stable",
   "profiles": {

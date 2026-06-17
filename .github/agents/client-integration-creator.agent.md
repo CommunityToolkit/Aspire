@@ -51,7 +51,7 @@ Example template:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>A .NET Aspire client integration for XYZ.</Description>
+    <Description>An Aspire client integration for XYZ.</Description>
     <AdditionalPackageTags>xyz client</AdditionalPackageTags>
   </PropertyGroup>
   <ItemGroup>

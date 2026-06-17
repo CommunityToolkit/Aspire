@@ -3,6 +3,8 @@ using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.Bun.Tests;
 
+#pragma warning disable CS0618
+
 public class AddBunAppTests
 {
     [Fact]
@@ -159,4 +161,18 @@ public class AddBunAppTests
         Assert.Equal("bun-bun-install", installerResource.Name);
         Assert.Equal("bun", installerResource.Command);
     }
+
+    [Fact]
+    public void BunExtensionsAreDeprecated()
+    {
+        var addBunAppMethod = typeof(BunAppExtensions).GetMethod(nameof(BunAppExtensions.AddBunApp), [typeof(IDistributedApplicationBuilder), typeof(string), typeof(string), typeof(string), typeof(bool)]);
+        var withPackageInstallationMethod = typeof(BunAppExtensions).GetMethod(nameof(BunAppExtensions.WithBunPackageInstallation), [typeof(IResourceBuilder<BunAppResource>), typeof(Action<IResourceBuilder<BunInstallerResource>>)]);
+
+        Assert.NotNull(addBunAppMethod);
+        Assert.NotNull(withPackageInstallationMethod);
+        Assert.NotNull(addBunAppMethod.GetCustomAttributes(typeof(ObsoleteAttribute), inherit: false).SingleOrDefault());
+        Assert.NotNull(withPackageInstallationMethod.GetCustomAttributes(typeof(ObsoleteAttribute), inherit: false).SingleOrDefault());
+    }
 }
+
+#pragma warning restore CS0618

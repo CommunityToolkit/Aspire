@@ -33,17 +33,17 @@ namespace Aspire.Hosting
         [AspireExportIgnore(Reason = "Use the parameter-based overload so polyglot app hosts expose a single addMcpInspector capability.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> AddMcpInspector(this IDistributedApplicationBuilder builder, string name) { throw null; }
 
-        [AspireExport("withBun", Description = "Configures the MCP Inspector to use bun as the package manager")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithBun(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
 
-        [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer", Description = "Configures the MCP Inspector to use a specified MCP server resource")]
+        [AspireExport("withInspectedMcpServer", MethodName = "withInspectedMcpServer")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithMcpServer<TResource>(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder, ApplicationModel.IResourceBuilder<TResource> mcpServer, bool isDefault = true, McpTransportType transportType = McpTransportType.StreamableHttp, string path = "/mcp")
             where TResource : ApplicationModel.IResourceWithEndpoints { throw null; }
 
-        [AspireExport("withPnpm", Description = "Configures the MCP Inspector to use pnpm as the package manager")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithPnpm(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
 
-        [AspireExport("withYarn", Description = "Configures the MCP Inspector to use yarn as the package manager")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> WithYarn(this ApplicationModel.IResourceBuilder<ApplicationModel.McpInspectorResource> builder) { throw null; }
     }
 

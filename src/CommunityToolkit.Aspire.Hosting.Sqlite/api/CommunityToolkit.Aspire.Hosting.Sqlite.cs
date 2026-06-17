@@ -10,7 +10,7 @@ namespace Aspire.Hosting
 {
     public static partial class SqliteResourceBuilderExtensions
     {
-        [AspireExport("addSqlite", Description = "Adds a Sqlite database resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SqliteResource> AddSqlite(this IDistributedApplicationBuilder builder, string name, string? databasePath = null, string? databaseFileName = null) { throw null; }
 
         [AspireExportIgnore(Reason = "Action<IResourceBuilder<SqliteWebResource>> is not ATS-compatible. Use the overload without the callback instead.")]

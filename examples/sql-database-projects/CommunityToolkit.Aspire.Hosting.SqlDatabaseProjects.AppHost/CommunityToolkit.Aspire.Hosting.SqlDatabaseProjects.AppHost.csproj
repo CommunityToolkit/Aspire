@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.4.0-preview.1.26275.15">
+<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="ErikEJ.Dacpac.Chinook" IsAspirePackageResource="true" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

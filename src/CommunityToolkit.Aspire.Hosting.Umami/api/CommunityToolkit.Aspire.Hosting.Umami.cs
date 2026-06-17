@@ -10,10 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class UmamiBuilderExtensions
     {
-        [AspireExport("addUmami", Description = "Adds a Umami analytics container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.UmamiResource> AddUmami(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? secret = null, int? port = null) { throw null; }
 
-        [AspireExport("withPostgreSQL", Description = "Configures PostgreSQL as the storage backend for Umami")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.UmamiResource> WithPostgreSQL(this ApplicationModel.IResourceBuilder<ApplicationModel.UmamiResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> database) { throw null; }
     }
 }
