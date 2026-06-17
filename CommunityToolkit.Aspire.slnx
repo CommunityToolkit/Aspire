@@ -169,6 +169,9 @@
     <Project Path="examples/seaweedfs/SeaweedFS.AppHost/SeaweedFS.AppHost.csproj" Id="6e0ec4a6-d1d2-4aed-9a5b-b053c46e41b3" />
     <Project Path="examples/seaweedfs/SeaweedFS.ServiceDefaults/SeaweedFS.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/rustfs/">
+    <Project Path="examples/rustfs/CommunityToolkit.Aspire.Hosting.RustFs.AppHost/CommunityToolkit.Aspire.Hosting.RustFs.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/sftp/">
     <Project Path="examples/sftp/CommunityToolkit.Aspire.Hosting.Sftp.ApiService/CommunityToolkit.Aspire.Hosting.Sftp.ApiService.csproj" />
     <Project Path="examples/sftp/CommunityToolkit.Aspire.Hosting.Sftp.AppHost/CommunityToolkit.Aspire.Hosting.Sftp.AppHost.csproj" />
@@ -250,6 +253,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Redis.Extensions/CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Rust/CommunityToolkit.Aspire.Hosting.Rust.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SeaweedFS/CommunityToolkit.Aspire.Hosting.SeaweedFS.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.RustFs/CommunityToolkit.Aspire.Hosting.RustFs.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Sftp/CommunityToolkit.Aspire.Hosting.Sftp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Solr/CommunityToolkit.Aspire.Hosting.Solr.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.csproj" />
@@ -317,6 +321,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Redis.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Rust.Tests/CommunityToolkit.Aspire.Hosting.Rust.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests/CommunityToolkit.Aspire.Hosting.SeaweedFS.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.RustFs.Tests/CommunityToolkit.Aspire.Hosting.RustFs.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sftp.Tests/CommunityToolkit.Aspire.Hosting.Sftp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Solr.Tests/CommunityToolkit.Aspire.Hosting.Solr.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests/CommunityToolkit.Aspire.Hosting.SqlDatabaseProjects.Tests.csproj" />
