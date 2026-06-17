@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\logto\CommunityToolkit.Aspire.Hosting.Logto.AppHost\CommunityToolkit.Aspire.Hosting.Logto.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Logto\CommunityToolkit.Aspire.Hosting.Logto.csproj"/>
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
