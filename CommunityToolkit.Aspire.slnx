@@ -74,6 +74,9 @@
     <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Prod.csproj" />
     <Project Path="examples\keycloak-postgres\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.ServiceDefaults\CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/kind/">
+    <Project Path="examples/kind/CommunityToolkit.Aspire.Hosting.Kind.AppHost/CommunityToolkit.Aspire.Hosting.Kind.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/kurrentdb/">
     <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService.csproj" />
     <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost/CommunityToolkit.Aspire.Hosting.KurrentDB.AppHost.csproj" />
@@ -236,6 +239,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Java/CommunityToolkit.Aspire.Hosting.Java.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.k6/CommunityToolkit.Aspire.Hosting.k6.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.Kind/CommunityToolkit.Aspire.Hosting.Kind.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.KurrentDB/CommunityToolkit.Aspire.Hosting.KurrentDB.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.LavinMQ/CommunityToolkit.Aspire.Hosting.LavinMQ.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Logto/CommunityToolkit.Aspire.Hosting.Logto.csproj" />
@@ -306,6 +310,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests/CommunityToolkit.Aspire.Hosting.JavaScript.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.k6.Tests/CommunityToolkit.Aspire.Hosting.k6.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests/CommunityToolkit.Aspire.Hosting.Keycloak.Extensions.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.Kind.Tests/CommunityToolkit.Aspire.Hosting.Kind.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests/CommunityToolkit.Aspire.Hosting.KurrentDB.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests/CommunityToolkit.Aspire.Hosting.LavinMQ.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Logto.Tests/CommunityToolkit.Aspire.Hosting.Logto.Tests.csproj" />
