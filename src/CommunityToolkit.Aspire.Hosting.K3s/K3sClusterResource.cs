@@ -1,5 +1,7 @@
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
+using CommunityToolkit.Aspire.Hosting;
+
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -22,11 +24,11 @@ public sealed class K3sClusterResource(string name)
 
     /// <summary>Container image settings for the Helm installer, resolved from cluster options.</summary>
     internal (string Registry, string Image, string Tag) HelmImageInfo { get; set; }
-        = ("docker.io", "alpine/helm", "3.17.3");
+        = (HelmContainerImageTags.Registry, HelmContainerImageTags.Image, HelmContainerImageTags.Tag);
 
     /// <summary>Container image settings for the kubectl manifest applier, resolved from cluster options.</summary>
     internal (string Registry, string Image, string Tag) KubectlImageInfo { get; set; }
-        = ("docker.io", "alpine/kubectl", "1.36.0");
+        = (KubectlContainerImageTags.Registry, KubectlContainerImageTags.Image, KubectlContainerImageTags.Tag);
 
     /// <summary>
     /// Host-side directory that holds all kubeconfig variants for this cluster.

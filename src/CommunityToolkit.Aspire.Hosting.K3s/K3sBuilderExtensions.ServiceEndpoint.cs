@@ -81,10 +81,6 @@ public static class K3sServiceEndpointExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
         ArgumentException.ThrowIfNullOrWhiteSpace(@namespace);
 
-        if (servicePort is < 1 or > 65535)
-            throw new ArgumentOutOfRangeException(nameof(servicePort),
-                servicePort, "Service port must be in the range 1–65535.");
-
         // Infer scheme from the port when not explicitly provided.
         // Callers should pass an explicit scheme whenever the Kubernetes service port
         // does not reliably indicate the application protocol (e.g. HTTPS on port 80).

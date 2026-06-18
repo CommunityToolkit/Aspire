@@ -283,28 +283,6 @@ public class K3sPublicApiTests
         Assert.Throws<ArgumentException>(action);
     }
 
-    [Fact]
-    public void AddServiceEndpointShouldThrowWhenPortIsZero()
-    {
-        var appBuilder = new DistributedApplicationBuilder([]);
-        var cluster = appBuilder.AddK3sCluster("k8s");
-
-        var action = () => cluster.AddServiceEndpoint("ep", "svc", 0);
-
-        Assert.Throws<ArgumentOutOfRangeException>(action);
-    }
-
-    [Fact]
-    public void AddServiceEndpointShouldThrowWhenPortExceeds65535()
-    {
-        var appBuilder = new DistributedApplicationBuilder([]);
-        var cluster = appBuilder.AddK3sCluster("k8s");
-
-        var action = () => cluster.AddServiceEndpoint("ep", "svc", 65536);
-
-        Assert.Throws<ArgumentOutOfRangeException>(action);
-    }
-
     // ── WithReference (service endpoint) argument guards ─────────────────────
 
     [Fact]

@@ -67,11 +67,7 @@ public static class K3sBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        var resource = new K3sClusterResource(name)
-        {
-            HelmImageInfo = (HelmContainerImageTags.Registry, HelmContainerImageTags.Image, HelmContainerImageTags.Tag),
-            KubectlImageInfo = (KubectlContainerImageTags.Registry, KubectlContainerImageTags.Image, KubectlContainerImageTags.Tag),
-        };
+        var resource = new K3sClusterResource(name);
         var tag = K3sContainerImageTags.Tag;
 
         // ── Kubeconfig directory on the host ──────────────────────────────────
@@ -576,6 +572,13 @@ public static class K3sBuilderExtensions
         #!/bin/sh
         # Aspire k3s init entrypoint — adapted from k3d (https://github.com/k3d-io/k3d)
         # cgroupsv2 fix adapted from moby/moby (Apache-2.0), used with permission.
+
+        # Raise inotify limits so multiple k3s instances (server + agents) don't exhaust
+        # the kernel default (128 instances). Applies to the Docker VM / host kernel because
+        # k3s containers run with --privileged --userns=host. Silently skipped on runtimes
+        # where the write is not permitted.
+        sysctl -w fs.inotify.max_user_instances=1024 2>/dev/null || true
+        sysctl -w fs.inotify.max_user_watches=1048576 2>/dev/null || true
 
         # Make mountpoints recursively shared — required for volume propagation in Docker-in-Docker.
         mount --make-rshared / 2>/dev/null || true

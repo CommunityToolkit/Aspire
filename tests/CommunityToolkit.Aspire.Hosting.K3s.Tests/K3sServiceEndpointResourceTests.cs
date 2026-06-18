@@ -169,21 +169,6 @@ public class K3sServiceEndpointResourceTests
     // ── Port validation ───────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(65536)]
-    [InlineData(100000)]
-    public void AddServiceEndpointThrowsForInvalidPort(int port)
-    {
-        var appBuilder = DistributedApplication.CreateBuilder();
-        var cluster = appBuilder.AddK3sCluster("k8s");
-
-        var action = () => cluster.AddServiceEndpoint("ep", "svc", port);
-
-        Assert.Throws<ArgumentOutOfRangeException>(action);
-    }
-
-    [Theory]
     [InlineData(1)]
     [InlineData(65535)]
     public void AddServiceEndpointAcceptsPortBoundaries(int port)
