@@ -2,6 +2,7 @@ using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -249,6 +250,11 @@ public static class SquadBuilderExtensions
         }
     }
 
+    // OS-bound spawn helpers — excluded from coverage because they hand off to wt.exe /
+    // powershell.exe which open real terminal windows. Their argument-list building is
+    // simple enough to read at a glance; the launch itself can only be exercised in a
+    // user-driven smoke test on a Windows desktop.
+    [ExcludeFromCodeCoverage]
     private static void StartWindowsTerminal(string workingDirectory, string windowTitle, string copilotCommand)
     {
         var startInfo = new ProcessStartInfo
@@ -270,6 +276,7 @@ public static class SquadBuilderExtensions
         Process.Start(startInfo);
     }
 
+    [ExcludeFromCodeCoverage]
     private static void StartConsoleWindow(string workingDirectory, string windowTitle, string copilotCommand)
     {
         // Launch PowerShell directly with UseShellExecute=true (which opens a new console window
