@@ -7,4 +7,7 @@
   <ItemGroup>
     <Compile Include="$(SharedDir)\Adminer\AdminerLoginServer.cs" Link="AdminerLoginServer.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 </Project>

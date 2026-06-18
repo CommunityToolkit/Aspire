@@ -8,6 +8,7 @@
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.JavaScript" />
     <PackageReference Include="AspNetCore.HealthChecks.Uris" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>

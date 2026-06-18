@@ -10,36 +10,48 @@ namespace Aspire.Hosting
 {
     public static partial class PerlAppResourceBuilderExtensions
     {
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PerlAppResource> AddPerlApi(this IDistributedApplicationBuilder builder, string resourceName, string appDirectory, string scriptName) { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PerlAppResource> AddPerlExecutable(this IDistributedApplicationBuilder builder, string resourceName, string appDirectory, string executablePath) { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PerlAppResource> AddPerlModule(this IDistributedApplicationBuilder builder, string resourceName, string appDirectory, string moduleName) { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PerlAppResource> AddPerlScript(this IDistributedApplicationBuilder builder, string resourceName, string appDirectory, string scriptName) { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithCarton<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder)
             where TResource : ApplicationModel.PerlAppResource { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithCpanMinus<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder)
             where TResource : ApplicationModel.PerlAppResource { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithLocalLib<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder, string path = "local")
             where TResource : ApplicationModel.PerlAppResource { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithPackage<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder, string packageName, bool force = false, bool skipTest = false)
             where TResource : ApplicationModel.PerlAppResource { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<T> WithPerlbrew<T>(this ApplicationModel.IResourceBuilder<T> builder, string version, string? perlbrewRoot = null)
             where T : ApplicationModel.PerlAppResource { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<T> WithPerlbrewEnvironment<T>(this ApplicationModel.IResourceBuilder<T> builder, string version, string? perlbrewRoot = null)
             where T : ApplicationModel.PerlAppResource { throw null; }
 
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIREPERL001")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithPerlCertificateTrust<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder)
             where TResource : ApplicationModel.PerlAppResource { throw null; }
 
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<TResource> WithProjectDependencies<TResource>(this ApplicationModel.IResourceBuilder<TResource> builder, bool cartonDeployment = false)
             where TResource : ApplicationModel.PerlAppResource { throw null; }
     }

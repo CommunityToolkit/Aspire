@@ -4,4 +4,7 @@
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Redis.Extensions\CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
 </Project>

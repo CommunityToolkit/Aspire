@@ -14,4 +14,8 @@
     <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
 </Project>

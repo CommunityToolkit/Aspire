@@ -20,9 +20,9 @@ public sealed class SurrealDbClientSettings
     /// Gets or sets the Service lifetime to register services under.
     /// </summary>
     /// <value>
-    /// The default value is <see langword="ServiceLifetime.Singleton"/>.
+    /// The default value is <see cref="ServiceLifetime.Scoped"/>.
     /// </value>
-    public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Singleton;
+    public ServiceLifetime Lifetime { get; set; } = ServiceLifetime.Scoped;
     
     /// <summary>
     /// Gets or sets a boolean value that indicates whether the SurrealDB health check is disabled or not.

@@ -10,16 +10,16 @@ namespace Aspire.Hosting
 {
     public static partial class ZitadelHostingExtensions
     {
-        [AspireExport("addZitadel", Description = "Adds a Zitadel container resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> AddZitadel(this IDistributedApplicationBuilder builder, string name, int? port = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? username = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? masterKey = null) { throw null; }
 
-        [AspireExport("withExistingDatabase", Description = "Adds database support to the Zitadel resource using an existing PostgreSQL database")]
+        [AspireExport("withExistingDatabase")]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> WithDatabase(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.PostgresDatabaseResource> database) { throw null; }
 
-        [AspireExport("withDatabase", Description = "Adds database support to the Zitadel resource using a PostgreSQL server")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> WithDatabase(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> server, string? databaseName = null) { throw null; }
 
-        [AspireExport("withExternalDomain", Description = "Configures the external domain for the Zitadel resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> WithExternalDomain(this ApplicationModel.IResourceBuilder<CommunityToolkit.Aspire.Hosting.Zitadel.ZitadelResource> builder, string externalDomain) { throw null; }
     }
 }

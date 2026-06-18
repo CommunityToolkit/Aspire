@@ -10,10 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class DenoAppHostingExtensions
     {
-        [AspireExport("addDenoApp", Description = "Adds a Deno app resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DenoAppResource> AddDenoApp(this IDistributedApplicationBuilder builder, string name, string scriptPath, string? workingDirectory = null, string[]? permissionFlags = null, string[]? args = null) { throw null; }
 
-        [AspireExport("addDenoTask", Description = "Adds a Deno task resource")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.DenoAppResource> AddDenoTask(this IDistributedApplicationBuilder builder, string name, string? workingDirectory = null, string taskName = "start", string[]? args = null) { throw null; }
 
         [AspireExportIgnore(Reason = "Action<IResourceBuilder<DenoInstallerResource>> is not ATS-compatible. Use the overload without configureInstaller instead.")]

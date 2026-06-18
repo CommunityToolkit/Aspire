@@ -1,0 +1,17 @@
+﻿{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "13.4.3"
+  },
+  "profiles": {
+    "http": {
+      "applicationUrl": "http://localhost:15333"
+    }
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.SeaweedFS": "../../../src/CommunityToolkit.Aspire.Hosting.SeaweedFS/CommunityToolkit.Aspire.Hosting.SeaweedFS.csproj"
+  }
+}

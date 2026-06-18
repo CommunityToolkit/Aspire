@@ -10,10 +10,10 @@ namespace Aspire.Hosting
 {
     public static partial class ElasticvueBuilderExtensions
     {
-        [AspireExport("withElasticvue", Description = "Adds Elasticvue for administering an Elasticsearch resource")]
+        [AspireExport(RunSyncOnBackgroundThread = true)]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ElasticsearchResource> WithElasticvue(this ApplicationModel.IResourceBuilder<ApplicationModel.ElasticsearchResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.ElasticvueContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
 
-        [AspireExport("withHostPort", Description = "Configures the host port that the Elasticvue resource is exposed on")]
+        [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.ElasticvueContainerResource> WithHostPort(this ApplicationModel.IResourceBuilder<ApplicationModel.ElasticvueContainerResource> builder, int? port) { throw null; }
     }
 }
