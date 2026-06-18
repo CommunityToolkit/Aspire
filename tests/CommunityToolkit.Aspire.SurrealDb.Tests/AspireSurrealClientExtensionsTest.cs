@@ -97,15 +97,25 @@ public class AspireSurrealClientExtensionsTest(SurrealDbContainerFixture contain
         builder.AddKeyedSurrealClient("surreal2");
         builder.AddKeyedSurrealClient("surreal3");
 
-        using var host = builder.Build();
+        var host = builder.Build();
 
-        var client1 = host.Services.GetRequiredService<SurrealDbClient>();
-        var client2 = host.Services.GetRequiredKeyedService<SurrealDbClient>("surreal2");
-        var client3 = host.Services.GetRequiredKeyedService<SurrealDbClient>("surreal3");
+        var client1 = host.Services.GetRequiredService<SurrealDbSession>();
+        var client2 = host.Services.GetRequiredKeyedService<SurrealDbSession>("surreal2");
+        var client3 = host.Services.GetRequiredKeyedService<SurrealDbSession>("surreal3");
 
         Assert.NotSame(client1, client2);
         Assert.NotSame(client1, client3);
         Assert.NotSame(client2, client3);
+        
+        try
+        {
+            host.Dispose();
+        }
+        catch
+        {
+            // ignored
+            // Failed to be disposed on unknown server
+        }
     }
 
     [Fact]
@@ -121,12 +131,22 @@ public class AspireSurrealClientExtensionsTest(SurrealDbContainerFixture contain
         builder.AddSurrealClient("surreal1");
         builder.AddKeyedSurrealClient("surreal2");
 
-        using var host = builder.Build();
+        var host = builder.Build();
 
-        var client1 = host.Services.GetRequiredService<SurrealDbClient>();
-        var client2 = host.Services.GetRequiredKeyedService<SurrealDbClient>("surreal2");
+        var client1 = host.Services.GetRequiredService<SurrealDbSession>();
+        var client2 = host.Services.GetRequiredKeyedService<SurrealDbSession>("surreal2");
 
         Assert.NotSame(client1, client2);
+
+        try
+        {
+            host.Dispose();
+        }
+        catch
+        {
+            // ignored
+            // Failed to be disposed on unknown server
+        }
     }
 
     private static HostApplicationBuilder CreateBuilder(string connectionString)
