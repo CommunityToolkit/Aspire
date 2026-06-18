@@ -741,7 +741,7 @@ static class App
                     continue;
                 }
 
-                // Content precedes the comment; trim it away before further processing.
+                // Content precedes the comment; trim off the comment (and anything after it) before further processing.
                 line = line[..commentStart].Trim();
             }
 
