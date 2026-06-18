@@ -24,7 +24,7 @@
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
     <PackageVersion Include="Logto.AspNetCore.Authentication" Version="0.2.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
-
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="10.0.8" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -72,6 +72,7 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.23.3" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
@@ -94,8 +95,8 @@
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.9.0" />
-    <PackageVersion Include="SurrealDb.Net" Version="0.9.0" />
+    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.10.2" />
+    <PackageVersion Include="SurrealDb.Net" Version="0.10.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />

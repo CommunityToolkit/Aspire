@@ -172,6 +172,13 @@ static class App
                     continue;
                 }
 
+                if (TryGetExampleTests(filePath, projectPaths, nodeToTests, out var exampleName, out var impactedExampleTests))
+                {
+                    selected.UnionWith(impactedExampleTests);
+                    reasons.Add($"Selected {impactedExampleTests.Count} tests because {filePath} belongs to example {exampleName}.");
+                    continue;
+                }
+
                 if (filePath.StartsWith("src/", StringComparison.Ordinal) ||
                     filePath.StartsWith("tests/", StringComparison.Ordinal) ||
                     filePath.StartsWith("examples/", StringComparison.Ordinal) ||
@@ -571,6 +578,42 @@ static class App
         return false;
     }
 
+    private static bool TryGetExampleTests(
+        string filePath,
+        List<string> projectPaths,
+        Dictionary<string, HashSet<string>> nodeToTests,
+        out string exampleName,
+        out HashSet<string> tests)
+    {
+        tests = [];
+        exampleName = string.Empty;
+
+        if (!filePath.StartsWith("examples/", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var segments = filePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+        {
+            return false;
+        }
+
+        exampleName = segments[1];
+        var examplePrefix = $"examples/{exampleName}/";
+        var exampleProjects = projectPaths.Where(projectPath => projectPath.StartsWith(examplePrefix, StringComparison.Ordinal));
+
+        foreach (var projectPath in exampleProjects)
+        {
+            if (nodeToTests.TryGetValue(projectPath, out var impacted))
+            {
+                tests.UnionWith(impacted);
+            }
+        }
+
+        return tests.Count > 0;
+    }
+
     private static Dictionary<string, string> ParseStringConstants(string contents)
     {
         var constants = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -636,6 +679,7 @@ static class App
 
         var packageIds = new HashSet<string>(StringComparer.Ordinal);
         var uncertain = false;
+        var inComment = false;
 
         foreach (var rawLine in output.Split('\n', StringSplitOptions.TrimEntries))
         {
@@ -655,9 +699,50 @@ static class App
             }
 
             var line = rawLine[1..].Trim();
-            if (string.IsNullOrEmpty(line) || line.StartsWith("<!--", StringComparison.Ordinal))
+            if (string.IsNullOrEmpty(line))
             {
                 continue;
+            }
+
+            // Track multi-line XML comment state so that continuation lines
+            // of a block comment don't incorrectly trigger uncertain = true.
+            if (inComment)
+            {
+                var commentEnd = line.IndexOf("-->", StringComparison.Ordinal);
+                if (commentEnd >= 0)
+                {
+                    inComment = false;
+
+                    // Process any content after the comment close marker on the same line.
+                    line = line[(commentEnd + 3)..].Trim();
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            var commentStart = line.IndexOf("<!--", StringComparison.Ordinal);
+            if (commentStart >= 0)
+            {
+                // If the comment doesn't close on this line, enter multi-line comment mode.
+                if (line.IndexOf("-->", commentStart + 4, StringComparison.Ordinal) < 0)
+                {
+                    inComment = true;
+                }
+
+                if (commentStart == 0)
+                {
+                    // Entire line is a comment — skip it.
+                    continue;
+                }
+
+                // Content precedes the comment; trim off the comment (and anything after it) before further processing.
+                line = line[..commentStart].Trim();
             }
 
             if (line.Contains("PackageVersion", StringComparison.Ordinal) &&
@@ -667,7 +752,10 @@ static class App
                 continue;
             }
 
-            uncertain = true;
+            if (!string.IsNullOrEmpty(line))
+            {
+                uncertain = true;
+            }
         }
 
         return (packageIds, uncertain);

@@ -1,0 +1,22 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Dbx\CommunityToolkit.Aspire.Hosting.Dbx.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions\CommunityToolkit.Aspire.Hosting.MongoDB.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions\CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Redis.Extensions\CommunityToolkit.Aspire.Hosting.Redis.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions\CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.MySql.Extensions\CommunityToolkit.Aspire.Hosting.MySql.Extensions.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+</Project>
