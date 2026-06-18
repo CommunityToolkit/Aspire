@@ -9,11 +9,13 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.MySql" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Adminer\CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dbx\CommunityToolkit.Aspire.Hosting.Dbx.csproj" />
   </ItemGroup>
 
   <ItemGroup>

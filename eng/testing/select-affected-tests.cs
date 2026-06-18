@@ -172,6 +172,13 @@ static class App
                     continue;
                 }
 
+                if (TryGetExampleTests(filePath, projectPaths, nodeToTests, out var exampleName, out var impactedExampleTests))
+                {
+                    selected.UnionWith(impactedExampleTests);
+                    reasons.Add($"Selected {impactedExampleTests.Count} tests because {filePath} belongs to example {exampleName}.");
+                    continue;
+                }
+
                 if (filePath.StartsWith("src/", StringComparison.Ordinal) ||
                     filePath.StartsWith("tests/", StringComparison.Ordinal) ||
                     filePath.StartsWith("examples/", StringComparison.Ordinal) ||
@@ -569,6 +576,42 @@ static class App
 
         tests = [];
         return false;
+    }
+
+    private static bool TryGetExampleTests(
+        string filePath,
+        List<string> projectPaths,
+        Dictionary<string, HashSet<string>> nodeToTests,
+        out string exampleName,
+        out HashSet<string> tests)
+    {
+        tests = [];
+        exampleName = string.Empty;
+
+        if (!filePath.StartsWith("examples/", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var segments = filePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+        {
+            return false;
+        }
+
+        exampleName = segments[1];
+        var examplePrefix = $"examples/{exampleName}/";
+        var exampleProjects = projectPaths.Where(projectPath => projectPath.StartsWith(examplePrefix, StringComparison.Ordinal));
+
+        foreach (var projectPath in exampleProjects)
+        {
+            if (nodeToTests.TryGetValue(projectPath, out var impacted))
+            {
+                tests.UnionWith(impacted);
+            }
+        }
+
+        return tests.Count > 0;
     }
 
     private static Dictionary<string, string> ParseStringConstants(string contents)

@@ -8,12 +8,14 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting" />
     <PackageReference Include="Aspire.Hosting.MongoDB" />
+    <PackageReference Include="MessagePack" />
     <PackageReference Include="MongoDB.Driver" />
     <PackageReference Include="SharpCompress" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dbx\CommunityToolkit.Aspire.Hosting.Dbx.csproj" />
   </ItemGroup>
 
 </Project>
