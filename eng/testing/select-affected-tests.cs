@@ -708,11 +708,22 @@ static class App
             // of a block comment don't incorrectly trigger uncertain = true.
             if (inComment)
             {
-                if (line.Contains("-->", StringComparison.Ordinal))
+                var commentEnd = line.IndexOf("-->", StringComparison.Ordinal);
+                if (commentEnd >= 0)
                 {
                     inComment = false;
+
+                    // Process any content after the comment close marker on the same line.
+                    line = line[(commentEnd + 3)..].Trim();
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        continue;
+                    }
                 }
-                continue;
+                else
+                {
+                    continue;
+                }
             }
 
             var commentStart = line.IndexOf("<!--", StringComparison.Ordinal);
