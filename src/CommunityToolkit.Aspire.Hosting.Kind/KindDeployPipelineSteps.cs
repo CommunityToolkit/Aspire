@@ -117,7 +117,7 @@ internal static class KindDeployPipelineSteps
         if (resource.TryGetAnnotationsOfType<ContainerBuildOptionsCallbackAnnotation>(out var annotations))
         {
             var buildContext = new ContainerBuildOptionsCallbackContext(
-                resource, ctx.Services, ctx.Logger, ctx.CancellationToken);
+                resource, ctx.Services, ctx.Logger, ctx.CancellationToken, ctx.ExecutionContext);
 
             foreach (var annotation in annotations)
             {

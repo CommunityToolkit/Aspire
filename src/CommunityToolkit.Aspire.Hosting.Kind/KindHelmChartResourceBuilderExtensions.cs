@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -25,6 +27,7 @@ public static class KindHelmChartResourceBuilderExtensions
     /// or local path (<c>./charts/my-app</c>).
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<KindHelmChartResource> AddHelmChart(
         this IResourceBuilder<KindClusterResource> builder,
         [ResourceName] string name,
@@ -117,6 +120,7 @@ public static class KindHelmChartResourceBuilderExtensions
     /// <param name="builder">The Helm chart resource builder.</param>
     /// <param name="version">The chart version.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<KindHelmChartResource> WithChartVersion(
         this IResourceBuilder<KindHelmChartResource> builder,
         string version)
@@ -135,6 +139,7 @@ public static class KindHelmChartResourceBuilderExtensions
     /// <param name="key">The Helm value key.</param>
     /// <param name="value">The Helm value.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<KindHelmChartResource> WithHelmValue(
         this IResourceBuilder<KindHelmChartResource> builder,
         string key,
@@ -154,6 +159,7 @@ public static class KindHelmChartResourceBuilderExtensions
     /// <param name="builder">The Helm chart resource builder.</param>
     /// <param name="path">The path to the values file.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<KindHelmChartResource> WithHelmValuesFile(
         this IResourceBuilder<KindHelmChartResource> builder,
         string path)
@@ -172,6 +178,7 @@ public static class KindHelmChartResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="namespace">The Kubernetes namespace.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<T> WithNamespace<T>(
         this IResourceBuilder<T> builder,
         string @namespace)
@@ -184,3 +191,5 @@ public static class KindHelmChartResourceBuilderExtensions
         return builder;
     }
 }
+
+#pragma warning restore ASPIREATS001

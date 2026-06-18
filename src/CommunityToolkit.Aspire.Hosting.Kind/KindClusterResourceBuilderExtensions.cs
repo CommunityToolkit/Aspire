@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -22,6 +24,7 @@ public static class KindClusterResourceBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the Kind cluster.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindClusterResource}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<KindClusterResource> AddKindCluster(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name)
@@ -120,6 +123,7 @@ public static class KindClusterResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="version">The Kubernetes version (e.g., "v1.32.2").</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<T> WithKubernetesVersion<T>(
         this IResourceBuilder<T> builder,
         string version)
@@ -140,6 +144,7 @@ public static class KindClusterResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="count">The number of worker nodes. Must be zero or greater.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<T> WithWorkerNodes<T>(
         this IResourceBuilder<T> builder,
         int count)
@@ -160,6 +165,7 @@ public static class KindClusterResourceBuilderExtensions
     /// <param name="builder">The resource builder.</param>
     /// <param name="lifetime">The desired cluster lifetime.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
     public static IResourceBuilder<T> WithClusterLifetime<T>(
         this IResourceBuilder<T> builder,
         ClusterLifetime lifetime)
@@ -180,6 +186,7 @@ public static class KindClusterResourceBuilderExtensions
     /// <remarks>
     /// Multiple calls to this method compose: each callback is applied in order during config generation.
     /// </remarks>
+    [AspireExportIgnore(Reason = "Action<KindConfigModel> is not ATS-compatible. Configure Kind config through ATS-supported APIs.")]
     public static IResourceBuilder<KindClusterResource> WithKindConfig(
         this IResourceBuilder<KindClusterResource> builder,
         Action<KindConfigModel> configure)
@@ -246,6 +253,7 @@ public static class KindClusterResourceBuilderExtensions
     /// overload instead, which handles container-specific requirements like bind-mounting and network connectivity.
     /// </para>
     /// </remarks>
+    [AspireExport("withKindClusterReference")]
     public static IResourceBuilder<T> WithReference<T>(
         this IResourceBuilder<T> builder,
         IResourceBuilder<KindClusterResource> kind)
@@ -261,3 +269,5 @@ public static class KindClusterResourceBuilderExtensions
         });
     }
 }
+
+#pragma warning restore ASPIREATS001

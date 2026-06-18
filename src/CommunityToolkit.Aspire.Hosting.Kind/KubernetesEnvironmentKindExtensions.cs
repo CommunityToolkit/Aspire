@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 #pragma warning disable ASPIREPIPELINES001 // Pipeline APIs are experimental
+#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
 
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Kubernetes;
@@ -26,6 +27,7 @@ public static class KubernetesEnvironmentKindExtensions
     /// <param name="builder">The Kubernetes environment resource builder.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindEnvironmentResource}"/>
     /// for further Kind-specific configuration.</returns>
+    [AspireExport]
     public static IResourceBuilder<KindEnvironmentResource> WithKind(
         this IResourceBuilder<KubernetesEnvironmentResource> builder)
     {
@@ -57,3 +59,5 @@ public static class KubernetesEnvironmentKindExtensions
         return kindBuilder;
     }
 }
+
+#pragma warning restore ASPIREATS001

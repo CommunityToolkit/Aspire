@@ -7,6 +7,8 @@ using CommunityToolkit.Aspire.Hosting.Kind;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+#pragma warning disable ASPIREATS001 // AspireExport APIs are experimental
+
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -39,6 +41,7 @@ public static class KindContainerExtensions
     /// communication over the Kind container network.
     /// </para>
     /// </remarks>
+    [AspireExport("withKindContainerReference")]
     public static IResourceBuilder<ContainerResource> WithReference(
         this IResourceBuilder<ContainerResource> builder,
         IResourceBuilder<KindClusterResource> kind)
@@ -91,6 +94,7 @@ public static class KindContainerExtensions
     /// the container can be identified by the handler.
     /// </para>
     /// </remarks>
+    [AspireExport]
     public static IResourceBuilder<ContainerResource> WithKindNetwork(
         this IResourceBuilder<ContainerResource> builder)
     {
@@ -215,3 +219,5 @@ public static class KindContainerExtensions
         return RandomNumberGenerator.GetString(chars, length);
     }
 }
+
+#pragma warning restore ASPIREATS001
