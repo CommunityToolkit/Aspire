@@ -74,7 +74,7 @@
     <!-- External packages -->
     <PackageVersion Include="AWSSDK.S3" Version="4.0.23.3" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
-    <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
+    <PackageVersion Include="JsonSchema.Net" Version="9.2.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
     <PackageVersion Include="Minio" Version="6.0.5" />
