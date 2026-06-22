@@ -5,7 +5,7 @@
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
-    <PackageVersion Include="Squad.Agents.AI" Version="0.5.1-preview.8" />
+    <PackageVersion Include="Squad.Agents.AI" Version="0.5.1" />
     <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
          Microsoft.Agents.AI.GitHub.Copilot preview ships with the buildTransitive
          bridge from https://github.com/microsoft/agent-framework/pull/6457 (merged
