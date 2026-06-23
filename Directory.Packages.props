@@ -5,14 +5,7 @@
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
-    <PackageVersion Include="Squad.Agents.AI" Version="0.5.1" />
-    <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
-         Microsoft.Agents.AI.GitHub.Copilot preview ships with the buildTransitive
-         bridge from https://github.com/microsoft/agent-framework/pull/6457 (merged
-         2026-06-10). Without it, copilot.exe never lands in bin/.../runtimes/
-         {rid}/native/ and the SDK throws on first RunAsync. Drop this entry once
-         MAF cuts the next preview. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.0" />
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
@@ -82,6 +75,14 @@
     <!-- External packages -->
     <PackageVersion Include="AWSSDK.S3" Version="4.0.23.3" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
+    <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
+    <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
+         Microsoft.Agents.AI.GitHub.Copilot preview ships with the buildTransitive
+         bridge from https://github.com/microsoft/agent-framework/pull/6457 (merged
+         2026-06-10). Without it, copilot.exe never lands in bin/.../runtimes/
+         {rid}/native/ and the SDK throws on first RunAsync. Drop this entry once
+         MAF cuts the next preview. -->
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.0" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
@@ -103,6 +104,7 @@
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+    <PackageVersion Include="Squad.Agents.AI" Version="0.5.1" />
     <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.10.2" />
     <PackageVersion Include="SurrealDb.Net" Version="0.10.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
