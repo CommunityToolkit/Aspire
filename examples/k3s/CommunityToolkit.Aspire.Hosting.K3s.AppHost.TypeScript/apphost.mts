@@ -3,11 +3,11 @@ import { createBuilder, ContainerLifetime } from './.aspire/modules/aspire.mjs';
 const builder = await createBuilder();
 
 // ── Runtime path (actually executed) ─────────────────────────────────────────
-// Deploys a k3s cluster with 2 agent nodes, installs podinfo via Helm, and
-// exposes the podinfo service as an Aspire endpoint — validating the full
-// add/build/run path without relying on the configure callback.
-const cluster = await builder.addK3sCluster('k8s')
-    .withAgentCount(2);
+// Single-node cluster: installs podinfo via Helm and exposes the service as an
+// Aspire endpoint — validating the full add/build/run path. No agent nodes so
+// the CI runner has enough CPU/RAM to schedule pods. withAgentCount is covered
+// by the compile-time section below.
+const cluster = await builder.addK3sCluster('k8s');
 
 const _apiEndpoint = await cluster.apiEndpoint();
 
