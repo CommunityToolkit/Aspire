@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "CommunityToolkit.Aspire.Hosting.Bitwarden.SecretManager.AppHost.csproj"
+  }
+}
