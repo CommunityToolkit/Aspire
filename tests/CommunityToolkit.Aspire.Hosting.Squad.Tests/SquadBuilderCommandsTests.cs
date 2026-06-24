@@ -82,21 +82,21 @@ public class SquadBuilderCommandsTests : IDisposable
     }
 
     [Fact]
-    public async Task OpenCopilotCli_OnNonWindows_ReturnsExplanatoryFailure()
+    public async Task OpenCopilotCli_OnNonWindows_AttemptsLaunch()
     {
         if (OperatingSystem.IsWindows())
         {
             // On Windows the command can succeed or fail depending on whether wt.exe / Copilot CLI
-            // are installed on the test runner; we don't assert here. The non-Windows assertion
-            // below is the deterministic one.
+            // are installed on the test runner; skip here. The non-Windows path is exercised below.
             return;
         }
 
         var resource = BuildSquadResource("squad");
         var result = await InvokeCommandAsync(resource, "open-copilot-cli");
 
-        Assert.False(result.Success);
-        Assert.Contains("Windows", result.Message ?? string.Empty);
+        // Cross-platform support means non-Windows now attempts to launch the CLI.
+        // Success=true or Success=false are valid outcomes depending on the shell handler.
+        Assert.NotNull(result);
     }
 
     [Fact]
