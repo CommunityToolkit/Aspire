@@ -127,7 +127,7 @@ internal sealed class K3sReadinessHealthCheck(
 
     /// <summary>
     /// Reads the raw kubeconfig written by k3s, rewrites it for each consumer variant,
-    /// and writes both to disk atomically. Returns the path to the local variant.
+    /// and writes both to disk in-place. Returns the path to the local variant.
     /// </summary>
     private async Task<string> EnsureKubeconfigVariantsAsync(
         string rawPath,
@@ -141,12 +141,12 @@ internal sealed class K3sReadinessHealthCheck(
         var localDir = Path.Combine(dir, "local");
         Directory.CreateDirectory(localDir);
         var localPath = Path.Combine(localDir, "kubeconfig.yaml");
-        await WriteAtomicAsync(localPath, BuildConfigYaml(parsed, $"https://localhost:{port}"), ct)
+        await WriteKubeconfigAsync(localPath, BuildConfigYaml(parsed, $"https://localhost:{port}"), ct)
             .ConfigureAwait(false);
 
         var containerDir = Path.Combine(dir, "container");
         Directory.CreateDirectory(containerDir);
-        await WriteAtomicAsync(
+        await WriteKubeconfigAsync(
             Path.Combine(containerDir, "kubeconfig.yaml"),
             BuildConfigYaml(parsed, $"https://{resource.Name}:6443"),
             ct).ConfigureAwait(false);
@@ -168,15 +168,21 @@ internal sealed class K3sReadinessHealthCheck(
     }
 
     /// <summary>
-    /// Writes <paramref name="content"/> to <paramref name="path"/> atomically by first
-    /// writing to a sibling temp file then renaming. Readers never observe a partial write.
+    /// Writes <paramref name="content"/> to <paramref name="path"/> by truncating the file
+    /// in-place, preserving its inode.
     /// </summary>
-    private static async Task WriteAtomicAsync(string path, string content, CancellationToken ct)
-    {
-        var tmp = path + ".tmp";
-        await File.WriteAllTextAsync(tmp, content, ct).ConfigureAwait(false);
-        File.Move(tmp, path, overwrite: true);
-    }
+    /// <remarks>
+    /// A rename-based atomic write (write temp → rename over target) creates a new inode at
+    /// the destination path. On Linux, Docker file-level bind mounts track the inode that
+    /// existed at container-start time, not the path. Containers with a file-level bind mount
+    /// of this kubeconfig path (helm, kubectl) would never see the updated content if the
+    /// file were replaced by rename. Writing in-place (O_TRUNC on the existing file) keeps
+    /// the original inode and makes the update immediately visible inside those containers.
+    /// On macOS, Docker Desktop resolves bind-mounted files by path (virtiofs/gRPC-FUSE), so
+    /// both approaches work there — the in-place write is the cross-platform correct choice.
+    /// </remarks>
+    private static Task WriteKubeconfigAsync(string path, string content, CancellationToken ct) =>
+        File.WriteAllTextAsync(path, content, ct);
 
     internal static bool IsTlsOrAuthFailure(Exception ex) =>
         ex is System.Security.Authentication.AuthenticationException
