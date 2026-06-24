@@ -15,23 +15,14 @@ namespace Aspire.Hosting;
 ///   <item><description><b>ResourceStopped:</b> transitions stopped Squad resources to <c>Finished</c>.</description></item>
 /// </list>
 /// </summary>
-internal sealed class SquadLifecycleHook : IDistributedApplicationEventingSubscriber
+internal sealed class SquadLifecycleHook(
+    ILogger<SquadLifecycleHook> logger,
+    ResourceNotificationService notifications) : IDistributedApplicationEventingSubscriber
 {
-    private readonly ILogger<SquadLifecycleHook> _logger;
-    private readonly ResourceNotificationService _notifications;
-
     // Known Aspire dashboard state styles (mirrors KnownResourceStateStyles names).
     private const string StateSpawning = "Spawning";
     private const string StateActive = "Active";
     private const string StateStopped = "Finished";
-
-    public SquadLifecycleHook(
-        ILogger<SquadLifecycleHook> logger,
-        ResourceNotificationService notifications)
-    {
-        _logger = logger;
-        _notifications = notifications;
-    }
 
     // Lifecycle entry points.
 
@@ -60,7 +51,7 @@ internal sealed class SquadLifecycleHook : IDistributedApplicationEventingSubscr
     {
         if (@event.Resource is SquadResource squad)
         {
-            return _notifications.PublishUpdateAsync(squad, s => s with
+            return notifications.PublishUpdateAsync(squad, s => s with
             {
                 State = new ResourceStateSnapshot(StateStopped, KnownResourceStateStyles.Info),
             });
@@ -76,18 +67,18 @@ internal sealed class SquadLifecycleHook : IDistributedApplicationEventingSubscr
         var squads = appModel.Resources.OfType<SquadResource>().ToList();
         if (squads.Count == 0) return;
 
-        _logger.LogInformation("Squad: {Count} squad team resource(s) discovered.", squads.Count);
+        logger.LogInformation("Squad: {Count} squad team resource(s) discovered.", squads.Count);
 
         foreach (var squad in squads)
         {
             // Publish the squad resource as Spawning before it becomes Active.
-            await _notifications.PublishUpdateAsync(squad, s => s with
+            await notifications.PublishUpdateAsync(squad, s => s with
             {
                 State = new ResourceStateSnapshot(StateSpawning, KnownResourceStateStyles.Info),
                 Properties = [..ReadTeamProperties(squad)],
             });
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Squad '{Name}' is Spawning - {AgentCount} agent(s) discovered: {Agents}",
                 squad.Name, squad.Agents.Count, string.Join(", ", squad.Agents));
         }
@@ -102,9 +93,9 @@ internal sealed class SquadLifecycleHook : IDistributedApplicationEventingSubscr
 
         foreach (var squad in squads)
         {
-            _logger.LogInformation("Squad '{Name}' is Active - {AgentCount} agent(s) ready.", squad.Name, squad.Agents.Count);
+            logger.LogInformation("Squad '{Name}' is Active - {AgentCount} agent(s) ready.", squad.Name, squad.Agents.Count);
 
-            await _notifications.PublishUpdateAsync(squad, s => s with
+            await notifications.PublishUpdateAsync(squad, s => s with
             {
                 State = new ResourceStateSnapshot(StateActive, KnownResourceStateStyles.Success),
                 Properties = [..ReadTeamProperties(squad)],
@@ -125,7 +116,7 @@ internal sealed class SquadLifecycleHook : IDistributedApplicationEventingSubscr
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 ex,
                 "Could not read Squad dashboard metadata for resource '{SquadName}' from '{TeamRoot}'.",
                 squad.Name,

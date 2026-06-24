@@ -198,109 +198,113 @@ public static class SquadBuilderExtensions
 
     private static LaunchResult LaunchCopilotCli(string squadName, string teamRoot)
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            return LaunchResult.Failed("Opening an interactive Copilot CLI terminal is currently implemented for Windows AppHost sessions only.");
-        }
-
         if (!Directory.Exists(teamRoot))
         {
             return LaunchResult.Failed($"Squad team root was not found: {teamRoot}");
         }
 
         var windowTitle = $"Copilot - {squadName}";
+
+        try
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                LaunchCopilotCliWindows(teamRoot, windowTitle);
+            }
+            else
+            {
+                LaunchCopilotCliUnix(teamRoot, windowTitle);
+            }
+
+            return LaunchResult.Succeeded($"Opened GitHub Copilot CLI for squad '{squadName}'.");
+        }
+        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException or InvalidOperationException)
+        {
+            return LaunchResult.Failed($"Failed to open Copilot CLI terminal: {ex.Message}");
+        }
+    }
+
+    // OS-bound spawn helpers — excluded from coverage because they hand off to terminal
+    // processes. Their argument-list building is simple enough to read at a glance;
+    // the launch itself can only be exercised in a user-driven smoke test.
+    [ExcludeFromCodeCoverage]
+    private static void LaunchCopilotCliWindows(string teamRoot, string windowTitle)
+    {
         var copilotCommand = "$copilot = Get-Command copilot -ErrorAction SilentlyContinue; " +
             "if ($copilot) { & $copilot.Source } " +
             "else { Write-Host 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.' -ForegroundColor Yellow }";
 
+        // Try Windows Terminal first, fall back to PowerShell console.
         try
         {
-            StartWindowsTerminal(teamRoot, windowTitle, copilotCommand);
-            return LaunchResult.Succeeded($"Opened GitHub Copilot CLI for squad '{squadName}'.");
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "wt.exe",
+                UseShellExecute = false,
+            };
+
+            startInfo.ArgumentList.Add("-d");
+            startInfo.ArgumentList.Add(teamRoot);
+            startInfo.ArgumentList.Add("--title");
+            startInfo.ArgumentList.Add(windowTitle);
+            startInfo.ArgumentList.Add("powershell.exe");
+            startInfo.ArgumentList.Add("-NoLogo");
+            startInfo.ArgumentList.Add("-NoExit");
+            startInfo.ArgumentList.Add("-Command");
+            startInfo.ArgumentList.Add(copilotCommand);
+
+            Process.Start(startInfo);
+            return;
         }
-        catch (Win32Exception)
+        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException or InvalidOperationException)
         {
             // Windows Terminal is optional. Fall back to the inbox console host.
         }
-        catch (FileNotFoundException)
-        {
-            // Windows Terminal is optional. Fall back to the inbox console host.
-        }
-        catch (InvalidOperationException)
-        {
-            // Windows Terminal is optional. Fall back to the inbox console host.
-        }
 
-        try
-        {
-            StartConsoleWindow(teamRoot, windowTitle, copilotCommand);
-            return LaunchResult.Succeeded($"Opened GitHub Copilot CLI for squad '{squadName}' in a PowerShell window.");
-        }
-        catch (Win32Exception ex)
-        {
-            return LaunchResult.Failed($"Failed to open Copilot CLI terminal: {ex.Message}");
-        }
-        catch (FileNotFoundException ex)
-        {
-            return LaunchResult.Failed($"Failed to open Copilot CLI terminal: {ex.Message}");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return LaunchResult.Failed($"Failed to open Copilot CLI terminal: {ex.Message}");
-        }
-    }
-
-    // OS-bound spawn helpers — excluded from coverage because they hand off to wt.exe /
-    // powershell.exe which open real terminal windows. Their argument-list building is
-    // simple enough to read at a glance; the launch itself can only be exercised in a
-    // user-driven smoke test on a Windows desktop.
-    [ExcludeFromCodeCoverage]
-    private static void StartWindowsTerminal(string workingDirectory, string windowTitle, string copilotCommand)
-    {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = "wt.exe",
-            UseShellExecute = false,
-        };
-
-        startInfo.ArgumentList.Add("-d");
-        startInfo.ArgumentList.Add(workingDirectory);
-        startInfo.ArgumentList.Add("--title");
-        startInfo.ArgumentList.Add(windowTitle);
-        startInfo.ArgumentList.Add("powershell.exe");
-        startInfo.ArgumentList.Add("-NoLogo");
-        startInfo.ArgumentList.Add("-NoExit");
-        startInfo.ArgumentList.Add("-Command");
-        startInfo.ArgumentList.Add(copilotCommand);
-
-        Process.Start(startInfo);
-    }
-
-    [ExcludeFromCodeCoverage]
-    private static void StartConsoleWindow(string workingDirectory, string windowTitle, string copilotCommand)
-    {
-        // Launch PowerShell directly with UseShellExecute=true (which opens a new console window
-        // for non-console parents) instead of going through `cmd /c start "<title>" ...`.
-        // `start` treats the first quoted argument as the window title, but cmd's quote-stripping
-        // rules make passing a title that contains spaces (e.g., "Copilot - research-squad")
-        // fragile — the title can be swallowed into the command. Setting the title inside the new
-        // shell via $Host.UI.RawUI.WindowTitle removes that fragility entirely.
+        // Fallback: launch PowerShell directly (opens a new console window via UseShellExecute=true).
         var escapedTitle = windowTitle.Replace("'", "''");
         var inlineCommand = $"$Host.UI.RawUI.WindowTitle = '{escapedTitle}'; {copilotCommand}";
 
-        var startInfo = new ProcessStartInfo
+        var fallbackInfo = new ProcessStartInfo
         {
             FileName = "powershell.exe",
-            WorkingDirectory = workingDirectory,
+            WorkingDirectory = teamRoot,
             UseShellExecute = true,
         };
 
-        startInfo.ArgumentList.Add("-NoLogo");
-        startInfo.ArgumentList.Add("-NoExit");
-        startInfo.ArgumentList.Add("-Command");
-        startInfo.ArgumentList.Add(inlineCommand);
+        fallbackInfo.ArgumentList.Add("-NoLogo");
+        fallbackInfo.ArgumentList.Add("-NoExit");
+        fallbackInfo.ArgumentList.Add("-Command");
+        fallbackInfo.ArgumentList.Add(inlineCommand);
+
+        Process.Start(fallbackInfo);
+    }
+
+    [ExcludeFromCodeCoverage]
+    private static void LaunchCopilotCliUnix(string teamRoot, string windowTitle)
+    {
+        // On macOS/Linux, launch a shell that checks for the copilot CLI.
+        var shellCommand = "command -v copilot >/dev/null 2>&1 && exec copilot || " +
+            "{ echo 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.'; exec $SHELL; }";
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = GetUnixShell(),
+            WorkingDirectory = teamRoot,
+            UseShellExecute = false,
+        };
+
+        startInfo.ArgumentList.Add("-c");
+        startInfo.ArgumentList.Add(shellCommand);
+        startInfo.Environment["SQUAD_TERMINAL_TITLE"] = windowTitle;
 
         Process.Start(startInfo);
+    }
+
+    private static string GetUnixShell()
+    {
+        var shell = Environment.GetEnvironmentVariable("SHELL");
+        return !string.IsNullOrEmpty(shell) ? shell : "/bin/bash";
     }
 
     private sealed record LaunchResult(bool Success, string Message)
