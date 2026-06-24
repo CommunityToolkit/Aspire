@@ -166,7 +166,13 @@ public static class K3sManifestBuilderExtensions
         // DCP sets up container network aliases asynchronously, so the kubeconfig file
         // can appear in the bind-mount before the k8s hostname resolves in the kubectl
         // container. Using `kubectl cluster-info` verifies both the file and the network.
+        sb.AppendLine("_k3s_wait=0");
         sb.AppendLine($"until [ -f {K3sFileHelpers.ContainerKubeconfigPath} ] && kubectl cluster-info --kubeconfig {K3sFileHelpers.ContainerKubeconfigPath} > /dev/null 2>&1; do");
+        sb.AppendLine("  _k3s_wait=$((_k3s_wait + 5))");
+        sb.AppendLine("  if [ \"$_k3s_wait\" -ge 600 ]; then");
+        sb.AppendLine("    echo 'Timed out waiting for k3s cluster to be ready after 10 minutes' >&2");
+        sb.AppendLine("    exit 1");
+        sb.AppendLine("  fi");
         sb.AppendLine("  echo 'Waiting for k3s cluster to be ready and reachable...'");
         sb.AppendLine("  sleep 5");
         sb.AppendLine("done");
