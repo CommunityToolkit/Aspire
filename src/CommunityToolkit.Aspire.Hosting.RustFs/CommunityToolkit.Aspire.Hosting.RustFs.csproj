@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting rustfs storage s3-compatible</AdditionalPackageTags>
-    <Description>An Aspire hosting integration for RustFs</Description>
+    <Description>An Aspire hosting integration for the RustFS S3-compatible object storage container.</Description>
   </PropertyGroup>
 
   <ItemGroup>
