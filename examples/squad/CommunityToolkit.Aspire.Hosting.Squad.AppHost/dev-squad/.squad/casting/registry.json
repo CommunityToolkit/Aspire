@@ -1,0 +1,40 @@
+{
+  "agents": {
+    "lisa": {
+      "persistent_name": "Lisa",
+      "universe": "The Simpsons",
+      "created_at": "2026-06-11T15:07:36+03:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Tech Lead / Architect",
+      "folder": ".squad/agents/lisa"
+    },
+    "marge": {
+      "persistent_name": "Marge",
+      "universe": "The Simpsons",
+      "created_at": "2026-06-11T15:07:36+03:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Frontend Developer",
+      "folder": ".squad/agents/marge"
+    },
+    "frink": {
+      "persistent_name": "Frink",
+      "universe": "The Simpsons",
+      "created_at": "2026-06-11T15:07:36+03:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Backend / API Developer",
+      "folder": ".squad/agents/frink"
+    },
+    "comicbookguy": {
+      "persistent_name": "Comic Book Guy",
+      "universe": "The Simpsons",
+      "created_at": "2026-06-11T15:07:36+03:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Tester / QA Engineer",
+      "folder": ".squad/agents/comicbookguy"
+    }
+  }
+}
