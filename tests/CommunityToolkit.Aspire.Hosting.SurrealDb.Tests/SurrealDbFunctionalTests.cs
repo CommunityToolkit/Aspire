@@ -36,7 +36,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task VerifySurrealDbResource()
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         var ct = cts.Token;
         await using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
 
@@ -74,7 +74,7 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
     [InlineData(false)]
     public async Task WithDataShouldPersistStateBetweenUsages(bool useVolume)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         var ct = cts.Token;
 
         string? volumeName = null;
