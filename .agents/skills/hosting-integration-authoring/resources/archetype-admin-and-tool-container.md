@@ -54,6 +54,24 @@ DON'T:
 - Don't leak parent credentials into logs, generated files, or manifests.
 - Don't assume Aspire resource names are valid as container-specific IDs without normalization.
 
+## Multi-parent singleton aggregation
+
+Tools such as Adminer, DbGate, and Elasticvue can be singleton resources that aggregate configuration from multiple parent resources.
+
+DO:
+
+- In `Add{Tool}`, check `builder.Resources.OfType<ToolResource>().SingleOrDefault()` and return `builder.CreateResourceBuilder(existing)` when repeat calls should share one tool instance.
+- In parent-scoped `With{Tool}` helpers, create or get the singleton tool, add any parent relationship or display relationship that helps dashboard UX, then return the original parent builder.
+- Use deferred `WithEnvironment(context => ...)` callbacks on the tool to read all finalized parent resources from `applicationBuilder.Resources.OfType<TParentResource>()`.
+- Merge incremental configuration instead of overwriting it. If several parent types contribute to the same tool, parse the existing environment value, add missing entries, and write it back; Adminer-style JSON server lists and DbGate-style connection lists are good models.
+- Make repeated parent calls idempotent with stable sanitized connection IDs, labels, or keys.
+- Test multiple parents and multiple parent types calling `With{Tool}` so one singleton contains the merged configuration.
+
+DON'T:
+
+- Don't capture a single parent at app-model construction time when the tool must discover every opted-in parent in the final model.
+- Don't resolve secrets early just to build aggregate config. Prefer `ReferenceExpression` or runtime environment callback resolution, and ensure resolved values never enter manifests or logs.
+
 ## Health checks
 
 DO:

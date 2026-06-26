@@ -48,6 +48,30 @@ DON'T:
 - Don't include setup siblings in publish manifests.
 - Don't rely on user call order when setup resources have dependencies.
 
+Canonical setup sibling shape:
+
+```csharp
+if (!resource.ApplicationBuilder.ExecutionContext.IsPublishMode)
+{
+    var setupName = $"{resource.Resource.Name}-setup";
+
+    if (resource.ApplicationBuilder.TryCreateResourceBuilder<SetupResource>(setupName, out var existingSetup))
+    {
+        configureSetup?.Invoke(existingSetup);
+        return resource;
+    }
+
+    var setupBuilder = resource.ApplicationBuilder.AddResource(new SetupResource(setupName, resource.Resource.WorkingDirectory))
+        .WithParentRelationship(resource.Resource)
+        .ExcludeFromManifest();
+
+    resource.WaitForCompletion(setupBuilder);
+    configureSetup?.Invoke(setupBuilder);
+}
+```
+
+Use setup siblings only for work that must complete before the target starts. For post-ready background work such as model downloads or service-side child creation, prefer `ResourceReadyEvent`/`OnResourceReady`, publish status with `ResourceNotificationService`, and do not block the primary resource unless readiness truly depends on the helper.
+
 ## Admin/dev companions
 
 Admin UIs and development tools are companion resources, not deployment resources.

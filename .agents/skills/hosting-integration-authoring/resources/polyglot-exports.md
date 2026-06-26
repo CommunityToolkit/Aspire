@@ -108,6 +108,7 @@ Common cases that need a C# API plus a polyglot adapter:
 - C# generic metadata markers such as `IProjectMetadata`, package metadata, or strongly typed project references.
 - Mutable dictionaries or framework types that do not project cleanly.
 - Endpoint-reference overloads when generated SDKs need a string/parameter/external-service alternative.
+- Azure provisioning callbacks or Bicep/provisioning types such as `Action<AzureResourceInfrastructure>`, `BicepValue<T>`, or provider SDK model types.
 
 DO:
 
@@ -118,6 +119,19 @@ DO:
 DON'T:
 
 - Don't leave C# callback or generic-metadata overloads as the only way to configure an exported feature.
+
+Toolkit adapter pattern:
+
+1. Keep the public C# API ergonomic, even when it accepts callbacks or Azure/provisioning types.
+2. Mark C#-only overloads with `[AspireExportIgnore(Reason = "...")]` and name the incompatible type plus the replacement export shape.
+3. Add an internal static `*PolyglotExtensions` adapter when the exported shape should be different from the public C# shape.
+4. Make exported adapters compose the public API internally and accept only resource builders, primitives, arrays, dictionaries, DTOs, parameters, endpoint references, or other ATS-compatible values.
+5. Put polyglot options in `[AspireDto]` types with `init` properties and `ToXxxOptions()` conversion methods when the public C# API uses richer option objects.
+
+Example patterns in this repo:
+
+- Dapr exposes callback/options APIs for C# and DTO-based exports such as `AddDaprComponentExport` and `WithDaprSidecarExport`, backed by `DaprComponentExportOptions` and `DaprSidecarExportOptions`.
+- Azure Dapr APIs that accept `Action<AzureResourceInfrastructure>` or Azure provisioning model types are ignored for ATS, while `AzureRedisCacheDaprHostingPolyglotExtensions` provides exported helper methods that compose the public C# APIs with primitive options.
 
 ## DTOs, options, unions, and live values
 

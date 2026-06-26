@@ -25,6 +25,23 @@ DON'T:
 - Don't require every consumer to manually wire repeated low-level environment variables if an annotation-driven middleware integration can derive them consistently.
 - Don't let global scans mutate unrelated resources without a clear opt-in annotation.
 
+## Annotation-discovery pattern
+
+Use this pattern when fluent calls attach local configuration, but the integration needs the final app model before it can create sidecar processes, component manifests, generated files, or endpoint routing.
+
+DO:
+
+- Add small, typed annotations from `With{Feature}` or `With{Sidecar}` APIs instead of doing final wiring immediately.
+- Register one global lifecycle hook or `IDistributedApplicationEventingSubscriber` idempotently, for example from `Add{Integration}`.
+- In `BeforeStartEvent`, scan only resources with the opt-in annotation, collect component/reference annotations, and then materialize derived sidecar resources, generated config, or command arguments.
+- Propagate relevant `WaitAnnotation`s from the target resource to the derived sidecar/process so dependency ordering remains correct.
+- For resource-level aggregators such as local tunnel tools, store endpoint annotations on the aggregator resource and build config in `OnBeforeResourceStarted` after endpoint references are available.
+
+Reference patterns:
+
+- Dapr: `WithDaprSidecar` stores `DaprSidecarAnnotation`; `DaprDistributedApplicationLifecycleHook` subscribes to `BeforeStartEvent`, scans annotated resources, propagates waits, and materializes sidecar execution/config from the final model.
+- Ngrok: `WithTunnelEndpoint` adds endpoint annotations to the `NgrokResource`; `OnBeforeResourceStarted` reads endpoint references and writes the ngrok config just before the container starts.
+
 ## Lifecycle and ordering
 
 DO:
