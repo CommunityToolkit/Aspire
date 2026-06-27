@@ -235,23 +235,21 @@ public static class SquadBuilderExtensions
             "else { Write-Host 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.' -ForegroundColor Yellow }";
 
         // Try Windows Terminal first, fall back to PowerShell console.
+        // wt.exe uses a special syntax: everything after the profile/directory args
+        // is the commandline to execute. Using ArgumentList over-quotes it, so we
+        // build a single Arguments string instead.
         try
         {
+            var escapedTeamRoot = teamRoot.Contains(' ') ? $"\"{teamRoot}\"" : teamRoot;
+            var escapedWindowTitle = windowTitle.Contains(' ') ? $"\"{windowTitle}\"" : windowTitle;
+            var escapedCommand = copilotCommand.Replace("\"", "\\\"");
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = "wt.exe",
+                Arguments = $"-d {escapedTeamRoot} --title {escapedWindowTitle} powershell.exe -NoLogo -NoExit -Command \"{escapedCommand}\"",
                 UseShellExecute = false,
             };
-
-            startInfo.ArgumentList.Add("-d");
-            startInfo.ArgumentList.Add(teamRoot);
-            startInfo.ArgumentList.Add("--title");
-            startInfo.ArgumentList.Add(windowTitle);
-            startInfo.ArgumentList.Add("powershell.exe");
-            startInfo.ArgumentList.Add("-NoLogo");
-            startInfo.ArgumentList.Add("-NoExit");
-            startInfo.ArgumentList.Add("-Command");
-            startInfo.ArgumentList.Add(copilotCommand);
 
             Process.Start(startInfo);
             return;
