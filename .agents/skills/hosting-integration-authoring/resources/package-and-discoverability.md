@@ -11,6 +11,7 @@ DO:
 - Keep consuming-app client setup in client integration packages or consuming-app docs, not hosting package docs.
 - Add package metadata, description, icons, README, and tags consistent with nearby integrations.
 - Keep container image tag constants and package metadata easy for automation to update.
+- Prefer stable, explicit container image tags such as concrete `major.minor` tags or immutable digests. Avoid floating tags such as `latest`, `edge`, or bare major tags unless the upstream image has no stable alternative and the README documents the tradeoff.
 - For a new first-party packable integration that has not shipped a baseline package yet, set the existing repo baseline-validation opt-out used for new packages (for example `DisablePackageBaselineValidation`) until the first release establishes a baseline.
 
 DON'T:

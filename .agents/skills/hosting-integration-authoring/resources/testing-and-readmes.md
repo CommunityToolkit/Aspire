@@ -27,6 +27,7 @@ DO test:
 - Preflight failure paths for missing CLI, missing auth/context, missing registry access, disabled target APIs/services, and insufficient permissions.
 - Polyglot exports when exported API shape changes, including analyzer diagnostics and generated `.d.ts` signatures.
 - Controller/reconciler command serialization, conflict detection, command state transitions, cancellation, drift coalescing, and per-resource completion behavior when the integration owns shared external state.
+- Solution and CI wiring for new projects. Add new source, test, and example projects to `CommunityToolkit.Aspire.slnx`; when a new test project is added, run `./eng/testing/generate-test-list-for-workflow.sh` and include the `.github/workflows/tests.yml` update.
 
 DON'T:
 

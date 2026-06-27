@@ -82,6 +82,27 @@ DON'T:
 - Don't fail `aspire start` because a publish-only Dockerfile prerequisite is missing.
 - Don't emit Dockerfiles that depend on host-specific absolute paths.
 
+## Generated Dockerfile details
+
+Language integrations that publish as containers should make the generated Dockerfile predictable, secure, and easy to override.
+
+DO:
+
+- Generate multi-stage Dockerfiles when the language benefits from a separate SDK/build image and smaller runtime image.
+- Detect language/runtime versions from project files first, then installed toolchains, then a documented default. Examples include `go.mod`, `package.json`, `Cargo.toml`, `pyproject.toml`, and similar ecosystem files.
+- Log version-detection failures at debug level and continue to the next fallback instead of failing unrelated AppHost construction.
+- Allow users to override build and runtime base images through explicit APIs or annotations, and keep those overrides in the app model.
+- Include runtime essentials such as CA certificates when the generated app may make HTTPS requests.
+- Carry `WithContainerFiles` inputs into generated images with explicit destination paths and pipeline dependencies.
+- Document publish behavior in the README: generated Dockerfile shape, version detection order, default versions, base-image override APIs, and container-file support.
+- Add focused tests for version detection, generated Dockerfile shape, base-image override annotations, and publish-mode argument differences.
+
+DON'T:
+
+- Don't use host-installed toolchain versions as the only source of truth for generated container images.
+- Don't leak run-mode setup commands, watch/reload flags, local virtual environment paths, or host-specific absolute paths into generated Dockerfiles.
+- Don't hide an unsupported framework/runtime publish path behind a generic language API; fail clearly or require a user-authored Dockerfile.
+
 ## Framework and publish variants
 
 First-party Aspire language integrations prefer explicit variants when the runtime behavior materially changes.
