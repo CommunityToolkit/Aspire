@@ -12,6 +12,7 @@
     <PackageReference Include="Aspire.Hosting.SqlServer" />
     <PackageReference Include="Microsoft.Build.Locator" />
     <PackageReference Include="Microsoft.SqlServer.DacFx" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
   <ItemGroup>
