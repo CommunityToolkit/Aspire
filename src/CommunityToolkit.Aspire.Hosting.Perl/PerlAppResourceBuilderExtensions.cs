@@ -214,7 +214,6 @@ public static partial class PerlAppResourceBuilderExtensions
         }
 
         resourceBuilder.WithOtlpExporter();
-
         resourceBuilder.WithRequiredCommand("perl", "https://www.perl.org/get.html");
         resourceBuilder.WithRequiredCommand("cpan", "https://metacpan.org/pod/CPAN");
 

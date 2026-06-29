@@ -1,7 +1,7 @@
 namespace CommunityToolkit.Aspire.Testing;
 
 /// <summary>
-/// Runs the shared TypeScript AppHost validation flow for example app hosts.
+/// Runs the shared TypeScript AppHost validation flow for example and test app hosts.
 /// </summary>
 public static class TypeScriptAppHostTest
 {
@@ -14,7 +14,9 @@ public static class TypeScriptAppHostTest
     /// <param name="waitForResources">The resources that must reach the expected Aspire state, if any.</param>
     /// <param name="waitStatus">The Aspire resource status to wait for.</param>
     /// <param name="requiredCommands">Optional commands that must exist on <c>PATH</c> before validation runs.</param>
+    /// <param name="useConfiguredPackages"><see langword="true"/> to validate the AppHost using the package mappings already present in <c>aspire.config.json</c> instead of packing a local polyglot package first.</param>
     /// <param name="secrets">Optional dictionary of secret key-value pairs to set via <c>aspire secret set</c> before starting the app host.</param>
+    /// <param name="appHostPathRelativeToRepo">Optional repository-relative path to an <c>apphost.ts</c> file. When omitted, the path is resolved from <paramref name="exampleName"/> and <paramref name="appHostProject"/>.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public static async Task Run(
         string appHostProject,
@@ -23,7 +25,9 @@ public static class TypeScriptAppHostTest
         IEnumerable<string> waitForResources,
         string waitStatus = "healthy",
         IEnumerable<string>? requiredCommands = null,
+        bool useConfiguredPackages = false,
         Dictionary<string, string>? secrets = null,
+        string? appHostPathRelativeToRepo = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appHostProject);
@@ -46,7 +50,10 @@ public static class TypeScriptAppHostTest
 
         string repoRoot = Path.GetFullPath(Path.Combine("..", "..", "..", "..", ".."));
         string scriptPath = Path.Combine(repoRoot, "eng", "testing", "validate-typescript-apphost.ps1");
-        string appHostPath = Path.Combine(repoRoot, "examples", exampleName, appHostProject, "apphost.mts");
+        string appHostPath = string.IsNullOrWhiteSpace(appHostPathRelativeToRepo)
+            ? Path.Combine(repoRoot, "examples", exampleName, appHostProject, "apphost.ts")
+            : Path.Combine(repoRoot, appHostPathRelativeToRepo);
+        string packageProjectPath = Path.Combine(repoRoot, "src", packageName, $"{packageName}.csproj");
         string shell = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
 
         List<string> arguments =
@@ -54,7 +61,9 @@ public static class TypeScriptAppHostTest
             "-NoLogo",
             "-NoProfile",
             "-File", scriptPath,
-            "-AppHostPath", appHostPath
+            "-AppHostPath", appHostPath,
+            "-PackageProjectPath", packageProjectPath,
+            "-PackageName", packageName
         ];
 
         if (resources.Count > 0)
@@ -73,6 +82,11 @@ public static class TypeScriptAppHostTest
         {
             arguments.Add("-RequiredCommands");
             arguments.Add(string.Join(',', commands));
+        }
+
+        if (useConfiguredPackages)
+        {
+            arguments.Add("-UseConfiguredPackages");
         }
 
         if (secrets is { Count: > 0 })
