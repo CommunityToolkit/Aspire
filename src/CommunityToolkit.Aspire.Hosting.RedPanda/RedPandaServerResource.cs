@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -71,5 +69,3 @@ public class RedPandaServerResource(string name) : ContainerResource(name), IRes
         yield return new("Port", ReferenceExpression.Create($"{Port}"));
     }
 }
-
-#pragma warning restore ASPIREATS001

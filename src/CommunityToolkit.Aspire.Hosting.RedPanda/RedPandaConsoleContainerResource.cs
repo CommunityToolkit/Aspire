@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -13,5 +11,3 @@ public class RedPandaConsoleContainerResource(string name) : ContainerResource(n
     internal const string HttpEndpointName = "http";
     internal const int HttpPort = 8080;
 }
-
-#pragma warning restore ASPIREATS001

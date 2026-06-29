@@ -2,8 +2,6 @@ using System.Globalization;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.RedPanda;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -305,5 +303,3 @@ public static class RedPandaBuilderExtensions
         context.EnvironmentVariables["KAFKA_CLUSTERS_0_SCHEMAREGISTRY"] = schemaRegistry;
     }
 }
-
-#pragma warning restore ASPIREATS001
