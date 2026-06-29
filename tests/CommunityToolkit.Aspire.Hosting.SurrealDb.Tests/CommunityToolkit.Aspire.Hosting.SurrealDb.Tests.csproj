@@ -5,10 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.SurrealDb\SurrealDbContainerImageTags.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\examples\surrealdb\CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost\CommunityToolkit.Aspire.Hosting.SurrealDb.AppHost.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.SurrealDb\CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.SurrealDb\CommunityToolkit.Aspire.SurrealDb.csproj" />
