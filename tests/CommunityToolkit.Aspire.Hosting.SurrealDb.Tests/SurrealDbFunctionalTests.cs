@@ -8,6 +8,7 @@ using CommunityToolkit.Aspire.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Polly;
 using SurrealDb.Net;
 using SurrealDb.Net.Exceptions;
@@ -85,6 +86,14 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
         try
         {
             using var builder1 = TestDistributedApplicationBuilder.Create(testOutputHelper);
+            builder1.Services.AddLogging(builder =>
+            {
+                builder.AddXUnit(testOutputHelper);
+                if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null && Environment.GetEnvironmentVariable("RUNNER_DEBUG") == "1")
+                    builder.SetMinimumLevel(LogLevel.Trace);
+                else
+                    builder.SetMinimumLevel(LogLevel.Information);
+            });
 
             var password1 = builder1.AddParameter("surreal-password", secret: true);
             password1.Resource.Default = new PasswordConstantDefault();
@@ -151,6 +160,15 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             }
 
             using var builder2 = TestDistributedApplicationBuilder.Create(testOutputHelper);
+
+            builder2.Services.AddLogging(builder =>
+            {
+                builder.AddXUnit(testOutputHelper);
+                if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null && Environment.GetEnvironmentVariable("RUNNER_DEBUG") == "1")
+                    builder.SetMinimumLevel(LogLevel.Trace);
+                else
+                    builder.SetMinimumLevel(LogLevel.Information);
+            });
 
             var password2 = builder2.AddParameter("surreal-password", secret: true);
             password2.Resource.Default = new PasswordConstantDefault();
@@ -256,36 +274,36 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         await app.StopAsync(cts.Token);
     }
-    
+
     [Fact(Skip = "Feature is unstable and blocking the release")]
     public async Task VerifyWithInitFiles()
     {
         // Creates a script that should be executed when the container is initialized.
-    
+
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
         var pipeline = new ResiliencePipelineBuilder()
             .AddRetry(new() { MaxRetryAttempts = 10, BackoffType = DelayBackoffType.Linear, Delay = TimeSpan.FromSeconds(2), ShouldHandle = new PredicateBuilder().Handle<SurrealDbException>() })
             .Build();
-    
+
         var initDirPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-    
+
         Directory.CreateDirectory(initDirPath);
-        
+
         var initFilePath = Path.Combine(initDirPath, "init.surql");
-    
+
         var surrealNsName = "ns1";
         var surrealDbName = "db1";
-        
+
         try
         {
             await File.WriteAllTextAsync(
-                initFilePath, 
+                initFilePath,
         $"""
                 USE NS {surrealNsName};
                 USE DB {surrealDbName};
                 
                 CREATE car SET Brand = "BatMobile";
-                """, 
+                """,
                 cts.Token
             );
 
@@ -301,29 +319,29 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             var db = ns.AddDatabase(surrealDbName);
 
             await using var app = builder.Build();
-    
+
             await app.StartAsync(cts.Token);
-                
+
             var rns = app.Services.GetRequiredService<ResourceNotificationService>();
-            
+
             await rns.WaitForResourceAsync(db.Resource.Name, KnownResourceStates.Running, cts.Token);
-    
+
             var hb = Host.CreateApplicationBuilder();
-    
+
             hb.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [$"ConnectionStrings:{db.Resource.Name}"] = await db.Resource.ConnectionStringExpression.GetValueAsync(cts.Token)
             });
-    
+
             hb.AddSurrealClient(db.Resource.Name);
-    
+
             using var host = hb.Build();
-    
+
             await host.StartAsync(cts.Token);
 
             // Wait until the database is available
             await rns.WaitForResourceHealthyAsync(db.Resource.Name, cts.Token);
-    
+
             await pipeline.ExecuteAsync(async token =>
             {
                 await using var client = host.Services.GetRequiredService<SurrealDbClient>();
@@ -345,14 +363,14 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
             }
         }
     }
-    
+
     [Fact(Skip = "Feature is unstable and blocking the release")]
     public async Task AddDatabaseCreatesDatabaseWithCustomScript()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
         using var builder = TestDistributedApplicationBuilder.Create(testOutputHelper);
-        
+
         var surrealNsName = "ns1";
         var surrealDbName = "db1";
 
@@ -419,10 +437,10 @@ public class SurrealDbFunctionalTests(ITestOutputHelper testOutputHelper)
 
         [Column("title")]
         public string? Title { get; set; }
-        
+
         [Column("due_by")]
         public DateOnly? DueBy { get; set; } = null;
-        
+
         [Column("is_complete")]
         public bool IsComplete { get; set; } = false;
     }
