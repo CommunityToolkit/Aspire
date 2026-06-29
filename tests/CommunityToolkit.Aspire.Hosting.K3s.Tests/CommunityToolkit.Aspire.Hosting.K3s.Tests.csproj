@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.K3s\CommunityToolkit.Aspire.Hosting.K3s.csproj" />
+    <ProjectReference Include="..\..\examples\k3s\CommunityToolkit.Aspire.Hosting.K3s.AppHost\CommunityToolkit.Aspire.Hosting.K3s.AppHost.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+
+
+</Project>

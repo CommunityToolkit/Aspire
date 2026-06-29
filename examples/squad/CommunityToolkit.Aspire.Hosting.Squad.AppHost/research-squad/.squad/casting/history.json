@@ -1,0 +1,21 @@
+{
+  "universe_usage_history": [
+    {
+      "universe": "The Matrix",
+      "assignment_id": "matrix-research-squad-2026-06-11",
+      "used_at": "2026-06-11T00:00:00Z"
+    }
+  ],
+  "assignment_cast_snapshots": {
+    "matrix-research-squad-2026-06-11": {
+      "universe": "The Matrix",
+      "agents": {
+        "lead": "Morpheus",
+        "ml-data-researcher": "Trinity",
+        "model-evaluator": "Oracle",
+        "tester": "Tank"
+      },
+      "created_at": "2026-06-11T00:00:00Z"
+    }
+  }
+}
