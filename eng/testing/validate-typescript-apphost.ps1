@@ -4,6 +4,12 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$AppHostPath,
 
+    [string]$PackageProjectPath,
+
+    [string]$PackageName,
+
+    [switch]$UseConfiguredPackages,
+
     [string[]]$WaitForResources = @(),
 
     [string[]]$RequiredCommands = @(),
