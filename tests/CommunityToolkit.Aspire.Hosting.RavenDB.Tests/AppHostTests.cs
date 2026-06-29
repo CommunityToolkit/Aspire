@@ -67,4 +67,31 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
             Assert.Equal("Test Document", doc.Name.ToString());
         }
     }
+
+    [Fact]
+    public async Task DatabaseResourceHasStudioUrl()
+    {
+        using var cancellationToken = new CancellationTokenSource();
+        cancellationToken.CancelAfter(TimeSpan.FromMinutes(5));
+
+        var serverName = "ravendb";
+        var databaseResourceName = "ravenDatabase";
+
+        // The database becomes healthy only after the server's endpoints are allocated, which is when
+        // the "RavenDB Studio" URL annotation is added to the database resource.
+        await fixture.ResourceNotificationService
+            .WaitForResourceHealthyAsync(databaseResourceName)
+            .WaitAsync(TimeSpan.FromMinutes(5), cancellationToken.Token);
+
+        var appModel = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
+        var dbResource = Assert.Single(appModel.Resources.OfType<RavenDBDatabaseResource>());
+
+        var serverEndpoint = fixture.GetEndpoint(serverName, "http"); // e.g. http://localhost:9534
+
+        var studioUrl = Assert.Single(dbResource.Annotations.OfType<ResourceUrlAnnotation>(),
+            u => u.DisplayText == "RavenDB Studio");
+        Assert.Equal(
+            $"{serverEndpoint.OriginalString.TrimEnd('/')}/studio/index.html#databases/documents?&database={databaseResourceName}",
+            studioUrl.Url);
+    }
 }

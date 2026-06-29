@@ -255,6 +255,47 @@ public static class RavenDBBuilderExtensions
 
         var dbBuilder = builder.ApplicationBuilder.AddResource(databaseResource);
 
+        // Wire an "RavenDB Studio" deep-link onto the database child resource.
+        // The database has no endpoints of its own, so its own URL pipeline never runs; build the link
+        // from the parent server's primary endpoint (or its public URL when secured), which is only
+        // known once the server's endpoints are allocated. The parent server is a container, so its
+        // ResourceEndpointsAllocatedEvent fires (the child's would not).
+        builder.ApplicationBuilder.Eventing.Subscribe<ResourceEndpointsAllocatedEvent>(
+            builder.Resource,
+            async (@event, ct) =>
+            {
+                var server = databaseResource.Parent;
+
+                string? baseUrl;
+                if (server.IsSecured && !string.IsNullOrEmpty(server.PublicServerUrl))
+                    baseUrl = server.PublicServerUrl;
+                else if (server.PrimaryEndpoint.IsAllocated)
+                    baseUrl = server.PrimaryEndpoint.Url; // e.g. http://localhost:9534 (no trailing slash)
+                else
+                    return; // nothing to build a link from yet — no-op
+
+                var studioUrl = BuildStudioUrl(baseUrl, databaseResource.DatabaseName);
+
+                // (1) Annotation — discoverable via TryGetUrls and assertable in tests.
+                databaseResource.Annotations.Add(new ResourceUrlAnnotation
+                {
+                    Url = studioUrl,
+                    DisplayText = "RavenDB Studio"
+                });
+
+                // (2) Snapshot update — the dashboard renders from the snapshot, and the child's initial
+                //     snapshot was published before the server endpoints were allocated.
+                var notifications = @event.Services.GetRequiredService<ResourceNotificationService>();
+                await notifications.PublishUpdateAsync(databaseResource, snapshot =>
+                {
+                    var urls = snapshot.Urls.Add(new UrlSnapshot(Name: null, Url: studioUrl, IsInternal: false)
+                    {
+                        DisplayProperties = new UrlDisplayPropertiesSnapshot("RavenDB Studio", 0)
+                    });
+                    return snapshot with { Urls = urls };
+                }).ConfigureAwait(false);
+            });
+
         if (ensureCreated)
         {
             dbBuilder.OnResourceReady(async (resource, _, ct) =>
@@ -284,6 +325,12 @@ public static class RavenDBBuilderExtensions
         }
 
         return dbBuilder;
+    }
+
+    internal static string BuildStudioUrl(string baseUrl, string databaseName)
+    {
+        var root = baseUrl.TrimEnd('/');
+        return $"{root}/studio/index.html#databases/documents?&database={Uri.EscapeDataString(databaseName)}";
     }
 
     /// <summary>
