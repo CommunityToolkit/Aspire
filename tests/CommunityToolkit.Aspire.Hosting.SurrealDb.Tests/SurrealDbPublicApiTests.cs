@@ -2,10 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Utils;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
 
@@ -108,9 +107,9 @@ public class SurrealDbPublicApiTests
     public void WithDataShouldThrowWhenBuilderIsNull(bool useVolume)
     {
         IResourceBuilder<SurrealDbServerResource> builder = null!;
-    
+
         Func<IResourceBuilder<SurrealDbServerResource>>? action = null;
-    
+
         if (useVolume)
         {
             action = () => builder.WithDataVolume();
@@ -118,24 +117,24 @@ public class SurrealDbPublicApiTests
         else
         {
             const string source = "/data";
-    
+
             action = () => builder.WithDataBindMount(source);
         }
-    
+
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
     }
-    
+
     [Fact]
     public void WithDataBindMountShouldThrowWhenSourceIsNull()
     {
         var builder = TestDistributedApplicationBuilder.Create();
         var resourceBuilder = builder.AddSurrealServer("surreal");
-    
+
         string source = null!;
-    
+
         var action = () => resourceBuilder.WithDataBindMount(source);
-    
+
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(source), exception.ParamName);
     }
@@ -172,7 +171,7 @@ public class SurrealDbPublicApiTests
         Assert.Equal(source, mountAnnotation.Source);
         Assert.Equal("/data", mountAnnotation.Target);
     }
-    
+
     [Fact(Skip = "Feature is unstable and blocking the release")]
     public void WithInitFilesShouldThrowWhenBuilderIsNull()
     {
