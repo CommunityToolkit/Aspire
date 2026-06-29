@@ -13,7 +13,13 @@ param(
 
     [int]$WaitTimeoutSeconds = 180,
 
-    [string[]]$Secrets = @()
+    [string[]]$Secrets = @(),
+
+    [string]$PackageProjectPath,
+
+    [string]$PackageName,
+
+    [switch]$UseConfiguredPackages
 )
 
 $ErrorActionPreference = "Stop"
