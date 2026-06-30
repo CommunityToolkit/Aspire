@@ -93,13 +93,11 @@ public class VercelEnvironmentTests
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
 
         var vercel = builder.AddVercelEnvironment("vercel")
-            .WithVercelCliPath("vercel-test")
             .WithVercelTarget("preview")
             .WithVercelProductionDeployments()
             .WithVercelTarget("staging");
 
         var options = vercel.Resource.GetVercelOptions();
-        Assert.Equal("vercel-test", options.CliPath);
         Assert.Equal("staging", options.Target);
         Assert.False(options.Production);
     }
@@ -160,29 +158,6 @@ public class VercelEnvironmentTests
                 Assert.Equal(["vercel-destroy-prereq-vercel"], step.DependsOnSteps);
                 Assert.Equal([WellKnownPipelineSteps.Destroy], step.RequiredBySteps);
             });
-    }
-
-    [Fact]
-    public void WithVercelCliPathShouldThrowWhenBuilderIsNull()
-    {
-        IResourceBuilder<VercelEnvironmentResource> builder = null!;
-
-        var action = () => builder.WithVercelCliPath("vercel");
-
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal(nameof(builder), exception.ParamName);
-    }
-
-    [Fact]
-    public void WithVercelCliPathShouldThrowWhenCliPathIsEmpty()
-    {
-        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
-        var vercel = builder.AddVercelEnvironment("vercel");
-
-        var action = () => vercel.WithVercelCliPath("");
-
-        var exception = Assert.Throws<ArgumentException>(action);
-        Assert.Equal("cliPath", exception.ParamName);
     }
 
     [Fact]
@@ -702,7 +677,6 @@ public class VercelEnvironmentTests
         builder.Services.AddSingleton<IVercelCliRunner>(runner);
         builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
         var vercel = builder.AddVercelEnvironment("vercel")
-            .WithVercelCliPath("vercel-test")
             .WithVercelScope("team");
         builder.AddContainer("api", "api")
             .WithDockerfile(sourceRoot.Path, "Dockerfile")
@@ -716,7 +690,7 @@ public class VercelEnvironmentTests
         await VercelDeploymentStep.DeployAsync(context, environment);
 
         var invocation = Assert.Single(runner.Invocations);
-        Assert.Equal("vercel-test", invocation.FileName);
+        Assert.Equal("vercel", invocation.FileName);
         Assert.Equal(sourceRoot.Path, invocation.WorkingDirectory);
         Assert.Equal(["--scope", "team", "--cwd", sourceRoot.Path, "deploy", "--yes", "--env", "GREETING=hello"], invocation.Arguments);
         Assert.Null(invocation.StandardInput);
@@ -817,8 +791,7 @@ public class VercelEnvironmentTests
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
         builder.Services.AddSingleton<IVercelCliRunner>(runner);
         builder.Services.AddSingleton<IDeploymentStateManager>(new FakeDeploymentStateManager());
-        var vercel = builder.AddVercelEnvironment("vercel")
-            .WithVercelCliPath("vercel-test");
+        builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
             .WithDockerfile(sourceRoot.Path, "Dockerfile");
 
@@ -830,7 +803,7 @@ public class VercelEnvironmentTests
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
             VercelDeploymentStep.DeployAsync(context, environment));
 
-        Assert.Contains("Failed to deploy resource 'api' to Vercel using 'vercel-test' (exit code 1). deploy failed", exception.Message);
+        Assert.Contains("Failed to deploy resource 'api' to Vercel using 'vercel' (exit code 1). deploy failed", exception.Message);
     }
 
     [Fact]
@@ -842,8 +815,7 @@ public class VercelEnvironmentTests
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
         builder.Services.AddSingleton<IVercelCliRunner>(runner);
-        var vercel = builder.AddVercelEnvironment("vercel")
-            .WithVercelCliPath("vercel-test");
+        builder.AddVercelEnvironment("vercel");
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -867,8 +839,7 @@ public class VercelEnvironmentTests
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
         builder.Services.AddSingleton<IVercelCliRunner>(runner);
-        var vercel = builder.AddVercelEnvironment("vercel")
-            .WithVercelCliPath("vercel-test");
+        builder.AddVercelEnvironment("vercel");
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -878,7 +849,7 @@ public class VercelEnvironmentTests
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
             VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment));
 
-        Assert.Contains("Failed to validate Vercel authentication using 'vercel-test' (exit code 1). not logged in", exception.Message);
+        Assert.Contains("Failed to validate Vercel authentication using 'vercel' (exit code 1). not logged in", exception.Message);
     }
 
     [Fact]
@@ -888,8 +859,7 @@ public class VercelEnvironmentTests
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
         builder.Services.AddSingleton<IVercelCliRunner>(runner);
-        var vercel = builder.AddVercelEnvironment("vercel")
-            .WithVercelCliPath("vercel-test");
+        builder.AddVercelEnvironment("vercel");
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -899,7 +869,7 @@ public class VercelEnvironmentTests
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
             VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment));
 
-        Assert.Contains("Failed to validate Vercel CLI installation using 'vercel-test' (exit code 1). missing vercel", exception.Message);
+        Assert.Contains("Failed to validate Vercel CLI installation using 'vercel' (exit code 1). missing vercel", exception.Message);
     }
 
     [Fact]
@@ -943,7 +913,6 @@ public class VercelEnvironmentTests
         builder.Services.AddSingleton<IVercelCliRunner>(runner);
         builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
         var vercel = builder.AddVercelEnvironment("vercel")
-            .WithVercelCliPath("vercel-test")
             .WithVercelScope("team");
 
         using var app = builder.Build();
@@ -1166,7 +1135,6 @@ public class VercelEnvironmentTests
 
         var options = resource.GetVercelOptions();
 
-        Assert.Equal("vercel", options.CliPath);
         Assert.Null(options.Scope);
         Assert.Null(options.Target);
         Assert.False(options.Production);

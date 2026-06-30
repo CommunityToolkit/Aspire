@@ -25,6 +25,7 @@ internal static class VercelDeploymentStep
     public const string DeploymentPlanFileName = "vercel-deployments.json";
 
     private const string StateSectionNamePrefix = "communitytoolkit.vercel.";
+    private const string VercelCliFileName = "vercel";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -100,19 +101,18 @@ internal static class VercelDeploymentStep
 
     public static async Task ValidateCliPrerequisitesAsync(PipelineStepContext context, VercelEnvironmentResource environment)
     {
-        var options = environment.GetVercelOptions();
         var runner = context.Services.GetRequiredService<IVercelCliRunner>();
 
-        var versionResult = await runner.RunAsync(options.CliPath, ["--version"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var versionResult = await runner.RunAsync(VercelCliFileName, ["--version"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
         if (!versionResult.Succeeded)
         {
-            throw CreateCliException("validate Vercel CLI installation", options.CliPath, versionResult);
+            throw CreateCliException("validate Vercel CLI installation", VercelCliFileName, versionResult);
         }
 
-        var whoamiResult = await runner.RunAsync(options.CliPath, ["whoami"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var whoamiResult = await runner.RunAsync(VercelCliFileName, ["whoami"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
         if (!whoamiResult.Succeeded)
         {
-            throw CreateCliException("validate Vercel authentication", options.CliPath, whoamiResult);
+            throw CreateCliException("validate Vercel authentication", VercelCliFileName, whoamiResult);
         }
     }
 
@@ -136,11 +136,11 @@ internal static class VercelDeploymentStep
                 preparedEntry,
                 context.CancellationToken).ConfigureAwait(false);
 
-            var result = await runner.RunAsync(options.CliPath, arguments, preparedEntry.SourceRoot, context.CancellationToken).ConfigureAwait(false);
+            var result = await runner.RunAsync(VercelCliFileName, arguments, preparedEntry.SourceRoot, context.CancellationToken).ConfigureAwait(false);
 
             if (!result.Succeeded)
             {
-                throw CreateCliException($"deploy resource '{entry.Resource.Name}' to Vercel", options.CliPath, result);
+                throw CreateCliException($"deploy resource '{entry.Resource.Name}' to Vercel", VercelCliFileName, result);
             }
 
             var deploymentResult = GetDeploymentResult(result.StandardOutput);
@@ -200,11 +200,11 @@ internal static class VercelDeploymentStep
         foreach (string projectName in projects)
         {
             string[] arguments = BuildDestroyProjectArguments(options, projectName);
-            var result = await runner.RunAsync(options.CliPath, arguments, workingDirectory: null, context.CancellationToken, standardInput: "y\n").ConfigureAwait(false);
+            var result = await runner.RunAsync(VercelCliFileName, arguments, workingDirectory: null, context.CancellationToken, standardInput: "y\n").ConfigureAwait(false);
 
             if (!result.Succeeded)
             {
-                throw CreateCliException($"destroy Vercel project '{projectName}'", options.CliPath, result);
+                throw CreateCliException($"destroy Vercel project '{projectName}'", VercelCliFileName, result);
             }
 
             context.Summary.Add("Vercel project removed", projectName);

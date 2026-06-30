@@ -72,7 +72,7 @@ vercel --cwd <project-root> deploy --yes --env GREETING=hello
 
 - An Aspire workload with Dockerfile publish metadata, such as a language app resource that emits Dockerfile metadata or a project configured with `PublishAsDockerFile`.
 - The deployed container should listen on `$PORT`; the default port is `80`.
-- Vercel CLI installed and on `PATH`, or configured with `WithVercelCliPath`.
+- Vercel CLI installed and available on `PATH`.
 - Vercel authentication from an existing CLI login or the `VERCEL_TOKEN` environment variable.
 - Any project linking, secrets, domains, deployment protection, or build-time environment variables configured in Vercel.
 

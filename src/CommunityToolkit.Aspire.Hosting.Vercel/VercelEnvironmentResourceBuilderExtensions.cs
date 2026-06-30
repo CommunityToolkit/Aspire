@@ -89,23 +89,6 @@ public static class VercelEnvironmentResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Configures the Vercel CLI executable path used by deploy and destroy pipeline steps.
-    /// </summary>
-    /// <param name="builder">The Vercel environment builder.</param>
-    /// <param name="cliPath">The executable name or absolute path for the Vercel CLI.</param>
-    /// <returns>The Vercel environment builder.</returns>
-    [AspireExport]
-    public static IResourceBuilder<VercelEnvironmentResource> WithVercelCliPath(
-        this IResourceBuilder<VercelEnvironmentResource> builder,
-        string cliPath)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrWhiteSpace(cliPath);
-
-        return builder.WithVercelOptions(options => options with { CliPath = cliPath });
-    }
-
-    /// <summary>
     /// Configures the Vercel team or account scope for deployments.
     /// </summary>
     /// <param name="builder">The Vercel environment builder.</param>

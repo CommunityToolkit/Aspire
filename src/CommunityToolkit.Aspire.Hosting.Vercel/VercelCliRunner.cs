@@ -62,7 +62,7 @@ internal sealed class VercelCliRunner : IVercelCliRunner
         catch (Win32Exception ex)
         {
             throw new DistributedApplicationException(
-                $"The Vercel CLI '{fileName}' could not be started. Install Vercel CLI from https://vercel.com/docs/cli or configure a custom path with WithVercelCliPath.",
+                $"The Vercel CLI '{fileName}' could not be started. Install Vercel CLI from https://vercel.com/docs/cli and ensure it is available on PATH.",
                 ex);
         }
     }
