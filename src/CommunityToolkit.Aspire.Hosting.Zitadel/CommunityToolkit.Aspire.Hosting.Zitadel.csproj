@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>An Aspire hosting integration for the ZITADEL identity and access management container.</Description>
-    <AdditionalPackageTags>zitadel auth identity oauth2 authenticatioon openid-connect oidc</AdditionalPackageTags>
+    <AdditionalPackageTags>zitadel auth identity oauth2 authentication openid-connect oidc</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>
