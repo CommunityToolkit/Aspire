@@ -128,14 +128,15 @@ internal static class VercelDeploymentStep
 
         foreach (var entry in entries)
         {
+            var preparedEntry = await PrepareDeploymentEntryAsync(context, entry).ConfigureAwait(false);
             string[] arguments = await BuildDeployArgumentsAsync(
                 context.ExecutionContext,
                 context.Logger,
                 options,
-                entry,
+                preparedEntry,
                 context.CancellationToken).ConfigureAwait(false);
 
-            var result = await runner.RunAsync(options.CliPath, arguments, entry.SourceRoot, context.CancellationToken).ConfigureAwait(false);
+            var result = await runner.RunAsync(options.CliPath, arguments, preparedEntry.SourceRoot, context.CancellationToken).ConfigureAwait(false);
 
             if (!result.Succeeded)
             {
@@ -143,7 +144,7 @@ internal static class VercelDeploymentStep
             }
 
             var deploymentResult = GetDeploymentResult(result.StandardOutput);
-            string projectName = GetVercelProjectName(entry);
+            string projectName = GetVercelProjectName(preparedEntry);
 
             stateEntries.Add(new(
                 entry.Resource.Name,
@@ -245,7 +246,7 @@ internal static class VercelDeploymentStep
 
             planEntries.Add(new(
                 entry.Resource.Name,
-                entry.DockerfilePath,
+                GetDisplayDockerfilePath(entry),
                 BuildDisplayDeployCommand(options, entry.Resource.Name, environmentVariables),
                 [.. environmentVariables.Select(static variable => variable.Key).Order(StringComparer.Ordinal)]));
         }
@@ -400,20 +401,20 @@ internal static class VercelDeploymentStep
         if (resource is ContainerResource { Entrypoint: not null })
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures a container entrypoint, but Vercel Dockerfile deployments use the CMD/ENTRYPOINT from Dockerfile.vercel. Move the entrypoint into Dockerfile.vercel.");
+                $"Resource '{resource.Name}' configures a container entrypoint, but Vercel Dockerfile deployments use the CMD/ENTRYPOINT from the Dockerfile. Move the entrypoint into the Dockerfile.");
         }
 
         if (executionConfiguration.ArgumentsWithUnprocessed.Any())
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire command-line arguments, but Vercel Dockerfile deployments cannot override Docker CMD/ENTRYPOINT. Move these arguments into Dockerfile.vercel or express them as environment variables.");
+                $"Resource '{resource.Name}' configures Aspire command-line arguments, but Vercel Dockerfile deployments cannot override Docker CMD/ENTRYPOINT. Move these arguments into the Dockerfile or express them as environment variables.");
         }
 
         if (resource.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile)
             && (dockerfile.BuildArguments.Count > 0 || dockerfile.BuildSecrets.Count > 0))
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire Docker build arguments or build secrets. Vercel builds Dockerfile.vercel itself, so configure build-time values in Vercel instead.");
+                $"Resource '{resource.Name}' configures Aspire Docker build arguments or build secrets. Vercel builds the Dockerfile itself, so configure build-time values in Vercel instead.");
         }
     }
 
@@ -451,15 +452,17 @@ internal static class VercelDeploymentStep
                 continue;
             }
 
-            if (!resource.TryGetLastAnnotation<VercelDeploymentAnnotation>(out var annotation))
+            if (!resource.TryGetLastAnnotation<VercelDeploymentAnnotation>(out _))
             {
                 continue;
             }
 
-            string sourceRoot = ResolveSourceRoot(resource, annotation);
-            string dockerfilePath = annotation.DockerfilePath;
+            if (!resource.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile))
+            {
+                throw new DistributedApplicationException($"Resource '{resource.Name}' is published to Vercel but does not have Aspire Dockerfile build metadata. Configure the resource with PublishAsDockerFile, WithDockerfile, WithDockerfileFactory, or WithDockerfileBuilder before calling PublishAsVercel.");
+            }
 
-            yield return new(resource, sourceRoot, dockerfilePath);
+            yield return new(resource, dockerfile.ContextPath, dockerfile.DockerfilePath, dockerfile);
         }
     }
 
@@ -477,40 +480,113 @@ internal static class VercelDeploymentStep
                 throw new DistributedApplicationException($"The Vercel source root '{entry.SourceRoot}' for resource '{entry.Resource.Name}' does not exist.");
             }
 
-            string dockerfilePath = Path.Combine(entry.SourceRoot, entry.DockerfilePath);
-            if (!File.Exists(dockerfilePath))
+            if (entry.Dockerfile.DockerfileFactory is null && !File.Exists(entry.DockerfilePath))
             {
-                throw new DistributedApplicationException($"The Vercel Dockerfile '{dockerfilePath}' for resource '{entry.Resource.Name}' does not exist. Add a Dockerfile.vercel file to the source root or pass a custom dockerfilePath to PublishAsVercel.");
+                throw new DistributedApplicationException($"The Vercel Dockerfile '{entry.DockerfilePath}' for resource '{entry.Resource.Name}' does not exist. Configure the resource with an existing Dockerfile or an Aspire generated Dockerfile before calling PublishAsVercel.");
             }
         }
     }
 
-    private static string ResolveSourceRoot(IResource resource, VercelDeploymentAnnotation annotation)
+    private static async Task<VercelDeploymentEntry> PrepareDeploymentEntryAsync(PipelineStepContext context, VercelDeploymentEntry entry)
     {
-        if (annotation.SourceRoot is { } sourceRoot)
+        if (!RequiresStaging(entry))
         {
-            return sourceRoot;
+            return entry;
         }
 
-        if (resource is ProjectResource project)
+        var outputService = context.Services.GetRequiredService<IPipelineOutputService>();
+        string stagingRoot = GetStagingSourceRoot(outputService.GetTempDirectory(entry.Resource), entry);
+
+        if (Directory.Exists(stagingRoot))
         {
-            string projectPath = project.GetProjectMetadata().ProjectPath;
-            return Path.GetDirectoryName(projectPath)
-                ?? throw new DistributedApplicationException($"The project path '{projectPath}' for resource '{resource.Name}' does not have a parent directory.");
+            Directory.Delete(stagingRoot, recursive: true);
         }
 
-        if (resource is ExecutableResource executable)
-        {
-            return executable.WorkingDirectory;
-        }
+        CopyDirectory(entry.SourceRoot, stagingRoot, context.CancellationToken);
 
-        if (resource.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile))
+        string stagedDockerfilePath = Path.Combine(stagingRoot, "Dockerfile");
+        DockerfileFactoryContext dockerfileContext = new()
         {
-            return dockerfile.ContextPath;
-        }
+            CancellationToken = context.CancellationToken,
+            Resource = entry.Resource,
+            Services = context.Services
+        };
 
-        throw new DistributedApplicationException($"Resource '{resource.Name}' does not have a Vercel source root. Pass sourceRoot to PublishAsVercel or configure the container resource with WithDockerfile.");
+        await entry.Dockerfile.EmitDockerfileArtifactsAsync(dockerfileContext, stagedDockerfilePath).ConfigureAwait(false);
+
+        return entry with
+        {
+            SourceRoot = stagingRoot,
+            DockerfilePath = stagedDockerfilePath
+        };
     }
+
+    private static bool RequiresStaging(VercelDeploymentEntry entry)
+    {
+        if (entry.Dockerfile.DockerfileFactory is not null)
+        {
+            return true;
+        }
+
+        string dockerfileDirectory = Path.GetDirectoryName(Path.GetFullPath(entry.DockerfilePath)) ?? string.Empty;
+
+        return !PathEquals(dockerfileDirectory, entry.SourceRoot)
+            || !string.Equals(Path.GetFileName(entry.DockerfilePath), "Dockerfile", GetPathStringComparison());
+    }
+
+    private static string GetDisplayDockerfilePath(VercelDeploymentEntry entry)
+    {
+        if (RequiresStaging(entry))
+        {
+            return "Dockerfile";
+        }
+
+        return Path.GetRelativePath(entry.SourceRoot, entry.DockerfilePath);
+    }
+
+    private static string GetStagingSourceRoot(string tempDirectory, VercelDeploymentEntry entry)
+    {
+        string sourceRoot = Path.TrimEndingDirectorySeparator(entry.SourceRoot);
+        string sourceRootName = Path.GetFileName(sourceRoot);
+
+        if (string.IsNullOrWhiteSpace(sourceRootName))
+        {
+            sourceRootName = entry.Resource.Name;
+        }
+
+        return Path.Combine(tempDirectory, sourceRootName);
+    }
+
+    private static void CopyDirectory(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(destinationDirectory);
+
+        foreach (string directory in Directory.EnumerateDirectories(sourceDirectory, "*", SearchOption.AllDirectories))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string relativePath = Path.GetRelativePath(sourceDirectory, directory);
+            Directory.CreateDirectory(Path.Combine(destinationDirectory, relativePath));
+        }
+
+        foreach (string file in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string relativePath = Path.GetRelativePath(sourceDirectory, file);
+            string destinationFile = Path.Combine(destinationDirectory, relativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
+            File.Copy(file, destinationFile, overwrite: true);
+        }
+    }
+
+    private static bool PathEquals(string path, string otherPath)
+        => string.Equals(Path.GetFullPath(path), Path.GetFullPath(otherPath), GetPathStringComparison());
+
+    private static StringComparison GetPathStringComparison()
+        => OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
     internal static string GetVercelProjectName(VercelDeploymentEntry entry)
     {
@@ -630,7 +706,7 @@ internal static class VercelDeploymentStep
     }
 }
 
-internal sealed record VercelDeploymentEntry(IResource Resource, string SourceRoot, string DockerfilePath);
+internal sealed record VercelDeploymentEntry(IResource Resource, string SourceRoot, string DockerfilePath, DockerfileBuildAnnotation Dockerfile);
 
 internal sealed record VercelDeploymentPlan(string Environment, VercelDeploymentPlanEntry[] Deployments);
 

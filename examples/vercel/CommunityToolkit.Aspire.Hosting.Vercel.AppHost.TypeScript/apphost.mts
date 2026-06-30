@@ -8,7 +8,7 @@ await vercel.withVercelProductionDeployments();
 
 const api = await builder
     .addContainer("api", "ct-aspire-vercel-typescript")
-    .withDockerfile("./ct-aspire-vercel-typescript", { dockerfilePath: "Dockerfile.vercel" });
+    .withDockerfile("./ct-aspire-vercel-typescript");
 
 await api.withEnvironment("GREETING", "hello-from-typescript-apphost");
 await api.publishAsVercel(vercel);

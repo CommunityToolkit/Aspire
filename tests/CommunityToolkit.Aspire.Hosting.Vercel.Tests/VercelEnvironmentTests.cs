@@ -57,10 +57,45 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public void RunModeProjectPublishAsVercelLeavesProjectResourceUnchanged()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var vercel = builder.AddVercelEnvironment("vercel");
+        var projectResource = new ProjectResource("api");
+
+        builder.AddResource(projectResource)
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var api = Assert.Single(model.Resources.OfType<ProjectResource>());
+
+        Assert.Same(projectResource, api);
+        Assert.False(api.TryGetLastAnnotation<VercelDeploymentAnnotation>(out _));
+    }
+
+    [Fact]
+    public void RunModeExecutablePublishAsVercelLeavesExecutableResourceUnchanged()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        var builder = DistributedApplication.CreateBuilder();
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        builder.AddExecutable("api", "node", sourceRoot.Path)
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var api = Assert.Single(model.Resources.OfType<ExecutableResource>());
+
+        Assert.False(api.TryGetLastAnnotation<VercelDeploymentAnnotation>(out _));
+    }
+
+    [Fact]
     public void PublishModeAddsVercelEnvironmentAndDeploymentAnnotation()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
 
@@ -69,7 +104,7 @@ public class VercelEnvironmentTests
             .WithVercelTarget("preview");
 
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .PublishAsVercel(vercel);
 
         using var app = builder.Build();
@@ -78,8 +113,10 @@ public class VercelEnvironmentTests
         var api = Assert.Single(model.Resources.OfType<ContainerResource>());
 
         Assert.Same(environment, api.GetComputeEnvironment());
-        Assert.True(api.TryGetLastAnnotation<VercelDeploymentAnnotation>(out var deployment));
-        Assert.Equal("Dockerfile.vercel", deployment.DockerfilePath);
+        Assert.True(api.TryGetLastAnnotation<VercelDeploymentAnnotation>(out _));
+        Assert.True(api.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile));
+        Assert.Equal(sourceRoot.Path, dockerfile.ContextPath);
+        Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile"), dockerfile.DockerfilePath);
 
         var options = environment.GetVercelOptions();
         Assert.Equal("team", options.Scope);
@@ -197,28 +234,34 @@ public class VercelEnvironmentTests
     [Fact]
     public void PublishProjectAsVercelAddsDeploymentAnnotationInPublishMode()
     {
+        using var sourceRoot = TemporaryDirectory.Create();
+        string projectPath = Path.Combine(sourceRoot.Path, "Api.csproj");
+        File.WriteAllText(projectPath, "<Project />");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM mcr.microsoft.com/dotnet/aspnet:10.0");
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
         var vercel = builder.AddVercelEnvironment("vercel");
+        var projectResource = new ProjectResource("api");
+        var project = builder.AddResource(projectResource)
+            .WithAnnotation(new FakeProjectMetadata(projectPath));
 
-        var project = builder.AddResource(new ProjectResource("api"))
-            .PublishAsVercel(vercel, "Dockerfile.custom");
+        project.PublishAsVercel(vercel);
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var api = Assert.Single(model.Resources.OfType<ProjectResource>());
+        var api = Assert.Single(model.Resources.OfType<ContainerResource>(), resource => resource.Name == "api");
 
-        Assert.Same(project.Resource, api);
         Assert.Same(vercel.Resource, api.GetComputeEnvironment());
-        Assert.True(api.TryGetLastAnnotation<VercelDeploymentAnnotation>(out var annotation));
-        Assert.Null(annotation.SourceRoot);
-        Assert.Equal("Dockerfile.custom", annotation.DockerfilePath);
+        Assert.True(api.TryGetLastAnnotation<VercelDeploymentAnnotation>(out _));
+        Assert.True(api.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile));
+        Assert.Equal(sourceRoot.Path, dockerfile.ContextPath);
+        Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile"), dockerfile.DockerfilePath);
     }
 
     [Fact]
     public void PublishExecutableAsVercelAddsDeploymentAnnotationInPublishMode()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
         var vercel = builder.AddVercelEnvironment("vercel");
 
@@ -230,13 +273,13 @@ public class VercelEnvironmentTests
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
 
         var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
-        Assert.IsType<ExecutableResource>(entry.Resource);
+        Assert.IsAssignableFrom<ContainerResource>(entry.Resource);
         Assert.Equal(sourceRoot.Path, entry.SourceRoot);
-        Assert.Equal("Dockerfile.vercel", entry.DockerfilePath);
+        Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile"), entry.DockerfilePath);
     }
 
     [Fact]
-    public void PublishContainerAsVercelResolvesExplicitSourceRootAndDockerfile()
+    public void PublishContainerAsVercelUsesDockerfileAnnotation()
     {
         using var sourceRoot = TemporaryDirectory.Create();
         File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.custom"), "FROM nginx:alpine");
@@ -244,7 +287,8 @@ public class VercelEnvironmentTests
         var vercel = builder.AddVercelEnvironment("vercel");
 
         builder.AddContainer("api", "api")
-            .PublishAsVercel(vercel, sourceRoot.Path, "Dockerfile.custom");
+            .WithDockerfile(sourceRoot.Path, "Dockerfile.custom")
+            .PublishAsVercel(vercel);
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -252,7 +296,7 @@ public class VercelEnvironmentTests
 
         var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
         Assert.Equal(sourceRoot.Path, entry.SourceRoot);
-        Assert.Equal("Dockerfile.custom", entry.DockerfilePath);
+        Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile.custom"), entry.DockerfilePath);
     }
 
     [Fact]
@@ -260,12 +304,12 @@ public class VercelEnvironmentTests
     {
         using var sourceRoot = TemporaryDirectory.Create();
         using var outputRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .PublishAsVercel(vercel);
 
         using var app = builder.Build();
@@ -280,7 +324,7 @@ public class VercelEnvironmentTests
         Assert.Equal("vercel", root.GetProperty("environment").GetString());
         var deployment = Assert.Single(root.GetProperty("deployments").EnumerateArray());
         Assert.Equal("api", deployment.GetProperty("resourceName").GetString());
-        Assert.Equal("Dockerfile.vercel", deployment.GetProperty("dockerfilePath").GetString());
+        Assert.Equal("Dockerfile", deployment.GetProperty("dockerfilePath").GetString());
         Assert.Equal("vercel --cwd <api-source-root> deploy --yes", deployment.GetProperty("deployCommand").GetString());
     }
 
@@ -289,14 +333,14 @@ public class VercelEnvironmentTests
     {
         using var sourceRoot = TemporaryDirectory.Create();
         using var outputRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
         var outputService = new FakePipelineOutputService(outputRoot.Path);
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
         builder.Services.AddSingleton<IPipelineOutputService>(outputService);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .PublishAsVercel(vercel);
 
         using var app = builder.Build();
@@ -316,12 +360,12 @@ public class VercelEnvironmentTests
     {
         using var sourceRoot = TemporaryDirectory.Create();
         using var outputRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .WithEnvironment("GREETING", "hello")
             .PublishAsVercel(vercel);
 
@@ -354,7 +398,7 @@ public class VercelEnvironmentTests
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .PublishAsVercel(vercel);
 
         using var app = builder.Build();
@@ -364,7 +408,7 @@ public class VercelEnvironmentTests
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
             VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
 
-        Assert.Contains("Dockerfile.vercel", exception.Message);
+        Assert.Contains("Dockerfile", exception.Message);
     }
 
     [Fact]
@@ -376,7 +420,8 @@ public class VercelEnvironmentTests
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .PublishAsVercel(vercel, sourceRoot);
+            .WithDockerfile(sourceRoot)
+            .PublishAsVercel(vercel);
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -406,7 +451,8 @@ public class VercelEnvironmentTests
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
             VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
 
-        Assert.Contains("does not have a Vercel source root", exception.Message);
+        Assert.Contains("does not have Aspire Dockerfile build metadata", exception.Message);
+        Assert.Contains("WithDockerfile", exception.Message);
     }
 
     [Fact]
@@ -417,7 +463,7 @@ public class VercelEnvironmentTests
             Production = true,
             Scope = "team"
         };
-        var entry = new VercelDeploymentEntry(new ContainerResource("api"), "/repo/src/api", "Dockerfile.vercel");
+        var entry = CreateDeploymentEntry("/repo/src/api");
 
         string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
 
@@ -431,7 +477,7 @@ public class VercelEnvironmentTests
         {
             Target = "preview"
         };
-        var entry = new VercelDeploymentEntry(new ContainerResource("api"), "/repo/src/api", "Dockerfile.vercel");
+        var entry = CreateDeploymentEntry("/repo/src/api");
 
         string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
 
@@ -455,12 +501,12 @@ public class VercelEnvironmentTests
     public async Task BuildDeployArgumentsProcessesEnvironmentVariables()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .WithEnvironment("GREETING", "hello")
             .PublishAsVercel(vercel);
 
@@ -484,12 +530,12 @@ public class VercelEnvironmentTests
     public async Task BuildDeployArgumentsThrowsForContainerEntrypoint()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
         var vercel = builder.AddVercelEnvironment("vercel");
         var api = builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .PublishAsVercel(vercel);
         api.Resource.Entrypoint = "node";
 
@@ -513,13 +559,13 @@ public class VercelEnvironmentTests
     public async Task BuildDeployArgumentsThrowsForSecretEnvironmentVariables()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
         var secret = builder.AddParameter("api-key", "secret-value", secret: true);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .WithEnvironment("API_KEY", secret)
             .PublishAsVercel(vercel);
 
@@ -543,13 +589,13 @@ public class VercelEnvironmentTests
     public async Task BuildDeployArgumentsThrowsForConnectionStringEnvironmentVariables()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
         var connectionString = builder.AddConnectionString("db");
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .WithEnvironment("DATABASE_URL", connectionString)
             .PublishAsVercel(vercel);
 
@@ -573,12 +619,12 @@ public class VercelEnvironmentTests
     public async Task BuildDeployArgumentsThrowsForCommandLineArguments()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .WithArgs("--verbose")
             .PublishAsVercel(vercel);
 
@@ -602,12 +648,12 @@ public class VercelEnvironmentTests
     public async Task BuildDeployArgumentsThrowsForDockerBuildArguments()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .WithBuildArg("FOO", "bar")
             .PublishAsVercel(vercel);
 
@@ -631,7 +677,7 @@ public class VercelEnvironmentTests
     public async Task DeployAsyncRunsVercelCliAndSavesDeploymentState()
     {
         using var sourceRoot = TemporaryDirectory.Create("vercel-state-project");
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
         var runner = new FakeVercelCliRunner(new VercelCliResult(0, """
             {
               "deployment": {
@@ -649,7 +695,7 @@ public class VercelEnvironmentTests
             .WithVercelCliPath("vercel-test")
             .WithVercelScope("team");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .WithEnvironment("GREETING", "hello")
             .PublishAsVercel(vercel);
 
@@ -678,10 +724,87 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public async Task DeployAsyncStagesGeneratedDockerfileBeforeRunningVercelCli()
+    {
+        using var sourceRoot = TemporaryDirectory.Create("generated-vercel-project");
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "server.mjs"), "console.log('hello');");
+        var runner = new FakeVercelCliRunner(new VercelCliResult(0, "https://generated.vercel.app", ""));
+        var stateManager = new FakeDeploymentStateManager();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        var vercel = builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfileFactory(sourceRoot.Path, _ => Task.FromResult("""
+                FROM node:22-alpine
+                WORKDIR /app
+                COPY server.mjs .
+                CMD ["node", "server.mjs"]
+                """))
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.DeployAsync(context, environment);
+
+        var invocation = Assert.Single(runner.Invocations);
+        string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "generated-vercel-project");
+        Assert.Equal(expectedStagingRoot, invocation.WorkingDirectory);
+        Assert.Equal(["--cwd", expectedStagingRoot, "deploy", "--yes"], invocation.Arguments);
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile")));
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "server.mjs")));
+        Assert.Contains("FROM node:22-alpine", File.ReadAllText(Path.Combine(expectedStagingRoot, "Dockerfile")));
+
+        var savedSection = Assert.Single(stateManager.SavedSections);
+        Assert.Contains("generated-vercel-project", savedSection.Data.ToJsonString());
+    }
+
+    [Fact]
+    public async Task DeployAsyncStagesCustomDockerfileNameBeforeRunningVercelCli()
+    {
+        using var sourceRoot = TemporaryDirectory.Create("custom-vercel-project");
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.custom"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "index.html"), "hello");
+        var runner = new FakeVercelCliRunner(new VercelCliResult(0, "https://custom.vercel.app", ""));
+        var stateManager = new FakeDeploymentStateManager();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        var vercel = builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile.custom")
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var environment = Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.DeployAsync(context, environment);
+
+        var invocation = Assert.Single(runner.Invocations);
+        string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "custom-vercel-project");
+        Assert.Equal(expectedStagingRoot, invocation.WorkingDirectory);
+        Assert.Equal(["--cwd", expectedStagingRoot, "deploy", "--yes"], invocation.Arguments);
+        Assert.Equal("FROM nginx:alpine", File.ReadAllText(Path.Combine(expectedStagingRoot, "Dockerfile")));
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "index.html")));
+    }
+
+    [Fact]
     public async Task DeployAsyncThrowsWhenVercelCliFails()
     {
         using var sourceRoot = TemporaryDirectory.Create();
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
         var runner = new FakeVercelCliRunner(new VercelCliResult(1, "ignored stdout", "deploy failed"));
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
@@ -690,7 +813,7 @@ public class VercelEnvironmentTests
         var vercel = builder.AddVercelEnvironment("vercel")
             .WithVercelCliPath("vercel-test");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .PublishAsVercel(vercel);
 
         using var app = builder.Build();
@@ -843,7 +966,7 @@ public class VercelEnvironmentTests
     public async Task DestroyAsyncFallsBackToConfiguredDeploymentsWhenStateIsMissing()
     {
         using var sourceRoot = TemporaryDirectory.Create("fallback-project");
-        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
         var runner = new FakeVercelCliRunner(new VercelCliResult(0, "", ""));
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
@@ -851,7 +974,7 @@ public class VercelEnvironmentTests
         builder.Services.AddSingleton<IDeploymentStateManager>(new FakeDeploymentStateManager());
         var vercel = builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
             .PublishAsVercel(vercel);
 
         using var app = builder.Build();
@@ -1013,7 +1136,7 @@ public class VercelEnvironmentTests
         string vercelDirectory = Path.Combine(sourceRoot.Path, ".vercel");
         Directory.CreateDirectory(vercelDirectory);
         File.WriteAllText(Path.Combine(vercelDirectory, "project.json"), """{"projectName":"linked-project"}""");
-        var entry = new VercelDeploymentEntry(new ContainerResource("api"), sourceRoot.Path, "Dockerfile.vercel");
+        var entry = CreateDeploymentEntry(sourceRoot.Path);
 
         string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
 
@@ -1024,7 +1147,7 @@ public class VercelEnvironmentTests
     public void GetVercelProjectNameFallsBackToSourceRootName()
     {
         using var sourceRoot = TemporaryDirectory.Create("fallback-project");
-        var entry = new VercelDeploymentEntry(new ContainerResource("api"), sourceRoot.Path, "Dockerfile.vercel");
+        var entry = CreateDeploymentEntry(sourceRoot.Path);
 
         string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
 
@@ -1061,6 +1184,27 @@ public class VercelEnvironmentTests
             PipelineContext = pipelineContext,
             ReportingStep = NoopReportingStep.Instance
         };
+    }
+
+    private static VercelDeploymentEntry CreateDeploymentEntry(string sourceRoot)
+    {
+        string dockerfilePath = Path.Combine(sourceRoot, "Dockerfile");
+        return new(
+            new ContainerResource("api"),
+            sourceRoot,
+            dockerfilePath,
+            new DockerfileBuildAnnotation(sourceRoot, dockerfilePath, stage: null));
+    }
+
+    private sealed class FakeProjectMetadata(string projectPath) : IProjectMetadata
+    {
+        public bool IsFileBasedApp => false;
+
+        public LaunchSettings? LaunchSettings => null;
+
+        public string ProjectPath => projectPath;
+
+        public bool SuppressBuild => false;
     }
 
     private sealed class TemporaryDirectory : IDisposable
@@ -1163,15 +1307,17 @@ public class VercelEnvironmentTests
         }
     }
 
-    private sealed class FakePipelineOutputService(string outputDirectory) : IPipelineOutputService
+    private sealed class FakePipelineOutputService(string outputDirectory, string? tempDirectory = null) : IPipelineOutputService
     {
+        private readonly string _tempDirectory = tempDirectory ?? outputDirectory;
+
         public string GetOutputDirectory() => outputDirectory;
 
         public string GetOutputDirectory(IResource resource) => outputDirectory;
 
-        public string GetTempDirectory() => outputDirectory;
+        public string GetTempDirectory() => _tempDirectory;
 
-        public string GetTempDirectory(IResource resource) => outputDirectory;
+        public string GetTempDirectory(IResource resource) => Path.Combine(_tempDirectory, resource.Name);
     }
 
     private sealed class NoopReportingStep : IReportingStep

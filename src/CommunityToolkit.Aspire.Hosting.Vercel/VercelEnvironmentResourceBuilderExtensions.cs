@@ -12,8 +12,6 @@ namespace Aspire.Hosting;
 [Experimental("CTASPIREVERCEL001")]
 public static class VercelEnvironmentResourceBuilderExtensions
 {
-    private const string DefaultDockerfilePath = "Dockerfile.vercel";
-
     /// <summary>
     /// Adds a publish/deploy-only Vercel environment resource.
     /// </summary>
@@ -156,17 +154,15 @@ public static class VercelEnvironmentResourceBuilderExtensions
     }
 
     /// <summary>
-    /// Configures a .NET project resource to deploy to Vercel using a Dockerfile at the project root.
+    /// Configures a .NET project resource to deploy to Vercel using Aspire's Dockerfile publishing support.
     /// </summary>
     /// <param name="builder">The project resource builder.</param>
     /// <param name="environment">The Vercel environment builder.</param>
-    /// <param name="dockerfilePath">The Dockerfile path relative to the project root. Defaults to <c>Dockerfile.vercel</c>.</param>
     /// <returns>The project resource builder.</returns>
     [AspireExport("publishProjectAsVercel", MethodName = "publishAsVercel")]
     public static IResourceBuilder<ProjectResource> PublishAsVercel(
         this IResourceBuilder<ProjectResource> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment,
-        string? dockerfilePath = null)
+        IResourceBuilder<VercelEnvironmentResource> environment)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(environment);
@@ -176,21 +172,19 @@ public static class VercelEnvironmentResourceBuilderExtensions
             return builder;
         }
 
-        return builder.WithVercelDeployment(environment, sourceRoot: null, dockerfilePath);
+        return builder.PublishAsDockerFile(container => container.WithVercelDeployment(environment));
     }
 
     /// <summary>
-    /// Configures an executable resource to deploy to Vercel using a Dockerfile at the executable working directory.
+    /// Configures an executable resource to deploy to Vercel using Aspire's Dockerfile publishing support.
     /// </summary>
     /// <param name="builder">The executable resource builder.</param>
     /// <param name="environment">The Vercel environment builder.</param>
-    /// <param name="dockerfilePath">The Dockerfile path relative to the executable working directory. Defaults to <c>Dockerfile.vercel</c>.</param>
     /// <returns>The executable resource builder.</returns>
     [AspireExport("publishExecutableAsVercel", MethodName = "publishAsVercel")]
     public static IResourceBuilder<ExecutableResource> PublishAsVercel(
         this IResourceBuilder<ExecutableResource> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment,
-        string? dockerfilePath = null)
+        IResourceBuilder<VercelEnvironmentResource> environment)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(environment);
@@ -200,23 +194,20 @@ public static class VercelEnvironmentResourceBuilderExtensions
             return builder;
         }
 
-        return builder.WithVercelDeployment(environment, sourceRoot: null, dockerfilePath);
+        return builder.PublishAsDockerFile(container => container.WithVercelDeployment(environment));
     }
 
     /// <summary>
-    /// Configures a container resource to deploy to Vercel using a Dockerfile-based source root.
+    /// Configures a container resource to deploy to Vercel using its Aspire Dockerfile build metadata.
     /// </summary>
     /// <param name="builder">The container resource builder.</param>
     /// <param name="environment">The Vercel environment builder.</param>
-    /// <param name="sourceRoot">The source root passed to <c>vercel deploy --cwd</c>. Defaults to the container Dockerfile build context.</param>
-    /// <param name="dockerfilePath">The Dockerfile path relative to the source root. Defaults to <c>Dockerfile.vercel</c>.</param>
     /// <returns>The container resource builder.</returns>
+    /// <remarks>Configure the container with <c>WithDockerfile</c>, <c>WithDockerfileFactory</c>, or <c>WithDockerfileBuilder</c> before publishing it to Vercel.</remarks>
     [AspireExport("publishContainerAsVercel", MethodName = "publishAsVercel")]
     public static IResourceBuilder<ContainerResource> PublishAsVercel(
         this IResourceBuilder<ContainerResource> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment,
-        string? sourceRoot = null,
-        string? dockerfilePath = null)
+        IResourceBuilder<VercelEnvironmentResource> environment)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(environment);
@@ -226,27 +217,17 @@ public static class VercelEnvironmentResourceBuilderExtensions
             return builder;
         }
 
-        return builder.WithVercelDeployment(environment, sourceRoot, dockerfilePath);
+        return builder.WithVercelDeployment(environment);
     }
 
     private static IResourceBuilder<T> WithVercelDeployment<T>(
         this IResourceBuilder<T> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment,
-        string? sourceRoot,
-        string? dockerfilePath)
+        IResourceBuilder<VercelEnvironmentResource> environment)
         where T : IComputeResource
     {
-        string? normalizedSourceRoot = sourceRoot is null
-            ? null
-            : ResolvePath(builder.ApplicationBuilder, sourceRoot);
-
-        string normalizedDockerfilePath = string.IsNullOrWhiteSpace(dockerfilePath)
-            ? DefaultDockerfilePath
-            : dockerfilePath;
-
         return builder
             .WithComputeEnvironment(environment)
-            .WithAnnotation(new VercelDeploymentAnnotation(normalizedSourceRoot, normalizedDockerfilePath), ResourceAnnotationMutationBehavior.Replace);
+            .WithAnnotation(new VercelDeploymentAnnotation(), ResourceAnnotationMutationBehavior.Replace);
     }
 
     private static IResourceBuilder<VercelEnvironmentResource> WithVercelOptions(
@@ -259,6 +240,4 @@ public static class VercelEnvironmentResourceBuilderExtensions
         return builder.WithAnnotation(updated, ResourceAnnotationMutationBehavior.Replace);
     }
 
-    private static string ResolvePath(IDistributedApplicationBuilder builder, string path) =>
-        Path.GetFullPath(Path.IsPathRooted(path) ? path : Path.Combine(builder.AppHostDirectory, path));
 }
