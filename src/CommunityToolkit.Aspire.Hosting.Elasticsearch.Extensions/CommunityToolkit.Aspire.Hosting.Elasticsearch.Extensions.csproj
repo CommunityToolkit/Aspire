@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting elasticsearch elasticvue</AdditionalPackageTags>
-    <Description>An Aspire integration for extending Elasticsearch hosting.</Description>
+    <Description>An Aspire hosting integration for extending Elasticsearch resources with additional management tooling.</Description>
   </PropertyGroup>
 
   <ItemGroup>
