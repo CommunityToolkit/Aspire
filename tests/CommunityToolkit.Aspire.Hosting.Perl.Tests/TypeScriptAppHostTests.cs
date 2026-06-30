@@ -12,6 +12,7 @@ public class TypeScriptAppHostTests
             packageName: "CommunityToolkit.Aspire.Hosting.Perl",
             exampleName: "perl/cpanm-api-integration",
             waitForResources: ["perl-api"],
+            appHostPathRelativeToRepo: "examples/perl/cpanm-api-integration/CpanmApiIntegration.AppHost.TypeScript/apphost.mts",
             waitStatus: "up",
             requiredCommands: ["perl", "cpanm"],
             cancellationToken: TestContext.Current.CancellationToken);
