@@ -62,6 +62,7 @@ This repository contains the source code for the Aspire Community Toolkit, a col
 | - **Learn More**: [`Hosting.Umami`][umami-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields]][umami-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Umami][umami-shields-preview]][umami-nuget-preview]                                                                                           | An Aspire hosting integration leveraging the [Umami](https://umami.is/) container.                                                                                 |
 | - **Learn More**: [`Hosting.Azure.Extensions`][azure-ext-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Azure.Extensions][azure-ext-shields]][azure-ext-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Azure.Extensions][azure-ext-shields-preview]][azure-ext-nuget-preview]                                              | An integration that contains some additional extensions for hosting Azure container.                                                                                    |
 | - **Learn More**: [`Hosting.Squad`][squad-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Squad][squad-shields]][squad-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Squad][squad-shields-preview]][squad-nuget-preview]                                                                                          | An Aspire hosting integration that models a [Squad](https://github.com/bradygaster/squad) AI-agent team as a first-class resource.                                                                                  |
+| - **Learn More**: [`Hosting.Floci`][floci-integration-docs] <br /> - Stable 📦: [![CommunityToolkit.Aspire.Hosting.Floci][floci-shields]][floci-nuget] <br /> - Preview 📦: [![CommunityToolkit.Aspire.Hosting.Floci][floci-shields-preview]][floci-nuget-preview]                                                                                                   | An Aspire hosting integration leveraging the [Floci](https://floci.io) AWS emulator container.                                                                                                                      |
 
 ## 🙌 Getting Started
 
@@ -333,3 +334,8 @@ This project is supported by the [.NET Foundation](https://dotnetfoundation.org)
 [squad-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Squad/
 [squad-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Squad?label=nuget%20(preview)
 [squad-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Squad/absoluteLatest
+[floci-integration-docs]: https://learn.microsoft.com/dotnet/aspire/community-toolkit/hosting-floci
+[floci-shields]: https://img.shields.io/nuget/v/CommunityToolkit.Aspire.Hosting.Floci
+[floci-nuget]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Floci/
+[floci-shields-preview]: https://img.shields.io/nuget/vpre/CommunityToolkit.Aspire.Hosting.Floci?label=nuget%20(preview)
+[floci-nuget-preview]: https://nuget.org/packages/CommunityToolkit.Aspire.Hosting.Floci/absoluteLatest
