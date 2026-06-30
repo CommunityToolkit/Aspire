@@ -15,5 +15,8 @@ namespace Aspire.Hosting
 
         [AspireExport(RunSyncOnBackgroundThread = true)]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
+
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbxContainerResource>> is not supported reliably in polyglot app hosts. Use the container options overload instead.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> WithDbx(this ApplicationModel.IResourceBuilder<ApplicationModel.MySqlServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbxContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 }

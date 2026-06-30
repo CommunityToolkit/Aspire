@@ -17,7 +17,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbNamespaceResource> AddNamespace(this ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> builder, string name, string? namespaceName = null) { throw null; }
 
         [AspireExport]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> AddSurrealServer(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? userName = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, int? port = null, string path = "memory", bool strictMode = false) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.SurrealDbServerResource> AddSurrealServer(this IDistributedApplicationBuilder builder, string name, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? userName = null, ApplicationModel.IResourceBuilder<ApplicationModel.ParameterResource>? password = null, int? port = null, string path = "memory") { throw null; }
 
         [AspireExport("withDatabaseCreationScript", MethodName = "withCreationScript")]
         [System.Diagnostics.CodeAnalysis.Experimental("CTASPIRE002")]
