@@ -51,7 +51,7 @@ public static class TypeScriptAppHostTest
         string repoRoot = Path.GetFullPath(Path.Combine("..", "..", "..", "..", ".."));
         string scriptPath = Path.Combine(repoRoot, "eng", "testing", "validate-typescript-apphost.ps1");
         string appHostPath = string.IsNullOrWhiteSpace(appHostPathRelativeToRepo)
-            ? Path.Combine(repoRoot, "examples", exampleName, appHostProject, "apphost.ts")
+            ? Path.Combine(repoRoot, "examples", exampleName, appHostProject, "apphost.mts")
             : Path.Combine(repoRoot, appHostPathRelativeToRepo);
         string shell = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
 
