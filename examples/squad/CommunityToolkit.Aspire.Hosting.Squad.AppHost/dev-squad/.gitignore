@@ -1,0 +1,25 @@
+# Squad: ignore runtime state (logs, inbox, sessions)
+.squad/orchestration-log/
+.squad/log/
+.squad/decisions/inbox/
+.squad/sessions/
+.squad/.scratch/
+.squad/.cache/
+# Squad: SubSquad activation file (local to this machine)
+.squad-workstream
+
+# Copilot CLI SDK: per-session state created at runtime
+.squad/session-state/
+.squad/session-store.db
+.squad/session-store.db-shm
+.squad/session-store.db-wal
+
+# Scratch artifacts (any C#/dotnet projects the team creates inside the squad folder).
+# The Aspire AppHost.csproj's default <Compile> glob will sweep .cs files at any depth
+# under the AppHost project folder; nested projects produce CS8802 / CS0579 errors.
+# Keep the squad folder strictly for .squad/ + .github/ + .copilot/ + .mcp.json scaffolding.
+*.csproj
+*.fsproj
+*.vbproj
+bin/
+obj/

@@ -151,6 +151,8 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     needs: run-tests
     uses: ./.github/workflows/code-coverage.yml
+    with:
+      fail_on_low_coverage: true
     secrets: inherit
 
   detect-pr-label:
