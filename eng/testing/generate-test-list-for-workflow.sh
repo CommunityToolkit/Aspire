@@ -22,13 +22,7 @@ case "${MODE}" in
         get_test_names
         ;;
     --json)
-        mapfile -t tests < <(get_test_names)
-        python - <<'PY' "${tests[@]}"
-import json
-import sys
-
-print(json.dumps(sys.argv[1:]))
-PY
+        get_test_names | python3 -c 'import json, sys; print(json.dumps([line.rstrip("\n") for line in sys.stdin if line.rstrip("\n")]))'
         ;;
     --workflow)
         echo "${INDENT}# Hosting integration tests"
