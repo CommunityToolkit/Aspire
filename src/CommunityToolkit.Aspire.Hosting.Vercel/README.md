@@ -1,6 +1,6 @@
 # Vercel hosting integration
 
-Use this integration to model, configure, and deploy Dockerfile-based Aspire resources to Vercel.
+Use this integration to model, configure, and deploy Aspire workloads to Vercel's Dockerfile-based hosting.
 
 ## Getting started
 
@@ -12,7 +12,7 @@ aspire add CommunityToolkit.Aspire.Hosting.Vercel
 
 ## Usage example
 
-Add a Vercel environment and publish the project to it. Project and executable resources use Aspire's existing Dockerfile publishing support, so the Dockerfile that Aspire would publish is the Dockerfile Vercel builds:
+Add a Vercel environment and publish the workload to it. Projects and language-specific app integrations use Aspire's existing publish support, so generated Dockerfiles come from the workload integration instead of Vercel-specific files:
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
@@ -25,6 +25,13 @@ builder.AddProject<Projects.ApiService>("api")
 builder.Build().Run();
 ```
 
+Language integrations work the same way:
+
+```csharp
+builder.AddNodeApp("api", "../api", "server.mjs")
+       .PublishAsVercel(vercel);
+```
+
 By default, `aspire deploy` runs:
 
 ```bash
@@ -33,7 +40,7 @@ vercel --cwd <project-root> deploy --yes
 
 Use `WithVercelProductionDeployments` to add `--prod`, `WithVercelTarget` to add `--target`, and `WithVercelScope` to deploy to a team or account scope.
 
-For existing container resources, configure Aspire Dockerfile build metadata before publishing to Vercel:
+For low-level container resources, publish them to Vercel only after they already have Aspire Dockerfile build metadata. Prefer the workload-specific `Add*App` integration when one exists:
 
 ```csharp
 builder.AddContainer("web", "web")
@@ -41,7 +48,7 @@ builder.AddContainer("web", "web")
        .PublishAsVercel(vercel);
 ```
 
-`WithDockerfile`, `WithDockerfileFactory`, and `WithDockerfileBuilder` are supported. If Aspire generates the Dockerfile, or if the configured Dockerfile is not named `Dockerfile` in the context root, the integration stages the source root and materializes the Vercel-facing `Dockerfile` before running `vercel deploy`.
+`WithDockerfile`, `WithDockerfileFactory`, and `WithDockerfileBuilder` are supported for this low-level container path. If Aspire generates the Dockerfile, or if the configured Dockerfile is not named `Dockerfile` in the context root, the integration stages the source root and materializes the Vercel-facing `Dockerfile` before running `vercel deploy`.
 
 Non-secret Aspire environment variables configured on the resource are processed during publish/deploy and passed to Vercel as CLI environment variables:
 
@@ -64,7 +71,7 @@ vercel --cwd <project-root> deploy --yes --env GREETING=hello
 
 ## Prerequisites
 
-- A Dockerfile-backed Aspire resource. Projects and executables can use `PublishAsVercel` directly. Existing container resources must be configured with `WithDockerfile`, `WithDockerfileFactory`, or `WithDockerfileBuilder` before `PublishAsVercel`.
+- An Aspire workload that can publish as a Dockerfile. Projects and language app resources can use `PublishAsVercel` directly. Existing low-level container resources must already be configured with `WithDockerfile`, `WithDockerfileFactory`, or `WithDockerfileBuilder` before `PublishAsVercel`.
 - The deployed container should listen on `$PORT`; the default port is `80`.
 - Vercel CLI installed and on `PATH`, or configured with `WithVercelCliPath`.
 - Vercel authentication from an existing CLI login or the `VERCEL_TOKEN` environment variable.
@@ -76,9 +83,9 @@ This integration does not manage Vercel secrets, provision marketplace resources
 
 `aspire destroy` deletes the Vercel projects for resources targeted by this integration. Use a dedicated Vercel project for each Aspire resource, or do not run `aspire destroy` if the project contains deployments that are managed outside the Aspire AppHost.
 
-Secret Aspire environment variables, connection strings, Docker build arguments, and Docker build secrets are rejected. Configure those values in Vercel project settings instead, because Vercel builds `Dockerfile` itself and Vercel CLI `--env` would put secret values on the command line.
+Secret Aspire environment variables, connection strings, Docker build arguments, and Docker build secrets are rejected. Configure those values in Vercel project settings instead, because Vercel runs the Dockerfile build itself and Vercel CLI `--env` would put secret values on the command line.
 
-Aspire command-line arguments and container entrypoint overrides are also rejected. Put runtime arguments or entrypoint behavior in `Dockerfile` instead.
+Aspire command-line arguments and container entrypoint overrides are also rejected. Configure runtime command behavior through the workload's publish support or Vercel project settings instead.
 
 ## Additional documentation
 

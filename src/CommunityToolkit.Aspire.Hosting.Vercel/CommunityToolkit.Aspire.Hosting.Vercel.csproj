@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting deployment vercel dockerfile containers</AdditionalPackageTags>
-    <Description>An Aspire hosting integration for deploying Dockerfile-based services to Vercel.</Description>
+    <Description>An Aspire hosting integration for deploying Aspire workloads to Vercel Dockerfile hosting.</Description>
     <IsPreview>true</IsPreview>
     <NoWarn>$(NoWarn);ASPIREATS001</NoWarn>
   </PropertyGroup>

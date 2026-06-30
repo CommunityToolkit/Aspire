@@ -401,20 +401,20 @@ internal static class VercelDeploymentStep
         if (resource is ContainerResource { Entrypoint: not null })
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures a container entrypoint, but Vercel Dockerfile deployments use the CMD/ENTRYPOINT from the Dockerfile. Move the entrypoint into the Dockerfile.");
+                $"Resource '{resource.Name}' configures a container entrypoint, but Vercel Dockerfile deployments use the CMD/ENTRYPOINT from Aspire's publish output. Configure the workload's publish behavior or Vercel project settings instead.");
         }
 
         if (executionConfiguration.ArgumentsWithUnprocessed.Any())
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire command-line arguments, but Vercel Dockerfile deployments cannot override Docker CMD/ENTRYPOINT. Move these arguments into the Dockerfile or express them as environment variables.");
+                $"Resource '{resource.Name}' configures Aspire command-line arguments, but Vercel Dockerfile deployments cannot override Docker CMD/ENTRYPOINT. Configure the workload's publish behavior or express the values as environment variables.");
         }
 
         if (resource.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile)
             && (dockerfile.BuildArguments.Count > 0 || dockerfile.BuildSecrets.Count > 0))
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire Docker build arguments or build secrets. Vercel builds the Dockerfile itself, so configure build-time values in Vercel instead.");
+                $"Resource '{resource.Name}' configures Aspire Docker build arguments or build secrets. Vercel runs the Dockerfile build itself, so configure build-time values in Vercel instead.");
         }
     }
 

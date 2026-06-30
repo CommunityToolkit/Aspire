@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for deploying Dockerfile-based resources to Vercel.
+/// Provides extension methods for deploying Aspire workloads to Vercel Dockerfile hosting.
 /// </summary>
 [Experimental("CTASPIREVERCEL001")]
 public static class VercelEnvironmentResourceBuilderExtensions
@@ -19,7 +19,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
     /// <param name="name">The Aspire resource name for the Vercel environment.</param>
     /// <returns>A resource builder for the Vercel environment.</returns>
     /// <remarks>
-    /// The Vercel environment is not added to the local run model. During publish and deploy it validates Dockerfile-based
+    /// The Vercel environment is not added to the local run model. During publish and deploy it validates Dockerfile build metadata for
     /// resources and, during deploy, invokes the Vercel CLI using the current login or <c>VERCEL_TOKEN</c>.
     /// </remarks>
     [AspireExport]
@@ -178,13 +178,15 @@ public static class VercelEnvironmentResourceBuilderExtensions
     /// <summary>
     /// Configures an executable resource to deploy to Vercel using Aspire's Dockerfile publishing support.
     /// </summary>
+    /// <typeparam name="T">The executable resource type.</typeparam>
     /// <param name="builder">The executable resource builder.</param>
     /// <param name="environment">The Vercel environment builder.</param>
     /// <returns>The executable resource builder.</returns>
     [AspireExport("publishExecutableAsVercel", MethodName = "publishAsVercel")]
-    public static IResourceBuilder<ExecutableResource> PublishAsVercel(
-        this IResourceBuilder<ExecutableResource> builder,
+    public static IResourceBuilder<T> PublishAsVercel<T>(
+        this IResourceBuilder<T> builder,
         IResourceBuilder<VercelEnvironmentResource> environment)
+        where T : ExecutableResource
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(environment);

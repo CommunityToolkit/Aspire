@@ -279,6 +279,35 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public void PublishLanguageExecutableAsVercelUsesExistingGeneratedDockerfileMetadata()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "server.mjs"), "console.log('hello');");
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+        var resource = new TestLanguageAppResource("api", "node", sourceRoot.Path);
+
+        builder.AddResource(resource)
+            .PublishAsDockerFile(container => container.WithDockerfileFactory(sourceRoot.Path, _ => Task.FromResult("""
+                FROM node:22-alpine
+                WORKDIR /app
+                COPY server.mjs .
+                CMD ["node", "server.mjs"]
+                """)))
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        Assert.IsAssignableFrom<ContainerResource>(entry.Resource);
+        Assert.Equal(sourceRoot.Path, entry.SourceRoot);
+        Assert.NotNull(entry.Dockerfile.DockerfileFactory);
+        Assert.True(entry.Resource.TryGetLastAnnotation<VercelDeploymentAnnotation>(out _));
+    }
+
+    [Fact]
     public void PublishContainerAsVercelUsesDockerfileAnnotation()
     {
         using var sourceRoot = TemporaryDirectory.Create();
@@ -1206,6 +1235,9 @@ public class VercelEnvironmentTests
 
         public bool SuppressBuild => false;
     }
+
+    private sealed class TestLanguageAppResource(string name, string command, string workingDirectory)
+        : ExecutableResource(name, command, workingDirectory);
 
     private sealed class TemporaryDirectory : IDisposable
     {
