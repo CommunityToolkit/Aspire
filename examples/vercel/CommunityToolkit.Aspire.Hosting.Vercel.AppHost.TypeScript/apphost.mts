@@ -10,6 +10,5 @@ const api = await builder
     .addNodeApp("api", "./ct-aspire-vercel-typescript", "server.mjs");
 
 await api.withEnvironment("GREETING", "hello-from-typescript-apphost");
-await api.publishAsVercel(vercel);
 
 await builder.build().run();

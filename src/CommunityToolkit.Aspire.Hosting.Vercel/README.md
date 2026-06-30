@@ -12,24 +12,23 @@ aspire add CommunityToolkit.Aspire.Hosting.Vercel
 
 ## Usage example
 
-Add a Vercel environment and publish the workload to it. Projects and language-specific app integrations use Aspire's existing publish support, so generated Dockerfiles come from the workload integration instead of Vercel-specific files:
+Add a Vercel environment and a workload with Aspire Dockerfile publish metadata. When Vercel is the only compute environment, Dockerfile-backed workloads target it by default:
 
 ```csharp
 var builder = DistributedApplication.CreateBuilder(args);
 
-var vercel = builder.AddVercelEnvironment("vercel");
+builder.AddVercelEnvironment("vercel");
 
-builder.AddProject<Projects.ApiService>("api")
-       .PublishAsVercel(vercel);
+builder.AddNodeApp("api", "../api", "server.mjs");
 
 builder.Build().Run();
 ```
 
-Language integrations work the same way:
+.NET projects use Aspire's existing Dockerfile publish support:
 
 ```csharp
-builder.AddNodeApp("api", "../api", "server.mjs")
-       .PublishAsVercel(vercel);
+builder.AddProject<Projects.ApiService>("api")
+       .PublishAsDockerFile();
 ```
 
 By default, `aspire deploy` runs:
@@ -40,22 +39,22 @@ vercel --cwd <project-root> deploy --yes
 
 Use `WithVercelProductionDeployments` to add `--prod`, `WithVercelTarget` to add `--target`, and `WithVercelScope` to deploy to a team or account scope.
 
-For low-level container resources, publish them to Vercel only after they already have Aspire Dockerfile build metadata. Prefer the workload-specific `Add*App` integration when one exists:
+When an AppHost contains multiple compute environments, use Aspire's standard `WithComputeEnvironment` API to choose Vercel for a workload:
 
 ```csharp
-builder.AddContainer("web", "web")
-       .WithDockerfile("../web")
-       .PublishAsVercel(vercel);
+var vercel = builder.AddVercelEnvironment("vercel");
+
+builder.AddNodeApp("api", "../api", "server.mjs")
+       .WithComputeEnvironment(vercel);
 ```
 
-`WithDockerfile`, `WithDockerfileFactory`, and `WithDockerfileBuilder` are supported for this low-level container path. If Aspire generates the Dockerfile, or if the configured Dockerfile is not named `Dockerfile` in the context root, the integration stages the source root and materializes the Vercel-facing `Dockerfile` before running `vercel deploy`.
+For low-level container resources, Vercel requires existing Aspire Dockerfile build metadata. Prefer the workload-specific `Add*App` integration when one exists. `WithDockerfile`, `WithDockerfileFactory`, and `WithDockerfileBuilder` are supported as advanced escape hatches. If Aspire generates the Dockerfile, or if the configured Dockerfile is not named `Dockerfile` in the context root, the integration stages the source root and materializes the Vercel-facing `Dockerfile` before running `vercel deploy`.
 
 Non-secret Aspire environment variables configured on the resource are processed during publish/deploy and passed to Vercel as CLI environment variables:
 
 ```csharp
-builder.AddProject<Projects.ApiService>("api")
-       .WithEnvironment("GREETING", "hello")
-       .PublishAsVercel(vercel);
+builder.AddNodeApp("api", "../api", "server.mjs")
+       .WithEnvironment("GREETING", "hello");
 ```
 
 ```bash
@@ -64,14 +63,14 @@ vercel --cwd <project-root> deploy --yes --env GREETING=hello
 
 ## Deployment behavior
 
-- `aspire start` is unchanged. The Vercel environment and `PublishAsVercel` configuration are publish/deploy-only.
+- `aspire start` is unchanged. The Vercel environment is publish/deploy-only.
 - `aspire publish` writes a `vercel-deployments.json` plan for the targeted resources, including the environment variable names passed to Vercel.
 - `aspire deploy` validates the Vercel CLI, validates authentication, materializes any Aspire-generated Dockerfile, and invokes `vercel deploy`.
 - `aspire destroy` removes the Vercel projects recorded during deployment. The Aspire CLI destroy confirmation applies before the project removal step runs.
 
 ## Prerequisites
 
-- An Aspire workload that can publish as a Dockerfile. Projects and language app resources can use `PublishAsVercel` directly. Existing low-level container resources must already be configured with `WithDockerfile`, `WithDockerfileFactory`, or `WithDockerfileBuilder` before `PublishAsVercel`.
+- An Aspire workload with Dockerfile publish metadata, such as a language app resource that emits Dockerfile metadata or a project configured with `PublishAsDockerFile`.
 - The deployed container should listen on `$PORT`; the default port is `80`.
 - Vercel CLI installed and on `PATH`, or configured with `WithVercelCliPath`.
 - Vercel authentication from an existing CLI login or the `VERCEL_TOKEN` environment variable.

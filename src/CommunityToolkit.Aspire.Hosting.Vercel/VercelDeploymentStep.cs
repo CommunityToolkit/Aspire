@@ -445,32 +445,33 @@ internal static class VercelDeploymentStep
 
     internal static IEnumerable<VercelDeploymentEntry> GetDeploymentEntries(DistributedApplicationModel model, VercelEnvironmentResource environment)
     {
-        foreach (var resource in model.Resources)
+        foreach (var resource in model.Resources.OfType<IComputeResource>())
         {
-            if (resource.GetComputeEnvironment() != environment)
-            {
-                continue;
-            }
-
-            if (!resource.TryGetLastAnnotation<VercelDeploymentAnnotation>(out _))
+            if (!IsTargetedToEnvironment(resource, environment))
             {
                 continue;
             }
 
             if (!resource.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile))
             {
-                throw new DistributedApplicationException($"Resource '{resource.Name}' is published to Vercel but does not have Aspire Dockerfile build metadata. Configure the resource with PublishAsDockerFile, WithDockerfile, WithDockerfileFactory, or WithDockerfileBuilder before calling PublishAsVercel.");
+                throw new DistributedApplicationException($"Resource '{resource.Name}' targets Vercel but does not have Aspire Dockerfile build metadata. Use a workload integration that publishes Dockerfile metadata, call PublishAsDockerFile, or configure the resource with WithDockerfile, WithDockerfileFactory, or WithDockerfileBuilder.");
             }
 
             yield return new(resource, dockerfile.ContextPath, dockerfile.DockerfilePath, dockerfile);
         }
     }
 
+    private static bool IsTargetedToEnvironment(IResource resource, VercelEnvironmentResource environment)
+    {
+        var computeEnvironment = resource.GetComputeEnvironment();
+        return computeEnvironment is null || ReferenceEquals(computeEnvironment, environment);
+    }
+
     private static void ValidateEntries(IReadOnlyList<VercelDeploymentEntry> entries)
     {
         if (entries.Count == 0)
         {
-            throw new DistributedApplicationException("No resources are configured for Vercel deployment. Call PublishAsVercel on at least one project, executable, or Dockerfile container resource.");
+            throw new DistributedApplicationException("No Dockerfile-backed compute resources target Vercel. Add a workload with Aspire Dockerfile publish metadata, or use WithComputeEnvironment to target Vercel when multiple compute environments are present.");
         }
 
         foreach (var entry in entries)
@@ -482,7 +483,7 @@ internal static class VercelDeploymentStep
 
             if (entry.Dockerfile.DockerfileFactory is null && !File.Exists(entry.DockerfilePath))
             {
-                throw new DistributedApplicationException($"The Vercel Dockerfile '{entry.DockerfilePath}' for resource '{entry.Resource.Name}' does not exist. Configure the resource with an existing Dockerfile or an Aspire generated Dockerfile before calling PublishAsVercel.");
+                throw new DistributedApplicationException($"The Vercel Dockerfile '{entry.DockerfilePath}' for resource '{entry.Resource.Name}' does not exist. Configure the resource with an existing Dockerfile or Aspire-generated Dockerfile metadata.");
             }
         }
     }

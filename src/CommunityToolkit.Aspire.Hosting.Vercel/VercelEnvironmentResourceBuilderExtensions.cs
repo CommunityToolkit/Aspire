@@ -46,6 +46,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
                     Name = $"{VercelDeploymentStep.PublishStepNamePrefix}{resource.Name}",
                     Description = $"Generate Vercel deployment plan for '{resource.Name}'.",
                     Resource = resource,
+                    DependsOnSteps = [WellKnownPipelineSteps.ValidateComputeEnvironments],
                     RequiredBySteps = [WellKnownPipelineSteps.Publish, WellKnownPipelineSteps.Deploy],
                     Action = context => VercelDeploymentStep.WriteDeploymentPlanAsync(context, resource)
                 },
@@ -54,6 +55,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
                     Name = $"{VercelDeploymentStep.DeployPrereqStepNamePrefix}{resource.Name}",
                     Description = $"Validate Vercel CLI prerequisites for '{resource.Name}'.",
                     Resource = resource,
+                    DependsOnSteps = [WellKnownPipelineSteps.ValidateComputeEnvironments],
                     RequiredBySteps = [WellKnownPipelineSteps.Deploy],
                     Action = context => VercelDeploymentStep.ValidatePrerequisitesAsync(context, resource)
                 },
@@ -151,85 +153,6 @@ public static class VercelEnvironmentResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
 
         return builder.WithVercelOptions(options => options with { Production = false, Target = target });
-    }
-
-    /// <summary>
-    /// Configures a .NET project resource to deploy to Vercel using Aspire's Dockerfile publishing support.
-    /// </summary>
-    /// <param name="builder">The project resource builder.</param>
-    /// <param name="environment">The Vercel environment builder.</param>
-    /// <returns>The project resource builder.</returns>
-    [AspireExport("publishProjectAsVercel", MethodName = "publishAsVercel")]
-    public static IResourceBuilder<ProjectResource> PublishAsVercel(
-        this IResourceBuilder<ProjectResource> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(environment);
-
-        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
-        {
-            return builder;
-        }
-
-        return builder.PublishAsDockerFile(container => container.WithVercelDeployment(environment));
-    }
-
-    /// <summary>
-    /// Configures an executable resource to deploy to Vercel using Aspire's Dockerfile publishing support.
-    /// </summary>
-    /// <typeparam name="T">The executable resource type.</typeparam>
-    /// <param name="builder">The executable resource builder.</param>
-    /// <param name="environment">The Vercel environment builder.</param>
-    /// <returns>The executable resource builder.</returns>
-    [AspireExport("publishExecutableAsVercel", MethodName = "publishAsVercel")]
-    public static IResourceBuilder<T> PublishAsVercel<T>(
-        this IResourceBuilder<T> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment)
-        where T : ExecutableResource
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(environment);
-
-        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
-        {
-            return builder;
-        }
-
-        return builder.PublishAsDockerFile(container => container.WithVercelDeployment(environment));
-    }
-
-    /// <summary>
-    /// Configures a container resource to deploy to Vercel using its Aspire Dockerfile build metadata.
-    /// </summary>
-    /// <param name="builder">The container resource builder.</param>
-    /// <param name="environment">The Vercel environment builder.</param>
-    /// <returns>The container resource builder.</returns>
-    /// <remarks>Configure the container with <c>WithDockerfile</c>, <c>WithDockerfileFactory</c>, or <c>WithDockerfileBuilder</c> before publishing it to Vercel.</remarks>
-    [AspireExport("publishContainerAsVercel", MethodName = "publishAsVercel")]
-    public static IResourceBuilder<ContainerResource> PublishAsVercel(
-        this IResourceBuilder<ContainerResource> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(environment);
-
-        if (!builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
-        {
-            return builder;
-        }
-
-        return builder.WithVercelDeployment(environment);
-    }
-
-    private static IResourceBuilder<T> WithVercelDeployment<T>(
-        this IResourceBuilder<T> builder,
-        IResourceBuilder<VercelEnvironmentResource> environment)
-        where T : IComputeResource
-    {
-        return builder
-            .WithComputeEnvironment(environment)
-            .WithAnnotation(new VercelDeploymentAnnotation(), ResourceAnnotationMutationBehavior.Replace);
     }
 
     private static IResourceBuilder<VercelEnvironmentResource> WithVercelOptions(
