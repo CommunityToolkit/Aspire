@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting deployment vercel dockerfile containers</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for deploying Dockerfile-based services to Vercel.</Description>
+    <IsPreview>true</IsPreview>
+    <NoWarn>$(NoWarn);ASPIREATS001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Vercel.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+</Project>
