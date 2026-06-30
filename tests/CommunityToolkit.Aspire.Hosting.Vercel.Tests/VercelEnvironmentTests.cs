@@ -1,10 +1,17 @@
+#pragma warning disable ASPIREPIPELINES001
+#pragma warning disable ASPIREPIPELINES002
+#pragma warning disable ASPIREPIPELINES004
 #pragma warning disable CTASPIREVERCEL001
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Pipelines;
 using CommunityToolkit.Aspire.Hosting.Vercel;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel.Tests;
 
@@ -81,6 +88,174 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public void VercelEnvironmentOptionsCanBeConfigured()
+    {
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelCliPath("vercel-test")
+            .WithVercelTarget("preview")
+            .WithVercelProductionDeployments()
+            .WithVercelTarget("staging");
+
+        var options = vercel.Resource.GetVercelOptions();
+        Assert.Equal("vercel-test", options.CliPath);
+        Assert.Equal("staging", options.Target);
+        Assert.False(options.Production);
+    }
+
+    [Fact]
+    public async Task AddVercelEnvironmentRegistersExpectedPipelineSteps()
+    {
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(new FakeVercelCliRunner());
+        builder.Services.AddSingleton<IDeploymentStateManager>(new FakeDeploymentStateManager());
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var stepContext = CreatePipelineStepContext(builder, app);
+        var annotation = Assert.Single(environment.Annotations.OfType<PipelineStepAnnotation>());
+
+        var steps = (await annotation.CreateStepsAsync(new()
+        {
+            PipelineContext = stepContext.PipelineContext,
+            Resource = environment
+        })).ToArray();
+
+        Assert.Collection(
+            steps,
+            step =>
+            {
+                Assert.Equal("vercel-publish-vercel", step.Name);
+                Assert.Same(vercel.Resource, step.Resource);
+                Assert.Equal([WellKnownPipelineSteps.Publish, WellKnownPipelineSteps.Deploy], step.RequiredBySteps);
+            },
+            step =>
+            {
+                Assert.Equal("vercel-deploy-prereq-vercel", step.Name);
+                Assert.Same(vercel.Resource, step.Resource);
+                Assert.Equal([WellKnownPipelineSteps.Deploy], step.RequiredBySteps);
+            },
+            step =>
+            {
+                Assert.Equal("vercel-deploy-vercel", step.Name);
+                Assert.Same(vercel.Resource, step.Resource);
+                Assert.Equal(["vercel-deploy-prereq-vercel"], step.DependsOnSteps);
+                Assert.Equal([WellKnownPipelineSteps.Deploy], step.RequiredBySteps);
+            },
+            step =>
+            {
+                Assert.Equal("vercel-destroy-prereq-vercel", step.Name);
+                Assert.Same(vercel.Resource, step.Resource);
+                Assert.Equal([WellKnownPipelineSteps.Destroy], step.RequiredBySteps);
+            },
+            step =>
+            {
+                Assert.Equal("vercel-destroy-vercel", step.Name);
+                Assert.Same(vercel.Resource, step.Resource);
+                Assert.Equal(["vercel-destroy-prereq-vercel"], step.DependsOnSteps);
+                Assert.Equal([WellKnownPipelineSteps.Destroy], step.RequiredBySteps);
+            });
+    }
+
+    [Fact]
+    public void WithVercelCliPathShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<VercelEnvironmentResource> builder = null!;
+
+        var action = () => builder.WithVercelCliPath("vercel");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithVercelCliPathShouldThrowWhenCliPathIsEmpty()
+    {
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        var action = () => vercel.WithVercelCliPath("");
+
+        var exception = Assert.Throws<ArgumentException>(action);
+        Assert.Equal("cliPath", exception.ParamName);
+    }
+
+    [Fact]
+    public void WithVercelProductionDeploymentsShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<VercelEnvironmentResource> builder = null!;
+
+        var action = () => builder.WithVercelProductionDeployments();
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void PublishProjectAsVercelAddsDeploymentAnnotationInPublishMode()
+    {
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        var project = builder.AddResource(new ProjectResource("api"))
+            .PublishAsVercel(vercel, "Dockerfile.custom");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var api = Assert.Single(model.Resources.OfType<ProjectResource>());
+
+        Assert.Same(project.Resource, api);
+        Assert.Same(vercel.Resource, api.GetComputeEnvironment());
+        Assert.True(api.TryGetLastAnnotation<VercelDeploymentAnnotation>(out var annotation));
+        Assert.Null(annotation.SourceRoot);
+        Assert.Equal("Dockerfile.custom", annotation.DockerfilePath);
+    }
+
+    [Fact]
+    public void PublishExecutableAsVercelAddsDeploymentAnnotationInPublishMode()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        builder.AddExecutable("api", "node", sourceRoot.Path)
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        Assert.IsType<ExecutableResource>(entry.Resource);
+        Assert.Equal(sourceRoot.Path, entry.SourceRoot);
+        Assert.Equal("Dockerfile.vercel", entry.DockerfilePath);
+    }
+
+    [Fact]
+    public void PublishContainerAsVercelResolvesExplicitSourceRootAndDockerfile()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.custom"), "FROM nginx:alpine");
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        builder.AddContainer("api", "api")
+            .PublishAsVercel(vercel, sourceRoot.Path, "Dockerfile.custom");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        Assert.Equal(sourceRoot.Path, entry.SourceRoot);
+        Assert.Equal("Dockerfile.custom", entry.DockerfilePath);
+    }
+
+    [Fact]
     public async Task WriteDeploymentPlanWritesExpectedJson()
     {
         using var sourceRoot = TemporaryDirectory.Create();
@@ -107,6 +282,33 @@ public class VercelEnvironmentTests
         Assert.Equal("api", deployment.GetProperty("resourceName").GetString());
         Assert.Equal("Dockerfile.vercel", deployment.GetProperty("dockerfilePath").GetString());
         Assert.Equal("vercel --cwd <api-source-root> deploy --yes", deployment.GetProperty("deployCommand").GetString());
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanPipelineStepWritesSummary()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        var outputService = new FakePipelineOutputService(outputRoot.Path);
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IPipelineOutputService>(outputService);
+        var vercel = builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.WriteDeploymentPlanAsync(context, environment);
+
+        var summary = Assert.Single(context.Summary.Items);
+        Assert.Equal("Vercel deployment plan", summary.Key);
+        Assert.Equal(Path.Combine(outputRoot.Path, VercelDeploymentStep.DeploymentPlanFileName), summary.Value);
     }
 
     [Fact]
@@ -166,6 +368,48 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public async Task WriteDeploymentPlanThrowsWhenSourceRootIsMissing()
+    {
+        using var outputRoot = TemporaryDirectory.Create();
+        string sourceRoot = Path.Combine(Path.GetTempPath(), $"missing-vercel-tests-{Guid.NewGuid():N}");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .PublishAsVercel(vercel, sourceRoot);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
+
+        Assert.Contains(sourceRoot, exception.Message);
+        Assert.Contains("does not exist", exception.Message);
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanThrowsWhenContainerHasNoSourceRoot()
+    {
+        using var outputRoot = TemporaryDirectory.Create();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
+
+        Assert.Contains("does not have a Vercel source root", exception.Message);
+    }
+
+    [Fact]
     public void BuildDeployArgumentsIncludesConfiguredOptions()
     {
         var options = new VercelEnvironmentOptionsAnnotation
@@ -178,6 +422,20 @@ public class VercelEnvironmentTests
         string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
 
         Assert.Equal(["--scope", "team", "--cwd", "/repo/src/api", "deploy", "--yes", "--prod"], arguments);
+    }
+
+    [Fact]
+    public void BuildDeployArgumentsIncludesTarget()
+    {
+        var options = new VercelEnvironmentOptionsAnnotation
+        {
+            Target = "preview"
+        };
+        var entry = new VercelDeploymentEntry(new ContainerResource("api"), "/repo/src/api", "Dockerfile.vercel");
+
+        string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
+
+        Assert.Equal(["--cwd", "/repo/src/api", "deploy", "--yes", "--target", "preview"], arguments);
     }
 
     [Fact]
@@ -220,6 +478,35 @@ public class VercelEnvironmentTests
 
         Assert.Contains("--env", arguments);
         Assert.Contains("GREETING=hello", arguments);
+    }
+
+    [Fact]
+    public async Task BuildDeployArgumentsThrowsForContainerEntrypoint()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
+        var vercel = builder.AddVercelEnvironment("vercel");
+        var api = builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .PublishAsVercel(vercel);
+        api.Resource.Entrypoint = "node";
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.BuildDeployArgumentsAsync(
+                builder.ExecutionContext,
+                NullLogger.Instance,
+                environment.GetVercelOptions(),
+                entry,
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("entrypoint", exception.Message);
     }
 
     [Fact]
@@ -341,6 +628,290 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public async Task DeployAsyncRunsVercelCliAndSavesDeploymentState()
+    {
+        using var sourceRoot = TemporaryDirectory.Create("vercel-state-project");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        var runner = new FakeVercelCliRunner(new VercelCliResult(0, """
+            {
+              "deployment": {
+                "id": "dpl_123",
+                "url": "https://api.vercel.app"
+              }
+            }
+            """, ""));
+        var stateManager = new FakeDeploymentStateManager();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelCliPath("vercel-test")
+            .WithVercelScope("team");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .WithEnvironment("GREETING", "hello")
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.DeployAsync(context, environment);
+
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal("vercel-test", invocation.FileName);
+        Assert.Equal(sourceRoot.Path, invocation.WorkingDirectory);
+        Assert.Equal(["--scope", "team", "--cwd", sourceRoot.Path, "deploy", "--yes", "--env", "GREETING=hello"], invocation.Arguments);
+        Assert.Null(invocation.StandardInput);
+
+        var summary = Assert.Single(context.Summary.Items);
+        Assert.Equal("api Vercel deployment", summary.Key);
+        Assert.Equal("https://api.vercel.app", summary.Value);
+
+        var savedSection = Assert.Single(stateManager.SavedSections);
+        Assert.Equal("communitytoolkit.vercel.vercel", savedSection.SectionName);
+        string stateJson = savedSection.Data.ToJsonString();
+        Assert.Contains("vercel-state-project", stateJson);
+        Assert.Contains("dpl_123", stateJson);
+    }
+
+    [Fact]
+    public async Task DeployAsyncThrowsWhenVercelCliFails()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        var runner = new FakeVercelCliRunner(new VercelCliResult(1, "ignored stdout", "deploy failed"));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(new FakeDeploymentStateManager());
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelCliPath("vercel-test");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.DeployAsync(context, environment));
+
+        Assert.Contains("Failed to deploy resource 'api' to Vercel using 'vercel-test' (exit code 1). deploy failed", exception.Message);
+    }
+
+    [Fact]
+    public async Task ValidateCliPrerequisitesRunsVersionAndWhoami()
+    {
+        var runner = new FakeVercelCliRunner(
+            new(0, "54.18.6", ""),
+            new(0, "davidfowl-6717", ""));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelCliPath("vercel-test");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment);
+
+        Assert.Collection(
+            runner.Invocations,
+            invocation => Assert.Equal(["--version"], invocation.Arguments),
+            invocation => Assert.Equal(["whoami"], invocation.Arguments));
+    }
+
+    [Fact]
+    public async Task ValidateCliPrerequisitesThrowsWhenWhoamiFails()
+    {
+        var runner = new FakeVercelCliRunner(
+            new(0, "54.18.6", ""),
+            new(1, "", "not logged in"));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelCliPath("vercel-test");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment));
+
+        Assert.Contains("Failed to validate Vercel authentication using 'vercel-test' (exit code 1). not logged in", exception.Message);
+    }
+
+    [Fact]
+    public async Task ValidateCliPrerequisitesThrowsWhenVersionFailsWithStandardOutput()
+    {
+        var runner = new FakeVercelCliRunner(new VercelCliResult(1, "missing vercel", ""));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelCliPath("vercel-test");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment));
+
+        Assert.Contains("Failed to validate Vercel CLI installation using 'vercel-test' (exit code 1). missing vercel", exception.Message);
+    }
+
+    [Fact]
+    public async Task ValidatePrerequisitesThrowsWhenNoResourcesArePublished()
+    {
+        var runner = new FakeVercelCliRunner(
+            new(0, "54.18.6", ""),
+            new(0, "davidfowl-6717", ""));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.ValidatePrerequisitesAsync(context, environment));
+
+        Assert.Contains("No resources are configured for Vercel deployment", exception.Message);
+    }
+
+    [Fact]
+    public async Task DestroyAsyncDeletesProjectsFromSavedDeploymentState()
+    {
+        var runner = new FakeVercelCliRunner(
+            new(0, "", ""),
+            new(0, "", ""));
+        var stateManager = new FakeDeploymentStateManager();
+        stateManager.SetSection("communitytoolkit.vercel.vercel", JsonSerializer.Serialize(new VercelDeploymentState(
+            "vercel",
+            [
+                new("api", "z-project", "dpl_1", "https://z-project.vercel.app"),
+                new("worker", "a-project", null, null),
+                new("api2", "z-project", null, null)
+            ])));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelCliPath("vercel-test")
+            .WithVercelScope("team");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.DestroyAsync(context, environment);
+
+        Assert.Collection(
+            runner.Invocations,
+            invocation =>
+            {
+                Assert.Equal(["--scope", "team", "project", "remove", "a-project"], invocation.Arguments);
+                Assert.Equal("y\n", invocation.StandardInput);
+            },
+            invocation =>
+            {
+                Assert.Equal(["--scope", "team", "project", "remove", "z-project"], invocation.Arguments);
+                Assert.Equal("y\n", invocation.StandardInput);
+            });
+        Assert.Single(stateManager.DeletedSections);
+    }
+
+    [Fact]
+    public async Task DestroyAsyncFallsBackToConfiguredDeploymentsWhenStateIsMissing()
+    {
+        using var sourceRoot = TemporaryDirectory.Create("fallback-project");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile.vercel"), "FROM nginx:alpine");
+        var runner = new FakeVercelCliRunner(new VercelCliResult(0, "", ""));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(new FakeDeploymentStateManager());
+        var vercel = builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile.vercel")
+            .PublishAsVercel(vercel);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.DestroyAsync(context, environment);
+
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal(["project", "remove", "fallback-project"], invocation.Arguments);
+    }
+
+    [Fact]
+    public async Task DestroyAsyncAddsSummaryWhenNoDeploymentsExist()
+    {
+        var runner = new FakeVercelCliRunner();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(new FakeDeploymentStateManager());
+        var vercel = builder.AddVercelEnvironment("vercel");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.DestroyAsync(context, environment);
+
+        Assert.Empty(runner.Invocations);
+        var summary = Assert.Single(context.Summary.Items);
+        Assert.Equal("Vercel destroy", summary.Key);
+        Assert.Contains("No Vercel deployments", summary.Value);
+    }
+
+    [Fact]
+    public async Task VercelCliRunnerRunsProcessAndCapturesOutput()
+    {
+        var runner = new VercelCliRunner();
+
+        var result = await runner.RunAsync("dotnet", ["--version"], Directory.GetCurrentDirectory(), TestContext.Current.CancellationToken);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(0, result.ExitCode);
+        Assert.False(string.IsNullOrWhiteSpace(result.StandardOutput));
+    }
+
+    [Fact]
+    public async Task VercelCliRunnerThrowsWhenProcessCannotStart()
+    {
+        var runner = new VercelCliRunner();
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            runner.RunAsync($"missing-vercel-cli-{Guid.NewGuid():N}", [], workingDirectory: null, TestContext.Current.CancellationToken));
+
+        Assert.Contains("could not be started", exception.Message);
+    }
+
+    [Fact]
     public void GetDeploymentUrlReturnsPlainUrl()
     {
         string url = VercelDeploymentStep.GetDeploymentUrl("""
@@ -366,6 +937,55 @@ public class VercelEnvironmentTests
             """);
 
         Assert.Equal("https://example-json.vercel.app", url);
+    }
+
+    [Fact]
+    public void GetDeploymentResultReturnsRootJsonDeploymentUrl()
+    {
+        var result = VercelDeploymentStep.GetDeploymentResult("""
+            {
+              "id": "dpl_root",
+              "url": "https://root-json.vercel.app"
+            }
+            """);
+
+        Assert.Equal("dpl_root", result.DeploymentId);
+        Assert.Equal("https://root-json.vercel.app", result.DeploymentUrl);
+    }
+
+    [Fact]
+    public void GetDeploymentResultFallsBackWhenJsonIsInvalid()
+    {
+        var result = VercelDeploymentStep.GetDeploymentResult("""
+            {
+              "deployment":
+            }
+            https://fallback.vercel.app
+            """);
+
+        Assert.Null(result.DeploymentId);
+        Assert.Equal("https://fallback.vercel.app", result.DeploymentUrl);
+    }
+
+    [Fact]
+    public void GetDeploymentResultFallsBackWhenJsonHasNoUrl()
+    {
+        var result = VercelDeploymentStep.GetDeploymentResult("""
+            {
+              "deployment": {
+                "id": "dpl_no_url"
+              }
+            }
+            """);
+
+        Assert.Null(result.DeploymentId);
+        Assert.Equal("""
+            {
+              "deployment": {
+                "id": "dpl_no_url"
+              }
+            }
+            """.Trim(), result.DeploymentUrl);
     }
 
     [Fact]
@@ -411,6 +1031,38 @@ public class VercelEnvironmentTests
         Assert.Equal("fallback-project", projectName);
     }
 
+    [Fact]
+    public void GetVercelOptionsReturnsDefaultOptionsWithoutAnnotation()
+    {
+        var resource = new VercelEnvironmentResource("vercel");
+
+        var options = resource.GetVercelOptions();
+
+        Assert.Equal("vercel", options.CliPath);
+        Assert.Null(options.Scope);
+        Assert.Null(options.Target);
+        Assert.False(options.Production);
+    }
+
+    private static PipelineStepContext CreatePipelineStepContext(
+        IDistributedApplicationBuilder builder,
+        DistributedApplication app)
+    {
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var pipelineContext = new PipelineContext(
+            model,
+            builder.ExecutionContext,
+            app.Services,
+            NullLogger.Instance,
+            TestContext.Current.CancellationToken);
+
+        return new()
+        {
+            PipelineContext = pipelineContext,
+            ReportingStep = NoopReportingStep.Instance
+        };
+    }
+
     private sealed class TemporaryDirectory : IDisposable
     {
         private TemporaryDirectory(string path)
@@ -435,5 +1087,141 @@ public class VercelEnvironmentTests
                 Directory.Delete(Path, recursive: true);
             }
         }
+    }
+
+    private sealed class FakeVercelCliRunner(params VercelCliResult[] results) : IVercelCliRunner
+    {
+        private readonly Queue<VercelCliResult> _results = new(results);
+
+        public List<VercelCliInvocation> Invocations { get; } = [];
+
+        public Task<VercelCliResult> RunAsync(
+            string fileName,
+            IReadOnlyList<string> arguments,
+            string? workingDirectory,
+            CancellationToken cancellationToken,
+            string? standardInput = null)
+        {
+            Invocations.Add(new(fileName, [.. arguments], workingDirectory, standardInput));
+
+            var result = _results.Count > 0
+                ? _results.Dequeue()
+                : new VercelCliResult(0, "", "");
+
+            return Task.FromResult(result);
+        }
+    }
+
+    private sealed record VercelCliInvocation(
+        string FileName,
+        string[] Arguments,
+        string? WorkingDirectory,
+        string? StandardInput);
+
+    private sealed class FakeDeploymentStateManager : IDeploymentStateManager
+    {
+        private readonly Dictionary<string, DeploymentStateSection> _sections = new(StringComparer.Ordinal);
+
+        public string? StateFilePath => null;
+
+        public List<DeploymentStateSection> SavedSections { get; } = [];
+
+        public List<DeploymentStateSection> DeletedSections { get; } = [];
+
+        public void SetSection(string sectionName, string value)
+            => _sections[sectionName] = new(sectionName, new JsonObject { ["value"] = value }, 0);
+
+        public Task<DeploymentStateSection> AcquireSectionAsync(string sectionName, CancellationToken cancellationToken)
+        {
+            if (!_sections.TryGetValue(sectionName, out var section))
+            {
+                section = new(sectionName, new JsonObject(), 0);
+                _sections.Add(sectionName, section);
+            }
+
+            return Task.FromResult(section);
+        }
+
+        public Task SaveSectionAsync(DeploymentStateSection section, CancellationToken cancellationToken)
+        {
+            SavedSections.Add(section);
+            _sections[section.SectionName] = section;
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteSectionAsync(DeploymentStateSection section, CancellationToken cancellationToken)
+        {
+            DeletedSections.Add(section);
+            _sections.Remove(section.SectionName);
+            return Task.CompletedTask;
+        }
+
+        public Task ClearAllStateAsync(CancellationToken cancellationToken)
+        {
+            _sections.Clear();
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakePipelineOutputService(string outputDirectory) : IPipelineOutputService
+    {
+        public string GetOutputDirectory() => outputDirectory;
+
+        public string GetOutputDirectory(IResource resource) => outputDirectory;
+
+        public string GetTempDirectory() => outputDirectory;
+
+        public string GetTempDirectory(IResource resource) => outputDirectory;
+    }
+
+    private sealed class NoopReportingStep : IReportingStep
+    {
+        public static NoopReportingStep Instance { get; } = new();
+
+        public Task<IReportingTask> CreateTaskAsync(MarkdownString statusText, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReportingTask>(NoopReportingTask.Instance);
+
+        public Task<IReportingTask> CreateTaskAsync(string statusText, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReportingTask>(NoopReportingTask.Instance);
+
+        public Task CompleteAsync(MarkdownString completionText, CompletionState completionState = CompletionState.Completed, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task CompleteAsync(string completionText, CompletionState completionState = CompletionState.Completed, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public void Log(LogLevel logLevel, MarkdownString message)
+        {
+        }
+
+        public void Log(LogLevel logLevel, string message)
+        {
+        }
+
+        [Obsolete("Use Log(LogLevel, string) or Log(LogLevel, MarkdownString) instead.")]
+        public void Log(LogLevel logLevel, string message, bool enableMarkdown)
+        {
+        }
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
+    private sealed class NoopReportingTask : IReportingTask
+    {
+        public static NoopReportingTask Instance { get; } = new();
+
+        public Task UpdateAsync(MarkdownString statusText, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task UpdateAsync(string statusText, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task CompleteAsync(MarkdownString completionMessage, CompletionState completionState = CompletionState.Completed, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public Task CompleteAsync(string? completionMessage = null, CompletionState completionState = CompletionState.Completed, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }
