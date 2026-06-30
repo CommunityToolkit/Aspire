@@ -1,0 +1,21 @@
+{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "13.4.3"
+  },
+  "profiles": {
+    "https": {
+      "applicationUrl": "https://localhost:29760;http://localhost:28941",
+      "environmentVariables": {
+        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:10985",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:13329"
+      }
+    }
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Floci": "../../../src/CommunityToolkit.Aspire.Hosting.Floci/CommunityToolkit.Aspire.Hosting.Floci.csproj"
+  }
+}
