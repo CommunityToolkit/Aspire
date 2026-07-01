@@ -70,18 +70,9 @@ public static class VercelEnvironmentResourceBuilderExtensions
                 },
                 new PipelineStep
                 {
-                    Name = $"{VercelDeploymentStep.DestroyPrereqStepNamePrefix}{resource.Name}",
-                    Description = $"Validate Vercel CLI prerequisites for destroying '{resource.Name}'.",
-                    Resource = resource,
-                    RequiredBySteps = [WellKnownPipelineSteps.Destroy],
-                    Action = context => VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, resource)
-                },
-                new PipelineStep
-                {
                     Name = $"{VercelDeploymentStep.DestroyStepNamePrefix}{resource.Name}",
                     Description = $"Destroy Vercel resources for environment '{resource.Name}'.",
                     Resource = resource,
-                    DependsOnSteps = [$"{VercelDeploymentStep.DestroyPrereqStepNamePrefix}{resource.Name}"],
                     RequiredBySteps = [WellKnownPipelineSteps.Destroy],
                     Action = context => VercelDeploymentStep.DestroyAsync(context, resource)
                 }

@@ -137,8 +137,7 @@ internal static class VercelDeploymentStep
         var entries = GetDeploymentEntries(context.Model, environment).ToList();
 
         ValidateEntries(entries);
-
-        List<VercelDeploymentStateEntry> stateEntries = [];
+        await ValidateExistingDeploymentStateAsync(context, environment, options).ConfigureAwait(false);
 
         foreach (var entry in entries)
         {
@@ -164,7 +163,7 @@ internal static class VercelDeploymentStep
             var projectLink = GetVercelProjectLink(preparedEntry);
             string? productionUrl = GetProductionUrl(options, projectLink.ProjectName);
 
-            stateEntries.Add(new(
+            var stateEntry = new VercelDeploymentStateEntry(
                 entry.Resource.Name,
                 projectLink.ProjectName,
                 projectLink.ProjectId,
@@ -174,7 +173,9 @@ internal static class VercelDeploymentStep
                 managedByAspire)
             {
                 ProductionUrl = productionUrl
-            });
+            };
+
+            await SaveDeploymentStateEntryAsync(context, environment, options, stateEntry).ConfigureAwait(false);
 
             context.Summary.Add($"{entry.Resource.Name} Vercel deployment", deploymentResult.DeploymentUrl);
             if (productionUrl is not null)
@@ -182,8 +183,6 @@ internal static class VercelDeploymentStep
                 context.Summary.Add($"{entry.Resource.Name} Vercel production URL", productionUrl);
             }
         }
-
-        await SaveDeploymentStateAsync(context, environment, options, stateEntries).ConfigureAwait(false);
     }
 
     internal static string[] BuildDeployArguments(VercelEnvironmentOptionsAnnotation options, VercelDeploymentEntry entry)
@@ -259,8 +258,12 @@ internal static class VercelDeploymentStep
         }
 
         var inspection = GetDeploymentInspection(result.StandardOutput);
-        if (inspection.ReadyState is not null
-            && !string.Equals(inspection.ReadyState, "READY", StringComparison.OrdinalIgnoreCase))
+        if (inspection.ReadyState is null)
+        {
+            throw new DistributedApplicationException($"Vercel inspect output for resource '{resourceName}' did not include a deployment ready state. Output: {GetTrimmedOutput(result.StandardOutput)}");
+        }
+
+        if (!string.Equals(inspection.ReadyState, "READY", StringComparison.OrdinalIgnoreCase))
         {
             throw new DistributedApplicationException($"Vercel deployment for resource '{resourceName}' finished with state '{inspection.ReadyState}' instead of 'READY'.");
         }
@@ -269,7 +272,6 @@ internal static class VercelDeploymentStep
     public static async Task DestroyAsync(PipelineStepContext context, VercelEnvironmentResource environment)
     {
         var options = environment.GetVercelOptions();
-        var runner = context.Services.GetRequiredService<IVercelCliRunner>();
         var stateManager = context.Services.GetRequiredService<IDeploymentStateManager>();
         var stateSection = await stateManager.AcquireSectionAsync(GetStateSectionName(environment), context.CancellationToken).ConfigureAwait(false);
         var state = ReadDeploymentState(stateSection);
@@ -294,6 +296,9 @@ internal static class VercelDeploymentStep
             await stateManager.DeleteSectionAsync(stateSection, context.CancellationToken).ConfigureAwait(false);
             return;
         }
+
+        await ValidateCliPrerequisitesAsync(context, environment).ConfigureAwait(false);
+        var runner = context.Services.GetRequiredService<IVercelCliRunner>();
 
         foreach (string projectName in projects)
         {
@@ -438,24 +443,67 @@ internal static class VercelDeploymentStep
         return $"vercel {string.Join(" ", BuildDeployArguments(options, $"<{resourceName}-source-root>", displayEnvironmentVariables))}";
     }
 
-    private static async Task SaveDeploymentStateAsync(
+    private static async Task ValidateExistingDeploymentStateAsync(
         PipelineStepContext context,
         VercelEnvironmentResource environment,
-        VercelEnvironmentOptionsAnnotation options,
-        IReadOnlyList<VercelDeploymentStateEntry> deployments)
+        VercelEnvironmentOptionsAnnotation options)
     {
         var stateManager = context.Services.GetRequiredService<IDeploymentStateManager>();
         var stateSection = await stateManager.AcquireSectionAsync(GetStateSectionName(environment), context.CancellationToken).ConfigureAwait(false);
-        var state = new VercelDeploymentState(
+        var existingState = ReadDeploymentState(stateSection);
+        if (existingState is not null)
+        {
+            ValidateDeploymentState(environment, options, existingState);
+        }
+    }
+
+    private static async Task SaveDeploymentStateEntryAsync(
+        PipelineStepContext context,
+        VercelEnvironmentResource environment,
+        VercelEnvironmentOptionsAnnotation options,
+        VercelDeploymentStateEntry deployment)
+    {
+        var stateManager = context.Services.GetRequiredService<IDeploymentStateManager>();
+        var stateSection = await stateManager.AcquireSectionAsync(GetStateSectionName(environment), context.CancellationToken).ConfigureAwait(false);
+        var existingState = ReadDeploymentState(stateSection);
+        var state = existingState is null
+            ? CreateDeploymentState(environment, options, [deployment])
+            : MergeDeploymentState(environment, options, existingState, deployment);
+
+        stateSection.SetValue(JsonSerializer.Serialize(state, JsonOptions));
+
+        await stateManager.SaveSectionAsync(stateSection, context.CancellationToken).ConfigureAwait(false);
+    }
+
+    private static VercelDeploymentState CreateDeploymentState(
+        VercelEnvironmentResource environment,
+        VercelEnvironmentOptionsAnnotation options,
+        VercelDeploymentStateEntry[] deployments)
+        => new(
             DeploymentStateSchemaVersion,
             environment.Name,
             NormalizeScope(options.Scope),
             NormalizeTarget(options.Target),
             options.Production,
-            [.. deployments]);
-        stateSection.SetValue(JsonSerializer.Serialize(state, JsonOptions));
+            deployments);
 
-        await stateManager.SaveSectionAsync(stateSection, context.CancellationToken).ConfigureAwait(false);
+    private static VercelDeploymentState MergeDeploymentState(
+        VercelEnvironmentResource environment,
+        VercelEnvironmentOptionsAnnotation options,
+        VercelDeploymentState existingState,
+        VercelDeploymentStateEntry deployment)
+    {
+        ValidateDeploymentState(environment, options, existingState);
+
+        return CreateDeploymentState(
+            environment,
+            options,
+            [
+                .. existingState.Deployments.Where(existing =>
+                    !string.Equals(existing.ResourceName, deployment.ResourceName, StringComparison.Ordinal)
+                    || !string.Equals(existing.ProjectName, deployment.ProjectName, StringComparison.Ordinal)),
+                deployment
+            ]);
     }
 
     private static VercelDeploymentState? ReadDeploymentState(DeploymentStateSection stateSection)
@@ -719,6 +767,32 @@ internal static class VercelDeploymentStep
 
             ValidateUnsupportedResourceModel(entry);
         }
+
+        ValidateUniqueVercelProjectNames(entries);
+    }
+
+    private static void ValidateUniqueVercelProjectNames(IReadOnlyList<VercelDeploymentEntry> entries)
+    {
+        var projectNames = entries
+            .Select(entry => new
+            {
+                Entry = entry,
+                ProjectLink = GetVercelProjectLink(entry),
+                Linked = HasVercelProjectLinkFile(entry.SourceRoot)
+            })
+            .GroupBy(item => item.ProjectLink.ProjectName, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1 && group.Any(static item => !item.Linked))
+            .ToArray();
+
+        if (projectNames.Length == 0)
+        {
+            return;
+        }
+
+        var collision = projectNames[0];
+        string resources = string.Join(", ", collision.Select(static item => $"'{item.Entry.Resource.Name}'").Order(StringComparer.Ordinal));
+        throw new DistributedApplicationException(
+            $"Multiple Vercel resources resolve to managed project name '{collision.Key}' ({resources}). Managed Vercel project names must be unique per environment. Link shared existing projects with .vercel/project.json or use distinct source directory names.");
     }
 
     private static void ValidateUnsupportedResourceModel(VercelDeploymentEntry entry)
@@ -1072,8 +1146,11 @@ internal static class VercelDeploymentStep
         string[] lines = standardOutput
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        string deploymentUrl = lines.LastOrDefault(static line => Uri.TryCreate(line, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http")
-            ?? standardOutput.Trim();
+        string? deploymentUrl = lines.LastOrDefault(IsHttpUrl);
+        if (deploymentUrl is null)
+        {
+            throw new DistributedApplicationException($"Vercel deploy output did not contain an HTTP or HTTPS deployment URL. Output: {GetTrimmedOutput(standardOutput)}");
+        }
 
         return new(DeploymentId: null, deploymentUrl);
     }
@@ -1157,8 +1234,14 @@ internal static class VercelDeploymentStep
             ? urlElement.GetString()
             : null;
 
-        return Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http";
+        return IsHttpUrl(url);
     }
+
+    private static bool IsHttpUrl([NotNullWhen(true)] string? url)
+        => Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http";
+
+    private static string GetTrimmedOutput(string output)
+        => string.IsNullOrWhiteSpace(output) ? "<empty>" : output.Trim();
 
     private static DistributedApplicationException CreateCliException(string operation, string cliPath, VercelCliResult result)
     {
