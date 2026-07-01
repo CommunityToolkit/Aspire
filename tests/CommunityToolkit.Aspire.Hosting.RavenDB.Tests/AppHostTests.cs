@@ -90,10 +90,19 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         // Deep-link uses the physical database name (URL-escaped), not the resource name, so assert against
         // the actual DatabaseName to stay correct even when AddDatabase(name, databaseName: ...) differ.
+        var expectedUrl =
+            $"{serverEndpoint.OriginalString.TrimEnd('/')}/studio/index.html#databases/documents?&database={Uri.EscapeDataString(dbResource.DatabaseName)}";
+
         var studioUrl = Assert.Single(dbResource.Annotations.OfType<ResourceUrlAnnotation>(),
             u => u.DisplayText == "RavenDB Studio");
-        Assert.Equal(
-            $"{serverEndpoint.OriginalString.TrimEnd('/')}/studio/index.html#databases/documents?&database={Uri.EscapeDataString(dbResource.DatabaseName)}",
-            studioUrl.Url);
+        Assert.Equal(expectedUrl, studioUrl.Url);
+
+        // The dashboard renders links from the resource snapshot (published via PublishUpdateAsync), not the
+        // annotation, so assert the URL actually reached the snapshot — otherwise the link could be absent
+        // from the dashboard even though the annotation is present.
+        Assert.True(fixture.ResourceNotificationService.TryGetCurrentState(databaseResourceName, out var resourceEvent));
+        var snapshotUrl = Assert.Single(resourceEvent!.Snapshot.Urls,
+            u => u.DisplayProperties.DisplayName == "RavenDB Studio");
+        Assert.Equal(expectedUrl, snapshotUrl.Url);
     }
 }

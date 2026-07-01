@@ -279,11 +279,24 @@ public static class RavenDBBuilderExtensions
 
                 var studioUrl = BuildStudioUrl(baseUrl, databaseResource.DatabaseName);
 
+                // Endpoints can be (re)allocated more than once (e.g. on a server restart, possibly with a
+                // different port), so this handler must be idempotent: drop any previous "RavenDB Studio"
+                // link before re-adding, in both the annotations and the snapshot, instead of accumulating
+                // duplicates and leaving stale URLs behind.
+
                 // (1) Annotation — discoverable via TryGetUrls and assertable in tests.
+                foreach (var stale in databaseResource.Annotations
+                             .OfType<ResourceUrlAnnotation>()
+                             .Where(u => u.DisplayText == StudioDisplayText)
+                             .ToArray())
+                {
+                    databaseResource.Annotations.Remove(stale);
+                }
+
                 databaseResource.Annotations.Add(new ResourceUrlAnnotation
                 {
                     Url = studioUrl,
-                    DisplayText = "RavenDB Studio"
+                    DisplayText = StudioDisplayText
                 });
 
                 // (2) Snapshot update — the dashboard renders from the snapshot, and the child's initial
@@ -291,10 +304,12 @@ public static class RavenDBBuilderExtensions
                 var notifications = @event.Services.GetRequiredService<ResourceNotificationService>();
                 await notifications.PublishUpdateAsync(databaseResource, snapshot =>
                 {
-                    var urls = snapshot.Urls.Add(new UrlSnapshot(Name: null, Url: studioUrl, IsInternal: false)
-                    {
-                        DisplayProperties = new UrlDisplayPropertiesSnapshot("RavenDB Studio", 0)
-                    });
+                    var urls = snapshot.Urls
+                        .RemoveAll(u => u.DisplayProperties.DisplayName == StudioDisplayText)
+                        .Add(new UrlSnapshot(Name: null, Url: studioUrl, IsInternal: false)
+                        {
+                            DisplayProperties = new UrlDisplayPropertiesSnapshot(StudioDisplayText, 0)
+                        });
                     return snapshot with { Urls = urls };
                 }).ConfigureAwait(false);
             });
@@ -329,6 +344,10 @@ public static class RavenDBBuilderExtensions
 
         return dbBuilder;
     }
+
+    // Display text shared by the "RavenDB Studio" URL annotation and its snapshot entry; also used as the
+    // key to de-duplicate them when endpoints are re-allocated.
+    private const string StudioDisplayText = "RavenDB Studio";
 
     internal static string BuildStudioUrl(string baseUrl, string databaseName)
     {
