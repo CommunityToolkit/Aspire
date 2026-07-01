@@ -11,6 +11,7 @@ using Aspire.Hosting.Pipelines;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -337,6 +338,7 @@ internal static class VercelDeploymentStep
         var environmentVariables = await GetVercelEnvironmentVariablesAsync(
             executionContext,
             logger,
+            options,
             entry,
             cancellationToken).ConfigureAwait(false);
 
@@ -356,7 +358,7 @@ internal static class VercelDeploymentStep
         {
             var environmentVariables = executionContext is null || logger is null
                 ? []
-                : await GetVercelEnvironmentVariablesAsync(executionContext, logger, entry, cancellationToken).ConfigureAwait(false);
+                : await GetVercelEnvironmentVariablesAsync(executionContext, logger, options, entry, cancellationToken).ConfigureAwait(false);
 
             planEntries.Add(new(
                 entry.Resource.Name,
@@ -371,6 +373,7 @@ internal static class VercelDeploymentStep
     private static async Task<IReadOnlyList<KeyValuePair<string, string>>> GetVercelEnvironmentVariablesAsync(
         DistributedApplicationExecutionContext executionContext,
         ILogger logger,
+        VercelEnvironmentOptionsAnnotation options,
         VercelDeploymentEntry entry,
         CancellationToken cancellationToken)
     {
@@ -388,7 +391,7 @@ internal static class VercelDeploymentStep
 
         ValidateUnsupportedRuntimeConfiguration(entry.Resource, executionConfiguration);
 
-        var environmentVariables = GetVercelEnvironmentVariables(entry.Resource, executionConfiguration);
+        var environmentVariables = GetVercelEnvironmentVariables(entry.Resource, options, executionConfiguration);
 
         return environmentVariables;
     }
@@ -590,6 +593,7 @@ internal static class VercelDeploymentStep
 
     private static IReadOnlyList<KeyValuePair<string, string>> GetVercelEnvironmentVariables(
         IResource resource,
+        VercelEnvironmentOptionsAnnotation options,
         IExecutionConfigurationResult executionConfiguration)
     {
         List<KeyValuePair<string, string>> environmentVariables = [];
@@ -614,16 +618,104 @@ internal static class VercelDeploymentStep
                     $"Environment variable '{name}' for resource '{resource.Name}' references a secret or connection string. Vercel CLI --env would pass the value on the command line, so configure this value in Vercel project environment variables or a Vercel secret instead.");
             }
 
-            if (ContainsRemoteResourceReference(resource, unprocessedValue))
+            if (ContainsUnsupportedResourceReference(resource, unprocessedValue))
             {
                 throw new DistributedApplicationException(
-                    $"Environment variable '{name}' for resource '{resource.Name}' references another Aspire resource endpoint or service. Vercel deployment URLs are not available until after deployment, so cross-resource endpoint and service discovery references are not supported by the Vercel preview integration.");
+                    $"Environment variable '{name}' for resource '{resource.Name}' references another Aspire resource or service in a way that cannot be represented as a Vercel deployment URL. Use endpoint references to Vercel production workloads, or configure the value in Vercel project environment variables.");
+            }
+
+            if (TryGetVercelEnvironmentVariableValue(resource, options, unprocessedValue, out string? vercelValue))
+            {
+                value = vercelValue;
             }
 
             environmentVariables.Add(new(name, value));
         }
 
         return environmentVariables;
+    }
+
+    private static bool TryGetVercelEnvironmentVariableValue(
+        IResource resource,
+        VercelEnvironmentOptionsAnnotation options,
+        object? value,
+        [NotNullWhen(true)] out string? vercelValue)
+    {
+        switch (value)
+        {
+            case EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference):
+                vercelValue = GetVercelEndpointPropertyValue(options, endpointReference.Property(EndpointProperty.Url));
+                return true;
+            case EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint):
+                vercelValue = GetVercelEndpointPropertyValue(options, endpointReferenceExpression);
+                return true;
+            case ReferenceExpression referenceExpression when ContainsCrossResourceEndpointReference(resource, referenceExpression):
+                vercelValue = GetVercelReferenceExpressionValue(resource, options, referenceExpression);
+                return true;
+            default:
+                vercelValue = null;
+                return false;
+        }
+    }
+
+    private static string GetVercelReferenceExpressionValue(
+        IResource resource,
+        VercelEnvironmentOptionsAnnotation options,
+        ReferenceExpression referenceExpression)
+    {
+        if (referenceExpression.IsConditional)
+        {
+            throw new DistributedApplicationException("Vercel endpoint references do not support conditional reference expressions. Configure a concrete Vercel project environment variable instead.");
+        }
+
+        var arguments = new object?[referenceExpression.ValueProviders.Count];
+        for (int i = 0; i < referenceExpression.ValueProviders.Count; i++)
+        {
+            IValueProvider valueProvider = referenceExpression.ValueProviders[i];
+            arguments[i] = valueProvider switch
+            {
+                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetVercelEndpointPropertyValue(options, endpointReference.Property(EndpointProperty.Url)),
+                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetVercelEndpointPropertyValue(options, endpointReferenceExpression),
+                _ => throw new DistributedApplicationException("Vercel endpoint reference expressions cannot be combined with parameters, secrets, or other value providers. Configure a concrete Vercel project environment variable instead.")
+            };
+
+            if (referenceExpression.StringFormats[i] is "uri" && arguments[i] is string stringValue)
+            {
+                arguments[i] = Uri.EscapeDataString(stringValue);
+            }
+        }
+
+        return string.Format(CultureInfo.InvariantCulture, referenceExpression.Format, arguments);
+    }
+
+    private static string GetVercelEndpointPropertyValue(
+        VercelEnvironmentOptionsAnnotation options,
+        EndpointReferenceExpression endpointReferenceExpression)
+    {
+        if (!options.Production)
+        {
+            throw new DistributedApplicationException(
+                "Vercel endpoint references require production deployments because preview and custom target URLs are assigned by Vercel after deployment. Call WithVercelProductionDeployments on the Vercel environment, or remove the reference.");
+        }
+
+        var endpointReference = endpointReferenceExpression.Endpoint;
+        var endpoint = endpointReference.EndpointAnnotation;
+        string host = $"{GetVercelProjectName(endpointReference.Resource)}.vercel.app";
+        const int port = 443;
+
+        return endpointReferenceExpression.Property switch
+        {
+            EndpointProperty.Url => $"https://{host}",
+            EndpointProperty.Host or EndpointProperty.IPV4Host => host,
+            EndpointProperty.Port => port.ToString(CultureInfo.InvariantCulture),
+            EndpointProperty.TargetPort => endpoint.TargetPort is int targetPort
+                ? targetPort.ToString(CultureInfo.InvariantCulture)
+                : port.ToString(CultureInfo.InvariantCulture),
+            EndpointProperty.Scheme => "https",
+            EndpointProperty.HostAndPort => $"{host}:{port.ToString(CultureInfo.InvariantCulture)}",
+            EndpointProperty.TlsEnabled => bool.TrueString,
+            _ => throw new DistributedApplicationException($"The endpoint property '{endpointReferenceExpression.Property}' is not supported for Vercel endpoint references.")
+        };
     }
 
     private static void ValidateEnvironmentVariableName(IResource resource, string name)
@@ -676,7 +768,22 @@ internal static class VercelDeploymentStep
         };
     }
 
-    private static bool ContainsRemoteResourceReference(IResource resource, object? value)
+    private static bool ContainsCrossResourceEndpointReference(IResource resource, object? value)
+    {
+        return value switch
+        {
+            null => false,
+            EndpointReference endpointReference => IsCrossResourceEndpointReference(resource, endpointReference),
+            EndpointReferenceExpression endpointReferenceExpression => IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint),
+            IValueWithReferences valueWithReferences => valueWithReferences.References.Any(reference => ContainsCrossResourceEndpointReference(resource, reference)),
+            _ => false
+        };
+    }
+
+    private static bool IsCrossResourceEndpointReference(IResource resource, EndpointReference endpointReference)
+        => !ReferenceEquals(endpointReference.Resource, resource);
+
+    private static bool ContainsUnsupportedResourceReference(IResource resource, object? value)
     {
         return value switch
         {
@@ -684,10 +791,10 @@ internal static class VercelDeploymentStep
             string => false,
             ParameterResource => false,
             IResourceBuilder<ParameterResource> => false,
-            EndpointReference => true,
-            EndpointReferenceExpression => true,
+            EndpointReference => false,
+            EndpointReferenceExpression => false,
             IResource referencedResource => !ReferenceEquals(referencedResource, resource),
-            IValueWithReferences valueWithReferences => valueWithReferences.References.Any(reference => ContainsRemoteResourceReference(resource, reference)),
+            IValueWithReferences valueWithReferences => valueWithReferences.References.Any(reference => ContainsUnsupportedResourceReference(resource, reference)),
             IResourceBuilder<IResource> resourceBuilder => !ReferenceEquals(resourceBuilder.Resource, resource),
             _ => false
         };
@@ -1000,6 +1107,16 @@ internal static class VercelDeploymentStep
 
     internal static string GetVercelProjectName(VercelDeploymentEntry entry)
         => GetVercelProjectLink(entry).ProjectName;
+
+    internal static string GetVercelProjectName(IResource resource)
+    {
+        if (!resource.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile))
+        {
+            throw new DistributedApplicationException($"Resource '{resource.Name}' targets Vercel but does not have Aspire Dockerfile build metadata. Use a workload integration that publishes Dockerfile metadata, call PublishAsDockerFile, or configure the resource with WithDockerfile, WithDockerfileFactory, or WithDockerfileBuilder.");
+        }
+
+        return GetVercelProjectName(new VercelDeploymentEntry(resource, dockerfile.ContextPath, dockerfile.DockerfilePath, dockerfile));
+    }
 
     private static VercelProjectLink GetVercelProjectLink(VercelDeploymentEntry entry)
     {
