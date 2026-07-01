@@ -88,10 +88,12 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         var serverEndpoint = fixture.GetEndpoint(serverName, "http"); // e.g. http://localhost:9534
 
+        // Deep-link uses the physical database name (URL-escaped), not the resource name, so assert against
+        // the actual DatabaseName to stay correct even when AddDatabase(name, databaseName: ...) differ.
         var studioUrl = Assert.Single(dbResource.Annotations.OfType<ResourceUrlAnnotation>(),
             u => u.DisplayText == "RavenDB Studio");
         Assert.Equal(
-            $"{serverEndpoint.OriginalString.TrimEnd('/')}/studio/index.html#databases/documents?&database={databaseResourceName}",
+            $"{serverEndpoint.OriginalString.TrimEnd('/')}/studio/index.html#databases/documents?&database={Uri.EscapeDataString(dbResource.DatabaseName)}",
             studioUrl.Url);
     }
 }

@@ -270,7 +270,10 @@ public static class RavenDBBuilderExtensions
                 if (server.IsSecured && !string.IsNullOrEmpty(server.PublicServerUrl))
                     baseUrl = server.PublicServerUrl;
                 else if (server.PrimaryEndpoint.IsAllocated)
-                    baseUrl = server.PrimaryEndpoint.Url; // e.g. http://localhost:9534 (no trailing slash)
+                    // The primary endpoint's scheme may be forced to "tcp" (see ForceTcpScheme), which is not a
+                    // browser-navigable link. Normalize it to http/https (based on IsSecured) while keeping the
+                    // allocated host and port, e.g. http://localhost:9534.
+                    baseUrl = NormalizeToHttpBaseUrl(server.PrimaryEndpoint.Url, server.IsSecured);
                 else
                     return; // nothing to build a link from yet — no-op
 
@@ -331,6 +334,16 @@ public static class RavenDBBuilderExtensions
     {
         var root = baseUrl.TrimEnd('/');
         return $"{root}/studio/index.html#databases/documents?&database={Uri.EscapeDataString(databaseName)}";
+    }
+
+    // Rebuilds an allocated endpoint URL with an http/https scheme, preserving host and port. The primary
+    // endpoint may use a non-HTTP scheme (e.g. "tcp" when ForceTcpScheme is set), which is not a valid
+    // browser link for the Studio.
+    internal static string NormalizeToHttpBaseUrl(string endpointUrl, bool isSecured)
+    {
+        var uri = new Uri(endpointUrl);
+        var scheme = isSecured ? Uri.UriSchemeHttps : Uri.UriSchemeHttp;
+        return $"{scheme}://{uri.Authority}";
     }
 
     /// <summary>
