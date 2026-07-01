@@ -27,8 +27,9 @@ public class TypeScriptAppHostTests
         try
         {
             await ProcessTestUtilities.RunProcessAsync("aspire", ["restore"], appHostRoot, TestContext.Current.CancellationToken);
-            string npm = OperatingSystem.IsWindows() ? "npm.cmd" : "npm";
-            await ProcessTestUtilities.RunProcessAsync(npm, ["run", "build"], appHostRoot, TestContext.Current.CancellationToken);
+            string node = OperatingSystem.IsWindows() ? "node.exe" : "node";
+            await ProcessTestUtilities.RunProcessAsync(node, [Path.Combine("node_modules", "eslint", "bin", "eslint.js"), "apphost.mts"], appHostRoot, TestContext.Current.CancellationToken);
+            await ProcessTestUtilities.RunProcessAsync(node, [Path.Combine("node_modules", "typescript", "bin", "tsc")], appHostRoot, TestContext.Current.CancellationToken);
             await ProcessTestUtilities.RunProcessAsync("aspire", ["publish", "--non-interactive"], appHostRoot, TestContext.Current.CancellationToken);
 
             string planPath = Path.Combine(outputRoot, "vercel", "vercel-deployments.json");
