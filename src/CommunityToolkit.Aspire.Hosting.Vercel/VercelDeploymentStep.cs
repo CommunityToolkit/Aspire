@@ -15,6 +15,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
@@ -31,11 +32,20 @@ internal static class VercelDeploymentStep
     private const int DeploymentStateSchemaVersion = 1;
     private const int VercelProjectNameMaxLength = 100;
     private const string VercelCliFileName = "vercel";
+    private static readonly Version MinimumVercelCliVersion = new(54, 18, 6);
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
     };
+
+    private static readonly string[] CommonSourceUploadDirectoryWarnings =
+    [
+        "bin",
+        "obj",
+        "TestResults",
+        "coverage"
+    ];
 
     public static async Task WriteDeploymentPlanAsync(PipelineStepContext context, VercelEnvironmentResource environment)
     {
@@ -113,6 +123,19 @@ internal static class VercelDeploymentStep
         if (!versionResult.Succeeded)
         {
             throw CreateCliException("validate Vercel CLI installation", VercelCliFileName, versionResult);
+        }
+
+        var versionOutput = $"{versionResult.StandardOutput}{Environment.NewLine}{versionResult.StandardError}";
+        if (!TryGetVercelCliVersion(versionOutput, out var version))
+        {
+            throw new DistributedApplicationException(
+                $"Failed to determine Vercel CLI version from '{GetTrimmedOutput(versionOutput)}'. Install Vercel CLI {MinimumVercelCliVersion} or later from https://vercel.com/docs/cli.");
+        }
+
+        if (version < MinimumVercelCliVersion)
+        {
+            throw new DistributedApplicationException(
+                $"Vercel CLI version '{version}' is not supported. Install Vercel CLI {MinimumVercelCliVersion} or later from https://vercel.com/docs/cli.");
         }
 
         var whoamiResult = await runner.RunAsync(VercelCliFileName, ["whoami"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
@@ -1019,6 +1042,8 @@ internal static class VercelDeploymentStep
             Directory.Delete(stagingRoot, recursive: true);
         }
 
+        LogSourceUploadWarnings(context.Logger, entry);
+
         CopyDirectory(
             entry.SourceRoot,
             stagingRoot,
@@ -1078,6 +1103,121 @@ internal static class VercelDeploymentStep
         }
 
         return Path.Combine(tempDirectory, sourceRootName);
+    }
+
+    private static void LogSourceUploadWarnings(ILogger logger, VercelDeploymentEntry entry)
+    {
+        var warningPaths = GetSourceUploadWarningPaths(entry.SourceRoot);
+        if (warningPaths.Count == 0)
+        {
+            return;
+        }
+
+        logger.LogWarning(
+            "Resource '{ResourceName}' source root contains files or directories that may be uploaded to Vercel: {Paths}. Add or update .vercelignore to exclude sensitive or unnecessary content.",
+            entry.Resource.Name,
+            string.Join(", ", warningPaths));
+    }
+
+    internal static IReadOnlyList<string> GetSourceUploadWarningPaths(string sourceRoot)
+    {
+        var ignorePatterns = ReadVercelIgnorePatterns(sourceRoot);
+        List<string> warningPaths = [];
+
+        foreach (string directoryName in CommonSourceUploadDirectoryWarnings)
+        {
+            string directoryPath = Path.Combine(sourceRoot, directoryName);
+            if (Directory.Exists(directoryPath) && !IsIgnoredByVercelIgnore(directoryName, isDirectory: true, ignorePatterns))
+            {
+                warningPaths.Add($"{directoryName}/");
+            }
+        }
+
+        foreach (string file in Directory.EnumerateFiles(sourceRoot, ".env*"))
+        {
+            string fileName = Path.GetFileName(file);
+            if (IsExampleEnvironmentFile(fileName))
+            {
+                continue;
+            }
+
+            if (!IsIgnoredByVercelIgnore(fileName, isDirectory: false, ignorePatterns))
+            {
+                warningPaths.Add(fileName);
+            }
+        }
+
+        return [.. warningPaths.Order(StringComparer.Ordinal)];
+    }
+
+    private static bool IsExampleEnvironmentFile(string fileName)
+        => fileName.Equals(".env.example", GetPathStringComparison())
+            || fileName.Equals(".env.sample", GetPathStringComparison())
+            || fileName.Equals(".env.template", GetPathStringComparison());
+
+    private static IReadOnlyList<string> ReadVercelIgnorePatterns(string sourceRoot)
+    {
+        string vercelIgnorePath = Path.Combine(sourceRoot, ".vercelignore");
+        if (!File.Exists(vercelIgnorePath))
+        {
+            return [];
+        }
+
+        return [.. File.ReadAllLines(vercelIgnorePath)
+            .Select(static line => line.Trim())
+            .Where(static line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))];
+    }
+
+    private static bool IsIgnoredByVercelIgnore(string relativePath, bool isDirectory, IReadOnlyList<string> ignorePatterns)
+    {
+        bool ignored = false;
+        foreach (string pattern in ignorePatterns)
+        {
+            bool negated = pattern.StartsWith('!');
+            string normalizedPattern = negated ? pattern[1..] : pattern;
+            if (string.IsNullOrWhiteSpace(normalizedPattern))
+            {
+                continue;
+            }
+
+            if (VercelIgnorePatternMatches(relativePath, isDirectory, normalizedPattern))
+            {
+                ignored = !negated;
+            }
+        }
+
+        return ignored;
+    }
+
+    private static bool VercelIgnorePatternMatches(string relativePath, bool isDirectory, string pattern)
+    {
+        bool directoryOnly = pattern.EndsWith('/');
+        if (directoryOnly && !isDirectory)
+        {
+            return false;
+        }
+
+        string normalizedPattern = pattern.Trim('/');
+        if (string.IsNullOrWhiteSpace(normalizedPattern))
+        {
+            return false;
+        }
+
+        string normalizedPath = relativePath.Replace(Path.DirectorySeparatorChar, '/');
+        if (normalizedPattern.Contains('/'))
+        {
+            return WildcardMatches(normalizedPath, normalizedPattern);
+        }
+
+        return normalizedPath
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .Any(segment => WildcardMatches(segment, normalizedPattern));
+    }
+
+    private static bool WildcardMatches(string value, string pattern)
+    {
+        string regexPattern = $"^{Regex.Escape(pattern).Replace("\\*", ".*", StringComparison.Ordinal).Replace("\\?", ".", StringComparison.Ordinal)}$";
+        return Regex.IsMatch(value, regexPattern, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
     }
 
     private static void CopyDirectory(
@@ -1379,6 +1519,22 @@ internal static class VercelDeploymentStep
 
     private static bool IsHttpUrl([NotNullWhen(true)] string? url)
         => Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http";
+
+    internal static bool TryGetVercelCliVersion(string output, [NotNullWhen(true)] out Version? version)
+    {
+        var match = Regex.Match(output, @"(?<!\d)(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?!\d)", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+        if (!match.Success)
+        {
+            version = null;
+            return false;
+        }
+
+        version = new(
+            int.Parse(match.Groups["major"].Value, CultureInfo.InvariantCulture),
+            int.Parse(match.Groups["minor"].Value, CultureInfo.InvariantCulture),
+            int.Parse(match.Groups["patch"].Value, CultureInfo.InvariantCulture));
+        return true;
+    }
 
     private static string GetTrimmedOutput(string output)
         => string.IsNullOrWhiteSpace(output) ? "<empty>" : output.Trim();

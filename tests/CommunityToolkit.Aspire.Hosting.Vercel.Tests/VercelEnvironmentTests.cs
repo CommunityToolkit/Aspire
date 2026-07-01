@@ -1521,6 +1521,67 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public async Task DeployAsyncWarnsWhenSourceUploadMayIncludeSensitiveOrHeavyFiles()
+    {
+        using var sourceRoot = TemporaryDirectory.Create("source-warning-project");
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, ".env"), "SECRET=value");
+        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "bin"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "obj"));
+        var runner = new FakeVercelCliRunner(
+            new VercelCliResult(0, "https://source-warning-project.vercel.app", ""),
+            ReadyInspectResult());
+        var stateManager = new FakeDeploymentStateManager();
+        var logger = new RecordingLogger();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile");
+
+        using var app = builder.Build();
+        var environment = Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app, logger);
+
+        await VercelDeploymentStep.DeployAsync(context, environment);
+
+        var warning = Assert.Single(logger.Entries, entry => entry.Level == LogLevel.Warning);
+        Assert.Contains("source root contains files or directories that may be uploaded to Vercel", warning.Message);
+        Assert.Contains(".env", warning.Message);
+        Assert.Contains("bin/", warning.Message);
+        Assert.Contains("obj/", warning.Message);
+        Assert.DoesNotContain("SECRET=value", warning.Message);
+    }
+
+    [Fact]
+    public void GetSourceUploadWarningPathsHonorsVercelIgnore()
+    {
+        using var sourceRoot = TemporaryDirectory.Create("ignored-source-warning-project");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, ".vercelignore"), """
+            .env*
+            bin/
+            obj/
+            TestResults/
+            coverage/
+            """);
+        File.WriteAllText(Path.Combine(sourceRoot.Path, ".env.local"), "SECRET=value");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, ".env.example"), "DOCUMENTED=value");
+        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "bin"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "obj"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "TestResults"));
+        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "coverage"));
+
+        var warnings = VercelDeploymentStep.GetSourceUploadWarningPaths(sourceRoot.Path);
+
+        Assert.Empty(warnings);
+    }
+
+    [Fact]
     public async Task DeployAsyncStagesGeneratedDockerfileBeforeRunningVercelCli()
     {
         using var sourceRoot = TemporaryDirectory.Create("generated-vercel-project");
@@ -1753,7 +1814,7 @@ public class VercelEnvironmentTests
     public async Task ValidateCliPrerequisitesRunsVersionAndWhoami()
     {
         var runner = new FakeVercelCliRunner(
-            new(0, "54.18.6", ""),
+            new(0, "Vercel CLI 54.18.6", ""),
             new(0, "davidfowl-6717", ""));
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
@@ -1864,6 +1925,48 @@ public class VercelEnvironmentTests
             VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment));
 
         Assert.Contains("Failed to validate Vercel CLI installation using 'vercel' (exit code 1). missing vercel", exception.Message);
+    }
+
+    [Fact]
+    public async Task ValidateCliPrerequisitesThrowsWhenVersionIsTooOld()
+    {
+        var runner = new FakeVercelCliRunner(new VercelCliResult(0, "54.18.5", ""));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.AddVercelEnvironment("vercel");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment));
+
+        Assert.Contains("Vercel CLI version '54.18.5' is not supported", exception.Message);
+        Assert.Single(runner.Invocations);
+    }
+
+    [Fact]
+    public async Task ValidateCliPrerequisitesThrowsWhenVersionCannotBeParsed()
+    {
+        var runner = new FakeVercelCliRunner(new VercelCliResult(0, "vercel dev build", ""));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.AddVercelEnvironment("vercel");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.ValidateCliPrerequisitesAsync(context, environment));
+
+        Assert.Contains("Failed to determine Vercel CLI version", exception.Message);
+        Assert.Single(runner.Invocations);
     }
 
     [Fact]
@@ -2327,14 +2430,15 @@ public class VercelEnvironmentTests
 
     private static PipelineStepContext CreatePipelineStepContext(
         IDistributedApplicationBuilder builder,
-        DistributedApplication app)
+        DistributedApplication app,
+        ILogger? logger = null)
     {
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var pipelineContext = new PipelineContext(
             model,
             builder.ExecutionContext,
             app.Services,
-            NullLogger.Instance,
+            logger ?? NullLogger.Instance,
             TestContext.Current.CancellationToken);
 
         return new()
@@ -2468,6 +2572,27 @@ public class VercelEnvironmentTests
             return Task.FromResult(result);
         }
     }
+
+    private sealed class RecordingLogger : ILogger
+    {
+        public List<LogEntry> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Entries.Add(new(logLevel, formatter(state, exception)));
+        }
+    }
+
+    private sealed record LogEntry(LogLevel Level, string Message);
 
     private sealed record VercelCliInvocation(
         string FileName,

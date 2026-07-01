@@ -48,7 +48,7 @@ builder.AddNodeApp("api", "../api", "server.mjs")
        .WithComputeEnvironment(vercel);
 ```
 
-For low-level container resources, Vercel requires existing Aspire Dockerfile build metadata. Prefer the workload-specific `Add*App` integration when one exists. `WithDockerfile`, `WithDockerfileFactory`, and `WithDockerfileBuilder` are supported as advanced escape hatches. The integration always stages the source root into Aspire's deploy-time temp directory, materializes the Vercel-facing `Dockerfile` there, and runs `vercel deploy` from the staged directory so the Vercel CLI does not write `.vercel` metadata into the source tree. Staging skips `.git`, `node_modules`, and unmanaged `.vercel` metadata; linked projects keep only `.vercel/project.json`. Add a `.vercelignore` file to exclude local files such as `.env`, `bin/`, `obj/`, test artifacts, large assets, and other files that should not be uploaded to Vercel.
+For low-level container resources, Vercel requires existing Aspire Dockerfile build metadata. Prefer the workload-specific `Add*App` integration when one exists. `WithDockerfile`, `WithDockerfileFactory`, and `WithDockerfileBuilder` are supported as advanced escape hatches. The integration always stages the source root into Aspire's deploy-time temp directory, materializes the Vercel-facing `Dockerfile` there, and runs `vercel deploy` from the staged directory so the Vercel CLI does not write `.vercel` metadata into the source tree. Staging skips `.git`, `node_modules`, and unmanaged `.vercel` metadata; linked projects keep only `.vercel/project.json`. Add a `.vercelignore` file to exclude local files such as `.env`, `bin/`, `obj/`, test artifacts, large assets, and other files that should not be uploaded to Vercel. Deploy emits a warning when common sensitive or heavy root entries such as `.env*`, `bin/`, `obj/`, `TestResults/`, or `coverage/` are present and are not covered by `.vercelignore`.
 
 Non-secret Aspire environment variables configured on the resource are processed during publish/deploy and passed to Vercel as CLI environment variables:
 
@@ -89,7 +89,7 @@ The `BACKEND_URL` value is deployed as `https://<backend-project>.vercel.app`. E
 
 - An Aspire workload with Dockerfile publish metadata, such as a language app resource that emits Dockerfile metadata or a project configured with `PublishAsDockerFile`.
 - The deployed container should listen on `$PORT`; the default port is `80`.
-- Vercel CLI installed and available on `PATH`. Use the latest Vercel CLI; this preview is tested with Vercel CLI 54.18.6 and depends on `deploy --env`, `inspect --wait --timeout --format=json`, and `project remove`.
+- Vercel CLI 54.18.6 or later installed and available on `PATH`. This preview depends on `deploy --env`, `inspect --wait --timeout --format=json`, and `project remove`; older CLI versions are rejected during deploy preflight.
 - Vercel authentication from an existing CLI login or the `VERCEL_TOKEN` environment variable.
 - Any project linking, secrets, domains, deployment protection, or build-time environment variables configured in Vercel.
 
