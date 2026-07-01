@@ -859,7 +859,7 @@ internal static class VercelDeploymentStep
                 Linked = HasVercelProjectLinkFile(entry.SourceRoot)
             })
             .GroupBy(item => item.ProjectLink.ProjectName, StringComparer.Ordinal)
-            .Where(group => group.Count() > 1 && group.Any(static item => !item.Linked))
+            .Where(group => group.Count() > 1)
             .ToArray();
 
         if (projectNames.Length == 0)
@@ -870,7 +870,7 @@ internal static class VercelDeploymentStep
         var collision = projectNames[0];
         string resources = string.Join(", ", collision.Select(static item => $"'{item.Entry.Resource.Name}'").Order(StringComparer.Ordinal));
         throw new DistributedApplicationException(
-            $"Multiple Vercel resources resolve to managed project name '{collision.Key}' ({resources}). Managed Vercel project names must be unique per environment. Link shared existing projects with .vercel/project.json or use distinct source directory names.");
+            $"Multiple Vercel resources resolve to project name '{collision.Key}' ({resources}). Vercel project names must be unique per environment because each resource deploys to and references one project production URL. Use distinct source directory names or link each resource to a distinct Vercel project with .vercel/project.json.");
     }
 
     private static void ValidateUnsupportedResourceModel(VercelDeploymentEntry entry)

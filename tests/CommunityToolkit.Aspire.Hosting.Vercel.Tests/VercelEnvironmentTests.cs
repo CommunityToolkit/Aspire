@@ -593,7 +593,40 @@ public class VercelEnvironmentTests
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
             VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
 
-        Assert.Contains("managed project name 'my-api'", exception.Message);
+        Assert.Contains("project name 'my-api'", exception.Message);
+        Assert.Contains("'api'", exception.Message);
+        Assert.Contains("'worker'", exception.Message);
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanThrowsForLinkedProjectNameCollisions()
+    {
+        using var parent = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        string firstRoot = Path.Combine(parent.Path, "api");
+        string secondRoot = Path.Combine(parent.Path, "worker");
+        Directory.CreateDirectory(firstRoot);
+        Directory.CreateDirectory(secondRoot);
+        File.WriteAllText(Path.Combine(firstRoot, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(secondRoot, "Dockerfile"), "FROM nginx:alpine");
+        WriteVercelProjectLink(firstRoot, "shared-project", "prj_shared_a");
+        WriteVercelProjectLink(secondRoot, "shared-project", "prj_shared_b");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(firstRoot, "Dockerfile");
+        builder.AddContainer("worker", "worker")
+            .WithDockerfile(secondRoot, "Dockerfile");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
+
+        Assert.Contains("project name 'shared-project'", exception.Message);
         Assert.Contains("'api'", exception.Message);
         Assert.Contains("'worker'", exception.Message);
     }
@@ -2188,6 +2221,18 @@ public class VercelEnvironmentTests
             sourceRoot,
             dockerfilePath,
             new DockerfileBuildAnnotation(sourceRoot, dockerfilePath, stage: null));
+    }
+
+    private static void WriteVercelProjectLink(string sourceRoot, string projectName, string projectId)
+    {
+        string vercelDirectory = Path.Combine(sourceRoot, ".vercel");
+        Directory.CreateDirectory(vercelDirectory);
+        File.WriteAllText(Path.Combine(vercelDirectory, "project.json"), $$"""
+            {
+              "projectId": "{{projectId}}",
+              "projectName": "{{projectName}}"
+            }
+            """);
     }
 
     private static VercelCliResult ReadyInspectResult()
