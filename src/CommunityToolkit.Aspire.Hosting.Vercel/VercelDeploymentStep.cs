@@ -672,7 +672,7 @@ internal static class VercelDeploymentStep
             IResourceWithConnectionString => true,
             IResourceBuilder<IResourceWithConnectionString> => true,
             IValueWithReferences valueWithReferences => valueWithReferences.References.Any(ContainsSecretReference),
-            _ => IsConnectionStringResourceBuilder(value)
+            _ => false
         };
     }
 
@@ -688,39 +688,10 @@ internal static class VercelDeploymentStep
             EndpointReferenceExpression => true,
             IResource referencedResource => !ReferenceEquals(referencedResource, resource),
             IValueWithReferences valueWithReferences => valueWithReferences.References.Any(reference => ContainsRemoteResourceReference(resource, reference)),
-            _ => IsResourceBuilder(value, resource)
+            IResourceBuilder<IResource> resourceBuilder => !ReferenceEquals(resourceBuilder.Resource, resource),
+            _ => false
         };
     }
-
-    private static bool IsConnectionStringResourceBuilder(object value)
-    {
-        return value.GetType()
-            .GetInterfaces()
-            .Any(static interfaceType =>
-                interfaceType.IsGenericType
-                && interfaceType.GetGenericTypeDefinition() == typeof(IResourceBuilder<>)
-                && typeof(IResourceWithConnectionString).IsAssignableFrom(interfaceType.GetGenericArguments()[0]));
-    }
-
-    private static bool IsResourceBuilder(object value, IResource resource)
-    {
-        return value.GetType()
-            .GetInterfaces()
-            .Any(interfaceType =>
-                interfaceType.IsGenericType
-                && interfaceType.GetGenericTypeDefinition() == typeof(IResourceBuilder<>)
-                && typeof(IResource).IsAssignableFrom(interfaceType.GetGenericArguments()[0])
-                && !typeof(ParameterResource).IsAssignableFrom(interfaceType.GetGenericArguments()[0])
-                && TryGetResource(value, out var referencedResource)
-                && !ReferenceEquals(referencedResource, resource));
-    }
-
-    private static bool TryGetResource(object value, [NotNullWhen(true)] out IResource? resource)
-    {
-        resource = value.GetType().GetProperty(nameof(IResourceBuilder<IResource>.Resource))?.GetValue(value) as IResource;
-        return resource is not null;
-    }
-
 
     internal static IEnumerable<VercelDeploymentEntry> GetDeploymentEntries(DistributedApplicationModel model, VercelEnvironmentResource environment)
     {
