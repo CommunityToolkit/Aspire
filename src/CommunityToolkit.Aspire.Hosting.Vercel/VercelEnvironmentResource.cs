@@ -3,6 +3,7 @@ using Aspire.Hosting;
 using CommunityToolkit.Aspire.Hosting.Vercel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Net.Sockets;
 
 namespace Aspire.Hosting.ApplicationModel;
 
@@ -37,9 +38,11 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
         if (!IsHttpEndpoint(endpoint))
         {
             throw new InvalidOperationException(
-                $"Vercel endpoint references support only HTTP or HTTPS endpoints. Endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' uses scheme '{endpoint.UriScheme}'.");
+                $"Vercel endpoint references support only HTTP or HTTPS endpoints with HTTP transports. Endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' uses scheme '{endpoint.UriScheme}' and transport '{endpoint.Transport}'.");
         }
 
+        // Same-deploy references need an address that exists before `vercel deploy`
+        // finishes. Production project aliases are deterministic; preview URLs are not.
         string projectName = VercelDeploymentStep.GetVercelProjectName(endpointReference.Resource);
         return ReferenceExpression.Create($"{projectName}.vercel.app");
     }
@@ -56,14 +59,23 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
         var host = GetHostAddressExpression(endpointReference);
         const int port = 443;
 
+        // These expressions model the caller-visible Vercel edge endpoint, not the
+        // container listener. Vercel terminates TLS and forwards to the runtime's $PORT,
+        // so service references use HTTPS/443 while TargetPort remains container metadata.
         return property switch
         {
+            // Vercel terminates public HTTPS at the platform edge, so callers always use
+            // the alias over 443 even when the container listens on $PORT internally.
             EndpointProperty.Url => ReferenceExpression.Create($"https://{host}"),
             EndpointProperty.Host or EndpointProperty.IPV4Host => host,
             EndpointProperty.Port => ReferenceExpression.Create($"{port.ToString(CultureInfo.InvariantCulture)}"),
             EndpointProperty.TargetPort => endpoint.TargetPort is int targetPort
                 ? ReferenceExpression.Create($"{targetPort.ToString(CultureInfo.InvariantCulture)}")
                 : throw new InvalidOperationException(
+                    // Azure publishers can emit ContainerPortReference placeholders into
+                    // Bicep/Helm. Vercel deploy receives concrete CLI env values, so an
+                    // unresolved TargetPort would become a bogus string rather than a
+                    // target-native reference.
                     $"The endpoint property '{EndpointProperty.TargetPort}' cannot be resolved for endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' because the endpoint does not define an explicit target port."),
             EndpointProperty.Scheme => ReferenceExpression.Create($"https"),
             EndpointProperty.HostAndPort => ReferenceExpression.Create($"{host}:{port.ToString(CultureInfo.InvariantCulture)}"),
@@ -73,6 +85,9 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
     }
 
     private static bool IsHttpEndpoint(EndpointAnnotation endpoint)
-        => string.Equals(endpoint.UriScheme, "http", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(endpoint.UriScheme, "https", StringComparison.OrdinalIgnoreCase);
+        => endpoint.Protocol == ProtocolType.Tcp
+            && (string.Equals(endpoint.UriScheme, "http", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(endpoint.UriScheme, "https", StringComparison.OrdinalIgnoreCase))
+            && (string.Equals(endpoint.Transport, "http", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(endpoint.Transport, "http2", StringComparison.OrdinalIgnoreCase));
 }

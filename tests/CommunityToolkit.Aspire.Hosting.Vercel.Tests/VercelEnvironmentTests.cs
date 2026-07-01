@@ -13,6 +13,7 @@ using CommunityToolkit.Aspire.Hosting.Vercel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -366,8 +367,8 @@ public class VercelEnvironmentTests
         Assert.Equal("vercel", root.GetProperty("environment").GetString());
         var deployment = Assert.Single(root.GetProperty("deployments").EnumerateArray());
         Assert.Equal("api", deployment.GetProperty("resourceName").GetString());
-        Assert.Equal("Dockerfile", deployment.GetProperty("dockerfilePath").GetString());
-        Assert.Equal("vercel --cwd <api-source-root> deploy --yes", deployment.GetProperty("deployCommand").GetString());
+        Assert.Equal("Dockerfile.vercel", deployment.GetProperty("dockerfilePath").GetString());
+        Assert.Equal("vercel --cwd <api-source-root> deploy --yes --project <api-project>", deployment.GetProperty("deployCommand").GetString());
     }
 
     [Fact]
@@ -424,9 +425,42 @@ public class VercelEnvironmentTests
         using var document = JsonDocument.Parse(File.ReadAllText(planPath));
         var deployment = Assert.Single(document.RootElement.GetProperty("deployments").EnumerateArray());
 
-        Assert.Equal("vercel --cwd <api-source-root> deploy --yes --env GREETING=<value>", deployment.GetProperty("deployCommand").GetString());
+        Assert.Equal("vercel --cwd <api-source-root> deploy --yes --project <api-project> --env GREETING=<value>", deployment.GetProperty("deployCommand").GetString());
         Assert.Equal("GREETING", Assert.Single(deployment.GetProperty("environmentVariables").EnumerateArray()).GetString());
         Assert.DoesNotContain("hello", File.ReadAllText(planPath));
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanDoesNotResolveSecretEnvironmentVariableValues()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
+        var secret = builder.AddParameter("api-key", secret: true);
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
+            .WithEnvironment("API_KEY", secret);
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        string planPath = await VercelDeploymentStep.WriteDeploymentPlanAsync(
+            builder.ExecutionContext,
+            NullLogger.Instance,
+            model,
+            environment,
+            outputRoot.Path,
+            TestContext.Current.CancellationToken);
+
+        using var document = JsonDocument.Parse(File.ReadAllText(planPath));
+        var deployment = Assert.Single(document.RootElement.GetProperty("deployments").EnumerateArray());
+
+        Assert.DoesNotContain("--env API_KEY", deployment.GetProperty("deployCommand").GetString(), StringComparison.Ordinal);
+        Assert.Equal("API_KEY", Assert.Single(deployment.GetProperty("environmentVariables").EnumerateArray()).GetString());
     }
 
     [Fact]
@@ -573,11 +607,38 @@ public class VercelEnvironmentTests
         Assert.Contains("support only HTTP or HTTPS endpoints", exception.Message);
     }
 
-    [Fact]
-    public async Task WriteDeploymentPlanAllowsInternalHttpEndpoints()
+    [Theory]
+    [InlineData("http")]
+    [InlineData("https")]
+    public async Task WriteDeploymentPlanAllowsExternalHttpEndpoints(string scheme)
     {
-        await AssertWriteDeploymentPlanSucceedsAsync(static api =>
+        await AssertWriteDeploymentPlanSucceedsAsync(api =>
+            api.WithEndpoint(targetPort: 8080, scheme: scheme, name: scheme, isExternal: true));
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanThrowsForInternalHttpEndpoints()
+    {
+        var exception = await AssertWriteDeploymentPlanThrowsAsync(static api =>
             api.WithEndpoint(targetPort: 8080, scheme: "http", name: "http", isExternal: false));
+
+        Assert.Contains("public platform HTTPS ingress only", exception.Message);
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanThrowsForNonHttpEndpointTransports()
+    {
+        var exception = await AssertWriteDeploymentPlanThrowsAsync(static api =>
+            api.Resource.Annotations.Add(new EndpointAnnotation(
+                ProtocolType.Tcp,
+                uriScheme: "http",
+                transport: "tcp",
+                name: "tcp-http",
+                targetPort: 8080,
+                isExternal: true)));
+
+        Assert.Contains("transport 'tcp'", exception.Message);
+        Assert.Contains("HTTP transports", exception.Message);
     }
 
     [Fact]
@@ -705,7 +766,7 @@ public class VercelEnvironmentTests
         await VercelDeploymentStep.DeployAsync(context, environment);
 
         string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "invalid-project");
-        var invocation = runner.Invocations[0];
+        var invocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("deploy"));
         Assert.Equal(expectedStagingRoot, invocation.WorkingDirectory);
 
         var deployment = Assert.Single(ReadSavedState(Assert.Single(stateManager.SavedSections)).Deployments);
@@ -740,7 +801,11 @@ public class VercelEnvironmentTests
         await VercelDeploymentStep.DeployAsync(context, environment);
 
         string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "configured-project");
-        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile")));
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile.vercel")));
+        AssertGeneratedVercelJson(expectedStagingRoot);
+        var deployInvocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("deploy"));
+        Assert.Contains("--project", deployInvocation.Arguments);
+        Assert.Contains("configured-project", deployInvocation.Arguments);
 
         var state = ReadSavedState(Assert.Single(stateManager.SavedSections));
         var deployment = Assert.Single(state.Deployments);
@@ -760,7 +825,7 @@ public class VercelEnvironmentTests
 
         string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
 
-        Assert.Equal(["--scope", "team", "--cwd", "/repo/src/api", "deploy", "--yes", "--prod"], arguments);
+        Assert.Equal(["--scope", "team", "--cwd", "/repo/src/api", "deploy", "--yes", "--project", "api", "--prod"], arguments);
     }
 
     [Fact]
@@ -774,7 +839,7 @@ public class VercelEnvironmentTests
 
         string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
 
-        Assert.Equal(["--cwd", "/repo/src/api", "deploy", "--yes", "--target", "preview"], arguments);
+        Assert.Equal(["--cwd", "/repo/src/api", "deploy", "--yes", "--project", "api", "--target", "preview"], arguments);
     }
 
     [Fact]
@@ -902,7 +967,7 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public async Task BuildDeployArgumentsThrowsForSecretEnvironmentVariables()
+    public async Task BuildDeployArgumentsDoesNotPassSecretEnvironmentVariablesOnCommandLine()
     {
         using var sourceRoot = TemporaryDirectory.Create();
         File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
@@ -919,53 +984,80 @@ public class VercelEnvironmentTests
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
         var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
 
-        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
-                builder.ExecutionContext,
-                NullLogger.Instance,
-                environment.GetVercelOptions(),
-                entry,
-                TestContext.Current.CancellationToken));
+        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+            builder.ExecutionContext,
+            NullLogger.Instance,
+            environment.GetVercelOptions(),
+            entry,
+            TestContext.Current.CancellationToken);
 
-        Assert.Contains("API_KEY", exception.Message);
+        Assert.DoesNotContain(arguments, argument => argument.Contains("API_KEY", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task BuildDeployArgumentsThrowsForCompositeSecretEnvironmentVariables()
+    public async Task DeployAsyncConfiguresSecretEnvironmentVariablesBeforeDeploy()
     {
         using var sourceRoot = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
         File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
+        var runner = new FakeVercelCliRunner(
+            new VercelCliResult(0, "", ""),
+            new VercelCliResult(0, "", ""),
+            new VercelCliResult(0, "", ""),
+            new VercelCliResult(0, """
+                {
+                  "deployment": {
+                    "id": "dpl_secret",
+                    "url": "https://secret-project.vercel.app"
+                  }
+                }
+                """, ""),
+            ReadyInspectResult());
+        var stateManager = new FakeDeploymentStateManager();
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
         var secret = builder.AddParameter("api-key", "secret-value", secret: true);
-        builder.AddVercelEnvironment("vercel");
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        builder.AddVercelEnvironment("vercel")
+            .WithVercelProductionDeployments();
         builder.AddContainer("api", "api")
             .WithDockerfile(sourceRoot.Path, "Dockerfile")
-            .WithEnvironment("AUTH_HEADER", ReferenceExpression.Create($"Bearer {secret.Resource}"));
+            .WithEnvironment("AUTH_HEADER", ReferenceExpression.Create($"Bearer {secret.Resource}"))
+            .WithEnvironment("API_KEY", secret)
+            .WithEnvironment("GREETING", "hello");
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
         var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
+        var context = CreatePipelineStepContext(builder, app);
 
-        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
-                builder.ExecutionContext,
-                NullLogger.Instance,
-                environment.GetVercelOptions(),
-                entry,
-                TestContext.Current.CancellationToken));
+        await VercelDeploymentStep.DeployAsync(context, environment);
 
-        Assert.Contains("AUTH_HEADER", exception.Message);
+        string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", projectName);
+        Assert.Equal(["project", "add", projectName], runner.Invocations[0].Arguments);
+        Assert.Equal(["--cwd", expectedStagingRoot, "link", "--yes", "--project", projectName], runner.Invocations[1].Arguments);
+        Assert.Equal(["--cwd", expectedStagingRoot, "env", "add", "API_KEY", "production", "--yes", "--force", "--sensitive"], runner.Invocations[2].Arguments);
+        Assert.Equal("secret-value", runner.Invocations[2].StandardInput);
+        Assert.Equal(["--cwd", expectedStagingRoot, "env", "add", "AUTH_HEADER", "production", "--yes", "--force", "--sensitive"], runner.Invocations[3].Arguments);
+        Assert.Equal("Bearer secret-value", runner.Invocations[3].StandardInput);
+        Assert.Contains("GREETING=hello", runner.Invocations[4].Arguments);
+        Assert.DoesNotContain(runner.Invocations[4].Arguments, argument => argument.Contains("API_KEY", StringComparison.Ordinal));
+        Assert.DoesNotContain(runner.Invocations[4].Arguments, argument => argument.Contains("AUTH_HEADER", StringComparison.Ordinal));
     }
 
     [Fact]
-    public async Task BuildDeployArgumentsThrowsForConnectionStringEnvironmentVariables()
+    public async Task BuildDeployArgumentsDoesNotPassConnectionStringEnvironmentVariablesOnCommandLine()
     {
         using var sourceRoot = TemporaryDirectory.Create();
         File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
 
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
+        builder.Configuration["ConnectionStrings:db"] = "Host=example.com;Username=app;Password=secret";
         var connectionString = builder.AddConnectionString("db");
         builder.AddVercelEnvironment("vercel");
         builder.AddContainer("api", "api")
@@ -977,15 +1069,14 @@ public class VercelEnvironmentTests
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
         var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
 
-        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
-                builder.ExecutionContext,
-                NullLogger.Instance,
-                environment.GetVercelOptions(),
-                entry,
-                TestContext.Current.CancellationToken));
+        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+            builder.ExecutionContext,
+            NullLogger.Instance,
+            environment.GetVercelOptions(),
+            entry,
+            TestContext.Current.CancellationToken);
 
-        Assert.Contains("DATABASE_URL", exception.Message);
+        Assert.DoesNotContain(arguments, argument => argument.Contains("DATABASE_URL", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -1390,7 +1481,7 @@ public class VercelEnvironmentTests
         await VercelDeploymentStep.DeployAsync(context, environment);
 
         Assert.Equal(0, imageManager.CallCount);
-        Assert.Equal(2, runner.Invocations.Count);
+        Assert.Equal(3, runner.Invocations.Count);
         Assert.Single(stateManager.SavedSections);
     }
 
@@ -1430,14 +1521,16 @@ public class VercelEnvironmentTests
 
         await VercelDeploymentStep.DeployAsync(context, environment);
 
-        var invocation = runner.Invocations[0];
+        var invocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("deploy"));
         string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "vercel-state-project");
         Assert.Equal("vercel", invocation.FileName);
         Assert.Equal(expectedStagingRoot, invocation.WorkingDirectory);
-        Assert.Equal(["--scope", "team", "--cwd", expectedStagingRoot, "deploy", "--yes", "--prod", "--env", "GREETING=hello"], invocation.Arguments);
+        Assert.Equal(["--scope", "team", "--cwd", expectedStagingRoot, "deploy", "--yes", "--project", "vercel-state-project", "--prod", "--env", "GREETING=hello"], invocation.Arguments);
         Assert.Null(invocation.StandardInput);
-        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile")));
-        Assert.Equal(["--scope", "team", "inspect", "https://api.vercel.app", "--wait", "--timeout", "120s", "--format=json"], runner.Invocations[1].Arguments);
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile.vercel")));
+        AssertGeneratedVercelJson(expectedStagingRoot);
+        var inspectInvocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("inspect"));
+        Assert.Equal(["--scope", "team", "inspect", "https://api.vercel.app", "--wait", "--timeout", "120s", "--format=json"], inspectInvocation.Arguments);
 
         Assert.Collection(
             context.Summary.Items,
@@ -1637,7 +1730,8 @@ public class VercelEnvironmentTests
         await VercelDeploymentStep.DeployAsync(context, environment);
 
         string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "ignored-staging-project");
-        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile")));
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile.vercel")));
+        AssertGeneratedVercelJson(expectedStagingRoot);
         Assert.True(File.Exists(Path.Combine(expectedStagingRoot, ".vercelignore")));
         Assert.False(Directory.Exists(Path.Combine(expectedStagingRoot, ".git")));
         Assert.False(Directory.Exists(Path.Combine(expectedStagingRoot, "node_modules")));
@@ -1645,15 +1739,13 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public async Task DeployAsyncWarnsWhenSourceUploadMayIncludeSensitiveOrHeavyFiles()
+    public async Task DeployAsyncWarnsWhenSourceUploadMayIncludeEnvironmentFiles()
     {
         using var sourceRoot = TemporaryDirectory.Create("source-warning-project");
         using var outputRoot = TemporaryDirectory.Create();
         using var tempRoot = TemporaryDirectory.Create();
         File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
         File.WriteAllText(Path.Combine(sourceRoot.Path, ".env"), "SECRET=value");
-        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "bin"));
-        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "obj"));
         var runner = new FakeVercelCliRunner(
             new VercelCliResult(0, "https://source-warning-project.vercel.app", ""),
             ReadyInspectResult());
@@ -1675,11 +1767,111 @@ public class VercelEnvironmentTests
         await VercelDeploymentStep.DeployAsync(context, environment);
 
         var warning = Assert.Single(logger.Entries, entry => entry.Level == LogLevel.Warning);
-        Assert.Contains("source root contains files or directories that may be uploaded to Vercel", warning.Message);
+        Assert.Contains("source root contains environment files that may be uploaded to Vercel", warning.Message);
         Assert.Contains(".env", warning.Message);
-        Assert.Contains("bin/", warning.Message);
-        Assert.Contains("obj/", warning.Message);
         Assert.DoesNotContain("SECRET=value", warning.Message);
+    }
+
+    [Fact]
+    public async Task DeployAsyncThrowsWhenSourceRootContainsSymbolicLink()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var sourceRoot = TemporaryDirectory.Create();
+        using var outsideRoot = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(outsideRoot.Path, "outside.txt"), "outside");
+        File.CreateSymbolicLink(Path.Combine(sourceRoot.Path, "outside-link.txt"), Path.Combine(outsideRoot.Path, "outside.txt"));
+        var runner = new FakeVercelCliRunner();
+        var stateManager = new FakeDeploymentStateManager();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile");
+
+        using var app = builder.Build();
+        var environment = Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.DeployAsync(context, environment));
+
+        Assert.Contains("symbolic link", exception.Message);
+        Assert.Contains("outside-link.txt", exception.Message);
+        Assert.Empty(runner.Invocations);
+    }
+
+    [Fact]
+    public async Task DeployAsyncThrowsWhenVercelJsonAlreadyConfiguresServices()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "vercel.json"), """{"services":{"api":{"root":"."}}}""");
+        var runner = new FakeVercelCliRunner();
+        var stateManager = new FakeDeploymentStateManager();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile");
+
+        using var app = builder.Build();
+        var environment = Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.DeployAsync(context, environment));
+
+        Assert.Contains("existing 'services' configuration", exception.Message);
+        Assert.Empty(runner.Invocations);
+    }
+
+    [Theory]
+    [InlineData("build", "{\"build\":{\"env\":{\"SECRET\":\"value\"}}}")]
+    [InlineData("builds", "{\"builds\":[]}")]
+    [InlineData("env", "{\"env\":{\"SECRET\":\"value\"}}")]
+    [InlineData("routes", "{\"routes\":[]}")]
+    public async Task DeployAsyncThrowsWhenVercelJsonContainsUnsupportedServicesModeTopLevelKey(string key, string vercelJson)
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "vercel.json"), vercelJson);
+        var runner = new FakeVercelCliRunner();
+        var stateManager = new FakeDeploymentStateManager();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile");
+
+        using var app = builder.Build();
+        var environment = Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.DeployAsync(context, environment));
+
+        Assert.Contains($"top-level '{key}'", exception.Message);
+        Assert.Empty(runner.Invocations);
     }
 
     [Fact]
@@ -1688,17 +1880,9 @@ public class VercelEnvironmentTests
         using var sourceRoot = TemporaryDirectory.Create("ignored-source-warning-project");
         File.WriteAllText(Path.Combine(sourceRoot.Path, ".vercelignore"), """
             .env*
-            bin/
-            obj/
-            TestResults/
-            coverage/
             """);
         File.WriteAllText(Path.Combine(sourceRoot.Path, ".env.local"), "SECRET=value");
         File.WriteAllText(Path.Combine(sourceRoot.Path, ".env.example"), "DOCUMENTED=value");
-        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "bin"));
-        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "obj"));
-        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "TestResults"));
-        Directory.CreateDirectory(Path.Combine(sourceRoot.Path, "coverage"));
 
         var warnings = VercelDeploymentStep.GetSourceUploadWarningPaths(sourceRoot.Path);
 
@@ -1737,13 +1921,14 @@ public class VercelEnvironmentTests
 
         await VercelDeploymentStep.DeployAsync(context, environment);
 
-        var invocation = runner.Invocations[0];
+        var invocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("deploy"));
         string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "generated-vercel-project");
         Assert.Equal(expectedStagingRoot, invocation.WorkingDirectory);
-        Assert.Equal(["--cwd", expectedStagingRoot, "deploy", "--yes"], invocation.Arguments);
-        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile")));
+        Assert.Equal(["--cwd", expectedStagingRoot, "deploy", "--yes", "--project", "generated-vercel-project"], invocation.Arguments);
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile.vercel")));
         Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "server.mjs")));
-        Assert.Contains("FROM node:22-alpine", File.ReadAllText(Path.Combine(expectedStagingRoot, "Dockerfile")));
+        AssertGeneratedVercelJson(expectedStagingRoot);
+        Assert.Contains("FROM node:22-alpine", File.ReadAllText(Path.Combine(expectedStagingRoot, "Dockerfile.vercel")));
 
         var savedSection = Assert.Single(stateManager.SavedSections);
         Assert.Contains("generated-vercel-project", savedSection.Data.ToJsonString());
@@ -1776,11 +1961,12 @@ public class VercelEnvironmentTests
 
         await VercelDeploymentStep.DeployAsync(context, environment);
 
-        var invocation = runner.Invocations[0];
+        var invocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("deploy"));
         string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "custom-vercel-project");
         Assert.Equal(expectedStagingRoot, invocation.WorkingDirectory);
-        Assert.Equal(["--cwd", expectedStagingRoot, "deploy", "--yes"], invocation.Arguments);
-        Assert.Equal("FROM nginx:alpine", File.ReadAllText(Path.Combine(expectedStagingRoot, "Dockerfile")));
+        Assert.Equal(["--cwd", expectedStagingRoot, "deploy", "--yes", "--project", "custom-vercel-project"], invocation.Arguments);
+        Assert.Equal("FROM nginx:alpine", File.ReadAllText(Path.Combine(expectedStagingRoot, "Dockerfile.vercel")));
+        AssertGeneratedVercelJson(expectedStagingRoot);
         Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "index.html")));
     }
 
@@ -1835,7 +2021,7 @@ public class VercelEnvironmentTests
             VercelDeploymentStep.DeployAsync(context, environment));
 
         Assert.Contains("did not contain an HTTP or HTTPS deployment URL", exception.Message);
-        Assert.Single(runner.Invocations);
+        Assert.Equal(2, runner.Invocations.Count);
         Assert.Empty(stateManager.SavedSections);
     }
 
@@ -2635,6 +2821,19 @@ public class VercelEnvironmentTests
             section.Data.First().Value!.GetValue<string>(),
             new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
 
+    private static void AssertGeneratedVercelJson(string stagingRoot)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(stagingRoot, "vercel.json")));
+        var root = document.RootElement;
+        var service = root.GetProperty("services").GetProperty("app");
+        Assert.Equal("container", service.GetProperty("runtime").GetString());
+        Assert.Equal(".", service.GetProperty("root").GetString());
+        Assert.Equal("Dockerfile.vercel", service.GetProperty("entrypoint").GetString());
+        var rewrite = root.GetProperty("rewrites").EnumerateArray().Last();
+        Assert.Equal("/(.*)", rewrite.GetProperty("source").GetString());
+        Assert.Equal("app", rewrite.GetProperty("destination").GetProperty("service").GetString());
+    }
+
     private sealed class FakeProjectMetadata(string projectPath) : IProjectMetadata
     {
         public bool IsFileBasedApp => false;
@@ -2690,11 +2889,30 @@ public class VercelEnvironmentTests
         {
             Invocations.Add(new(fileName, [.. arguments], workingDirectory, standardInput));
 
+            if (IsProjectAdd(arguments))
+            {
+                return Task.FromResult(new VercelCliResult(0, "", ""));
+            }
+
             var result = _results.Count > 0
                 ? _results.Dequeue()
                 : new VercelCliResult(0, "", "");
 
             return Task.FromResult(result);
+        }
+
+        private static bool IsProjectAdd(IReadOnlyList<string> arguments)
+        {
+            for (int i = 0; i < arguments.Count - 1; i++)
+            {
+                if (string.Equals(arguments[i], "project", StringComparison.Ordinal)
+                    && string.Equals(arguments[i + 1], "add", StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 
