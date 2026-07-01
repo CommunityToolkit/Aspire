@@ -106,6 +106,19 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public void WithVercelProjectNameThrowsForInvalidProjectName()
+    {
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        var api = builder.AddContainer("api", "api");
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            api.WithVercelProjectName("Invalid_Project"));
+
+        Assert.Equal("projectName", exception.ParamName);
+        Assert.Contains("Use lowercase letters, digits, and hyphens", exception.Message);
+    }
+
+    [Fact]
     public async Task AddVercelEnvironmentRegistersExpectedPipelineSteps()
     {
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
@@ -632,6 +645,40 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public async Task WriteDeploymentPlanThrowsForConfiguredProjectNameCollisions()
+    {
+        using var parent = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        string firstRoot = Path.Combine(parent.Path, "api");
+        string secondRoot = Path.Combine(parent.Path, "worker");
+        Directory.CreateDirectory(firstRoot);
+        Directory.CreateDirectory(secondRoot);
+        File.WriteAllText(Path.Combine(firstRoot, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(secondRoot, "Dockerfile"), "FROM nginx:alpine");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(firstRoot, "Dockerfile")
+            .WithVercelProjectName("shared-project");
+        builder.AddContainer("worker", "worker")
+            .WithDockerfile(secondRoot, "Dockerfile")
+            .WithVercelProjectName("shared-project");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
+
+        Assert.Contains("project name 'shared-project'", exception.Message);
+        Assert.Contains("WithVercelProjectName", exception.Message);
+        Assert.Contains("'api'", exception.Message);
+        Assert.Contains("'worker'", exception.Message);
+    }
+
+    [Fact]
     public async Task DeployAsyncStagesManagedProjectUsingSlugifiedProjectName()
     {
         using var sourceRoot = TemporaryDirectory.Create("Invalid_Project");
@@ -663,6 +710,42 @@ public class VercelEnvironmentTests
 
         var deployment = Assert.Single(ReadSavedState(Assert.Single(stateManager.SavedSections)).Deployments);
         Assert.Equal("invalid-project", deployment.ProjectName);
+    }
+
+    [Fact]
+    public async Task DeployAsyncStagesManagedProjectUsingConfiguredProjectName()
+    {
+        using var sourceRoot = TemporaryDirectory.Create("source-folder");
+        using var outputRoot = TemporaryDirectory.Create();
+        using var tempRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "Dockerfile"), "FROM nginx:alpine");
+        var runner = new FakeVercelCliRunner(
+            new VercelCliResult(0, "https://configured-project.vercel.app", ""),
+            ReadyInspectResult());
+        var stateManager = new FakeDeploymentStateManager();
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.Services.AddSingleton<IVercelCliRunner>(runner);
+        builder.Services.AddSingleton<IDeploymentStateManager>(stateManager);
+        builder.Services.AddSingleton<IPipelineOutputService>(new FakePipelineOutputService(outputRoot.Path, tempRoot.Path));
+        builder.AddVercelEnvironment("vercel");
+        builder.AddContainer("api", "api")
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
+            .WithVercelProjectName("configured-project");
+
+        using var app = builder.Build();
+        var environment = Assert.Single(app.Services.GetRequiredService<DistributedApplicationModel>().Resources.OfType<VercelEnvironmentResource>());
+        var context = CreatePipelineStepContext(builder, app);
+
+        await VercelDeploymentStep.DeployAsync(context, environment);
+
+        string expectedStagingRoot = Path.Combine(tempRoot.Path, "api", "configured-project");
+        Assert.True(File.Exists(Path.Combine(expectedStagingRoot, "Dockerfile")));
+
+        var state = ReadSavedState(Assert.Single(stateManager.SavedSections));
+        var deployment = Assert.Single(state.Deployments);
+        Assert.Equal("configured-project", deployment.ProjectName);
+        Assert.True(deployment.ManagedByAspire);
     }
 
     [Fact]
@@ -1012,6 +1095,47 @@ public class VercelEnvironmentTests
             TestContext.Current.CancellationToken);
 
         Assert.Contains("BACKEND_HTTP=https://backend-app.vercel.app", arguments);
+    }
+
+    [Fact]
+    public async Task BuildDeployArgumentsUsesConfiguredProjectNameForEndpointReferences()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        string apiRoot = Path.Combine(sourceRoot.Path, "api-app");
+        string backendRoot = Path.Combine(sourceRoot.Path, "backend-source");
+        Directory.CreateDirectory(apiRoot);
+        Directory.CreateDirectory(backendRoot);
+        File.WriteAllText(Path.Combine(apiRoot, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(backendRoot, "Dockerfile"), "FROM nginx:alpine");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelProductionDeployments();
+        var api = builder.AddContainer("api", "api")
+            .WithDockerfile(apiRoot, "Dockerfile")
+            .WithComputeEnvironment(vercel);
+        var backend = builder.AddContainer("backend", "backend")
+            .WithDockerfile(backendRoot, "Dockerfile")
+            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http", isExternal: true)
+            .WithVercelProjectName("configured-backend")
+            .WithComputeEnvironment(vercel);
+        api.WithEnvironment("BACKEND_URL", backend.GetEndpoint("http"));
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
+
+        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+            builder.ExecutionContext,
+            NullLogger.Instance,
+            environment.GetVercelOptions(),
+            entry,
+            entries,
+            TestContext.Current.CancellationToken);
+
+        Assert.Contains("BACKEND_URL=https://configured-backend.vercel.app", arguments);
     }
 
     [Fact]
@@ -2399,6 +2523,7 @@ public class VercelEnvironmentTests
         Directory.CreateDirectory(vercelDirectory);
         File.WriteAllText(Path.Combine(vercelDirectory, "project.json"), """{"projectName":"linked-project"}""");
         var entry = CreateDeploymentEntry(sourceRoot.Path);
+        entry.Resource.Annotations.Add(new VercelProjectOptionsAnnotation("configured-project"));
 
         string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
 

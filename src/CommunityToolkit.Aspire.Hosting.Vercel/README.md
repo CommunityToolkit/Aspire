@@ -48,6 +48,15 @@ builder.AddNodeApp("api", "../api", "server.mjs")
        .WithComputeEnvironment(vercel);
 ```
 
+Use `WithVercelProjectName` when an Aspire-managed resource should deploy to a specific Vercel project name instead of inferring one from the source directory:
+
+```csharp
+builder.AddNodeApp("api", "../api", "server.mjs")
+       .WithVercelProjectName("my-api");
+```
+
+Linked projects with `.vercel/project.json` keep their existing provider project identity and take precedence over `WithVercelProjectName`.
+
 For low-level container resources, Vercel requires existing Aspire Dockerfile build metadata. Prefer the workload-specific `Add*App` integration when one exists. `WithDockerfile`, `WithDockerfileFactory`, and `WithDockerfileBuilder` are supported as advanced escape hatches. The integration always stages the source root into Aspire's deploy-time temp directory, materializes the Vercel-facing `Dockerfile` there, and runs `vercel deploy` from the staged directory so the Vercel CLI does not write `.vercel` metadata into the source tree. Staging skips `.git`, `node_modules`, and unmanaged `.vercel` metadata; linked projects keep only `.vercel/project.json`. Add a `.vercelignore` file to exclude local files such as `.env`, `bin/`, `obj/`, test artifacts, large assets, and other files that should not be uploaded to Vercel. Deploy emits a warning when common sensitive or heavy root entries such as `.env*`, `bin/`, `obj/`, `TestResults/`, or `coverage/` are present and are not covered by `.vercelignore`.
 
 Non-secret Aspire environment variables configured on the resource are processed during publish/deploy and passed to Vercel as CLI environment variables:
@@ -112,7 +121,7 @@ This preview integration intentionally supports a narrow Vercel Dockerfile deplo
 | Container entrypoint overrides and Aspire command-line args | Rejected. Configure runtime command behavior through the Dockerfile/workload publish output or Vercel project settings. |
 | Existing linked Vercel projects | Supported for deploy. Destroy preserves projects that were linked before deploy and only deletes Aspire-created projects recorded in state. |
 
-Managed Vercel project names are inferred from the source directory name when no `.vercel/project.json` link exists. The integration slugifies the inferred name to Vercel's lowercase, hyphenated project-name form before staging and deployment, and rejects duplicate project names within the same Vercel environment, including linked projects. Each Aspire resource must map to one distinct Vercel project because production endpoint references use the project-level `https://<project>.vercel.app` URL. This preview intentionally does not expose resource-level project naming, alias, framework/output, or per-resource target APIs; link each resource to a distinct Vercel project before deploy when you need exact existing project identities, and add future per-resource settings through resource-specific annotations rather than overloading the environment.
+Managed Vercel project names are inferred from the source directory name when no `.vercel/project.json` link exists and no explicit `WithVercelProjectName` is configured. The integration slugifies inferred names to Vercel's lowercase, hyphenated project-name form before staging and deployment, and rejects duplicate project names within the same Vercel environment, including linked projects and explicitly configured names. Each Aspire resource must map to one distinct Vercel project because production endpoint references use the project-level `https://<project>.vercel.app` URL. This preview intentionally does not yet expose resource-level alias, domain, framework/output, build-setting, deployment-protection, or per-resource target APIs; link each resource to a distinct Vercel project before deploy when you need existing provider project identities.
 
 ## Additional documentation
 

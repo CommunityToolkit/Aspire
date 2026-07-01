@@ -947,7 +947,7 @@ internal static class VercelDeploymentStep
         var collision = projectNames[0];
         string resources = string.Join(", ", collision.Select(static item => $"'{item.Entry.Resource.Name}'").Order(StringComparer.Ordinal));
         throw new DistributedApplicationException(
-            $"Multiple Vercel resources resolve to project name '{collision.Key}' ({resources}). Vercel project names must be unique per environment because each resource deploys to and references one project production URL. Use distinct source directory names or link each resource to a distinct Vercel project with .vercel/project.json.");
+            $"Multiple Vercel resources resolve to project name '{collision.Key}' ({resources}). Vercel project names must be unique per environment because each resource deploys to and references one project production URL. Use WithVercelProjectName, distinct source directory names, or link each resource to a distinct Vercel project with .vercel/project.json.");
     }
 
     private static void ValidateUnsupportedResourceModel(VercelDeploymentEntry entry)
@@ -1322,6 +1322,11 @@ internal static class VercelDeploymentStep
 
     private static string GetManagedVercelProjectName(VercelDeploymentEntry entry)
     {
+        if (entry.Resource.TryGetLastAnnotation<VercelProjectOptionsAnnotation>(out var options))
+        {
+            return options.ProjectName;
+        }
+
         string sourceRoot = Path.TrimEndingDirectorySeparator(entry.SourceRoot);
         string sourceRootName = Path.GetFileName(sourceRoot);
 
@@ -1332,6 +1337,21 @@ internal static class VercelDeploymentStep
         }
 
         throw new DistributedApplicationException($"Could not infer a valid Vercel project name for resource '{entry.Resource.Name}' from source root '{entry.SourceRoot}'. Rename the source directory or link the source root to an existing Vercel project.");
+    }
+
+    internal static bool IsValidVercelProjectName(string projectName)
+    {
+        if (string.IsNullOrWhiteSpace(projectName)
+            || projectName.Length > VercelProjectNameMaxLength
+            || !IsLowercaseAsciiLetterOrDigit(projectName[0])
+            || !IsLowercaseAsciiLetterOrDigit(projectName[^1]))
+        {
+            return false;
+        }
+
+        return projectName.All(static character =>
+            IsLowercaseAsciiLetterOrDigit(character)
+            || character == '-');
     }
 
     private static bool TryCreateVercelProjectName(string? value, [NotNullWhen(true)] out string? projectName)
@@ -1379,6 +1399,9 @@ internal static class VercelDeploymentStep
 
     private static bool IsAsciiLetterOrDigit(char character)
         => character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9';
+
+    private static bool IsLowercaseAsciiLetterOrDigit(char character)
+        => character is >= 'a' and <= 'z' or >= '0' and <= '9';
 
     private static bool HasVercelProjectLinkFile(string sourceRoot)
         => File.Exists(GetVercelProjectJsonPath(sourceRoot));
