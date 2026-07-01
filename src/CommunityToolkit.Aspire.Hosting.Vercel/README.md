@@ -68,6 +68,7 @@ var vercel = builder.AddVercelEnvironment("vercel")
     .WithVercelProductionDeployments();
 
 var backend = builder.AddNodeApp("backend", "../backend", "server.mjs")
+    .WithEndpoint(name: "http", scheme: "http", env: "PORT", isExternal: true)
     .WithComputeEnvironment(vercel);
 
 builder.AddNodeApp("api", "../api", "server.mjs")
@@ -75,7 +76,7 @@ builder.AddNodeApp("api", "../api", "server.mjs")
     .WithComputeEnvironment(vercel);
 ```
 
-The `BACKEND_URL` value is deployed as `https://<backend-project>.vercel.app`. Preview and custom-target deployments still reject endpoint references because those URLs are assigned by Vercel after deployment.
+The `BACKEND_URL` value is deployed as `https://<backend-project>.vercel.app`. Endpoint references must target external HTTP or HTTPS endpoints on workloads in the same Vercel environment. Preview and custom-target deployments still reject endpoint references because those URLs are assigned by Vercel after deployment.
 
 ## Deployment behavior
 
@@ -104,7 +105,7 @@ This preview integration intentionally supports a narrow Vercel Dockerfile deplo
 | Container registries, image build, image push | Not used. Vercel uploads and builds the staged source tree. |
 | Non-secret environment variables | Passed with `vercel deploy --env KEY=value`; names must use letters, digits, and underscores and values are redacted from publish output. |
 | Secret parameters, connection strings, Docker build args/secrets | Rejected, including composite values that contain secrets. Configure them in Vercel project environment variables or Vercel secrets. |
-| Service discovery, endpoint references, `WithReference` to another resource | Supported for Vercel production deployments by using deterministic `https://<project>.vercel.app` URLs. Rejected for preview/custom targets because those URLs are assigned after deployment. |
+| Service discovery, endpoint references, `WithReference` to another resource | Supported for external HTTP(S) endpoints on workloads in the same Vercel production environment by using deterministic `https://<project>.vercel.app` URLs. Rejected for preview/custom targets because those URLs are assigned after deployment. |
 | Endpoints | HTTP and HTTPS endpoints are accepted when they map to one target port. Non-HTTP(S) endpoints or multiple target ports are rejected. |
 | Volumes, bind mounts, Aspire container files | Rejected. Include required files in the source tree or use a Vercel-supported external service for state. |
 | Health checks, probes, replicas, wait/dependency ordering | Rejected until they are mapped to Vercel-native behavior. |

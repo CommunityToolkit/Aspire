@@ -953,20 +953,22 @@ public class VercelEnvironmentTests
             .WithComputeEnvironment(vercel);
         var backend = builder.AddContainer("backend", "backend")
             .WithDockerfile(backendRoot, "Dockerfile")
-            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http")
+            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http", isExternal: true)
             .WithComputeEnvironment(vercel);
         api.WithEnvironment("BACKEND_URL", backend.GetEndpoint("http"));
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment), entry => entry.Resource.Name == "api");
+        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
         string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
             entry,
+            entries,
             TestContext.Current.CancellationToken);
 
         Assert.Contains("BACKEND_URL=https://backend-app.vercel.app", arguments);
@@ -988,7 +990,7 @@ public class VercelEnvironmentTests
             .WithVercelProductionDeployments();
         var backend = builder.AddContainer("backend", "backend")
             .WithDockerfile(backendRoot, "Dockerfile")
-            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http")
+            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http", isExternal: true)
             .WithComputeEnvironment(vercel);
         builder.AddContainer("api", "api")
             .WithDockerfile(apiRoot, "Dockerfile")
@@ -998,13 +1000,15 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment), entry => entry.Resource.Name == "api");
+        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
         string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
             entry,
+            entries,
             TestContext.Current.CancellationToken);
 
         Assert.Contains("BACKEND_HTTP=https://backend-app.vercel.app", arguments);
@@ -1029,14 +1033,15 @@ public class VercelEnvironmentTests
             .WithComputeEnvironment(vercel);
         var backend = builder.AddContainer("backend", "backend")
             .WithDockerfile(backendRoot, "Dockerfile")
-            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http")
+            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http", isExternal: true)
             .WithComputeEnvironment(vercel);
         api.WithEnvironment("BACKEND_URL", backend.GetEndpoint("http"));
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment), entry => entry.Resource.Name == "api");
+        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
             VercelDeploymentStep.BuildDeployArgumentsAsync(
@@ -1044,9 +1049,135 @@ public class VercelEnvironmentTests
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
                 entry,
+                entries,
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("Vercel endpoint references require production deployments", exception.ToString());
+    }
+
+    [Fact]
+    public async Task BuildDeployArgumentsThrowsForEndpointReferencesToDifferentVercelEnvironment()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        string apiRoot = Path.Combine(sourceRoot.Path, "api-app");
+        string backendRoot = Path.Combine(sourceRoot.Path, "backend-app");
+        Directory.CreateDirectory(apiRoot);
+        Directory.CreateDirectory(backendRoot);
+        File.WriteAllText(Path.Combine(apiRoot, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(backendRoot, "Dockerfile"), "FROM nginx:alpine");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelProductionDeployments();
+        var otherVercel = builder.AddVercelEnvironment("other-vercel")
+            .WithVercelProductionDeployments();
+        var api = builder.AddContainer("api", "api")
+            .WithDockerfile(apiRoot, "Dockerfile")
+            .WithComputeEnvironment(vercel);
+        var backend = builder.AddContainer("backend", "backend")
+            .WithDockerfile(backendRoot, "Dockerfile")
+            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http", isExternal: true)
+            .WithComputeEnvironment(otherVercel);
+        api.WithEnvironment("BACKEND_URL", backend.GetEndpoint("http"));
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>(), environment => environment.Name == "vercel");
+        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.BuildDeployArgumentsAsync(
+                builder.ExecutionContext,
+                NullLogger.Instance,
+                environment.GetVercelOptions(),
+                entry,
+                entries,
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("does not target this Vercel environment", exception.Message);
+    }
+
+    [Fact]
+    public async Task BuildDeployArgumentsThrowsForInternalEndpointReferences()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        string apiRoot = Path.Combine(sourceRoot.Path, "api-app");
+        string backendRoot = Path.Combine(sourceRoot.Path, "backend-app");
+        Directory.CreateDirectory(apiRoot);
+        Directory.CreateDirectory(backendRoot);
+        File.WriteAllText(Path.Combine(apiRoot, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(backendRoot, "Dockerfile"), "FROM nginx:alpine");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelProductionDeployments();
+        var api = builder.AddContainer("api", "api")
+            .WithDockerfile(apiRoot, "Dockerfile")
+            .WithComputeEnvironment(vercel);
+        var backend = builder.AddContainer("backend", "backend")
+            .WithDockerfile(backendRoot, "Dockerfile")
+            .WithEndpoint(port: 8080, targetPort: 8080, scheme: "http", name: "http", isExternal: false)
+            .WithComputeEnvironment(vercel);
+        api.WithEnvironment("BACKEND_URL", backend.GetEndpoint("http"));
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.BuildDeployArgumentsAsync(
+                builder.ExecutionContext,
+                NullLogger.Instance,
+                environment.GetVercelOptions(),
+                entry,
+                entries,
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("can only target external HTTP or HTTPS endpoints", exception.Message);
+    }
+
+    [Fact]
+    public async Task BuildDeployArgumentsThrowsForTargetPortEndpointReferenceWithoutExplicitTargetPort()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        string apiRoot = Path.Combine(sourceRoot.Path, "api-app");
+        string backendRoot = Path.Combine(sourceRoot.Path, "backend-app");
+        Directory.CreateDirectory(apiRoot);
+        Directory.CreateDirectory(backendRoot);
+        File.WriteAllText(Path.Combine(apiRoot, "Dockerfile"), "FROM nginx:alpine");
+        File.WriteAllText(Path.Combine(backendRoot, "Dockerfile"), "FROM nginx:alpine");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", Path.Combine(sourceRoot.Path, "out")]);
+        var vercel = builder.AddVercelEnvironment("vercel")
+            .WithVercelProductionDeployments();
+        var api = builder.AddContainer("api", "api")
+            .WithDockerfile(apiRoot, "Dockerfile")
+            .WithComputeEnvironment(vercel);
+        var backend = builder.AddContainer("backend", "backend")
+            .WithDockerfile(backendRoot, "Dockerfile")
+            .WithEndpoint(port: 8080, scheme: "http", name: "http", isExternal: true)
+            .WithComputeEnvironment(vercel);
+        api.WithEnvironment("BACKEND_TARGET_PORT", backend.GetEndpoint("http").Property(EndpointProperty.TargetPort));
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
+
+        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
+            VercelDeploymentStep.BuildDeployArgumentsAsync(
+                builder.ExecutionContext,
+                NullLogger.Instance,
+                environment.GetVercelOptions(),
+                entry,
+                entries,
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("does not define an explicit target port", exception.Message);
     }
 
     [Fact]

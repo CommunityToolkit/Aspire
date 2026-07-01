@@ -27,6 +27,19 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
                 $"Vercel endpoint references require production deployments because preview and custom target URLs are assigned by Vercel after deployment. Call {nameof(VercelEnvironmentResourceBuilderExtensions.WithVercelProductionDeployments)} on the Vercel environment, or remove the reference.");
         }
 
+        var endpoint = endpointReference.EndpointAnnotation;
+        if (!endpoint.IsExternal)
+        {
+            throw new InvalidOperationException(
+                $"Vercel endpoint references can only target external HTTP or HTTPS endpoints. Endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' is not external.");
+        }
+
+        if (!IsHttpEndpoint(endpoint))
+        {
+            throw new InvalidOperationException(
+                $"Vercel endpoint references support only HTTP or HTTPS endpoints. Endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' uses scheme '{endpoint.UriScheme}'.");
+        }
+
         string projectName = VercelDeploymentStep.GetVercelProjectName(endpointReference.Resource);
         return ReferenceExpression.Create($"{projectName}.vercel.app");
     }
@@ -50,11 +63,16 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
             EndpointProperty.Port => ReferenceExpression.Create($"{port.ToString(CultureInfo.InvariantCulture)}"),
             EndpointProperty.TargetPort => endpoint.TargetPort is int targetPort
                 ? ReferenceExpression.Create($"{targetPort.ToString(CultureInfo.InvariantCulture)}")
-                : ReferenceExpression.Create($"{port.ToString(CultureInfo.InvariantCulture)}"),
+                : throw new InvalidOperationException(
+                    $"The endpoint property '{EndpointProperty.TargetPort}' cannot be resolved for endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' because the endpoint does not define an explicit target port."),
             EndpointProperty.Scheme => ReferenceExpression.Create($"https"),
             EndpointProperty.HostAndPort => ReferenceExpression.Create($"{host}:{port.ToString(CultureInfo.InvariantCulture)}"),
             EndpointProperty.TlsEnabled => ReferenceExpression.Create($"{bool.TrueString}"),
             _ => throw new InvalidOperationException($"The property '{property}' is not supported for the endpoint '{endpoint.Name}'.")
         };
     }
+
+    private static bool IsHttpEndpoint(EndpointAnnotation endpoint)
+        => string.Equals(endpoint.UriScheme, "http", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(endpoint.UriScheme, "https", StringComparison.OrdinalIgnoreCase);
 }
