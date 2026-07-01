@@ -12,13 +12,13 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [Fact]
     public async Task TestAppHost()
     {
-        using var cancellationToken = new CancellationTokenSource();
-        cancellationToken.CancelAfter(TimeSpan.FromMinutes(5));
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMinutes(5));
 
         var connectionName = "ravendb";
         var databaseName = "ravenDatabase";
 
-        await fixture.ResourceNotificationService.WaitForResourceAsync(connectionName, KnownResourceStates.Running, cancellationToken.Token).WaitAsync(TimeSpan.FromMinutes(5), cancellationToken.Token);
+        await fixture.ResourceNotificationService.WaitForResourceAsync(connectionName, KnownResourceStates.Running, cts.Token).WaitAsync(TimeSpan.FromMinutes(5), cts.Token);
 
         var endpoint = fixture.GetEndpoint(connectionName, "http");
         Assert.NotNull(endpoint);
@@ -29,12 +29,12 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         var serverResource = Assert.Single(appModel.Resources.OfType<RavenDBServerResource>());
         var dbResource = Assert.Single(appModel.Resources.OfType<RavenDBDatabaseResource>());
 
-        var serverConnectionString = await serverResource.ConnectionStringExpression.GetValueAsync(cancellationToken.Token);
+        var serverConnectionString = await serverResource.ConnectionStringExpression.GetValueAsync(cts.Token);
         Assert.False(string.IsNullOrWhiteSpace(serverConnectionString));
         Assert.Contains(endpoint.OriginalString, serverConnectionString);
         Assert.Equal(databaseName, dbResource.DatabaseName);
 
-        var databaseConnectionString = await dbResource.ConnectionStringExpression.GetValueAsync(cancellationToken.Token);
+        var databaseConnectionString = await dbResource.ConnectionStringExpression.GetValueAsync(cts.Token);
         Assert.False(string.IsNullOrWhiteSpace(databaseConnectionString));
         Assert.Equal($"URL={endpoint.OriginalString};Database={databaseName}", databaseConnectionString);
         Assert.Equal(databaseName, dbResource.DatabaseName);
@@ -56,13 +56,13 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
 
         using (var session = documentStore.OpenAsyncSession())
         {
-            await session.StoreAsync(new { Id = "Test/1", Name = "Test Document" }, cancellationToken.Token);
-            await session.SaveChangesAsync(cancellationToken.Token);
+            await session.StoreAsync(new { Id = "Test/1", Name = "Test Document" }, cts.Token);
+            await session.SaveChangesAsync(cts.Token);
         }
 
         using (var session = documentStore.OpenAsyncSession())
         {
-            var doc = await session.LoadAsync<dynamic>("Test/1", cancellationToken.Token);
+            var doc = await session.LoadAsync<dynamic>("Test/1", cts.Token);
             Assert.NotNull(doc);
             Assert.Equal("Test Document", doc.Name.ToString());
         }
@@ -71,8 +71,8 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     [Fact]
     public async Task DatabaseResourceHasStudioUrl()
     {
-        using var cancellationToken = new CancellationTokenSource();
-        cancellationToken.CancelAfter(TimeSpan.FromMinutes(5));
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMinutes(5));
 
         var serverName = "ravendb";
         var databaseResourceName = "ravenDatabase";
@@ -81,7 +81,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         // the "RavenDB Studio" URL annotation is added to the database resource.
         await fixture.ResourceNotificationService
             .WaitForResourceHealthyAsync(databaseResourceName)
-            .WaitAsync(TimeSpan.FromMinutes(5), cancellationToken.Token);
+            .WaitAsync(TimeSpan.FromMinutes(5), cts.Token);
 
         var appModel = fixture.App.Services.GetRequiredService<DistributedApplicationModel>();
         var dbResource = Assert.Single(appModel.Resources.OfType<RavenDBDatabaseResource>());
