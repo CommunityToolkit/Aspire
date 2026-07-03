@@ -840,7 +840,7 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public async Task WriteDeploymentPlanThrowsForWaitDependencies()
+    public async Task WriteDeploymentPlanIgnoresWaitDependencies()
     {
         using var sourceRoot = TemporaryDirectory.Create();
         using var outputRoot = TemporaryDirectory.Create();
@@ -849,19 +849,27 @@ public class VercelEnvironmentTests
         var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
         builder.AddVercelEnvironment("vercel");
         var backend = builder.AddContainer("backend", "backend")
-            .WithDockerfile(sourceRoot.Path, "Dockerfile");
+            .WithDockerfile(sourceRoot.Path, "Dockerfile")
+            .WithVercelProjectName("backend");
         builder.AddContainer("api", "api")
             .WithDockerfile(sourceRoot.Path, "Dockerfile")
+            .WithVercelProjectName("api")
             .WaitFor(backend);
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
 
-        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
+        string planPath = await VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken);
 
-        Assert.Contains("wait/dependency ordering", exception.Message);
+        using var document = JsonDocument.Parse(File.ReadAllText(planPath));
+        var deployments = document.RootElement.GetProperty("deployments")
+            .EnumerateArray()
+            .Select(static deployment => deployment.GetProperty("resourceName").GetString()!)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(["api", "backend"], deployments);
     }
 
     [Fact]

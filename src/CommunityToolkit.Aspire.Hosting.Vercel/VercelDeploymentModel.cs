@@ -259,12 +259,6 @@ internal static class VercelDeploymentModel
                 $"Resource '{resource.Name}' configures Aspire replicas or scale, but the Vercel preview integration does not map replica counts to Vercel-native scaling. Configure scaling in Vercel instead.");
         }
 
-        if (resource.Annotations.OfType<WaitAnnotation>().Any())
-        {
-            throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire wait/dependency ordering, but Vercel deploys each project independently and the preview integration does not preserve Aspire startup ordering. Remove the wait relationship or deploy dependent services separately.");
-        }
-
         ValidateEndpointModel(entry);
         ValidateProjectName(entry);
     }
