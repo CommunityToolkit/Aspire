@@ -30,7 +30,7 @@ public static class VercelResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectName);
 
-        if (!VercelDeploymentStep.IsValidVercelProjectName(projectName))
+        if (!VercelProjectNameResolver.IsValidProjectName(projectName))
         {
             throw new ArgumentException(
                 $"Vercel project name '{projectName}' is invalid. Use lowercase letters, digits, and hyphens; start and end with a letter or digit; and keep the name at most 100 characters.",

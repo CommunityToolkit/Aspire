@@ -43,7 +43,7 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
 
         // Same-deploy references need an address that exists before `vercel deploy`
         // finishes. Production project aliases are deterministic; preview URLs are not.
-        string projectName = VercelDeploymentStep.GetVercelProjectName(endpointReference.Resource);
+        string projectName = VercelProjectNameResolver.GetProjectName(endpointReference.Resource);
         return ReferenceExpression.Create($"{projectName}.vercel.app");
     }
 

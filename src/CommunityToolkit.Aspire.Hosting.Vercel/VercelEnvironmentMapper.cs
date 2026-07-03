@@ -1,31 +1,16 @@
-#pragma warning disable ASPIREPIPELINES001
-#pragma warning disable ASPIREPIPELINES002
-#pragma warning disable ASPIREPIPELINES003
-#pragma warning disable ASPIREPIPELINES004
 #pragma warning disable ASPIRECOMPUTE003
-#pragma warning disable ASPIREPROBES001
-#pragma warning disable CTASPIREVERCEL001
 
-using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using Aspire.Hosting.ApplicationModel.Docker;
-using Aspire.Hosting.Pipelines;
 using Aspire.Hosting.Publishing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Aspire.Hosting;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Net.Sockets;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
-internal static partial class VercelDeploymentStep
+internal static class VercelEnvironmentMapper
 {
-    private static async Task<VercelEnvironmentConfiguration> GetVercelEnvironmentConfigurationAsync(
+    public static async Task<VercelEnvironmentConfiguration> GetConfigurationAsync(
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IExecutionConfigurationResult executionConfiguration,
@@ -69,7 +54,7 @@ internal static partial class VercelDeploymentStep
             if (containsSecret)
             {
                 value = resolveProjectEnvironmentVariableValues
-                    ? await GetVercelProjectEnvironmentVariableValueAsync(
+                    ? await GetProjectEnvironmentVariableValueAsync(
                         resource,
                         options,
                         entriesByResourceName,
@@ -78,7 +63,7 @@ internal static partial class VercelDeploymentStep
                         cancellationToken).ConfigureAwait(false)
                     : "<value>";
             }
-            else if (TryGetVercelEnvironmentVariableValue(resource, options, entriesByResourceName, unprocessedValue, out string? vercelValue))
+            else if (TryGetEnvironmentVariableValue(resource, options, entriesByResourceName, unprocessedValue, out string? vercelValue))
             {
                 value = vercelValue;
             }
@@ -96,7 +81,29 @@ internal static partial class VercelDeploymentStep
         return new(deploymentEnvironmentVariables, projectEnvironmentVariables);
     }
 
-    private static async ValueTask<string> GetVercelProjectEnvironmentVariableValueAsync(
+    public static void ValidateUnsupportedRuntimeConfiguration(
+        IResource resource,
+        IExecutionConfigurationResult executionConfiguration)
+    {
+        // These Aspire concepts have no faithful Vercel Dockerfile-deploy equivalent in this
+        // preview. Rejecting them is safer than silently dropping entrypoint, args, or build
+        // values that would change the workload's deployed behavior. Aspire's built-in
+        // image build/push pipeline owns build-time Docker options; this validation only
+        // rejects runtime concepts the Vercel Build Output API path cannot preserve.
+        if (resource is ContainerResource { Entrypoint: not null })
+        {
+            throw new DistributedApplicationException(
+                $"Resource '{resource.Name}' configures a container entrypoint, but Vercel Dockerfile deployments use the CMD/ENTRYPOINT from Aspire's publish output. Configure the workload's publish behavior or Vercel project settings instead.");
+        }
+
+        if (executionConfiguration.ArgumentsWithUnprocessed.Any())
+        {
+            throw new DistributedApplicationException(
+                $"Resource '{resource.Name}' configures Aspire command-line arguments, but Vercel Dockerfile deployments cannot override Docker CMD/ENTRYPOINT. Configure the workload's publish behavior or express the values as environment variables.");
+        }
+    }
+
+    private static async ValueTask<string> GetProjectEnvironmentVariableValueAsync(
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
@@ -122,7 +129,7 @@ internal static partial class VercelDeploymentStep
             case IResourceBuilder<IResourceWithConnectionString> connectionStringBuilder:
                 return await GetValueProviderValueAsync(connectionStringBuilder.Resource.ConnectionStringExpression, $"connection string for resource '{connectionStringBuilder.Resource.Name}'", cancellationToken).ConfigureAwait(false);
             case ReferenceExpression referenceExpression:
-                return await GetVercelProjectReferenceExpressionValueAsync(resource, options, entriesByResourceName, referenceExpression, cancellationToken).ConfigureAwait(false);
+                return await GetProjectReferenceExpressionValueAsync(resource, options, entriesByResourceName, referenceExpression, cancellationToken).ConfigureAwait(false);
             case IValueProvider valueProvider:
                 return await GetValueProviderValueAsync(valueProvider, "environment variable value", cancellationToken).ConfigureAwait(false);
             default:
@@ -130,7 +137,7 @@ internal static partial class VercelDeploymentStep
         }
     }
 
-    private static async ValueTask<string> GetVercelProjectReferenceExpressionValueAsync(
+    private static async ValueTask<string> GetProjectReferenceExpressionValueAsync(
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
@@ -150,8 +157,8 @@ internal static partial class VercelDeploymentStep
             {
                 // Secret-bearing project env vars may combine endpoint URLs with secret
                 // parameters because the final value is sent through Vercel's secret path.
-                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetVercelEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url)),
-                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetVercelEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression),
+                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url)),
+                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression),
                 ParameterResource parameter => await GetParameterValueAsync(parameter, cancellationToken).ConfigureAwait(false),
                 IResourceWithConnectionString connectionStringResource => await GetValueProviderValueAsync(connectionStringResource.ConnectionStringExpression, $"connection string for resource '{connectionStringResource.Name}'", cancellationToken).ConfigureAwait(false),
                 _ => await GetValueProviderValueAsync(valueProvider, "reference expression value", cancellationToken).ConfigureAwait(false)
@@ -192,7 +199,7 @@ internal static partial class VercelDeploymentStep
         }
     }
 
-    private static bool TryGetVercelEnvironmentVariableValue(
+    private static bool TryGetEnvironmentVariableValue(
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
@@ -204,13 +211,13 @@ internal static partial class VercelDeploymentStep
         switch (value)
         {
             case EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference):
-                vercelValue = GetVercelEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url));
+                vercelValue = GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url));
                 return true;
             case EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint):
-                vercelValue = GetVercelEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression);
+                vercelValue = GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression);
                 return true;
             case ReferenceExpression referenceExpression when ContainsCrossResourceEndpointReference(resource, referenceExpression):
-                vercelValue = GetVercelReferenceExpressionValue(resource, options, entriesByResourceName, referenceExpression);
+                vercelValue = GetReferenceExpressionValue(resource, options, entriesByResourceName, referenceExpression);
                 return true;
             default:
                 vercelValue = null;
@@ -218,7 +225,7 @@ internal static partial class VercelDeploymentStep
         }
     }
 
-    private static string GetVercelReferenceExpressionValue(
+    private static string GetReferenceExpressionValue(
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
@@ -235,8 +242,8 @@ internal static partial class VercelDeploymentStep
             IValueProvider valueProvider = referenceExpression.ValueProviders[i];
             arguments[i] = valueProvider switch
             {
-                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetVercelEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url)),
-                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetVercelEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression),
+                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url)),
+                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression),
                 // Mixed expressions can hide provider-specific ordering or secret semantics.
                 // Keep this path to deterministic endpoint-only production URLs.
                 _ => throw new DistributedApplicationException("Vercel endpoint reference expressions cannot be combined with parameters, secrets, or other value providers. Configure a concrete Vercel project environment variable instead.")
@@ -251,7 +258,7 @@ internal static partial class VercelDeploymentStep
         return string.Format(CultureInfo.InvariantCulture, referenceExpression.Format, arguments);
     }
 
-    private static string GetVercelEndpointPropertyValue(
+    private static string GetEndpointPropertyValue(
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
@@ -275,7 +282,7 @@ internal static partial class VercelDeploymentStep
                 $"Resource '{resource.Name}' references endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}', but Vercel endpoint references can only target external HTTP or HTTPS endpoints. Configure an external endpoint or remove the reference.");
         }
 
-        if (!IsHttpEndpoint(endpoint))
+        if (!VercelDeploymentModel.IsHttpEndpoint(endpoint))
         {
             throw new DistributedApplicationException(
                 $"Resource '{resource.Name}' references endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' with scheme '{endpoint.UriScheme}', but Vercel endpoint references support only HTTP or HTTPS endpoints.");
@@ -287,7 +294,7 @@ internal static partial class VercelDeploymentStep
                 $"Resource '{resource.Name}' references endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}', but the referenced resource does not target this Vercel environment. Vercel endpoint references can only target workloads deployed to the same Vercel environment.");
         }
 
-        string host = $"{GetVercelProjectName(referencedEntry)}.vercel.app";
+        string host = $"{VercelProjectNameResolver.GetProjectName(referencedEntry)}.vercel.app";
         const int port = 443;
 
         return endpointReferenceExpression.Property switch
@@ -322,28 +329,6 @@ internal static partial class VercelDeploymentStep
         {
             throw new DistributedApplicationException(
                 $"Resource '{resource.Name}' configures invalid Vercel environment variable name '{name}'. Use letters, digits, and underscores, and start with a letter or underscore.");
-        }
-    }
-
-    private static void ValidateUnsupportedRuntimeConfiguration(
-        IResource resource,
-        IExecutionConfigurationResult executionConfiguration)
-    {
-        // These Aspire concepts have no faithful Vercel Dockerfile-deploy equivalent in this
-        // preview. Rejecting them is safer than silently dropping entrypoint, args, or build
-        // values that would change the workload's deployed behavior. Aspire's built-in
-        // image build/push pipeline owns build-time Docker options; this validation only
-        // rejects runtime concepts the Vercel Build Output API path cannot preserve.
-        if (resource is ContainerResource { Entrypoint: not null })
-        {
-            throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures a container entrypoint, but Vercel Dockerfile deployments use the CMD/ENTRYPOINT from Aspire's publish output. Configure the workload's publish behavior or Vercel project settings instead.");
-        }
-
-        if (executionConfiguration.ArgumentsWithUnprocessed.Any())
-        {
-            throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire command-line arguments, but Vercel Dockerfile deployments cannot override Docker CMD/ENTRYPOINT. Configure the workload's publish behavior or express the values as environment variables.");
         }
     }
 
@@ -404,13 +389,4 @@ internal static partial class VercelDeploymentStep
         // can recreate resource references across an RPC boundary, but resource name is the
         // app-model identity used by deployment target maps.
         => string.Equals(resource.Name, otherResource.Name, StringComparison.Ordinal);
-
-    private static bool IsHttpEndpoint(EndpointAnnotation endpoint)
-        // URI scheme alone is not enough: Aspire can model a TCP transport with an HTTP
-        // URI scheme. Vercel's container ingress here is HTTP-family traffic over TCP.
-        => endpoint.Protocol == ProtocolType.Tcp
-            && (string.Equals(endpoint.UriScheme, "http", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(endpoint.UriScheme, "https", StringComparison.OrdinalIgnoreCase))
-            && (string.Equals(endpoint.Transport, "http", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(endpoint.Transport, "http2", StringComparison.OrdinalIgnoreCase));
 }

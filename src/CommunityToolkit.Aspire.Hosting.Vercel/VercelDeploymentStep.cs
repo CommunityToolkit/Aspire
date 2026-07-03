@@ -99,19 +99,19 @@ internal static partial class VercelDeploymentStep
         // step can validate registry metadata: project create/link, Vercel pull, VCR login,
         // VCR repository ensure, and deployment target annotation setup.
         var options = environment.GetVercelOptions();
-        var entries = GetDeploymentEntries(context.Model, environment).ToList();
-        ValidateEntries(entries);
+        var entries = VercelDeploymentModel.GetEntries(context.Model, environment).ToList();
+        VercelDeploymentModel.ValidateEntries(entries);
         foreach (var entry in entries)
         {
-            await ValidateVercelJsonAsync(entry.Resource, entry.SourceRoot, context.CancellationToken).ConfigureAwait(false);
+            await VercelDeploymentModel.ValidateVercelJsonAsync(entry.Resource, entry.SourceRoot, context.CancellationToken).ConfigureAwait(false);
         }
 
         await ValidateCliPrerequisitesAsync(context, environment).ConfigureAwait(false);
         await ValidateDockerDigestInspectionPrerequisitesAsync(context).ConfigureAwait(false);
         var runner = context.Services.GetRequiredService<IVercelCliRunner>();
         var registryClient = context.Services.GetRequiredService<IVercelContainerRegistryClient>();
-        await ValidateExistingDeploymentStateAsync(context, environment, options).ConfigureAwait(false);
-        var entriesByResourceName = GetDeploymentEntriesByResourceName(entries);
+        await VercelDeploymentStateStore.ValidateExistingAsync(context, environment, options).ConfigureAwait(false);
+        var entriesByResourceName = VercelDeploymentModel.GetEntriesByResourceName(entries);
 
         foreach (var entry in entries)
         {
@@ -140,9 +140,9 @@ internal static partial class VercelDeploymentStep
     {
         var options = environment.GetVercelOptions();
         var runner = context.Services.GetRequiredService<IVercelCliRunner>();
-        var entries = GetDeploymentEntries(context.Model, environment).ToList();
+        var entries = VercelDeploymentModel.GetEntries(context.Model, environment).ToList();
 
-        ValidateEntries(entries);
+        VercelDeploymentModel.ValidateEntries(entries);
         // Normal pipeline execution runs the prereq step first. Keep this fallback so the
         // deploy delegate remains directly unit-testable and safe if invoked by a custom runner.
         if (entries.Any(entry => GetPreparedDeployment(entry.Resource) is null))
@@ -188,7 +188,7 @@ internal static partial class VercelDeploymentStep
             preparedDeployment.ProjectContext,
             image).ConfigureAwait(false);
 
-        string? productionUrl = GetProductionUrl(options, preparedDeployment.ProjectLink.ProjectName);
+        string? productionUrl = VercelDeploymentStateStore.GetProductionUrl(options, preparedDeployment.ProjectLink.ProjectName);
         var stateEntry = CreateSuccessfulDeploymentStateEntry(
             preparedDeployment.Entry,
             preparedDeployment.ProjectLink,
@@ -201,7 +201,7 @@ internal static partial class VercelDeploymentStep
         // Persist each verified resource independently. A later resource can fail after
         // Vercel has already created earlier projects, and destroy must still know which
         // managed projects are safe to remove or retry.
-        await SaveDeploymentStateEntryAsync(context, environment, options, stateEntry).ConfigureAwait(false);
+        await VercelDeploymentStateStore.SaveEntryAsync(context, environment, options, stateEntry).ConfigureAwait(false);
 
         AddDeploymentSummary(context, entry.Resource.Name, deploymentResult, productionUrl);
     }
@@ -224,7 +224,7 @@ internal static partial class VercelDeploymentStep
         // Record the managed project as soon as Vercel accepts it. Build, env
         // configuration, or deploy can still fail afterward, and destroy must be able
         // to clean up that partially-created provider object.
-        await SaveDeploymentStateEntryAsync(context, environment, options, new(
+        await VercelDeploymentStateStore.SaveEntryAsync(context, environment, options, new(
             preparedEntry.Resource.Name,
             projectLink.ProjectName,
             projectLink.ProjectId,
@@ -233,7 +233,7 @@ internal static partial class VercelDeploymentStep
             sourceRoot,
             ManagedByAspire: true)
         {
-            ProductionUrl = GetProductionUrl(options, projectLink.ProjectName),
+            ProductionUrl = VercelDeploymentStateStore.GetProductionUrl(options, projectLink.ProjectName),
             ProjectEnvironmentVariables = previousDeployment?.Entry.ProjectEnvironmentVariables ?? []
         }).ConfigureAwait(false);
     }
@@ -244,7 +244,7 @@ internal static partial class VercelDeploymentStep
         // support. Vercel prereq must happen before push-prereq/build/push so the resource has
         // a VCR container registry annotation and linux/amd64 build target; Vercel deploy must
         // then wait for the resource-specific push step.
-        var entries = GetDeploymentEntries(context.Model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(context.Model, environment).ToArray();
         if (entries.Length == 0)
         {
             return;
@@ -323,9 +323,9 @@ internal static partial class VercelDeploymentStep
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
         VercelDeploymentEntry entry)
     {
-        var preparedEntry = await PrepareDeploymentEntryAsync(context, entry).ConfigureAwait(false);
-        var projectLink = GetVercelProjectLink(preparedEntry);
-        var previousDeployment = await GetPreviousDeploymentStateEntryAsync(
+        var preparedEntry = await VercelDeploymentModel.PrepareEntryAsync(context, entry).ConfigureAwait(false);
+        var projectLink = VercelProjectNameResolver.GetProjectLink(preparedEntry);
+        var previousDeployment = await VercelDeploymentStateStore.GetPreviousAsync(
             context,
             environment,
             options,
@@ -333,7 +333,7 @@ internal static partial class VercelDeploymentStep
             projectLink.ProjectName).ConfigureAwait(false);
         // A checked-in .vercel/project.json means the user linked an existing provider project,
         // so deploy can target it but destroy must not claim ownership of it.
-        bool managedByAspire = !HasVercelProjectLinkFile(entry.SourceRoot);
+        bool managedByAspire = !VercelProjectNameResolver.HasProjectLinkFile(entry.SourceRoot);
 
         // Managed projects are recorded before the image build begins. If Docker build,
         // project-env configuration, or VCR push fails later, destroy/retry still has enough
@@ -378,7 +378,7 @@ internal static partial class VercelDeploymentStep
         {
             // Use Aspire's unprocessed values so endpoint references and secrets keep their
             // graph meaning until Vercel-specific deployment translation happens.
-            var environmentConfiguration = await GetVercelEnvironmentConfigurationAsync(
+            var environmentConfiguration = await VercelDeploymentPlanWriter.GetEnvironmentConfigurationAsync(
                 context.ExecutionContext,
                 context.Logger,
                 options,
@@ -404,7 +404,7 @@ internal static partial class VercelDeploymentStep
             // for that linked project. Keep that link/pull in scratch space so the source
             // root never receives provider metadata or pulled env files.
             var pulledProject = await PullProjectSettingsAsync(context, runner, options, preparedEntry, projectLinkDirectory).ConfigureAwait(false);
-            var oidcClaims = DecodeUnvalidatedOidcClaims(pulledProject.OidcToken);
+            var oidcClaims = VercelOidcToken.DecodeUnvalidatedClaims(pulledProject.OidcToken);
 
             return new(environmentConfiguration, pulledProject, oidcClaims);
         }
@@ -413,7 +413,7 @@ internal static partial class VercelDeploymentStep
             // `vercel pull` can write provider-owned env/config files into the linked
             // directory. They may contain project secrets unrelated to the AppHost, so the
             // scratch link is never copied, logged, stored in state, or left on disk.
-            DeleteDirectoryIfExists(projectLinkDirectory);
+            VercelFileSystem.DeleteDirectoryIfExists(projectLinkDirectory);
         }
     }
 
@@ -428,12 +428,12 @@ internal static partial class VercelDeploymentStep
         // The generated Build Output API tree is the provider-owned deploy artifact.
         // It points at the immutable VCR digest and is written to temp/output storage so
         // `vercel deploy --prebuilt` uploads metadata only, not a staged source tree.
-        await WriteBuildOutputAsync(entry, projectContext.PulledProject, image.Reference, context.CancellationToken).ConfigureAwait(false);
+        await VercelBuildOutputWriter.WriteAsync(entry, projectContext.PulledProject, image.Reference, context.CancellationToken).ConfigureAwait(false);
 
-        string[] deployArguments = BuildDeployArguments(
+        string[] deployArguments = VercelCliArguments.BuildDeployArguments(
             options,
             entry.DeployDirectory,
-            GetVercelProjectOption(entry),
+            VercelProjectNameResolver.GetProjectOption(entry),
             projectContext.EnvironmentConfiguration.DeploymentEnvironmentVariables);
 
         var result = await runner.RunAsync(VercelCliFileName, deployArguments, entry.DeployDirectory, context.CancellationToken).ConfigureAwait(false);
@@ -442,7 +442,7 @@ internal static partial class VercelDeploymentStep
             throw CreateCliException($"deploy prebuilt resource '{entry.Resource.Name}' to Vercel", VercelCliFileName, result);
         }
 
-        var deploymentResult = GetDeploymentResult(result.StandardOutput);
+        var deploymentResult = VercelCliOutputParser.GetDeploymentResult(result.StandardOutput);
         await VerifyDeploymentAsync(context, runner, options, entry.Resource.Name, deploymentResult).ConfigureAwait(false);
 
         return deploymentResult;
@@ -537,14 +537,14 @@ internal static partial class VercelDeploymentStep
             preparedDeployment.ProjectContext.OidcClaims,
             context.CancellationToken).ConfigureAwait(false);
 
-        string[] arguments = BuildDockerInspectDigestArguments(preparedDeployment.TaggedImageReference);
+        string[] arguments = VercelCliArguments.BuildDockerInspectDigestArguments(preparedDeployment.TaggedImageReference);
         var result = await runner.RunAsync(DockerCliFileName, arguments, workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"resolve pushed VCR image digest for resource '{preparedDeployment.Entry.Resource.Name}'", DockerCliFileName, result);
         }
 
-        string digest = GetDockerImageDigest(result.StandardOutput);
+        string digest = VercelDockerImageDigestParser.GetDigest(result.StandardOutput);
         string digestReference = preparedDeployment.TaggedImageReference[..preparedDeployment.TaggedImageReference.LastIndexOf(':')] + $"@{digest}";
         return new(digestReference, digest);
     }
