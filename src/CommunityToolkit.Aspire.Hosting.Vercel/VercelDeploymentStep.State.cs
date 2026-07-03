@@ -104,7 +104,7 @@ internal static partial class VercelDeploymentStep
             state = VercelDeploymentStateStore.RemoveManagedProject(state, projectName);
             // Save after each project removal so a later CLI failure leaves retryable state
             // for projects that still exist instead of forgetting partially cleaned resources.
-            stateSection.SetValue(JsonSerializer.Serialize(state, JsonOptions));
+            stateSection.SetValue(VercelDeploymentStateStore.Serialize(state));
             await stateManager.SaveSectionAsync(stateSection, context.CancellationToken).ConfigureAwait(false);
         }
 
@@ -234,7 +234,10 @@ internal static partial class VercelDeploymentStep
     {
         var outputService = context.Services.GetRequiredService<IPipelineOutputService>();
         string projectLinkDirectory = Path.Combine(outputService.GetTempDirectory(environment), ".vercel-projects", deployment.ProjectName);
-        VercelFileSystem.DeleteDirectoryIfExists(projectLinkDirectory);
+        if (Directory.Exists(projectLinkDirectory))
+        {
+            Directory.Delete(projectLinkDirectory, recursive: true);
+        }
         Directory.CreateDirectory(projectLinkDirectory);
 
         try
@@ -257,7 +260,10 @@ internal static partial class VercelDeploymentStep
         }
         finally
         {
-            VercelFileSystem.DeleteDirectoryIfExists(projectLinkDirectory);
+            if (Directory.Exists(projectLinkDirectory))
+            {
+                Directory.Delete(projectLinkDirectory, recursive: true);
+            }
         }
     }
 }

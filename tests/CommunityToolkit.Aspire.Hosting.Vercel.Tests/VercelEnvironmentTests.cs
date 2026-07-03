@@ -83,7 +83,7 @@ public class VercelEnvironmentTests
         Assert.True(api.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile));
         Assert.Equal(sourceRoot.Path, dockerfile.ContextPath);
         Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile"), dockerfile.DockerfilePath);
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
         Assert.Same(api, entry.Resource);
 
         var options = environment.GetVercelOptions();
@@ -228,7 +228,7 @@ public class VercelEnvironmentTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
         var api = Assert.Single(model.Resources.OfType<ContainerResource>());
-        Assert.NotNull(Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment)).Dockerfile!.DockerfileFactory);
+        Assert.NotNull(Assert.Single(VercelDeploymentModel.GetEntries(model, environment)).Dockerfile!.DockerfileFactory);
 
         var steps = await CreateConfiguredPipelineStepsAsync(builder, app);
         var buildStep = Assert.Single(steps, step => step.Name == "build-api");
@@ -279,7 +279,7 @@ public class VercelEnvironmentTests
         await deployStep.Action(context);
         await destroyStep.Action(context);
 
-        Assert.True(File.Exists(Path.Combine(outputRoot.Path, VercelDeploymentStep.DeploymentPlanFileName)));
+        Assert.True(File.Exists(Path.Combine(outputRoot.Path, VercelConstants.DeploymentPlanFileName)));
         Assert.Contains(runner.Invocations, static invocation => invocation.FileName == "docker" && invocation.Arguments.Contains("imagetools"));
         Assert.Contains(runner.Invocations, static invocation => invocation.FileName == "vercel" && invocation.Arguments.Contains("deploy"));
         Assert.Contains(runner.Invocations, static invocation => invocation.FileName == "vercel" && invocation.Arguments is ["project", "remove", ..]);
@@ -443,7 +443,7 @@ public class VercelEnvironmentTests
         Assert.True(api.TryGetLastAnnotation<DockerfileBuildAnnotation>(out var dockerfile));
         Assert.Equal(sourceRoot.Path, dockerfile.ContextPath);
         Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile"), dockerfile.DockerfilePath);
-        Assert.Same(api, Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment)).Resource);
+        Assert.Same(api, Assert.Single(VercelDeploymentModel.GetEntries(model, environment)).Resource);
     }
 
     [Fact]
@@ -463,7 +463,7 @@ public class VercelEnvironmentTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
 
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
         Assert.Same(projectResource, entry.Resource);
         Assert.Equal(sourceRoot.Path, entry.SourceRoot);
         Assert.Null(entry.Dockerfile);
@@ -485,7 +485,7 @@ public class VercelEnvironmentTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
 
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
         Assert.IsAssignableFrom<ContainerResource>(entry.Resource);
         Assert.Equal(sourceRoot.Path, entry.SourceRoot);
         Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile"), entry.DockerfilePath);
@@ -512,7 +512,7 @@ public class VercelEnvironmentTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
 
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
         Assert.IsAssignableFrom<ContainerResource>(entry.Resource);
         Assert.Equal(sourceRoot.Path, entry.SourceRoot);
         Assert.NotNull(entry.Dockerfile!.DockerfileFactory);
@@ -533,7 +533,7 @@ public class VercelEnvironmentTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
 
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
         Assert.Equal(sourceRoot.Path, entry.SourceRoot);
         Assert.Equal(Path.Combine(sourceRoot.Path, "Dockerfile.custom"), entry.DockerfilePath);
     }
@@ -561,8 +561,8 @@ public class VercelEnvironmentTests
         var vercelEnvironment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>(), resource => resource.Name == "vercel");
         var otherEnvironment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>(), resource => resource.Name == "other");
 
-        var vercelEntry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, vercelEnvironment));
-        var otherEntry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, otherEnvironment));
+        var vercelEntry = Assert.Single(VercelDeploymentModel.GetEntries(model, vercelEnvironment));
+        var otherEntry = Assert.Single(VercelDeploymentModel.GetEntries(model, otherEnvironment));
 
         Assert.Equal("api", vercelEntry.Resource.Name);
         Assert.Equal("worker", otherEntry.Resource.Name);
@@ -583,7 +583,7 @@ public class VercelEnvironmentTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environments = model.Resources.OfType<VercelEnvironmentResource>().ToArray();
 
-        Assert.All(environments, environment => Assert.Empty(VercelDeploymentStep.GetDeploymentEntries(model, environment)));
+        Assert.All(environments, environment => Assert.Empty(VercelDeploymentModel.GetEntries(model, environment)));
     }
 
     [Fact]
@@ -604,7 +604,7 @@ public class VercelEnvironmentTests
 
         string planPath = await VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken);
 
-        Assert.Equal(Path.Combine(outputRoot.Path, VercelDeploymentStep.DeploymentPlanFileName), planPath);
+        Assert.Equal(Path.Combine(outputRoot.Path, VercelConstants.DeploymentPlanFileName), planPath);
         using var document = JsonDocument.Parse(File.ReadAllText(planPath));
         var root = document.RootElement;
         Assert.Equal("vercel", root.GetProperty("environment").GetString());
@@ -641,7 +641,7 @@ public class VercelEnvironmentTests
 
         var summary = Assert.Single(context.Summary.Items);
         Assert.Equal("Vercel deployment plan", summary.Key);
-        Assert.Equal(Path.Combine(outputRoot.Path, VercelDeploymentStep.DeploymentPlanFileName), summary.Value);
+        Assert.Equal(Path.Combine(outputRoot.Path, VercelConstants.DeploymentPlanFileName), summary.Value);
     }
 
     [Fact]
@@ -1132,7 +1132,7 @@ public class VercelEnvironmentTests
         };
         var entry = CreateDeploymentEntry("/repo/src/api");
 
-        string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
+        string[] arguments = VercelCliArguments.BuildDeployArguments(options, entry);
 
         Assert.Equal(["deploy", "--scope", "team", "--cwd", "/repo/src/api", "--project", "api", "--prebuilt", "--yes", "--prod"], arguments);
     }
@@ -1140,7 +1140,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void BuildDockerInspectDigestArgumentsUsesBuildxImagetools()
     {
-        string[] arguments = VercelDeploymentStep.BuildDockerInspectDigestArguments("vcr.vercel.com/team/project/app:tag");
+        string[] arguments = VercelCliArguments.BuildDockerInspectDigestArguments("vcr.vercel.com/team/project/app:tag");
 
         Assert.Equal(["buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", "vcr.vercel.com/team/project/app:tag"], arguments);
     }
@@ -1148,7 +1148,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDockerImageDigestParsesJsonString()
     {
-        string digest = VercelDeploymentStep.GetDockerImageDigest($"\"{FakeVercelCliRunner.FakeImageDigest}\"");
+        string digest = VercelDockerImageDigestParser.GetDigest($"\"{FakeVercelCliRunner.FakeImageDigest}\"");
 
         Assert.Equal(FakeVercelCliRunner.FakeImageDigest, digest);
     }
@@ -1156,7 +1156,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDockerImageDigestSelectsLinuxAmd64ManifestDigest()
     {
-        string digest = VercelDeploymentStep.GetDockerImageDigest(FakeVercelCliRunner.FakeImageManifestJson);
+        string digest = VercelDockerImageDigestParser.GetDigest(FakeVercelCliRunner.FakeImageManifestJson);
 
         Assert.Equal(FakeVercelCliRunner.FakeImageDigest, digest);
     }
@@ -1180,7 +1180,7 @@ public class VercelEnvironmentTests
             """;
 
         var exception = Assert.Throws<DistributedApplicationException>(() =>
-            VercelDeploymentStep.GetDockerImageDigest(manifestJson));
+            VercelDockerImageDigestParser.GetDigest(manifestJson));
 
         Assert.Contains("linux/amd64 manifest digest", exception.Message);
     }
@@ -1197,7 +1197,7 @@ public class VercelEnvironmentTests
             }
             """);
 
-        var claims = VercelDeploymentStep.DecodeUnvalidatedOidcClaims(token);
+        var claims = VercelOidcToken.DecodeUnvalidatedClaims(token);
 
         Assert.Equal("team_123", claims.OwnerId);
         Assert.Equal("test-team", claims.Owner);
@@ -1209,7 +1209,7 @@ public class VercelEnvironmentTests
     public void DecodeUnvalidatedOidcClaimsRejectsNonCompactJwt()
     {
         var exception = Assert.Throws<DistributedApplicationException>(() =>
-            VercelDeploymentStep.DecodeUnvalidatedOidcClaims("not-a-jwt"));
+            VercelOidcToken.DecodeUnvalidatedClaims("not-a-jwt"));
 
         Assert.Contains("compact JWT", exception.Message);
     }
@@ -1217,7 +1217,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void ParseDotEnvFileParsesVercelPullOutputSubset()
     {
-        var values = VercelDeploymentStep.ParseDotEnvFile(
+        var values = VercelDotEnvParser.Parse(
         [
             "",
             "# comment",
@@ -1238,8 +1238,8 @@ public class VercelEnvironmentTests
     [Fact]
     public void ProjectListContainsProjectUsesExactJsonProjectName()
     {
-        Assert.True(VercelDeploymentStep.ProjectListContainsProject(ProjectListJson("api", "worker"), "api"));
-        Assert.False(VercelDeploymentStep.ProjectListContainsProject(ProjectListJson("api-preview"), "api"));
+        Assert.True(VercelCliOutputParser.ProjectListContainsProject(ProjectListJson("api", "worker"), "api"));
+        Assert.False(VercelCliOutputParser.ProjectListContainsProject(ProjectListJson("api-preview"), "api"));
     }
 
     [Fact]
@@ -1261,9 +1261,9 @@ public class VercelEnvironmentTests
             }
             """;
 
-        Assert.False(VercelDeploymentStep.EnvironmentVariableListContainsName(output, "API_KEY"));
-        Assert.True(VercelDeploymentStep.EnvironmentVariableListContainsName(output, "OLD_KEY"));
-        Assert.False(VercelDeploymentStep.EnvironmentVariableListContainsName(output, "KEY"));
+        Assert.False(VercelCliOutputParser.EnvironmentVariableListContainsName(output, "API_KEY"));
+        Assert.True(VercelCliOutputParser.EnvironmentVariableListContainsName(output, "OLD_KEY"));
+        Assert.False(VercelCliOutputParser.EnvironmentVariableListContainsName(output, "KEY"));
     }
 
     [Fact]
@@ -1274,10 +1274,10 @@ public class VercelEnvironmentTests
             Scope = "team"
         };
 
-        string[] linkArguments = VercelDeploymentStep.BuildLinkProjectArguments(options, "/tmp/vercel-link", "api-project");
-        string[] envArguments = VercelDeploymentStep.BuildAddProjectEnvironmentVariableArguments(options, "/tmp/vercel-link", "API_KEY", "production");
-        string[] removeEnvArguments = VercelDeploymentStep.BuildRemoveProjectEnvironmentVariableArguments(options, "/tmp/vercel-link", "API_KEY", "production");
-        string[] listEnvArguments = VercelDeploymentStep.BuildListProjectEnvironmentVariablesArguments(options, "/tmp/vercel-link", "production");
+        string[] linkArguments = VercelCliArguments.BuildLinkProjectArguments(options, "/tmp/vercel-link", "api-project");
+        string[] envArguments = VercelCliArguments.BuildAddProjectEnvironmentVariableArguments(options, "/tmp/vercel-link", "API_KEY", "production");
+        string[] removeEnvArguments = VercelCliArguments.BuildRemoveProjectEnvironmentVariableArguments(options, "/tmp/vercel-link", "API_KEY", "production");
+        string[] listEnvArguments = VercelCliArguments.BuildListProjectEnvironmentVariablesArguments(options, "/tmp/vercel-link", "production");
 
         Assert.Equal(["link", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes", "--project", "api-project"], linkArguments);
         Assert.Equal(["env", "add", "API_KEY", "production", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes", "--force", "--sensitive"], envArguments);
@@ -1295,7 +1295,7 @@ public class VercelEnvironmentTests
         };
         var entry = CreateDeploymentEntry("/repo/src/api");
 
-        string[] arguments = VercelDeploymentStep.BuildDeployArguments(options, entry);
+        string[] arguments = VercelCliArguments.BuildDeployArguments(options, entry);
 
         Assert.Equal(["deploy", "--cwd", "/repo/src/api", "--project", "api", "--prebuilt", "--yes", "--target", "preview"], arguments);
     }
@@ -1308,7 +1308,7 @@ public class VercelEnvironmentTests
             Scope = "team"
         };
 
-        string[] arguments = VercelDeploymentStep.BuildDestroyProjectArguments(options, "api");
+        string[] arguments = VercelCliArguments.BuildDestroyProjectArguments(options, "api");
 
         Assert.Equal(["project", "remove", "api", "--scope", "team"], arguments);
     }
@@ -1321,7 +1321,7 @@ public class VercelEnvironmentTests
             Scope = "team"
         };
 
-        string[] arguments = VercelDeploymentStep.BuildValidateScopeArguments(options);
+        string[] arguments = VercelCliArguments.BuildValidateScopeArguments(options);
 
         Assert.Equal(["project", "ls", "--scope", "team", "--format=json"], arguments);
     }
@@ -1334,7 +1334,7 @@ public class VercelEnvironmentTests
             Scope = "team"
         };
 
-        string[] arguments = VercelDeploymentStep.BuildListProjectsArguments(options, "api");
+        string[] arguments = VercelCliArguments.BuildListProjectsArguments(options, "api");
 
         Assert.Equal(["project", "ls", "--scope", "team", "--filter", "api", "--format=json"], arguments);
     }
@@ -1347,7 +1347,7 @@ public class VercelEnvironmentTests
             Scope = "team"
         };
 
-        string[] arguments = VercelDeploymentStep.BuildInspectDeploymentArguments(options, "https://api.vercel.app");
+        string[] arguments = VercelCliArguments.BuildInspectDeploymentArguments(options, "https://api.vercel.app");
 
         Assert.Equal(["inspect", "https://api.vercel.app", "--scope", "team", "--wait", "--timeout", "120s", "--format=json"], arguments);
     }
@@ -1367,9 +1367,9 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -1396,9 +1396,9 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -1424,10 +1424,10 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
+            VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
                 builder.ExecutionContext,
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
@@ -1453,9 +1453,9 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -1501,8 +1501,8 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
-        string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
+        string projectName = VercelProjectNameResolver.GetProjectName(entry);
         var context = CreatePipelineStepContext(builder, app);
 
         await VercelDeploymentStep.DeployAsync(context, environment);
@@ -1561,8 +1561,8 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
-        string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
+        string projectName = VercelProjectNameResolver.GetProjectName(entry);
         stateManager.SetSection("communitytoolkit.vercel.vercel", JsonSerializer.Serialize(new VercelDeploymentState(
             SchemaVersion: 1,
             Environment: "vercel",
@@ -1618,8 +1618,8 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
-        string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
+        string projectName = VercelProjectNameResolver.GetProjectName(entry);
         stateManager.SetSection("communitytoolkit.vercel.vercel", JsonSerializer.Serialize(new VercelDeploymentState(
             SchemaVersion: 1,
             Environment: "vercel",
@@ -1668,9 +1668,9 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -1695,10 +1695,10 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
+            VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
                 builder.ExecutionContext,
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
@@ -1735,10 +1735,10 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(model, environment).ToArray();
         var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -1775,10 +1775,10 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(model, environment).ToArray();
         var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -1816,10 +1816,10 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(model, environment).ToArray();
         var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -1856,11 +1856,11 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(model, environment).ToArray();
         var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
+            VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
                 builder.ExecutionContext,
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
@@ -1899,11 +1899,11 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>(), environment => environment.Name == "vercel");
-        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(model, environment).ToArray();
         var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
+            VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
                 builder.ExecutionContext,
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
@@ -1940,11 +1940,11 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(model, environment).ToArray();
         var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
+            VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
                 builder.ExecutionContext,
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
@@ -1981,11 +1981,11 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entries = VercelDeploymentStep.GetDeploymentEntries(model, environment).ToArray();
+        var entries = VercelDeploymentModel.GetEntries(model, environment).ToArray();
         var entry = Assert.Single(entries, entry => entry.Resource.Name == "api");
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
+            VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
                 builder.ExecutionContext,
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
@@ -2011,10 +2011,10 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
         var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            VercelDeploymentStep.BuildDeployArgumentsAsync(
+            VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
                 builder.ExecutionContext,
                 NullLogger.Instance,
                 environment.GetVercelOptions(),
@@ -2039,9 +2039,9 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
 
-        string[] arguments = await VercelDeploymentStep.BuildDeployArgumentsAsync(
+        string[] arguments = await VercelDeploymentPlanWriter.BuildDeployArgumentsAsync(
             builder.ExecutionContext,
             NullLogger.Instance,
             environment.GetVercelOptions(),
@@ -2126,7 +2126,7 @@ public class VercelEnvironmentTests
         var digestInvocation = Assert.Single(runner.Invocations, invocation => invocation.FileName == "docker" && invocation.Arguments.Contains("imagetools"));
         var invocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("deploy"));
         string expectedDeployDirectory = Path.Combine(tempRoot.Path, "api", "vercel-build-output");
-        Assert.Equal(VercelDeploymentStep.BuildDockerInspectDigestArguments(digestInvocation.Arguments[^1]), digestInvocation.Arguments);
+        Assert.Equal(VercelCliArguments.BuildDockerInspectDigestArguments(digestInvocation.Arguments[^1]), digestInvocation.Arguments);
         Assert.StartsWith("vcr.vercel.com/test-team/test-project/app:", digestInvocation.Arguments[^1], StringComparison.Ordinal);
         Assert.Equal("vercel", invocation.FileName);
         Assert.Equal(expectedDeployDirectory, invocation.WorkingDirectory);
@@ -3272,7 +3272,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDeploymentUrlReturnsPlainUrl()
     {
-        string url = VercelDeploymentStep.GetDeploymentUrl("""
+        string url = VercelCliOutputParser.GetDeploymentUrl("""
             Vercel CLI 54.18.6
             https://example.vercel.app
             """);
@@ -3283,7 +3283,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDeploymentUrlReturnsJsonDeploymentUrl()
     {
-        string url = VercelDeploymentStep.GetDeploymentUrl("""
+        string url = VercelCliOutputParser.GetDeploymentUrl("""
             {
               "status": "ok",
               "deployment": {
@@ -3300,7 +3300,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDeploymentResultReturnsRootJsonDeploymentUrl()
     {
-        var result = VercelDeploymentStep.GetDeploymentResult("""
+        var result = VercelCliOutputParser.GetDeploymentResult("""
             {
               "id": "dpl_root",
               "url": "https://root-json.vercel.app"
@@ -3314,7 +3314,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDeploymentResultFallsBackWhenJsonIsInvalid()
     {
-        var result = VercelDeploymentStep.GetDeploymentResult("""
+        var result = VercelCliOutputParser.GetDeploymentResult("""
             {
               "deployment":
             }
@@ -3329,7 +3329,7 @@ public class VercelEnvironmentTests
     public void GetDeploymentResultThrowsWhenOutputHasNoUrl()
     {
         var exception = Assert.Throws<DistributedApplicationException>(() =>
-            VercelDeploymentStep.GetDeploymentResult("""
+            VercelCliOutputParser.GetDeploymentResult("""
             {
               "deployment": {
                 "id": "dpl_no_url"
@@ -3343,7 +3343,7 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDeploymentResultReturnsJsonDeploymentId()
     {
-        var result = VercelDeploymentStep.GetDeploymentResult("""
+        var result = VercelCliOutputParser.GetDeploymentResult("""
             {
               "status": "ok",
               "deployment": {
@@ -3361,17 +3361,17 @@ public class VercelEnvironmentTests
     [Fact]
     public void GetDeploymentInspectionParsesObservedJsonShapes()
     {
-        Assert.Equal("READY", VercelDeploymentStep.GetDeploymentInspection("""{ "readyState": "READY" }""").ReadyState);
-        Assert.Equal("READY", VercelDeploymentStep.GetDeploymentInspection("""{ "state": "READY" }""").ReadyState);
-        Assert.Equal("READY", VercelDeploymentStep.GetDeploymentInspection("""{ "deployment": { "readyState": "READY" } }""").ReadyState);
-        Assert.Equal("READY", VercelDeploymentStep.GetDeploymentInspection("""{ "deployment": { "state": "READY" } }""").ReadyState);
+        Assert.Equal("READY", VercelCliOutputParser.GetDeploymentInspection("""{ "readyState": "READY" }""").ReadyState);
+        Assert.Equal("READY", VercelCliOutputParser.GetDeploymentInspection("""{ "state": "READY" }""").ReadyState);
+        Assert.Equal("READY", VercelCliOutputParser.GetDeploymentInspection("""{ "deployment": { "readyState": "READY" } }""").ReadyState);
+        Assert.Equal("READY", VercelCliOutputParser.GetDeploymentInspection("""{ "deployment": { "state": "READY" } }""").ReadyState);
     }
 
     [Fact]
     public void GetDeploymentInspectionThrowsForInvalidJson()
     {
         var exception = Assert.Throws<DistributedApplicationException>(() =>
-            VercelDeploymentStep.GetDeploymentInspection("""{ "deployment": """));
+            VercelCliOutputParser.GetDeploymentInspection("""{ "deployment": """));
 
         Assert.Contains("vercel inspect", exception.Message);
     }
@@ -3386,7 +3386,7 @@ public class VercelEnvironmentTests
         var entry = CreateDeploymentEntry(sourceRoot.Path);
         entry.Resource.Annotations.Add(new VercelProjectOptionsAnnotation("configured-project"));
 
-        string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
+        string projectName = VercelProjectNameResolver.GetProjectName(entry);
 
         Assert.Equal("linked-project", projectName);
     }
@@ -3397,7 +3397,7 @@ public class VercelEnvironmentTests
         using var sourceRoot = TemporaryDirectory.Create("fallback-project");
         var entry = CreateDeploymentEntry(sourceRoot.Path);
 
-        string projectName = VercelDeploymentStep.GetVercelProjectName(entry);
+        string projectName = VercelProjectNameResolver.GetProjectName(entry);
 
         Assert.Equal("fallback-project", projectName);
     }
@@ -3633,8 +3633,8 @@ public class VercelEnvironmentTests
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
         var context = CreatePipelineStepContext(builder, app);
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment));
-        var entriesByResourceName = VercelDeploymentStep.GetDeploymentEntries(model, environment)
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment));
+        var entriesByResourceName = VercelDeploymentModel.GetEntries(model, environment)
             .ToDictionary(static deployment => deployment.Resource.Name, StringComparer.Ordinal);
 
         var projectContext = await VercelDeploymentStep.PreparePulledProjectContextAsync(
@@ -3645,7 +3645,7 @@ public class VercelEnvironmentTests
             entriesByResourceName);
 
         string expectedProjectLinkDirectory = Path.Combine(tempRoot.Path, "api", ".vercel-project");
-        string expectedProjectName = VercelDeploymentStep.GetVercelProjectName(entry);
+        string expectedProjectName = VercelProjectNameResolver.GetProjectName(entry);
         Assert.False(Directory.Exists(expectedProjectLinkDirectory));
         Assert.Equal(expectedProjectName, projectContext.PulledProject.ProjectName);
         Assert.Equal("prj_test", projectContext.PulledProject.ProjectId);
@@ -3677,7 +3677,7 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
         var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
-        var entry = Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment)) with
+        var entry = Assert.Single(VercelDeploymentModel.GetEntries(model, environment)) with
         {
             DeployDirectory = deployRoot.Path
         };
@@ -3694,7 +3694,7 @@ public class VercelEnvironmentTests
             """,
             OidcToken: "unused");
 
-        await VercelDeploymentStep.WriteBuildOutputAsync(
+        await VercelBuildOutputWriter.WriteAsync(
             entry,
             project,
             $"vcr.vercel.com/test-team/test-project/app@{FakeVercelCliRunner.FakeImageDigest}",
@@ -4017,7 +4017,7 @@ public class VercelEnvironmentTests
             }
 
             return next.Succeeded
-                && !VercelDeploymentStep.TryGetVercelCliVersion(output, out _)
+                && !VercelCliOutputParser.TryGetCliVersion(output, out _)
                 && !output.TrimStart().StartsWith("vercel ", StringComparison.OrdinalIgnoreCase);
         }
 

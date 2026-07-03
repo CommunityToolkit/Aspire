@@ -13,9 +13,6 @@ namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
 internal static class VercelDeploymentStateStore
 {
-    private const string StateSectionNamePrefix = "communitytoolkit.vercel.";
-    private const int DeploymentStateSchemaVersion = 1;
-
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
@@ -73,7 +70,7 @@ internal static class VercelDeploymentStateStore
             ? Create(environment, options, [deployment])
             : Merge(environment, options, existingState, deployment);
 
-        stateSection.SetValue(JsonSerializer.Serialize(state, JsonOptions));
+        stateSection.SetValue(Serialize(state));
 
         await stateManager.SaveSectionAsync(stateSection, context.CancellationToken).ConfigureAwait(false);
     }
@@ -107,7 +104,7 @@ internal static class VercelDeploymentStateStore
         VercelEnvironmentOptionsAnnotation options,
         VercelDeploymentState state)
     {
-        if (state.SchemaVersion != DeploymentStateSchemaVersion)
+        if (state.SchemaVersion != VercelConstants.DeploymentStateSchemaVersion)
         {
             throw new DistributedApplicationException($"Vercel deployment state for environment '{environment.Name}' uses unsupported schema version '{state.SchemaVersion}'. Redeploy the environment before destroying it.");
         }
@@ -134,7 +131,7 @@ internal static class VercelDeploymentStateStore
                 .ToArray()
         };
 
-    public static string GetSectionName(VercelEnvironmentResource environment) => $"{StateSectionNamePrefix}{environment.Name}";
+    public static string GetSectionName(VercelEnvironmentResource environment) => $"{VercelConstants.StateSectionNamePrefix}{environment.Name}";
 
     public static string? GetProductionUrl(VercelEnvironmentOptionsAnnotation options, string projectName)
         => options.Production ? $"https://{projectName}.vercel.app" : null;
@@ -144,7 +141,7 @@ internal static class VercelDeploymentStateStore
         VercelEnvironmentOptionsAnnotation options,
         VercelDeploymentStateEntry[] deployments)
         => new(
-            DeploymentStateSchemaVersion,
+            VercelConstants.DeploymentStateSchemaVersion,
             environment.Name,
             NormalizeScope(options.Scope),
             NormalizeTarget(options.Target),
@@ -176,6 +173,9 @@ internal static class VercelDeploymentStateStore
             ? JsonSerializer.Deserialize<VercelDeploymentState>(value.GetValue<string>(), JsonOptions)
             : value.Deserialize<VercelDeploymentState>(JsonOptions);
     }
+
+    public static string Serialize(VercelDeploymentState state)
+        => JsonSerializer.Serialize(state, JsonOptions);
 
     private static string? NormalizeScope(string? scope)
         => string.IsNullOrWhiteSpace(scope) ? null : scope;

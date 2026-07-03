@@ -18,8 +18,6 @@ namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
 internal static class VercelDeploymentModel
 {
-    private const string VercelJsonFileName = "vercel.json";
-
     private static readonly string[] VercelJsonBuildOutputUnsupportedKeys =
     [
         "build",
@@ -136,7 +134,7 @@ internal static class VercelDeploymentModel
         string sourceRoot,
         CancellationToken cancellationToken)
     {
-        string vercelJsonPath = Path.Combine(sourceRoot, VercelJsonFileName);
+        string vercelJsonPath = Path.Combine(sourceRoot, VercelConstants.JsonFileName);
         if (!File.Exists(vercelJsonPath))
         {
             return;
@@ -146,18 +144,18 @@ internal static class VercelDeploymentModel
         try
         {
             root = JsonNode.Parse(await File.ReadAllTextAsync(vercelJsonPath, cancellationToken).ConfigureAwait(false)) as JsonObject
-                ?? throw new DistributedApplicationException($"Resource '{resource.Name}' source root contains '{VercelJsonFileName}', but it is not a JSON object.");
+                ?? throw new DistributedApplicationException($"Resource '{resource.Name}' source root contains '{VercelConstants.JsonFileName}', but it is not a JSON object.");
         }
         catch (JsonException ex)
         {
-            throw new DistributedApplicationException($"Resource '{resource.Name}' source root contains invalid '{VercelJsonFileName}'.", ex);
+            throw new DistributedApplicationException($"Resource '{resource.Name}' source root contains invalid '{VercelConstants.JsonFileName}'.", ex);
         }
 
         var unsupportedKey = VercelJsonBuildOutputUnsupportedKeys.FirstOrDefault(root.ContainsKey);
         if (unsupportedKey is not null)
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' source root contains '{VercelJsonFileName}' with top-level '{unsupportedKey}', but the Aspire Vercel integration owns the generated Build Output API container function and catch-all routing configuration. Move that setting into the Dockerfile, AppHost environment variables, or Vercel project settings before deploying with the Aspire Vercel integration.");
+                $"Resource '{resource.Name}' source root contains '{VercelConstants.JsonFileName}' with top-level '{unsupportedKey}', but the Aspire Vercel integration owns the generated Build Output API container function and catch-all routing configuration. Move that setting into the Dockerfile, AppHost environment variables, or Vercel project settings before deploying with the Aspire Vercel integration.");
         }
     }
 

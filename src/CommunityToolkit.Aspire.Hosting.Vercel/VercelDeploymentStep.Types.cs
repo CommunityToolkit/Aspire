@@ -13,7 +13,10 @@ internal sealed record VercelDeploymentEntry(
     string? DockerfilePath = null,
     DockerfileBuildAnnotation? Dockerfile = null,
     string TempDirectory = "",
-    string DeployDirectory = "");
+    string DeployDirectory = "")
+{
+    public string EffectiveDeployDirectory => string.IsNullOrWhiteSpace(DeployDirectory) ? SourceRoot : DeployDirectory;
+}
 
 internal sealed record VercelDeploymentPlan(string Environment, VercelDeploymentPlanEntry[] Deployments);
 

@@ -55,7 +55,7 @@ internal static class VercelDeploymentPlanWriter
                 entries,
                 cancellationToken).ConfigureAwait(false));
 
-        string planPath = Path.Combine(outputDirectory, VercelDeploymentStep.DeploymentPlanFileName);
+        string planPath = Path.Combine(outputDirectory, VercelConstants.DeploymentPlanFileName);
         await using FileStream stream = File.Create(planPath);
         await JsonSerializer.SerializeAsync(stream, plan, JsonOptions, cancellationToken).ConfigureAwait(false);
 
@@ -97,7 +97,7 @@ internal static class VercelDeploymentPlanWriter
             resolveProjectEnvironmentVariableValues: false,
             cancellationToken).ConfigureAwait(false);
 
-        return VercelCliArguments.BuildDeployArguments(options, VercelDeploymentPaths.GetDeployDirectory(entry), VercelProjectNameResolver.GetProjectOption(entry), environmentConfiguration.DeploymentEnvironmentVariables);
+        return VercelCliArguments.BuildDeployArguments(options, entry.EffectiveDeployDirectory, VercelProjectNameResolver.GetProjectOption(entry), environmentConfiguration.DeploymentEnvironmentVariables);
     }
 
     public static async Task<VercelEnvironmentConfiguration> GetEnvironmentConfigurationAsync(

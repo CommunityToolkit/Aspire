@@ -17,7 +17,10 @@ internal static partial class VercelDeploymentStep
     {
         var outputService = context.Services.GetRequiredService<IPipelineOutputService>();
         string projectLinkDirectory = Path.Combine(outputService.GetTempDirectory(entry.Resource), ".vercel-project");
-        VercelFileSystem.DeleteDirectoryIfExists(projectLinkDirectory);
+        if (Directory.Exists(projectLinkDirectory))
+        {
+            Directory.Delete(projectLinkDirectory, recursive: true);
+        }
         Directory.CreateDirectory(projectLinkDirectory);
 
         // `vercel env add` is project-scoped but intentionally does not accept --project.
@@ -52,8 +55,8 @@ internal static partial class VercelDeploymentStep
             throw CreateCliException($"pull Vercel project settings for resource '{entry.Resource.Name}'", VercelCliFileName, result);
         }
 
-        string vercelDirectory = Path.Combine(projectLinkDirectory, VercelDirectoryName);
-        string projectJsonPath = Path.Combine(vercelDirectory, VercelProjectFileName);
+        string vercelDirectory = Path.Combine(projectLinkDirectory, VercelConstants.DirectoryName);
+        string projectJsonPath = Path.Combine(vercelDirectory, VercelConstants.ProjectFileName);
         string environmentPath = Path.Combine(vercelDirectory, $".env.{targetEnvironment}.local");
 
         if (!File.Exists(projectJsonPath))
@@ -67,10 +70,10 @@ internal static partial class VercelDeploymentStep
         }
 
         var environmentVariables = VercelDotEnvParser.Parse(await File.ReadAllLinesAsync(environmentPath, context.CancellationToken).ConfigureAwait(false));
-        if (!environmentVariables.TryGetValue(VercelOidcTokenEnvironmentVariable, out string? oidcToken)
+        if (!environmentVariables.TryGetValue(VercelConstants.OidcTokenEnvironmentVariable, out string? oidcToken)
             || string.IsNullOrWhiteSpace(oidcToken))
         {
-            throw new DistributedApplicationException($"Vercel pull did not provide {VercelOidcTokenEnvironmentVariable}, which is required to authenticate local Docker builds to VCR.");
+            throw new DistributedApplicationException($"Vercel pull did not provide {VercelConstants.OidcTokenEnvironmentVariable}, which is required to authenticate local Docker builds to VCR.");
         }
 
         string projectJsonContent = await File.ReadAllTextAsync(projectJsonPath, context.CancellationToken).ConfigureAwait(false);
@@ -79,8 +82,16 @@ internal static partial class VercelDeploymentStep
         // `vercel pull` materializes project secrets next to the scratch link so local
         // builders can read them. This integration only needs the short-lived OIDC token
         // and project metadata; delete the env files before creating deploy artifacts.
-        VercelFileSystem.DeleteFileIfExists(environmentPath);
-        VercelFileSystem.DeleteFileIfExists(Path.Combine(projectLinkDirectory, ".env.local"));
+        if (File.Exists(environmentPath))
+        {
+            File.Delete(environmentPath);
+        }
+
+        string localEnvironmentPath = Path.Combine(projectLinkDirectory, ".env.local");
+        if (File.Exists(localEnvironmentPath))
+        {
+            File.Delete(localEnvironmentPath);
+        }
 
         return new(project.ProjectName, project.ProjectId, project.OrgId, projectJsonContent, oidcToken);
     }

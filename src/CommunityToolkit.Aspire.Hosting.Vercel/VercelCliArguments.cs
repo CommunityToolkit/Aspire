@@ -2,11 +2,8 @@ namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
 internal static class VercelCliArguments
 {
-    private const string VcrRegistry = "vcr.vercel.com";
-    private const string VercelContainerServiceName = "app";
-
     public static string[] BuildDeployArguments(VercelEnvironmentOptionsAnnotation options, VercelDeploymentEntry entry)
-        => BuildDeployArguments(options, VercelDeploymentPaths.GetDeployDirectory(entry), VercelProjectNameResolver.GetProjectOption(entry), environmentVariables: []);
+        => BuildDeployArguments(options, entry.EffectiveDeployDirectory, VercelProjectNameResolver.GetProjectOption(entry), environmentVariables: []);
 
     public static string[] BuildDockerInspectDigestArguments(string imageReference)
         => ["buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", imageReference];
@@ -135,7 +132,7 @@ internal static class VercelCliArguments
     }
 
     public static string[] BuildDockerLoginArguments(string username)
-        => ["login", VcrRegistry, "--username", username, "--password-stdin"];
+        => ["login", VercelConstants.VcrRegistry, "--username", username, "--password-stdin"];
 
     public static string[] BuildInspectDeploymentArguments(VercelEnvironmentOptionsAnnotation options, string deploymentUrl)
     {
@@ -220,7 +217,7 @@ internal static class VercelCliArguments
             .Select(static environmentVariable => new KeyValuePair<string, string>(environmentVariable.Key, "<value>"))
             .ToArray();
 
-        string displayImage = $"vcr.vercel.com/<owner>/<project>/{VercelContainerServiceName}:<tag>";
+        string displayImage = $"{VercelConstants.VcrRegistry}/<owner>/<project>/{VercelConstants.ContainerServiceName}:<tag>";
         string displayDeployDirectory = $"<{resourceName}-build-output>";
         string displayProject = $"<{resourceName}-vercel-project>";
         return $"vercel pull --cwd <{resourceName}-vercel-project-link> --yes --environment {VercelProjectEnvironment.GetName(options)} && aspire build/push {resourceName} -> {displayImage} && docker {string.Join(" ", BuildDockerInspectDigestArguments(displayImage))} && vercel {string.Join(" ", BuildDeployArguments(options, displayDeployDirectory, displayProject, displayEnvironmentVariables))}";

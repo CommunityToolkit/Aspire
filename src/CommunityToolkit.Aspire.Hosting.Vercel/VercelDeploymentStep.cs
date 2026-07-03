@@ -17,8 +17,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
@@ -45,22 +43,12 @@ internal static partial class VercelDeploymentStep
     public const string DeployStepNamePrefix = "vercel-deploy-prebuilt-";
     public const string DestroyPrereqStepNamePrefix = "vercel-prepare-destroy-";
     public const string DestroyStepNamePrefix = "vercel-destroy-";
-    public const string DeploymentPlanFileName = "vercel-deployments.json";
 
-    private const string StateSectionNamePrefix = "communitytoolkit.vercel.";
-    private const int DeploymentStateSchemaVersion = 1;
-    private const int VercelProjectNameMaxLength = 100;
-    private const string VercelCliFileName = "vercel";
-    internal const string DockerCliFileName = "docker";
-    private const string VcrRegistry = "vcr.vercel.com";
-    private const string VercelJsonFileName = "vercel.json";
-    private const string VercelProjectFileName = "project.json";
-    private const string VercelDirectoryName = ".vercel";
-    private const string VercelOutputDirectoryName = "output";
-    private const string VercelOidcTokenEnvironmentVariable = "VERCEL_OIDC_TOKEN";
-    private const string VercelContainerServiceName = "app";
+    private const string VercelCliFileName = VercelConstants.CliFileName;
+    internal const string DockerCliFileName = VercelConstants.DockerCliFileName;
+    private const string VcrRegistry = VercelConstants.VcrRegistry;
+    private const string VercelContainerServiceName = VercelConstants.ContainerServiceName;
     private const string PushPrereqStepName = "push-prereq";
-    private const int VercelBuildOutputApiVersion = 3;
     private static readonly Version MinimumVercelCliVersion = new(54, 18, 6);
     // These keys either bypass the generated Build Output API contract or configure
     // routing/build/runtime/env behavior that Aspire must own so endpoint refs and
@@ -85,13 +73,6 @@ internal static partial class VercelDeploymentStep
         "routes",
         "services"
     ];
-
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        WriteIndented = true
-    };
-
-
     public static async Task ValidatePrerequisitesAsync(PipelineStepContext context, VercelEnvironmentResource environment)
     {
         // This is the deploy prerequisite step, not merely static validation. It intentionally
@@ -413,7 +394,10 @@ internal static partial class VercelDeploymentStep
             // `vercel pull` can write provider-owned env/config files into the linked
             // directory. They may contain project secrets unrelated to the AppHost, so the
             // scratch link is never copied, logged, stored in state, or left on disk.
-            VercelFileSystem.DeleteDirectoryIfExists(projectLinkDirectory);
+            if (Directory.Exists(projectLinkDirectory))
+            {
+                Directory.Delete(projectLinkDirectory, recursive: true);
+            }
         }
     }
 
@@ -570,7 +554,7 @@ internal static partial class VercelDeploymentStep
         {
             ProductionUrl = productionUrl,
             VcrImageDigest = image.Digest,
-            BuildOutputApiVersion = VercelBuildOutputApiVersion,
+            BuildOutputApiVersion = VercelConstants.BuildOutputApiVersion,
             ProjectEnvironmentVariables = [.. projectContext.EnvironmentConfiguration.ProjectEnvironmentVariables
                 .Select(static variable => variable.Key)
                 .Order(StringComparer.Ordinal)]

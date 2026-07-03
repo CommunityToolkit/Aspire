@@ -5,11 +5,6 @@ namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
 internal static class VercelBuildOutputWriter
 {
-    private const int VercelBuildOutputApiVersion = 3;
-    private const string VercelDirectoryName = ".vercel";
-    private const string VercelOutputDirectoryName = "output";
-    private const string VercelProjectFileName = "project.json";
-
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true
@@ -30,16 +25,16 @@ internal static class VercelBuildOutputWriter
         //       { "runtime": "container", "handler": "<vcr image>@sha256:..." }
         // There is intentionally no user source copy here; Aspire's build/push pipeline has
         // already built the image, and Vercel deploy uploads only metadata that points at it.
-        string vercelDirectory = Path.Combine(entry.DeployDirectory, VercelDirectoryName);
-        string outputDirectory = Path.Combine(vercelDirectory, VercelOutputDirectoryName);
+        string vercelDirectory = Path.Combine(entry.EffectiveDeployDirectory, VercelConstants.DirectoryName);
+        string outputDirectory = Path.Combine(vercelDirectory, VercelConstants.OutputDirectoryName);
         string functionDirectory = Path.Combine(outputDirectory, "functions", "index.func");
         Directory.CreateDirectory(functionDirectory);
 
-        await File.WriteAllTextAsync(Path.Combine(vercelDirectory, VercelProjectFileName), project.ProjectJsonContent, cancellationToken).ConfigureAwait(false);
+        await File.WriteAllTextAsync(Path.Combine(vercelDirectory, VercelConstants.ProjectFileName), project.ProjectJsonContent, cancellationToken).ConfigureAwait(false);
 
         var outputConfig = new JsonObject
         {
-            ["version"] = VercelBuildOutputApiVersion,
+            ["version"] = VercelConstants.BuildOutputApiVersion,
             ["routes"] = new JsonArray
             {
                 new JsonObject

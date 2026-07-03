@@ -12,8 +12,6 @@ namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
 internal static class VercelProjectNameResolver
 {
-    private const int VercelProjectNameMaxLength = 100;
-
     public static string GetProjectName(VercelDeploymentEntry entry)
         => GetProjectLink(entry).ProjectName;
 
@@ -59,7 +57,7 @@ internal static class VercelProjectNameResolver
     public static bool IsValidProjectName(string projectName)
     {
         if (string.IsNullOrWhiteSpace(projectName)
-            || projectName.Length > VercelProjectNameMaxLength
+            || projectName.Length > VercelConstants.ProjectNameMaxLength
             || !IsLowercaseAsciiLetterOrDigit(projectName[0])
             || !IsLowercaseAsciiLetterOrDigit(projectName[^1]))
         {
@@ -121,9 +119,9 @@ internal static class VercelProjectNameResolver
             .ToString()
             .Trim('-');
 
-        if (projectName.Length > VercelProjectNameMaxLength)
+        if (projectName.Length > VercelConstants.ProjectNameMaxLength)
         {
-            projectName = projectName[..VercelProjectNameMaxLength].Trim('-');
+            projectName = projectName[..VercelConstants.ProjectNameMaxLength].Trim('-');
         }
 
         if (projectName.Length == 0)
@@ -160,7 +158,7 @@ internal static class VercelProjectNameResolver
     }
 
     private static string GetProjectJsonPath(string sourceRoot)
-        => Path.Combine(sourceRoot, ".vercel", "project.json");
+        => Path.Combine(sourceRoot, VercelConstants.DirectoryName, VercelConstants.ProjectFileName);
 
     private static bool IsAsciiLetterOrDigit(char character)
         => character is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9';
