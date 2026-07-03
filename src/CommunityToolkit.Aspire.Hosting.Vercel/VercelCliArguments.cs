@@ -1,5 +1,9 @@
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Builds Vercel and Docker command argument arrays in one place so deploy logic can stay
+/// provider-oriented while tests assert exact CLI boundaries without shell quoting concerns.
+/// </summary>
 internal static class VercelCliArguments
 {
     public static string[] BuildDeployArguments(VercelEnvironmentOptionsAnnotation options, VercelDeploymentEntry entry)

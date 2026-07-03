@@ -1,5 +1,9 @@
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Centralizes Vercel protocol names and generated-file constants so Build Output, VCR, state,
+/// and CLI components stay aligned as provider contracts evolve.
+/// </summary>
 internal static class VercelConstants
 {
     internal const string DeploymentPlanFileName = "vercel-deployments.json";

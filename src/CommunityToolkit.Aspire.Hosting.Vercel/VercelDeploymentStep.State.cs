@@ -10,6 +10,10 @@ using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Vercel deployment-step helpers for state-driven destroy. Cleanup uses persisted ownership
+/// instead of the current model so removed resources can still be deleted safely.
+/// </summary>
 internal static partial class VercelDeploymentStep
 {
     public static async Task DestroyAsync(PipelineStepContext context, VercelEnvironmentResource environment)

@@ -3,6 +3,10 @@ using System.Text.Json.Nodes;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Writes the minimal Vercel Build Output API directory that points Vercel at an Aspire-built
+/// container image instead of asking Vercel to build source code.
+/// </summary>
 internal static class VercelBuildOutputWriter
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)

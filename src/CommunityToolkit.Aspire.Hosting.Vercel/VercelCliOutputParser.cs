@@ -7,6 +7,10 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Parses the structured and legacy text shapes emitted by Vercel CLI commands so the rest of
+/// the deploy pipeline deals in typed results instead of CLI-specific output formats.
+/// </summary>
 internal static class VercelCliOutputParser
 {
     public static string GetDeploymentUrl(string standardOutput)

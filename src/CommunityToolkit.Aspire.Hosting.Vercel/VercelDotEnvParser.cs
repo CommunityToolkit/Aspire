@@ -1,5 +1,9 @@
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Parses the limited dotenv syntax emitted by <c>vercel pull</c> so deploy can read the
+/// short-lived OIDC token without taking a dependency on user-authored dotenv semantics.
+/// </summary>
 internal static class VercelDotEnvParser
 {
     public static Dictionary<string, string> Parse(IEnumerable<string> lines)

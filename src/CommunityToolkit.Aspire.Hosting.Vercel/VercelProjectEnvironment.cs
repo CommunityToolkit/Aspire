@@ -1,5 +1,9 @@
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Translates Aspire's Vercel deployment options into the environment names expected by Vercel
+/// project environment-variable commands and persisted state cleanup.
+/// </summary>
 internal static class VercelProjectEnvironment
 {
     public static string GetName(VercelEnvironmentOptionsAnnotation options)

@@ -11,6 +11,10 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Vercel deployment-step helpers that bridge Aspire pipeline callbacks to the testable
+/// publish-plan writer.
+/// </summary>
 internal static partial class VercelDeploymentStep
 {
     public static async Task WriteDeploymentPlanAsync(PipelineStepContext context, VercelEnvironmentResource environment)

@@ -7,6 +7,10 @@ using Aspire.Hosting.Pipelines;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Keeps internal Vercel annotation access and pipeline-finalizer wiring out of the public
+/// AppHost API while sharing those helpers across resource extension methods and pipeline code.
+/// </summary>
 internal static class VercelResourceExtensions
 {
     [AspireExportIgnore(Reason = "Internal Vercel annotation access is not part of the generated AppHost API.")]

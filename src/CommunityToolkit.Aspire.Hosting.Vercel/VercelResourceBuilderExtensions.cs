@@ -5,7 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for configuring Aspire workloads deployed to Vercel Dockerfile hosting.
+/// Provides public per-workload AppHost options for Vercel deployments, such as overriding the
+/// Aspire-managed project name for repeatable provider resources.
 /// </summary>
 [Experimental("CTASPIREVERCEL001")]
 public static class VercelResourceBuilderExtensions

@@ -8,7 +8,9 @@ using System.Net.Sockets;
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// Represents a Vercel deployment target for Aspire workloads that publish as Dockerfile builds.
+/// Represents the Aspire compute environment for Vercel Dockerfile deployments. The resource
+/// exists to attach publish/deploy pipeline steps and to model Vercel production aliases for
+/// endpoint references.
 /// </summary>
 /// <param name="name">The Aspire resource name for the Vercel environment.</param>
 [Experimental("CTASPIREVERCEL001")]

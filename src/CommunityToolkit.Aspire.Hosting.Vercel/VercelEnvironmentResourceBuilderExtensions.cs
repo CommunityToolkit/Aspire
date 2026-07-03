@@ -9,7 +9,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace Aspire.Hosting;
 
 /// <summary>
-/// Provides extension methods for deploying Aspire workloads to Vercel Dockerfile hosting.
+/// Provides the public AppHost entry points for adding a Vercel compute environment and choosing
+/// how it maps to Vercel scopes, production deployments, and custom targets.
 /// </summary>
 [Experimental("CTASPIREVERCEL001")]
 public static class VercelEnvironmentResourceBuilderExtensions

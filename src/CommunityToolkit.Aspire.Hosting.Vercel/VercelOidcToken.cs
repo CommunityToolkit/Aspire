@@ -4,6 +4,10 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Decodes provider-issued OIDC token claims from <c>vercel pull</c> so the integration can
+/// route VCR login and repository creation without treating the token as an authentication result.
+/// </summary>
 internal static class VercelOidcToken
 {
     public static VercelOidcClaims DecodeUnvalidatedClaims(string token)

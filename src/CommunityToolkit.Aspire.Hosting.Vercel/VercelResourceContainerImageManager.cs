@@ -6,6 +6,10 @@ using Aspire.Hosting.Publishing;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Decorates Aspire's container image manager to add the VCR login behavior needed before
+/// pushing Vercel-targeted resources, while leaving unrelated resource pushes untouched.
+/// </summary>
 internal sealed class VercelResourceContainerImageManager(
     IResourceContainerImageManager inner,
     IVercelCliRunner runner) : IResourceContainerImageManager

@@ -7,6 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Vercel deployment-step helpers for preparing linked project directories, pulling provider
+/// metadata, and writing Build Output API files before invoking <c>vercel deploy --prebuilt</c>.
+/// </summary>
 internal static partial class VercelDeploymentStep
 {
     private static async Task<string> PrepareProjectEnvironmentDirectoryAsync(

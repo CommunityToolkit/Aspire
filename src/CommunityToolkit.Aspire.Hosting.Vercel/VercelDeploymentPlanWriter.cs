@@ -9,6 +9,10 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Produces the publish-time Vercel deployment plan: a deterministic, reviewable artifact that
+/// shows commands and environment variable names without resolving secrets or mutating Vercel.
+/// </summary>
 internal static class VercelDeploymentPlanWriter
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)

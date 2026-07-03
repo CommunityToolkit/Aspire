@@ -8,6 +8,10 @@ using System.Globalization;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Converts Aspire execution environment values into Vercel deploy-time and project-scoped
+/// environment variables, preserving secret handling and rejecting unsupported references early.
+/// </summary>
 internal static class VercelEnvironmentMapper
 {
     public static async Task<VercelEnvironmentConfiguration> GetConfigurationAsync(

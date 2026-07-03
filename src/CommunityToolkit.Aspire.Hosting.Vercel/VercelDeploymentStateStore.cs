@@ -11,6 +11,10 @@ using System.Text.Json.Nodes;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Owns the Aspire deployment-state section for Vercel so deploy and destroy know which Vercel
+/// projects and environment variables this integration created, even if the AppHost changes later.
+/// </summary>
 internal static class VercelDeploymentStateStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)

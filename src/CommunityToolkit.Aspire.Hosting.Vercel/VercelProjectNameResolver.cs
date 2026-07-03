@@ -11,6 +11,10 @@ using System.Text.Json.Serialization;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Resolves the Vercel project identity for a workload, preferring existing linked project
+/// metadata and otherwise creating stable Aspire-managed names for repeatable deploy/destroy.
+/// </summary>
 internal static class VercelProjectNameResolver
 {
     public static string GetProjectName(VercelDeploymentEntry entry)

@@ -8,6 +8,10 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Vercel deployment-step helpers for CLI prerequisite validation, deployment verification,
+/// and shared error shaping around external tool failures.
+/// </summary>
 internal static partial class VercelDeploymentStep
 {
     public static async Task ValidateCliPrerequisitesAsync(PipelineStepContext context, VercelEnvironmentResource environment)

@@ -16,6 +16,10 @@ using System.Text.Json.Nodes;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Projects Aspire compute resources into the subset of the app model that Vercel Dockerfile
+/// hosting can represent, and rejects unsupported constructs before provider mutation starts.
+/// </summary>
 internal static class VercelDeploymentModel
 {
     private static readonly string[] VercelJsonBuildOutputUnsupportedKeys =

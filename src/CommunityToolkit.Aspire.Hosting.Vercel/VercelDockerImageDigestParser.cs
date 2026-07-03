@@ -6,6 +6,10 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Extracts the Vercel-compatible image manifest digest from Docker inspect output so Build
+/// Output API deployments reference immutable VCR images instead of mutable tags or OCI indexes.
+/// </summary>
 internal static class VercelDockerImageDigestParser
 {
     public static string GetDigest(string output)

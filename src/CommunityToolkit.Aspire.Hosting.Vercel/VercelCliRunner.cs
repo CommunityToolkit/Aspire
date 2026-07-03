@@ -5,11 +5,19 @@ using System.Text;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Runs external command-line tools for the Vercel integration. Keeping this behind an interface
+/// lets tests validate deploy behavior without invoking the real Vercel or Docker CLIs.
+/// </summary>
 internal interface IVercelCliRunner
 {
     Task<VercelCliResult> RunAsync(string fileName, IReadOnlyList<string> arguments, string? workingDirectory, CancellationToken cancellationToken, string? standardInput = null);
 }
 
+/// <summary>
+/// Process-based implementation of <see cref="IVercelCliRunner"/> that preserves argument and
+/// stdin boundaries for cross-platform quoting and secret handling.
+/// </summary>
 internal sealed class VercelCliRunner : IVercelCliRunner
 {
     public async Task<VercelCliResult> RunAsync(string fileName, IReadOnlyList<string> arguments, string? workingDirectory, CancellationToken cancellationToken, string? standardInput = null)
@@ -73,6 +81,10 @@ internal sealed class VercelCliRunner : IVercelCliRunner
     }
 }
 
+/// <summary>
+/// Captures a completed CLI invocation so callers can decide whether to parse stdout,
+/// surface stderr, or combine both for diagnostics.
+/// </summary>
 internal sealed record VercelCliResult(int ExitCode, string StandardOutput, string StandardError)
 {
     public bool Succeeded => ExitCode == 0;

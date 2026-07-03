@@ -6,11 +6,19 @@ using System.Text.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Ensures project-scoped Vercel Container Registry repositories exist before Aspire pushes
+/// workload images to VCR.
+/// </summary>
 internal interface IVercelContainerRegistryClient
 {
     Task EnsureRepositoryAsync(string token, VercelOidcClaims claims, string repository, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Calls the Vercel Container Registry API to converge the repository that Aspire's built-in
+/// image push step will target.
+/// </summary>
 internal sealed class VercelContainerRegistryClient : IVercelContainerRegistryClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);

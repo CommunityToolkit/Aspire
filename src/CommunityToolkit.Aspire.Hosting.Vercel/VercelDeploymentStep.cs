@@ -21,6 +21,10 @@ using System.Text.RegularExpressions;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
+/// <summary>
+/// Coordinates the Aspire publish, deploy, and destroy pipeline steps for Vercel while
+/// delegating provider formats and app-model rules to focused testable helpers.
+/// </summary>
 internal static partial class VercelDeploymentStep
 {
     // E2E contract:
