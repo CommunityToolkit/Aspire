@@ -210,6 +210,38 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
+    public async Task GeneratedDockerfileResourceUsesBuiltInImageBuildAndPushSteps()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "index.html"), "hello");
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest"]);
+        builder.AddVercelEnvironment("vercel");
+        builder.AddDockerfileFactory("api", sourceRoot.Path, _ => Task.FromResult("""
+            FROM nginx:alpine
+            COPY index.html /usr/share/nginx/html/index.html
+            """));
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+        var api = Assert.Single(model.Resources.OfType<ContainerResource>());
+        Assert.NotNull(Assert.Single(VercelDeploymentStep.GetDeploymentEntries(model, environment)).Dockerfile!.DockerfileFactory);
+
+        var steps = await CreateConfiguredPipelineStepsAsync(builder, app);
+        var buildStep = Assert.Single(steps, step => step.Name == "build-api");
+        var pushStep = Assert.Single(steps, step => step.Name == "push-api");
+        var deployStep = Assert.Single(steps, step => step.Name == "vercel-deploy-vercel");
+
+        Assert.Contains("vercel-deploy-prereq-vercel", buildStep.DependsOnSteps);
+        Assert.Contains(WellKnownPipelineSteps.Deploy, buildStep.RequiredBySteps);
+        Assert.Contains("vercel-deploy-prereq-vercel", pushStep.DependsOnSteps);
+        Assert.Contains(WellKnownPipelineSteps.Deploy, pushStep.RequiredBySteps);
+        Assert.Contains("push-api", deployStep.DependsOnSteps);
+        Assert.Contains(api.Annotations, annotation => annotation is ContainerImagePushOptionsCallbackAnnotation);
+    }
+
+    [Fact]
     public async Task VercelPipelineStepActionsCanBeUnitTested()
     {
         using var sourceRoot = TemporaryDirectory.Create("pipeline-action-project");
@@ -695,6 +727,33 @@ public class VercelEnvironmentTests
             VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken));
 
         Assert.Contains("Dockerfile", exception.Message);
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanAllowsGeneratedDockerfileFactoryBeforeBuild()
+    {
+        using var sourceRoot = TemporaryDirectory.Create();
+        using var outputRoot = TemporaryDirectory.Create();
+        Assert.False(File.Exists(Path.Combine(sourceRoot.Path, "Dockerfile")));
+
+        var builder = DistributedApplication.CreateBuilder(["--publisher", "manifest", "--output-path", outputRoot.Path]);
+        builder.AddVercelEnvironment("vercel");
+        builder.AddDockerfileFactory("api", sourceRoot.Path, _ => Task.FromResult("""
+            FROM nginx:alpine
+            COPY index.html /usr/share/nginx/html/index.html
+            """));
+        File.WriteAllText(Path.Combine(sourceRoot.Path, "index.html"), "hello");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var environment = Assert.Single(model.Resources.OfType<VercelEnvironmentResource>());
+
+        string planPath = await VercelDeploymentStep.WriteDeploymentPlanAsync(model, environment, outputRoot.Path, TestContext.Current.CancellationToken);
+
+        Assert.True(File.Exists(planPath));
+        using var document = JsonDocument.Parse(File.ReadAllText(planPath));
+        var deployment = Assert.Single(document.RootElement.GetProperty("deployments").EnumerateArray());
+        Assert.Equal("<generated>", deployment.GetProperty("dockerfilePath").GetString());
     }
 
     [Fact]
