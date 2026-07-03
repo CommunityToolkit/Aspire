@@ -821,13 +821,20 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public async Task WriteDeploymentPlanThrowsForHealthChecksAndProbes()
+    public async Task WriteDeploymentPlanThrowsForProbes()
     {
         var exception = await AssertWriteDeploymentPlanThrowsAsync(static api =>
             api.WithEndpoint(targetPort: 8080, scheme: "http", name: "http", isExternal: true)
                 .WithHttpProbe(ProbeType.Readiness, path: "/health"));
 
-        Assert.Contains("health checks or container probes", exception.Message);
+        Assert.Contains("container probes", exception.Message);
+    }
+
+    [Fact]
+    public async Task WriteDeploymentPlanIgnoresHealthChecks()
+    {
+        await AssertWriteDeploymentPlanSucceedsAsync(static api =>
+            api.WithHealthCheck("api-health"));
     }
 
     [Fact]

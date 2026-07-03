@@ -246,11 +246,10 @@ internal static class VercelDeploymentModel
         }
 
         if (resource.Annotations.OfType<ProbeAnnotation>().Any()
-            || resource.Annotations.OfType<EndpointProbeAnnotation>().Any()
-            || resource.Annotations.OfType<HealthCheckAnnotation>().Any())
+            || resource.Annotations.OfType<EndpointProbeAnnotation>().Any())
         {
             throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire health checks or container probes, but the Vercel preview integration does not map them to Vercel-native checks. Remove the Aspire probes or configure health behavior in Vercel.");
+                $"Resource '{resource.Name}' configures Aspire container probes, but the Vercel preview integration does not map them to Vercel-native checks. Remove the Aspire probes or configure health behavior in Vercel.");
         }
 
         ValidateEndpointModel(entry);
