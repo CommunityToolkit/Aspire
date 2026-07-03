@@ -79,11 +79,11 @@ For low-level container resources, Vercel requires Aspire image-build metadata. 
 
 1. `aspire publish` validates the targeted resources and writes `vercel-deployments.json`, a deterministic review plan with command shape, Dockerfile/source information, and environment variable names. It does not call Vercel, resolve secrets, or push images.
 2. The deploy prerequisite step validates Vercel CLI, Docker buildx, Vercel auth, configured scope, existing state compatibility, Vercel project names, endpoints, and unsupported Aspire concepts before provider mutation.
-3. For each resource, the integration creates or links a Vercel project in an Aspire-owned scratch directory, configures sensitive project environment variables with `vercel env add --sensitive` over standard input, and runs `vercel pull` in that scratch directory to obtain `.vercel/project.json`, `.vercel/.env.<target>.local`, and the short-lived `VERCEL_OIDC_TOKEN`.
-4. The integration decodes only routing claims from the Vercel OIDC JWT payload, configures Vercel Container Registry (`vcr.vercel.com/<owner>/<project>`) as the resource's Aspire deployment target registry, and lets Aspire's built-in build/push steps build the workload image and push it to VCR.
-5. After the push, deploy logs in to VCR again, runs `docker buildx imagetools inspect --format '{{json .Manifest}}'`, and selects the linux/amd64 manifest digest. Live Vercel validation rejected OCI index digests, so the generated artifact references the concrete platform manifest.
-6. Deploy writes Vercel Build Output API v3 files under Aspire temp/output storage: `.vercel/project.json`, `.vercel/output/config.json`, and `.vercel/output/functions/index.func/.vc-config.json` with `runtime: "container"` and a digest-pinned VCR `handler`.
-7. Deploy runs `vercel deploy --prebuilt`, parses the deployment URL from JSON or plain CLI output, verifies readiness with `vercel inspect --wait --format=json`, records deployment URLs/image digests/state, and adds deployment URLs to the pipeline summary.
+3. For each resource, the integration creates or links a Vercel project in an Aspire-owned scratch directory, configures sensitive project environment variables with `vercel env add --sensitive` over standard input, and runs [`vercel pull`](https://vercel.com/docs/cli/pull) in that scratch directory to obtain `.vercel/project.json`, `.vercel/.env.<target>.local`, and the short-lived `VERCEL_OIDC_TOKEN`.
+4. The integration decodes only routing claims from the Vercel OIDC JWT payload, configures [Vercel Container Registry](https://vercel.com/docs/container-registry) (`vcr.vercel.com/<owner>/<project>`) as the resource's Aspire deployment target registry, and lets Aspire's built-in build/push steps build the workload image and push it to VCR.
+5. After the push, deploy logs in to VCR again, runs `docker buildx imagetools inspect --format '{{json .Manifest}}'`, and selects the linux/amd64 manifest digest. Live Vercel validation rejected OCI index digests, so the generated artifact references the concrete platform manifest accepted by [Vercel Container Images](https://vercel.com/docs/functions/container-images).
+6. Deploy writes [Vercel Build Output API](https://vercel.com/docs/build-output-api) v3 files under Aspire temp/output storage: `.vercel/project.json`, `.vercel/output/config.json`, and `.vercel/output/functions/index.func/.vc-config.json` with `runtime: "container"` and a digest-pinned VCR `handler`.
+7. Deploy runs [`vercel deploy --prebuilt`](https://vercel.com/docs/cli/deploy), parses the deployment URL from JSON or plain CLI output, verifies readiness with [`vercel inspect --wait`](https://vercel.com/docs/cli/inspect), records deployment URLs/image digests/state, and adds deployment URLs to the pipeline summary.
 8. `aspire destroy` reads saved deployment state first, removes tracked project environment variables from linked projects, deletes only Aspire-managed Vercel projects, treats already-missing projects as converged, and saves partial state after each successful delete so retry remains safe.
 
 Non-secret Aspire environment variables configured on the resource are processed during publish/deploy and passed to Vercel as deployment-scoped CLI environment variables:
@@ -98,7 +98,7 @@ builder.AddContainer("api", "api")
 vercel deploy --cwd <generated-build-output> --project <project> --prebuilt --yes --env GREETING=hello
 ```
 
-Secret parameters, connection strings, and composite values that contain secrets are configured as sensitive Vercel project environment variables before deploy. Because `vercel env add` is scoped through Vercel link metadata and does not accept `--project`, the integration links a temporary scratch directory outside the source tree and sends the value through standard input instead of putting it on the command line:
+Secret parameters, connection strings, and composite values that contain secrets are configured as [sensitive Vercel project environment variables](https://vercel.com/docs/environment-variables/sensitive-environment-variables) before deploy. Because [`vercel env add`](https://vercel.com/docs/cli/env) is scoped through [`vercel link`](https://vercel.com/docs/cli/link) metadata and does not accept `--project`, the integration links a temporary scratch directory outside the source tree and sends the value through standard input instead of putting it on the command line:
 
 ```csharp
 var apiKey = builder.AddParameter("api-key", secret: true);
@@ -181,7 +181,15 @@ If the source root already contains a `vercel.json`, the integration reads it on
 
 - [Run any Dockerfile on Vercel](https://vercel.com/blog/dockerfile-on-vercel)
 - [Vercel Container Images](https://vercel.com/docs/functions/container-images)
+- [Vercel Container Registry](https://vercel.com/docs/container-registry)
+- [Vercel Build Output API](https://vercel.com/docs/build-output-api)
+- [Build Output API configuration](https://vercel.com/docs/build-output-api/configuration)
 - [Vercel CLI deploy](https://vercel.com/docs/cli/deploy)
+- [Vercel CLI link](https://vercel.com/docs/cli/link)
+- [Vercel CLI pull](https://vercel.com/docs/cli/pull)
+- [Vercel CLI env](https://vercel.com/docs/cli/env)
+- [Vercel CLI inspect](https://vercel.com/docs/cli/inspect)
+- [Sensitive environment variables](https://vercel.com/docs/environment-variables/sensitive-environment-variables)
 
 ## Feedback & contributing
 

@@ -34,6 +34,12 @@ internal static class VercelDeploymentStep
     //   destroy => use saved state, not the current model, and delete only Aspire-managed projects.
     // Keep provider/protocol parsing in small internal helpers so tests can assert exact behavior
     // without live Vercel credentials.
+    //
+    // Vercel contracts referenced by the non-obvious deploy behavior below:
+    //   Container Images: https://vercel.com/docs/functions/container-images
+    //   Container Registry: https://vercel.com/docs/container-registry
+    //   Build Output API: https://vercel.com/docs/build-output-api
+    //   Prebuilt deploy: https://vercel.com/docs/cli/deploy
     public const string PublishStepNamePrefix = "vercel-generate-plan-";
     public const string DeployPrereqStepNamePrefix = "vercel-prepare-projects-";
     public const string DeployStepNamePrefix = "vercel-deploy-prebuilt-";
@@ -1521,6 +1527,7 @@ internal static class VercelDeploymentStep
         Directory.CreateDirectory(projectLinkDirectory);
 
         // `vercel env add` is project-scoped but intentionally does not accept --project.
+        // See https://vercel.com/docs/cli/env and https://vercel.com/docs/cli/link.
         // Link a scratch directory instead of the source root so secret configuration can use
         // the CLI's native project lookup without writing .vercel metadata into user code.
         string[] linkArguments = BuildLinkProjectArguments(options, projectLinkDirectory, GetVercelProjectOption(entry));
@@ -1540,6 +1547,9 @@ internal static class VercelDeploymentStep
         VercelDeploymentEntry entry,
         string projectLinkDirectory)
     {
+        // `vercel pull` is the documented way to materialize project settings and environment
+        // files under `.vercel/`; VCR authentication depends on the pulled VERCEL_OIDC_TOKEN.
+        // See https://vercel.com/docs/cli/pull and https://vercel.com/docs/container-registry.
         string targetEnvironment = GetVercelProjectEnvironmentName(options);
         string[] arguments = BuildPullProjectSettingsArguments(options, projectLinkDirectory, targetEnvironment);
         var result = await runner.RunAsync(VercelCliFileName, arguments, projectLinkDirectory, context.CancellationToken).ConfigureAwait(false);
@@ -1599,6 +1609,9 @@ internal static class VercelDeploymentStep
             throw new DistributedApplicationException("The Vercel OIDC token did not include the owner_id claim required to authenticate to VCR.");
         }
 
+        // VCR supports Docker-compatible tooling at vcr.vercel.com. This login uses the
+        // Vercel-issued OIDC token pulled for the linked project.
+        // See https://vercel.com/docs/container-registry.
         string[] arguments = BuildDockerLoginArguments(claims.OwnerId);
         var result = await runner.RunAsync(DockerCliFileName, arguments, workingDirectory: null, cancellationToken, standardInput: oidcToken).ConfigureAwait(false);
         if (!result.Succeeded)
@@ -1613,7 +1626,9 @@ internal static class VercelDeploymentStep
         string imageReference,
         CancellationToken cancellationToken)
     {
-        // Vercel Build Output API v3 expects:
+        // Vercel Build Output API v3 expects the file-system contract documented at
+        // https://vercel.com/docs/build-output-api and
+        // https://vercel.com/docs/build-output-api/configuration:
         //   .vercel/project.json                          copied project identity from `vercel pull`
         //   .vercel/output/config.json                    routes and API version
         //   .vercel/output/functions/index.func/.vc-config.json
@@ -1709,8 +1724,10 @@ internal static class VercelDeploymentStep
             try
             {
                 // Current path uses `--format '{{json .Manifest}}'`. Docker may return an OCI
-                // image index with a `manifests[]` array, or a single manifest object. Vercel
-                // rejected index digests in live smoke tests, so prefer the linux/amd64 child.
+                // image index with a `manifests[]` array, or a single manifest object. Vercel's
+                // Container Images docs describe VCR-backed OCI images; live smoke tests rejected
+                // index digests, so prefer the linux/amd64 child.
+                // See https://vercel.com/docs/functions/container-images.
                 using var document = JsonDocument.Parse(trimmed);
                 var root = document.RootElement;
 
