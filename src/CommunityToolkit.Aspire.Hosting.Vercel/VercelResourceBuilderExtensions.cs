@@ -37,6 +37,8 @@ public static class VercelResourceBuilderExtensions
                 nameof(projectName));
         }
 
-        return builder.WithAnnotation(new VercelProjectOptionsAnnotation(projectName), ResourceAnnotationMutationBehavior.Replace);
+        return builder
+            .WithAnnotation(new VercelProjectOptionsAnnotation(projectName), ResourceAnnotationMutationBehavior.Replace)
+            .WithVercelPipelineFinalizer();
     }
 }

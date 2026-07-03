@@ -52,7 +52,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
                 new PipelineStep
                 {
                     Name = $"{VercelDeploymentStep.PublishStepNamePrefix}{resource.Name}",
-                    Description = $"Generate Vercel deployment plan for '{resource.Name}'.",
+                    Description = $"Generate the Vercel Build Output API plan for '{resource.Name}'.",
                     Resource = resource,
                     DependsOnSteps = [WellKnownPipelineSteps.ValidateComputeEnvironments],
                     RequiredBySteps = [WellKnownPipelineSteps.Publish, WellKnownPipelineSteps.Deploy],
@@ -61,7 +61,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
                 new PipelineStep
                 {
                     Name = $"{VercelDeploymentStep.DeployPrereqStepNamePrefix}{resource.Name}",
-                    Description = $"Prepare Vercel projects and VCR image push settings for '{resource.Name}'.",
+                    Description = $"Create/link Vercel projects and configure VCR image pushes for '{resource.Name}'.",
                     Resource = resource,
                     DependsOnSteps = [WellKnownPipelineSteps.ValidateComputeEnvironments],
                     RequiredBySteps = [WellKnownPipelineSteps.Deploy],
@@ -70,7 +70,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
                 new PipelineStep
                 {
                     Name = $"{VercelDeploymentStep.DeployStepNamePrefix}{resource.Name}",
-                    Description = $"Deploy resources to Vercel environment '{resource.Name}'.",
+                    Description = $"Deploy the digest-pinned VCR images to Vercel with --prebuilt for '{resource.Name}'.",
                     Resource = resource,
                     Tags = ["vercel-deploy"],
                     DependsOnSteps = [$"{VercelDeploymentStep.DeployPrereqStepNamePrefix}{resource.Name}"],

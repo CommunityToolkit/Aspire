@@ -150,23 +150,23 @@ public class VercelEnvironmentTests
             steps,
             step =>
             {
-                Assert.Equal("vercel-publish-vercel", step.Name);
+                Assert.Equal("vercel-generate-plan-vercel", step.Name);
                 Assert.Same(vercel.Resource, step.Resource);
                 Assert.Equal([WellKnownPipelineSteps.ValidateComputeEnvironments], step.DependsOnSteps);
                 Assert.Equal([WellKnownPipelineSteps.Publish, WellKnownPipelineSteps.Deploy], step.RequiredBySteps);
             },
             step =>
             {
-                Assert.Equal("vercel-deploy-prereq-vercel", step.Name);
+                Assert.Equal("vercel-prepare-projects-vercel", step.Name);
                 Assert.Same(vercel.Resource, step.Resource);
                 Assert.Equal([WellKnownPipelineSteps.ValidateComputeEnvironments], step.DependsOnSteps);
                 Assert.Equal([WellKnownPipelineSteps.Deploy], step.RequiredBySteps);
             },
             step =>
             {
-                Assert.Equal("vercel-deploy-vercel", step.Name);
+                Assert.Equal("vercel-deploy-prebuilt-vercel", step.Name);
                 Assert.Same(vercel.Resource, step.Resource);
-                Assert.Equal(["vercel-deploy-prereq-vercel"], step.DependsOnSteps);
+                Assert.Equal(["vercel-prepare-projects-vercel"], step.DependsOnSteps);
                 Assert.Equal([WellKnownPipelineSteps.Deploy], step.RequiredBySteps);
             },
             step =>
@@ -198,13 +198,15 @@ public class VercelEnvironmentTests
         var buildStep = Assert.Single(steps, step => step.Name == "build-api");
         var pushStep = Assert.Single(steps, step => step.Name == "push-api");
         var pushPrereqStep = Assert.Single(steps, step => step.Name == "push-prereq");
-        var deployStep = Assert.Single(steps, step => step.Name == "vercel-deploy-vercel");
+        var deployStep = Assert.Single(steps, step => step.Name == "vercel-deploy-prebuilt-vercel");
 
-        Assert.Contains("vercel-deploy-prereq-vercel", buildStep.DependsOnSteps);
+        AssertPipelineDependenciesAreDistinct(steps);
+        Assert.Contains("vercel-prepare-projects-vercel", buildStep.DependsOnSteps);
         Assert.Contains(WellKnownPipelineSteps.Deploy, buildStep.RequiredBySteps);
-        Assert.Contains("vercel-deploy-prereq-vercel", pushPrereqStep.DependsOnSteps);
-        Assert.Contains("vercel-deploy-prereq-vercel", pushStep.DependsOnSteps);
+        Assert.Contains("vercel-prepare-projects-vercel", pushPrereqStep.DependsOnSteps);
+        Assert.Contains("vercel-prepare-projects-vercel", pushStep.DependsOnSteps);
         Assert.Contains(WellKnownPipelineSteps.Deploy, pushStep.RequiredBySteps);
+        Assert.Contains("vercel-generate-plan-vercel", deployStep.DependsOnSteps);
         Assert.Contains("push-api", deployStep.DependsOnSteps);
         Assert.Contains(api.Annotations, annotation => annotation is ContainerImagePushOptionsCallbackAnnotation);
     }
@@ -231,12 +233,14 @@ public class VercelEnvironmentTests
         var steps = await CreateConfiguredPipelineStepsAsync(builder, app);
         var buildStep = Assert.Single(steps, step => step.Name == "build-api");
         var pushStep = Assert.Single(steps, step => step.Name == "push-api");
-        var deployStep = Assert.Single(steps, step => step.Name == "vercel-deploy-vercel");
+        var deployStep = Assert.Single(steps, step => step.Name == "vercel-deploy-prebuilt-vercel");
 
-        Assert.Contains("vercel-deploy-prereq-vercel", buildStep.DependsOnSteps);
+        AssertPipelineDependenciesAreDistinct(steps);
+        Assert.Contains("vercel-prepare-projects-vercel", buildStep.DependsOnSteps);
         Assert.Contains(WellKnownPipelineSteps.Deploy, buildStep.RequiredBySteps);
-        Assert.Contains("vercel-deploy-prereq-vercel", pushStep.DependsOnSteps);
+        Assert.Contains("vercel-prepare-projects-vercel", pushStep.DependsOnSteps);
         Assert.Contains(WellKnownPipelineSteps.Deploy, pushStep.RequiredBySteps);
+        Assert.Contains("vercel-generate-plan-vercel", deployStep.DependsOnSteps);
         Assert.Contains("push-api", deployStep.DependsOnSteps);
         Assert.Contains(api.Annotations, annotation => annotation is ContainerImagePushOptionsCallbackAnnotation);
     }
@@ -265,9 +269,9 @@ public class VercelEnvironmentTests
         using var app = builder.Build();
         var steps = await CreateConfiguredPipelineStepsAsync(builder, app);
         var context = CreatePipelineStepContext(builder, app);
-        var publishStep = Assert.Single(steps, step => step.Name == "vercel-publish-vercel");
-        var prereqStep = Assert.Single(steps, step => step.Name == "vercel-deploy-prereq-vercel");
-        var deployStep = Assert.Single(steps, step => step.Name == "vercel-deploy-vercel");
+        var publishStep = Assert.Single(steps, step => step.Name == "vercel-generate-plan-vercel");
+        var prereqStep = Assert.Single(steps, step => step.Name == "vercel-prepare-projects-vercel");
+        var deployStep = Assert.Single(steps, step => step.Name == "vercel-deploy-prebuilt-vercel");
         var destroyStep = Assert.Single(steps, step => step.Name == "vercel-destroy-vercel");
 
         await publishStep.Action(context);
@@ -3474,6 +3478,15 @@ public class VercelEnvironmentTests
         }
 
         return steps;
+    }
+
+    private static void AssertPipelineDependenciesAreDistinct(IEnumerable<PipelineStep> steps)
+    {
+        foreach (var step in steps)
+        {
+            Assert.Equal(step.DependsOnSteps.Distinct(StringComparer.Ordinal), step.DependsOnSteps);
+            Assert.Equal(step.RequiredBySteps.Distinct(StringComparer.Ordinal), step.RequiredBySteps);
+        }
     }
 
     private static VercelDeploymentEntry CreateDeploymentEntry(string sourceRoot)

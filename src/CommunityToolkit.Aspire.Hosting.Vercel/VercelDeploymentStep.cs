@@ -34,10 +34,10 @@ internal static class VercelDeploymentStep
     //   destroy => use saved state, not the current model, and delete only Aspire-managed projects.
     // Keep provider/protocol parsing in small internal helpers so tests can assert exact behavior
     // without live Vercel credentials.
-    public const string PublishStepNamePrefix = "vercel-publish-";
-    public const string DeployPrereqStepNamePrefix = "vercel-deploy-prereq-";
-    public const string DeployStepNamePrefix = "vercel-deploy-";
-    public const string DestroyPrereqStepNamePrefix = "vercel-destroy-prereq-";
+    public const string PublishStepNamePrefix = "vercel-generate-plan-";
+    public const string DeployPrereqStepNamePrefix = "vercel-prepare-projects-";
+    public const string DeployStepNamePrefix = "vercel-deploy-prebuilt-";
+    public const string DestroyPrereqStepNamePrefix = "vercel-prepare-destroy-";
     public const string DestroyStepNamePrefix = "vercel-destroy-";
     public const string DeploymentPlanFileName = "vercel-deployments.json";
 
@@ -347,6 +347,7 @@ internal static class VercelDeploymentStep
             return;
         }
 
+        string planStepName = $"{PublishStepNamePrefix}{environment.Name}";
         string prereqStepName = $"{DeployPrereqStepNamePrefix}{environment.Name}";
         var deploySteps = context.GetSteps(environment, "vercel-deploy").ToArray();
         var pushPrereqSteps = context.Steps
@@ -362,6 +363,8 @@ internal static class VercelDeploymentStep
             {
                 AddUnique(buildStep.DependsOnSteps, prereqStepName);
                 AddUnique(buildStep.RequiredBySteps, WellKnownPipelineSteps.Deploy);
+                RemoveDuplicates(buildStep.DependsOnSteps);
+                RemoveDuplicates(buildStep.RequiredBySteps);
             }
 
             var pushSteps = context.GetSteps(entry.Resource, WellKnownPipelineTags.PushContainerImage).ToArray();
@@ -369,6 +372,8 @@ internal static class VercelDeploymentStep
             {
                 AddUnique(pushStep.DependsOnSteps, prereqStepName);
                 AddUnique(pushStep.RequiredBySteps, WellKnownPipelineSteps.Deploy);
+                RemoveDuplicates(pushStep.DependsOnSteps);
+                RemoveDuplicates(pushStep.RequiredBySteps);
             }
 
             // Aspire's global push prerequisite validates that every pushed image has a
@@ -377,15 +382,32 @@ internal static class VercelDeploymentStep
             foreach (var pushPrereqStep in pushPrereqSteps)
             {
                 AddUnique(pushPrereqStep.DependsOnSteps, prereqStepName);
+                RemoveDuplicates(pushPrereqStep.DependsOnSteps);
+                RemoveDuplicates(pushPrereqStep.RequiredBySteps);
             }
 
             foreach (var deployStep in deploySteps)
             {
+                AddUnique(deployStep.DependsOnSteps, planStepName);
                 foreach (var pushStep in pushSteps)
                 {
                     AddUnique(deployStep.DependsOnSteps, pushStep.Name);
                 }
+
+                RemoveDuplicates(deployStep.DependsOnSteps);
+                RemoveDuplicates(deployStep.RequiredBySteps);
             }
+        }
+
+        NormalizePipelineDependencies(context);
+    }
+
+    public static void NormalizePipelineDependencies(PipelineConfigurationContext context)
+    {
+        foreach (var step in context.Steps)
+        {
+            RemoveDuplicates(step.DependsOnSteps);
+            RemoveDuplicates(step.RequiredBySteps);
         }
     }
 
@@ -667,6 +689,21 @@ internal static class VercelDeploymentStep
     private static void AddUnique(ICollection<string> values, string value)
     {
         if (!values.Contains(value, StringComparer.Ordinal))
+        {
+            values.Add(value);
+        }
+    }
+
+    private static void RemoveDuplicates(ICollection<string> values)
+    {
+        string[] distinctValues = values.Distinct(StringComparer.Ordinal).ToArray();
+        if (distinctValues.Length == values.Count)
+        {
+            return;
+        }
+
+        values.Clear();
+        foreach (string value in distinctValues)
         {
             values.Add(value);
         }
