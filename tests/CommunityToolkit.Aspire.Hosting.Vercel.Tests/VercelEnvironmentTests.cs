@@ -831,12 +831,10 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public async Task WriteDeploymentPlanThrowsForReplicas()
+    public async Task WriteDeploymentPlanIgnoresReplicas()
     {
-        var exception = await AssertWriteDeploymentPlanThrowsAsync(static api =>
+        await AssertWriteDeploymentPlanSucceedsAsync(static api =>
             api.Resource.Annotations.Add(new ReplicaAnnotation(2)));
-
-        Assert.Contains("replicas or scale", exception.Message);
     }
 
     [Fact]

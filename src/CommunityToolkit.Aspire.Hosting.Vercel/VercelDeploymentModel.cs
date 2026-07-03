@@ -253,12 +253,6 @@ internal static class VercelDeploymentModel
                 $"Resource '{resource.Name}' configures Aspire health checks or container probes, but the Vercel preview integration does not map them to Vercel-native checks. Remove the Aspire probes or configure health behavior in Vercel.");
         }
 
-        if (resource.Annotations.OfType<ReplicaAnnotation>().Any())
-        {
-            throw new DistributedApplicationException(
-                $"Resource '{resource.Name}' configures Aspire replicas or scale, but the Vercel preview integration does not map replica counts to Vercel-native scaling. Configure scaling in Vercel instead.");
-        }
-
         ValidateEndpointModel(entry);
         ValidateProjectName(entry);
     }
