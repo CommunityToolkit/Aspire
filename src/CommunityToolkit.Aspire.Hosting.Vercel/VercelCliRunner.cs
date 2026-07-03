@@ -14,6 +14,9 @@ internal sealed class VercelCliRunner : IVercelCliRunner
 {
     public async Task<VercelCliResult> RunAsync(string fileName, IReadOnlyList<string> arguments, string? workingDirectory, CancellationToken cancellationToken, string? standardInput = null)
     {
+        // Keep all target CLI calls behind this runner so unit tests can assert exact
+        // executable/argument/stdin boundaries. Secrets use stdin; arguments are never
+        // shell-concatenated, which avoids platform quoting differences.
         ProcessStartInfo startInfo = new()
         {
             FileName = fileName,
@@ -31,6 +34,8 @@ internal sealed class VercelCliRunner : IVercelCliRunner
             startInfo.WorkingDirectory = workingDirectory;
         }
 
+        // Vercel CLI can emit ANSI color codes that make parser failure messages harder to
+        // read and snapshot. Disable them at the process boundary for deterministic output.
         startInfo.Environment["NO_COLOR"] = "1";
 
         foreach (var argument in arguments)

@@ -1,6 +1,8 @@
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Pipelines;
+using Aspire.Hosting.Publishing;
 using CommunityToolkit.Aspire.Hosting.Vercel;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Diagnostics.CodeAnalysis;
 
@@ -19,8 +21,8 @@ public static class VercelEnvironmentResourceBuilderExtensions
     /// <param name="name">The Aspire resource name for the Vercel environment.</param>
     /// <returns>A resource builder for the Vercel environment.</returns>
     /// <remarks>
-    /// The Vercel environment is not added to the local run model. During publish and deploy it validates Dockerfile build metadata for
-    /// resources and, during deploy, invokes the Vercel CLI using the current login or <c>VERCEL_TOKEN</c>.
+    /// The Vercel environment is not added to the local run model. During publish and deploy it validates image-build resources and,
+    /// during deploy, invokes the Vercel CLI using the current login or <c>VERCEL_TOKEN</c>.
     /// </remarks>
     [AspireExport]
     public static IResourceBuilder<VercelEnvironmentResource> AddVercelEnvironment(
@@ -31,12 +33,18 @@ public static class VercelEnvironmentResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(name);
 
         builder.Services.TryAddSingleton<IVercelCliRunner, VercelCliRunner>();
+        builder.Services.TryAddSingleton<IVercelContainerRegistryClient, VercelContainerRegistryClient>();
+        builder.Services.DecorateVercelContainerImageManager();
 
         var resource = new VercelEnvironmentResource(name);
         var resourceBuilder = builder.ExecutionContext.IsRunMode
             ? builder.CreateResourceBuilder(resource)
             : builder.AddResource(resource);
 
+        // The actions are plain delegates over injectable services (CLI runner, registry
+        // client, state/output managers). Tests materialize the pipeline steps and invoke
+        // these delegates directly so publish/prereq/deploy/destroy logic does not require a
+        // live Aspire CLI pipeline process.
         return resourceBuilder
             .WithAnnotation(new VercelEnvironmentOptionsAnnotation(), ResourceAnnotationMutationBehavior.Replace)
             .WithPipelineStepFactory(_ =>
@@ -53,7 +61,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
                 new PipelineStep
                 {
                     Name = $"{VercelDeploymentStep.DeployPrereqStepNamePrefix}{resource.Name}",
-                    Description = $"Validate Vercel CLI prerequisites for '{resource.Name}'.",
+                    Description = $"Prepare Vercel projects and VCR image push settings for '{resource.Name}'.",
                     Resource = resource,
                     DependsOnSteps = [WellKnownPipelineSteps.ValidateComputeEnvironments],
                     RequiredBySteps = [WellKnownPipelineSteps.Deploy],
@@ -64,6 +72,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
                     Name = $"{VercelDeploymentStep.DeployStepNamePrefix}{resource.Name}",
                     Description = $"Deploy resources to Vercel environment '{resource.Name}'.",
                     Resource = resource,
+                    Tags = ["vercel-deploy"],
                     DependsOnSteps = [$"{VercelDeploymentStep.DeployPrereqStepNamePrefix}{resource.Name}"],
                     RequiredBySteps = [WellKnownPipelineSteps.Deploy],
                     Action = context => VercelDeploymentStep.DeployAsync(context, resource)
@@ -76,7 +85,8 @@ public static class VercelEnvironmentResourceBuilderExtensions
                     RequiredBySteps = [WellKnownPipelineSteps.Destroy],
                     Action = context => VercelDeploymentStep.DestroyAsync(context, resource)
                 }
-            ]);
+            ])
+            .WithAnnotation(new PipelineConfigurationAnnotation(context => VercelDeploymentStep.ConfigurePipeline(context, resource)));
     }
 
     /// <summary>
@@ -138,5 +148,67 @@ public static class VercelEnvironmentResourceBuilderExtensions
 
         return builder.WithAnnotation(updated, ResourceAnnotationMutationBehavior.Replace);
     }
+
+    private static void DecorateVercelContainerImageManager(this IServiceCollection services)
+    {
+        // Aspire owns image build/push. Vercel only needs to re-authenticate project-scoped
+        // VCR credentials immediately before Vercel-targeted pushes. Decorate the existing
+        // image manager once and leave all non-Vercel resources on the original path.
+        if (services.Any(static descriptor => descriptor.ServiceType == typeof(VercelContainerImageManagerDecorationMarker)))
+        {
+            return;
+        }
+
+        int descriptorIndex = -1;
+        for (int i = services.Count - 1; i >= 0; i--)
+        {
+            if (services[i].ServiceType == typeof(IResourceContainerImageManager))
+            {
+                descriptorIndex = i;
+                break;
+            }
+        }
+
+        if (descriptorIndex < 0)
+        {
+            return;
+        }
+
+        var descriptor = services[descriptorIndex];
+        services.RemoveAt(descriptorIndex);
+        services.Insert(
+            descriptorIndex,
+            ServiceDescriptor.Describe(
+                typeof(IResourceContainerImageManager),
+                serviceProvider =>
+                {
+                    var inner = (IResourceContainerImageManager)CreateService(serviceProvider, descriptor);
+                    return ActivatorUtilities.CreateInstance<VercelResourceContainerImageManager>(serviceProvider, inner);
+                },
+                descriptor.Lifetime));
+        services.AddSingleton<VercelContainerImageManagerDecorationMarker>();
+    }
+
+    private static object CreateService(IServiceProvider serviceProvider, ServiceDescriptor descriptor)
+    {
+        if (descriptor.ImplementationInstance is not null)
+        {
+            return descriptor.ImplementationInstance;
+        }
+
+        if (descriptor.ImplementationFactory is not null)
+        {
+            return descriptor.ImplementationFactory(serviceProvider)!;
+        }
+
+        if (descriptor.ImplementationType is not null)
+        {
+            return ActivatorUtilities.CreateInstance(serviceProvider, descriptor.ImplementationType);
+        }
+
+        throw new InvalidOperationException($"The {nameof(IResourceContainerImageManager)} service registration is missing an implementation.");
+    }
+
+    private sealed class VercelContainerImageManagerDecorationMarker;
 
 }

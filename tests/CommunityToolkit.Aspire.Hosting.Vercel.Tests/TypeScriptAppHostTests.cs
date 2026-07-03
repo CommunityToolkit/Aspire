@@ -8,6 +8,11 @@ public class TypeScriptAppHostTests
     [Fact]
     public async Task TypeScriptAppHostCompilesAndStarts()
     {
+        if (!IsOnPath("pwsh"))
+        {
+            Assert.Skip("TypeScript AppHost start smoke requires PowerShell (pwsh) because the TypeScript AppHost test harness launches Aspire scripts through pwsh.");
+        }
+
         await TypeScriptAppHostTest.Run(
             appHostProject: "CommunityToolkit.Aspire.Hosting.Vercel.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.Vercel",
@@ -51,5 +56,25 @@ public class TypeScriptAppHostTests
                 Directory.Delete(distRoot, recursive: true);
             }
         }
+    }
+
+    private static bool IsOnPath(string fileName)
+    {
+        string path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+        foreach (string directory in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            string candidate = Path.Combine(directory, fileName);
+            if (File.Exists(candidate))
+            {
+                return true;
+            }
+
+            if (OperatingSystem.IsWindows() && File.Exists(candidate + ".exe"))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
