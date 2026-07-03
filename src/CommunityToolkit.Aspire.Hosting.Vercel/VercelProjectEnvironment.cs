@@ -4,6 +4,10 @@ internal static class VercelProjectEnvironment
 {
     public static string GetName(VercelEnvironmentOptionsAnnotation options)
     {
+        // Vercel CLI env commands use "production" and "preview" environment names, while
+        // deploy uses --prod or --target. Keep this translation in one place so state cleanup
+        // removes variables from the same Vercel environment deploy configured.
+        // See https://vercel.com/docs/cli/env and https://vercel.com/docs/cli/deploy.
         if (options.Production)
         {
             return "production";

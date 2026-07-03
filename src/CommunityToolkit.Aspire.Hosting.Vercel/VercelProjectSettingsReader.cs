@@ -12,6 +12,7 @@ internal static class VercelProjectSettingsReader
         {
             // `vercel pull` writes `.vercel/project.json`. Only project identity fields are
             // needed: they select the linked provider project and are safe to persist in state.
+            // See https://vercel.com/docs/cli/pull.
             var settings = JsonSerializer.Deserialize<VercelProjectSettingsJson>(projectJsonContent);
 
             return new(settings?.ProjectName ?? string.Empty, settings?.ProjectId, settings?.OrgId);

@@ -79,6 +79,8 @@ internal static class VercelDeploymentStateStore
     {
         // DeploymentStateSection storage shape has changed across Aspire builds. Accept the
         // known wrappers so destroy can still clean up projects created by an older CLI.
+        // The Vercel state payload itself is versioned below; this tolerance is only for the
+        // Aspire storage envelope, not for provider object ownership.
         if (stateSection.Data.TryGetPropertyValue("value", out JsonNode? value)
             && value is not null)
         {

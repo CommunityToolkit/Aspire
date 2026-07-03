@@ -134,6 +134,9 @@ internal static class VercelDeploymentModel
         string sourceRoot,
         CancellationToken cancellationToken)
     {
+        // User vercel.json can coexist only when it does not claim the same Build Output API
+        // routes/functions/services surface this integration generates under .vercel/output.
+        // See https://vercel.com/docs/project-configuration and https://vercel.com/docs/build-output-api.
         string vercelJsonPath = Path.Combine(sourceRoot, VercelConstants.JsonFileName);
         if (!File.Exists(vercelJsonPath))
         {
@@ -276,6 +279,7 @@ internal static class VercelDeploymentModel
         // single public Vercel container ingress.
         // Vercel's Dockerfile preview exposes one public platform ingress; it has no
         // Aspire-modeled private service network for internal endpoints.
+        // See https://vercel.com/docs/functions/container-images.
         var internalEndpoint = endpoints.FirstOrDefault(static endpoint => !endpoint.IsExternal);
         if (internalEndpoint is not null)
         {

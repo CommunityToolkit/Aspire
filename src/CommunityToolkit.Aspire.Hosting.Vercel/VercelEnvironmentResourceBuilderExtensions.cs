@@ -23,6 +23,7 @@ public static class VercelEnvironmentResourceBuilderExtensions
     /// <remarks>
     /// The Vercel environment is not added to the local run model. During publish and deploy it validates image-build resources and,
     /// during deploy, invokes the Vercel CLI using the current login or <c>VERCEL_TOKEN</c>.
+    /// See <see href="https://vercel.com/docs/cli">Vercel CLI documentation</see>.
     /// </remarks>
     [AspireExport]
     public static IResourceBuilder<VercelEnvironmentResource> AddVercelEnvironment(
@@ -111,7 +112,11 @@ public static class VercelEnvironmentResourceBuilderExtensions
     /// </summary>
     /// <param name="builder">The Vercel environment builder.</param>
     /// <returns>The Vercel environment builder.</returns>
-    /// <remarks>This adds <c>--prod</c> to Vercel CLI deployments and clears any custom target configured with <see cref="WithVercelTarget"/>.</remarks>
+    /// <remarks>
+    /// This adds <c>--prod</c> to Vercel CLI deployments and clears any custom target configured with <see cref="WithVercelTarget"/>.
+    /// Production deployments have deterministic <c>https://{project}.vercel.app</c> aliases that Aspire endpoint references can use.
+    /// See <see href="https://vercel.com/docs/cli/deploy">Vercel deploy CLI documentation</see>.
+    /// </remarks>
     [AspireExport]
     public static IResourceBuilder<VercelEnvironmentResource> WithVercelProductionDeployments(
         this IResourceBuilder<VercelEnvironmentResource> builder)
@@ -127,7 +132,11 @@ public static class VercelEnvironmentResourceBuilderExtensions
     /// <param name="builder">The Vercel environment builder.</param>
     /// <param name="target">The target value passed to <c>vercel deploy --target</c>, such as <c>preview</c> or a custom environment.</param>
     /// <returns>The Vercel environment builder.</returns>
-    /// <remarks>This clears production deployment mode configured with <see cref="WithVercelProductionDeployments"/>.</remarks>
+    /// <remarks>
+    /// This clears production deployment mode configured with <see cref="WithVercelProductionDeployments"/>.
+    /// Preview and custom-target URLs are assigned after deployment, so Aspire endpoint references are unavailable for these targets.
+    /// See <see href="https://vercel.com/docs/deployments/generated-urls">Vercel generated URL documentation</see>.
+    /// </remarks>
     [AspireExport]
     public static IResourceBuilder<VercelEnvironmentResource> WithVercelTarget(
         this IResourceBuilder<VercelEnvironmentResource> builder,

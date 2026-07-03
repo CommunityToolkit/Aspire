@@ -20,6 +20,7 @@ internal sealed class VercelContainerRegistryClient : IVercelContainerRegistryCl
         // VCR repositories are project-scoped under owner/project. The integration currently
         // creates the leaf repository ("app") only; any future nested repository name should
         // be provisioned by the provider or a separate explicit API before this method runs.
+        // See https://vercel.com/docs/container-registry.
         if (repository.Contains('/', StringComparison.Ordinal))
         {
             return;

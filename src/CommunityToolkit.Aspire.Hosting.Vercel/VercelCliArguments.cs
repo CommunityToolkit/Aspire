@@ -6,6 +6,9 @@ internal static class VercelCliArguments
         => BuildDeployArguments(options, entry.EffectiveDeployDirectory, VercelProjectNameResolver.GetProjectOption(entry), environmentVariables: []);
 
     public static string[] BuildDockerInspectDigestArguments(string imageReference)
+        // Inspect the pushed tag through Docker buildx so deploy can pin the Vercel Build
+        // Output API container handler to the linux/amd64 manifest digest Vercel accepts.
+        // See https://vercel.com/docs/functions/container-images.
         => ["buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", imageReference];
 
     public static string[] BuildDestroyProjectArguments(VercelEnvironmentOptionsAnnotation options, string projectName)
@@ -31,6 +34,9 @@ internal static class VercelCliArguments
         arguments.Add("ls");
         arguments.Add(targetEnvironment);
         AddOptionalScopeArgument(arguments, options);
+        // Environment variables are project-scoped in the Vercel CLI. The linked scratch
+        // directory selects the project; JSON output avoids parsing localized table text.
+        // See https://vercel.com/docs/cli/env.
         arguments.Add("--cwd");
         arguments.Add(projectLinkDirectory);
         arguments.Add("--format=json");
@@ -66,6 +72,9 @@ internal static class VercelCliArguments
         // Vercel env commands must run inside a linked project directory. Use the
         // Aspire-owned scratch link instead of the source root so provider metadata
         // and pulled env files never mutate the user's checkout.
+        // --sensitive ensures the value is stored in Vercel's project env store instead
+        // of being visible in generated Build Output or deploy command arguments.
+        // See https://vercel.com/docs/cli/env and https://vercel.com/docs/environment-variables/sensitive-environment-variables.
         arguments.Add("--cwd");
         arguments.Add(projectLinkDirectory);
         arguments.Add("--yes");
@@ -104,6 +113,10 @@ internal static class VercelCliArguments
 
         arguments.Add("link");
         AddOptionalScopeArgument(arguments, options);
+        // Link writes .vercel/project.json in the selected working directory. Always link a
+        // scratch directory; checked-in .vercel/project.json in the source root is read-only
+        // user intent, not something deploy should mutate.
+        // See https://vercel.com/docs/cli/link.
         arguments.Add("--cwd");
         arguments.Add(projectLinkDirectory);
         arguments.Add("--yes");
@@ -122,6 +135,10 @@ internal static class VercelCliArguments
 
         arguments.Add("pull");
         AddOptionalScopeArgument(arguments, options);
+        // Pull materializes .vercel/project.json plus .vercel/.env.<environment>.local.
+        // The integration reads the project identity and VCR OIDC token, then deletes the
+        // pulled env files before writing deploy artifacts.
+        // See https://vercel.com/docs/cli/pull.
         arguments.Add("--cwd");
         arguments.Add(projectLinkDirectory);
         arguments.Add("--yes");
@@ -141,6 +158,9 @@ internal static class VercelCliArguments
         arguments.Add("inspect");
         arguments.Add(deploymentUrl);
         AddOptionalScopeArgument(arguments, options);
+        // Deploy returning successfully only confirms submission. Ask inspect to wait for the
+        // provider's final JSON state before deployment state is persisted.
+        // See https://vercel.com/docs/cli/inspect.
         arguments.Add("--wait");
         arguments.Add("--timeout");
         arguments.Add("120s");
@@ -183,6 +203,9 @@ internal static class VercelCliArguments
         arguments.Add("--cwd");
         arguments.Add(deployDirectory);
         AddOptionalProjectArgument(arguments, projectNameOrId);
+        // --prebuilt tells the CLI to upload the generated .vercel/output tree rather than
+        // running a source build. That tree is produced by VercelBuildOutputWriter.
+        // See https://vercel.com/docs/cli/deploy and https://vercel.com/docs/build-output-api.
         arguments.Add("--prebuilt");
         arguments.Add("--yes");
 

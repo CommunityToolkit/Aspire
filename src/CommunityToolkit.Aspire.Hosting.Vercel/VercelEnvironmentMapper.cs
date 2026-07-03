@@ -50,6 +50,8 @@ internal static class VercelEnvironmentMapper
 
             // Non-secrets can ride on `vercel deploy --env`; secret-bearing values must use
             // Vercel project environment variables so values never appear in CLI arguments.
+            // See https://vercel.com/docs/cli/deploy and
+            // https://vercel.com/docs/environment-variables/sensitive-environment-variables.
             bool containsSecret = ContainsSecretReference(unprocessedValue);
             if (containsSecret)
             {
@@ -114,6 +116,7 @@ internal static class VercelEnvironmentMapper
         // This path resolves values for `vercel env add`, not `vercel deploy --env`.
         // Values can be secret-bearing because they are sent on stdin to Vercel's secret
         // store; they must not be copied into publish plans, command lines, or state.
+        // See https://vercel.com/docs/cli/env.
         switch (value)
         {
             case null:
@@ -268,6 +271,7 @@ internal static class VercelEnvironmentMapper
         // post-deploy outputs, internal endpoints have no public Vercel edge address, and
         // cross-environment references lack a stable same-deploy alias. Fail before values
         // are written to Vercel env vars.
+        // See https://vercel.com/docs/deployments/generated-urls.
         if (!options.Production)
         {
             throw new DistributedApplicationException(

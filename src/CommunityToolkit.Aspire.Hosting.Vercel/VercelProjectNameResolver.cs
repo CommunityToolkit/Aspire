@@ -79,6 +79,7 @@ internal static class VercelProjectNameResolver
 
         // The production endpoint contract is project-name based, so managed names must
         // be stable and Vercel-valid before deploy starts.
+        // See https://vercel.com/docs/projects/overview.
         string sourceRoot = Path.TrimEndingDirectorySeparator(entry.SourceRoot);
         string sourceRootName = Path.GetFileName(sourceRoot);
 
@@ -144,6 +145,7 @@ internal static class VercelProjectNameResolver
             //   .vercel/project.json: { "projectId": "...", "orgId": "...", "projectName": "..." }
             // Treat it as user/provider ownership metadata rather than regenerating a managed
             // name. Destroy preserves these linked projects and only removes tracked env vars.
+            // See https://vercel.com/docs/cli/link.
             var project = JsonSerializer.Deserialize<VercelLinkedProjectJson>(File.ReadAllText(projectJsonPath));
             if (project is { ProjectName: { } projectName } && !string.IsNullOrWhiteSpace(projectName))
             {

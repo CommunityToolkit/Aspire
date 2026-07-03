@@ -19,6 +19,7 @@ internal static class VercelOidcToken
             // This is an unvalidated decode of the Vercel-issued token from `vercel pull`.
             // Docker/Vercel validate the token when it is used; here we only need routing
             // metadata such as owner_id/project to construct the VCR login and repository.
+            // See https://vercel.com/docs/container-registry.
             byte[] payloadBytes = Convert.FromBase64String(PadBase64Url(parts[1]));
             var claims = JsonSerializer.Deserialize<VercelOidcTokenClaimsJson>(payloadBytes);
 

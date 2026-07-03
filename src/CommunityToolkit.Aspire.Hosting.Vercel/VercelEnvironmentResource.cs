@@ -43,6 +43,7 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
 
         // Same-deploy references need an address that exists before `vercel deploy`
         // finishes. Production project aliases are deterministic; preview URLs are not.
+        // See https://vercel.com/docs/deployments/generated-urls.
         string projectName = VercelProjectNameResolver.GetProjectName(endpointReference.Resource);
         return ReferenceExpression.Create($"{projectName}.vercel.app");
     }
@@ -62,6 +63,7 @@ public sealed class VercelEnvironmentResource(string name) : Resource(name), ICo
         // These expressions model the caller-visible Vercel edge endpoint, not the
         // container listener. Vercel terminates TLS and forwards to the runtime's $PORT,
         // so service references use HTTPS/443 while TargetPort remains container metadata.
+        // See https://vercel.com/docs/functions/container-images.
         return property switch
         {
             // Vercel terminates public HTTPS at the platform edge, so callers always use

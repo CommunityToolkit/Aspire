@@ -100,6 +100,9 @@ internal static class VercelCliOutputParser
     {
         try
         {
+            // Vercel env JSON includes gitBranch for branch-scoped values. Aspire-managed
+            // project env vars are target-wide, so branch-scoped matches must not block add/rm.
+            // See https://vercel.com/docs/cli/env.
             foreach (var environmentVariable in DeserializeArrayOrNamedArray<VercelListedEnvironmentVariable>(standardOutput, "envs"))
             {
                 if (string.Equals(environmentVariable.Key, name, StringComparison.Ordinal)
@@ -176,6 +179,9 @@ internal static class VercelCliOutputParser
 
     private static T[] DeserializeArrayOrNamedArray<T>(string json, string propertyName)
     {
+        // Vercel CLI JSON has used both bare arrays and named-array wrappers
+        // ({ "projects": [...] }, { "envs": [...] }) across commands/versions.
+        // Keep this format tolerance localized to provider-output parsing.
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
         if (root.ValueKind == JsonValueKind.Array)

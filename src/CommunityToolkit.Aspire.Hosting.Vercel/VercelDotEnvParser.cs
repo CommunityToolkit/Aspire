@@ -8,6 +8,7 @@ internal static class VercelDotEnvParser
         // We only need the VERCEL_OIDC_TOKEN line. This intentionally supports the subset the
         // CLI emits: comments/blank lines, KEY=value, single/double quoted values, and common
         // backslash escapes. It is not a general dotenv evaluator with interpolation.
+        // See https://vercel.com/docs/cli/pull.
         Dictionary<string, string> values = new(StringComparer.Ordinal);
 
         foreach (string rawLine in lines)
