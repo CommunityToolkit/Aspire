@@ -50,29 +50,7 @@ internal static partial class VercelDeploymentStep
     private const string VercelContainerServiceName = VercelConstants.ContainerServiceName;
     private const string PushPrereqStepName = "push-prereq";
     private static readonly Version MinimumVercelCliVersion = new(54, 18, 6);
-    // These keys either bypass the generated Build Output API contract or configure
-    // routing/build/runtime/env behavior that Aspire must own so endpoint refs and
-    // secret handling stay coherent.
-    private static readonly string[] VercelJsonBuildOutputUnsupportedKeys =
-    [
-        "build",
-        "builds",
-        "buildCommand",
-        "devCommand",
-        "env",
-        "experimentalServices",
-        "experimentalServicesV2",
-        "framework",
-        "functions",
-        "headers",
-        "ignoreCommand",
-        "installCommand",
-        "outputDirectory",
-        "redirects",
-        "rewrites",
-        "routes",
-        "services"
-    ];
+
     public static async Task ValidatePrerequisitesAsync(PipelineStepContext context, VercelEnvironmentResource environment)
     {
         // This is the deploy prerequisite step, not merely static validation. It intentionally

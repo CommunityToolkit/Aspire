@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Aspire.Hosting;
 
@@ -43,12 +44,11 @@ internal static class VercelCliOutputParser
             //   { "state": "READY" }
             //   { "deployment": { "readyState": "READY" } }
             //   { "deployment": { "state": "READY" } }
-            using var document = JsonDocument.Parse(standardOutput);
-            var root = document.RootElement;
-            string? readyState = VercelJson.GetStringProperty(root, "readyState")
-                ?? VercelJson.GetStringProperty(root, "state")
-                ?? (root.TryGetProperty("deployment", out var deployment) ? VercelJson.GetStringProperty(deployment, "readyState") : null)
-                ?? (root.TryGetProperty("deployment", out deployment) ? VercelJson.GetStringProperty(deployment, "state") : null);
+            var output = JsonSerializer.Deserialize<VercelInspectOutput>(standardOutput);
+            string? readyState = output?.ReadyState
+                ?? output?.State
+                ?? output?.Deployment?.ReadyState
+                ?? output?.Deployment?.State;
 
             return new(readyState);
         }
@@ -80,10 +80,9 @@ internal static class VercelCliOutputParser
     {
         try
         {
-            using var document = JsonDocument.Parse(standardOutput);
-            foreach (var project in VercelJson.EnumerateArrayOrNamedArray(document.RootElement, "projects"))
+            foreach (var project in DeserializeArrayOrNamedArray<VercelListedProject>(standardOutput, "projects"))
             {
-                if (string.Equals(VercelJson.GetStringProperty(project, "name"), projectName, StringComparison.Ordinal))
+                if (string.Equals(project.Name, projectName, StringComparison.Ordinal))
                 {
                     return true;
                 }
@@ -101,11 +100,10 @@ internal static class VercelCliOutputParser
     {
         try
         {
-            using var document = JsonDocument.Parse(standardOutput);
-            foreach (var environmentVariable in VercelJson.EnumerateArrayOrNamedArray(document.RootElement, "envs"))
+            foreach (var environmentVariable in DeserializeArrayOrNamedArray<VercelListedEnvironmentVariable>(standardOutput, "envs"))
             {
-                if (string.Equals(VercelJson.GetStringProperty(environmentVariable, "key"), name, StringComparison.Ordinal)
-                    && string.IsNullOrWhiteSpace(VercelJson.GetStringProperty(environmentVariable, "gitBranch")))
+                if (string.Equals(environmentVariable.Key, name, StringComparison.Ordinal)
+                    && string.IsNullOrWhiteSpace(environmentVariable.GitBranch))
                 {
                     return true;
                 }
@@ -131,10 +129,8 @@ internal static class VercelCliOutputParser
 
         try
         {
-            using var document = JsonDocument.Parse(standardOutput);
-            var root = document.RootElement;
-
-            if (TryGetDeploymentResult(root, out var deploymentResult))
+            var output = JsonSerializer.Deserialize<VercelDeployOutput>(standardOutput);
+            if (output is not null && TryGetDeploymentResult(output, out var deploymentResult))
             {
                 return deploymentResult;
             }
@@ -147,32 +143,21 @@ internal static class VercelCliOutputParser
         return null;
     }
 
-    private static bool TryGetDeploymentResult(JsonElement root, [NotNullWhen(true)] out VercelDeploymentResult? deploymentResult)
+    private static bool TryGetDeploymentResult(VercelDeployOutput output, [NotNullWhen(true)] out VercelDeploymentResult? deploymentResult)
     {
         // Parse the Vercel deploy JSON shapes observed from different CLI versions:
         //   { "deployment": { "url": "https://...", "id": "..." } }
         //   { "url": "https://...", "id": "..." }
         // Callers fall back to line-based extraction when deploy output is plain text.
-        if (root.TryGetProperty("deployment", out var deployment)
-            && deployment.TryGetProperty("url", out var nestedUrl)
-            && TryGetHttpUrl(nestedUrl, out var nestedDeploymentUrl))
+        if (TryGetHttpUrl(output.Deployment?.Url, out var nestedDeploymentUrl))
         {
-            string? deploymentId = deployment.TryGetProperty("id", out var nestedId) && nestedId.ValueKind == JsonValueKind.String
-                ? nestedId.GetString()
-                : null;
-
-            deploymentResult = new(deploymentId, nestedDeploymentUrl);
+            deploymentResult = new(output.Deployment?.Id, nestedDeploymentUrl);
             return true;
         }
 
-        if (root.TryGetProperty("url", out var url)
-            && TryGetHttpUrl(url, out var rootDeploymentUrl))
+        if (TryGetHttpUrl(output.Url, out var rootDeploymentUrl))
         {
-            string? deploymentId = root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String
-                ? id.GetString()
-                : null;
-
-            deploymentResult = new(deploymentId, rootDeploymentUrl);
+            deploymentResult = new(output.Id, rootDeploymentUrl);
             return true;
         }
 
@@ -180,15 +165,88 @@ internal static class VercelCliOutputParser
         return false;
     }
 
-    private static bool TryGetHttpUrl(JsonElement urlElement, [NotNullWhen(true)] out string? url)
+    private static bool TryGetHttpUrl(string? url, [NotNullWhen(true)] out string? deploymentUrl)
     {
-        url = urlElement.ValueKind == JsonValueKind.String
-            ? urlElement.GetString()
-            : null;
-
-        return IsHttpUrl(url);
+        deploymentUrl = url;
+        return IsHttpUrl(deploymentUrl);
     }
 
     private static bool IsHttpUrl([NotNullWhen(true)] string? url)
         => Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http";
+
+    private static T[] DeserializeArrayOrNamedArray<T>(string json, string propertyName)
+    {
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            return root.Deserialize<T[]>() ?? [];
+        }
+
+        if (root.ValueKind == JsonValueKind.Object
+            && root.TryGetProperty(propertyName, out var array)
+            && array.ValueKind == JsonValueKind.Array)
+        {
+            return array.Deserialize<T[]>() ?? [];
+        }
+
+        throw new JsonException($"Expected JSON array or object property '{propertyName}'.");
+    }
+
+    private sealed class VercelDeployOutput
+    {
+        [JsonPropertyName("deployment")]
+        public VercelDeployDeployment? Deployment { get; init; }
+
+        [JsonPropertyName("url")]
+        public string? Url { get; init; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; init; }
+    }
+
+    private sealed class VercelDeployDeployment
+    {
+        [JsonPropertyName("url")]
+        public string? Url { get; init; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; init; }
+    }
+
+    private sealed class VercelInspectOutput
+    {
+        [JsonPropertyName("readyState")]
+        public string? ReadyState { get; init; }
+
+        [JsonPropertyName("state")]
+        public string? State { get; init; }
+
+        [JsonPropertyName("deployment")]
+        public VercelInspectDeployment? Deployment { get; init; }
+    }
+
+    private sealed class VercelInspectDeployment
+    {
+        [JsonPropertyName("readyState")]
+        public string? ReadyState { get; init; }
+
+        [JsonPropertyName("state")]
+        public string? State { get; init; }
+    }
+
+    private sealed class VercelListedProject
+    {
+        [JsonPropertyName("name")]
+        public string? Name { get; init; }
+    }
+
+    private sealed class VercelListedEnvironmentVariable
+    {
+        [JsonPropertyName("key")]
+        public string? Key { get; init; }
+
+        [JsonPropertyName("gitBranch")]
+        public string? GitBranch { get; init; }
+    }
 }

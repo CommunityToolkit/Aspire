@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
@@ -19,14 +20,13 @@ internal static class VercelOidcToken
             // Docker/Vercel validate the token when it is used; here we only need routing
             // metadata such as owner_id/project to construct the VCR login and repository.
             byte[] payloadBytes = Convert.FromBase64String(PadBase64Url(parts[1]));
-            using var document = JsonDocument.Parse(payloadBytes);
-            var root = document.RootElement;
+            var claims = JsonSerializer.Deserialize<VercelOidcTokenClaimsJson>(payloadBytes);
 
             return new(
-                VercelJson.GetStringProperty(root, "owner_id"),
-                VercelJson.GetStringProperty(root, "owner"),
-                VercelJson.GetStringProperty(root, "project"),
-                VercelJson.GetStringProperty(root, "project_id"));
+                claims?.OwnerId,
+                claims?.Owner,
+                claims?.Project,
+                claims?.ProjectId);
         }
         catch (Exception ex) when (ex is FormatException or JsonException)
         {
@@ -38,5 +38,20 @@ internal static class VercelOidcToken
     {
         string padded = value.Replace('-', '+').Replace('_', '/');
         return padded.PadRight(padded.Length + (4 - padded.Length % 4) % 4, '=');
+    }
+
+    private sealed class VercelOidcTokenClaimsJson
+    {
+        [JsonPropertyName("owner_id")]
+        public string? OwnerId { get; init; }
+
+        [JsonPropertyName("owner")]
+        public string? Owner { get; init; }
+
+        [JsonPropertyName("project")]
+        public string? Project { get; init; }
+
+        [JsonPropertyName("project_id")]
+        public string? ProjectId { get; init; }
     }
 }

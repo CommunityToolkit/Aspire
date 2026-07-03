@@ -7,6 +7,7 @@ using Aspire.Hosting;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CommunityToolkit.Aspire.Hosting.Vercel;
 
@@ -143,12 +144,10 @@ internal static class VercelProjectNameResolver
             //   .vercel/project.json: { "projectId": "...", "orgId": "...", "projectName": "..." }
             // Treat it as user/provider ownership metadata rather than regenerating a managed
             // name. Destroy preserves these linked projects and only removes tracked env vars.
-            using var document = JsonDocument.Parse(File.ReadAllText(projectJsonPath));
-            string? projectName = VercelJson.GetStringProperty(document.RootElement, "projectName");
-
-            if (!string.IsNullOrWhiteSpace(projectName))
+            var project = JsonSerializer.Deserialize<VercelLinkedProjectJson>(File.ReadAllText(projectJsonPath));
+            if (project is { ProjectName: { } projectName } && !string.IsNullOrWhiteSpace(projectName))
             {
-                projectLink = new(projectName, VercelJson.GetStringProperty(document.RootElement, "projectId"));
+                projectLink = new(projectName, project.ProjectId);
                 return true;
             }
         }
@@ -165,4 +164,13 @@ internal static class VercelProjectNameResolver
 
     private static bool IsLowercaseAsciiLetterOrDigit(char character)
         => character is >= 'a' and <= 'z' or >= '0' and <= '9';
+
+    private sealed class VercelLinkedProjectJson
+    {
+        [JsonPropertyName("projectName")]
+        public string? ProjectName { get; init; }
+
+        [JsonPropertyName("projectId")]
+        public string? ProjectId { get; init; }
+    }
 }

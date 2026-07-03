@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Aspire.Hosting;
 
@@ -38,31 +39,25 @@ internal static class VercelDockerImageDigestParser
                 // Container Images docs describe VCR-backed OCI images; live smoke tests rejected
                 // index digests, so prefer the linux/amd64 child.
                 // See https://vercel.com/docs/functions/container-images.
-                using var document = JsonDocument.Parse(trimmed);
-                var root = document.RootElement;
-
-                if (root.TryGetProperty("manifests", out var manifests) && manifests.ValueKind == JsonValueKind.Array)
+                var manifestOutput = JsonSerializer.Deserialize<DockerManifestOutput>(trimmed);
+                if (manifestOutput?.Manifests is { Length: > 0 } manifests)
                 {
-                    foreach (var manifest in manifests.EnumerateArray())
+                    foreach (var manifest in manifests)
                     {
-                        if (manifest.TryGetProperty("platform", out var platform)
-                            && platform.TryGetProperty("os", out var osElement)
-                            && platform.TryGetProperty("architecture", out var architectureElement)
-                            && string.Equals(osElement.GetString(), "linux", StringComparison.OrdinalIgnoreCase)
-                            && string.Equals(architectureElement.GetString(), "amd64", StringComparison.OrdinalIgnoreCase)
-                            && VercelJson.TryGetString(manifest, "digest", out var platformDigest)
-                            && IsSha256Digest(platformDigest))
+                        if (string.Equals(manifest.Platform?.Os, "linux", StringComparison.OrdinalIgnoreCase)
+                            && string.Equals(manifest.Platform?.Architecture, "amd64", StringComparison.OrdinalIgnoreCase)
+                            && IsSha256Digest(manifest.Digest))
                         {
-                            return platformDigest!;
+                            return manifest.Digest!;
                         }
                     }
 
                     throw new DistributedApplicationException("Docker did not return a linux/amd64 manifest digest for the pushed VCR image. Vercel requires linux/amd64 container images.");
                 }
 
-                if (VercelJson.TryGetString(root, "digest", out var digest) && IsSha256Digest(digest))
+                if (IsSha256Digest(manifestOutput?.Digest))
                 {
-                    return digest!;
+                    return manifestOutput!.Digest!;
                 }
             }
             catch (JsonException ex)
@@ -82,4 +77,31 @@ internal static class VercelDockerImageDigestParser
 
     private static bool IsSha256Digest([NotNullWhen(true)] string? value)
         => value is not null && Regex.IsMatch(value, "^sha256:[a-f0-9]{64}$", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+
+    private sealed class DockerManifestOutput
+    {
+        [JsonPropertyName("manifests")]
+        public DockerManifest[]? Manifests { get; init; }
+
+        [JsonPropertyName("digest")]
+        public string? Digest { get; init; }
+    }
+
+    private sealed class DockerManifest
+    {
+        [JsonPropertyName("digest")]
+        public string? Digest { get; init; }
+
+        [JsonPropertyName("platform")]
+        public DockerManifestPlatform? Platform { get; init; }
+    }
+
+    private sealed class DockerManifestPlatform
+    {
+        [JsonPropertyName("os")]
+        public string? Os { get; init; }
+
+        [JsonPropertyName("architecture")]
+        public string? Architecture { get; init; }
+    }
 }
