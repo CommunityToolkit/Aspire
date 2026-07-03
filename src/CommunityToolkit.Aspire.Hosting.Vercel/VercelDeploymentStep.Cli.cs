@@ -19,7 +19,7 @@ internal static partial class VercelDeploymentStep
         var options = environment.GetVercelOptions();
         var runner = context.Services.GetRequiredService<IVercelCliRunner>();
 
-        var versionResult = await runner.RunAsync(VercelCliFileName, ["--version"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var versionResult = await runner.GetVersionAsync(context.CancellationToken).ConfigureAwait(false);
         if (!versionResult.Succeeded)
         {
             throw CreateCliException("validate Vercel CLI installation", VercelCliFileName, versionResult);
@@ -41,7 +41,7 @@ internal static partial class VercelDeploymentStep
                 $"Vercel CLI version '{version}' is not supported. Install Vercel CLI {MinimumVercelCliVersion} or later from https://vercel.com/docs/cli.");
         }
 
-        var whoamiResult = await runner.RunAsync(VercelCliFileName, ["whoami"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var whoamiResult = await runner.GetCurrentUserAsync(context.CancellationToken).ConfigureAwait(false);
         if (!whoamiResult.Succeeded)
         {
             throw CreateCliException("validate Vercel authentication", VercelCliFileName, whoamiResult);
@@ -49,7 +49,7 @@ internal static partial class VercelDeploymentStep
 
         if (!string.IsNullOrWhiteSpace(options.Scope))
         {
-            var scopeResult = await runner.RunAsync(VercelCliFileName, VercelCliArguments.BuildValidateScopeArguments(options), workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+            var scopeResult = await runner.ListProjectsAsync(options, filter: null, context.CancellationToken).ConfigureAwait(false);
             if (!scopeResult.Succeeded)
             {
                 throw CreateCliException($"validate Vercel scope '{options.Scope}'", VercelCliFileName, scopeResult);
@@ -67,8 +67,7 @@ internal static partial class VercelDeploymentStep
         // A successful `vercel deploy` only means the CLI accepted the submission.
         // Query the provider before recording state so Aspire does not persist failed
         // or still-building deployments as successfully applied resources.
-        string[] arguments = VercelCliArguments.BuildInspectDeploymentArguments(options, deploymentResult.DeploymentUrl);
-        var result = await runner.RunAsync(VercelCliFileName, arguments, workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.InspectDeploymentAsync(options, deploymentResult.DeploymentUrl, context.CancellationToken).ConfigureAwait(false);
 
         if (!result.Succeeded)
         {

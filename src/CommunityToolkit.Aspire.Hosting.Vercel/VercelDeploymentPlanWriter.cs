@@ -101,7 +101,7 @@ internal static class VercelDeploymentPlanWriter
             resolveProjectEnvironmentVariableValues: false,
             cancellationToken).ConfigureAwait(false);
 
-        return VercelCliArguments.BuildDeployArguments(options, entry.EffectiveDeployDirectory, VercelProjectNameResolver.GetProjectOption(entry), environmentConfiguration.DeploymentEnvironmentVariables);
+        return VercelCliRunner.BuildDeployPrebuiltArgumentsForPlan(options, entry.EffectiveDeployDirectory, VercelProjectNameResolver.GetProjectOption(entry), environmentConfiguration.DeploymentEnvironmentVariables);
     }
 
     public static async Task<VercelEnvironmentConfiguration> GetEnvironmentConfigurationAsync(
@@ -160,7 +160,7 @@ internal static class VercelDeploymentPlanWriter
             planEntries.Add(new(
                 entry.Resource.Name,
                 VercelDeploymentModel.GetDisplayDockerfilePath(entry),
-                VercelCliArguments.BuildDisplayDeployCommand(options, entry.Resource.Name, environmentConfiguration.DeploymentEnvironmentVariables),
+                VercelCliRunner.BuildDisplayDeployCommand(options, entry.Resource.Name, environmentConfiguration.DeploymentEnvironmentVariables),
                 [.. environmentConfiguration.AllEnvironmentVariableNames.Order(StringComparer.Ordinal)]));
         }
 

@@ -87,8 +87,7 @@ internal static partial class VercelDeploymentStep
             }
             else
             {
-                string[] arguments = VercelCliArguments.BuildDestroyProjectArguments(options, projectName);
-                var result = await runner.RunAsync(VercelCliFileName, arguments, workingDirectory: null, context.CancellationToken, standardInput: "y\n").ConfigureAwait(false);
+                var result = await runner.RemoveProjectAsync(options, projectName, context.CancellationToken).ConfigureAwait(false);
 
                 if (!result.Succeeded)
                 {
@@ -124,8 +123,7 @@ internal static partial class VercelDeploymentStep
         // Avoid treating localized or reformatted CLI errors as provider state. The Vercel
         // CLI exposes project lists as JSON, so destroy checks exact project names before
         // deleting and again after a failed delete to distinguish races from real failures.
-        string[] arguments = VercelCliArguments.BuildListProjectsArguments(options, projectName);
-        var result = await runner.RunAsync(VercelCliFileName, arguments, workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.ListProjectsAsync(options, projectName, context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"list Vercel projects while checking for '{projectName}'", VercelCliFileName, result);
@@ -145,8 +143,7 @@ internal static partial class VercelDeploymentStep
         // `vercel env rm` reports absence as human text, but `vercel env ls --format=json`
         // returns the linked project's exact keys. Use that provider read for idempotent
         // stale-secret cleanup instead of parsing failure prose.
-        string[] arguments = VercelCliArguments.BuildListProjectEnvironmentVariablesArguments(options, projectLinkDirectory, targetEnvironment);
-        var result = await runner.RunAsync(VercelCliFileName, arguments, projectLinkDirectory, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.ListProjectEnvironmentVariablesAsync(options, projectLinkDirectory, targetEnvironment, context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"list Vercel project environment variables before removing '{name}'", VercelCliFileName, result);
@@ -193,8 +190,7 @@ internal static partial class VercelDeploymentStep
         string targetEnvironment = VercelProjectEnvironment.GetName(options);
         foreach (var environmentVariable in environmentVariables.OrderBy(static variable => variable.Key, StringComparer.Ordinal))
         {
-            string[] arguments = VercelCliArguments.BuildAddProjectEnvironmentVariableArguments(options, projectLinkDirectory, environmentVariable.Key, targetEnvironment);
-            var result = await runner.RunAsync(VercelCliFileName, arguments, projectLinkDirectory, context.CancellationToken, standardInput: environmentVariable.Value).ConfigureAwait(false);
+            var result = await runner.AddProjectEnvironmentVariableAsync(options, projectLinkDirectory, environmentVariable.Key, targetEnvironment, environmentVariable.Value, context.CancellationToken).ConfigureAwait(false);
             if (!result.Succeeded)
             {
                 throw CreateCliException($"configure Vercel project environment variable '{environmentVariable.Key}' for resource '{entry.Resource.Name}'", VercelCliFileName, result);
@@ -218,8 +214,7 @@ internal static partial class VercelDeploymentStep
                 continue;
             }
 
-            string[] arguments = VercelCliArguments.BuildRemoveProjectEnvironmentVariableArguments(options, projectLinkDirectory, name, targetEnvironment);
-            var result = await runner.RunAsync(VercelCliFileName, arguments, projectLinkDirectory, context.CancellationToken).ConfigureAwait(false);
+            var result = await runner.RemoveProjectEnvironmentVariableAsync(options, projectLinkDirectory, name, targetEnvironment, context.CancellationToken).ConfigureAwait(false);
             if (!result.Succeeded
                 && await ProjectEnvironmentVariableExistsAsync(context, runner, options, projectLinkDirectory, name, targetEnvironment).ConfigureAwait(false))
             {
@@ -246,8 +241,7 @@ internal static partial class VercelDeploymentStep
 
         try
         {
-            string[] linkArguments = VercelCliArguments.BuildLinkProjectArguments(options, projectLinkDirectory, deployment.ProjectId ?? deployment.ProjectName);
-            var linkResult = await runner.RunAsync(VercelCliFileName, linkArguments, projectLinkDirectory, context.CancellationToken).ConfigureAwait(false);
+            var linkResult = await runner.LinkProjectAsync(options, projectLinkDirectory, deployment.ProjectId ?? deployment.ProjectName, context.CancellationToken).ConfigureAwait(false);
             if (!linkResult.Succeeded)
             {
                 throw CreateCliException($"link Vercel project '{deployment.ProjectName}' for environment variable cleanup", VercelCliFileName, linkResult);

@@ -1136,26 +1136,33 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public void BuildDeployArgumentsIncludesConfiguredOptions()
+    public async Task DeployPrebuiltUsesConfiguredOptions()
     {
         var options = new VercelEnvironmentOptionsAnnotation
         {
             Production = true,
             Scope = "team"
         };
-        var entry = CreateDeploymentEntry("/repo/src/api");
+        var runner = new FakeVercelCliRunner();
 
-        string[] arguments = VercelCliArguments.BuildDeployArguments(options, entry);
+        await runner.DeployPrebuiltAsync(options, "/repo/src/api", "api", [], TestContext.Current.CancellationToken);
 
-        Assert.Equal(["deploy", "--scope", "team", "--cwd", "/repo/src/api", "--project", "api", "--prebuilt", "--yes", "--prod"], arguments);
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal("vercel", invocation.FileName);
+        Assert.Equal("/repo/src/api", invocation.WorkingDirectory);
+        Assert.Equal(["deploy", "--scope", "team", "--cwd", "/repo/src/api", "--project", "api", "--prebuilt", "--yes", "--prod"], invocation.Arguments);
     }
 
     [Fact]
-    public void BuildDockerInspectDigestArgumentsUsesBuildxImagetools()
+    public async Task InspectDockerImageDigestUsesBuildxImagetools()
     {
-        string[] arguments = VercelCliArguments.BuildDockerInspectDigestArguments("vcr.vercel.com/team/project/app:tag");
+        var runner = new FakeVercelCliRunner();
 
-        Assert.Equal(["buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", "vcr.vercel.com/team/project/app:tag"], arguments);
+        await runner.InspectDockerImageDigestAsync("vcr.vercel.com/team/project/app:tag", TestContext.Current.CancellationToken);
+
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal("docker", invocation.FileName);
+        Assert.Equal(["buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", "vcr.vercel.com/team/project/app:tag"], invocation.Arguments);
     }
 
     [Fact]
@@ -1280,89 +1287,101 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public void BuildProjectEnvironmentVariableArgumentsUseLinkedScratchDirectory()
+    public async Task ProjectEnvironmentVariableOperationsUseLinkedScratchDirectory()
     {
         var options = new VercelEnvironmentOptionsAnnotation
         {
             Scope = "team"
         };
+        var runner = new FakeVercelCliRunner();
 
-        string[] linkArguments = VercelCliArguments.BuildLinkProjectArguments(options, "/tmp/vercel-link", "api-project");
-        string[] envArguments = VercelCliArguments.BuildAddProjectEnvironmentVariableArguments(options, "/tmp/vercel-link", "API_KEY", "production");
-        string[] removeEnvArguments = VercelCliArguments.BuildRemoveProjectEnvironmentVariableArguments(options, "/tmp/vercel-link", "API_KEY", "production");
-        string[] listEnvArguments = VercelCliArguments.BuildListProjectEnvironmentVariablesArguments(options, "/tmp/vercel-link", "production");
+        await runner.LinkProjectAsync(options, "/tmp/vercel-link", "api-project", TestContext.Current.CancellationToken);
+        await runner.AddProjectEnvironmentVariableAsync(options, "/tmp/vercel-link", "API_KEY", "production", "secret", TestContext.Current.CancellationToken);
+        await runner.RemoveProjectEnvironmentVariableAsync(options, "/tmp/vercel-link", "API_KEY", "production", TestContext.Current.CancellationToken);
+        await runner.ListProjectEnvironmentVariablesAsync(options, "/tmp/vercel-link", "production", TestContext.Current.CancellationToken);
 
-        Assert.Equal(["link", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes", "--project", "api-project"], linkArguments);
-        Assert.Equal(["env", "add", "API_KEY", "production", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes", "--force", "--sensitive"], envArguments);
-        Assert.Equal(["env", "rm", "API_KEY", "production", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes"], removeEnvArguments);
-        Assert.Equal(["env", "ls", "production", "--scope", "team", "--cwd", "/tmp/vercel-link", "--format=json"], listEnvArguments);
-        Assert.DoesNotContain("--project", envArguments);
+        Assert.Equal(["link", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes", "--project", "api-project"], runner.Invocations[0].Arguments);
+        Assert.Equal(["env", "add", "API_KEY", "production", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes", "--force", "--sensitive"], runner.Invocations[1].Arguments);
+        Assert.Equal("secret", runner.Invocations[1].StandardInput);
+        Assert.Equal(["env", "rm", "API_KEY", "production", "--scope", "team", "--cwd", "/tmp/vercel-link", "--yes"], runner.Invocations[2].Arguments);
+        Assert.Equal(["env", "ls", "production", "--scope", "team", "--cwd", "/tmp/vercel-link", "--format=json"], runner.Invocations[3].Arguments);
+        Assert.DoesNotContain("--project", runner.Invocations[1].Arguments);
     }
 
     [Fact]
-    public void BuildDeployArgumentsIncludesTarget()
+    public async Task DeployPrebuiltIncludesTarget()
     {
         var options = new VercelEnvironmentOptionsAnnotation
         {
             Target = "preview"
         };
-        var entry = CreateDeploymentEntry("/repo/src/api");
+        var runner = new FakeVercelCliRunner();
 
-        string[] arguments = VercelCliArguments.BuildDeployArguments(options, entry);
+        await runner.DeployPrebuiltAsync(options, "/repo/src/api", "api", [], TestContext.Current.CancellationToken);
 
-        Assert.Equal(["deploy", "--cwd", "/repo/src/api", "--project", "api", "--prebuilt", "--yes", "--target", "preview"], arguments);
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal(["deploy", "--cwd", "/repo/src/api", "--project", "api", "--prebuilt", "--yes", "--target", "preview"], invocation.Arguments);
     }
 
     [Fact]
-    public void BuildDestroyProjectArgumentsIncludesConfiguredOptions()
+    public async Task RemoveProjectIncludesConfiguredOptions()
     {
         var options = new VercelEnvironmentOptionsAnnotation
         {
             Scope = "team"
         };
+        var runner = new FakeVercelCliRunner();
 
-        string[] arguments = VercelCliArguments.BuildDestroyProjectArguments(options, "api");
+        await runner.RemoveProjectAsync(options, "api", TestContext.Current.CancellationToken);
 
-        Assert.Equal(["project", "remove", "api", "--scope", "team"], arguments);
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal(["project", "remove", "api", "--scope", "team"], invocation.Arguments);
+        Assert.Equal("y\n", invocation.StandardInput);
     }
 
     [Fact]
-    public void BuildValidateScopeArgumentsIncludesConfiguredOptions()
+    public async Task ListProjectsWithoutFilterIncludesConfiguredOptions()
     {
         var options = new VercelEnvironmentOptionsAnnotation
         {
             Scope = "team"
         };
+        var runner = new FakeVercelCliRunner();
 
-        string[] arguments = VercelCliArguments.BuildValidateScopeArguments(options);
+        await runner.ListProjectsAsync(options, filter: null, TestContext.Current.CancellationToken);
 
-        Assert.Equal(["project", "ls", "--scope", "team", "--format=json"], arguments);
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal(["project", "ls", "--scope", "team", "--format=json"], invocation.Arguments);
     }
 
     [Fact]
-    public void BuildListProjectsArgumentsIncludesFilter()
+    public async Task ListProjectsIncludesFilter()
     {
         var options = new VercelEnvironmentOptionsAnnotation
         {
             Scope = "team"
         };
+        var runner = new FakeVercelCliRunner();
 
-        string[] arguments = VercelCliArguments.BuildListProjectsArguments(options, "api");
+        await runner.ListProjectsAsync(options, "api", TestContext.Current.CancellationToken);
 
-        Assert.Equal(["project", "ls", "--scope", "team", "--filter", "api", "--format=json"], arguments);
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal(["project", "ls", "--scope", "team", "--filter", "api", "--format=json"], invocation.Arguments);
     }
 
     [Fact]
-    public void BuildInspectDeploymentArgumentsIncludesConfiguredOptions()
+    public async Task InspectDeploymentIncludesConfiguredOptions()
     {
         var options = new VercelEnvironmentOptionsAnnotation
         {
             Scope = "team"
         };
+        var runner = new FakeVercelCliRunner();
 
-        string[] arguments = VercelCliArguments.BuildInspectDeploymentArguments(options, "https://api.vercel.app");
+        await runner.InspectDeploymentAsync(options, "https://api.vercel.app", TestContext.Current.CancellationToken);
 
-        Assert.Equal(["inspect", "https://api.vercel.app", "--scope", "team", "--wait", "--timeout", "120s", "--format=json"], arguments);
+        var invocation = Assert.Single(runner.Invocations);
+        Assert.Equal(["inspect", "https://api.vercel.app", "--scope", "team", "--wait", "--timeout", "120s", "--format=json"], invocation.Arguments);
     }
 
     [Fact]
@@ -2139,7 +2158,7 @@ public class VercelEnvironmentTests
         var digestInvocation = Assert.Single(runner.Invocations, invocation => invocation.FileName == "docker" && invocation.Arguments.Contains("imagetools"));
         var invocation = Assert.Single(runner.Invocations, invocation => invocation.Arguments.Contains("deploy"));
         string expectedDeployDirectory = Path.Combine(tempRoot.Path, "api", "vercel-build-output");
-        Assert.Equal(VercelCliArguments.BuildDockerInspectDigestArguments(digestInvocation.Arguments[^1]), digestInvocation.Arguments);
+        Assert.Equal(["buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", digestInvocation.Arguments[^1]], digestInvocation.Arguments);
         Assert.StartsWith("vcr.vercel.com/test-team/test-project/app:", digestInvocation.Arguments[^1], StringComparison.Ordinal);
         Assert.Equal("vercel", invocation.FileName);
         Assert.Equal(expectedDeployDirectory, invocation.WorkingDirectory);
@@ -3260,26 +3279,28 @@ public class VercelEnvironmentTests
     }
 
     [Fact]
-    public async Task VercelCliRunnerRunsProcessAndCapturesOutput()
+    public async Task VercelCliRunnerInvokesTypedProcessOperation()
     {
-        var runner = new VercelCliRunner();
+        var runner = new VercelCliRunner((fileName, arguments, workingDirectory, cancellationToken, standardInput) =>
+            Task.FromResult(new VercelCliResult(0, $"{fileName} {string.Join(" ", arguments)}", "")));
 
-        var result = await runner.RunAsync("dotnet", ["--version"], Directory.GetCurrentDirectory(), TestContext.Current.CancellationToken);
+        var result = await runner.GetVersionAsync(TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(0, result.ExitCode);
-        Assert.False(string.IsNullOrWhiteSpace(result.StandardOutput));
+        Assert.Equal("vercel --version", result.StandardOutput);
     }
 
     [Fact]
-    public async Task VercelCliRunnerThrowsWhenProcessCannotStart()
+    public async Task VercelCliRunnerSurfacesTypedProcessFailures()
     {
-        var runner = new VercelCliRunner();
+        var runner = new VercelCliRunner((_, _, _, _, _) =>
+            Task.FromResult(new VercelCliResult(1, "", "failed")));
 
-        var exception = await Assert.ThrowsAsync<DistributedApplicationException>(() =>
-            runner.RunAsync($"missing-vercel-cli-{Guid.NewGuid():N}", [], workingDirectory: null, TestContext.Current.CancellationToken));
+        var result = await runner.GetVersionAsync(TestContext.Current.CancellationToken);
 
-        Assert.Contains("could not be started", exception.Message);
+        Assert.False(result.Succeeded);
+        Assert.Equal("failed", result.StandardError);
     }
 
     [Fact]
@@ -3809,9 +3830,10 @@ public class VercelEnvironmentTests
         }
     }
 
-    private sealed class FakeVercelCliRunner(params VercelCliResult[] results) : IVercelCliRunner
+    private sealed class FakeVercelCliRunner : IVercelCliRunner
     {
-        private readonly Queue<VercelCliResult> _results = new(results);
+        private readonly VercelCliRunner _runner;
+        private readonly Queue<VercelCliResult> _results;
         private readonly HashSet<string> _projects = new(StringComparer.Ordinal);
         private readonly Dictionary<string, string> _linkedProjects = new(StringComparer.Ordinal);
         private readonly HashSet<string> _projectEnvironmentVariables = new(StringComparer.Ordinal)
@@ -3850,7 +3872,98 @@ public class VercelEnvironmentTests
 
         public List<VercelCliInvocation> Invocations { get; } = [];
 
-        public Task<VercelCliResult> RunAsync(
+        public FakeVercelCliRunner(params VercelCliResult[] results)
+        {
+            _results = new(results);
+            _runner = new(RunProcessAsync);
+        }
+
+        public Task<VercelCliResult> GetVersionAsync(CancellationToken cancellationToken)
+            => _runner.GetVersionAsync(cancellationToken);
+
+        public Task<VercelCliResult> GetCurrentUserAsync(CancellationToken cancellationToken)
+            => _runner.GetCurrentUserAsync(cancellationToken);
+
+        public Task<VercelCliResult> ListProjectsAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string? filter,
+            CancellationToken cancellationToken)
+            => _runner.ListProjectsAsync(options, filter, cancellationToken);
+
+        public Task<VercelCliResult> AddProjectAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string projectName,
+            CancellationToken cancellationToken)
+            => _runner.AddProjectAsync(options, projectName, cancellationToken);
+
+        public Task<VercelCliResult> RemoveProjectAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string projectName,
+            CancellationToken cancellationToken)
+            => _runner.RemoveProjectAsync(options, projectName, cancellationToken);
+
+        public Task<VercelCliResult> LinkProjectAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string projectLinkDirectory,
+            string projectNameOrId,
+            CancellationToken cancellationToken)
+            => _runner.LinkProjectAsync(options, projectLinkDirectory, projectNameOrId, cancellationToken);
+
+        public Task<VercelCliResult> PullProjectSettingsAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string projectLinkDirectory,
+            string targetEnvironment,
+            CancellationToken cancellationToken)
+            => _runner.PullProjectSettingsAsync(options, projectLinkDirectory, targetEnvironment, cancellationToken);
+
+        public Task<VercelCliResult> ListProjectEnvironmentVariablesAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string projectLinkDirectory,
+            string targetEnvironment,
+            CancellationToken cancellationToken)
+            => _runner.ListProjectEnvironmentVariablesAsync(options, projectLinkDirectory, targetEnvironment, cancellationToken);
+
+        public Task<VercelCliResult> AddProjectEnvironmentVariableAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string projectLinkDirectory,
+            string name,
+            string targetEnvironment,
+            string value,
+            CancellationToken cancellationToken)
+            => _runner.AddProjectEnvironmentVariableAsync(options, projectLinkDirectory, name, targetEnvironment, value, cancellationToken);
+
+        public Task<VercelCliResult> RemoveProjectEnvironmentVariableAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string projectLinkDirectory,
+            string name,
+            string targetEnvironment,
+            CancellationToken cancellationToken)
+            => _runner.RemoveProjectEnvironmentVariableAsync(options, projectLinkDirectory, name, targetEnvironment, cancellationToken);
+
+        public Task<VercelCliResult> DeployPrebuiltAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string deployDirectory,
+            string? projectNameOrId,
+            IReadOnlyList<KeyValuePair<string, string>> environmentVariables,
+            CancellationToken cancellationToken)
+            => _runner.DeployPrebuiltAsync(options, deployDirectory, projectNameOrId, environmentVariables, cancellationToken);
+
+        public Task<VercelCliResult> InspectDeploymentAsync(
+            VercelEnvironmentOptionsAnnotation options,
+            string deploymentUrl,
+            CancellationToken cancellationToken)
+            => _runner.InspectDeploymentAsync(options, deploymentUrl, cancellationToken);
+
+        public Task<VercelCliResult> ValidateDockerBuildxAsync(CancellationToken cancellationToken)
+            => _runner.ValidateDockerBuildxAsync(cancellationToken);
+
+        public Task<VercelCliResult> LoginToVcrAsync(string ownerId, string oidcToken, CancellationToken cancellationToken)
+            => _runner.LoginToVcrAsync(ownerId, oidcToken, cancellationToken);
+
+        public Task<VercelCliResult> InspectDockerImageDigestAsync(string imageReference, CancellationToken cancellationToken)
+            => _runner.InspectDockerImageDigestAsync(imageReference, cancellationToken);
+
+        private Task<VercelCliResult> RunProcessAsync(
             string fileName,
             IReadOnlyList<string> arguments,
             string? workingDirectory,

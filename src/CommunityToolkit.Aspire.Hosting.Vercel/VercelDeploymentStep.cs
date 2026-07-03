@@ -92,7 +92,7 @@ internal static partial class VercelDeploymentStep
     private static async Task ValidateDockerDigestInspectionPrerequisitesAsync(PipelineStepContext context)
     {
         var runner = context.Services.GetRequiredService<IVercelCliRunner>();
-        var result = await runner.RunAsync(DockerCliFileName, ["buildx", "version"], workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.ValidateDockerBuildxAsync(context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException("validate Docker buildx for VCR image digest inspection", DockerCliFileName, result);
@@ -396,13 +396,12 @@ internal static partial class VercelDeploymentStep
         // `vercel deploy --prebuilt` uploads metadata only, not a staged source tree.
         await VercelBuildOutputWriter.WriteAsync(entry, projectContext.PulledProject, image.Reference, context.CancellationToken).ConfigureAwait(false);
 
-        string[] deployArguments = VercelCliArguments.BuildDeployArguments(
+        var result = await runner.DeployPrebuiltAsync(
             options,
             entry.DeployDirectory,
             VercelProjectNameResolver.GetProjectOption(entry),
-            projectContext.EnvironmentConfiguration.DeploymentEnvironmentVariables);
-
-        var result = await runner.RunAsync(VercelCliFileName, deployArguments, entry.DeployDirectory, context.CancellationToken).ConfigureAwait(false);
+            projectContext.EnvironmentConfiguration.DeploymentEnvironmentVariables,
+            context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"deploy prebuilt resource '{entry.Resource.Name}' to Vercel", VercelCliFileName, result);
@@ -503,8 +502,7 @@ internal static partial class VercelDeploymentStep
             preparedDeployment.ProjectContext.OidcClaims,
             context.CancellationToken).ConfigureAwait(false);
 
-        string[] arguments = VercelCliArguments.BuildDockerInspectDigestArguments(preparedDeployment.TaggedImageReference);
-        var result = await runner.RunAsync(DockerCliFileName, arguments, workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.InspectDockerImageDigestAsync(preparedDeployment.TaggedImageReference, context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"resolve pushed VCR image digest for resource '{preparedDeployment.Entry.Resource.Name}'", DockerCliFileName, result);

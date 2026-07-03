@@ -31,8 +31,7 @@ internal static partial class VercelDeploymentStep
         // See https://vercel.com/docs/cli/env and https://vercel.com/docs/cli/link.
         // Link a scratch directory instead of the source root so secret configuration can use
         // the CLI's native project lookup without writing .vercel metadata into user code.
-        string[] linkArguments = VercelCliArguments.BuildLinkProjectArguments(options, projectLinkDirectory, VercelProjectNameResolver.GetProjectOption(entry));
-        var result = await runner.RunAsync(VercelCliFileName, linkArguments, projectLinkDirectory, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.LinkProjectAsync(options, projectLinkDirectory, VercelProjectNameResolver.GetProjectOption(entry), context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"prepare temporary Vercel project link for resource '{entry.Resource.Name}'", VercelCliFileName, result);
@@ -52,8 +51,7 @@ internal static partial class VercelDeploymentStep
         // files under `.vercel/`; VCR authentication depends on the pulled VERCEL_OIDC_TOKEN.
         // See https://vercel.com/docs/cli/pull and https://vercel.com/docs/container-registry.
         string targetEnvironment = VercelProjectEnvironment.GetName(options);
-        string[] arguments = VercelCliArguments.BuildPullProjectSettingsArguments(options, projectLinkDirectory, targetEnvironment);
-        var result = await runner.RunAsync(VercelCliFileName, arguments, projectLinkDirectory, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.PullProjectSettingsAsync(options, projectLinkDirectory, targetEnvironment, context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"pull Vercel project settings for resource '{entry.Resource.Name}'", VercelCliFileName, result);
@@ -121,8 +119,7 @@ internal static partial class VercelDeploymentStep
         // VCR supports Docker-compatible tooling at vcr.vercel.com. This login uses the
         // Vercel-issued OIDC token pulled for the linked project.
         // See https://vercel.com/docs/container-registry.
-        string[] arguments = VercelCliArguments.BuildDockerLoginArguments(claims.OwnerId);
-        var result = await runner.RunAsync(DockerCliFileName, arguments, workingDirectory: null, cancellationToken, standardInput: oidcToken).ConfigureAwait(false);
+        var result = await runner.LoginToVcrAsync(claims.OwnerId, oidcToken, cancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException("authenticate Docker to VCR", DockerCliFileName, result);
@@ -139,8 +136,7 @@ internal static partial class VercelDeploymentStep
         // this integration supports: it creates the project or validates that it already
         // exists and is accessible. Failure here means deploy should not proceed to image push.
         string projectName = VercelProjectNameResolver.GetProjectName(entry);
-        string[] arguments = VercelCliArguments.BuildAddProjectArguments(options, projectName);
-        var result = await runner.RunAsync(VercelCliFileName, arguments, workingDirectory: null, context.CancellationToken).ConfigureAwait(false);
+        var result = await runner.AddProjectAsync(options, projectName, context.CancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw CreateCliException($"create or validate Vercel project '{projectName}' for resource '{entry.Resource.Name}'", VercelCliFileName, result);
