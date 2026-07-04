@@ -263,6 +263,7 @@ internal sealed class VercelCliRunner : IVercelCliRunner
     internal static string BuildDisplayDeployCommand(
         VercelEnvironmentOptionsAnnotation options,
         string resourceName,
+        string serviceName,
         IReadOnlyList<KeyValuePair<string, string>> environmentVariables)
     {
         // The plan should explain the command shape without leaking concrete source roots,
@@ -271,7 +272,7 @@ internal sealed class VercelCliRunner : IVercelCliRunner
             .Select(static environmentVariable => new KeyValuePair<string, string>(environmentVariable.Key, "<value>"))
             .ToArray();
 
-        string displayImage = $"{VercelConstants.VcrRegistry}/<owner>/<project>/{VercelConstants.ContainerServiceName}:<tag>";
+        string displayImage = $"{VercelConstants.VcrRegistry}/<owner>/<project>/{serviceName}:<tag>";
         string displayDeployDirectory = $"<{resourceName}-build-output>";
         string displayProject = $"<{resourceName}-vercel-project>";
         return $"vercel pull --cwd <{resourceName}-vercel-project-link> --yes --environment {VercelProjectEnvironment.GetName(options)} && aspire build/push {resourceName} -> {displayImage} && docker {string.Join(" ", BuildDockerInspectDigestArguments(displayImage))} && vercel {string.Join(" ", BuildDeployPrebuiltArguments(options, displayDeployDirectory, displayProject, displayEnvironmentVariables))}";

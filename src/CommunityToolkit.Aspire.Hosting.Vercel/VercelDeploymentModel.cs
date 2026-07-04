@@ -105,7 +105,6 @@ internal static class VercelDeploymentModel
             ValidateUnsupportedResourceModel(entry);
         }
 
-        ValidateUniqueProjectNames(entries);
     }
 
     public static async Task<VercelDeploymentEntry> PrepareEntryAsync(PipelineStepContext context, VercelDeploymentEntry entry)
@@ -191,32 +190,6 @@ internal static class VercelDeploymentModel
             || (computeEnvironment is null && allowImplicitTargeting);
     }
 
-    private static void ValidateUniqueProjectNames(IReadOnlyList<VercelDeploymentEntry> entries)
-    {
-        // Production endpoint references use https://{projectName}.vercel.app. If two
-        // resources resolve to the same Vercel project, endpoint references and destroy
-        // ownership would both become ambiguous.
-        var projectNames = entries
-            .Select(entry => new
-            {
-                Entry = entry,
-                ProjectLink = VercelProjectNameResolver.GetProjectLink(entry)
-            })
-            .GroupBy(item => item.ProjectLink.ProjectName, StringComparer.Ordinal)
-            .Where(group => group.Count() > 1)
-            .ToArray();
-
-        if (projectNames.Length == 0)
-        {
-            return;
-        }
-
-        var collision = projectNames[0];
-        string resources = string.Join(", ", collision.Select(static item => $"'{item.Entry.Resource.Name}'").Order(StringComparer.Ordinal));
-        throw new DistributedApplicationException(
-            $"Multiple Vercel resources resolve to project name '{collision.Key}' ({resources}). Vercel project names must be unique per environment because each resource deploys to and references one project production URL. Use WithVercelProjectName, distinct source directory names, or link each resource to a distinct Vercel project with .vercel/project.json.");
-    }
-
     private static void ValidateUnsupportedResourceModel(VercelDeploymentEntry entry)
     {
         IResource resource = entry.Resource;
@@ -263,19 +236,6 @@ internal static class VercelDeploymentModel
         if (endpoints.Length == 0)
         {
             return;
-        }
-
-        // Reject the tempting Compose/ACA shapes up front: private listeners, multiple
-        // target ports, and non-HTTP protocols do not have an equivalent in this preview's
-        // single public Vercel container ingress.
-        // Vercel's Dockerfile preview exposes one public platform ingress; it has no
-        // Aspire-modeled private service network for internal endpoints.
-        // See https://vercel.com/docs/functions/container-images.
-        var internalEndpoint = endpoints.FirstOrDefault(static endpoint => !endpoint.IsExternal);
-        if (internalEndpoint is not null)
-        {
-            throw new DistributedApplicationException(
-                $"Resource '{entry.Resource.Name}' configures endpoint '{internalEndpoint.Name}' as internal, but Vercel Dockerfile deployments expose public platform HTTPS ingress only. Mark the endpoint external or remove it before deploying to Vercel.");
         }
 
         var unsupportedEndpoint = endpoints.FirstOrDefault(static endpoint => !IsHttpEndpoint(endpoint));

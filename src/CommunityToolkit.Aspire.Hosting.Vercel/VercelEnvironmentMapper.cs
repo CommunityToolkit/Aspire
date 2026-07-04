@@ -19,11 +19,13 @@ internal static class VercelEnvironmentMapper
         VercelEnvironmentOptionsAnnotation options,
         IExecutionConfigurationResult executionConfiguration,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
+        VercelDeploymentProjectMap? projectMap,
         bool resolveProjectEnvironmentVariableValues,
         CancellationToken cancellationToken)
     {
         List<KeyValuePair<string, string>> deploymentEnvironmentVariables = [];
         List<KeyValuePair<string, string>> projectEnvironmentVariables = [];
+        List<VercelServiceBinding> serviceBindings = [];
         HashSet<string> names = new(StringComparer.Ordinal);
 
         // This is the env-var edge-case boundary. Vercel has deployment env args and
@@ -46,16 +48,22 @@ internal static class VercelEnvironmentMapper
                     $"Resource '{resource.Name}' configures environment variable '{name}' more than once. Vercel project environment variable names must be unique.");
             }
 
+            if (TryCreateServiceBinding(resource, name, projectMap, unprocessedValue, out var serviceBinding))
+            {
+                serviceBindings.Add(serviceBinding);
+                continue;
+            }
+
             if (ContainsUnsupportedResourceReference(resource, unprocessedValue))
             {
                 throw new DistributedApplicationException(
                     $"Environment variable '{name}' for resource '{resource.Name}' references another Aspire resource or service in a way that cannot be represented as a Vercel deployment URL. Use endpoint references to Vercel production workloads, or configure the value in Vercel project environment variables.");
             }
 
-            // Non-secrets can ride on `vercel deploy --env`; secret-bearing values must use
-            // Vercel project environment variables so values never appear in CLI arguments.
-            // See https://vercel.com/docs/cli/deploy and
-            // https://vercel.com/docs/environment-variables/sensitive-environment-variables.
+            // Non-secrets can be written into the generated per-service Build Output config;
+            // secret-bearing values must use Vercel project environment variables so values
+            // never appear in generated artifacts or CLI arguments.
+            // See https://vercel.com/docs/environment-variables/sensitive-environment-variables.
             bool containsSecret = ContainsSecretReference(unprocessedValue);
             if (containsSecret)
             {
@@ -64,12 +72,13 @@ internal static class VercelEnvironmentMapper
                         resource,
                         options,
                         entriesByResourceName,
+                        projectMap,
                         unprocessedValue,
                         value,
                         cancellationToken).ConfigureAwait(false)
                     : "<value>";
             }
-            else if (TryGetEnvironmentVariableValue(resource, options, entriesByResourceName, unprocessedValue, out string? vercelValue))
+            else if (TryGetEnvironmentVariableValue(resource, options, entriesByResourceName, projectMap, unprocessedValue, out string? vercelValue))
             {
                 value = vercelValue;
             }
@@ -84,7 +93,28 @@ internal static class VercelEnvironmentMapper
             }
         }
 
-        return new(deploymentEnvironmentVariables, projectEnvironmentVariables);
+        return new(deploymentEnvironmentVariables, projectEnvironmentVariables, serviceBindings);
+    }
+
+    public static IEnumerable<string> GetReferencedResourceNames(
+        IResource resource,
+        IExecutionConfigurationResult executionConfiguration)
+    {
+        foreach (var environmentVariable in executionConfiguration.EnvironmentVariablesWithUnprocessed)
+        {
+            foreach (string resourceName in GetReferencedResourceNames(resource, environmentVariable.Value.Item1))
+            {
+                yield return resourceName;
+            }
+        }
+
+        foreach (var argument in executionConfiguration.ArgumentsWithUnprocessed)
+        {
+            foreach (string resourceName in GetReferencedResourceNames(resource, argument.Item1))
+            {
+                yield return resourceName;
+            }
+        }
     }
 
     public static void ValidateUnsupportedRuntimeConfiguration(
@@ -113,6 +143,7 @@ internal static class VercelEnvironmentMapper
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
+        VercelDeploymentProjectMap? projectMap,
         object? value,
         string processedValue,
         CancellationToken cancellationToken)
@@ -136,7 +167,7 @@ internal static class VercelEnvironmentMapper
             case IResourceBuilder<IResourceWithConnectionString> connectionStringBuilder:
                 return await GetValueProviderValueAsync(connectionStringBuilder.Resource.ConnectionStringExpression, $"connection string for resource '{connectionStringBuilder.Resource.Name}'", cancellationToken).ConfigureAwait(false);
             case ReferenceExpression referenceExpression:
-                return await GetProjectReferenceExpressionValueAsync(resource, options, entriesByResourceName, referenceExpression, cancellationToken).ConfigureAwait(false);
+                return await GetProjectReferenceExpressionValueAsync(resource, options, entriesByResourceName, projectMap, referenceExpression, cancellationToken).ConfigureAwait(false);
             case IValueProvider valueProvider:
                 return await GetValueProviderValueAsync(valueProvider, "environment variable value", cancellationToken).ConfigureAwait(false);
             default:
@@ -148,6 +179,7 @@ internal static class VercelEnvironmentMapper
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
+        VercelDeploymentProjectMap? projectMap,
         ReferenceExpression referenceExpression,
         CancellationToken cancellationToken)
     {
@@ -164,8 +196,8 @@ internal static class VercelEnvironmentMapper
             {
                 // Secret-bearing project env vars may combine endpoint URLs with secret
                 // parameters because the final value is sent through Vercel's secret path.
-                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url)),
-                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression),
+                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetEndpointPropertyValue(resource, options, entriesByResourceName, projectMap, endpointReference.Property(EndpointProperty.Url)),
+                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetEndpointPropertyValue(resource, options, entriesByResourceName, projectMap, endpointReferenceExpression),
                 ParameterResource parameter => await GetParameterValueAsync(parameter, cancellationToken).ConfigureAwait(false),
                 IResourceWithConnectionString connectionStringResource => await GetValueProviderValueAsync(connectionStringResource.ConnectionStringExpression, $"connection string for resource '{connectionStringResource.Name}'", cancellationToken).ConfigureAwait(false),
                 _ => await GetValueProviderValueAsync(valueProvider, "reference expression value", cancellationToken).ConfigureAwait(false)
@@ -210,6 +242,7 @@ internal static class VercelEnvironmentMapper
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
+        VercelDeploymentProjectMap? projectMap,
         object? value,
         [NotNullWhen(true)] out string? vercelValue)
     {
@@ -218,13 +251,13 @@ internal static class VercelEnvironmentMapper
         switch (value)
         {
             case EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference):
-                vercelValue = GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url));
+                vercelValue = GetEndpointPropertyValue(resource, options, entriesByResourceName, projectMap, endpointReference.Property(EndpointProperty.Url));
                 return true;
             case EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint):
-                vercelValue = GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression);
+                vercelValue = GetEndpointPropertyValue(resource, options, entriesByResourceName, projectMap, endpointReferenceExpression);
                 return true;
             case ReferenceExpression referenceExpression when ContainsCrossResourceEndpointReference(resource, referenceExpression):
-                vercelValue = GetReferenceExpressionValue(resource, options, entriesByResourceName, referenceExpression);
+                vercelValue = GetReferenceExpressionValue(resource, options, entriesByResourceName, projectMap, referenceExpression);
                 return true;
             default:
                 vercelValue = null;
@@ -236,6 +269,7 @@ internal static class VercelEnvironmentMapper
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
+        VercelDeploymentProjectMap? projectMap,
         ReferenceExpression referenceExpression)
     {
         if (referenceExpression.IsConditional)
@@ -249,8 +283,8 @@ internal static class VercelEnvironmentMapper
             IValueProvider valueProvider = referenceExpression.ValueProviders[i];
             arguments[i] = valueProvider switch
             {
-                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReference.Property(EndpointProperty.Url)),
-                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetEndpointPropertyValue(resource, options, entriesByResourceName, endpointReferenceExpression),
+                EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference) => GetEndpointPropertyValue(resource, options, entriesByResourceName, projectMap, endpointReference.Property(EndpointProperty.Url)),
+                EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint) => GetEndpointPropertyValue(resource, options, entriesByResourceName, projectMap, endpointReferenceExpression),
                 // Mixed expressions can hide provider-specific ordering or secret semantics.
                 // Keep this path to deterministic endpoint-only production URLs.
                 _ => throw new DistributedApplicationException("Vercel endpoint reference expressions cannot be combined with parameters, secrets, or other value providers. Configure a concrete Vercel project environment variable instead.")
@@ -269,6 +303,7 @@ internal static class VercelEnvironmentMapper
         IResource resource,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
+        VercelDeploymentProjectMap? projectMap,
         EndpointReferenceExpression endpointReferenceExpression)
     {
         // This is the endpoint-reference edge-case boundary: preview/custom URLs are
@@ -284,6 +319,12 @@ internal static class VercelEnvironmentMapper
 
         var endpointReference = endpointReferenceExpression.Endpoint;
         var endpoint = endpointReference.EndpointAnnotation;
+        if (projectMap?.AreInSameProject(resource.Name, endpointReference.Resource.Name) == true)
+        {
+            throw new DistributedApplicationException(
+                $"Resource '{resource.Name}' references endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' inside the same Vercel project. Same-project references must be injected as Vercel service bindings and can only be used as direct URL-valued environment variables.");
+        }
+
         if (!endpoint.IsExternal)
         {
             throw new DistributedApplicationException(
@@ -338,6 +379,58 @@ internal static class VercelEnvironmentMapper
             throw new DistributedApplicationException(
                 $"Resource '{resource.Name}' configures invalid Vercel environment variable name '{name}'. Use letters, digits, and underscores, and start with a letter or underscore.");
         }
+    }
+
+    private static bool TryCreateServiceBinding(
+        IResource resource,
+        string environmentVariableName,
+        VercelDeploymentProjectMap? projectMap,
+        object? value,
+        [NotNullWhen(true)] out VercelServiceBinding? binding)
+    {
+        binding = null;
+        if (projectMap is null)
+        {
+            return false;
+        }
+
+        EndpointReferenceExpression? endpointReferenceExpression = value switch
+        {
+            EndpointReference reference => reference.Property(EndpointProperty.Url),
+            EndpointReferenceExpression expression => expression,
+            _ => null
+        };
+
+        if (endpointReferenceExpression is null)
+        {
+            return false;
+        }
+
+        var endpointReference = endpointReferenceExpression.Endpoint;
+        if (!IsCrossResourceEndpointReference(resource, endpointReference)
+            || !projectMap.AreInSameProject(resource.Name, endpointReference.Resource.Name))
+        {
+            return false;
+        }
+
+        var endpoint = endpointReference.EndpointAnnotation;
+        if (!VercelDeploymentModel.IsHttpEndpoint(endpoint))
+        {
+            throw new DistributedApplicationException($"Resource '{resource.Name}' references endpoint '{endpoint.Name}' on resource '{endpointReference.Resource.Name}' with scheme '{endpoint.UriScheme}', but Vercel service bindings support only HTTP or HTTPS endpoints.");
+        }
+
+        if (endpointReferenceExpression.Property != EndpointProperty.Url)
+        {
+            throw new DistributedApplicationException($"Resource '{resource.Name}' references endpoint property '{endpointReferenceExpression.Property}' for same-project Vercel service '{endpointReference.Resource.Name}', but Vercel service bindings can only inject URL values.");
+        }
+
+        if (!projectMap.TryGetService(endpointReference.Resource.Name, out var targetService))
+        {
+            throw new DistributedApplicationException($"Resource '{resource.Name}' references resource '{endpointReference.Resource.Name}', but the referenced resource is not part of a Vercel project group.");
+        }
+
+        binding = new(environmentVariableName, targetService.ServiceName);
+        return true;
     }
 
     private static bool ContainsSecretReference(object? value)
@@ -397,4 +490,37 @@ internal static class VercelEnvironmentMapper
         // can recreate resource references across an RPC boundary, but resource name is the
         // app-model identity used by deployment target maps.
         => string.Equals(resource.Name, otherResource.Name, StringComparison.Ordinal);
+
+    private static IEnumerable<string> GetReferencedResourceNames(IResource resource, object? value)
+    {
+        switch (value)
+        {
+            case null:
+            case string:
+            case ParameterResource:
+            case IResourceBuilder<ParameterResource>:
+                yield break;
+            case EndpointReference endpointReference when IsCrossResourceEndpointReference(resource, endpointReference):
+                yield return endpointReference.Resource.Name;
+                yield break;
+            case EndpointReferenceExpression endpointReferenceExpression when IsCrossResourceEndpointReference(resource, endpointReferenceExpression.Endpoint):
+                yield return endpointReferenceExpression.Endpoint.Resource.Name;
+                yield break;
+            case IResource referencedResource when !IsSameResource(resource, referencedResource):
+                yield return referencedResource.Name;
+                yield break;
+            case IResourceBuilder<IResource> resourceBuilder when !IsSameResource(resource, resourceBuilder.Resource):
+                yield return resourceBuilder.Resource.Name;
+                yield break;
+            case IValueWithReferences valueWithReferences:
+                foreach (var reference in valueWithReferences.References)
+                {
+                    foreach (string resourceName in GetReferencedResourceNames(resource, reference))
+                    {
+                        yield return resourceName;
+                    }
+                }
+                break;
+        }
+    }
 }

@@ -43,6 +43,9 @@ internal static class VercelDeploymentPlanWriter
     {
         var entries = VercelDeploymentModel.GetEntries(model, environment).ToList();
         VercelDeploymentModel.ValidateEntries(entries);
+        var projectMap = executionContext is null || logger is null
+            ? VercelDeploymentProjectGrouper.CreateMap(entries, entries.ToDictionary(static entry => entry.Resource.Name, static _ => Array.Empty<string>(), StringComparer.Ordinal))
+            : await VercelDeploymentProjectGrouper.CreateMapAsync(executionContext, logger, entries, cancellationToken).ConfigureAwait(false);
 
         // Publish is a reviewable handoff, not a dry-run deploy. Keep it deterministic:
         // show commands, Dockerfile paths, and env var names without resolving secrets or
@@ -57,6 +60,7 @@ internal static class VercelDeploymentPlanWriter
                 logger,
                 options,
                 entries,
+                projectMap,
                 cancellationToken).ConfigureAwait(false));
 
         string planPath = Path.Combine(outputDirectory, VercelConstants.DeploymentPlanFileName);
@@ -91,6 +95,7 @@ internal static class VercelDeploymentPlanWriter
         // Publish plans must be useful without Vercel credentials or secret resolution.
         // Secret-bearing values are reduced to names/placeholders here; deploy resolves them
         // only when they are sent to Vercel's project env store over stdin.
+        var projectMap = await VercelDeploymentProjectGrouper.CreateMapAsync(executionContext, logger, entries, cancellationToken).ConfigureAwait(false);
         var entriesByResourceName = VercelDeploymentModel.GetEntriesByResourceName(entries);
         var environmentConfiguration = await GetEnvironmentConfigurationAsync(
             executionContext,
@@ -98,6 +103,7 @@ internal static class VercelDeploymentPlanWriter
             options,
             entry,
             entriesByResourceName,
+            projectMap,
             resolveProjectEnvironmentVariableValues: false,
             cancellationToken).ConfigureAwait(false);
 
@@ -110,6 +116,7 @@ internal static class VercelDeploymentPlanWriter
         VercelEnvironmentOptionsAnnotation options,
         VercelDeploymentEntry entry,
         IReadOnlyDictionary<string, VercelDeploymentEntry> entriesByResourceName,
+        VercelDeploymentProjectMap? projectMap,
         bool resolveProjectEnvironmentVariableValues,
         CancellationToken cancellationToken)
     {
@@ -132,6 +139,7 @@ internal static class VercelDeploymentPlanWriter
             options,
             executionConfiguration,
             entriesByResourceName,
+            projectMap,
             resolveProjectEnvironmentVariableValues,
             cancellationToken).ConfigureAwait(false);
 
@@ -143,6 +151,7 @@ internal static class VercelDeploymentPlanWriter
         ILogger? logger,
         VercelEnvironmentOptionsAnnotation options,
         IReadOnlyList<VercelDeploymentEntry> entries,
+        VercelDeploymentProjectMap projectMap,
         CancellationToken cancellationToken)
     {
         List<VercelDeploymentPlanEntry> planEntries = [];
@@ -155,12 +164,16 @@ internal static class VercelDeploymentPlanWriter
             // handed off more often than deploy logs.
             var environmentConfiguration = executionContext is null || logger is null
                 ? VercelEnvironmentConfiguration.Empty
-                : await GetEnvironmentConfigurationAsync(executionContext, logger, options, entry, entriesByResourceName, resolveProjectEnvironmentVariableValues: false, cancellationToken).ConfigureAwait(false);
+                : await GetEnvironmentConfigurationAsync(executionContext, logger, options, entry, entriesByResourceName, projectMap, resolveProjectEnvironmentVariableValues: false, cancellationToken).ConfigureAwait(false);
+
+            string serviceName = projectMap.TryGetService(entry.Resource.Name, out var service)
+                ? service.ServiceName
+                : VercelConstants.ContainerServiceName;
 
             planEntries.Add(new(
                 entry.Resource.Name,
                 VercelDeploymentModel.GetDisplayDockerfilePath(entry),
-                VercelCliRunner.BuildDisplayDeployCommand(options, entry.Resource.Name, environmentConfiguration.DeploymentEnvironmentVariables),
+                VercelCliRunner.BuildDisplayDeployCommand(options, entry.Resource.Name, serviceName, []),
                 [.. environmentConfiguration.AllEnvironmentVariableNames.Order(StringComparer.Ordinal)]));
         }
 

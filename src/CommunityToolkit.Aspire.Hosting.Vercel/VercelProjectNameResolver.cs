@@ -74,6 +74,16 @@ internal static class VercelProjectNameResolver
             || character == '-');
     }
 
+    public static string GetServiceName(IResource resource)
+    {
+        if (TryCreateProjectName(resource.Name, out string? serviceName))
+        {
+            return serviceName;
+        }
+
+        throw new DistributedApplicationException($"Could not infer a valid Vercel service name for resource '{resource.Name}'. Rename the Aspire resource to use letters, digits, or hyphens.");
+    }
+
     private static string GetManagedProjectName(VercelDeploymentEntry entry)
     {
         if (entry.Resource.TryGetLastAnnotation<VercelProjectOptionsAnnotation>(out var options))
@@ -96,7 +106,7 @@ internal static class VercelProjectNameResolver
         throw new DistributedApplicationException($"Could not infer a valid Vercel project name for resource '{entry.Resource.Name}' from source root '{entry.SourceRoot}'. Rename the source directory or link the source root to an existing Vercel project.");
     }
 
-    private static bool TryCreateProjectName(string? value, [NotNullWhen(true)] out string? projectName)
+    internal static bool TryCreateProjectName(string? value, [NotNullWhen(true)] out string? projectName)
     {
         if (string.IsNullOrWhiteSpace(value))
         {

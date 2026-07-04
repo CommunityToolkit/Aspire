@@ -38,14 +38,21 @@ internal sealed record VercelDeploymentPlanEntry(string ResourceName, string Doc
 /// </summary>
 internal sealed record VercelEnvironmentConfiguration(
     IReadOnlyList<KeyValuePair<string, string>> DeploymentEnvironmentVariables,
-    IReadOnlyList<KeyValuePair<string, string>> ProjectEnvironmentVariables)
+    IReadOnlyList<KeyValuePair<string, string>> ProjectEnvironmentVariables,
+    IReadOnlyList<VercelServiceBinding> ServiceBindings)
 {
-    public static VercelEnvironmentConfiguration Empty { get; } = new([], []);
+    public static VercelEnvironmentConfiguration Empty { get; } = new([], [], []);
 
     public IEnumerable<string> AllEnvironmentVariableNames =>
         DeploymentEnvironmentVariables.Select(static variable => variable.Key)
-            .Concat(ProjectEnvironmentVariables.Select(static variable => variable.Key));
+            .Concat(ProjectEnvironmentVariables.Select(static variable => variable.Key))
+            .Concat(ServiceBindings.Select(static binding => binding.EnvironmentVariableName));
 }
+
+/// <summary>
+/// Describes one Vercel service binding that injects a private target service URL into the caller.
+/// </summary>
+internal sealed record VercelServiceBinding(string EnvironmentVariableName, string ServiceName);
 
 /// <summary>
 /// Typed result from <c>vercel deploy</c>; the URL is used for verification and the optional ID
@@ -92,6 +99,8 @@ internal sealed record VercelDeploymentStateEntry(
 
     public string? VcrImageDigest { get; init; }
 
+    public VercelServiceDeploymentStateEntry[] Services { get; init; } = [];
+
     public int? BuildOutputApiVersion { get; init; }
 
     public string[] ProjectEnvironmentVariables { get; init; } = [];
@@ -103,13 +112,75 @@ internal sealed record VercelDeploymentStateEntry(
 internal sealed record VercelImageReference(string Reference, string Digest);
 
 /// <summary>
+/// Captures one Aspire workload as a Vercel service within a project group.
+/// </summary>
+internal sealed record VercelDeploymentService(
+    VercelDeploymentEntry Entry,
+    string ServiceName,
+    bool IsPublicRoot);
+
+/// <summary>
+/// A Vercel project deployment unit: one public/root service plus private services it owns.
+/// </summary>
+internal sealed record VercelDeploymentProjectGroup(
+    VercelDeploymentService Root,
+    VercelDeploymentService[] Services)
+{
+    public VercelDeploymentEntry RootEntry => Root.Entry;
+}
+
+/// <summary>
+/// Lookup structure used while translating Aspire references into Vercel project/service concepts.
+/// </summary>
+internal sealed class VercelDeploymentProjectMap(IReadOnlyList<VercelDeploymentProjectGroup> groups)
+{
+    private readonly Dictionary<string, VercelDeploymentProjectGroup> _groupsByResourceName = groups
+        .SelectMany(group => group.Services.Select(service => new { service.Entry.Resource.Name, Group = group }))
+        .ToDictionary(static item => item.Name, static item => item.Group, StringComparer.Ordinal);
+
+    private readonly Dictionary<string, VercelDeploymentService> _servicesByResourceName = groups
+        .SelectMany(static group => group.Services)
+        .ToDictionary(static service => service.Entry.Resource.Name, StringComparer.Ordinal);
+
+    public IReadOnlyList<VercelDeploymentProjectGroup> Groups { get; } = groups;
+
+    public bool TryGetService(string resourceName, out VercelDeploymentService service)
+        => _servicesByResourceName.TryGetValue(resourceName, out service!);
+
+    public bool TryGetGroup(string resourceName, out VercelDeploymentProjectGroup group)
+        => _groupsByResourceName.TryGetValue(resourceName, out group!);
+
+    public bool AreInSameProject(string sourceResourceName, string targetResourceName)
+        => _groupsByResourceName.TryGetValue(sourceResourceName, out var sourceGroup)
+            && _groupsByResourceName.TryGetValue(targetResourceName, out var targetGroup)
+            && ReferenceEquals(sourceGroup, targetGroup);
+}
+
+/// <summary>
+/// Pairs a prepared Vercel service with the immutable image digest resolved after Aspire pushes it.
+/// </summary>
+internal sealed record VercelResolvedDeployment(
+    VercelPreparedDeploymentAnnotation PreparedDeployment,
+    VercelImageReference Image);
+
+/// <summary>
+/// Persisted digest/repository details for one service inside a Vercel project deployment.
+/// </summary>
+internal sealed record VercelServiceDeploymentStateEntry(
+    string ResourceName,
+    string ServiceName,
+    string? VcrImageDigest);
+
+/// <summary>
 /// Resource annotation produced during Vercel prerequisite work and consumed by Aspire's image
 /// push decorator and deploy step to keep project, token, and image-tag context together.
 /// </summary>
 internal sealed record VercelPreparedDeploymentAnnotation(
     VercelDeploymentEntry Entry,
+    string ServiceName,
     VercelProjectLink ProjectLink,
     VercelPulledProjectContext ProjectContext,
+    VercelEnvironmentConfiguration EnvironmentConfiguration,
     bool ManagedByAspire,
     string RemoteImageName,
     string RemoteImageTag,
@@ -143,7 +214,6 @@ internal sealed record VercelPulledProject(
 /// project settings, and decoded claims for VCR operations.
 /// </summary>
 internal sealed record VercelPulledProjectContext(
-    VercelEnvironmentConfiguration EnvironmentConfiguration,
     VercelPulledProject PulledProject,
     VercelOidcClaims OidcClaims);
 
