@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>An Aspire hosting integration to add an OpenTelemetry Collector into the OTLP pipeline.</Description>
-    <AdditionalPackageTags>opentelemetry observability</AdditionalPackageTags>
+    <AdditionalPackageTags>hosting opentelemetry observability</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>
