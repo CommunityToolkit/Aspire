@@ -83,6 +83,7 @@
   </Folder>
   <Folder Name="/examples/kind/">
     <Project Path="examples/kind/CommunityToolkit.Aspire.Hosting.Kind.AppHost/CommunityToolkit.Aspire.Hosting.Kind.AppHost.csproj" />
+    <Project Path="examples/kind/CommunityToolkit.Aspire.Hosting.Kind.Publish.AppHost/CommunityToolkit.Aspire.Hosting.Kind.Publish.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/kurrentdb/">
     <Project Path="examples/kurrentdb/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService/CommunityToolkit.Aspire.Hosting.KurrentDB.ApiService.csproj" />
