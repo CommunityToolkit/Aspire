@@ -3,9 +3,8 @@ import { createBuilder } from "./.aspire/modules/aspire.mjs";
 const builder = await createBuilder();
 
 let primary = await builder.addSurrealServer("primary", {
-    port: 18000,
-    path: "memory",
-    strictMode: true,
+  port: 18000,
+  path: "memory",
 });
 
 primary = await primary.withDataVolume({ name: "surreal-primary-data" });
@@ -14,22 +13,22 @@ primary = await primary.withSurrealist({ containerName: "surrealist-primary" });
 primary = await primary.withSurrealDbOtlpExporter();
 
 let appNamespace = await primary.addNamespace("appns", {
-    namespaceName: "polyglotNs",
+  namespaceName: "polyglotNs",
 });
 appNamespace = await appNamespace.withCreationScript(
-    "DEFINE NAMESPACE IF NOT EXISTS `polyglotNs`;",
+  "DEFINE NAMESPACE IF NOT EXISTS `polyglotNs`;",
 );
 
 let appDatabase = await appNamespace.addDatabase("appdb", {
-    databaseName: "polyglotDb",
+  databaseName: "polyglotDb",
 });
 appDatabase = await appDatabase.withCreationScript(
-    "DEFINE DATABASE IF NOT EXISTS `polyglotDb`;",
+  "DEFINE DATABASE IF NOT EXISTS `polyglotDb`;",
 );
 
 let mounted = await builder.addSurrealServer("mounted", {
-    port: 18001,
-    path: "memory",
+  port: 18001,
+  path: "memory",
 });
 mounted = await mounted.withDataBindMount("./data");
 mounted = await mounted.withInitFiles("./seed.surql");
@@ -43,13 +42,13 @@ const _primaryConnectionString = await primary.connectionStringExpression();
 
 const _namespaceParent = await appNamespace.parent();
 const _namespaceConnectionString =
-    await appNamespace.connectionStringExpression();
+  await appNamespace.connectionStringExpression();
 const _namespaceName = await appNamespace.namespaceName();
 const _namespaceParentName = await _namespaceParent.name();
 
 const _databaseParent = await appDatabase.parent();
 const _databaseConnectionString =
-    await appDatabase.connectionStringExpression();
+  await appDatabase.connectionStringExpression();
 const _databaseName = await appDatabase.databaseName();
 const _databaseParentName = await _databaseParent.name();
 const _databaseServerName = await (await _databaseParent.parent()).name();
@@ -61,4 +60,3 @@ const _mountedUri = await mounted.uriExpression();
 const _mountedConnectionString = await mounted.connectionStringExpression();
 
 await builder.build().run();
-

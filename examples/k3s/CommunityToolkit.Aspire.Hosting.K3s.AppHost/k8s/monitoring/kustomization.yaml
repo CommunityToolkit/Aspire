@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Kustomize places every resource in this namespace.
+namespace: default
+
+# Common labels applied to all resources in this overlay.
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/managed-by: aspire
+    environment: development
+
+
+resources:
+  - monitoring-config.yaml

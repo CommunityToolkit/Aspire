@@ -1,0 +1,21 @@
+{
+  "appHost": {
+    "path": "apphost.mts",
+    "language": "typescript/nodejs"
+  },
+  "sdk": {
+    "version": "13.4.3"
+  },
+  "profiles": {
+    "https": {
+      "applicationUrl": "https://localhost:29750;http://localhost:28931",
+      "environmentVariables": {
+        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:10975",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:13319"
+      }
+    }
+  },
+  "packages": {
+    "CommunityToolkit.Aspire.Hosting.Azure.Dapr": "../../../src/CommunityToolkit.Aspire.Hosting.Azure.Dapr/CommunityToolkit.Aspire.Hosting.Azure.Dapr.csproj"
+  }
+}

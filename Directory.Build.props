@@ -44,7 +44,7 @@
   <!-- Versioning -->
   <PropertyGroup>
     <ToolkitMinorVersion>4</ToolkitMinorVersion>
-    <ToolkitPatchVersion>0</ToolkitPatchVersion>
+    <ToolkitPatchVersion>1</ToolkitPatchVersion>
     <ToolkitPreviewVersion>preview.1</ToolkitPreviewVersion>
 
     <VersionPrefix>$(AspireMajorVersion).$(ToolkitMinorVersion).$(ToolkitPatchVersion)</VersionPrefix>
@@ -52,5 +52,8 @@
 
   <ItemGroup>
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-4mjw-xr5x-prpc" />
+    <!-- SQLitePCLRaw.lib.e_sqlite3 <= 2.1.11 depends on vulnerable SQLite < 3.50.2 (memory corruption).
+         No patched NuGet version available yet. Suppress until upstream ships a fix. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
   </ItemGroup>
 </Project>
