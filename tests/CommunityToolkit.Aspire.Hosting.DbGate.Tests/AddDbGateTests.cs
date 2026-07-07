@@ -362,8 +362,8 @@ public class AddDbGateTests
             {
                 var expectedRedisUrl = redisResource1.PasswordParameter switch
                 {
-                    IValueProvider parameter => $"redis://:{await parameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}",
-                    _ => $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}"
+                    IValueProvider parameter => $"rediss://:{await parameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}",
+                    _ => $"rediss://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}"
                 };
                 Assert.Equal("URL_redis1", item.Key);
                 Assert.Equal(expectedRedisUrl, item.Value);
@@ -382,8 +382,8 @@ public class AddDbGateTests
             {
                 var expectedRedisUrl = redisResource2.PasswordParameter switch
                 {
-                    IValueProvider parameter => $"redis://:{await parameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}",
-                    _ => $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}"
+                    IValueProvider parameter => $"rediss://:{await parameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}",
+                    _ => $"rediss://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}"
                 };
                 Assert.Equal("URL_redis2", item.Key);
                 Assert.Equal(expectedRedisUrl, item.Value);
