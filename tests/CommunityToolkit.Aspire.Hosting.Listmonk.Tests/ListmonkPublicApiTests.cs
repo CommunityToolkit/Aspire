@@ -30,26 +30,25 @@ public class ListmonkPublicApiTests
     }
 
     [Fact]
-    public void WithPostgreSQLShouldThrowWhenBuilderIsNull()
+    public void AddListmonkShouldThrowWhenDatabaseNameIsEmpty()
     {
-        IResourceBuilder<ListmonkResource> builder = null!;
+        var builder = TestDistributedApplicationBuilder.Create();
 
-        var action = () => builder.WithPostgreSQL(null!);
+        var action = () => builder.AddListmonk("listmonk", databaseName: string.Empty);
 
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal(nameof(builder), exception.ParamName);
+        var exception = Assert.Throws<ArgumentException>(action);
+        Assert.Equal("databaseName", exception.ParamName);
     }
 
     [Fact]
-    public void WithPostgreSQLShouldThrowWhenDatabaseIsNull()
+    public void AddListmonkShouldThrowWhenPostgresNameIsEmpty()
     {
         var builder = TestDistributedApplicationBuilder.Create();
-        var listmonk = builder.AddListmonk("listmonk");
 
-        var action = () => listmonk.WithPostgreSQL(null!);
+        var action = () => builder.AddListmonk("listmonk", postgresName: string.Empty);
 
-        var exception = Assert.Throws<ArgumentNullException>(action);
-        Assert.Equal("database", exception.ParamName);
+        var exception = Assert.Throws<ArgumentException>(action);
+        Assert.Equal("postgresName", exception.ParamName);
     }
 
     [Fact]

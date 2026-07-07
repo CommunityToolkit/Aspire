@@ -12,7 +12,7 @@ public class TypeScriptAppHostTests
             appHostProject: "CommunityToolkit.Aspire.Hosting.Listmonk.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.Listmonk",
             exampleName: "listmonk",
-            waitForResources: ["postgres", "listmonk", "listmonk-default"],
+            waitForResources: ["postgres", "listmonk", "listmonk-default-postgres", "listmonk-default"],
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }

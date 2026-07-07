@@ -21,6 +21,14 @@ public class AddListmonkTests
 
         var containerResource = Assert.Single(appModel.Resources.OfType<ListmonkResource>());
         Assert.Equal("listmonk", containerResource.Name);
+        var postgres = Assert.Single(appModel.Resources.OfType<PostgresServerResource>());
+        Assert.Equal("listmonk-postgres", postgres.Name);
+        var parentAnnotation = postgres.Annotations.OfType<ResourceRelationshipAnnotation>()
+            .SingleOrDefault(annotation => annotation.Type == "Parent");
+        Assert.NotNull(parentAnnotation);
+        Assert.Same(containerResource, parentAnnotation.Resource);
+
+        Assert.Contains(appModel.Resources.OfType<PostgresDatabaseResource>(), resource => resource.Name == "listmonk-db");
 
         var endpoint = Assert.Single(containerResource.Annotations.OfType<EndpointAnnotation>());
         Assert.Equal(9000, endpoint.TargetPort);
@@ -38,32 +46,38 @@ public class AddListmonkTests
 
         var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.Collection(config,
-            env =>
-            {
-                Assert.Equal("LISTMONK_app__address", env.Key);
-                Assert.Equal("0.0.0.0:9000", env.Value);
-            });
+        Assert.Equal("0.0.0.0:9000", config["LISTMONK_app__address"]);
+        Assert.Equal("listmonk-postgres", config["LISTMONK_db__host"]);
+        Assert.Equal("5432", config["LISTMONK_db__port"]);
+        Assert.Equal("postgres", config["LISTMONK_db__user"]);
+        Assert.Equal("listmonk-db", config["LISTMONK_db__database"]);
+        Assert.Equal("disable", config["LISTMONK_db__ssl_mode"]);
     }
 
     [Fact]
-    public async Task WithPostgreSQLAddsDatabaseConfiguration()
+    public async Task AddListmonkUsesConfiguredPostgresName()
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
 
-        var password = appBuilder.AddParameter("password", "password");
-        var postgres = appBuilder.AddPostgres("postgres", password: password);
-        var database = postgres.AddDatabase("listmonkdb");
-
-        var listmonk = appBuilder.AddListmonk("listmonk")
-            .WithPostgreSQL(database);
+        var listmonk = appBuilder.AddListmonk("listmonk", postgresName: "mailing-postgres");
 
         var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
 
-        Assert.Equal("postgres", config["LISTMONK_db__host"]);
+        Assert.Equal("mailing-postgres", config["LISTMONK_db__host"]);
+    }
+
+    [Fact]
+    public async Task AddListmonkUsesConfiguredDatabaseName()
+    {
+        using var appBuilder = TestDistributedApplicationBuilder.Create();
+
+        var listmonk = appBuilder.AddListmonk("listmonk", databaseName: "listmonkdb");
+
+        var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
+
+        Assert.Equal("listmonk-postgres", config["LISTMONK_db__host"]);
         Assert.Equal("5432", config["LISTMONK_db__port"]);
         Assert.Equal("postgres", config["LISTMONK_db__user"]);
-        Assert.Equal("password", config["LISTMONK_db__password"]);
         Assert.Equal("listmonkdb", config["LISTMONK_db__database"]);
         Assert.Equal("disable", config["LISTMONK_db__ssl_mode"]);
     }
