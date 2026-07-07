@@ -1,7 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var redpanda = builder.AddRedPanda("redpanda")
-    .WithConsole();
+    .WithConsole()
+    .WithKafkaUI();
 
 // A sample application that produces to and consumes from the Redpanda broker using the
 // standard Aspire.Confluent.Kafka client integration.
