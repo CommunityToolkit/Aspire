@@ -3,6 +3,7 @@ using Aspire.Hosting.Lifecycle;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -209,102 +210,234 @@ public static class SquadBuilderExtensions
         {
             if (OperatingSystem.IsWindows())
             {
-                LaunchCopilotCliWindows(teamRoot, windowTitle);
+                LaunchCopilotCliWindows(squadName, teamRoot, windowTitle);
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                LaunchCopilotCliMacOs(squadName, teamRoot);
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                if (!LaunchCopilotCliLinux(squadName, teamRoot))
+                {
+                    return LaunchResult.Failed(
+                        "Could not open a terminal for GitHub Copilot CLI: no supported terminal emulator " +
+                        "(x-terminal-emulator, gnome-terminal, konsole, xfce4-terminal, xterm) was found on PATH. " +
+                        "Install one, or run 'copilot --agent squad' manually from the squad workspace.");
+                }
             }
             else
             {
-                LaunchCopilotCliUnix(teamRoot, windowTitle);
+                return LaunchResult.Failed("Opening GitHub Copilot CLI is not supported on this operating system.");
             }
 
             return LaunchResult.Succeeded($"Opened GitHub Copilot CLI for squad '{squadName}'.");
         }
-        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException or InvalidOperationException)
+        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException or InvalidOperationException or IOException or UnauthorizedAccessException)
         {
             return LaunchResult.Failed($"Failed to open Copilot CLI terminal: {ex.Message}");
         }
     }
 
-    // OS-bound spawn helpers — excluded from coverage because they hand off to terminal
-    // processes. Their argument-list building is simple enough to read at a glance;
-    // the launch itself can only be exercised in a user-driven smoke test.
-    [ExcludeFromCodeCoverage]
-    private static void LaunchCopilotCliWindows(string teamRoot, string windowTitle)
-    {
-        var copilotCommand = "$copilot = Get-Command copilot -ErrorAction SilentlyContinue; " +
-            "if ($copilot) { & $copilot.Source } " +
-            "else { Write-Host 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.' -ForegroundColor Yellow }";
+    // Windows PowerShell 5.1 misreads UTF-8-without-BOM content as ANSI, which corrupts any
+    // non-ASCII characters embedded in the generated .ps1 (e.g. a teamRoot path inside
+    // Set-Location -LiteralPath '…'). Emitting a BOM makes 5.1 decode the script as UTF-8.
+    internal static readonly Encoding WindowsScriptEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
 
-        // Try Windows Terminal first, fall back to PowerShell console.
+    // Unix scripts must stay BOM-free: a leading BOM breaks the '#!/bin/bash' shebang. LF-only.
+    internal static readonly Encoding UnixScriptEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+    // Copilot is always launched from a temporary SCRIPT FILE written under
+    // <teamRoot>/.squad/.cache/. Running a file means no terminal — in particular
+    // Windows Terminal, which treats ';' as a pane/command separator — ever has to
+    // parse ';', '&', or quotes out of an inline command string, which is what caused
+    // wt.exe to fail with Win32 error 0x80070002 (ERROR_FILE_NOT_FOUND).
+    internal static string WriteLaunchScript(string teamRoot, string squadName, string extension, string content, bool makeExecutable, Encoding encoding)
+    {
+        var cacheDir = Path.Combine(teamRoot, ".squad", ".cache");
+        Directory.CreateDirectory(cacheDir);
+
+        // Unique per launch (timestamp + random token) so re-launching never contends with a
+        // file that is still locked/open by a previously spawned terminal. The GUID guards against
+        // coarse clock granularity (~15ms on Windows) producing duplicate timestamps for rapid launches.
+        var fileName = $"launch-copilot-{SanitizeFileComponent(squadName)}-{DateTime.Now:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}{extension}";
+        var scriptPath = Path.Combine(cacheDir, fileName);
+
+        // Windows scripts are written UTF-8 WITH BOM (see WindowsScriptEncoding); Unix scripts
+        // UTF-8 WITHOUT BOM (see UnixScriptEncoding) so the shebang stays intact.
+        File.WriteAllText(scriptPath, content, encoding);
+
+        // Guarded so File.SetUnixFileMode is only invoked on Unix (it throws on Windows).
+        if (makeExecutable && !OperatingSystem.IsWindows())
+        {
+            // rwxr-xr-x (0755)
+            File.SetUnixFileMode(
+                scriptPath,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+        }
+
+        return scriptPath;
+    }
+
+    private static string SanitizeFileComponent(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var cleaned = new string(value.Select(c => Array.IndexOf(invalid, c) >= 0 ? '-' : c).ToArray()).Trim();
+        return string.IsNullOrEmpty(cleaned) ? "squad" : cleaned;
+    }
+
+    internal static string BuildUnixLaunchScript(string teamRoot)
+    {
+        // bash single-quoted string escaping: ' -> '\''
+        var escapedRoot = teamRoot.Replace("'", "'\\''");
+
+        // Join with '\n' (not Environment.NewLine) so the script keeps LF endings on all hosts.
+        return string.Join('\n',
+            "#!/bin/bash",
+            $"cd '{escapedRoot}'",
+            "if command -v copilot >/dev/null 2>&1; then",
+            "    copilot --agent squad",
+            "else",
+            "    echo 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.'",
+            "fi",
+            "exec \"${SHELL:-/bin/bash}\"") + "\n";
+    }
+
+    internal static string BuildWindowsLaunchScript(string teamRoot)
+    {
+        // PowerShell single-quoted string escaping: ' -> ''
+        var escapedRoot = teamRoot.Replace("'", "''");
+
+        // Newline-separated statements (Environment.NewLine) written to a .ps1 FILE and run with
+        // -File. This is deliberately NOT a single ';'-joined inline command: passing such a string
+        // to wt.exe made Windows Terminal treat ';' as a pane separator and fail with 0x80070002.
+        return string.Join(
+            Environment.NewLine,
+            $"Set-Location -LiteralPath '{escapedRoot}'",
+            "$copilot = Get-Command copilot -ErrorAction SilentlyContinue",
+            "if ($copilot) { & $copilot.Source --agent squad } " +
+            "else { Write-Host 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.' -ForegroundColor Yellow }") + Environment.NewLine;
+    }
+
+    // OS-bound spawn helpers — excluded from coverage because they hand off to terminal
+    // processes. The launch itself can only be exercised in a user-driven smoke test.
+    [ExcludeFromCodeCoverage]
+    private static void LaunchCopilotCliWindows(string squadName, string teamRoot, string windowTitle)
+    {
+        var script = BuildWindowsLaunchScript(teamRoot);
+
+        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".ps1", script, makeExecutable: false, WindowsScriptEncoding);
+
+        // Prefer Windows Terminal (wt.exe), running the script FILE with -File.
         try
         {
-            var startInfo = new ProcessStartInfo
+            var wt = new ProcessStartInfo
             {
                 FileName = "wt.exe",
                 UseShellExecute = false,
             };
 
-            startInfo.ArgumentList.Add("-d");
-            startInfo.ArgumentList.Add(teamRoot);
-            startInfo.ArgumentList.Add("--title");
-            startInfo.ArgumentList.Add(windowTitle);
-            startInfo.ArgumentList.Add("powershell.exe");
-            startInfo.ArgumentList.Add("-NoLogo");
-            startInfo.ArgumentList.Add("-NoExit");
-            startInfo.ArgumentList.Add("-Command");
-            startInfo.ArgumentList.Add(copilotCommand);
+            wt.ArgumentList.Add("-d");
+            wt.ArgumentList.Add(teamRoot);
+            wt.ArgumentList.Add("--title");
+            wt.ArgumentList.Add(windowTitle);
+            wt.ArgumentList.Add("powershell");
+            wt.ArgumentList.Add("-NoLogo");
+            wt.ArgumentList.Add("-NoExit");
+            wt.ArgumentList.Add("-File");
+            wt.ArgumentList.Add(scriptPath);
 
-            Process.Start(startInfo);
+            Process.Start(wt);
             return;
         }
-        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException or InvalidOperationException)
+        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException)
         {
-            // Windows Terminal is optional. Fall back to the inbox console host.
+            // Windows Terminal is not installed. Fall back to a plain console window.
         }
 
-        // Fallback: launch PowerShell directly (opens a new console window via UseShellExecute=true).
-        var escapedTitle = windowTitle.Replace("'", "''");
-        var inlineCommand = $"$Host.UI.RawUI.WindowTitle = '{escapedTitle}'; {copilotCommand}";
-
-        var fallbackInfo = new ProcessStartInfo
+        // Fallback: cmd's built-in `start` opens a new console window. The first quoted
+        // token after `start` becomes the window title.
+        var fallback = new ProcessStartInfo
         {
-            FileName = "powershell.exe",
-            WorkingDirectory = teamRoot,
-            UseShellExecute = true,
-        };
-
-        fallbackInfo.ArgumentList.Add("-NoLogo");
-        fallbackInfo.ArgumentList.Add("-NoExit");
-        fallbackInfo.ArgumentList.Add("-Command");
-        fallbackInfo.ArgumentList.Add(inlineCommand);
-
-        Process.Start(fallbackInfo);
-    }
-
-    [ExcludeFromCodeCoverage]
-    private static void LaunchCopilotCliUnix(string teamRoot, string windowTitle)
-    {
-        // On macOS/Linux, launch a shell that checks for the copilot CLI.
-        var shellCommand = "command -v copilot >/dev/null 2>&1 && exec copilot || " +
-            "{ echo 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.'; exec $SHELL; }";
-
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = GetUnixShell(),
+            FileName = "cmd.exe",
             WorkingDirectory = teamRoot,
             UseShellExecute = false,
         };
 
-        startInfo.ArgumentList.Add("-c");
-        startInfo.ArgumentList.Add(shellCommand);
-        startInfo.Environment["SQUAD_TERMINAL_TITLE"] = windowTitle;
+        fallback.ArgumentList.Add("/c");
+        fallback.ArgumentList.Add("start");
+        fallback.ArgumentList.Add(windowTitle);
+        fallback.ArgumentList.Add("powershell");
+        fallback.ArgumentList.Add("-NoLogo");
+        fallback.ArgumentList.Add("-NoExit");
+        fallback.ArgumentList.Add("-File");
+        fallback.ArgumentList.Add(scriptPath);
 
-        Process.Start(startInfo);
+        Process.Start(fallback);
     }
 
-    private static string GetUnixShell()
+    [ExcludeFromCodeCoverage]
+    private static void LaunchCopilotCliMacOs(string squadName, string teamRoot)
     {
-        var shell = Environment.GetEnvironmentVariable("SHELL");
-        return !string.IsNullOrEmpty(shell) ? shell : "/bin/bash";
+        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".command", BuildUnixLaunchScript(teamRoot), makeExecutable: true, UnixScriptEncoding);
+
+        var open = new ProcessStartInfo
+        {
+            FileName = "open",
+            UseShellExecute = false,
+        };
+
+        open.ArgumentList.Add("-a");
+        open.ArgumentList.Add("Terminal");
+        open.ArgumentList.Add(scriptPath);
+
+        Process.Start(open);
+    }
+
+    [ExcludeFromCodeCoverage]
+    private static bool LaunchCopilotCliLinux(string squadName, string teamRoot)
+    {
+        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".sh", BuildUnixLaunchScript(teamRoot), makeExecutable: true, UnixScriptEncoding);
+
+        // Terminal emulators vary across distros; try the common ones in order and fall
+        // through to the next when one is not installed (Win32Exception/FileNotFoundException).
+        (string FileName, string[] Args)[] candidates =
+        [
+            ("x-terminal-emulator", ["-e", "bash", scriptPath]),
+            ("gnome-terminal", ["--", "bash", scriptPath]),
+            ("konsole", ["-e", "bash", scriptPath]),
+            ("xfce4-terminal", ["-x", "bash", scriptPath]),
+            ("xterm", ["-e", "bash", scriptPath]),
+        ];
+
+        foreach (var (fileName, args) in candidates)
+        {
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    WorkingDirectory = teamRoot,
+                    UseShellExecute = false,
+                };
+
+                foreach (var arg in args)
+                {
+                    startInfo.ArgumentList.Add(arg);
+                }
+
+                Process.Start(startInfo);
+                return true;
+            }
+            catch (Exception ex) when (ex is Win32Exception or FileNotFoundException)
+            {
+                // Emulator not present; try the next candidate.
+            }
+        }
+
+        return false;
     }
 
     private sealed record LaunchResult(bool Success, string Message)
