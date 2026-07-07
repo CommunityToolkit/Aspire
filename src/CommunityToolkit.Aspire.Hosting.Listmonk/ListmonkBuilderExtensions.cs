@@ -81,7 +81,7 @@ public static class ListmonkBuilderExtensions
             .WithEntrypoint("sh")
             .WithArgs("-c", "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''")
             .WithEnvironment(AppAddressEnvVarName, "0.0.0.0:9000")
-            .WithHttpHealthCheck("/");
+            .WithHttpHealthCheck("/health");
 
         var postgres = builder.AddPostgres(postgresName ?? $"{name}-postgres")
             .WithParentRelationship(listmonk.Resource);
