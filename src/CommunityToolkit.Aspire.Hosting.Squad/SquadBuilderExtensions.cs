@@ -232,7 +232,7 @@ public static class SquadBuilderExtensions
 
             return LaunchResult.Succeeded($"Opened GitHub Copilot CLI for squad '{squadName}'.");
         }
-        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException or InvalidOperationException or IOException)
+        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException or InvalidOperationException or IOException or UnauthorizedAccessException)
         {
             return LaunchResult.Failed($"Failed to open Copilot CLI terminal: {ex.Message}");
         }
@@ -248,9 +248,10 @@ public static class SquadBuilderExtensions
         var cacheDir = Path.Combine(teamRoot, ".squad", ".cache");
         Directory.CreateDirectory(cacheDir);
 
-        // Unique per launch so re-launching never contends with a file that is still
-        // locked/open by a previously spawned terminal.
-        var fileName = $"launch-copilot-{SanitizeFileComponent(squadName)}-{DateTime.Now:yyyyMMddHHmmssfff}{extension}";
+        // Unique per launch (timestamp + random token) so re-launching never contends with a
+        // file that is still locked/open by a previously spawned terminal. The GUID guards against
+        // coarse clock granularity (~15ms on Windows) producing duplicate timestamps for rapid launches.
+        var fileName = $"launch-copilot-{SanitizeFileComponent(squadName)}-{DateTime.Now:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}{extension}";
         var scriptPath = Path.Combine(cacheDir, fileName);
 
         File.WriteAllText(scriptPath, content);
@@ -276,7 +277,7 @@ public static class SquadBuilderExtensions
         return string.IsNullOrEmpty(cleaned) ? "squad" : cleaned;
     }
 
-    private static string BuildUnixLaunchScript(string teamRoot)
+    internal static string BuildUnixLaunchScript(string teamRoot)
     {
         // bash single-quoted string escaping: ' -> '\''
         var escapedRoot = teamRoot.Replace("'", "'\\''");
@@ -293,20 +294,28 @@ public static class SquadBuilderExtensions
             "exec \"${SHELL:-/bin/bash}\"") + "\n";
     }
 
-    // OS-bound spawn helpers — excluded from coverage because they hand off to terminal
-    // processes. The launch itself can only be exercised in a user-driven smoke test.
-    [ExcludeFromCodeCoverage]
-    private static void LaunchCopilotCliWindows(string squadName, string teamRoot, string windowTitle)
+    internal static string BuildWindowsLaunchScript(string teamRoot)
     {
         // PowerShell single-quoted string escaping: ' -> ''
         var escapedRoot = teamRoot.Replace("'", "''");
 
-        var script = string.Join(
+        // Newline-separated statements (Environment.NewLine) written to a .ps1 FILE and run with
+        // -File. This is deliberately NOT a single ';'-joined inline command: passing such a string
+        // to wt.exe made Windows Terminal treat ';' as a pane separator and fail with 0x80070002.
+        return string.Join(
             Environment.NewLine,
             $"Set-Location -LiteralPath '{escapedRoot}'",
             "$copilot = Get-Command copilot -ErrorAction SilentlyContinue",
             "if ($copilot) { & $copilot.Source --agent squad } " +
             "else { Write-Host 'GitHub Copilot CLI was not found on PATH. Install it or add copilot to PATH, then retry from Aspire.' -ForegroundColor Yellow }") + Environment.NewLine;
+    }
+
+    // OS-bound spawn helpers — excluded from coverage because they hand off to terminal
+    // processes. The launch itself can only be exercised in a user-driven smoke test.
+    [ExcludeFromCodeCoverage]
+    private static void LaunchCopilotCliWindows(string squadName, string teamRoot, string windowTitle)
+    {
+        var script = BuildWindowsLaunchScript(teamRoot);
 
         var scriptPath = WriteLaunchScript(teamRoot, squadName, ".ps1", script, makeExecutable: false);
 
