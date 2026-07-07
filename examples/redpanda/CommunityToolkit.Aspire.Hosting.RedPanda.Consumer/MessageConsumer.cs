@@ -23,7 +23,20 @@ internal sealed class MessageConsumer(
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                ConsumeResult<string, string> result = consumer.Consume(stoppingToken);
+                ConsumeResult<string, string> result;
+
+                try
+                {
+                    result = consumer.Consume(stoppingToken);
+                }
+                catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
+                {
+                    // The topic is created on first produce, so it may not exist yet when the consumer
+                    // starts. Log and retry instead of letting the exception stop the whole host.
+                    logger.LogDebug("Topic {Topic} is not available yet, waiting: {Reason}", KafkaTopics.Messages, ex.Error.Reason);
+                    stoppingToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(1));
+                    continue;
+                }
 
                 logger.LogInformation(
                     "Consumed message {Key} from {TopicPartitionOffset}: {Value}",

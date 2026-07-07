@@ -78,7 +78,11 @@ public static class RedPandaBuilderExtensions
         return builder.AddResource(resource)
             .WithImage(RedPandaContainerImageTags.Image, RedPandaContainerImageTags.Tag)
             .WithImageRegistry(RedPandaContainerImageTags.Registry)
-            .WithEndpoint(targetPort: RedPandaServerResource.KafkaBrokerPort, port: port, name: RedPandaServerResource.PrimaryEndpointName)
+            // The external Kafka listener advertises its own host address (localhost:{port}) so that
+            // clients running on the host can reconnect after the initial metadata exchange. That only
+            // works if the advertised port is the real host port, so the endpoint is not proxied and
+            // the host port is published directly to the container's Kafka broker port.
+            .WithEndpoint(targetPort: RedPandaServerResource.KafkaBrokerPort, port: port, name: RedPandaServerResource.PrimaryEndpointName, isProxied: false)
             .WithEndpoint(targetPort: RedPandaServerResource.KafkaInternalBrokerPort, name: RedPandaServerResource.InternalEndpointName)
             .WithHttpEndpoint(targetPort: RedPandaServerResource.SchemaRegistryPort, name: RedPandaServerResource.SchemaRegistryEndpointName)
             .WithHttpEndpoint(targetPort: RedPandaServerResource.AdminPort, name: RedPandaServerResource.AdminEndpointName)

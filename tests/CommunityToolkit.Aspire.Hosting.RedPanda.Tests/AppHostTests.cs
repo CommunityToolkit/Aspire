@@ -10,6 +10,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     private const string ResourceName = "redpanda";
     private const string ConsoleResourceName = "redpanda-console";
     private const string KafkaUiResourceName = "redpanda-kafka-ui";
+    private const string ConsumerResourceName = "consumer";
 
     [Fact]
     public async Task ResourceStartsAndAdminApiReportsReady()
@@ -33,6 +34,14 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         HttpResponseMessage response = await client.GetAsync("/subjects");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ConsumerConnectsToBrokerAndBecomesHealthy()
+    {
+        // The consumer's Aspire Kafka producer/consumer health checks are surfaced to Aspire via
+        // WithHttpHealthCheck("/health"), so reaching a healthy state proves it connected to the broker.
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(ConsumerResourceName).WaitAsync(TimeSpan.FromMinutes(3));
     }
 
     [Fact]
