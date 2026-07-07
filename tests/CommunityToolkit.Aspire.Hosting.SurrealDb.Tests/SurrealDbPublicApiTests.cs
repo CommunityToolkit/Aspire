@@ -4,6 +4,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Logging;
+using CommunityToolkit.Aspire.Testing;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
 
@@ -19,6 +20,22 @@ public class SurrealDbPublicApiTests
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void AddDatabaseShouldCreateHealthCheckAnnotation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddSurrealServer("surreal")
+            .AddNamespace("ns")
+            .AddDatabase("db");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<SurrealDbDatabaseResource>());
+
+        var healthCheck = Assert.Single(resource.Annotations.OfType<HealthCheckAnnotation>());
+        Assert.Equal("surreal_ns_db_check", healthCheck.Key);
     }
 
     [Fact]
@@ -90,9 +107,9 @@ public class SurrealDbPublicApiTests
     public void WithDataShouldThrowWhenBuilderIsNull(bool useVolume)
     {
         IResourceBuilder<SurrealDbServerResource> builder = null!;
-    
+
         Func<IResourceBuilder<SurrealDbServerResource>>? action = null;
-    
+
         if (useVolume)
         {
             action = () => builder.WithDataVolume();
@@ -100,28 +117,61 @@ public class SurrealDbPublicApiTests
         else
         {
             const string source = "/data";
-    
+
             action = () => builder.WithDataBindMount(source);
         }
-    
+
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
     }
-    
+
     [Fact]
     public void WithDataBindMountShouldThrowWhenSourceIsNull()
     {
         var builder = TestDistributedApplicationBuilder.Create();
         var resourceBuilder = builder.AddSurrealServer("surreal");
-    
+
         string source = null!;
-    
+
         var action = () => resourceBuilder.WithDataBindMount(source);
-    
+
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(source), exception.ParamName);
     }
-    
+
+    [Fact]
+    public void WithDataVolumeShouldCreateVolumeMountAnnotation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddSurrealServer("surreal").WithDataVolume("surreal-data");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
+
+        var mountAnnotation = Assert.Single(resource.Annotations.OfType<ContainerMountAnnotation>());
+        Assert.Equal(ContainerMountType.Volume, mountAnnotation.Type);
+        Assert.Equal("surreal-data", mountAnnotation.Source);
+        Assert.Equal("/data", mountAnnotation.Target);
+    }
+
+    [Fact]
+    public void WithDataBindMountShouldCreateBindMountAnnotation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var source = Path.GetTempPath();
+        builder.AddSurrealServer("surreal").WithDataBindMount(source);
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
+
+        var mountAnnotation = Assert.Single(resource.Annotations.OfType<ContainerMountAnnotation>());
+        Assert.Equal(ContainerMountType.BindMount, mountAnnotation.Type);
+        Assert.Equal(source, mountAnnotation.Source);
+        Assert.Equal("/data", mountAnnotation.Target);
+    }
+
     [Fact(Skip = "Feature is unstable and blocking the release")]
     public void WithInitFilesShouldThrowWhenBuilderIsNull()
     {
@@ -154,7 +204,38 @@ public class SurrealDbPublicApiTests
             : Assert.Throws<ArgumentException>(action);
         Assert.Equal(nameof(source), exception.ParamName);
     }
-    
+
+    [Fact]
+    public async Task WithInitFilesShouldAddContainerFilesAndEnvironmentVariable()
+    {
+        var initDirectory = Directory.CreateTempSubdirectory();
+        var initFilePath = Path.Combine(initDirectory.FullName, "init.surql");
+        await File.WriteAllTextAsync(initFilePath, "DEFINE TABLE todo;");
+
+        try
+        {
+            var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            builder.AddSurrealServer("surreal").WithInitFiles(initFilePath);
+#pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+            using var app = builder.Build();
+            var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+            var resource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
+
+            var containerFilesAnnotation = Assert.Single(resource.Annotations.OfType<ContainerFileSystemCallbackAnnotation>());
+            Assert.Equal("/docker-entrypoint-initdb.d", containerFilesAnnotation.DestinationPath);
+
+            var environmentVariables = await resource.GetEnvironmentVariablesAsync();
+            Assert.True(environmentVariables.TryGetValue("SURREAL_IMPORT_FILE", out var importFile));
+            Assert.Equal("/docker-entrypoint-initdb.d/init.surql", importFile);
+        }
+        finally
+        {
+            Directory.Delete(initDirectory.FullName, recursive: true);
+        }
+    }
+
     [Fact]
     public void WithLogLevelShouldThrowWhenBuilderIsNull()
     {
@@ -166,6 +247,27 @@ public class SurrealDbPublicApiTests
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithCreationScriptShouldCreateDatabaseScriptAnnotation()
+    {
+        const string script = "DEFINE TABLE todo;";
+
+        var builder = DistributedApplication.CreateBuilder();
+#pragma warning disable CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        builder.AddSurrealServer("surreal")
+            .AddNamespace("ns")
+            .AddDatabase("db")
+            .WithCreationScript(script);
+#pragma warning restore CTASPIRE002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<SurrealDbDatabaseResource>());
+
+        var scriptAnnotation = Assert.Single(resource.Annotations.OfType<SurrealDbCreateDatabaseScriptAnnotation>());
+        Assert.Equal(script, scriptAnnotation.Script);
     }
 
     [Fact]
@@ -279,13 +381,13 @@ public class SurrealDbPublicApiTests
 
         string name = "surreal";
         string namespaceName = "ns";
-        string databaseName = null!;
+        string databaseName = "";
         var password = ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(distributedApplicationBuilder, "password", special: false);
         var parent = new SurrealDbServerResource("surreal", null, password);
         var nsParent = new SurrealDbNamespaceResource("ns", namespaceName, parent);
         var action = () => new SurrealDbDatabaseResource(name, databaseName, nsParent);
 
-        var exception = Assert.Throws<ArgumentNullException>(action);
+        var exception = Assert.Throws<ArgumentException>(action);
         Assert.Equal(nameof(databaseName), exception.ParamName);
     }
 

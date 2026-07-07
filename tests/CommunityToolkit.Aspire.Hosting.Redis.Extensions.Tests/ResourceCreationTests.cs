@@ -44,7 +44,7 @@ public class ResourceCreationTests
             async item =>
             {
                 var redisUrl = redisResource.PasswordParameter is not null ?
-                $"redis://:{await redisResource.PasswordParameter.GetValueAsync(default)}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
+                $"rediss://:{await redisResource.PasswordParameter.GetValueAsync(default)}@{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource.Name}:{redisResource.PrimaryEndpoint.TargetPort}";
                 Assert.Equal("URL_redis", item.Key);
                 Assert.Equal(redisUrl, item.Value);
             },
@@ -152,7 +152,7 @@ public class ResourceCreationTests
             async item =>
             {
                 var redisUrl = redisResource1.PasswordParameter is not null ?
-                $"redis://:{await redisResource1.PasswordParameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
+                $"rediss://:{await redisResource1.PasswordParameter.GetValueAsync(default)}@{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource1.Name}:{redisResource1.PrimaryEndpoint.TargetPort}";
 
                 Assert.Equal("URL_redis1", item.Key);
                 Assert.Equal(redisUrl, item.Value);
@@ -170,7 +170,7 @@ public class ResourceCreationTests
             async item =>
             {
                 var redisUrl = redisResource2.PasswordParameter is not null ?
-                $"redis://:{await redisResource2.PasswordParameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"redis://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
+                $"rediss://:{await redisResource2.PasswordParameter.GetValueAsync(default)}@{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}" : $"rediss://{redisResource2.Name}:{redisResource2.PrimaryEndpoint.TargetPort}";
 
                 Assert.Equal("URL_redis2", item.Key);
                 Assert.Equal(redisUrl, item.Value);
