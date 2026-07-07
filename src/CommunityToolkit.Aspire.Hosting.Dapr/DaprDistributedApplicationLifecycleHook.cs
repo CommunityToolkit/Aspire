@@ -11,7 +11,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Net.Sockets;
 using static CommunityToolkit.Aspire.Hosting.Dapr.CommandLineArgs;
 
@@ -240,8 +239,8 @@ internal sealed class DaprDistributedApplicationLifecycleHook(
                         var http = daprCli.GetEndpoint("http");
                         var grpc = daprCli.GetEndpoint("grpc");
 
-                        context.EnvironmentVariables.TryAdd("DAPR_HTTP_PORT", http.Port.ToString(CultureInfo.InvariantCulture));
-                        context.EnvironmentVariables.TryAdd("DAPR_GRPC_PORT", grpc.Port.ToString(CultureInfo.InvariantCulture));
+                        context.EnvironmentVariables.TryAdd("DAPR_HTTP_PORT", http.Property(EndpointProperty.Port));
+                        context.EnvironmentVariables.TryAdd("DAPR_GRPC_PORT", grpc.Property(EndpointProperty.Port));
 
                         context.EnvironmentVariables.TryAdd("DAPR_GRPC_ENDPOINT", grpc);
                         context.EnvironmentVariables.TryAdd("DAPR_HTTP_ENDPOINT", http);
