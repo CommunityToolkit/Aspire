@@ -91,4 +91,88 @@ public class SquadLaunchScriptTests
         Assert.DoesNotContain("\r", script);
         Assert.StartsWith("#!/bin/bash\n", script);
     }
+
+    // ──────────────────────────── Encoding / BOM (FIX 1) ────────────────────────────
+
+    [Fact]
+    public void WriteLaunchScript_WindowsScript_StartsWithUtf8Bom()
+    {
+        // Windows PowerShell 5.1 misreads UTF-8-without-BOM as ANSI, corrupting a non-ASCII
+        // teamRoot embedded in Set-Location. The Windows .ps1 must be written UTF-8 WITH BOM.
+        var root = CreateTempRoot();
+        try
+        {
+            var content = SquadBuilderExtensions.BuildWindowsLaunchScript(root);
+            var path = SquadBuilderExtensions.WriteLaunchScript(
+                root, "squad", ".ps1", content, makeExecutable: false, SquadBuilderExtensions.WindowsScriptEncoding);
+
+            var bytes = File.ReadAllBytes(path);
+
+            Assert.True(bytes.Length >= 3, "Script file is unexpectedly small.");
+            Assert.Equal(0xEF, bytes[0]);
+            Assert.Equal(0xBB, bytes[1]);
+            Assert.Equal(0xBF, bytes[2]);
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public void WriteLaunchScript_UnixScript_HasNoBom()
+    {
+        // Unix scripts must stay BOM-free: a leading BOM breaks the #!/bin/bash shebang.
+        var root = CreateTempRoot();
+        try
+        {
+            var content = SquadBuilderExtensions.BuildUnixLaunchScript(root);
+            var path = SquadBuilderExtensions.WriteLaunchScript(
+                root, "squad", ".sh", content, makeExecutable: false, SquadBuilderExtensions.UnixScriptEncoding);
+
+            var bytes = File.ReadAllBytes(path);
+
+            Assert.True(bytes.Length >= 3, "Script file is unexpectedly small.");
+            var hasBom = bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+            Assert.False(hasBom, "Unix script must not start with a UTF-8 BOM.");
+            // Shebang must be the very first bytes so the kernel can exec the interpreter.
+            Assert.Equal((byte)'#', bytes[0]);
+            Assert.Equal((byte)'!', bytes[1]);
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public void WindowsScriptEncoding_EmitsUtf8Bom_UnixEncodingDoesNot()
+    {
+        Assert.Equal(3, SquadBuilderExtensions.WindowsScriptEncoding.GetPreamble().Length);
+        Assert.Empty(SquadBuilderExtensions.UnixScriptEncoding.GetPreamble());
+    }
+
+    // ─────────────────────────────── Helpers ───────────────────────────────
+
+    private static string CreateTempRoot()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "squad-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        return root;
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup; ignore.
+        }
+    }
 }

@@ -11,11 +11,22 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace CommunityToolkit.Aspire.Hosting.Squad.Tests;
 
 /// <summary>
+/// Marks <see cref="SquadBuilderCommandsTests"/> as a non-parallel collection. That class mutates
+/// the process-wide PATH environment variable in its headless behavioral test, so it must never run
+/// concurrently with sibling test classes that could observe the mutated PATH mid-run.
+/// </summary>
+[CollectionDefinition("PathMutatingSerial", DisableParallelization = true)]
+public sealed class PathMutatingSerialCollection
+{
+}
+
+/// <summary>
 /// Exercises the dashboard commands attached to <see cref="SquadResource"/> by
 /// <c>SquadBuilderExtensions.AddSquad</c>. Each <c>WithCommand(...)</c> call lands as a
 /// <see cref="ResourceCommandAnnotation"/> on the resource; we invoke each command's
 /// <c>ExecuteCommand</c> delegate and assert the visible <see cref="ExecuteCommandResult"/>.
 /// </summary>
+[Collection("PathMutatingSerial")]
 public class SquadBuilderCommandsTests : IDisposable
 {
     private readonly List<string> _tempRoots = new();

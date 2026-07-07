@@ -3,6 +3,7 @@ using Aspire.Hosting.Lifecycle;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -238,12 +239,20 @@ public static class SquadBuilderExtensions
         }
     }
 
+    // Windows PowerShell 5.1 misreads UTF-8-without-BOM content as ANSI, which corrupts any
+    // non-ASCII characters embedded in the generated .ps1 (e.g. a teamRoot path inside
+    // Set-Location -LiteralPath '…'). Emitting a BOM makes 5.1 decode the script as UTF-8.
+    internal static readonly Encoding WindowsScriptEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+
+    // Unix scripts must stay BOM-free: a leading BOM breaks the '#!/bin/bash' shebang. LF-only.
+    internal static readonly Encoding UnixScriptEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
     // Copilot is always launched from a temporary SCRIPT FILE written under
     // <teamRoot>/.squad/.cache/. Running a file means no terminal — in particular
     // Windows Terminal, which treats ';' as a pane/command separator — ever has to
     // parse ';', '&', or quotes out of an inline command string, which is what caused
     // wt.exe to fail with Win32 error 0x80070002 (ERROR_FILE_NOT_FOUND).
-    private static string WriteLaunchScript(string teamRoot, string squadName, string extension, string content, bool makeExecutable)
+    internal static string WriteLaunchScript(string teamRoot, string squadName, string extension, string content, bool makeExecutable, Encoding encoding)
     {
         var cacheDir = Path.Combine(teamRoot, ".squad", ".cache");
         Directory.CreateDirectory(cacheDir);
@@ -254,7 +263,9 @@ public static class SquadBuilderExtensions
         var fileName = $"launch-copilot-{SanitizeFileComponent(squadName)}-{DateTime.Now:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}{extension}";
         var scriptPath = Path.Combine(cacheDir, fileName);
 
-        File.WriteAllText(scriptPath, content);
+        // Windows scripts are written UTF-8 WITH BOM (see WindowsScriptEncoding); Unix scripts
+        // UTF-8 WITHOUT BOM (see UnixScriptEncoding) so the shebang stays intact.
+        File.WriteAllText(scriptPath, content, encoding);
 
         // Guarded so File.SetUnixFileMode is only invoked on Unix (it throws on Windows).
         if (makeExecutable && !OperatingSystem.IsWindows())
@@ -317,7 +328,7 @@ public static class SquadBuilderExtensions
     {
         var script = BuildWindowsLaunchScript(teamRoot);
 
-        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".ps1", script, makeExecutable: false);
+        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".ps1", script, makeExecutable: false, WindowsScriptEncoding);
 
         // Prefer Windows Terminal (wt.exe), running the script FILE with -File.
         try
@@ -370,7 +381,7 @@ public static class SquadBuilderExtensions
     [ExcludeFromCodeCoverage]
     private static void LaunchCopilotCliMacOs(string squadName, string teamRoot)
     {
-        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".command", BuildUnixLaunchScript(teamRoot), makeExecutable: true);
+        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".command", BuildUnixLaunchScript(teamRoot), makeExecutable: true, UnixScriptEncoding);
 
         var open = new ProcessStartInfo
         {
@@ -388,7 +399,7 @@ public static class SquadBuilderExtensions
     [ExcludeFromCodeCoverage]
     private static bool LaunchCopilotCliLinux(string squadName, string teamRoot)
     {
-        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".sh", BuildUnixLaunchScript(teamRoot), makeExecutable: true);
+        var scriptPath = WriteLaunchScript(teamRoot, squadName, ".sh", BuildUnixLaunchScript(teamRoot), makeExecutable: true, UnixScriptEncoding);
 
         // Terminal emulators vary across distros; try the common ones in order and fall
         // through to the next when one is not installed (Win32Exception/FileNotFoundException).
