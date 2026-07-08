@@ -16,8 +16,11 @@ aspire add CommunityToolkit.Aspire.Hosting.Listmonk
 var builder = DistributedApplication.CreateBuilder(args);
 
 var adminPassword = builder.AddParameter("listmonk-admin-password", secret: true);
+var database = builder.AddPostgres("postgres")
+    .AddDatabase("listmonkdb");
 
-var listmonk = builder.AddListmonk("listmonk", postgresName: "postgres", databaseName: "listmonkdb")
+var listmonk = builder.AddListmonk("listmonk")
+    .WithReference(database)
     .WithAdminCredentials("admin", adminPassword)
     .WithTimeZone("Etc/UTC")
     .WithUploadsVolume();
@@ -47,7 +50,7 @@ The integration exposes listmonk's container configuration environment variables
 | Method | Environment variable |
 | --- | --- |
 | `WithAppAddress` | `LISTMONK_app__address` |
-| `AddListmonk` | `LISTMONK_db__host`, `LISTMONK_db__port`, `LISTMONK_db__user`, `LISTMONK_db__password`, `LISTMONK_db__database`, `LISTMONK_db__ssl_mode` |
+| `WithReference` | `LISTMONK_db__host`, `LISTMONK_db__port`, `LISTMONK_db__user`, `LISTMONK_db__password`, `LISTMONK_db__database`, `LISTMONK_db__ssl_mode` |
 | `WithDatabaseSslMode` | `LISTMONK_db__ssl_mode` |
 | `WithDatabaseMaxOpenConnections` | `LISTMONK_db__max_open` |
 | `WithDatabaseMaxIdleConnections` | `LISTMONK_db__max_idle` |

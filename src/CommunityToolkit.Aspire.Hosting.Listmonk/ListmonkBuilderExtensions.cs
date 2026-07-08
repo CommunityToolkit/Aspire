@@ -1,5 +1,4 @@
 using Aspire.Hosting.ApplicationModel;
-using CommunityToolkit.Aspire.Hosting.Listmonk;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -36,8 +35,6 @@ public static class ListmonkBuilderExtensions
     /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
     /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
     /// <param name="port">The host port for the listmonk HTTP endpoint. If <see langword="null"/>, Aspire will assign a random host port.</param>
-    /// <param name="postgresName">The name of the PostgreSQL server resource. Defaults to <c>{name}-postgres</c>.</param>
-    /// <param name="databaseName">The name of the PostgreSQL database resource. Defaults to <c>{name}-db</c>.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <example>
@@ -45,7 +42,10 @@ public static class ListmonkBuilderExtensions
     /// <code lang="csharp">
     /// var builder = DistributedApplication.CreateBuilder(args);
     ///
-    /// var listmonk = builder.AddListmonk("listmonk");
+    /// var db = builder.AddPostgres("postgres")
+    ///   .AddDatabase("db");
+    /// var listmonk = builder.AddListmonk("listmonk")
+    ///   .WithReference(db);
     /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
     ///   .WithReference(listmonk);
     ///
@@ -57,24 +57,13 @@ public static class ListmonkBuilderExtensions
     public static IResourceBuilder<ListmonkResource> AddListmonk(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
-        int? port = null,
-        [ResourceName] string? postgresName = null,
-        [ResourceName] string? databaseName = null)
+        int? port = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        if (postgresName is not null)
-        {
-            ArgumentException.ThrowIfNullOrEmpty(postgresName);
-        }
-
-        if (databaseName is not null)
-        {
-            ArgumentException.ThrowIfNullOrEmpty(databaseName);
-        }
 
         var resource = new ListmonkResource(name);
-        var listmonk = builder.AddResource(resource)
+        return builder.AddResource(resource)
             .WithImage(ListmonkContainerImageTags.Image, ListmonkContainerImageTags.Tag)
             .WithImageRegistry(ListmonkContainerImageTags.Registry)
             .WithHttpEndpoint(port: port, targetPort: ListmonkPort, name: ListmonkResource.PrimaryEndpointName)
@@ -82,12 +71,6 @@ public static class ListmonkBuilderExtensions
             .WithArgs("-c", "./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''")
             .WithEnvironment(AppAddressEnvVarName, "0.0.0.0:9000")
             .WithHttpHealthCheck("/health");
-
-        var postgres = builder.AddPostgres(postgresName ?? $"{name}-postgres")
-            .WithParentRelationship(listmonk.Resource);
-        var database = postgres.AddDatabase(databaseName ?? $"{name}-db");
-
-        return listmonk.ConfigurePostgreSQL(database);
     }
 
     /// <summary>
@@ -105,10 +88,20 @@ public static class ListmonkBuilderExtensions
         return builder.WithEnvironment(AppAddressEnvVarName, address);
     }
 
-    private static IResourceBuilder<ListmonkResource> ConfigurePostgreSQL(
+    /// <summary>
+    /// References a <see cref="PostgresDatabaseResource"/> as the PostgreSQL database for the listmonk resource.
+    /// </summary>
+    /// <param name="builder">The listmonk resource builder.</param>
+    /// <param name="database">The PostgreSQL database resource builder.</param>
+    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<ListmonkResource> WithReference(
         this IResourceBuilder<ListmonkResource> builder,
         IResourceBuilder<PostgresDatabaseResource> database)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(database);
+
         var postgres = database.Resource.Parent;
 
         return builder
@@ -116,7 +109,7 @@ public static class ListmonkBuilderExtensions
             .WithEnvironment(DatabasePortEnvVarName, ReferenceExpression.Create($"{postgres.PrimaryEndpoint.Property(EndpointProperty.TargetPort)}"))
             .WithEnvironment(DatabaseUserEnvVarName, postgres.UserNameReference)
             .WithEnvironment(DatabasePasswordEnvVarName, postgres.PasswordParameter)
-            .WithEnvironment(DatabaseNameEnvVarName, database.Resource.DatabaseName)
+            .WithEnvironment(DatabaseNameEnvVarName, ReferenceExpression.Create($"{database.Resource.DatabaseName}"))
             .WithDatabaseSslMode("disable")
             .WaitFor(database);
     }
