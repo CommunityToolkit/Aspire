@@ -6,23 +6,14 @@ namespace Aspire.Hosting.ApplicationModel;
 /// A resource that represents a listmonk instance.
 /// </summary>
 [AspireExport(ExposeProperties = true)]
-public class ListmonkResource : ContainerResource, IResourceWithServiceDiscovery, IResourceWithConnectionString
+public class ListmonkResource([ResourceName] string name) : ContainerResource(name), IResourceWithServiceDiscovery, IResourceWithConnectionString
 {
     internal const string PrimaryEndpointName = "http";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ListmonkResource"/> class.
-    /// </summary>
-    /// <param name="name">The name of the resource.</param>
-    public ListmonkResource([ResourceName] string name) : base(name)
-    {
-        PrimaryEndpoint = new(this, PrimaryEndpointName);
-    }
-
-    /// <summary>
     /// Gets the primary HTTP endpoint for the listmonk instance.
     /// </summary>
-    public EndpointReference PrimaryEndpoint { get; }
+    public EndpointReference PrimaryEndpoint => new(this, PrimaryEndpointName);
 
     /// <summary>
     /// Gets the host endpoint reference for this resource.

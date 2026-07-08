@@ -129,12 +129,13 @@ public class AddListmonkTests
     }
 
     [Fact]
-    public async Task WithUserAndGroupIdAddsContainerUserEnvironmentVariables()
+    public async Task WithUserIdAndWithGroupIdAddContainerUserEnvironmentVariables()
     {
         using var appBuilder = TestDistributedApplicationBuilder.Create();
 
         var listmonk = appBuilder.AddListmonk("listmonk")
-            .WithUserAndGroupId(1000, 1001);
+            .WithUserId(1000)
+            .WithGroupId(1001);
 
         var config = await listmonk.Resource.GetEnvironmentVariablesAsync();
 

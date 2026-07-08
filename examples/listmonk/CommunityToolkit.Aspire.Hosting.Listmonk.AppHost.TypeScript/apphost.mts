@@ -19,7 +19,8 @@ await listmonk.withDatabaseMaxOpenConnections(25);
 await listmonk.withDatabaseMaxIdleConnections(25);
 await listmonk.withDatabaseMaxLifetime("300s");
 await listmonk.withTimeZone("Etc/UTC");
-await listmonk.withUserAndGroupId(0, 0);
+await listmonk.withUserId(0);
+await listmonk.withGroupId(0);
 await listmonk.withUploadsVolume();
 await listmonkDefault.withDatabaseSslMode("disable");
 

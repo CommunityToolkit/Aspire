@@ -294,25 +294,6 @@ public static class ListmonkBuilderExtensions
     }
 
     /// <summary>
-    /// Configures the user and group IDs used by the listmonk container entrypoint.
-    /// </summary>
-    /// <param name="builder">The listmonk resource builder.</param>
-    /// <param name="userId">The value for <c>PUID</c>.</param>
-    /// <param name="groupId">The value for <c>PGID</c>.</param>
-    /// <returns>The <see cref="IResourceBuilder{T}"/>.</returns>
-    [AspireExport]
-    public static IResourceBuilder<ListmonkResource> WithUserAndGroupId(this IResourceBuilder<ListmonkResource> builder, int userId, int groupId)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentOutOfRangeException.ThrowIfNegative(userId);
-        ArgumentOutOfRangeException.ThrowIfNegative(groupId);
-
-        return builder
-            .WithUserId(userId)
-            .WithGroupId(groupId);
-    }
-
-    /// <summary>
     /// Adds a named volume for listmonk media uploads.
     /// </summary>
     /// <param name="builder">The listmonk resource builder.</param>

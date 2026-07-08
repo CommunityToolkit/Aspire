@@ -55,7 +55,7 @@ The integration exposes listmonk's container configuration environment variables
 | `WithDatabaseParameters` | `LISTMONK_db__params` |
 | `WithTimeZone` | `TZ` |
 | `WithAdminUser`, `WithAdminPassword`, `WithAdminCredentials` | `LISTMONK_ADMIN_USER`, `LISTMONK_ADMIN_PASSWORD` |
-| `WithUserId`, `WithGroupId`, `WithUserAndGroupId` | `PUID`, `PGID` |
+| `WithUserId`, `WithGroupId` | `PUID`, `PGID` |
 
 The admin credentials are only used by listmonk during first database setup.
 listmonk's container entrypoint also supports `LISTMONK_*_FILE` variables for Docker or Podman secret files. Prefer Aspire parameters for secrets in AppHost code; if a deployment requires file-based secret paths, configure those specific variables with Aspire's generic `WithEnvironment` API.
