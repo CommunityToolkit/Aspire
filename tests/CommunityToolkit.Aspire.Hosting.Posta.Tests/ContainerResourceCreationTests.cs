@@ -10,7 +10,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = null!;
 
-        var exception = Assert.Throws<ArgumentNullException>(() => builder.AddPosta("posta"));
+        var exception = Assert.Throws<ArgumentNullException>(() => builder.AddPosta("posta", null!, null!));
         Assert.Equal("builder", exception.ParamName);
     }
 
@@ -18,15 +18,17 @@ public class ContainerResourceCreationTests
     public void AddPostaThrowsWhenNameIsNull()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
 
-        Assert.Throws<ArgumentNullException>(() => builder.AddPosta(null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddPosta(null!, database, redis));
     }
 
     [Fact]
     public void WithReferenceThrowsWhenDatabaseIsNull()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var posta = builder.AddPosta("posta");
+        var (database, redis) = AddPostaDependencies(builder);
+        var posta = builder.AddPosta("posta", database, redis);
 
         Assert.Throws<ArgumentNullException>(() => posta.WithReference((IResourceBuilder<PostgresDatabaseResource>)null!));
     }
@@ -35,7 +37,8 @@ public class ContainerResourceCreationTests
     public void WithReferenceThrowsWhenRedisIsNull()
     {
         var builder = DistributedApplication.CreateBuilder();
-        var posta = builder.AddPosta("posta");
+        var (database, redis) = AddPostaDependencies(builder);
+        var posta = builder.AddPosta("posta", database, redis);
 
         Assert.Throws<ArgumentNullException>(() => posta.WithReference((IResourceBuilder<RedisResource>)null!));
     }
@@ -63,8 +66,9 @@ public class ContainerResourceCreationTests
     public void AddPostaSetsContainerDetailsOnResource()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
 
-        builder.AddPosta("posta");
+        builder.AddPosta("posta", database, redis);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -83,8 +87,9 @@ public class ContainerResourceCreationTests
     public void AddPostaSetsEndpointDetailsOnResource()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
 
-        builder.AddPosta("posta", port: 9001);
+        builder.AddPosta("posta", database, redis, port: 9001);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -100,8 +105,9 @@ public class ContainerResourceCreationTests
     public void AddPostaRegistersHealthChecks()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
 
-        builder.AddPosta("posta");
+        builder.AddPosta("posta", database, redis);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -150,7 +156,6 @@ public class ContainerResourceCreationTests
         var postgres = builder.AddPostgres("postgres");
         var database = postgres.AddDatabase("posta-db", "posta");
         var redis = builder.AddRedis("redis");
-        var databaseUrl = builder.AddParameter("posta-db-url", "postgres://example");
         var redisPassword = builder.AddParameter("posta-redis-password", "redis-secret");
         var googleSecret = builder.AddParameter("posta-google-secret", "google-secret");
         var s3AccessKey = builder.AddParameter("posta-s3-access-key", "s3-access");
@@ -159,7 +164,7 @@ public class ContainerResourceCreationTests
         var smtpPassword = builder.AddParameter("posta-smtp-password", "smtp-secret");
         var inboundWebhookSecret = builder.AddParameter("posta-inbound-secret", "inbound-secret");
 
-        var posta = builder.AddPosta("posta", options =>
+        var posta = builder.AddPosta("posta", database, redis, options =>
         {
             options.Environment = "dev";
             options.DevMode = true;
@@ -217,11 +222,7 @@ public class ContainerResourceCreationTests
             options.EmailVerifyRateHourly = 42;
             options.AllowDowngrade = true;
             options.PlanEnforcement = true;
-            options.DatabaseUrl = databaseUrl;
-            options.RedisPassword = redisPassword;
-            options.RedisAddress = "redis.example.com:6379";
         })
-            .WithReference(database)
             .WithReference(redis, redisPassword);
 
         Assert.True(posta.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
@@ -294,7 +295,6 @@ public class ContainerResourceCreationTests
         Assert.Equal("42", env["POSTA_EMAIL_VERIFY_RATE_HOURLY"]);
         Assert.Equal("true", env["POSTA_ALLOW_DOWNGRADE"]);
         Assert.Equal("true", env["POSTA_PLAN_ENFORCEMENT"]);
-        Assert.Same(databaseUrl.Resource, env["POSTA_DB_URL"]);
         Assert.True(env.ContainsKey("POSTA_DB_HOST"));
         Assert.True(env.ContainsKey("POSTA_DB_PORT"));
         Assert.True(env.ContainsKey("POSTA_DB_USER"));
@@ -302,7 +302,15 @@ public class ContainerResourceCreationTests
         Assert.Equal("posta", env["POSTA_DB_NAME"]);
         Assert.Equal("disable", env["POSTA_DB_SSL_MODE"]);
         Assert.True(env.ContainsKey("POSTA_REDIS_ADDR"));
-        Assert.NotEqual("redis.example.com:6379", env["POSTA_REDIS_ADDR"].ToString());
         Assert.Same(redisPassword.Resource, env["POSTA_REDIS_PASSWORD"]);
+    }
+
+    private static (IResourceBuilder<PostgresDatabaseResource> Database, IResourceBuilder<RedisResource> Redis) AddPostaDependencies(IDistributedApplicationBuilder builder)
+    {
+        var postgres = builder.AddPostgres("postgres");
+        var database = postgres.AddDatabase("posta-db", "posta");
+        var redis = builder.AddRedis("redis");
+
+        return (database, redis);
     }
 }

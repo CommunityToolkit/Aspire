@@ -9,29 +9,6 @@ namespace Aspire.Hosting;
 public static class PostaHostingExtensions
 {
     /// <summary>
-    /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/>.
-    /// </summary>
-    /// <ats-summary>Adds a Posta container resource</ats-summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the Posta resource will be added.</param>
-    /// <param name="name">The name of the Posta container resource.</param>
-    /// <param name="jwtSecret">Optional parameter used as the Posta JWT signing secret.</param>
-    /// <param name="adminPassword">Optional parameter used as the initial Posta admin password.</param>
-    /// <param name="adminEmail">The initial Posta admin account email.</param>
-    /// <param name="port">Optional host port for the Posta HTTP API and dashboard.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
-    [AspireExport]
-    public static IResourceBuilder<PostaResource> AddPosta(
-        this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        IResourceBuilder<ParameterResource>? jwtSecret = null,
-        IResourceBuilder<ParameterResource>? adminPassword = null,
-        string adminEmail = "admin@example.com",
-        int? port = null)
-    {
-        return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions: null);
-    }
-
-    /// <summary>
     /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/> and configures PostgreSQL and Redis references.
     /// </summary>
     /// <ats-summary>Adds a Posta container resource with PostgreSQL and Redis references</ats-summary>
@@ -55,38 +32,13 @@ public static class PostaHostingExtensions
         string adminEmail = "admin@example.com",
         int? port = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(database);
         ArgumentNullException.ThrowIfNull(redis);
 
         return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions: null)
             .WithReference(database)
             .WithReference(redis);
-    }
-
-    /// <summary>
-    /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/> with additional Posta environment configuration.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the Posta resource will be added.</param>
-    /// <param name="name">The name of the Posta container resource.</param>
-    /// <param name="configureOptions">A delegate that configures Posta environment variables.</param>
-    /// <param name="jwtSecret">Optional parameter used as the Posta JWT signing secret.</param>
-    /// <param name="adminPassword">Optional parameter used as the initial Posta admin password.</param>
-    /// <param name="adminEmail">The initial Posta admin account email.</param>
-    /// <param name="port">Optional host port for the Posta HTTP API and dashboard.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
-    [AspireExportIgnore(Reason = "Action<PostaOptions> is not supported in polyglot app hosts. Use the parameter-based overload instead.")]
-    public static IResourceBuilder<PostaResource> AddPosta(
-        this IDistributedApplicationBuilder builder,
-        [ResourceName] string name,
-        Action<PostaOptions> configureOptions,
-        IResourceBuilder<ParameterResource>? jwtSecret = null,
-        IResourceBuilder<ParameterResource>? adminPassword = null,
-        string adminEmail = "admin@example.com",
-        int? port = null)
-    {
-        ArgumentNullException.ThrowIfNull(configureOptions);
-
-        return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions);
     }
 
     /// <summary>
@@ -114,6 +66,7 @@ public static class PostaHostingExtensions
         string adminEmail = "admin@example.com",
         int? port = null)
     {
+        ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(database);
         ArgumentNullException.ThrowIfNull(redis);
         ArgumentNullException.ThrowIfNull(configureOptions);
@@ -221,12 +174,6 @@ public static class PostaHostingExtensions
             .WithEnvironment(context =>
             {
                 context.EnvironmentVariables["POSTA_PORT"] = PostaResource.HttpEndpointPort.ToString();
-                SetParameter(context, "POSTA_DB_URL", options.DatabaseUrl);
-                SetIfNotNull(context, "POSTA_REDIS_ADDR", options.RedisAddress);
-                if (options.RedisPassword is not null)
-                {
-                    context.EnvironmentVariables["POSTA_REDIS_PASSWORD"] = options.RedisPassword.Resource;
-                }
                 context.EnvironmentVariables["POSTA_JWT_SECRET"] = resource.JwtSecretParameter;
                 context.EnvironmentVariables["POSTA_ADMIN_EMAIL"] = adminEmail;
                 context.EnvironmentVariables["POSTA_ADMIN_PASSWORD"] = resource.AdminPasswordParameter;
