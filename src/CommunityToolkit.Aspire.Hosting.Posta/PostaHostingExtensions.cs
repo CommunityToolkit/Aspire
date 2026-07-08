@@ -31,6 +31,29 @@ public static class PostaHostingExtensions
         return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions: null);
     }
 
+    /// <summary>
+    /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/> and configures PostgreSQL and Redis references.
+    /// </summary>
+    /// <ats-summary>Adds a Posta container resource with PostgreSQL and Redis references</ats-summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the Posta resource will be added.</param>
+    /// <param name="name">The name of the Posta container resource.</param>
+    /// <param name="database">The PostgreSQL database resource used by Posta.</param>
+    /// <param name="redis">The Redis resource used by Posta.</param>
+    /// <param name="jwtSecret">Optional parameter used as the Posta JWT signing secret.</param>
+    /// <param name="adminPassword">Optional parameter used as the initial Posta admin password.</param>
+    /// <param name="adminEmail">The initial Posta admin account email.</param>
+    /// <param name="port">Optional host port for the Posta HTTP API and dashboard.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExport("addPostaWithReferences", MethodName = "addPostaWithReferences")]
+    public static IResourceBuilder<PostaResource> AddPosta(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        IResourceBuilder<PostgresDatabaseResource> database,
+        IResourceBuilder<RedisResource> redis,
+        IResourceBuilder<ParameterResource>? jwtSecret = null,
+        IResourceBuilder<ParameterResource>? adminPassword = null,
+        string adminEmail = "admin@example.com",
+        int? port = null)
     {
         ArgumentNullException.ThrowIfNull(database);
         ArgumentNullException.ThrowIfNull(redis);
@@ -66,6 +89,30 @@ public static class PostaHostingExtensions
         return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions);
     }
 
+    /// <summary>
+    /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/> with PostgreSQL, Redis, and additional Posta environment configuration.
+    /// </summary>
+    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/> to which the Posta resource will be added.</param>
+    /// <param name="name">The name of the Posta container resource.</param>
+    /// <param name="database">The PostgreSQL database resource used by Posta.</param>
+    /// <param name="redis">The Redis resource used by Posta.</param>
+    /// <param name="configureOptions">A delegate that configures Posta environment variables.</param>
+    /// <param name="jwtSecret">Optional parameter used as the Posta JWT signing secret.</param>
+    /// <param name="adminPassword">Optional parameter used as the initial Posta admin password.</param>
+    /// <param name="adminEmail">The initial Posta admin account email.</param>
+    /// <param name="port">Optional host port for the Posta HTTP API and dashboard.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "Action<PostaOptions> is not supported in polyglot app hosts. Use the parameter-based overload instead.")]
+    public static IResourceBuilder<PostaResource> AddPosta(
+        this IDistributedApplicationBuilder builder,
+        [ResourceName] string name,
+        IResourceBuilder<PostgresDatabaseResource> database,
+        IResourceBuilder<RedisResource> redis,
+        Action<PostaOptions> configureOptions,
+        IResourceBuilder<ParameterResource>? jwtSecret = null,
+        IResourceBuilder<ParameterResource>? adminPassword = null,
+        string adminEmail = "admin@example.com",
+        int? port = null)
     {
         ArgumentNullException.ThrowIfNull(database);
         ArgumentNullException.ThrowIfNull(redis);
