@@ -30,28 +30,6 @@ public class ListmonkPublicApiTests
     }
 
     [Fact]
-    public void AddListmonkShouldThrowWhenDatabaseNameIsEmpty()
-    {
-        var builder = TestDistributedApplicationBuilder.Create();
-
-        var action = () => builder.AddListmonk("listmonk", databaseName: string.Empty);
-
-        var exception = Assert.Throws<ArgumentException>(action);
-        Assert.Equal("databaseName", exception.ParamName);
-    }
-
-    [Fact]
-    public void AddListmonkShouldThrowWhenPostgresNameIsEmpty()
-    {
-        var builder = TestDistributedApplicationBuilder.Create();
-
-        var action = () => builder.AddListmonk("listmonk", postgresName: string.Empty);
-
-        var exception = Assert.Throws<ArgumentException>(action);
-        Assert.Equal("postgresName", exception.ParamName);
-    }
-
-    [Fact]
     public void WithUploadsBindMountShouldThrowWhenSourceIsNull()
     {
         var builder = TestDistributedApplicationBuilder.Create();
@@ -75,6 +53,32 @@ public class ListmonkPublicApiTests
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(address), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithReferenceShouldThrowWhenBuilderIsNull()
+    {
+        var appBuilder = TestDistributedApplicationBuilder.Create();
+        IResourceBuilder<ListmonkResource> listmonk = null!;
+        var database = appBuilder.AddPostgres("postgres").AddDatabase("listmonkdb");
+
+        var action = () => listmonk.WithReference(database);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal("builder", exception.ParamName);
+    }
+
+    [Fact]
+    public void WithReferenceShouldThrowWhenDatabaseIsNull()
+    {
+        var builder = TestDistributedApplicationBuilder.Create();
+        var listmonk = builder.AddListmonk("listmonk");
+        IResourceBuilder<PostgresDatabaseResource> database = null!;
+
+        var action = () => listmonk.WithReference(database);
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal("database", exception.ParamName);
     }
 
     [Fact]
