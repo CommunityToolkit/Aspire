@@ -95,12 +95,12 @@ public static class PostaHostingExtensions
             {
                 var postgres = database.Resource.Parent;
 
-                context.EnvironmentVariables["POSTA_DB_HOST"] = postgres.PrimaryEndpoint.Property(EndpointProperty.Host);
-                context.EnvironmentVariables["POSTA_DB_PORT"] = postgres.PrimaryEndpoint.Property(EndpointProperty.Port);
-                context.EnvironmentVariables["POSTA_DB_USER"] = postgres.UserNameReference;
-                context.EnvironmentVariables["POSTA_DB_PASSWORD"] = postgres.PasswordParameter;
-                context.EnvironmentVariables["POSTA_DB_NAME"] = database.Resource.DatabaseName;
-                context.EnvironmentVariables["POSTA_DB_SSL_MODE"] = "disable";
+                Set(context, "POSTA_DB_HOST", postgres.PrimaryEndpoint.Property(EndpointProperty.Host));
+                Set(context, "POSTA_DB_PORT", postgres.PrimaryEndpoint.Property(EndpointProperty.Port));
+                Set(context, "POSTA_DB_USER", postgres.UserNameReference);
+                Set(context, "POSTA_DB_PASSWORD", postgres.PasswordParameter);
+                Set(context, "POSTA_DB_NAME", database.Resource.DatabaseName);
+                Set(context, "POSTA_DB_SSL_MODE", "disable");
             })
             .WaitFor(database);
     }
@@ -127,14 +127,14 @@ public static class PostaHostingExtensions
                 var redisResource = redis.Resource;
                 var redisEndpoint = redisResource.GetEndpoint("secondary");
 
-                context.EnvironmentVariables["POSTA_REDIS_ADDR"] = ReferenceExpression.Create($"{redisEndpoint.Property(EndpointProperty.Host)}:{redisEndpoint.Property(EndpointProperty.Port)}");
+                Set(context, "POSTA_REDIS_ADDR", ReferenceExpression.Create($"{redisEndpoint.Property(EndpointProperty.Host)}:{redisEndpoint.Property(EndpointProperty.Port)}"));
                 if (redisPassword is not null)
                 {
-                    context.EnvironmentVariables["POSTA_REDIS_PASSWORD"] = redisPassword.Resource;
+                    Set(context, "POSTA_REDIS_PASSWORD", redisPassword.Resource);
                 }
                 else if (redisResource.PasswordParameter is not null)
                 {
-                    context.EnvironmentVariables["POSTA_REDIS_PASSWORD"] = redisResource.PasswordParameter;
+                    Set(context, "POSTA_REDIS_PASSWORD", redisResource.PasswordParameter);
                 }
             })
             .WaitFor(redis);
@@ -173,10 +173,13 @@ public static class PostaHostingExtensions
                 name: PostaResource.HttpEndpointName)
             .WithEnvironment(context =>
             {
-                context.EnvironmentVariables["POSTA_PORT"] = PostaResource.HttpEndpointPort.ToString();
-                context.EnvironmentVariables["POSTA_JWT_SECRET"] = resource.JwtSecretParameter;
-                context.EnvironmentVariables["POSTA_ADMIN_EMAIL"] = adminEmail;
-                context.EnvironmentVariables["POSTA_ADMIN_PASSWORD"] = resource.AdminPasswordParameter;
+                Set(context, "POSTA_PORT", PostaResource.HttpEndpointPort);
+                SetParameter(context, "POSTA_DB_URL", options.DatabaseUrl);
+                SetIfNotNull(context, "POSTA_REDIS_ADDR", options.RedisAddress);
+                if (options.RedisPassword is not null)
+                Set(context, "POSTA_JWT_SECRET", resource.JwtSecretParameter);
+                Set(context, "POSTA_ADMIN_EMAIL", adminEmail);
+                Set(context, "POSTA_ADMIN_PASSWORD", resource.AdminPasswordParameter);
                 ConfigurePostaEnvironment(context, options);
             })
             .WithHttpHealthCheck(
