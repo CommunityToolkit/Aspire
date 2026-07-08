@@ -177,6 +177,9 @@ public static class PostaHostingExtensions
                 SetParameter(context, "POSTA_DB_URL", options.DatabaseUrl);
                 SetIfNotNull(context, "POSTA_REDIS_ADDR", options.RedisAddress);
                 if (options.RedisPassword is not null)
+                {
+                    Set(context, "POSTA_REDIS_PASSWORD", options.RedisPassword.Resource);
+                }
                 Set(context, "POSTA_JWT_SECRET", resource.JwtSecretParameter);
                 Set(context, "POSTA_ADMIN_EMAIL", adminEmail);
                 Set(context, "POSTA_ADMIN_PASSWORD", resource.AdminPasswordParameter);
