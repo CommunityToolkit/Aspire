@@ -31,6 +31,15 @@ public static class PostaHostingExtensions
         return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions: null);
     }
 
+    {
+        ArgumentNullException.ThrowIfNull(database);
+        ArgumentNullException.ThrowIfNull(redis);
+
+        return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions: null)
+            .WithReference(database)
+            .WithReference(redis);
+    }
+
     /// <summary>
     /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/> with additional Posta environment configuration.
     /// </summary>
@@ -55,6 +64,16 @@ public static class PostaHostingExtensions
         ArgumentNullException.ThrowIfNull(configureOptions);
 
         return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions);
+    }
+
+    {
+        ArgumentNullException.ThrowIfNull(database);
+        ArgumentNullException.ThrowIfNull(redis);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        return AddPostaCore(builder, name, jwtSecret, adminPassword, adminEmail, port, configureOptions)
+            .WithReference(database)
+            .WithReference(redis);
     }
 
     /// <summary>
