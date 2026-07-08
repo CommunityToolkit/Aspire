@@ -255,6 +255,21 @@ public static class PostaHostingExtensions
         context.EnvironmentVariables[name] = value;
     }
 
+    private static void Set(EnvironmentCallbackContext context, string name, ParameterResource value)
+    {
+        context.EnvironmentVariables[name] = value;
+    }
+
+    private static void Set(EnvironmentCallbackContext context, string name, EndpointReferenceExpression value)
+    {
+        context.EnvironmentVariables[name] = value;
+    }
+
+    private static void Set(EnvironmentCallbackContext context, string name, ReferenceExpression value)
+    {
+        context.EnvironmentVariables[name] = value;
+    }
+
     private static void Set(EnvironmentCallbackContext context, string name, bool value)
     {
         context.EnvironmentVariables[name] = value ? "true" : "false";
