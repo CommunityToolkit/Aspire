@@ -1,4 +1,4 @@
-namespace CommunityToolkit.Aspire.Hosting.Listmonk;
+namespace Aspire.Hosting;
 
 internal static class ListmonkContainerImageTags
 {

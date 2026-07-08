@@ -1,6 +1,5 @@
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Hosting.Listmonk;
 using CommunityToolkit.Aspire.Testing;
 using System.Net.Sockets;
 
