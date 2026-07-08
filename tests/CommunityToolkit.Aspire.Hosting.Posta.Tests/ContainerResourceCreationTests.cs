@@ -156,78 +156,78 @@ public class ContainerResourceCreationTests
         var postgres = builder.AddPostgres("postgres");
         var database = postgres.AddDatabase("posta-db", "posta");
         var redis = builder.AddRedis("redis");
-        var databaseUrl = builder.AddParameter("posta-db-url", "postgres://example");
-        var redisPassword = builder.AddParameter("posta-redis-password", "redis-secret");
-        var googleSecret = builder.AddParameter("posta-google-secret", "google-secret");
-        var s3AccessKey = builder.AddParameter("posta-s3-access-key", "s3-access");
-        var s3SecretKey = builder.AddParameter("posta-s3-secret-key", "s3-secret");
-        var encryptionKey = builder.AddParameter("posta-encryption-key", "encryption-secret");
-        var smtpPassword = builder.AddParameter("posta-smtp-password", "smtp-secret");
-        var inboundWebhookSecret = builder.AddParameter("posta-inbound-secret", "inbound-secret");
+        var parameters = new Dictionary<string, IResourceBuilder<ParameterResource>>();
+
+        IResourceBuilder<ParameterResource> Parameter(string name, string value)
+        {
+            var parameter = builder.AddParameter($"posta-{name}", value);
+            parameters[name] = parameter;
+            return parameter;
+        }
 
         var posta = builder.AddPosta("posta", database, redis, options =>
         {
-            options.Environment = "dev";
-            options.DevMode = true;
-            options.AuthRateLimitEnabled = false;
-            options.RateLimitHourly = 500;
-            options.RateLimitDaily = 5000;
-            options.OpenApiDocs = false;
-            options.MetricsEnabled = true;
-            options.WebDir = "web/dist";
-            options.WebUrl = "https://posta.example.com";
-            options.ApiUrl = "https://api.posta.example.com";
-            options.CorsOrigins = "https://app.example.com";
-            options.EmbeddedWorker = false;
-            options.WorkerConcurrency = 20;
-            options.WorkerMaxRetries = 7;
-            options.WebhookMaxRetries = 4;
-            options.WebhookTimeoutSeconds = 30;
-            options.WebhookProxyUrl = "http://proxy.example.com";
-            options.GoogleOAuthClientId = "google-client-id";
-            options.GoogleOAuthClientSecret = googleSecret;
-            options.OAuthCallbackUrl = "https://posta.example.com/oauth/callback";
-            options.BlobProvider = "s3";
-            options.BlobS3Endpoint = "https://s3.example.com";
-            options.BlobS3Region = "eu-central-1";
-            options.BlobS3Bucket = "posta";
-            options.BlobS3AccessKey = s3AccessKey;
-            options.BlobS3SecretKey = s3SecretKey;
-            options.BlobS3UseSsl = false;
-            options.BlobS3PathStyle = true;
-            options.BlobFileSystemPath = "/posta/attachments";
-            options.EncryptionKey = encryptionKey;
-            options.SystemSmtpHost = "smtp.example.com";
-            options.SystemSmtpPort = 2525;
-            options.SystemSmtpUsername = "notifications@example.com";
-            options.SystemSmtpPassword = smtpPassword;
-            options.SystemSmtpFrom = "notifications@example.com";
-            options.SystemSmtpEncryption = "ssl";
-            options.InboundEnabled = true;
-            options.InboundSmtpHost = "127.0.0.1";
-            options.InboundSmtpPort = 2526;
-            options.InboundHostname = "mx.example.com";
-            options.InboundMaxMessageSize = 12345;
-            options.InboundMaxAttachSize = 6789;
-            options.InboundWebhookSecret = inboundWebhookSecret;
-            options.InboundTlsMode = "starttls";
-            options.InboundTlsCertFile = "/certs/fullchain.pem";
-            options.InboundTlsKeyFile = "/certs/privkey.pem";
-            options.InboundSmtpRateLimit = 10;
-            options.InboundSmtpRateWindow = 20;
-            options.EmailVerificationRequired = true;
-            options.AutoSuppressOnReject = false;
-            options.EmailVerifyEnabled = false;
-            options.EmailVerifyCacheTtlHours = 12;
-            options.EmailVerifyMxCacheTtlHours = 6;
-            options.EmailVerifyRateHourly = 42;
-            options.AllowDowngrade = true;
-            options.PlanEnforcement = true;
-            options.DatabaseUrl = databaseUrl;
-            options.RedisPassword = redisPassword;
-            options.RedisAddress = "redis.example.com:6379";
+            options.Environment = Parameter("environment", "dev");
+            options.DevMode = Parameter("dev-mode", "true");
+            options.AuthRateLimitEnabled = Parameter("auth-rate-limit-enabled", "false");
+            options.RateLimitHourly = Parameter("rate-limit-hourly", "500");
+            options.RateLimitDaily = Parameter("rate-limit-daily", "5000");
+            options.OpenApiDocs = Parameter("openapi-docs", "false");
+            options.MetricsEnabled = Parameter("metrics-enabled", "true");
+            options.WebDir = Parameter("web-dir", "web/dist");
+            options.WebUrl = Parameter("web-url", "https://posta.example.com");
+            options.ApiUrl = Parameter("api-url", "https://api.posta.example.com");
+            options.CorsOrigins = Parameter("cors-origins", "https://app.example.com");
+            options.EmbeddedWorker = Parameter("embedded-worker", "false");
+            options.WorkerConcurrency = Parameter("worker-concurrency", "20");
+            options.WorkerMaxRetries = Parameter("worker-max-retries", "7");
+            options.WebhookMaxRetries = Parameter("webhook-max-retries", "4");
+            options.WebhookTimeoutSeconds = Parameter("webhook-timeout-seconds", "30");
+            options.WebhookProxyUrl = Parameter("webhook-proxy-url", "http://proxy.example.com");
+            options.GoogleOAuthClientId = Parameter("google-oauth-client-id", "google-client-id");
+            options.GoogleOAuthClientSecret = Parameter("google-oauth-client-secret", "google-secret");
+            options.OAuthCallbackUrl = Parameter("oauth-callback-url", "https://posta.example.com/oauth/callback");
+            options.BlobProvider = Parameter("blob-provider", "s3");
+            options.BlobS3Endpoint = Parameter("blob-s3-endpoint", "https://s3.example.com");
+            options.BlobS3Region = Parameter("blob-s3-region", "eu-central-1");
+            options.BlobS3Bucket = Parameter("blob-s3-bucket", "posta");
+            options.BlobS3AccessKey = Parameter("blob-s3-access-key", "s3-access");
+            options.BlobS3SecretKey = Parameter("blob-s3-secret-key", "s3-secret");
+            options.BlobS3UseSsl = Parameter("blob-s3-use-ssl", "false");
+            options.BlobS3PathStyle = Parameter("blob-s3-path-style", "true");
+            options.BlobFileSystemPath = Parameter("blob-file-system-path", "/posta/attachments");
+            options.EncryptionKey = Parameter("encryption-key", "encryption-secret");
+            options.SystemSmtpHost = Parameter("system-smtp-host", "smtp.example.com");
+            options.SystemSmtpPort = Parameter("system-smtp-port", "2525");
+            options.SystemSmtpUsername = Parameter("system-smtp-username", "notifications@example.com");
+            options.SystemSmtpPassword = Parameter("system-smtp-password", "smtp-secret");
+            options.SystemSmtpFrom = Parameter("system-smtp-from", "notifications@example.com");
+            options.SystemSmtpEncryption = Parameter("system-smtp-encryption", "ssl");
+            options.InboundEnabled = Parameter("inbound-enabled", "true");
+            options.InboundSmtpHost = Parameter("inbound-smtp-host", "127.0.0.1");
+            options.InboundSmtpPort = Parameter("inbound-smtp-port", "2526");
+            options.InboundHostname = Parameter("inbound-hostname", "mx.example.com");
+            options.InboundMaxMessageSize = Parameter("inbound-max-message-size", "12345");
+            options.InboundMaxAttachSize = Parameter("inbound-max-attach-size", "6789");
+            options.InboundWebhookSecret = Parameter("inbound-webhook-secret", "inbound-secret");
+            options.InboundTlsMode = Parameter("inbound-tls-mode", "starttls");
+            options.InboundTlsCertFile = Parameter("inbound-tls-cert-file", "/certs/fullchain.pem");
+            options.InboundTlsKeyFile = Parameter("inbound-tls-key-file", "/certs/privkey.pem");
+            options.InboundSmtpRateLimit = Parameter("inbound-smtp-rate-limit", "10");
+            options.InboundSmtpRateWindow = Parameter("inbound-smtp-rate-window", "20");
+            options.EmailVerificationRequired = Parameter("email-verification-required", "true");
+            options.AutoSuppressOnReject = Parameter("auto-suppress-on-reject", "false");
+            options.EmailVerifyEnabled = Parameter("email-verify-enabled", "false");
+            options.EmailVerifyCacheTtlHours = Parameter("email-verify-cache-ttl-hours", "12");
+            options.EmailVerifyMxCacheTtlHours = Parameter("email-verify-mx-cache-ttl-hours", "6");
+            options.EmailVerifyRateHourly = Parameter("email-verify-rate-hourly", "42");
+            options.AllowDowngrade = Parameter("allow-downgrade", "true");
+            options.PlanEnforcement = Parameter("plan-enforcement", "true");
+            options.DatabaseUrl = Parameter("db-url", "postgres://example");
+            options.RedisPassword = Parameter("redis-password", "redis-secret");
+            options.RedisAddress = Parameter("redis-address", "redis.example.com:6379");
         })
-            .WithReference(redis, redisPassword);
+            .WithReference(redis, parameters["redis-password"]);
 
         Assert.True(posta.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
 
@@ -243,63 +243,70 @@ public class ContainerResourceCreationTests
         var env = context.EnvironmentVariables;
 
         Assert.Equal("9000", env["POSTA_PORT"]);
-        Assert.Equal("dev", env["POSTA_ENV"]);
-        Assert.Equal("true", env["POSTA_DEV_MODE"]);
-        Assert.Equal("false", env["POSTA_AUTH_RATE_LIMIT_ENABLED"]);
-        Assert.Equal("500", env["POSTA_RATE_LIMIT_HOURLY"]);
-        Assert.Equal("5000", env["POSTA_RATE_LIMIT_DAILY"]);
-        Assert.Equal("false", env["POSTA_OPENAPI_DOCS"]);
-        Assert.Equal("true", env["POSTA_METRICS_ENABLED"]);
-        Assert.Equal("web/dist", env["POSTA_WEB_DIR"]);
-        Assert.Equal("https://posta.example.com", env["POSTA_WEB_URL"]);
-        Assert.Equal("https://api.posta.example.com", env["POSTA_API_URL"]);
-        Assert.Equal("https://app.example.com", env["POSTA_CORS_ORIGINS"]);
-        Assert.Equal("false", env["POSTA_EMBEDDED_WORKER"]);
-        Assert.Equal("20", env["POSTA_WORKER_CONCURRENCY"]);
-        Assert.Equal("7", env["POSTA_WORKER_MAX_RETRIES"]);
-        Assert.Equal("4", env["POSTA_WEBHOOK_MAX_RETRIES"]);
-        Assert.Equal("30", env["POSTA_WEBHOOK_TIMEOUT_SECS"]);
-        Assert.Equal("http://proxy.example.com", env["POSTA_WEBHOOK_PROXY_URL"]);
-        Assert.Equal("google-client-id", env["POSTA_GOOGLE_OAUTH_CLIENT_ID"]);
-        Assert.Same(googleSecret.Resource, env["POSTA_GOOGLE_OAUTH_CLIENT_SECRET"]);
-        Assert.Equal("https://posta.example.com/oauth/callback", env["POSTA_OAUTH_CALLBACK_URL"]);
-        Assert.Equal("s3", env["POSTA_BLOB_PROVIDER"]);
-        Assert.Equal("https://s3.example.com", env["POSTA_BLOB_S3_ENDPOINT"]);
-        Assert.Equal("eu-central-1", env["POSTA_BLOB_S3_REGION"]);
-        Assert.Equal("posta", env["POSTA_BLOB_S3_BUCKET"]);
-        Assert.Same(s3AccessKey.Resource, env["POSTA_BLOB_S3_ACCESS_KEY"]);
-        Assert.Same(s3SecretKey.Resource, env["POSTA_BLOB_S3_SECRET_KEY"]);
-        Assert.Equal("false", env["POSTA_BLOB_S3_USE_SSL"]);
-        Assert.Equal("true", env["POSTA_BLOB_S3_PATH_STYLE"]);
-        Assert.Equal("/posta/attachments", env["POSTA_BLOB_FS_PATH"]);
-        Assert.Same(encryptionKey.Resource, env["POSTA_ENCRYPTION_KEY"]);
-        Assert.Equal("smtp.example.com", env["POSTA_SYSTEM_SMTP_HOST"]);
-        Assert.Equal("2525", env["POSTA_SYSTEM_SMTP_PORT"]);
-        Assert.Equal("notifications@example.com", env["POSTA_SYSTEM_SMTP_USERNAME"]);
-        Assert.Same(smtpPassword.Resource, env["POSTA_SYSTEM_SMTP_PASSWORD"]);
-        Assert.Equal("notifications@example.com", env["POSTA_SYSTEM_SMTP_FROM"]);
-        Assert.Equal("ssl", env["POSTA_SYSTEM_SMTP_ENCRYPTION"]);
-        Assert.Equal("true", env["POSTA_INBOUND_ENABLED"]);
-        Assert.Equal("127.0.0.1", env["POSTA_INBOUND_SMTP_HOST"]);
-        Assert.Equal("2526", env["POSTA_INBOUND_SMTP_PORT"]);
-        Assert.Equal("mx.example.com", env["POSTA_INBOUND_HOSTNAME"]);
-        Assert.Equal("12345", env["POSTA_INBOUND_MAX_MESSAGE_SIZE"]);
-        Assert.Equal("6789", env["POSTA_INBOUND_MAX_ATTACH_SIZE"]);
-        Assert.Same(inboundWebhookSecret.Resource, env["POSTA_INBOUND_WEBHOOK_SECRET"]);
-        Assert.Equal("starttls", env["POSTA_INBOUND_TLS_MODE"]);
-        Assert.Equal("/certs/fullchain.pem", env["POSTA_INBOUND_TLS_CERT_FILE"]);
-        Assert.Equal("/certs/privkey.pem", env["POSTA_INBOUND_TLS_KEY_FILE"]);
-        Assert.Equal("10", env["POSTA_INBOUND_SMTP_RATE_LIMIT"]);
-        Assert.Equal("20", env["POSTA_INBOUND_SMTP_RATE_WINDOW"]);
-        Assert.Equal("true", env["POSTA_EMAIL_VERIFICATION_REQUIRED"]);
-        Assert.Equal("false", env["POSTA_AUTO_SUPPRESS_ON_REJECT"]);
-        Assert.Equal("false", env["POSTA_EMAIL_VERIFY_ENABLED"]);
-        Assert.Equal("12", env["POSTA_EMAIL_VERIFY_CACHE_TTL_HOURS"]);
-        Assert.Equal("6", env["POSTA_EMAIL_VERIFY_MX_CACHE_TTL_HOURS"]);
-        Assert.Equal("42", env["POSTA_EMAIL_VERIFY_RATE_HOURLY"]);
-        Assert.Equal("true", env["POSTA_ALLOW_DOWNGRADE"]);
-        Assert.Equal("true", env["POSTA_PLAN_ENFORCEMENT"]);
-        Assert.Same(databaseUrl.Resource, env["POSTA_DB_URL"]);
+        foreach (var (parameterName, environmentVariableName) in new (string ParameterName, string EnvironmentVariableName)[]
+        {
+            ("environment", "POSTA_ENV"),
+            ("dev-mode", "POSTA_DEV_MODE"),
+            ("auth-rate-limit-enabled", "POSTA_AUTH_RATE_LIMIT_ENABLED"),
+            ("rate-limit-hourly", "POSTA_RATE_LIMIT_HOURLY"),
+            ("rate-limit-daily", "POSTA_RATE_LIMIT_DAILY"),
+            ("openapi-docs", "POSTA_OPENAPI_DOCS"),
+            ("metrics-enabled", "POSTA_METRICS_ENABLED"),
+            ("web-dir", "POSTA_WEB_DIR"),
+            ("web-url", "POSTA_WEB_URL"),
+            ("api-url", "POSTA_API_URL"),
+            ("cors-origins", "POSTA_CORS_ORIGINS"),
+            ("embedded-worker", "POSTA_EMBEDDED_WORKER"),
+            ("worker-concurrency", "POSTA_WORKER_CONCURRENCY"),
+            ("worker-max-retries", "POSTA_WORKER_MAX_RETRIES"),
+            ("webhook-max-retries", "POSTA_WEBHOOK_MAX_RETRIES"),
+            ("webhook-timeout-seconds", "POSTA_WEBHOOK_TIMEOUT_SECS"),
+            ("webhook-proxy-url", "POSTA_WEBHOOK_PROXY_URL"),
+            ("google-oauth-client-id", "POSTA_GOOGLE_OAUTH_CLIENT_ID"),
+            ("google-oauth-client-secret", "POSTA_GOOGLE_OAUTH_CLIENT_SECRET"),
+            ("oauth-callback-url", "POSTA_OAUTH_CALLBACK_URL"),
+            ("blob-provider", "POSTA_BLOB_PROVIDER"),
+            ("blob-s3-endpoint", "POSTA_BLOB_S3_ENDPOINT"),
+            ("blob-s3-region", "POSTA_BLOB_S3_REGION"),
+            ("blob-s3-bucket", "POSTA_BLOB_S3_BUCKET"),
+            ("blob-s3-access-key", "POSTA_BLOB_S3_ACCESS_KEY"),
+            ("blob-s3-secret-key", "POSTA_BLOB_S3_SECRET_KEY"),
+            ("blob-s3-use-ssl", "POSTA_BLOB_S3_USE_SSL"),
+            ("blob-s3-path-style", "POSTA_BLOB_S3_PATH_STYLE"),
+            ("blob-file-system-path", "POSTA_BLOB_FS_PATH"),
+            ("encryption-key", "POSTA_ENCRYPTION_KEY"),
+            ("system-smtp-host", "POSTA_SYSTEM_SMTP_HOST"),
+            ("system-smtp-port", "POSTA_SYSTEM_SMTP_PORT"),
+            ("system-smtp-username", "POSTA_SYSTEM_SMTP_USERNAME"),
+            ("system-smtp-password", "POSTA_SYSTEM_SMTP_PASSWORD"),
+            ("system-smtp-from", "POSTA_SYSTEM_SMTP_FROM"),
+            ("system-smtp-encryption", "POSTA_SYSTEM_SMTP_ENCRYPTION"),
+            ("inbound-enabled", "POSTA_INBOUND_ENABLED"),
+            ("inbound-smtp-host", "POSTA_INBOUND_SMTP_HOST"),
+            ("inbound-smtp-port", "POSTA_INBOUND_SMTP_PORT"),
+            ("inbound-hostname", "POSTA_INBOUND_HOSTNAME"),
+            ("inbound-max-message-size", "POSTA_INBOUND_MAX_MESSAGE_SIZE"),
+            ("inbound-max-attach-size", "POSTA_INBOUND_MAX_ATTACH_SIZE"),
+            ("inbound-webhook-secret", "POSTA_INBOUND_WEBHOOK_SECRET"),
+            ("inbound-tls-mode", "POSTA_INBOUND_TLS_MODE"),
+            ("inbound-tls-cert-file", "POSTA_INBOUND_TLS_CERT_FILE"),
+            ("inbound-tls-key-file", "POSTA_INBOUND_TLS_KEY_FILE"),
+            ("inbound-smtp-rate-limit", "POSTA_INBOUND_SMTP_RATE_LIMIT"),
+            ("inbound-smtp-rate-window", "POSTA_INBOUND_SMTP_RATE_WINDOW"),
+            ("email-verification-required", "POSTA_EMAIL_VERIFICATION_REQUIRED"),
+            ("auto-suppress-on-reject", "POSTA_AUTO_SUPPRESS_ON_REJECT"),
+            ("email-verify-enabled", "POSTA_EMAIL_VERIFY_ENABLED"),
+            ("email-verify-cache-ttl-hours", "POSTA_EMAIL_VERIFY_CACHE_TTL_HOURS"),
+            ("email-verify-mx-cache-ttl-hours", "POSTA_EMAIL_VERIFY_MX_CACHE_TTL_HOURS"),
+            ("email-verify-rate-hourly", "POSTA_EMAIL_VERIFY_RATE_HOURLY"),
+            ("allow-downgrade", "POSTA_ALLOW_DOWNGRADE"),
+            ("plan-enforcement", "POSTA_PLAN_ENFORCEMENT"),
+            ("db-url", "POSTA_DB_URL")
+        })
+        {
+            AssertParameter(parameterName, environmentVariableName);
+        }
+
         Assert.True(env.ContainsKey("POSTA_DB_HOST"));
         Assert.True(env.ContainsKey("POSTA_DB_PORT"));
         Assert.True(env.ContainsKey("POSTA_DB_USER"));
@@ -307,8 +314,13 @@ public class ContainerResourceCreationTests
         Assert.Equal("posta", env["POSTA_DB_NAME"]);
         Assert.Equal("disable", env["POSTA_DB_SSL_MODE"]);
         Assert.True(env.ContainsKey("POSTA_REDIS_ADDR"));
-        Assert.NotEqual("redis.example.com:6379", env["POSTA_REDIS_ADDR"].ToString());
-        Assert.Same(redisPassword.Resource, env["POSTA_REDIS_PASSWORD"]);
+        AssertParameter("redis-address", "POSTA_REDIS_ADDR");
+        AssertParameter("redis-password", "POSTA_REDIS_PASSWORD");
+
+        void AssertParameter(string parameterName, string environmentVariableName)
+        {
+            Assert.Same(parameters[parameterName].Resource, env[environmentVariableName]);
+        }
     }
 
     private static (IResourceBuilder<PostgresDatabaseResource> Database, IResourceBuilder<RedisResource> Redis) AddPostaDependencies(IDistributedApplicationBuilder builder)
