@@ -34,7 +34,7 @@ builder.AddProject<Projects.Api>("api")
 builder.Build().Run();
 ```
 
-Posta stores data in PostgreSQL, uses Redis for queueing, and runs the embedded worker in the main container by default. Pass Aspire-managed PostgreSQL and Redis resources to `AddPosta`, or use `WithReference` to attach them fluently. For externally managed infrastructure, configure `PostaOptions.DatabaseUrl`, `PostaOptions.RedisAddress`, and `PostaOptions.RedisPassword`.
+Posta stores data in PostgreSQL, uses Redis for queueing, and runs the embedded worker in the main container by default. `AddPosta` requires PostgreSQL database and Redis resources so the container starts with the dependencies it needs. Use `PostaOptions.DatabaseUrl`, `PostaOptions.RedisAddress`, and `PostaOptions.RedisPassword` only when you need to override the generated Posta environment values.
 
 Use the `PostaOptions` callback to configure Posta environment variables such as rate limits, web URLs, OAuth, blob storage, system SMTP, inbound email, email verification, and advanced switches. Secret values such as SMTP passwords, S3 keys, OAuth client secrets, encryption keys, inbound webhook secrets, `POSTA_DB_URL`, and Redis password are represented as Aspire parameters.
 

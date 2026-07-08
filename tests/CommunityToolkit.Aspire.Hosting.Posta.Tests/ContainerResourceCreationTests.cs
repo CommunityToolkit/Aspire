@@ -156,6 +156,7 @@ public class ContainerResourceCreationTests
         var postgres = builder.AddPostgres("postgres");
         var database = postgres.AddDatabase("posta-db", "posta");
         var redis = builder.AddRedis("redis");
+        var databaseUrl = builder.AddParameter("posta-db-url", "postgres://example");
         var redisPassword = builder.AddParameter("posta-redis-password", "redis-secret");
         var googleSecret = builder.AddParameter("posta-google-secret", "google-secret");
         var s3AccessKey = builder.AddParameter("posta-s3-access-key", "s3-access");
@@ -222,6 +223,9 @@ public class ContainerResourceCreationTests
             options.EmailVerifyRateHourly = 42;
             options.AllowDowngrade = true;
             options.PlanEnforcement = true;
+            options.DatabaseUrl = databaseUrl;
+            options.RedisPassword = redisPassword;
+            options.RedisAddress = "redis.example.com:6379";
         })
             .WithReference(redis, redisPassword);
 
@@ -295,6 +299,7 @@ public class ContainerResourceCreationTests
         Assert.Equal("42", env["POSTA_EMAIL_VERIFY_RATE_HOURLY"]);
         Assert.Equal("true", env["POSTA_ALLOW_DOWNGRADE"]);
         Assert.Equal("true", env["POSTA_PLAN_ENFORCEMENT"]);
+        Assert.Same(databaseUrl.Resource, env["POSTA_DB_URL"]);
         Assert.True(env.ContainsKey("POSTA_DB_HOST"));
         Assert.True(env.ContainsKey("POSTA_DB_PORT"));
         Assert.True(env.ContainsKey("POSTA_DB_USER"));
@@ -302,6 +307,7 @@ public class ContainerResourceCreationTests
         Assert.Equal("posta", env["POSTA_DB_NAME"]);
         Assert.Equal("disable", env["POSTA_DB_SSL_MODE"]);
         Assert.True(env.ContainsKey("POSTA_REDIS_ADDR"));
+        Assert.NotEqual("redis.example.com:6379", env["POSTA_REDIS_ADDR"].ToString());
         Assert.Same(redisPassword.Resource, env["POSTA_REDIS_PASSWORD"]);
     }
 
