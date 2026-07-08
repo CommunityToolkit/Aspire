@@ -8,7 +8,7 @@ on:
 
 jobs:
   prompt-for-codeowner:
-    if: ${{ github.event_name == 'pull_request_target' && !github.event.pull_request.draft }}
+    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'pull_request_target' && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -89,7 +89,7 @@ jobs:
             });
 
   handle-codeowner-response:
-    if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request && (github.event.comment.body == '/codeowner-accept' || github.event.comment.body == '/codeowner-reject') }}
+    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'issue_comment' && github.event.issue.pull_request && (startsWith(github.event.comment.body, '/codeowner-accept') || startsWith(github.event.comment.body, '/codeowner-reject')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -104,7 +104,9 @@ jobs:
             const core = require('@actions/core');
 
             const comment = context.payload.comment;
-            const accepted = comment.body.trim() === '/codeowner-accept';
+            const command = comment.body.trim();
+            const accepted = command === '/codeowner-accept';
+            const isValidCommand = accepted || command === '/codeowner-reject';
             const issue = context.payload.issue;
             const prNumber = issue.number;
             const pr = await github.rest.pulls.get({
@@ -157,6 +159,7 @@ jobs:
             core.setOutput('allowed', validationError ? 'false' : 'true');
             core.setOutput('example_folders_display', exampleFolders.map((folder) => `\`examples/${folder}/\``).join(', '));
             core.setOutput('example_folders_json', JSON.stringify(exampleFolders));
+            core.setOutput('is_valid_command', isValidCommand ? 'true' : 'false');
             core.setOutput('is_pr_author', isPrAuthor ? 'true' : 'false');
             core.setOutput('owner_login', pr.data.user.login);
             core.setOutput('package_ids_json', JSON.stringify(packageIds));
@@ -167,14 +170,14 @@ jobs:
             core.setOutput('needs_org_invite', accepted && isPrAuthor && !orgMember ? 'true' : 'false');
 
       - name: Check out repository
-        if: ${{ steps.metadata.outputs.accepted == 'true' && steps.metadata.outputs.allowed == 'true' }}
+        if: ${{ steps.metadata.outputs.is_valid_command == 'true' && steps.metadata.outputs.accepted == 'true' && steps.metadata.outputs.allowed == 'true' }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Create or update CODEOWNERS pull request
         id: codeowners_pr
-        if: ${{ steps.metadata.outputs.accepted == 'true' && steps.metadata.outputs.allowed == 'true' }}
+        if: ${{ steps.metadata.outputs.is_valid_command == 'true' && steps.metadata.outputs.accepted == 'true' && steps.metadata.outputs.allowed == 'true' }}
         env:
           BRANCH_NAME: automation/codeowners-pr-${{ steps.metadata.outputs.pr_number }}
           CODEOWNER_LOGIN: ${{ steps.metadata.outputs.owner_login }}
@@ -245,6 +248,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: Confirm response
+        if: ${{ steps.metadata.outputs.is_valid_command == 'true' }}
         uses: actions/github-script@v9.0.0
         env:
           ACCEPTED: ${{ steps.metadata.outputs.accepted }}

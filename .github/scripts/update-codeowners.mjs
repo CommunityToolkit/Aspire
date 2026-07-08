@@ -60,8 +60,12 @@ if (ownershipLines.every((line) => content.includes(line))) {
     process.exit(0);
 }
 
+const packageHeader = packageIds.length === 1
+    ? `# ${packageIds[0]}`
+    : `# ${packageIds.join(", ")}`;
+
 const block = [
-    ...packageIds.map((packageId) => `# ${packageId}`),
+    packageHeader,
     "",
     ...ownershipLines,
     "",
