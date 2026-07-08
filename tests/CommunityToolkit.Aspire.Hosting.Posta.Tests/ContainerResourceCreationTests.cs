@@ -41,6 +41,25 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
+    public void AddPostaWithReferencesThrowsWhenDatabaseIsNull()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var redis = builder.AddRedis("redis");
+
+        Assert.Throws<ArgumentNullException>(() => builder.AddPosta("posta", null!, redis));
+    }
+
+    [Fact]
+    public void AddPostaWithReferencesThrowsWhenRedisIsNull()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var postgres = builder.AddPostgres("postgres");
+        var database = postgres.AddDatabase("posta-db", "posta");
+
+        Assert.Throws<ArgumentNullException>(() => builder.AddPosta("posta", database, null!));
+    }
+
+    [Fact]
     public void AddPostaSetsContainerDetailsOnResource()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -90,6 +109,38 @@ public class ContainerResourceCreationTests
 
         Assert.True(resource.TryGetAnnotationsOfType<HealthCheckAnnotation>(out var annotations));
         Assert.Equal(2, annotations.Count());
+    }
+
+    [Fact]
+    public async Task AddPostaWithReferencesConfiguresPostgreSqlAndRedis()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var postgres = builder.AddPostgres("postgres");
+        var database = postgres.AddDatabase("posta-db", "posta");
+        var redis = builder.AddRedis("redis");
+
+        var posta = builder.AddPosta("posta", database, redis);
+
+        Assert.True(posta.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var context = new EnvironmentCallbackContext(
+            new DistributedApplicationExecutionContext(
+                new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+
+        foreach (var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        var env = context.EnvironmentVariables;
+
+        Assert.True(env.ContainsKey("POSTA_DB_HOST"));
+        Assert.True(env.ContainsKey("POSTA_DB_PORT"));
+        Assert.True(env.ContainsKey("POSTA_DB_USER"));
+        Assert.True(env.ContainsKey("POSTA_DB_PASSWORD"));
+        Assert.Equal("posta", env["POSTA_DB_NAME"]);
+        Assert.Equal("disable", env["POSTA_DB_SSL_MODE"]);
+        Assert.True(env.ContainsKey("POSTA_REDIS_ADDR"));
     }
 
     [Fact]
