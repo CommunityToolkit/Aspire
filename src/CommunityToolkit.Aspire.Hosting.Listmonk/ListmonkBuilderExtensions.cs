@@ -1,7 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -315,5 +313,3 @@ public static class ListmonkBuilderExtensions
         return builder.WithBindMount(source, UploadsPath);
     }
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental
