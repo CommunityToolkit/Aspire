@@ -48,13 +48,13 @@ public static class PostaHostingExtensions
     /// <param name="name">The name of the Posta container resource.</param>
     /// <param name="database">The PostgreSQL database resource used by Posta.</param>
     /// <param name="redis">The Redis resource used by Posta.</param>
-    /// <param name="options">The parameter-based Posta environment configuration.</param>
+    /// <param name="options">The Posta environment configuration.</param>
     /// <param name="jwtSecret">Optional parameter used as the Posta JWT signing secret.</param>
     /// <param name="adminPassword">Optional parameter used as the initial Posta admin password.</param>
     /// <param name="adminEmail">The initial Posta admin account email.</param>
     /// <param name="port">Optional host port for the Posta HTTP API and dashboard.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
-    [AspireExportIgnore(Reason = "PostaOptions contains parameter builders and is not supported in polyglot app hosts.")]
+    [AspireExportIgnore(Reason = "PostaOptions contains parameter builders for secret values and is not supported in polyglot app hosts.")]
     public static IResourceBuilder<PostaResource> AddPosta(
         this IDistributedApplicationBuilder builder,
         [ResourceName] string name,
