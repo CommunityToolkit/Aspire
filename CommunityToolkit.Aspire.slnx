@@ -156,7 +156,7 @@
     <Project Path="examples/papercut/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults/CommunityToolkit.Aspire.Hosting.PapercutSmtp.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/examples/perl/">
-    <Project Path="examples/perl/cpanm-api-integration/CpanmApiIntegration.AppHost/CpanmApiIntegration.AppHost.csproj" />
+    <Project Path="examples/perl/CpanmApiIntegration.AppHost/CpanmApiIntegration.AppHost.csproj" />
   </Folder>
   <Folder Name="/examples/postgres-ext/">
     <Project Path="examples/postgres-ext/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost/CommunityToolkit.Aspire.Hosting.PostgreSQL.Extensions.AppHost.csproj" />

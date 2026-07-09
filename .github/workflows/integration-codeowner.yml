@@ -1,0 +1,300 @@
+name: Integration code owner automation
+
+on:
+  pull_request_target:
+    types: [opened, ready_for_review, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  prompt-for-codeowner:
+    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'pull_request_target' && !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      issues: write
+    steps:
+      - name: Detect new integration paths
+        id: metadata
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const core = require('@actions/core');
+
+            const pr = context.payload.pull_request;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+
+            const addedFiles = files.filter((file) => file.status === 'added' || file.status === 'renamed');
+            const packageIds = [...new Set(addedFiles
+              .map((file) => file.filename.match(/^src\/(CommunityToolkit\.Aspire(?:\.Hosting)?(?:\.[A-Za-z0-9]+)+)\/([^/]+)$/))
+              .filter((match) => match && match[2] === `${match[1]}.csproj`)
+              .map((match) => match[1]))];
+            const exampleFolders = [...new Set(addedFiles
+              .map((file) => file.filename.match(/^examples\/([a-z0-9-]+)\//))
+              .filter(Boolean)
+              .map((match) => match[1]))];
+
+            core.setOutput('package_ids_json', JSON.stringify(packageIds));
+            core.setOutput('example_folders_json', JSON.stringify(exampleFolders));
+            core.setOutput('is_new_integration', packageIds.length > 0 && exampleFolders.length > 0 ? 'true' : 'false');
+
+      - name: Prompt for code owner interest
+        if: ${{ steps.metadata.outputs.is_new_integration == 'true' }}
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const marker = '<!-- integration-codeowner-prompt -->';
+            const prNumber = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const author = context.payload.pull_request.user.login;
+            const body = `${marker}
+            Thanks for opening a new integration PR, @${author}.
+
+            If you want to become the code owner for this integration, reply with:
+            - \`/codeowner-accept\`
+            - \`/codeowner-reject\`
+
+            Only the PR author should use these commands.`;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: prNumber,
+              per_page: 100,
+            });
+
+            const existingComment = comments.find((comment) => comment.body.includes(marker));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body,
+              });
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: prNumber,
+              body,
+            });
+
+  handle-codeowner-response:
+    if: ${{ github.repository_owner == 'CommunityToolkit' && github.event_name == 'issue_comment' && github.event.issue.pull_request && (startsWith(github.event.comment.body, '/codeowner-accept') || startsWith(github.event.comment.body, '/codeowner-reject')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Collect PR metadata
+        id: metadata
+        uses: actions/github-script@v9.0.0
+        with:
+          script: |
+            const core = require('@actions/core');
+
+            const comment = context.payload.comment;
+            const command = comment.body.trim();
+            const accepted = command === '/codeowner-accept';
+            const isValidCommand = accepted || command === '/codeowner-reject';
+            const issue = context.payload.issue;
+            const prNumber = issue.number;
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              per_page: 100,
+            });
+
+            const packageIdPattern = /^CommunityToolkit\.Aspire(?:\.Hosting)?(?:\.[A-Za-z0-9]+)+$/;
+            const exampleFolderPattern = /^[a-z0-9-]+$/;
+            const addedFiles = files.filter((file) => file.status === 'added' || file.status === 'renamed');
+            const packageIds = [...new Set(addedFiles
+              .map((file) => file.filename.match(/^src\/(CommunityToolkit\.Aspire(?:\.Hosting)?(?:\.[A-Za-z0-9]+)+)\/([^/]+)$/))
+              .filter((match) => match && match[2] === `${match[1]}.csproj`)
+              .map((match) => match[1]))];
+            const exampleFolders = [...new Set(addedFiles
+              .map((file) => file.filename.match(/^examples\/([a-z0-9-]+)\//))
+              .filter(Boolean)
+              .map((match) => match[1]))];
+
+            let validationError = '';
+
+            if (comment.user.login !== pr.data.user.login) {
+              validationError = `Only @${pr.data.user.login} can respond to the code owner prompt for this pull request.`;
+            } else if (pr.data.draft) {
+              validationError = 'This automation only runs after the pull request is ready for review.';
+            } else if (accepted) {
+              if (packageIds.length === 0) {
+                validationError = 'I could not find any new integration packages under `src/` in this pull request.';
+              } else if (exampleFolders.length === 0) {
+                validationError = 'I could not find any integration example folders under `examples/` in this pull request.';
+              } else if (packageIds.some((packageId) => !packageIdPattern.test(packageId) || packageId.endsWith('.Tests'))) {
+                validationError = 'This pull request contains an invalid integration package path.';
+              } else if (exampleFolders.some((exampleFolder) => !exampleFolderPattern.test(exampleFolder))) {
+                validationError = 'This pull request contains an invalid example folder path.';
+              }
+            }
+
+            const orgMemberAssociations = new Set(['MEMBER', 'OWNER']);
+            const isPrAuthor = comment.user.login === pr.data.user.login;
+            const orgMember = orgMemberAssociations.has(comment.author_association);
+
+            core.setOutput('accepted', accepted ? 'true' : 'false');
+            core.setOutput('allowed', validationError ? 'false' : 'true');
+            core.setOutput('example_folders_display', exampleFolders.map((folder) => `\`examples/${folder}/\``).join(', '));
+            core.setOutput('example_folders_json', JSON.stringify(exampleFolders));
+            core.setOutput('is_valid_command', isValidCommand ? 'true' : 'false');
+            core.setOutput('is_pr_author', isPrAuthor ? 'true' : 'false');
+            core.setOutput('owner_login', pr.data.user.login);
+            core.setOutput('package_ids_json', JSON.stringify(packageIds));
+            core.setOutput('package_ids_markdown', packageIds.map((packageId) => `- \`${packageId}\``).join('\n'));
+            core.setOutput('pr_number', String(prNumber));
+            core.setOutput('pr_url', pr.data.html_url);
+            core.setOutput('validation_error', validationError);
+            core.setOutput('needs_org_invite', accepted && isPrAuthor && !orgMember ? 'true' : 'false');
+
+      - name: Check out repository
+        if: ${{ steps.metadata.outputs.is_valid_command == 'true' && steps.metadata.outputs.accepted == 'true' && steps.metadata.outputs.allowed == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create or update CODEOWNERS pull request
+        id: codeowners_pr
+        if: ${{ steps.metadata.outputs.is_valid_command == 'true' && steps.metadata.outputs.accepted == 'true' && steps.metadata.outputs.allowed == 'true' }}
+        env:
+          BRANCH_NAME: automation/codeowners-pr-${{ steps.metadata.outputs.pr_number }}
+          CODEOWNER_LOGIN: ${{ steps.metadata.outputs.owner_login }}
+          CODEOWNERS_PATH: CODEOWNERS
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          EXAMPLE_FOLDERS_JSON: ${{ steps.metadata.outputs.example_folders_json }}
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_IDS_JSON: ${{ steps.metadata.outputs.package_ids_json }}
+          PACKAGE_IDS_MARKDOWN: ${{ steps.metadata.outputs.package_ids_markdown }}
+          PR_NUMBER: ${{ steps.metadata.outputs.pr_number }}
+          PR_URL: ${{ steps.metadata.outputs.pr_url }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin "${DEFAULT_BRANCH}"
+
+          if git ls-remote --exit-code --heads origin "${BRANCH_NAME}" > /dev/null 2>&1; then
+            git fetch origin "${BRANCH_NAME}"
+            git checkout -B "${BRANCH_NAME}" "origin/${BRANCH_NAME}"
+          else
+            git checkout -B "${BRANCH_NAME}" "origin/${DEFAULT_BRANCH}"
+          fi
+
+          node .github/scripts/update-codeowners.mjs
+
+          changed=false
+          if ! git diff --quiet -- CODEOWNERS; then
+            changed=true
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add CODEOWNERS
+            git commit -m "Add code owner for integration PR #${PR_NUMBER}"
+            git push --force-with-lease --set-upstream origin "${BRANCH_NAME}"
+          fi
+
+          pr_number="$(gh pr list --state open --head "${BRANCH_NAME}" --json number --jq '.[0].number // ""')"
+
+          if [ -z "${pr_number}" ] && [ "${changed}" = "true" ]; then
+            pr_body_file="$(mktemp)"
+            {
+              echo 'This pull request updates `CODEOWNERS` for a new integration submission.'
+              echo
+              echo "- Source PR: ${PR_URL}"
+              echo "- Proposed code owner: @${CODEOWNER_LOGIN}"
+              echo '- Package IDs:'
+              printf '%s\n' "${PACKAGE_IDS_MARKDOWN}"
+            } > "${pr_body_file}"
+
+            gh pr create \
+              --base "${DEFAULT_BRANCH}" \
+              --head "${BRANCH_NAME}" \
+              --title "Add CODEOWNERS entry for integration PR #${PR_NUMBER}" \
+              --body-file "${pr_body_file}"
+
+            rm -f "${pr_body_file}"
+            pr_number="$(gh pr list --state open --head "${BRANCH_NAME}" --json number --jq '.[0].number // ""')"
+          fi
+
+          pr_url=""
+          if [ -n "${pr_number}" ]; then
+            pr_url="$(gh pr view "${pr_number}" --json url --jq '.url')"
+          fi
+
+          {
+            echo "changed=${changed}"
+            echo "pr_number=${pr_number}"
+            echo "pr_url=${pr_url}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Confirm response
+        if: ${{ steps.metadata.outputs.is_valid_command == 'true' }}
+        uses: actions/github-script@v9.0.0
+        env:
+          ACCEPTED: ${{ steps.metadata.outputs.accepted }}
+          ALLOWED: ${{ steps.metadata.outputs.allowed }}
+          CODEOWNERS_CHANGED: ${{ steps.codeowners_pr.outputs.changed }}
+          CODEOWNERS_PR_URL: ${{ steps.codeowners_pr.outputs.pr_url }}
+          EXAMPLE_FOLDERS_DISPLAY: ${{ steps.metadata.outputs.example_folders_display }}
+          IS_PR_AUTHOR: ${{ steps.metadata.outputs.is_pr_author }}
+          NEEDS_ORG_INVITE: ${{ steps.metadata.outputs.needs_org_invite }}
+          OWNER_LOGIN: ${{ steps.metadata.outputs.owner_login }}
+          VALIDATION_ERROR: ${{ steps.metadata.outputs.validation_error }}
+        with:
+          script: |
+            const accepted = process.env.ACCEPTED === 'true';
+            const allowed = process.env.ALLOWED === 'true';
+            const changed = process.env.CODEOWNERS_CHANGED === 'true';
+            const prUrl = process.env.CODEOWNERS_PR_URL;
+            const exampleFoldersDisplay = process.env.EXAMPLE_FOLDERS_DISPLAY;
+            const isPrAuthor = process.env.IS_PR_AUTHOR === 'true';
+            const needsOrgInvite = process.env.NEEDS_ORG_INVITE === 'true';
+            const ownerLogin = process.env.OWNER_LOGIN;
+            const validationError = process.env.VALIDATION_ERROR;
+
+            let body;
+
+            if (!allowed && !isPrAuthor) {
+              body = `@${context.payload.comment.user.login} ${validationError}`;
+            } else if (!allowed && accepted) {
+              body = `Thanks @${ownerLogin} — I have recorded that you want to own this integration, but I could not update \`CODEOWNERS\` automatically. ${validationError}`;
+            } else if (!accepted) {
+              body = `Thanks @${ownerLogin} — I have recorded that you do not want to be added as the code owner for this integration.`;
+            } else if (prUrl) {
+              body = `Thanks @${ownerLogin} — I have recorded that you want to own this integration and opened or updated ${prUrl} to add you to \`CODEOWNERS\` for ${exampleFoldersDisplay}.`;
+            } else if (changed) {
+              body = `Thanks @${ownerLogin} — I have recorded that you want to own this integration and updated the automation branch with the \`CODEOWNERS\` change.`;
+            } else {
+              body = `Thanks @${ownerLogin} — I have recorded that you want to own this integration. The requested \`CODEOWNERS\` entries are already present, so there was nothing else to update.`;
+            }
+
+            if (accepted && needsOrgInvite) {
+              body += `\n\n@CommunityToolkit/aspire-owners please add @${ownerLogin} to the organization so the \`CODEOWNERS\` entry can be used.`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body,
+            });
