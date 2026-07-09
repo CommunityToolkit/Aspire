@@ -3,99 +3,99 @@ using Aspire.Hosting.ApplicationModel;
 namespace CommunityToolkit.Aspire.Hosting.Posta;
 
 /// <summary>
-/// Parameter-based configuration overrides for the Posta container.
+/// Configuration options for the Posta container.
 /// </summary>
 public sealed class PostaOptions
 {
     /// <summary>
     /// Gets or sets the Posta environment name.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? Environment { get; set; }
+    public string Environment { get; set; } = "production";
 
     /// <summary>
-    /// Gets or sets whether Posta stores emails without sending them.
+    /// Gets or sets a value indicating whether Posta stores emails without sending them.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? DevMode { get; set; }
+    public bool DevMode { get; set; }
 
     /// <summary>
-    /// Gets or sets whether auth rate limiting is enabled.
+    /// Gets or sets a value indicating whether auth rate limiting is enabled.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? AuthRateLimitEnabled { get; set; }
+    public bool AuthRateLimitEnabled { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the maximum emails per hour per user.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? RateLimitHourly { get; set; }
+    public int RateLimitHourly { get; set; } = 100;
 
     /// <summary>
     /// Gets or sets the maximum emails per day per user.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? RateLimitDaily { get; set; }
+    public int RateLimitDaily { get; set; } = 1000;
 
     /// <summary>
-    /// Gets or sets whether Swagger UI and ReDoc are enabled.
+    /// Gets or sets a value indicating whether Swagger UI and ReDoc are enabled.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? OpenApiDocs { get; set; }
+    public bool OpenApiDocs { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether Prometheus metrics are enabled.
+    /// Gets or sets a value indicating whether Prometheus metrics are enabled.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? MetricsEnabled { get; set; }
+    public bool MetricsEnabled { get; set; }
 
     /// <summary>
     /// Gets or sets the Vue dashboard build directory.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? WebDir { get; set; }
+    public string? WebDir { get; set; }
 
     /// <summary>
     /// Gets or sets the public dashboard URL.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? WebUrl { get; set; }
+    public string? WebUrl { get; set; }
 
     /// <summary>
     /// Gets or sets the public API base URL advertised in the OpenAPI servers list.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? ApiUrl { get; set; }
+    public string? ApiUrl { get; set; }
 
     /// <summary>
     /// Gets or sets the comma-separated allowed CORS origins.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? CorsOrigins { get; set; }
+    public string CorsOrigins { get; set; } = "*";
 
     /// <summary>
-    /// Gets or sets whether the worker runs in the server process.
+    /// Gets or sets a value indicating whether the worker runs in the server process.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? EmbeddedWorker { get; set; }
+    public bool EmbeddedWorker { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the number of worker goroutines.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? WorkerConcurrency { get; set; }
+    public int WorkerConcurrency { get; set; } = 10;
 
     /// <summary>
     /// Gets or sets the maximum email retry attempts.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? WorkerMaxRetries { get; set; }
+    public int WorkerMaxRetries { get; set; } = 5;
 
     /// <summary>
     /// Gets or sets the maximum webhook delivery retry attempts.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? WebhookMaxRetries { get; set; }
+    public int WebhookMaxRetries { get; set; } = 3;
 
     /// <summary>
     /// Gets or sets the webhook HTTP request timeout in seconds.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? WebhookTimeoutSeconds { get; set; }
+    public int WebhookTimeoutSeconds { get; set; } = 10;
 
     /// <summary>
     /// Gets or sets the optional HTTP, HTTPS, or SOCKS5 proxy for webhook delivery.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? WebhookProxyUrl { get; set; }
+    public string? WebhookProxyUrl { get; set; }
 
     /// <summary>
     /// Gets or sets the Google OAuth client ID for SSO login.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? GoogleOAuthClientId { get; set; }
+    public string? GoogleOAuthClientId { get; set; }
 
     /// <summary>
     /// Gets or sets the Google OAuth client secret for SSO login.
@@ -105,27 +105,27 @@ public sealed class PostaOptions
     /// <summary>
     /// Gets or sets the OAuth callback base URL.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? OAuthCallbackUrl { get; set; }
+    public string? OAuthCallbackUrl { get; set; }
 
     /// <summary>
     /// Gets or sets the storage backend for attachments, either s3 or filesystem.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? BlobProvider { get; set; }
+    public string? BlobProvider { get; set; }
 
     /// <summary>
     /// Gets or sets the S3-compatible endpoint.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? BlobS3Endpoint { get; set; }
+    public string? BlobS3Endpoint { get; set; }
 
     /// <summary>
     /// Gets or sets the S3 region.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? BlobS3Region { get; set; }
+    public string BlobS3Region { get; set; } = "us-east-1";
 
     /// <summary>
     /// Gets or sets the S3 bucket name.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? BlobS3Bucket { get; set; }
+    public string? BlobS3Bucket { get; set; }
 
     /// <summary>
     /// Gets or sets the S3 access key.
@@ -138,19 +138,19 @@ public sealed class PostaOptions
     public IResourceBuilder<ParameterResource>? BlobS3SecretKey { get; set; }
 
     /// <summary>
-    /// Gets or sets whether S3 storage uses TLS.
+    /// Gets or sets a value indicating whether S3 storage uses TLS.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? BlobS3UseSsl { get; set; }
+    public bool BlobS3UseSsl { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether S3 path-style addressing is used.
+    /// Gets or sets a value indicating whether S3 path-style addressing is used.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? BlobS3PathStyle { get; set; }
+    public bool BlobS3PathStyle { get; set; }
 
     /// <summary>
     /// Gets or sets the filesystem storage path.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? BlobFileSystemPath { get; set; }
+    public string BlobFileSystemPath { get; set; } = "/data/attachments";
 
     /// <summary>
     /// Gets or sets the AES-256-GCM encryption key for stored SMTP passwords.
@@ -160,17 +160,17 @@ public sealed class PostaOptions
     /// <summary>
     /// Gets or sets the system SMTP server host used for platform notifications.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? SystemSmtpHost { get; set; }
+    public string? SystemSmtpHost { get; set; }
 
     /// <summary>
     /// Gets or sets the system SMTP server port.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? SystemSmtpPort { get; set; }
+    public int SystemSmtpPort { get; set; } = 587;
 
     /// <summary>
     /// Gets or sets the system SMTP username.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? SystemSmtpUsername { get; set; }
+    public string? SystemSmtpUsername { get; set; }
 
     /// <summary>
     /// Gets or sets the system SMTP password.
@@ -180,42 +180,42 @@ public sealed class PostaOptions
     /// <summary>
     /// Gets or sets the system SMTP from address.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? SystemSmtpFrom { get; set; }
+    public string? SystemSmtpFrom { get; set; }
 
     /// <summary>
     /// Gets or sets the system SMTP encryption mode: none, ssl, or starttls.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? SystemSmtpEncryption { get; set; }
+    public string SystemSmtpEncryption { get; set; } = "starttls";
 
     /// <summary>
-    /// Gets or sets whether inbound email processing is enabled.
+    /// Gets or sets a value indicating whether inbound email processing is enabled.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundEnabled { get; set; }
+    public bool InboundEnabled { get; set; }
 
     /// <summary>
     /// Gets or sets the bind address for the built-in SMTP receiver.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundSmtpHost { get; set; }
+    public string InboundSmtpHost { get; set; } = "0.0.0.0";
 
     /// <summary>
     /// Gets or sets the SMTP listener port.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundSmtpPort { get; set; }
+    public int InboundSmtpPort { get; set; } = 2525;
 
     /// <summary>
     /// Gets or sets the hostname announced in EHLO and used as TLS SNI.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundHostname { get; set; }
+    public string InboundHostname { get; set; } = "posta.local";
 
     /// <summary>
     /// Gets or sets the maximum raw inbound message size in bytes.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundMaxMessageSize { get; set; }
+    public int InboundMaxMessageSize { get; set; } = 26214400;
 
     /// <summary>
     /// Gets or sets the maximum inbound attachment size in bytes.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundMaxAttachSize { get; set; }
+    public int InboundMaxAttachSize { get; set; } = 10485760;
 
     /// <summary>
     /// Gets or sets the shared secret for inbound webhooks.
@@ -225,67 +225,67 @@ public sealed class PostaOptions
     /// <summary>
     /// Gets or sets the inbound SMTP TLS mode: none or starttls.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundTlsMode { get; set; }
+    public string InboundTlsMode { get; set; } = "none";
 
     /// <summary>
     /// Gets or sets the PEM certificate path for inbound TLS.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundTlsCertFile { get; set; }
+    public string? InboundTlsCertFile { get; set; }
 
     /// <summary>
     /// Gets or sets the PEM key path for inbound TLS.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundTlsKeyFile { get; set; }
+    public string? InboundTlsKeyFile { get; set; }
 
     /// <summary>
     /// Gets or sets the per-IP SMTP session rate limit.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundSmtpRateLimit { get; set; }
+    public int InboundSmtpRateLimit { get; set; } = 60;
 
     /// <summary>
     /// Gets or sets the SMTP rate-limit window in seconds.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? InboundSmtpRateWindow { get; set; }
+    public int InboundSmtpRateWindow { get; set; } = 60;
 
     /// <summary>
-    /// Gets or sets whether users must verify their email address before sign-in.
+    /// Gets or sets a value indicating whether users must verify their email address before sign-in.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? EmailVerificationRequired { get; set; }
+    public bool EmailVerificationRequired { get; set; }
 
     /// <summary>
-    /// Gets or sets whether permanently rejected recipients are added to the suppression list.
+    /// Gets or sets a value indicating whether permanently rejected recipients are added to the suppression list.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? AutoSuppressOnReject { get; set; }
+    public bool AutoSuppressOnReject { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether the email verification endpoint is enabled.
+    /// Gets or sets a value indicating whether the email verification endpoint is enabled.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? EmailVerifyEnabled { get; set; }
+    public bool EmailVerifyEnabled { get; set; } = true;
 
     /// <summary>
     /// Gets or sets how long address-level verification results are cached, in hours.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? EmailVerifyCacheTtlHours { get; set; }
+    public int EmailVerifyCacheTtlHours { get; set; } = 168;
 
     /// <summary>
     /// Gets or sets how long domain MX lookups are cached, in hours.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? EmailVerifyMxCacheTtlHours { get; set; }
+    public int EmailVerifyMxCacheTtlHours { get; set; } = 24;
 
     /// <summary>
     /// Gets or sets the per-user hourly cap on verification requests.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? EmailVerifyRateHourly { get; set; }
+    public int EmailVerifyRateHourly { get; set; } = 1000;
 
     /// <summary>
-    /// Gets or sets whether older binaries can boot against a newer database schema.
+    /// Gets or sets a value indicating whether older binaries can boot against a newer database schema.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? AllowDowngrade { get; set; }
+    public bool AllowDowngrade { get; set; }
 
     /// <summary>
-    /// Gets or sets whether hosted plan limits and quotas are enforced.
+    /// Gets or sets a value indicating whether hosted plan limits and quotas are enforced.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? PlanEnforcement { get; set; }
+    public bool PlanEnforcement { get; set; }
 
     /// <summary>
     /// Gets or sets a PostgreSQL connection string parameter that overrides individual database settings.
@@ -300,5 +300,5 @@ public sealed class PostaOptions
     /// <summary>
     /// Gets or sets an external Redis address in the form host:port.
     /// </summary>
-    public IResourceBuilder<ParameterResource>? RedisAddress { get; set; }
+    public string? RedisAddress { get; set; }
 }
