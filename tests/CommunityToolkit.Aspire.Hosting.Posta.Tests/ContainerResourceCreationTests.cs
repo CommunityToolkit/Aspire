@@ -44,6 +44,20 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
+    public void WithGroupedOptionCallbacksThrowWhenConfigureOptionsIsNull()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+        var posta = builder.AddPosta("posta", database, redis);
+
+        Assert.Throws<ArgumentNullException>(() => posta.WithSystemSmtp((Action<PostaSystemSmtpOptions>)null!));
+        Assert.Throws<ArgumentNullException>(() => posta.WithInboundSmtp((Action<PostaInboundSmtpOptions>)null!));
+        Assert.Throws<ArgumentNullException>(() => posta.WithS3BlobStorage((Action<PostaS3BlobStorageOptions>)null!));
+        Assert.Throws<ArgumentNullException>(() => posta.WithGoogleOAuth((Action<PostaGoogleOAuthOptions>)null!));
+        Assert.Throws<ArgumentNullException>(() => posta.WithEmailVerification((Action<PostaEmailVerificationOptions>)null!));
+    }
+
+    [Fact]
     public void AddPostaWithReferencesThrowsWhenDatabaseIsNull()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -431,6 +445,45 @@ public class ContainerResourceCreationTests
         {
             Assert.Same(parameters[parameterName].Resource, env[environmentVariableName]);
         }
+    }
+
+    [Fact]
+    public async Task WithGroupedOptionCallbacksConfigureParameterBasedEnvironmentVariables()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+        var smtpHost = builder.AddParameter("posta-smtp-host", "smtp.example.com");
+        var inboundEnabled = builder.AddParameter("posta-inbound-enabled", "true");
+        var s3Bucket = builder.AddParameter("posta-s3-bucket", "posta");
+        var googleClientId = builder.AddParameter("posta-google-client-id", "google-client-id");
+        var emailVerificationRequired = builder.AddParameter("posta-email-verification-required", "true");
+
+        var posta = builder.AddPosta("posta", database, redis)
+            .WithSystemSmtp(options => options.Host = smtpHost)
+            .WithInboundSmtp(options => options.Enabled = inboundEnabled)
+            .WithS3BlobStorage(options => options.Bucket = s3Bucket)
+            .WithGoogleOAuth(options => options.ClientId = googleClientId)
+            .WithEmailVerification(options => options.Required = emailVerificationRequired);
+
+        Assert.True(posta.Resource.TryGetAnnotationsOfType<EnvironmentCallbackAnnotation>(out var annotations));
+
+        var context = new EnvironmentCallbackContext(
+            new DistributedApplicationExecutionContext(
+                new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+
+        foreach (var annotation in annotations)
+        {
+            await annotation.Callback(context);
+        }
+
+        var env = context.EnvironmentVariables;
+
+        Assert.Same(smtpHost.Resource, env["POSTA_SYSTEM_SMTP_HOST"]);
+        Assert.Same(inboundEnabled.Resource, env["POSTA_INBOUND_ENABLED"]);
+        Assert.Equal("s3", env["POSTA_BLOB_PROVIDER"]);
+        Assert.Same(s3Bucket.Resource, env["POSTA_BLOB_S3_BUCKET"]);
+        Assert.Same(googleClientId.Resource, env["POSTA_GOOGLE_OAUTH_CLIENT_ID"]);
+        Assert.Same(emailVerificationRequired.Resource, env["POSTA_EMAIL_VERIFICATION_REQUIRED"]);
     }
 
     private static (IResourceBuilder<PostgresDatabaseResource> Database, IResourceBuilder<RedisResource> Redis) AddPostaDependencies(IDistributedApplicationBuilder builder)

@@ -77,28 +77,28 @@ var s3AccessKey = builder.AddParameterFromConfiguration("posta-s3-access-key", "
 var s3SecretKey = builder.AddParameterFromConfiguration("posta-s3-secret-key", "Posta:S3:SecretKey", secret: true);
 
 var posta = builder.AddPosta("posta", database, redis)
-    .WithSystemSmtp(new PostaSystemSmtpOptions
+    .WithSystemSmtp(options =>
     {
-        Host = smtpHost,
-        Port = smtpPort,
-        Username = smtpUsername,
-        Password = smtpPassword,
-        From = smtpFrom,
-        Encryption = smtpEncryption
+        options.Host = smtpHost;
+        options.Port = smtpPort;
+        options.Username = smtpUsername;
+        options.Password = smtpPassword;
+        options.From = smtpFrom;
+        options.Encryption = smtpEncryption;
     })
-    .WithGoogleOAuth(new PostaGoogleOAuthOptions
+    .WithGoogleOAuth(options =>
     {
-        ClientId = googleClientId,
-        ClientSecret = googleClientSecret,
-        CallbackUrl = googleCallbackUrl
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+        options.CallbackUrl = googleCallbackUrl;
     })
-    .WithS3BlobStorage(new PostaS3BlobStorageOptions
+    .WithS3BlobStorage(options =>
     {
-        Endpoint = s3Endpoint,
-        Region = s3Region,
-        Bucket = s3Bucket,
-        AccessKey = s3AccessKey,
-        SecretKey = s3SecretKey
+        options.Endpoint = s3Endpoint;
+        options.Region = s3Region;
+        options.Bucket = s3Bucket;
+        options.AccessKey = s3AccessKey;
+        options.SecretKey = s3SecretKey;
     });
 ```
 
@@ -112,15 +112,15 @@ var inboundWebhookSecret = builder.AddParameterFromConfiguration("posta-inbound-
 var emailVerificationRequired = builder.AddParameterFromConfiguration("posta-email-verification-required", "Posta:EmailVerification:Required");
 
 builder.AddPosta("posta", database, redis)
-    .WithInboundSmtp(new PostaInboundSmtpOptions
+    .WithInboundSmtp(options =>
     {
-        Enabled = inboundEnabled,
-        Port = inboundPort,
-        WebhookSecret = inboundWebhookSecret
+        options.Enabled = inboundEnabled;
+        options.Port = inboundPort;
+        options.WebhookSecret = inboundWebhookSecret;
     })
-    .WithEmailVerification(new PostaEmailVerificationOptions
+    .WithEmailVerification(options =>
     {
-        Required = emailVerificationRequired
+        options.Required = emailVerificationRequired;
     });
 ```
 
@@ -134,10 +134,15 @@ builder.AddPosta("posta", database, redis)
 | `WithReference(PostgresDatabaseResource)` | Configures the PostgreSQL database environment variables and waits for the database. |
 | `WithReference(RedisResource, redisPassword)` | Configures Redis address/password environment variables and waits for Redis. |
 | `WithSystemSmtp(PostaSystemSmtpOptions)` | Configures parameter-based system SMTP settings. |
+| `WithSystemSmtp(Action<PostaSystemSmtpOptions>)` | Configures parameter-based system SMTP settings with a callback. |
 | `WithInboundSmtp(PostaInboundSmtpOptions)` | Configures parameter-based inbound SMTP receiver settings. |
+| `WithInboundSmtp(Action<PostaInboundSmtpOptions>)` | Configures parameter-based inbound SMTP receiver settings with a callback. |
 | `WithS3BlobStorage(PostaS3BlobStorageOptions)` | Configures parameter-based S3-compatible attachment storage and sets the blob provider to `s3`. |
+| `WithS3BlobStorage(Action<PostaS3BlobStorageOptions>)` | Configures parameter-based S3-compatible attachment storage with a callback and sets the blob provider to `s3`. |
 | `WithGoogleOAuth(PostaGoogleOAuthOptions)` | Configures parameter-based Google OAuth login settings. |
+| `WithGoogleOAuth(Action<PostaGoogleOAuthOptions>)` | Configures parameter-based Google OAuth login settings with a callback. |
 | `WithEmailVerification(PostaEmailVerificationOptions)` | Configures parameter-based email verification settings. |
+| `WithEmailVerification(Action<PostaEmailVerificationOptions>)` | Configures parameter-based email verification settings with a callback. |
 
 Use `PostaOptions.DatabaseUrl`, `PostaOptions.RedisAddress`, and `PostaOptions.RedisPassword` only when you need to override the generated PostgreSQL or Redis environment values.
 

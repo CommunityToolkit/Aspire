@@ -194,6 +194,26 @@ public static class PostaHostingExtensions
     }
 
     /// <summary>
+    /// Configures the system SMTP server used by Posta for platform notifications.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="configureOptions">A delegate that configures the parameter-based system SMTP options.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "Action<PostaSystemSmtpOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
+    public static IResourceBuilder<PostaResource> WithSystemSmtp(
+        this IResourceBuilder<PostaResource> builder,
+        Action<PostaSystemSmtpOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new PostaSystemSmtpOptions();
+        configureOptions.Invoke(options);
+
+        return builder.WithSystemSmtp(options);
+    }
+
+    /// <summary>
     /// Configures the built-in inbound SMTP receiver used by Posta.
     /// </summary>
     /// <param name="builder">The Posta resource builder.</param>
@@ -208,6 +228,26 @@ public static class PostaHostingExtensions
         ArgumentNullException.ThrowIfNull(options);
 
         return builder.WithEnvironment(context => ConfigureInboundSmtp(context, options));
+    }
+
+    /// <summary>
+    /// Configures the built-in inbound SMTP receiver used by Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="configureOptions">A delegate that configures the parameter-based inbound SMTP options.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "Action<PostaInboundSmtpOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
+    public static IResourceBuilder<PostaResource> WithInboundSmtp(
+        this IResourceBuilder<PostaResource> builder,
+        Action<PostaInboundSmtpOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new PostaInboundSmtpOptions();
+        configureOptions.Invoke(options);
+
+        return builder.WithInboundSmtp(options);
     }
 
     /// <summary>
@@ -228,6 +268,26 @@ public static class PostaHostingExtensions
     }
 
     /// <summary>
+    /// Configures S3-compatible attachment storage for Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="configureOptions">A delegate that configures the parameter-based S3 blob storage options.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "Action<PostaS3BlobStorageOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
+    public static IResourceBuilder<PostaResource> WithS3BlobStorage(
+        this IResourceBuilder<PostaResource> builder,
+        Action<PostaS3BlobStorageOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new PostaS3BlobStorageOptions();
+        configureOptions.Invoke(options);
+
+        return builder.WithS3BlobStorage(options);
+    }
+
+    /// <summary>
     /// Configures Google OAuth login for Posta.
     /// </summary>
     /// <param name="builder">The Posta resource builder.</param>
@@ -245,6 +305,26 @@ public static class PostaHostingExtensions
     }
 
     /// <summary>
+    /// Configures Google OAuth login for Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="configureOptions">A delegate that configures the parameter-based Google OAuth options.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "Action<PostaGoogleOAuthOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
+    public static IResourceBuilder<PostaResource> WithGoogleOAuth(
+        this IResourceBuilder<PostaResource> builder,
+        Action<PostaGoogleOAuthOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new PostaGoogleOAuthOptions();
+        configureOptions.Invoke(options);
+
+        return builder.WithGoogleOAuth(options);
+    }
+
+    /// <summary>
     /// Configures email verification behavior for Posta.
     /// </summary>
     /// <param name="builder">The Posta resource builder.</param>
@@ -259,6 +339,26 @@ public static class PostaHostingExtensions
         ArgumentNullException.ThrowIfNull(options);
 
         return builder.WithEnvironment(context => ConfigureEmailVerification(context, options));
+    }
+
+    /// <summary>
+    /// Configures email verification behavior for Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="configureOptions">A delegate that configures the parameter-based email verification options.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "Action<PostaEmailVerificationOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
+    public static IResourceBuilder<PostaResource> WithEmailVerification(
+        this IResourceBuilder<PostaResource> builder,
+        Action<PostaEmailVerificationOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new PostaEmailVerificationOptions();
+        configureOptions.Invoke(options);
+
+        return builder.WithEmailVerification(options);
     }
 
     private static IResourceBuilder<PostaResource> AddPostaCore(
