@@ -16,6 +16,6 @@
     }
   },
   "packages": {
-    "CommunityToolkit.Aspire.Hosting.Perl": "../../../../src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj"
+    "CommunityToolkit.Aspire.Hosting.Perl": "../../../src/CommunityToolkit.Aspire.Hosting.Perl/CommunityToolkit.Aspire.Hosting.Perl.csproj"
   }
 }
