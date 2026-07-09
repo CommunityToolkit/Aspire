@@ -131,12 +131,12 @@ public static class PostaHostingExtensions
             {
                 var postgres = database.Resource.Parent;
 
-                Set(context, "POSTA_DB_HOST", postgres.PrimaryEndpoint.Property(EndpointProperty.Host));
-                Set(context, "POSTA_DB_PORT", postgres.PrimaryEndpoint.Property(EndpointProperty.Port));
-                Set(context, "POSTA_DB_USER", postgres.UserNameReference);
-                Set(context, "POSTA_DB_PASSWORD", postgres.PasswordParameter);
-                Set(context, "POSTA_DB_NAME", database.Resource.DatabaseName);
-                Set(context, "POSTA_DB_SSL_MODE", "disable");
+                Set(context, PostaEnvironmentVariables.DbHost, postgres.PrimaryEndpoint.Property(EndpointProperty.Host));
+                Set(context, PostaEnvironmentVariables.DbPort, postgres.PrimaryEndpoint.Property(EndpointProperty.Port));
+                Set(context, PostaEnvironmentVariables.DbUser, postgres.UserNameReference);
+                Set(context, PostaEnvironmentVariables.DbPassword, postgres.PasswordParameter);
+                Set(context, PostaEnvironmentVariables.DbName, database.Resource.DatabaseName);
+                Set(context, PostaEnvironmentVariables.DbSslMode, "disable");
             })
             .WaitFor(database);
     }
@@ -163,14 +163,14 @@ public static class PostaHostingExtensions
                 var redisResource = redis.Resource;
                 var redisEndpoint = redisResource.GetEndpoint("secondary");
 
-                SetIfAbsent(context, "POSTA_REDIS_ADDR", ReferenceExpression.Create($"{redisEndpoint.Property(EndpointProperty.Host)}:{redisEndpoint.Property(EndpointProperty.Port)}"));
+                SetIfAbsent(context, PostaEnvironmentVariables.RedisAddress, ReferenceExpression.Create($"{redisEndpoint.Property(EndpointProperty.Host)}:{redisEndpoint.Property(EndpointProperty.Port)}"));
                 if (redisPassword is not null)
                 {
-                    Set(context, "POSTA_REDIS_PASSWORD", redisPassword.Resource);
+                    Set(context, PostaEnvironmentVariables.RedisPassword, redisPassword.Resource);
                 }
                 else if (redisResource.PasswordParameter is not null)
                 {
-                    SetIfAbsent(context, "POSTA_REDIS_PASSWORD", redisResource.PasswordParameter);
+                    SetIfAbsent(context, PostaEnvironmentVariables.RedisPassword, redisResource.PasswordParameter);
                 }
             })
             .WaitFor(redis);
@@ -208,16 +208,16 @@ public static class PostaHostingExtensions
                 name: PostaResource.HttpEndpointName)
             .WithEnvironment(context =>
             {
-                Set(context, "POSTA_PORT", PostaResource.HttpEndpointPort);
-                SetParameter(context, "POSTA_DB_URL", options.DatabaseUrl);
-                SetParameter(context, "POSTA_REDIS_ADDR", options.RedisAddress);
+                Set(context, PostaEnvironmentVariables.Port, PostaResource.HttpEndpointPort);
+                SetParameter(context, PostaEnvironmentVariables.DbUrl, options.DatabaseUrl);
+                SetIfNotNull(context, PostaEnvironmentVariables.RedisAddress, options.RedisAddress);
                 if (options.RedisPassword is not null)
                 {
-                    Set(context, "POSTA_REDIS_PASSWORD", options.RedisPassword.Resource);
+                    Set(context, PostaEnvironmentVariables.RedisPassword, options.RedisPassword.Resource);
                 }
-                Set(context, "POSTA_JWT_SECRET", resource.JwtSecretParameter);
-                Set(context, "POSTA_ADMIN_EMAIL", adminEmail);
-                Set(context, "POSTA_ADMIN_PASSWORD", resource.AdminPasswordParameter);
+                Set(context, PostaEnvironmentVariables.JwtSecret, resource.JwtSecretParameter);
+                Set(context, PostaEnvironmentVariables.AdminEmail, adminEmail);
+                Set(context, PostaEnvironmentVariables.AdminPassword, resource.AdminPasswordParameter);
                 ConfigurePostaEnvironment(context, options);
             })
             .WithHttpHealthCheck(
@@ -233,62 +233,142 @@ public static class PostaHostingExtensions
 
     private static void ConfigurePostaEnvironment(EnvironmentCallbackContext context, PostaOptions options)
     {
-        SetParameter(context, "POSTA_ENV", options.Environment, "production");
-        SetParameter(context, "POSTA_DEV_MODE", options.DevMode, "false");
-        SetParameter(context, "POSTA_AUTH_RATE_LIMIT_ENABLED", options.AuthRateLimitEnabled, "true");
-        SetParameter(context, "POSTA_RATE_LIMIT_HOURLY", options.RateLimitHourly, "100");
-        SetParameter(context, "POSTA_RATE_LIMIT_DAILY", options.RateLimitDaily, "1000");
-        SetParameter(context, "POSTA_OPENAPI_DOCS", options.OpenApiDocs, "true");
-        SetParameter(context, "POSTA_METRICS_ENABLED", options.MetricsEnabled, "false");
-        SetParameter(context, "POSTA_WEB_DIR", options.WebDir);
-        SetParameter(context, "POSTA_WEB_URL", options.WebUrl);
-        SetParameter(context, "POSTA_API_URL", options.ApiUrl);
-        SetParameter(context, "POSTA_CORS_ORIGINS", options.CorsOrigins, "*");
-        SetParameter(context, "POSTA_EMBEDDED_WORKER", options.EmbeddedWorker, "true");
-        SetParameter(context, "POSTA_WORKER_CONCURRENCY", options.WorkerConcurrency, "10");
-        SetParameter(context, "POSTA_WORKER_MAX_RETRIES", options.WorkerMaxRetries, "5");
-        SetParameter(context, "POSTA_WEBHOOK_MAX_RETRIES", options.WebhookMaxRetries, "3");
-        SetParameter(context, "POSTA_WEBHOOK_TIMEOUT_SECS", options.WebhookTimeoutSeconds, "10");
-        SetParameter(context, "POSTA_WEBHOOK_PROXY_URL", options.WebhookProxyUrl);
-        SetParameter(context, "POSTA_GOOGLE_OAUTH_CLIENT_ID", options.GoogleOAuthClientId);
-        SetParameter(context, "POSTA_GOOGLE_OAUTH_CLIENT_SECRET", options.GoogleOAuthClientSecret);
-        SetParameter(context, "POSTA_OAUTH_CALLBACK_URL", options.OAuthCallbackUrl);
-        SetParameter(context, "POSTA_BLOB_PROVIDER", options.BlobProvider);
-        SetParameter(context, "POSTA_BLOB_S3_ENDPOINT", options.BlobS3Endpoint);
-        SetParameter(context, "POSTA_BLOB_S3_REGION", options.BlobS3Region, "us-east-1");
-        SetParameter(context, "POSTA_BLOB_S3_BUCKET", options.BlobS3Bucket);
-        SetParameter(context, "POSTA_BLOB_S3_ACCESS_KEY", options.BlobS3AccessKey);
-        SetParameter(context, "POSTA_BLOB_S3_SECRET_KEY", options.BlobS3SecretKey);
-        SetParameter(context, "POSTA_BLOB_S3_USE_SSL", options.BlobS3UseSsl, "true");
-        SetParameter(context, "POSTA_BLOB_S3_PATH_STYLE", options.BlobS3PathStyle, "false");
-        SetParameter(context, "POSTA_BLOB_FS_PATH", options.BlobFileSystemPath, "/data/attachments");
-        SetParameter(context, "POSTA_ENCRYPTION_KEY", options.EncryptionKey);
-        SetParameter(context, "POSTA_SYSTEM_SMTP_HOST", options.SystemSmtpHost);
-        SetParameter(context, "POSTA_SYSTEM_SMTP_PORT", options.SystemSmtpPort, "587");
-        SetParameter(context, "POSTA_SYSTEM_SMTP_USERNAME", options.SystemSmtpUsername);
-        SetParameter(context, "POSTA_SYSTEM_SMTP_PASSWORD", options.SystemSmtpPassword);
-        SetParameter(context, "POSTA_SYSTEM_SMTP_FROM", options.SystemSmtpFrom);
-        SetParameter(context, "POSTA_SYSTEM_SMTP_ENCRYPTION", options.SystemSmtpEncryption, "starttls");
-        SetParameter(context, "POSTA_INBOUND_ENABLED", options.InboundEnabled, "false");
-        SetParameter(context, "POSTA_INBOUND_SMTP_HOST", options.InboundSmtpHost, "0.0.0.0");
-        SetParameter(context, "POSTA_INBOUND_SMTP_PORT", options.InboundSmtpPort, "2525");
-        SetParameter(context, "POSTA_INBOUND_HOSTNAME", options.InboundHostname, "posta.local");
-        SetParameter(context, "POSTA_INBOUND_MAX_MESSAGE_SIZE", options.InboundMaxMessageSize, "26214400");
-        SetParameter(context, "POSTA_INBOUND_MAX_ATTACH_SIZE", options.InboundMaxAttachSize, "10485760");
-        SetParameter(context, "POSTA_INBOUND_WEBHOOK_SECRET", options.InboundWebhookSecret);
-        SetParameter(context, "POSTA_INBOUND_TLS_MODE", options.InboundTlsMode, "none");
-        SetParameter(context, "POSTA_INBOUND_TLS_CERT_FILE", options.InboundTlsCertFile);
-        SetParameter(context, "POSTA_INBOUND_TLS_KEY_FILE", options.InboundTlsKeyFile);
-        SetParameter(context, "POSTA_INBOUND_SMTP_RATE_LIMIT", options.InboundSmtpRateLimit, "60");
-        SetParameter(context, "POSTA_INBOUND_SMTP_RATE_WINDOW", options.InboundSmtpRateWindow, "60");
-        SetParameter(context, "POSTA_EMAIL_VERIFICATION_REQUIRED", options.EmailVerificationRequired, "false");
-        SetParameter(context, "POSTA_AUTO_SUPPRESS_ON_REJECT", options.AutoSuppressOnReject, "true");
-        SetParameter(context, "POSTA_EMAIL_VERIFY_ENABLED", options.EmailVerifyEnabled, "true");
-        SetParameter(context, "POSTA_EMAIL_VERIFY_CACHE_TTL_HOURS", options.EmailVerifyCacheTtlHours, "168");
-        SetParameter(context, "POSTA_EMAIL_VERIFY_MX_CACHE_TTL_HOURS", options.EmailVerifyMxCacheTtlHours, "24");
-        SetParameter(context, "POSTA_EMAIL_VERIFY_RATE_HOURLY", options.EmailVerifyRateHourly, "1000");
-        SetParameter(context, "POSTA_ALLOW_DOWNGRADE", options.AllowDowngrade, "false");
-        SetParameter(context, "POSTA_PLAN_ENFORCEMENT", options.PlanEnforcement, "false");
+        Set(context, PostaEnvironmentVariables.Environment, options.Environment);
+        Set(context, PostaEnvironmentVariables.DevMode, options.DevMode);
+        Set(context, PostaEnvironmentVariables.AuthRateLimitEnabled, options.AuthRateLimitEnabled);
+        Set(context, PostaEnvironmentVariables.RateLimitHourly, options.RateLimitHourly);
+        Set(context, PostaEnvironmentVariables.RateLimitDaily, options.RateLimitDaily);
+        Set(context, PostaEnvironmentVariables.OpenApiDocs, options.OpenApiDocs);
+        Set(context, PostaEnvironmentVariables.MetricsEnabled, options.MetricsEnabled);
+        SetIfNotNull(context, PostaEnvironmentVariables.WebDir, options.WebDir);
+        SetIfNotNull(context, PostaEnvironmentVariables.WebUrl, options.WebUrl);
+        SetIfNotNull(context, PostaEnvironmentVariables.ApiUrl, options.ApiUrl);
+        Set(context, PostaEnvironmentVariables.CorsOrigins, options.CorsOrigins);
+        Set(context, PostaEnvironmentVariables.EmbeddedWorker, options.EmbeddedWorker);
+        Set(context, PostaEnvironmentVariables.WorkerConcurrency, options.WorkerConcurrency);
+        Set(context, PostaEnvironmentVariables.WorkerMaxRetries, options.WorkerMaxRetries);
+        Set(context, PostaEnvironmentVariables.WebhookMaxRetries, options.WebhookMaxRetries);
+        Set(context, PostaEnvironmentVariables.WebhookTimeoutSeconds, options.WebhookTimeoutSeconds);
+        SetIfNotNull(context, PostaEnvironmentVariables.WebhookProxyUrl, options.WebhookProxyUrl);
+        ConfigureGoogleOAuth(context, options);
+        ConfigureBlobStorage(context, options);
+        SetParameter(context, PostaEnvironmentVariables.EncryptionKey, options.EncryptionKey);
+        ConfigureSystemSmtp(context, options);
+        ConfigureInboundSmtp(context, options);
+        ConfigureEmailVerification(context, options);
+        Set(context, PostaEnvironmentVariables.AllowDowngrade, options.AllowDowngrade);
+        Set(context, PostaEnvironmentVariables.PlanEnforcement, options.PlanEnforcement);
+    }
+
+    private static void ConfigureGoogleOAuth(EnvironmentCallbackContext context, PostaOptions options)
+    {
+        SetIfNotNull(context, PostaEnvironmentVariables.GoogleOAuthClientId, options.GoogleOAuthClientId);
+        SetParameter(context, PostaEnvironmentVariables.GoogleOAuthClientSecret, options.GoogleOAuthClientSecret);
+        SetIfNotNull(context, PostaEnvironmentVariables.OAuthCallbackUrl, options.OAuthCallbackUrl);
+    }
+
+    private static void ConfigureGoogleOAuth(EnvironmentCallbackContext context, PostaGoogleOAuthOptions options)
+    {
+        SetParameter(context, PostaEnvironmentVariables.GoogleOAuthClientId, options.ClientId);
+        SetParameter(context, PostaEnvironmentVariables.GoogleOAuthClientSecret, options.ClientSecret);
+        SetParameter(context, PostaEnvironmentVariables.OAuthCallbackUrl, options.CallbackUrl);
+    }
+
+    private static void ConfigureBlobStorage(EnvironmentCallbackContext context, PostaOptions options)
+    {
+        SetIfNotNull(context, PostaEnvironmentVariables.BlobProvider, options.BlobProvider);
+        SetIfNotNull(context, PostaEnvironmentVariables.BlobS3Endpoint, options.BlobS3Endpoint);
+        Set(context, PostaEnvironmentVariables.BlobS3Region, options.BlobS3Region);
+        SetIfNotNull(context, PostaEnvironmentVariables.BlobS3Bucket, options.BlobS3Bucket);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3AccessKey, options.BlobS3AccessKey);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3SecretKey, options.BlobS3SecretKey);
+        Set(context, PostaEnvironmentVariables.BlobS3UseSsl, options.BlobS3UseSsl);
+        Set(context, PostaEnvironmentVariables.BlobS3PathStyle, options.BlobS3PathStyle);
+        Set(context, PostaEnvironmentVariables.BlobFileSystemPath, options.BlobFileSystemPath);
+    }
+
+    private static void ConfigureS3BlobStorage(EnvironmentCallbackContext context, PostaS3BlobStorageOptions options)
+    {
+        Set(context, PostaEnvironmentVariables.BlobProvider, "s3");
+        SetParameter(context, PostaEnvironmentVariables.BlobS3Endpoint, options.Endpoint);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3Region, options.Region);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3Bucket, options.Bucket);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3AccessKey, options.AccessKey);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3SecretKey, options.SecretKey);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3UseSsl, options.UseSsl);
+        SetParameter(context, PostaEnvironmentVariables.BlobS3PathStyle, options.PathStyle);
+    }
+
+    private static void ConfigureSystemSmtp(EnvironmentCallbackContext context, PostaOptions options)
+    {
+        SetIfNotNull(context, PostaEnvironmentVariables.SystemSmtpHost, options.SystemSmtpHost);
+        Set(context, PostaEnvironmentVariables.SystemSmtpPort, options.SystemSmtpPort);
+        SetIfNotNull(context, PostaEnvironmentVariables.SystemSmtpUsername, options.SystemSmtpUsername);
+        SetParameter(context, PostaEnvironmentVariables.SystemSmtpPassword, options.SystemSmtpPassword);
+        SetIfNotNull(context, PostaEnvironmentVariables.SystemSmtpFrom, options.SystemSmtpFrom);
+        Set(context, PostaEnvironmentVariables.SystemSmtpEncryption, options.SystemSmtpEncryption);
+    }
+
+    private static void ConfigureSystemSmtp(EnvironmentCallbackContext context, PostaSystemSmtpOptions options)
+    {
+        SetParameter(context, PostaEnvironmentVariables.SystemSmtpHost, options.Host);
+        SetParameter(context, PostaEnvironmentVariables.SystemSmtpPort, options.Port);
+        SetParameter(context, PostaEnvironmentVariables.SystemSmtpUsername, options.Username);
+        SetParameter(context, PostaEnvironmentVariables.SystemSmtpPassword, options.Password);
+        SetParameter(context, PostaEnvironmentVariables.SystemSmtpFrom, options.From);
+        SetParameter(context, PostaEnvironmentVariables.SystemSmtpEncryption, options.Encryption);
+    }
+
+    private static void ConfigureInboundSmtp(EnvironmentCallbackContext context, PostaOptions options)
+    {
+        Set(context, PostaEnvironmentVariables.InboundEnabled, options.InboundEnabled);
+        Set(context, PostaEnvironmentVariables.InboundSmtpHost, options.InboundSmtpHost);
+        Set(context, PostaEnvironmentVariables.InboundSmtpPort, options.InboundSmtpPort);
+        Set(context, PostaEnvironmentVariables.InboundHostname, options.InboundHostname);
+        Set(context, PostaEnvironmentVariables.InboundMaxMessageSize, options.InboundMaxMessageSize);
+        Set(context, PostaEnvironmentVariables.InboundMaxAttachSize, options.InboundMaxAttachSize);
+        SetParameter(context, PostaEnvironmentVariables.InboundWebhookSecret, options.InboundWebhookSecret);
+        Set(context, PostaEnvironmentVariables.InboundTlsMode, options.InboundTlsMode);
+        SetIfNotNull(context, PostaEnvironmentVariables.InboundTlsCertFile, options.InboundTlsCertFile);
+        SetIfNotNull(context, PostaEnvironmentVariables.InboundTlsKeyFile, options.InboundTlsKeyFile);
+        Set(context, PostaEnvironmentVariables.InboundSmtpRateLimit, options.InboundSmtpRateLimit);
+        Set(context, PostaEnvironmentVariables.InboundSmtpRateWindow, options.InboundSmtpRateWindow);
+    }
+
+    private static void ConfigureInboundSmtp(EnvironmentCallbackContext context, PostaInboundSmtpOptions options)
+    {
+        SetParameter(context, PostaEnvironmentVariables.InboundEnabled, options.Enabled);
+        SetParameter(context, PostaEnvironmentVariables.InboundSmtpHost, options.Host);
+        SetParameter(context, PostaEnvironmentVariables.InboundSmtpPort, options.Port);
+        SetParameter(context, PostaEnvironmentVariables.InboundHostname, options.Hostname);
+        SetParameter(context, PostaEnvironmentVariables.InboundMaxMessageSize, options.MaxMessageSize);
+        SetParameter(context, PostaEnvironmentVariables.InboundMaxAttachSize, options.MaxAttachmentSize);
+        SetParameter(context, PostaEnvironmentVariables.InboundWebhookSecret, options.WebhookSecret);
+        SetParameter(context, PostaEnvironmentVariables.InboundTlsMode, options.TlsMode);
+        SetParameter(context, PostaEnvironmentVariables.InboundTlsCertFile, options.TlsCertFile);
+        SetParameter(context, PostaEnvironmentVariables.InboundTlsKeyFile, options.TlsKeyFile);
+        SetParameter(context, PostaEnvironmentVariables.InboundSmtpRateLimit, options.RateLimit);
+        SetParameter(context, PostaEnvironmentVariables.InboundSmtpRateWindow, options.RateWindow);
+    }
+
+    private static void ConfigureEmailVerification(EnvironmentCallbackContext context, PostaOptions options)
+    {
+        Set(context, PostaEnvironmentVariables.EmailVerificationRequired, options.EmailVerificationRequired);
+        Set(context, PostaEnvironmentVariables.AutoSuppressOnReject, options.AutoSuppressOnReject);
+        Set(context, PostaEnvironmentVariables.EmailVerifyEnabled, options.EmailVerifyEnabled);
+        Set(context, PostaEnvironmentVariables.EmailVerifyCacheTtlHours, options.EmailVerifyCacheTtlHours);
+        Set(context, PostaEnvironmentVariables.EmailVerifyMxCacheTtlHours, options.EmailVerifyMxCacheTtlHours);
+        Set(context, PostaEnvironmentVariables.EmailVerifyRateHourly, options.EmailVerifyRateHourly);
+    }
+
+    private static void ConfigureEmailVerification(EnvironmentCallbackContext context, PostaEmailVerificationOptions options)
+    {
+        SetParameter(context, PostaEnvironmentVariables.EmailVerificationRequired, options.Required);
+        SetParameter(context, PostaEnvironmentVariables.AutoSuppressOnReject, options.AutoSuppressOnReject);
+        SetParameter(context, PostaEnvironmentVariables.EmailVerifyEnabled, options.Enabled);
+        SetParameter(context, PostaEnvironmentVariables.EmailVerifyCacheTtlHours, options.CacheTtlHours);
+        SetParameter(context, PostaEnvironmentVariables.EmailVerifyMxCacheTtlHours, options.MxCacheTtlHours);
+        SetParameter(context, PostaEnvironmentVariables.EmailVerifyRateHourly, options.RateHourly);
     }
 
     private static void Set(EnvironmentCallbackContext context, string name, string value)
@@ -321,9 +401,22 @@ public static class PostaHostingExtensions
         context.EnvironmentVariables.TryAdd(name, value);
     }
 
+    private static void Set(EnvironmentCallbackContext context, string name, bool value)
+    {
+        context.EnvironmentVariables[name] = value ? "true" : "false";
+    }
+
     private static void Set(EnvironmentCallbackContext context, string name, int value)
     {
         context.EnvironmentVariables[name] = value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static void SetIfNotNull(EnvironmentCallbackContext context, string name, string? value)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            context.EnvironmentVariables[name] = value;
+        }
     }
 
     private static void SetParameter(EnvironmentCallbackContext context, string name, IResourceBuilder<ParameterResource>? parameter)
@@ -333,20 +426,4 @@ public static class PostaHostingExtensions
             context.EnvironmentVariables[name] = parameter.Resource;
         }
     }
-
-    private static void SetParameter(
-        EnvironmentCallbackContext context,
-        string name,
-        IResourceBuilder<ParameterResource>? parameter,
-        string defaultValue)
-    {
-        if (parameter is not null)
-        {
-            context.EnvironmentVariables[name] = parameter.Resource;
-            return;
-        }
-
-        context.EnvironmentVariables[name] = defaultValue;
-    }
 }
-
