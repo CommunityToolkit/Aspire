@@ -6,7 +6,7 @@ on:
       - README.md
       - src/**/CommunityToolkit.Aspire*.csproj
       - src/CommunityToolkit.Aspire*/README.md
-      - eng/scripts/generate-readme-integrations.py
+      - eng/scripts/generate-readme-integrations.cs
       - .github/workflows/readme-integrations-check.yml
 
 jobs:
@@ -20,10 +20,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
       - name: Verify README integrations table is up to date
-        run: python eng/scripts/generate-readme-integrations.py --check
+        run: dotnet run eng/scripts/generate-readme-integrations.cs -- --check
