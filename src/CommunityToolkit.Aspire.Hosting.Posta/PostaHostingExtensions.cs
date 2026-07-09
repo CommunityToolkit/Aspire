@@ -176,6 +176,91 @@ public static class PostaHostingExtensions
             .WaitFor(redis);
     }
 
+    /// <summary>
+    /// Configures the system SMTP server used by Posta for platform notifications.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="options">The parameter-based system SMTP configuration.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "PostaSystemSmtpOptions contains parameter builders and is intended for C# AppHosts.")]
+    public static IResourceBuilder<PostaResource> WithSystemSmtp(
+        this IResourceBuilder<PostaResource> builder,
+        PostaSystemSmtpOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return builder.WithEnvironment(context => ConfigureSystemSmtp(context, options));
+    }
+
+    /// <summary>
+    /// Configures the built-in inbound SMTP receiver used by Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="options">The parameter-based inbound SMTP configuration.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "PostaInboundSmtpOptions contains parameter builders and is intended for C# AppHosts.")]
+    public static IResourceBuilder<PostaResource> WithInboundSmtp(
+        this IResourceBuilder<PostaResource> builder,
+        PostaInboundSmtpOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return builder.WithEnvironment(context => ConfigureInboundSmtp(context, options));
+    }
+
+    /// <summary>
+    /// Configures S3-compatible attachment storage for Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="options">The parameter-based S3 blob storage configuration.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "PostaS3BlobStorageOptions contains parameter builders and is intended for C# AppHosts.")]
+    public static IResourceBuilder<PostaResource> WithS3BlobStorage(
+        this IResourceBuilder<PostaResource> builder,
+        PostaS3BlobStorageOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return builder.WithEnvironment(context => ConfigureS3BlobStorage(context, options));
+    }
+
+    /// <summary>
+    /// Configures Google OAuth login for Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="options">The parameter-based Google OAuth configuration.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "PostaGoogleOAuthOptions contains parameter builders and is intended for C# AppHosts.")]
+    public static IResourceBuilder<PostaResource> WithGoogleOAuth(
+        this IResourceBuilder<PostaResource> builder,
+        PostaGoogleOAuthOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return builder.WithEnvironment(context => ConfigureGoogleOAuth(context, options));
+    }
+
+    /// <summary>
+    /// Configures email verification behavior for Posta.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="options">The parameter-based email verification configuration.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExportIgnore(Reason = "PostaEmailVerificationOptions contains parameter builders and is intended for C# AppHosts.")]
+    public static IResourceBuilder<PostaResource> WithEmailVerification(
+        this IResourceBuilder<PostaResource> builder,
+        PostaEmailVerificationOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return builder.WithEnvironment(context => ConfigureEmailVerification(context, options));
+    }
+
     private static IResourceBuilder<PostaResource> AddPostaCore(
         IDistributedApplicationBuilder builder,
         string name,
