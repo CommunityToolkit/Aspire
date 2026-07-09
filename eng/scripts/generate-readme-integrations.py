@@ -28,8 +28,8 @@ def _find_repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _read_property(project: ET.ElementTree, name: str) -> str | None:
-    for element in project.iter():
+def _read_property(tree: ET.ElementTree, name: str) -> str | None:
+    for element in tree.iter():
         if element.tag.endswith(name):
             value = (element.text or "").strip()
             if value:
@@ -54,8 +54,11 @@ def _load_integrations(repo_root: Path) -> list[Integration]:
 
         deprecated = False
         if readme.exists():
-            readme_text = readme.read_text(encoding="utf-8", errors="ignore")
-            deprecated = bool(re.search(r"\bthis integration is deprecated\b", readme_text, re.IGNORECASE))
+            readme_text = readme.read_text(encoding="utf-8", errors="replace")
+            deprecated = bool(
+                re.search(r"\bdeprecation notice\b", readme_text, re.IGNORECASE)
+                or re.search(r"\bthis (?:package|integration) is deprecated(?:\b| as of)", readme_text, re.IGNORECASE)
+            )
 
         if "|" in description:
             description = description.replace("|", "\\|")
@@ -88,10 +91,12 @@ def _render_table(integrations: list[Integration]) -> str:
     for integration in integrations:
         docs_link = integration.readme_path or "#"
         package = integration.package_id
-        cell = (
-            f"- **Learn More**: [`{integration.short_name}`]({docs_link}) <br /> "
-            f"- Stable 📦: [![{package}](https://img.shields.io/nuget/v/{package})](https://nuget.org/packages/{package}/) <br /> "
-            f"- Preview 📦: [![{package}](https://img.shields.io/nuget/vpre/{package}?label=nuget%20(preview))](https://nuget.org/packages/{package}/absoluteLatest)"
+        cell = " <br /> ".join(
+            [
+                f"- **Learn More**: [`{integration.short_name}`]({docs_link})",
+                f"- Stable 📦: [![{package}](https://img.shields.io/nuget/v/{package})](https://nuget.org/packages/{package}/)",
+                f"- Preview 📦: [![{package}](https://img.shields.io/nuget/vpre/{package}?label=nuget%20(preview))](https://nuget.org/packages/{package}/absoluteLatest)",
+            ]
         )
         lines.append(f"| {cell} | {integration.description} |")
 
@@ -107,8 +112,12 @@ def _update_readme(content: str, table: str) -> str:
 
     table_start = content.find("| Package")
     section_start = content.find("\n## 🙌 Getting Started")
-    if table_start == -1 or section_start == -1 or section_start <= table_start:
-        raise RuntimeError("Unable to locate integrations table section in README.md")
+    if table_start == -1:
+        raise RuntimeError("Unable to locate '| Package' header in README.md")
+    if section_start == -1:
+        raise RuntimeError("Unable to locate '## 🙌 Getting Started' section in README.md")
+    if section_start <= table_start:
+        raise RuntimeError("Integrations table appears after the getting started section in README.md")
 
     return content[:table_start] + block + "\n" + content[section_start:]
 
@@ -124,7 +133,7 @@ def main() -> int:
     integrations = _load_integrations(repo_root)
     table = _render_table(integrations)
 
-    existing = readme_path.read_text(encoding="utf-8")
+    existing = readme_path.read_text(encoding="utf-8", errors="replace")
     updated = _update_readme(existing, table)
 
     if args.check:

@@ -5,7 +5,7 @@ on:
     paths:
       - README.md
       - src/**/CommunityToolkit.Aspire*.csproj
-      - src/**/README.md
+      - src/CommunityToolkit.Aspire*/README.md
       - eng/scripts/generate-readme-integrations.py
       - .github/workflows/readme-integrations-check.yml
 
@@ -13,6 +13,8 @@ jobs:
   validate-readme-integrations:
     name: Validate integrations table
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
