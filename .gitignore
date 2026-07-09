@@ -22,6 +22,8 @@ node_modules
 examples/perl/**/local/*
 **cpanfile.snapshot
 **/.aspire/modules/
+**/.modules/
+**/*.AppHost.TypeScript/.aspire/
 **/*.AppHost.TypeScript/nuget.config
 
 **/.k3s/
