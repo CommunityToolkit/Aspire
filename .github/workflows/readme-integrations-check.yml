@@ -1,0 +1,27 @@
+name: README Integrations Check
+
+on:
+  pull_request:
+    paths:
+      - README.md
+      - src/**/CommunityToolkit.Aspire*.csproj
+      - src/**/README.md
+      - eng/scripts/generate-readme-integrations.py
+      - .github/workflows/readme-integrations-check.yml
+
+jobs:
+  validate-readme-integrations:
+    name: Validate integrations table
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Verify README integrations table is up to date
+        run: python eng/scripts/generate-readme-integrations.py --check
