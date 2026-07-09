@@ -1,7 +1,4 @@
-#!/usr/bin/env dotnet run
-
 using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -68,7 +65,12 @@ static List<Integration> LoadIntegrations(string repoRoot)
     List<Integration> integrations = [];
     Regex deprecationRegex = new(@"\bdeprecation notice\b|\bthis (?:package|integration) is deprecated(?:\b| as of)", RegexOptions.IgnoreCase);
 
-    foreach (string projectPath in Directory.EnumerateFiles(Path.Combine(repoRoot, "src"), "CommunityToolkit.Aspire*.csproj", SearchOption.AllDirectories).OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
+    IEnumerable<string> projectFiles = Directory.EnumerateFiles(
+        Path.Combine(repoRoot, "src"),
+        "CommunityToolkit.Aspire*.csproj",
+        SearchOption.AllDirectories);
+
+    foreach (string projectPath in projectFiles.OrderBy(static path => path, StringComparer.OrdinalIgnoreCase))
     {
         XDocument project = XDocument.Load(projectPath);
         string packageId = ReadProperty(project, "PackageId") ?? Path.GetFileNameWithoutExtension(projectPath);
