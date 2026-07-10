@@ -25,6 +25,12 @@ namespace Aspire.Hosting
         [AspireExport("withStripeReference")]
         public static ApplicationModel.IResourceBuilder<TDestination> WithReference<TDestination>(this ApplicationModel.IResourceBuilder<TDestination> builder, ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> source, string webhookSigningSecretEnvVarName = "STRIPE_WEBHOOK_SECRET")
             where TDestination : ApplicationModel.IResourceWithEnvironment { throw null; }
+
+        [AspireExport]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> WithThinListen(this ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> builder, ApplicationModel.IResourceBuilder<ApplicationModel.IResourceWithEndpoints> forwardTo, string webhookPath = "/webhooks/stripe/thin", System.Collections.Generic.IEnumerable<string>? thinEvents = null) { throw null; }
+
+        [AspireExport("withThinListenExternalService")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> WithThinListen(this ApplicationModel.IResourceBuilder<ApplicationModel.StripeResource> builder, ApplicationModel.IResourceBuilder<ExternalServiceResource> forwardTo, string webhookPath = "/webhooks/stripe/thin", System.Collections.Generic.IEnumerable<string>? thinEvents = null) { throw null; }
     }
 }
 

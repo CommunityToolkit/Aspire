@@ -1,4 +1,4 @@
-using Aspire.Hosting;
+﻿using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Stripe;
 
@@ -151,6 +151,145 @@ public class AddStripeTests
         // Verify that a CommandLineArgsCallbackAnnotation was added
         var argsAnnotation = resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>();
         Assert.NotEmpty(argsAnnotation);
+    }
+
+    [Fact]
+    public async Task StripeWithThinListenAddsThinListenArgs()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+
+        builder.AddStripe("stripe", apiKey)
+            .WithThinListen(externalEndpoint, webhookPath: "webhooks/thin");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
+
+        var args = await resource.GetArgumentListAsync();
+
+        Assert.Collection(args,
+            arg => Assert.Equal("listen", arg),
+            arg => Assert.Equal("--forward-thin-to", arg),
+            arg => Assert.Equal("http://localhost:5082/webhooks/thin", arg)
+        );
+    }
+
+    [Fact]
+    public async Task StripeWithThinListenAndThinEventsAddsThinEventArgs()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+
+        builder.AddStripe("stripe", apiKey)
+            .WithThinListen(externalEndpoint, webhookPath: "webhooks/thin",
+                thinEvents: ["v2.core.account[configuration.recipient].capability_status_updated"]);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
+
+        var args = await resource.GetArgumentListAsync();
+
+        Assert.Collection(args,
+            arg => Assert.Equal("listen", arg),
+            arg => Assert.Equal("--forward-thin-to", arg),
+            arg => Assert.Equal("http://localhost:5082/webhooks/thin", arg),
+            arg => Assert.Equal("--thin-events", arg),
+            arg => Assert.Equal("v2.core.account[configuration.recipient].capability_status_updated", arg)
+        );
+    }
+
+    [Fact]
+    public async Task StripeWithListenAndThinListenSharesSingleListenCommand()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+
+        builder.AddStripe("stripe", apiKey)
+            .WithListen(externalEndpoint, webhookPath: "webhooks", events: ["charge.dispute.created"])
+            .WithThinListen(externalEndpoint, webhookPath: "webhooks/thin",
+                thinEvents: ["v2.core.account[configuration.recipient].capability_status_updated"]);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
+
+        var args = await resource.GetArgumentListAsync();
+
+        Assert.Collection(args,
+            arg => Assert.Equal("listen", arg),
+            arg => Assert.Equal("--forward-to", arg),
+            arg => Assert.Equal("http://localhost:5082/webhooks", arg),
+            arg => Assert.Equal("--events", arg),
+            arg => Assert.Equal("charge.dispute.created", arg),
+            arg => Assert.Equal("--forward-thin-to", arg),
+            arg => Assert.Equal("http://localhost:5082/webhooks/thin", arg),
+            arg => Assert.Equal("--thin-events", arg),
+            arg => Assert.Equal("v2.core.account[configuration.recipient].capability_status_updated", arg)
+        );
+    }
+
+    [Fact]
+    public void StripeWithThinListenToEndpointReference()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+
+        var api = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Stripe_Api>("api");
+
+        builder.AddStripe("stripe", apiKey)
+            .WithThinListen(api);
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
+
+        // Verify that a CommandLineArgsCallbackAnnotation was added
+        var argsAnnotation = resource.Annotations.OfType<CommandLineArgsCallbackAnnotation>();
+        Assert.NotEmpty(argsAnnotation);
+    }
+
+    [Fact]
+    public void WithThinListenNullBuilderThrows()
+    {
+        IResourceBuilder<StripeResource> builder = null!;
+
+        Assert.Throws<ArgumentNullException>(() => builder.WithThinListen((IResourceBuilder<IResourceWithEndpoints>)null!));
+    }
+
+    [Fact]
+    public void WithThinListenNullUrlThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
+
+        Assert.Throws<ArgumentNullException>(() => stripe.WithThinListen((IResourceBuilder<ExternalServiceResource>)null!));
+    }
+
+    [Fact]
+    public void WithThinListenNullEndpointReferenceThrows()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+        var stripe = builder.AddStripe("stripe", apiKey);
+
+        Assert.Throws<ArgumentNullException>(() => stripe.WithThinListen((IResourceBuilder<IResourceWithEndpoints>)null!));
     }
 
     [Fact]

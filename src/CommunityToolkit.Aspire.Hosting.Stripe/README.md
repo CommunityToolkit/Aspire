@@ -1,4 +1,4 @@
-# CommunityToolkit.Aspire.Hosting.Stripe library
+﻿# CommunityToolkit.Aspire.Hosting.Stripe library
 
 Provides extension methods and resource definitions for an Aspire AppHost to configure the Stripe CLI for local webhook forwarding and testing.
 
@@ -98,6 +98,22 @@ var stripe = builder.AddStripe("stripe", stripeApiKey)
     .WithListen(webhookEndpoint, webhookPath: "/webhooks",
                 events: ["payment_intent.created", "charge.succeeded"]);
 ```
+
+### Thin (v2) events
+
+Stripe's v2 event family (for example the Accounts v2 events used by Connect platforms) is delivered as [thin events](https://docs.stripe.com/event-destinations#event-payloads), which the Stripe CLI forwards separately from snapshot events. Use `WithThinListen` to configure them — it can be combined with `WithListen` on the same resource, sharing a single CLI session and signing secret:
+
+```csharp
+var stripeApiKey = builder.AddParameter("stripe-api-key", "sk_test_default", secret: true);
+var webhookEndpoint = builder.AddExternalService("webhook-endpoint", "http://localhost:5082");
+var stripe = builder.AddStripe("stripe", stripeApiKey)
+    .WithListen(webhookEndpoint, webhookPath: "/webhooks/stripe",
+                events: ["charge.dispute.created"])
+    .WithThinListen(webhookEndpoint, webhookPath: "/webhooks/stripe/thin",
+                thinEvents: ["v2.core.account[configuration.recipient].capability_status_updated"]);
+```
+
+This maps to the CLI's `--forward-thin-to` / `--thin-events` options.
 
 ## How it works
 
