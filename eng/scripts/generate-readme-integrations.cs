@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -127,11 +128,9 @@ static string? ReadProperty(XDocument project, string propertyName)
 
 static string RenderTable(List<Integration> integrations)
 {
-    List<string> lines =
-    [
-        "| Package | Description |",
-        "| --- | --- |"
-    ];
+    StringBuilder lines = new();
+    lines.AppendLine("| Package | Description |");
+    lines.AppendLine("| --- | --- |");
 
     foreach (Integration integration in integrations)
     {
@@ -144,10 +143,10 @@ static string RenderTable(List<Integration> integrations)
             $"- Preview 📦: [![{package}](https://img.shields.io/nuget/vpre/{package}?label=nuget%20(preview))](https://nuget.org/packages/{package}/absoluteLatest)"
         });
 
-        lines.Add($"| {cell} | {integration.Description} |");
+        lines.AppendLine($"| {cell} | {integration.Description} |");
     }
 
-    return string.Join('\n', lines);
+    return lines.ToString().TrimEnd('\r', '\n');
 }
 
 static string UpdateReadme(string content, string table)
