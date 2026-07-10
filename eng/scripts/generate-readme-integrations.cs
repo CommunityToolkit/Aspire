@@ -129,8 +129,8 @@ static string? ReadProperty(XDocument project, string propertyName)
 static string RenderTable(List<Integration> integrations)
 {
     StringBuilder lines = new();
-    lines.AppendLine("| Package | Description |");
-    lines.AppendLine("| --- | --- |");
+    lines.Append("| Package | Description |\n");
+    lines.Append("| --- | --- |");
 
     foreach (Integration integration in integrations)
     {
@@ -143,10 +143,11 @@ static string RenderTable(List<Integration> integrations)
             $"- Preview 📦: [![{package}](https://img.shields.io/nuget/vpre/{package}?label=nuget%20(preview))](https://nuget.org/packages/{package}/absoluteLatest)"
         });
 
-        lines.AppendLine($"| {cell} | {integration.Description} |");
+        lines.Append('\n');
+        lines.Append($"| {cell} | {integration.Description} |");
     }
 
-    return lines.ToString().TrimEnd('\r', '\n');
+    return lines.ToString();
 }
 
 static string UpdateReadme(string content, string table)
