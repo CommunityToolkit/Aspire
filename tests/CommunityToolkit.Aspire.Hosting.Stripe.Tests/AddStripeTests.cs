@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting;
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Stripe;
 
@@ -240,6 +240,31 @@ public class AddStripeTests
             arg => Assert.Equal("--thin-events", arg),
             arg => Assert.Equal("v2.core.account[configuration.recipient].capability_status_updated", arg)
         );
+    }
+
+    [Fact]
+    public async Task StripeWithApiKeyBeforeListenKeepsListenCommandFirst()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var apiKey = builder.AddParameter("stripe-api-key", TestApiKeyValue);
+
+        var externalEndpoint = builder.AddExternalService("external-api", "http://localhost:5082");
+
+        builder.AddStripe("stripe", apiKey)
+            .WithApiKey(apiKey)
+            .WithListen(externalEndpoint, webhookPath: "webhooks");
+
+        using var app = builder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<StripeResource>());
+
+        var args = await resource.GetArgumentListAsync();
+
+        Assert.Equal("listen", args[0]);
+        Assert.Contains("--api-key", args);
+        Assert.Contains("http://localhost:5082/webhooks", args);
     }
 
     [Fact]

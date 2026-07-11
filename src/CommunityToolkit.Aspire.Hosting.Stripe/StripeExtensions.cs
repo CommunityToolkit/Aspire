@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Stripe;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -69,7 +69,7 @@ public static class StripeExtensions
                 throw new InvalidOperationException($"The resource '{forwardTo.Resource.Name}' does not have any endpoints defined.");
             }
             context.Args.Add("--forward-to");
-            context.Args.Add($"{endpoints.First().AllocatedEndpoint}{webhookPath}");
+            context.Args.Add(CombineUrl($"{endpoints.First().AllocatedEndpoint}", webhookPath));
         });
 
         if (events is not null && events.Any())
@@ -103,7 +103,7 @@ public static class StripeExtensions
         if (forwardTo.Resource.Uri is not null)
         {
             builder.WithArgs($"--forward-to");
-            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri.ToString()}{webhookPath}"));
+            builder.WithArgs(ReferenceExpression.Create($"{CombineUrl(forwardTo.Resource.Uri.ToString(), webhookPath)}"));
         }
         else if (forwardTo.Resource.UrlParameter is not null)
         {
@@ -118,7 +118,7 @@ public static class StripeExtensions
                     }
                 }
                 context.Args.Add($"--forward-to");
-                context.Args.Add(ReferenceExpression.Create($"{url}{webhookPath}"));
+                context.Args.Add(ReferenceExpression.Create($"{CombineUrl(url!, webhookPath)}"));
             });
         }
         else
@@ -165,7 +165,7 @@ public static class StripeExtensions
                 throw new InvalidOperationException($"The resource '{forwardTo.Resource.Name}' does not have any endpoints defined.");
             }
             context.Args.Add("--forward-thin-to");
-            context.Args.Add($"{endpoints.First().AllocatedEndpoint}{webhookPath}");
+            context.Args.Add(CombineUrl($"{endpoints.First().AllocatedEndpoint}", webhookPath));
         });
 
         if (thinEvents is not null && thinEvents.Any())
@@ -204,7 +204,7 @@ public static class StripeExtensions
         if (forwardTo.Resource.Uri is not null)
         {
             builder.WithArgs($"--forward-thin-to");
-            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri.ToString()}{webhookPath}"));
+            builder.WithArgs(ReferenceExpression.Create($"{CombineUrl(forwardTo.Resource.Uri.ToString(), webhookPath)}"));
         }
         else if (forwardTo.Resource.UrlParameter is not null)
         {
@@ -219,7 +219,7 @@ public static class StripeExtensions
                     }
                 }
                 context.Args.Add($"--forward-thin-to");
-                context.Args.Add(ReferenceExpression.Create($"{url}{webhookPath}"));
+                context.Args.Add(ReferenceExpression.Create($"{CombineUrl(url!, webhookPath)}"));
             });
         }
         else
@@ -299,8 +299,17 @@ public static class StripeExtensions
         }
 
         builder.Resource.Annotations.Add(new StripeListenCommandAnnotation());
-        builder.WithArgs("listen");
+        // Insert rather than append so the command stays valid regardless of the order
+        // extension methods were called in (e.g. WithApiKey before WithListen).
+        builder.WithArgs(context => context.Args.Insert(0, "listen"));
     }
+
+    /// <summary>
+    /// Joins a base URL and a webhook path with exactly one slash, regardless of
+    /// whether the base ends with '/' or the path starts with one.
+    /// </summary>
+    private static string CombineUrl(string baseUrl, string path) =>
+        $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
 
     private sealed class StripeListenCommandAnnotation : IResourceAnnotation;
 
