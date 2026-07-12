@@ -1,6 +1,10 @@
 using System.Globalization;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.RedPanda;
+using Confluent.Kafka;
+using HealthChecks.Kafka;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Aspire.Hosting;
 
@@ -75,6 +79,42 @@ public static class RedPandaBuilderExtensions
 
         RedPandaServerResource resource = new(name);
 
+        // The Admin API readiness probe (/v1/status/ready) reports when the Redpanda node has started,
+        // but it can flip to ready a moment before the external Kafka listener is actually accepting
+        // client connections. That gap is why consumers gated with WaitFor could still log a few
+        // transient "Connection refused" errors at startup. Add a Kafka-level health check - a producer
+        // that connects to the advertised bootstrap address, exactly as a real client would - so the
+        // resource only reports healthy once the broker truly accepts Kafka connections. This mirrors
+        // the health check that the built-in Aspire Kafka hosting integration registers.
+        string? connectionString = null;
+        builder.Eventing.Subscribe<ConnectionStringAvailableEvent>(resource, async (@event, ct) =>
+        {
+            connectionString = await resource.ConnectionStringExpression.GetValueAsync(ct).ConfigureAwait(false);
+
+            if (connectionString is null)
+            {
+                throw new DistributedApplicationException(
+                    $"ConnectionStringAvailableEvent was published for the '{resource.Name}' resource but the connection string was null.");
+            }
+        });
+
+        var kafkaHealthCheckKey = $"{name}_kafka_check";
+
+        // Register directly rather than via AddKafkaHealthCheck: the health check captures the
+        // connection string in its factory closure, so a per-resource registration avoids multiple
+        // Redpanda resources sharing (and overwriting) a single health check instance.
+        builder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
+            kafkaHealthCheckKey,
+            _ => new KafkaHealthCheck(new KafkaHealthCheckOptions
+            {
+                Configuration = new ProducerConfig
+                {
+                    BootstrapServers = connectionString ?? throw new InvalidOperationException("Connection string is unavailable")
+                }
+            }),
+            failureStatus: default,
+            tags: default));
+
         return builder.AddResource(resource)
             .WithImage(RedPandaContainerImageTags.Image, RedPandaContainerImageTags.Tag)
             .WithImageRegistry(RedPandaContainerImageTags.Registry)
@@ -88,7 +128,8 @@ public static class RedPandaBuilderExtensions
             .WithHttpEndpoint(targetPort: RedPandaServerResource.AdminPort, name: RedPandaServerResource.AdminEndpointName)
             .WithEntrypoint("/usr/bin/rpk")
             .WithArgs(context => ConfigureRedPandaArgs(context, resource, options))
-            .WithHttpHealthCheck("/v1/status/ready", endpointName: RedPandaServerResource.AdminEndpointName);
+            .WithHttpHealthCheck("/v1/status/ready", endpointName: RedPandaServerResource.AdminEndpointName)
+            .WithHealthCheck(kafkaHealthCheckKey);
     }
 
     /// <summary>
