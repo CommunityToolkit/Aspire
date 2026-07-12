@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Posta\CommunityToolkit.Aspire.Hosting.Posta.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Posta.ApiService\CommunityToolkit.Aspire.Hosting.Posta.ApiService.csproj" />
   </ItemGroup>
 
 </Project>
