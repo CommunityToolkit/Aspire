@@ -122,9 +122,13 @@ public class AddSqliteTests
         Assert.Equal(SqliteContainerImageTags.SqliteWebTag, imageAnnotation.Tag);
         Assert.Equal(SqliteContainerImageTags.SqliteWebRegistry, imageAnnotation.Registry);
 
-        var env = await sqliteWeb.GetArgumentListAsync();
-        var envVar = Assert.Single(env);
-        Assert.Equal(sqlite.Resource.DatabaseFileName, envVar);
+        Assert.True(sqliteWeb.TryGetAnnotationsOfType<ContainerImagePullPolicyAnnotation>(out var imagePullPolicyAnnotations));
+        var imagePullPolicyAnnotation = Assert.Single(imagePullPolicyAnnotations);
+        Assert.Equal(ImagePullPolicy.Always, imagePullPolicyAnnotation.ImagePullPolicy);
+
+        var args = await sqliteWeb.GetArgumentListAsync();
+        var databaseFileName = Assert.Single(args);
+        Assert.Equal(sqlite.Resource.DatabaseFileName, databaseFileName);
 
         Assert.True(sqliteWeb.TryGetAnnotationsOfType<ContainerMountAnnotation>(out var bindMountAnnotations));
         var bindMountAnnotation = Assert.Single(bindMountAnnotations);

@@ -25,6 +25,19 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     }
 
     [Fact]
+    public async Task SqliteWebResourceStarts()
+    {
+        var resourceName = "sqlite-sqliteweb";
+        await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(5));
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
+
+        var response = await httpClient.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("SQLite Web", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task ApiServiceCreateTestItemWithSqliteClient()
     {
         var resourceName = "api";

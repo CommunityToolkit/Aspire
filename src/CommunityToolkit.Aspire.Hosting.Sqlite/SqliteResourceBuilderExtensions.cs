@@ -80,6 +80,7 @@ public static class SqliteResourceBuilderExtensions
         var resourceBuilder = builder.ApplicationBuilder.AddResource(resource)
                                 .WithImage(SqliteContainerImageTags.SqliteWebImage, SqliteContainerImageTags.SqliteWebTag)
                                 .WithImageRegistry(SqliteContainerImageTags.SqliteWebRegistry)
+                                .WithImagePullPolicy(ImagePullPolicy.Always)
                                 .WithHttpEndpoint(targetPort: 8080, name: "http")
                                 .WithArgs(builder.Resource.DatabaseFileName)
                                 .WithBindMount(builder.Resource.DatabasePath, "/data")
