@@ -76,4 +76,6 @@ public sealed class LogtoResource(string name)
     }
 }
 
+internal sealed class LogtoDatabaseSetupResource(string name) : ContainerResource(name);
+
 #pragma warning restore ASPIREATS001

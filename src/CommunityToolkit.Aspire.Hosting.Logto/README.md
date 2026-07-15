@@ -1,101 +1,82 @@
-# Logto Hosting Extensions for .NET Aspire
+# Logto hosting integration
 
-## Overview
+Use this integration to model, configure, and orchestrate a [Logto](https://logto.io/) identity service in an Aspire distributed application. It connects Logto to PostgreSQL, optionally connects Redis, exposes the public and Admin Console endpoints, and provides a one-shot database setup command for local runs.
 
-This package provides **.NET Aspire hosting extensions** for integrating **Logto** with your AppHost.
-It includes helpers for wiring Logto to **PostgreSQL** (via `Aspire.Hosting.Postgres.AddPostgres()`) and optional **Redis** caching, and exposes fluent APIs to configure the required environment variables for Logto database connectivity, initialization, and caching.
- 
----
+## Getting started
 
-## Features
+Install the hosting integration in the AppHost directory:
 
-- Configure **Logto** to use **PostgreSQL** via `AddLogto(...)`.
-- Optional **Redis** integration for caching via `.WithRedis(...)`.
-- Fluent helpers to set environment variables:
-  - `ENDPOINT` (automatically set from the allocated primary endpoint during local runs)
-  - `DB_URL` (Postgres connection string)
-  - `REDIS_URL`
-  - `NODE_ENV`
-  - `ADMIN_ENDPOINT`
-- Data persistence via:
-  - `.WithDataVolume()` (managed Docker volume)
-  - `.WithDataBindMount()` (host bind mount).
-- Configurable **Admin Console** access and **proxy header** trust (`TRUST_PROXY_HEADER`).
-- Built-in health check for `/api/status`.
+```console
+aspire add CommunityToolkit.Aspire.Hosting.Logto
+```
 
----
-
-## Usage (AppHost)
+## Usage example
 
 ```csharp
-using Aspire.Hosting;
-using Aspire.Hosting.Postgres;
+var builder = DistributedApplication.CreateBuilder(args);
+
 var postgres = builder.AddPostgres("postgres");
-
-// Basic setup connecting to Postgres
-var logto = builder
-    .AddLogto("logto", postgres)
-    .WithDatabaseSeeding();
-
-// Advanced setup with Redis and specific configurations
 var redis = builder.AddRedis("redis");
 
-var logtoSecure = builder
-    .AddLogto("logto-secure", postgres, databaseName: "logto_secure_db")
+var logto = builder.AddLogto("logto", postgres)
     .WithRedis(redis)
-    .WithAdminEndpoint("https://admin.example.com")
-    .WithDisableAdminConsole(false)
-    .WithTrustProxyHeader(true);     // needed when TLS is terminated by a reverse proxy
+    .WithDatabaseSeeding();
+
+builder.AddProject<Projects.MyApi>("api")
+    .WithReference(logto)
+    .WaitFor(logto);
+
+builder.Build().Run();
 ```
 
-Logto will be configured with:
+The same integration is exported to a TypeScript AppHost:
 
-* `DB_URL=postgresql://.../logto_db` (constructed from the Postgres resource)
-* `REDIS_URL=...` (when Redis is attached with `.WithRedis(...)`)
-* `ENDPOINT=...` (automatically set to the allocated public HTTP URL during local runs)
-* `ADMIN_ENDPOINT=...` (automatically set to the allocated Admin Console URL during local runs, or overridden with `.WithAdminEndpoint(...)`)
-* `NODE_ENV` (when explicitly configured with `.WithNodeEnv(...)`)
-* Auto-configured health checks on `/api/status`.
+```typescript
+const postgres = await builder.addPostgres("postgres");
+const redis = await builder.addRedis("redis");
+const logto = await builder.addLogto("logto", postgres);
+const api = await builder.addProject("api", "../MyApi/MyApi.csproj");
 
----
-
-## Local Admin Console and CORS
-
-Logto Admin Console and the Logto API use separate ports. During a local Aspire run, both ports are exposed through dynamically allocated loopback proxy URLs. For example:
-
-```text
-Admin Console: http://127.0.0.1:10612
-Logto API:     http://localhost:10611
+await logto.withRedis(redis);
+await logto.withDatabaseSeeding();
+await api.withReference(logto);
+await api.waitFor(logto);
 ```
 
-Logto's production CORS policy intentionally rejects localhost origins when both its internal Admin URL and an external Admin endpoint are present. The symptom is that pages in Admin Console fail to load data or create resources such as Applications, and the browser reports an error similar to:
+`AddLogto` configures `DB_URL`, `ENDPOINT`, `ADMIN_ENDPOINT`, the `/api/status` health check, and the dependency on PostgreSQL. `WithRedis` adds `REDIS_URL` and the Redis dependency.
 
-```text
-Access to fetch at 'http://localhost:10611/api/resources' from origin
-'http://localhost:10612' has been blocked by CORS policy:
-No 'Access-Control-Allow-Origin' header is present.
-```
+### Database setup
 
-This integration handles the local Aspire scenario automatically:
+Call `WithDatabaseSeeding()` to seed the database and deploy required schema alterations in a one-shot setup container before Logto starts. The helper is run-only and is excluded from published manifests. Repeated calls do not create duplicate setup resources.
 
-- `ENDPOINT` is populated from the allocated Aspire API proxy URL.
-- The local `ADMIN_ENDPOINT` and the Admin link shown in Aspire Dashboard use `127.0.0.1` with the allocated Admin proxy port.
-- Logto keeps its normal production startup, so the compiled Admin Console is served instead of attempting to contact the unavailable Vite development server.
+For an air-gapped environment, use `WithDatabaseSeeding(disableAdminPwnedPasswordCheck: true)` to pass Logto's `--dapc` option during initial administrator creation.
 
-> [!IMPORTANT]
-> Open the exact `admin` URL shown in Aspire Dashboard. Do not replace `127.0.0.1` with `localhost`: Logto 1.41 intentionally removes `localhost` from its production CORS allowlist when an external Admin endpoint is configured.
+### Local Admin Console and CORS
 
-Do not use the direct Docker container port, because it may not match `ADMIN_ENDPOINT`. After changing endpoints, restart the Logto resource and reload the browser without cache.
+Logto's API and Admin Console use separate endpoints. During local Aspire runs, the integration sets `ENDPOINT` to the allocated API URL and normalizes the Admin Console URL to `127.0.0.1`. This is required by Logto 1.41's production CORS behavior.
 
-For HTTPS termination at a reverse proxy, additionally configure `.WithTrustProxyHeader(true)` and ensure the proxy sends `X-Forwarded-Proto`.
+Open the exact `admin` URL shown in the Aspire Dashboard. Replacing `127.0.0.1` with `localhost` can cause requests such as `/api/resources` to fail CORS preflight checks and prevent Applications from being created. `WithAdminEndpoint("https://admin.example.com")` updates both Logto's `ADMIN_ENDPOINT` and the Dashboard URL.
 
----
+When TLS terminates at a reverse proxy, configure `WithTrustProxyHeader(true)` and ensure that the proxy sends `X-Forwarded-Proto`.
 
-## Notes
+## Connection properties
 
-* Extension methods are in the `Aspire.Hosting` namespace.
-* Call `.WithDatabaseSeeding()` to run database seeding and the required Logto schema alterations in a one-shot setup container before Logto starts. This is required when upgrading an existing database to Logto 1.40 or later.
-* Local Admin links use `127.0.0.1` rather than `localhost` to remain compatible with Logto 1.41 production CORS checks while still serving the compiled Admin Console.
-* In an air-gapped environment, use `.WithDatabaseSeeding(disableAdminPwnedPasswordCheck: true)` to pass Logto's `--dapc` option during initial admin creation.
-* `WithSensitiveUsername(...)` is deprecated in Logto 1.41. Configure username case sensitivity in the tenant settings in Logto Console.
-* Container ports are **3001** (HTTP) and **3002** (Admin). Host ports are random by default unless explicitly configured; Logto receives the allocated public URLs automatically so browser redirects continue to work.
+When another resource uses `WithReference(logto)`, Aspire injects the connection string in the standard `ConnectionStrings__{resourceName}` environment variable. The connection string has the form `Endpoint={Uri}`.
+
+| Property | Description | Example |
+| --- | --- | --- |
+| `Host` | Host name of the public Logto endpoint. | `localhost` |
+| `Port` | Allocated port of the public Logto endpoint. | `10611` |
+| `Uri` | Complete public Logto endpoint URL. | `http://localhost:10611` |
+
+The Admin Console endpoint is intentionally excluded from service-reference endpoint expansion; consumers receive the public Logto endpoint only.
+
+## Additional documentation
+
+- [Logto documentation](https://docs.logto.io/)
+- [Logto configuration](https://docs.logto.io/logto-oss/using-cli/logto-config)
+- [Aspire service discovery](https://learn.microsoft.com/dotnet/aspire/service-discovery/overview)
+
+## Feedback & contributing
+
+Report bugs and request features in the [CommunityToolkit/Aspire issue tracker](https://github.com/CommunityToolkit/Aspire/issues). Contributions are welcome; see the repository's [contributing guide](https://github.com/CommunityToolkit/Aspire/blob/main/CONTRIBUTING.md).

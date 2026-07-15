@@ -1,5 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -25,7 +26,7 @@ public static class LogtoBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<LogtoResource> AddLogto(
         this IDistributedApplicationBuilder builder,
-        string name,
+        [ResourceName] string name,
         IResourceBuilder<PostgresServerResource> postgres,
         string databaseName = "logto_db",
         int? port = null,
@@ -164,7 +165,8 @@ public static class LogtoBuilderExtensions
             .WithHttpEndpoint(
                 port: adminPort,
                 targetPort: LogtoResource.DefaultHttpAdminPort,
-                name: LogtoResource.AdminEndpointName);
+                name: LogtoResource.AdminEndpointName)
+            .WithEndpoint(LogtoResource.AdminEndpointName, endpoint => endpoint.ExcludeReferenceEndpoint = true);
     }
 
     /// <summary>
@@ -180,7 +182,9 @@ public static class LogtoBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(url);
 
-        return builder.WithEnvironment("ADMIN_ENDPOINT", url);
+        return builder
+            .WithEnvironment("ADMIN_ENDPOINT", url)
+            .WithUrlForEndpoint(LogtoResource.AdminEndpointName, annotation => annotation.Url = url);
     }
 
     /// <summary>
@@ -217,7 +221,8 @@ public static class LogtoBuilderExtensions
     /// <param name="builder">The resource builder for the Logto resource to configure.</param>
     /// <param name="sensitiveUsername">A value indicating whether usernames should be treated as case-sensitive.</param>
     /// <returns>The updated resource builder with the configured case-sensitivity setting.</returns>
-    [AspireExport]
+    [AspireExportIgnore(Reason = "CASE_SENSITIVE_USERNAME was removed in Logto 1.41 and is retained only for source compatibility.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
     [Obsolete("CASE_SENSITIVE_USERNAME is deprecated in Logto 1.41. Configure username case sensitivity per tenant in the Logto Console instead.")]
     public static IResourceBuilder<LogtoResource> WithSensitiveUsername(this IResourceBuilder<LogtoResource> builder, bool sensitiveUsername)
     {
@@ -315,14 +320,26 @@ public static class LogtoBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
+        if (builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            return builder;
+        }
+
         var databaseUrl = builder.Resource.DatabaseUrl
             ?? throw new InvalidOperationException("Configure the Logto database before enabling database seeding.");
         var postgres = builder.Resource.PostgresResource
             ?? throw new InvalidOperationException("Configure the Logto PostgreSQL resource before enabling database seeding.");
+        var setupName = $"{builder.Resource.Name}-database-setup";
+        if (builder.ApplicationBuilder.TryCreateResourceBuilder<LogtoDatabaseSetupResource>(setupName, out _))
+        {
+            return builder;
+        }
+
         var seedArguments = disableAdminPwnedPasswordCheck ? "--swe --dapc" : "--swe";
 
         var setup = builder.ApplicationBuilder
-            .AddContainer($"{builder.Resource.Name}-database-setup", LogtoContainerImageTags.Image, LogtoContainerImageTags.Tag)
+            .AddResource(new LogtoDatabaseSetupResource(setupName))
+            .WithImage(LogtoContainerImageTags.Image, LogtoContainerImageTags.Tag)
             .WithImageRegistry(LogtoContainerImageTags.Registry)
             .WithEntrypoint("sh")
             .WithArgs("-c", $"npm run cli db seed -- {seedArguments} && npm run alteration deploy latest")

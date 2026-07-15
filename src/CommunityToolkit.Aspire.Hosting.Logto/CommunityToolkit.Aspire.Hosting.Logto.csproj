@@ -4,6 +4,7 @@
   <PropertyGroup>
     <Description>.NET Aspire hosting extensions for Logto (includes PostgreSQL and Redis integration).</Description>
     <AdditionalPackageTags>logto redis postgres hosting extensions</AdditionalPackageTags>
+    <EnableAspireIntegrationAnalyzers>true</EnableAspireIntegrationAnalyzers>
   </PropertyGroup>
   
     <ItemGroup>
