@@ -3,6 +3,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Aspire.Components.Common.TestUtilities;
+using Microsoft.Extensions.Logging;
 
 namespace Aspire.Hosting.Utils;
 
@@ -52,6 +53,19 @@ public static class TestDistributedApplicationBuilder
         // E.g., once https://github.com/dotnet/extensions/pull/5801 is released.
         // Discussion: https://github.com/dotnet/aspire/pull/7335/files#r1936799460
         builder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler());
+
+        builder.Services.AddLogging(builder =>
+            {
+                if (testOutputHelper is not null)
+                    builder.AddXUnit(testOutputHelper);
+                else
+                    builder.AddXUnit();
+
+                if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null && Environment.GetEnvironmentVariable("RUNNER_DEBUG") == "1")
+                    builder.SetMinimumLevel(LogLevel.Trace);
+                else
+                    builder.SetMinimumLevel(LogLevel.Information);
+            });
 
         builder.WithTempAspireStore();
 

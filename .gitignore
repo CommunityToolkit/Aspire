@@ -23,6 +23,8 @@ examples/perl/**/local/*
 **cpanfile.snapshot
 **/.aspire/modules/
 **/*.AppHost.TypeScript/nuget.config
+
+**/.k3s/
 tsconfig.apphost.json
 .ngrok
 bun.lock
@@ -35,3 +37,6 @@ affected-tests
 examples/**/.modules/*
 examples/**/.aspire/modules/*
 examples/**/.aspire/integrations/*
+playground/**/.modules/*
+playground/**/.aspire/modules/*
+playground/**/.aspire/integrations/*

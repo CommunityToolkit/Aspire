@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <!-- Squad.Agents.AI 0.2.0-preview.4 (or later) — bumped from preview.3 to pick up
+         the MAF 1.10.0-rc1 / GitHub.Copilot.SDK 1.0.0 GA transitive upgrade, which
+         is what makes the agent's runtime file-IO actually work (the older preview
+         was wedged on SDK 1.0.0-beta.2 + an incompatible CLI protocol). The
+         GitHub.Copilot.SDK direct ref is a temporary workaround — see the comment
+         in Directory.Packages.props. -->
+    <PackageReference Include="Squad.Agents.AI" />
+    <PackageReference Include="GitHub.Copilot.SDK" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

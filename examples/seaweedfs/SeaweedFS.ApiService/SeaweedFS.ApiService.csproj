@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SeaweedFS.ServiceDefaults\SeaweedFS.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.SeaweedFS.Client\CommunityToolkit.Aspire.SeaweedFS.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+</Project>

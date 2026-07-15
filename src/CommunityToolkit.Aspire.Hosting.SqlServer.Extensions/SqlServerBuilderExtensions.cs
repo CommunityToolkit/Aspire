@@ -135,6 +135,67 @@ public static class SqlServerBuilderExtensions
         return WithAdminer(builder, configureContainer, containerName);
     }
 
+    /// <summary>
+    /// Adds an administration and development platform for SqlServer to the application model using dbx.
+    /// </summary>
+    /// <remarks>
+    /// This version of the package defaults to the <inheritdoc cref="DbxContainerImageTags.Tag"/> tag of the <inheritdoc cref="DbxContainerImageTags.Image"/> container image.
+    /// This overload is not available in polyglot app hosts. Use <see cref="WithDbx(IResourceBuilder{SqlServerServerResource}, string, string)"/> instead.
+    /// </remarks>
+    /// <param name="builder">The SqlServer server resource builder.</param>
+    /// <param name="configureContainer">Configuration callback for dbx container resource.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <example>
+    /// Use in application host with a SqlServer resource
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var sqlserver = builder.AddSqlServer("sqlserver")
+    ///    .WithDbx();
+    /// var db = sqlserver.AddDatabase("db");
+    ///
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
+    ///   .WithReference(db);
+    ///
+    /// builder.Build().Run();
+    /// </code>
+    /// </example>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbxContainerResource>> is not supported reliably in polyglot app hosts. Use the container options overload instead.")]
+    public static IResourceBuilder<SqlServerServerResource> WithDbx(this IResourceBuilder<SqlServerServerResource> builder, Action<IResourceBuilder<DbxContainerResource>>? configureContainer = null, string? containerName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        containerName ??= "dbx";
+        var dbxBuilder = DbxBuilderExtensions.AddDbx(builder.ApplicationBuilder, containerName);
+
+        dbxBuilder
+            .WithEnvironment(context => ConfigureDbxContainer(context, dbxBuilder, builder));
+
+        configureContainer?.Invoke(dbxBuilder);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds an administration and development platform for SqlServer to the application model using dbx.
+    /// </summary>
+    /// <param name="builder">The SqlServer server resource builder.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <param name="imageTag">Optional image tag override for the dbx container.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    internal static IResourceBuilder<SqlServerServerResource> WithDbx(this IResourceBuilder<SqlServerServerResource> builder, string? containerName = null, string? imageTag = null)
+    {
+        Action<IResourceBuilder<DbxContainerResource>>? configureContainer = null;
+        if (!string.IsNullOrWhiteSpace(imageTag))
+        {
+            configureContainer = dbxBuilder => dbxBuilder.WithImageTag(imageTag);
+        }
+
+        return WithDbx(builder, configureContainer, containerName);
+    }
+
     private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<SqlServerServerResource> builder)
     {
         var sqlServerResource = builder.Resource;
@@ -202,6 +263,28 @@ public static class SqlServerBuilderExtensions
         }
         string servers_json = JsonSerializer.Serialize(servers);
         context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+    }
+
+    private static async Task ConfigureDbxContainer(
+        EnvironmentCallbackContext context,
+        IResourceBuilder<DbxContainerResource> dbxBuilder, 
+        IResourceBuilder<SqlServerServerResource> builder
+    )
+    {
+        var sqlServerServerResource = builder.Resource;
+        
+        dbxBuilder.Resource.AddConnection(
+            new DbxConnectionConfig
+            {
+                Id = sqlServerServerResource.Name,
+                Name = sqlServerServerResource.Name,
+                DbType = DbxDatabaseType.SqlServer,
+                Host = sqlServerServerResource.Name,
+                Port = ushort.Parse(sqlServerServerResource.PrimaryEndpoint.TargetPort!.Value.ToString()),
+                Username = await sqlServerServerResource.UserNameReference.GetValueAsync(context.CancellationToken) ?? string.Empty,
+                Password = await sqlServerServerResource.PasswordParameter.GetValueAsync(context.CancellationToken) ?? string.Empty,
+            }    
+        );
     }
 }
 

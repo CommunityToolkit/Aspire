@@ -93,6 +93,67 @@ public static class MySqlBuilderExtensions
 
         return builder;
     }
+    
+    /// <summary>
+    /// Adds an administration and development platform for MySql to the application model using dbx.
+    /// </summary>
+    /// <remarks>
+    /// This version of the package defaults to the <inheritdoc cref="DbxContainerImageTags.Tag"/> tag of the <inheritdoc cref="DbxContainerImageTags.Image"/> container image.
+    /// This overload is not available in polyglot app hosts. Use <see cref="WithDbx(IResourceBuilder{MySqlServerResource}, string, string)"/> instead.
+    /// </remarks>
+    /// <param name="builder">The MySql server resource builder.</param>
+    /// <param name="configureContainer">Configuration callback for dbx container resource.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <example>
+    /// Use in application host with a MySql resource
+    /// <code lang="csharp">
+    /// var builder = DistributedApplication.CreateBuilder(args);
+    ///
+    /// var mysql = builder.AddMySql("mysql")
+    ///    .WithDbx();
+    /// var db = mysql.AddDatabase("db");
+    ///
+    /// var api = builder.AddProject&lt;Projects.Api&gt;("api")
+    ///   .WithReference(db);
+    ///
+    /// builder.Build().Run();
+    /// </code>
+    /// </example>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbxContainerResource>> is not supported reliably in polyglot app hosts. Use the container options overload instead.")]
+    public static IResourceBuilder<MySqlServerResource> WithDbx(this IResourceBuilder<MySqlServerResource> builder, Action<IResourceBuilder<DbxContainerResource>>? configureContainer = null, string? containerName = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        containerName ??= "dbx";
+        var dbxBuilder = DbxBuilderExtensions.AddDbx(builder.ApplicationBuilder, containerName);
+
+        dbxBuilder
+            .WithEnvironment(context => ConfigureDbxContainer(context, dbxBuilder, builder));
+
+        configureContainer?.Invoke(dbxBuilder);
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds an administration and development platform for MySql to the application model using dbx.
+    /// </summary>
+    /// <param name="builder">The MySql server resource builder.</param>
+    /// <param name="containerName">The name of the container (Optional).</param>
+    /// <param name="imageTag">Optional image tag override for the dbx container.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    internal static IResourceBuilder<MySqlServerResource> WithDbx(this IResourceBuilder<MySqlServerResource> builder, string? containerName = null, string? imageTag = null)
+    {
+        Action<IResourceBuilder<DbxContainerResource>>? configureContainer = null;
+        if (!string.IsNullOrWhiteSpace(imageTag))
+        {
+            configureContainer = dbxBuilder => dbxBuilder.WithImageTag(imageTag);
+        }
+
+        return WithDbx(builder, configureContainer, containerName);
+    }
 
     private static void ConfigureDbGateContainer(EnvironmentCallbackContext context, IResourceBuilder<MySqlServerResource> builder)
     {
@@ -160,5 +221,27 @@ public static class MySqlBuilderExtensions
         }
         string servers_json = JsonSerializer.Serialize(servers);
         context.EnvironmentVariables["ADMINER_SERVERS"] = servers_json;
+    }
+
+    private static async Task ConfigureDbxContainer(
+        EnvironmentCallbackContext context,
+        IResourceBuilder<DbxContainerResource> dbxBuilder, 
+        IResourceBuilder<MySqlServerResource> builder
+    )
+    {
+        var mySqlServerResource = builder.Resource;
+        
+        dbxBuilder.Resource.AddConnection(
+            new DbxConnectionConfig
+            {
+                Id = mySqlServerResource.Name,
+                Name = mySqlServerResource.Name,
+                DbType = DbxDatabaseType.Mysql,
+                Host = mySqlServerResource.Name,
+                Port = ushort.Parse(mySqlServerResource.PrimaryEndpoint.TargetPort!.Value.ToString()),
+                Username = "root",
+                Password = await mySqlServerResource.PasswordParameter.GetValueAsync(context.CancellationToken) ?? string.Empty,
+            }    
+        );
     }
 }

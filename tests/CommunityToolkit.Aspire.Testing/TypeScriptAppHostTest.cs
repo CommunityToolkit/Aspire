@@ -24,6 +24,7 @@ public static class TypeScriptAppHostTest
         string waitStatus = "healthy",
         IEnumerable<string>? requiredCommands = null,
         Dictionary<string, string>? secrets = null,
+        int waitTimeoutSeconds = 180,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appHostProject);
@@ -73,6 +74,12 @@ public static class TypeScriptAppHostTest
         {
             arguments.Add("-RequiredCommands");
             arguments.Add(string.Join(',', commands));
+        }
+
+        if (waitTimeoutSeconds != 180)
+        {
+            arguments.Add("-WaitTimeoutSeconds");
+            arguments.Add(waitTimeoutSeconds.ToString());
         }
 
         if (secrets is { Count: > 0 })

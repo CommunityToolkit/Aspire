@@ -1,0 +1,12 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>d1a3e2c4-5b6f-7890-abcd-ef1234567890</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.RustFs\CommunityToolkit.Aspire.Hosting.RustFs.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

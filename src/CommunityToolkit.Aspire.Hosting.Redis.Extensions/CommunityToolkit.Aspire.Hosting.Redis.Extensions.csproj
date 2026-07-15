@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dbx\CommunityToolkit.Aspire.Hosting.Dbx.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,38 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>5a9c3d6b-1f1e-4f9e-a3ba-7d9e1f3a2b1a</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Squad\CommunityToolkit.Aspire.Hosting.Squad.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Squad.ApiApp\CommunityToolkit.Aspire.Hosting.Squad.ApiApp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Hard-reference MessagePack to pull the patched 2.5.301 (pinned in Directory.Packages.props)
+         instead of the vulnerable transitive version flowing through Aspire.Hosting. -->
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <!--
+    The research-squad/ and dev-squad/ folders are Squad team scaffolding (.squad/,
+    .github/, .copilot/, .mcp.json), not C# source. The Aspire AppHost SDK's
+    default <Compile>, <Content>, <None>, and <EmbeddedResource> globs would
+    otherwise pull in any .cs / .csproj / .resx files the team creates inside
+    those folders during a session — which produces CS8802 ("Only one
+    compilation unit can have top-level statements") and CS0579
+    ("Duplicate AssemblyInfo") errors on the next build. Exclude them so the
+    squads stay strictly scaffolding and never accidentally pollute the AppHost
+    project's compile graph.
+  -->
+  <ItemGroup>
+    <Compile Remove="research-squad\**;dev-squad\**" />
+    <Content Remove="research-squad\**;dev-squad\**" />
+    <None Remove="research-squad\**;dev-squad\**" />
+    <EmbeddedResource Remove="research-squad\**;dev-squad\**" />
+  </ItemGroup>
+
+</Project>

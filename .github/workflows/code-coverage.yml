@@ -2,6 +2,12 @@ name: Code Coverage
 
 on:
   workflow_call:
+    inputs:
+      fail_on_low_coverage:
+        description: Whether to fail the workflow if coverage is below threshold (true for main, false for PRs)
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   publish-coverage:
@@ -39,7 +45,7 @@ jobs:
         with:
           filename: "report/Cobertura.xml"
           badge: true
-          fail_below_min: true
+          fail_below_min: ${{ inputs.fail_on_low_coverage }}
           format: markdown
           hide_branch_rate: false
           hide_complexity: false

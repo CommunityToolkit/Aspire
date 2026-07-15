@@ -42,11 +42,11 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         await fixture.ResourceNotificationService.WaitForResourceHealthyAsync(resourceName).WaitAsync(TimeSpan.FromMinutes(1));
         var httpClient = fixture.CreateHttpClient(resourceName);
 
-        var todoResponse = await httpClient.GetAsync("/api/todo");
-        Assert.Equal(HttpStatusCode.OK, todoResponse.StatusCode);
-
         var initResponse = await httpClient.PostAsync("/init", null);
         Assert.Equal(HttpStatusCode.OK, initResponse.StatusCode);
+        
+        var todoResponse = await httpClient.GetAsync("/api/todo");
+        Assert.Equal(HttpStatusCode.OK, todoResponse.StatusCode);
 
         var weatherForecastResponse = await httpClient.GetAsync("/api/weatherForecast");
         Assert.Equal(HttpStatusCode.OK, weatherForecastResponse.StatusCode);
