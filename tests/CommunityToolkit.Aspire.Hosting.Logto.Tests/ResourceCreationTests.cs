@@ -1,5 +1,7 @@
 ﻿using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using CommunityToolkit.Aspire.Testing;
+
 namespace CommunityToolkit.Aspire.Hosting.Logto.Tests;
 
 public class ResourceCreationTests
