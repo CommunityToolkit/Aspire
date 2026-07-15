@@ -65,3 +65,6 @@ Logto will be configured with:
 * Call `.WithDatabaseSeeding()` to run the database seeding command
   `npm run cli db seed -- --swe && npm start` on startup.
 * Container ports are **3001** (HTTP) and **3002** (Admin). Host ports are random by default unless explicitly configured.
+* In an air-gapped environment, use `.WithDatabaseSeeding(disableAdminPwnedPasswordCheck: true)` to pass Logto's `--dapc` option during initial admin creation.
+* `WithSensitiveUsername(...)` is deprecated in Logto 1.41. Configure username case sensitivity in the tenant settings in Logto Console.
+* Container ports are **3001** (HTTP) and **3002** (Admin). Host ports are random by default unless explicitly configured; Logto receives the allocated public URLs automatically so browser redirects continue to work.

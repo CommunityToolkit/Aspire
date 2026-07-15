@@ -185,6 +185,7 @@ public static class LogtoBuilderExtensions
     /// <param name="sensitiveUsername">A value indicating whether usernames should be treated as case-sensitive.</param>
     /// <returns>The updated resource builder with the configured case-sensitivity setting.</returns>
     [AspireExport]
+    [Obsolete("CASE_SENSITIVE_USERNAME is deprecated in Logto 1.41. Configure username case sensitivity per tenant in the Logto Console instead.")]
     public static IResourceBuilder<LogtoResource> WithSensitiveUsername(this IResourceBuilder<LogtoResource> builder, bool sensitiveUsername)
     {
         ArgumentNullException.ThrowIfNull(builder);
