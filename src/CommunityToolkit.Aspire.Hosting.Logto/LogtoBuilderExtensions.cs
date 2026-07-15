@@ -44,10 +44,43 @@ public static class LogtoBuilderExtensions
             .WithImageRegistry(LogtoContainerImageTags.Registry);
 
         builderWithResource.WithResourcePort(port, adminPort);
+        builderWithResource.WithEnvironment(context =>
+        {
+            // Logto uses these public URLs for browser redirects and Admin Console API calls.
+            // They are only concrete after Aspire allocates the run-mode host ports.
+            if (resource.PrimaryEndpoint.IsAllocated)
+            {
+                context.EnvironmentVariables.TryAdd("ENDPOINT", resource.PrimaryEndpoint.Url);
+            }
+
+            var adminEndpoint = resource.GetEndpoint(LogtoResource.AdminEndpointName);
+            if (adminEndpoint.IsAllocated)
+            {
+                context.EnvironmentVariables.TryAdd("ADMIN_ENDPOINT", GetCorsSafeLocalAdminUrl(adminEndpoint.Url));
+            }
+        });
+        if (builder.ExecutionContext.IsRunMode)
+        {
+            builderWithResource.WithUrlForEndpoint(LogtoResource.AdminEndpointName, url =>
+                url.Url = GetCorsSafeLocalAdminUrl(url.Url));
+        }
         builderWithResource.WithDatabase(postgres, databaseName);
         SetHealthCheck(builder, builderWithResource, name);
 
         return builderWithResource;
+    }
+
+    private static string GetCorsSafeLocalAdminUrl(string url)
+    {
+        var uri = new Uri(url);
+
+        if (!uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        var builder = new UriBuilder(uri) { Host = "127.0.0.1" };
+        return builder.Uri.GetLeftPart(UriPartial.Authority);
     }
 
     /// <summary>
