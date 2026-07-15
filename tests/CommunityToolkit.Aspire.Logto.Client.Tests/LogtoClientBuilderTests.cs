@@ -107,4 +107,21 @@ public class LogtoClientBuilderTests
 
         Assert.Equal("Logto AppId must be configured.", ex.Message);
     }
+
+    [Theory]
+    [InlineData("relative/path")]
+    [InlineData("ftp://logto.example.com")]
+    public void AddLogtoOIDC_ThrowsInvalidOperation_WhenEndpointIsNotHttp(string endpoint)
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Aspire:Logto:Client:Endpoint"] = endpoint,
+            ["Aspire:Logto:Client:AppId"] = "test-app-id"
+        });
+
+        var ex = Assert.Throws<InvalidOperationException>(() => builder.AddLogtoOIDC());
+
+        Assert.Equal("Logto Endpoint must be an absolute HTTP or HTTPS URI.", ex.Message);
+    }
 }

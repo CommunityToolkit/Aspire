@@ -76,6 +76,8 @@ The Aspire Logto Client integration supports [Microsoft.Extensions.Configuration
 }
 ```
 
+All properties exposed by `LogtoOptions`, including scopes, resource, prompt, callback paths, user-info claims, and cookie domain, can be configured in this section or through the inline delegate. The endpoint must be an absolute HTTP or HTTPS URI.
+
 ### Use inline delegates
 
 You can also pass the `Action<LogtoOptions>` delegate to set up some or all the options inline, for example to set the AppId from code:
