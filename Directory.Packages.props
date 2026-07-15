@@ -74,7 +74,7 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.23.3" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.2" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
     <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
@@ -92,7 +92,7 @@
     <PackageVersion Include="MassTransit" Version="8.5.5" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.5" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
-    <PackageVersion Include="MeiliSearch" Version="0.18.0" />
+    <PackageVersion Include="MeiliSearch" Version="0.20.0" />
     <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.3" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />

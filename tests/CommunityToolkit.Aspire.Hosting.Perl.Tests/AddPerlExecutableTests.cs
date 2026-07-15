@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Perl.Annotations;
 
 namespace CommunityToolkit.Aspire.Hosting.Perl.Tests;

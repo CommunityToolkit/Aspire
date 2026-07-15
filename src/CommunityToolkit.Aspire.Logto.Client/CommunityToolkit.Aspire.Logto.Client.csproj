@@ -1,4 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+      <Description>An Aspire client integration for Logto that registers OpenID Connect (OIDC) or JWT authentication services in the dependency injection container.</Description>
+      <AdditionalPackageTags>client logto authentication oidc jwt</AdditionalPackageTags>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="Logto.AspNetCore.Authentication" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />

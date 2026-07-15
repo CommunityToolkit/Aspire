@@ -11,4 +11,8 @@
     <PackageReference Include="MessagePack" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.RavenDB.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting dbx</AdditionalPackageTags>
-    <Description>An Aspire integration for dbx hosting.</Description>
+    <Description>An Aspire hosting integration for the Dbx database management container.</Description>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire component to add an OpenTelemetry Collector into the OTLP pipeline</Description>
-    <AdditionalPackageTags>opentelemetry observability</AdditionalPackageTags>
+    <Description>An Aspire hosting integration to add an OpenTelemetry Collector into the OTLP pipeline.</Description>
+    <AdditionalPackageTags>hosting opentelemetry observability</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>

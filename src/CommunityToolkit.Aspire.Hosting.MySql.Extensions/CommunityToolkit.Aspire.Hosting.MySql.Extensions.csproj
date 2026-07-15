@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting mysql dbgate</AdditionalPackageTags>
-    <Description>An Aspire integration for extending mysql hosting.</Description>
+    <Description>An Aspire hosting integration for extending MySQL resources with additional management tooling.</Description>
     <NoWarn>$(NoWarn);ASPIREATS001</NoWarn>
   </PropertyGroup>
 
