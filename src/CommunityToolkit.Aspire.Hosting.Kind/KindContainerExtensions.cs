@@ -115,22 +115,27 @@ public static class KindContainerExtensions
                     return;
                 }
 
-                var commandService = e.Services.GetRequiredService<ResourceCommandService>();
-                var startResult = await commandService.ExecuteCommandAsync(
-                    e.Resource.Name, KnownResourceCommands.StartCommand, ct).ConfigureAwait(false);
+                var containerName = e.Resource.Annotations
+                    .OfType<ContainerNameAnnotation>()
+                    .Single()
+                    .Name;
 
-                if (!startResult.Success)
+                var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
+                var logger = loggerService.GetLogger(containerName);
+                var processRunner = e.Services.GetRequiredService<IProcessRunner>();
+                var containerRuntimeResolver = e.Services.GetRequiredService<IKindContainerRuntimeResolver>();
+                var containerRuntime = await containerRuntimeResolver.ResolveAsync(ct).ConfigureAwait(false);
+                var startResult = await processRunner.RunAsync(
+                    logger,
+                    containerRuntime.Executable,
+                    ["start", containerName],
+                    cancellationToken: ct).ConfigureAwait(false);
+
+                if (startResult.ExitCode != 0)
                 {
-                    var containerName = e.Resource.Annotations
-                        .OfType<ContainerNameAnnotation>()
-                        .Single()
-                        .Name;
-
-                    var loggerService = e.Services.GetRequiredService<ResourceLoggerService>();
-                    var logger = loggerService.GetLogger(containerName);
                     logger.LogError(
                         "Failed to restart container '{ContainerName}' after connecting to 'kind' network: {Error}",
-                        containerName, startResult.Message);
+                        containerName, startResult.Error);
                 }
             });
 
@@ -138,17 +143,12 @@ public static class KindContainerExtensions
     }
 
     /// <summary>
-    /// Connects the container to the "kind" container network if not already connected.
+    /// Connects the container to the "kind" container network.
     /// </summary>
-    /// <returns><see langword="true"/> if the connection was made (or was already present); <see langword="false"/> on failure.</returns>
+    /// <returns><see langword="true"/> if a new connection was made; otherwise, <see langword="false"/>.</returns>
     private static async Task<bool> EnsureConnectedToKindNetworkAsync(
         IResource resource, IServiceProvider services, CancellationToken ct)
     {
-        if (resource.TryGetLastAnnotation<KindNetworkConnectedAnnotation>(out _))
-        {
-            return true;
-        }
-
         var containerName = resource.Annotations
             .OfType<ContainerNameAnnotation>()
             .Single()
@@ -174,11 +174,10 @@ public static class KindContainerExtensions
         if (connectResult.ExitCode != 0)
         {
             // Docker and Podman each report a distinct error when the container is already
-            // connected to the network. Treat either as success to handle concurrent event handlers.
+            // connected to the network. No new connection means a stopped container should stay stopped.
             if (IsAlreadyConnectedError(connectResult))
             {
-                resource.Annotations.Add(new KindNetworkConnectedAnnotation());
-                return true;
+                return false;
             }
 
             logger.LogError(
@@ -187,7 +186,6 @@ public static class KindContainerExtensions
             return false;
         }
 
-        resource.Annotations.Add(new KindNetworkConnectedAnnotation());
         return true;
     }
 

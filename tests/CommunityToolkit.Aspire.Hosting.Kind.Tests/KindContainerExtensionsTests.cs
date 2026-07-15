@@ -9,6 +9,65 @@ namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 public class KindContainerExtensionsTests
 {
     [Fact]
+    public async Task WithKindNetwork_UsesRuntimeConnectionStateForRestart()
+    {
+        var processRunner = new FakeProcessRunner();
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(1, "", "endpoint already exists in network kind"));
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(0, "", ""));
+
+        var builder = DistributedApplication.CreateBuilder();
+        builder.Services.AddSingleton<IProcessRunner>(processRunner);
+        builder.Services.AddSingleton<IKindContainerRuntimeResolver>(
+            new KindContainerRuntimeResolver(new FakeContainerRuntimeResolver("Docker")));
+
+        var kind = builder.AddKindCluster("test-cluster");
+        var container = builder.AddContainer("test-container", "test-image")
+            .WithContainerName("test-container")
+            .WithReference(kind);
+
+        using var app = builder.Build();
+        var snapshot = new CustomResourceSnapshot
+        {
+            ResourceType = "Container",
+            CreationTimeStamp = DateTime.UtcNow,
+            Properties = [],
+        };
+
+        await builder.Eventing.PublishAsync(
+            new ResourceStoppedEvent(
+                container.Resource,
+                app.Services,
+                new ResourceEvent(container.Resource, "test-container", snapshot)),
+            CancellationToken.None);
+        await builder.Eventing.PublishAsync(
+            new ResourceStoppedEvent(
+                container.Resource,
+                app.Services,
+                new ResourceEvent(container.Resource, "test-container", snapshot)),
+            CancellationToken.None);
+        await builder.Eventing.PublishAsync(
+            new ResourceStoppedEvent(
+                container.Resource,
+                app.Services,
+                new ResourceEvent(container.Resource, "test-container", snapshot)),
+            CancellationToken.None);
+
+        Assert.All(processRunner.Commands, command => Assert.Equal("docker", command.FileName));
+        Assert.Equal(
+            [
+                "network connect kind test-container",
+                "start test-container",
+                "network connect kind test-container",
+                "network connect kind test-container",
+                "start test-container",
+            ],
+            processRunner.Commands.Select(command => command.Arguments));
+    }
+
+    [Fact]
     public void WithReference_Container_InjectsBindMountAnnotation()
     {
         var builder = DistributedApplication.CreateBuilder();
