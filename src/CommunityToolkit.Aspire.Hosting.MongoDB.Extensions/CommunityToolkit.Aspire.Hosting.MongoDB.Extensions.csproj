@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting mongodb dbgate</AdditionalPackageTags>
-    <Description>An Aspire integration for extending mongodb hosting.</Description>
+    <Description>An Aspire hosting integration for extending MongoDB resources with additional management tooling.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dbx\CommunityToolkit.Aspire.Hosting.Dbx.csproj" />
   </ItemGroup>
 
 </Project>

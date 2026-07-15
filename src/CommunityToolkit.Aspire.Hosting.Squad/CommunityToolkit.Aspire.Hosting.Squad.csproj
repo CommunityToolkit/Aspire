@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting squad ai agents copilot</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for Squad AI-agent teams. Models a `.squad/` workspace as a first-class Aspire resource that auto-discovers the team roster and exposes it via WithReference for downstream services.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <!-- Hard-reference MessagePack to pull the patched 2.5.301 (pinned in Directory.Packages.props)
+         instead of the vulnerable transitive version flowing through Aspire.Hosting. -->
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.Squad.Tests" />
+  </ItemGroup>
+
+</Project>

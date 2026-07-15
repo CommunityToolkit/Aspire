@@ -1,0 +1,32 @@
+{
+  "agents": {
+    "lead": {
+      "persistent_name": "Morpheus",
+      "universe": "The Matrix",
+      "created_at": "2026-06-11T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "ml-data-researcher": {
+      "persistent_name": "Trinity",
+      "universe": "The Matrix",
+      "created_at": "2026-06-11T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "model-evaluator": {
+      "persistent_name": "Oracle",
+      "universe": "The Matrix",
+      "created_at": "2026-06-11T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "tester": {
+      "persistent_name": "Tank",
+      "universe": "The Matrix",
+      "created_at": "2026-06-11T00:00:00Z",
+      "legacy_named": false,
+      "status": "active"
+    }
+  }
+}

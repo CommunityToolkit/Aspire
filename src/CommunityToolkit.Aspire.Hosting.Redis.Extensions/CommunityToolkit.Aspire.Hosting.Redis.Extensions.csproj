@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting redis dbgate</AdditionalPackageTags>
-    <Description>An Aspire integration for extending redis hosting.</Description>
+    <Description>An Aspire hosting integration for extending Redis resources with additional management tooling.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dbx\CommunityToolkit.Aspire.Hosting.Dbx.csproj" />
   </ItemGroup>
 
 </Project>

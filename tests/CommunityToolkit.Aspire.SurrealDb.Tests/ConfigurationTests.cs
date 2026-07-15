@@ -14,6 +14,6 @@ public class ConfigurationTests
         Assert.Null(new SurrealDbClientSettings().Options);
 
     [Fact]
-    public void LifetimeIsSingletonByDefault() =>
-        Assert.Equal(ServiceLifetime.Singleton, new SurrealDbClientSettings().Lifetime);
+    public void LifetimeIsScopedByDefault() =>
+        Assert.Equal(ServiceLifetime.Scoped, new SurrealDbClientSettings().Lifetime);
 }

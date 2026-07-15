@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>kubernetes k3s hosting cluster</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for k3s. Provides AddK3sCluster, AddHelmRelease (via alpine/helm), AddK8sManifest with Kustomize support (via alpine/kubectl), and AddServiceEndpoint for in-process WebSocket port-forwarding. No host-side kubectl or helm required.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="KubernetesClient" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.K3s.Tests" />
+  </ItemGroup>
+
+</Project>

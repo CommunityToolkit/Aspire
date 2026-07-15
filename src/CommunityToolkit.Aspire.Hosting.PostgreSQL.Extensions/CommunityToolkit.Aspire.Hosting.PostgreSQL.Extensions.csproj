@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AdditionalPackageTags>hosting postgres dbgate</AdditionalPackageTags>
-    <Description>An Aspire integration for extending postgres hosting.</Description>
+    <Description>An Aspire hosting integration for extending PostgreSQL resources with additional management tooling.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Adminer\CommunityToolkit.Aspire.Hosting.Adminer.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.DbGate\CommunityToolkit.Aspire.Hosting.DbGate.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Dbx\CommunityToolkit.Aspire.Hosting.Dbx.csproj" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Flyway\CommunityToolkit.Aspire.Hosting.Flyway.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <ItemGroup>
+    <PackageReference Include="Testcontainers" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.SeaweedFS\CommunityToolkit.Aspire.Hosting.SeaweedFS.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.SeaweedFS.Client\CommunityToolkit.Aspire.SeaweedFS.Client.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\CommunityToolkit.Aspire.Hosting.SeaweedFS\SeaweedFSContainerImageTags.cs" />
+  </ItemGroup>
+  
+</Project>

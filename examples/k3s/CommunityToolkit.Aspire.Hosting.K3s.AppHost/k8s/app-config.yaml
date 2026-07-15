@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+data:
+  environment: development
+  log-level: info
+  # podinfo endpoint — matches the AddServiceEndpoint name in Program.cs
+  api-endpoint: http://podinfo:9898

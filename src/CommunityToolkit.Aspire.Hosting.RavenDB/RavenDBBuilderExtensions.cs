@@ -255,6 +255,65 @@ public static class RavenDBBuilderExtensions
 
         var dbBuilder = builder.ApplicationBuilder.AddResource(databaseResource);
 
+        // Wire an "RavenDB Studio" deep-link onto the database child resource.
+        // The database has no endpoints of its own, so its own URL pipeline never runs; build the link
+        // from the parent server's primary endpoint (or its public URL when secured), which is only
+        // known once the server's endpoints are allocated. The parent server is a container, so its
+        // ResourceEndpointsAllocatedEvent fires (the child's would not).
+        builder.ApplicationBuilder.Eventing.Subscribe<ResourceEndpointsAllocatedEvent>(
+            builder.Resource,
+            async (@event, ct) =>
+            {
+                var server = databaseResource.Parent;
+
+                string? baseUrl;
+                if (server.IsSecured && !string.IsNullOrEmpty(server.PublicServerUrl))
+                    baseUrl = server.PublicServerUrl;
+                else if (server.PrimaryEndpoint.IsAllocated)
+                    // The primary endpoint's scheme may be forced to "tcp" (see ForceTcpScheme), which is not a
+                    // browser-navigable link. Normalize it to http/https (based on IsSecured) while keeping the
+                    // allocated host and port, e.g. http://localhost:9534.
+                    baseUrl = NormalizeToHttpBaseUrl(server.PrimaryEndpoint.Url, server.IsSecured);
+                else
+                    return; // nothing to build a link from yet — no-op
+
+                var studioUrl = BuildStudioUrl(baseUrl, databaseResource.DatabaseName);
+
+                // Endpoints can be (re)allocated more than once (e.g. on a server restart, possibly with a
+                // different port), so this handler must be idempotent: drop any previous "RavenDB Studio"
+                // link before re-adding, in both the annotations and the snapshot, instead of accumulating
+                // duplicates and leaving stale URLs behind.
+
+                // (1) Annotation — discoverable via TryGetUrls and assertable in tests.
+                foreach (var stale in databaseResource.Annotations
+                             .OfType<ResourceUrlAnnotation>()
+                             .Where(u => u.DisplayText == StudioDisplayText)
+                             .ToArray())
+                {
+                    databaseResource.Annotations.Remove(stale);
+                }
+
+                databaseResource.Annotations.Add(new ResourceUrlAnnotation
+                {
+                    Url = studioUrl,
+                    DisplayText = StudioDisplayText
+                });
+
+                // (2) Snapshot update — the dashboard renders from the snapshot, and the child's initial
+                //     snapshot was published before the server endpoints were allocated.
+                var notifications = @event.Services.GetRequiredService<ResourceNotificationService>();
+                await notifications.PublishUpdateAsync(databaseResource, snapshot =>
+                {
+                    var urls = snapshot.Urls
+                        .RemoveAll(u => u.DisplayProperties.DisplayName == StudioDisplayText)
+                        .Add(new UrlSnapshot(Name: null, Url: studioUrl, IsInternal: false)
+                        {
+                            DisplayProperties = new UrlDisplayPropertiesSnapshot(StudioDisplayText, 0)
+                        });
+                    return snapshot with { Urls = urls };
+                }).ConfigureAwait(false);
+            });
+
         if (ensureCreated)
         {
             dbBuilder.OnResourceReady(async (resource, _, ct) =>
@@ -284,6 +343,26 @@ public static class RavenDBBuilderExtensions
         }
 
         return dbBuilder;
+    }
+
+    // Display text shared by the "RavenDB Studio" URL annotation and its snapshot entry; also used as the
+    // key to de-duplicate them when endpoints are re-allocated.
+    private const string StudioDisplayText = "RavenDB Studio";
+
+    internal static string BuildStudioUrl(string baseUrl, string databaseName)
+    {
+        var root = baseUrl.TrimEnd('/');
+        return $"{root}/studio/index.html#databases/documents?&database={Uri.EscapeDataString(databaseName)}";
+    }
+
+    // Rebuilds an allocated endpoint URL with an http/https scheme, preserving host and port. The primary
+    // endpoint may use a non-HTTP scheme (e.g. "tcp" when ForceTcpScheme is set), which is not a valid
+    // browser link for the Studio.
+    internal static string NormalizeToHttpBaseUrl(string endpointUrl, bool isSecured)
+    {
+        var uri = new Uri(endpointUrl);
+        var scheme = isSecured ? Uri.UriSchemeHttps : Uri.UriSchemeHttp;
+        return $"{scheme}://{uri.Authority}";
     }
 
     /// <summary>

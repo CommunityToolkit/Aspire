@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire host integration for Zitadel.</Description>
-    <AdditionalPackageTags>zitadel auth identity oauth2 authenticatioon openid-connect oidc</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for the ZITADEL identity and access management container.</Description>
+    <AdditionalPackageTags>zitadel auth identity oauth2 authentication openid-connect oidc</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>

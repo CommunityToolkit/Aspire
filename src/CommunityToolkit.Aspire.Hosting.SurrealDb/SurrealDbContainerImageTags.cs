@@ -9,13 +9,13 @@ internal sealed class SurrealDbContainerImageTags
     public const string Registry = "docker.io";
     /// <summary>surrealdb/surrealdb</summary>
     public const string Image = "surrealdb/surrealdb";
-    /// <summary>v2.4</summary>
-    public const string Tag = "v2.4";
+    /// <summary>v3.1</summary>
+    public const string Tag = "v3.1";
     
     /// <summary>docker.io</summary>
     public const string SurrealistRegistry = "docker.io";
     /// <summary>surrealdb/surrealist</summary>
     public const string SurrealistImage = "surrealdb/surrealist";
-    /// <summary>3.6.9</summary>
-    public const string SurrealistTag = "3.6.9";
+    /// <summary>3.8.3</summary>
+    public const string SurrealistTag = "3.8.3";
 }

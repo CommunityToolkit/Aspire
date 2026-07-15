@@ -33,7 +33,6 @@ public static class SurrealDbBuilderExtensions
     /// <param name="password">The parameter used to provide the administrator password for the SurrealDB resource. If <see langword="null"/> a random password will be generated.</param>
     /// <param name="port">The host port for the SurrealDB instance.</param>
     /// <param name="path">Sets the path for storing data. If no argument is given, the default of <c>memory</c> for non-persistent storage in memory is assumed.</param>
-    /// <param name="strictMode">Whether strict mode is enabled on the server.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     /// <remarks>
     /// <example>
@@ -58,8 +57,7 @@ public static class SurrealDbBuilderExtensions
         IResourceBuilder<ParameterResource>? userName = null,
         IResourceBuilder<ParameterResource>? password = null,
         int? port = null,
-        string path = "memory",
-        bool strictMode = false
+        string path = "memory"
     )
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -70,10 +68,6 @@ public static class SurrealDbBuilderExtensions
             "start",
             path
         };
-        if (strictMode)
-        {
-            args.Add("--strict");
-        }
 
         // The password must be at least 8 characters long and contain characters from three of the following four sets: Uppercase letters, Lowercase letters, Base 10 digits, and Symbols
         var passwordParameter = password?.Resource ?? ParameterResourceBuilderExtensions.CreateDefaultPasswordParameter(builder, $"{name}-password", minLower: 1, minUpper: 1, minNumeric: 1);
@@ -97,11 +91,6 @@ public static class SurrealDbBuilderExtensions
                       .WithArgs([.. args])
                       .OnResourceReady(async (_, @event, ct) =>
                       {
-                          if (!strictMode)
-                          {
-                              return;
-                          }
-
                           var connectionString = await surrealServer.GetConnectionStringAsync(ct).ConfigureAwait(false);
                           if (connectionString is null)
                           {

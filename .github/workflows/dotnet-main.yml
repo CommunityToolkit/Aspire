@@ -24,7 +24,7 @@ jobs:
       DAPR_VERSION: "1.15.0"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Runtimes, Caching, and Tools
         uses: ./.github/actions/setup-runtimes-caching
         with:
@@ -106,6 +106,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: nuget-beta
+    permissions:
+      id-token: write
+      contents: read
     # Only run publish when the merged PR does NOT contain the skip label.
     # The label name is configurable via the `SKIP_PUBLISH_LABEL` env in the detector job below.
     if: needs.detect-pr-label.outputs.skip_publish != 'true'
@@ -115,8 +118,14 @@ jobs:
         with:
           name: signed-nuget-packages
 
+      - name: NuGet login (OIDC)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Publish to NuGet
-        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
+        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --skip-duplicate
 
   publish-azure-artifacts:
     needs: [sign, detect-pr-label]
@@ -151,6 +160,8 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     needs: run-tests
     uses: ./.github/workflows/code-coverage.yml
+    with:
+      fail_on_low_coverage: true
     secrets: inherit
 
   detect-pr-label:

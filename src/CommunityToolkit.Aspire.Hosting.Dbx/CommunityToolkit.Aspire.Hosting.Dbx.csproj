@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AdditionalPackageTags>hosting dbx</AdditionalPackageTags>
+    <Description>An Aspire hosting integration for the Dbx database management container.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+</Project>

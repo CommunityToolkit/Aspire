@@ -5,6 +5,7 @@
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
@@ -24,7 +25,7 @@
     <PackageVersion Include="Aspire.Hosting.SqlServer" Version="$(AspireVersion)" />
     <PackageVersion Include="Logto.AspNetCore.Authentication" Version="0.2.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Network" Version="9.0.0" />
-
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="10.0.8" />
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
@@ -72,7 +73,16 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.2" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
+    <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
+    <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
+         Microsoft.Agents.AI.GitHub.Copilot preview ships with the buildTransitive
+         bridge from https://github.com/microsoft/agent-framework/pull/6457 (merged
+         2026-06-10). Without it, copilot.exe never lands in bin/.../runtimes/
+         {rid}/native/ and the SDK throws on first RunAsync. Drop this entry once
+         MAF cuts the next preview. -->
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.3" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
@@ -80,7 +90,7 @@
     <PackageVersion Include="MassTransit" Version="8.5.5" />
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.5" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
-    <PackageVersion Include="MeiliSearch" Version="0.18.0" />
+    <PackageVersion Include="MeiliSearch" Version="0.20.0" />
     <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.3" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
@@ -94,12 +104,14 @@
     <PackageVersion Include="RavenDB.Client" Version="6.2.1" />
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.9.0" />
-    <PackageVersion Include="SurrealDb.Net" Version="0.9.0" />
+    <PackageVersion Include="Squad.Agents.AI" Version="0.5.1-preview.16" />
+    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.10.2" />
+    <PackageVersion Include="SurrealDb.Net" Version="0.10.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
   </ItemGroup>
