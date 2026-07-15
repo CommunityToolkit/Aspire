@@ -24,7 +24,7 @@ public sealed class KindConfigModel
     /// <summary>
     /// Gets the list of nodes in the cluster.
     /// </summary>
-    public List<KindNodeModel> Nodes { get; } = [];
+    public IList<KindNodeModel> Nodes { get; } = [];
 
     /// <summary>
     /// Gets or sets cluster-wide network settings.
@@ -37,28 +37,28 @@ public sealed class KindConfigModel
     /// Keys are feature gate names; values indicate whether the gate is enabled.
     /// When <see langword="null"/>, no feature gates are configured.
     /// </summary>
-    public Dictionary<string, bool>? FeatureGates { get; set; }
+    public IDictionary<string, bool>? FeatureGates { get; set; }
 
     /// <summary>
     /// Gets or sets runtime config values passed to kube-apiserver as <c>--runtime-config</c>.
     /// Use this to enable alpha APIs.
     /// When <see langword="null"/>, no runtime config is set.
     /// </summary>
-    public Dictionary<string, string>? RuntimeConfig { get; set; }
+    public IDictionary<string, string>? RuntimeConfig { get; set; }
 
     /// <summary>
     /// Gets or sets kubeadm config patches applied as merge patches at the cluster level.
     /// Each entry is a YAML string. Cluster-level patches are applied before node-level patches.
     /// When <see langword="null"/>, no cluster-level kubeadm patches are applied.
     /// </summary>
-    public List<string>? KubeadmConfigPatches { get; set; }
+    public IList<string>? KubeadmConfigPatches { get; set; }
 
     /// <summary>
     /// Gets or sets containerd config patches applied to every node.
     /// Each entry is a TOML merge-patch string.
     /// When <see langword="null"/>, no containerd patches are applied.
     /// </summary>
-    public List<string>? ContainerdConfigPatches { get; set; }
+    public IList<string>? ContainerdConfigPatches { get; set; }
 }
 
 /// <summary>
@@ -81,26 +81,26 @@ public sealed class KindNodeModel
     /// Gets or sets labels to apply to the node.
     /// When <see langword="null"/>, no additional labels are applied.
     /// </summary>
-    public Dictionary<string, string>? Labels { get; set; }
+    public IDictionary<string, string>? Labels { get; set; }
 
     /// <summary>
     /// Gets or sets additional mount points for the node container.
     /// When <see langword="null"/>, no extra mounts are configured.
     /// </summary>
-    public List<KindMountModel>? ExtraMounts { get; set; }
+    public IList<KindMountModel>? ExtraMounts { get; set; }
 
     /// <summary>
     /// Gets or sets additional port mappings for the node container.
     /// When <see langword="null"/>, no extra port mappings are configured.
     /// </summary>
-    public List<KindPortMappingModel>? ExtraPortMappings { get; set; }
+    public IList<KindPortMappingModel>? ExtraPortMappings { get; set; }
 
     /// <summary>
     /// Gets or sets kubeadm config patches applied as merge patches at the node level.
     /// Each entry is a YAML string. Node-level patches are applied after cluster-level patches.
     /// When <see langword="null"/>, no node-level kubeadm patches are applied.
     /// </summary>
-    public List<string>? KubeadmConfigPatches { get; set; }
+    public IList<string>? KubeadmConfigPatches { get; set; }
 }
 
 /// <summary>

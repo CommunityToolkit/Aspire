@@ -55,6 +55,7 @@ internal sealed class KindClusterManager
         try
         {
             _logger.LogInformation("Creating Kind cluster '{ClusterName}'...", _resource.Name);
+            EnsureKubeconfigDirectoryExists();
             var result = await _processRunner.RunAsync(
                 _logger,
                 "kind",
@@ -164,6 +165,8 @@ internal sealed class KindClusterManager
     {
         var containerRuntime = await GetContainerRuntimeAsync(cancellationToken).ConfigureAwait(false);
 
+        EnsureKubeconfigDirectoryExists();
+
         var result = await _processRunner.RunAsync(
             _logger,
             "kind",
@@ -179,6 +182,18 @@ internal sealed class KindClusterManager
         if (result.ExitCode != 0)
         {
             throw new InvalidOperationException($"Failed to export kubeconfig for '{_resource.Name}': {result.Error}");
+        }
+    }
+
+    /// <summary>
+    /// Ensures the parent directory of the kubeconfig path exists before the Kind CLI writes to it.
+    /// </summary>
+    private void EnsureKubeconfigDirectoryExists()
+    {
+        var directory = Path.GetDirectoryName(_resource.KubeconfigPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
         }
     }
 
