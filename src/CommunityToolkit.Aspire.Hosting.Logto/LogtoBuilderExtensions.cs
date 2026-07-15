@@ -260,23 +260,46 @@ public static class LogtoBuilderExtensions
         dbUrlBuilder.Append($"{postgres.Resource.UriExpression}/{databaseName}");
         var dbUrl = dbUrlBuilder.Build();
 
+        builder.Resource.DatabaseUrl = dbUrl;
+        builder.Resource.PostgresResource = postgres.Resource;
+
         return builder.WithEnvironment("DB_URL", dbUrl)
             .WaitFor(postgres);
     }
 
     /// <summary>
-    /// Starts Logto by running the database seed command before the application process.
+    /// Seeds and upgrades the Logto database in a one-shot setup container before Logto starts.
     /// </summary>
     /// <param name="builder">The resource builder for the Logto resource to configure.</param>
+    /// <param name="disableAdminPwnedPasswordCheck">
+    /// Disables the Have I Been Pwned check for the initial admin password. Use this only in air-gapped environments.
+    /// </param>
     /// <returns>The resource builder for the configured Logto resource.</returns>
     [AspireExport]
-    public static IResourceBuilder<LogtoResource> WithDatabaseSeeding(this IResourceBuilder<LogtoResource> builder)
+    public static IResourceBuilder<LogtoResource> WithDatabaseSeeding(
+        this IResourceBuilder<LogtoResource> builder,
+        bool disableAdminPwnedPasswordCheck = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder
+        var databaseUrl = builder.Resource.DatabaseUrl
+            ?? throw new InvalidOperationException("Configure the Logto database before enabling database seeding.");
+        var postgres = builder.Resource.PostgresResource
+            ?? throw new InvalidOperationException("Configure the Logto PostgreSQL resource before enabling database seeding.");
+        var seedArguments = disableAdminPwnedPasswordCheck ? "--swe --dapc" : "--swe";
+
+        var setup = builder.ApplicationBuilder
+            .AddContainer($"{builder.Resource.Name}-database-setup", LogtoContainerImageTags.Image, LogtoContainerImageTags.Tag)
+            .WithImageRegistry(LogtoContainerImageTags.Registry)
             .WithEntrypoint("sh")
-            .WithArgs("-c", "npm run cli db seed -- --swe && npm start");
+            .WithArgs("-c", $"npm run cli db seed -- {seedArguments} && npm run alteration deploy latest")
+            .WithEnvironment("DB_URL", databaseUrl)
+            .WithEnvironment("CI", "true")
+            .WithParentRelationship(builder.Resource)
+            .ExcludeFromManifest()
+            .WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(postgres));
+
+        return builder.WaitForCompletion(setup);
     }
 }
 
