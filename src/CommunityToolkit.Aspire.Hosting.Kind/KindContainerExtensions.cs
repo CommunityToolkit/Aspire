@@ -17,7 +17,6 @@ namespace Aspire.Hosting;
 public static class KindContainerExtensions
 {
     private const int RandomSuffixLength = 8;
-
     /// <summary>
     /// Configures a container resource to reference the Kind cluster by bind-mounting the container-compatible
     /// kubeconfig, injecting environment variables, and connecting to the Kind container network.
@@ -105,13 +104,13 @@ public static class KindContainerExtensions
         // For containers that start successfully but need the Kind network
         builder.ApplicationBuilder.Eventing
             .Subscribe<ResourceReadyEvent>(builder.Resource, (e, ct) =>
-                ConnectToKindNetworkAsync(e.Resource, e.Services, ct));
+                EnsureConnectedToKindNetworkAsync(e.Resource, e.Services, ct));
 
         // For containers that crash on startup because they can't reach the Kind API.
         builder.ApplicationBuilder.Eventing
             .Subscribe<ResourceStoppedEvent>(builder.Resource, async (e, ct) =>
             {
-                if (!await ConnectToKindNetworkAsync(e.Resource, e.Services, ct).ConfigureAwait(false))
+                if (!await EnsureConnectedToKindNetworkAsync(e.Resource, e.Services, ct).ConfigureAwait(false))
                 {
                     return;
                 }
@@ -142,7 +141,7 @@ public static class KindContainerExtensions
     /// Connects the container to the "kind" container network if not already connected.
     /// </summary>
     /// <returns><see langword="true"/> if the connection was made (or was already present); <see langword="false"/> on failure.</returns>
-    private static async Task<bool> ConnectToKindNetworkAsync(
+    private static async Task<bool> EnsureConnectedToKindNetworkAsync(
         IResource resource, IServiceProvider services, CancellationToken ct)
     {
         if (resource.TryGetLastAnnotation<KindNetworkConnectedAnnotation>(out _))
@@ -174,9 +173,9 @@ public static class KindContainerExtensions
 
         if (connectResult.ExitCode != 0)
         {
-            // Docker reports this message when the container is already connected to the network.
-            // Treat Docker's already-connected error as success to handle concurrent event handlers.
-            if (IsDockerAlreadyConnectedError(containerRuntime, connectResult))
+            // Docker and Podman each report a distinct error when the container is already
+            // connected to the network. Treat either as success to handle concurrent event handlers.
+            if (IsAlreadyConnectedError(connectResult))
             {
                 resource.Annotations.Add(new KindNetworkConnectedAnnotation());
                 return true;
@@ -192,10 +191,13 @@ public static class KindContainerExtensions
         return true;
     }
 
-    private static bool IsDockerAlreadyConnectedError(KindContainerRuntime containerRuntime, ProcessResult connectResult)
+    private static bool IsAlreadyConnectedError(ProcessResult connectResult)
     {
-        return containerRuntime.Executable.Equals("docker", StringComparison.OrdinalIgnoreCase) &&
-            connectResult.Error.Contains("already exists in network", StringComparison.OrdinalIgnoreCase);
+        // Docker reports "endpoint ... already exists in network kind" and Podman reports
+        // "... is already connected to network kind" when the container is already attached.
+        // Either message means the container is already on the Kind network, which is success.
+        return connectResult.Error.Contains("already exists in network", StringComparison.OrdinalIgnoreCase) ||
+            connectResult.Error.Contains("already connected to network", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

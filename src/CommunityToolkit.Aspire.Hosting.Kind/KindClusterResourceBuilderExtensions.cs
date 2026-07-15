@@ -229,10 +229,10 @@ public static class KindClusterResourceBuilderExtensions
                     "Kind CLI not found. Install it from https://kind.sigs.k8s.io/docs/user/quick-start/#installation");
             }
         }
-        catch (Win32Exception)
+        catch (Win32Exception ex)
         {
             throw new InvalidOperationException(
-                "Kind CLI not found. Install it from https://kind.sigs.k8s.io/docs/user/quick-start/#installation");
+                "Kind CLI not found. Install it from https://kind.sigs.k8s.io/docs/user/quick-start/#installation", ex);
         }
     }
 

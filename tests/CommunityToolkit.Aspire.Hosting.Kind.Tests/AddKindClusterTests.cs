@@ -317,7 +317,6 @@ public class AddKindClusterTests
         }
     }
 
-    // ── DefaultProcessRunner tests ──────────────────────────────────────
     // ── WithKindConfig / KindConfigAnnotation tests ────────────────────
 
     [Fact]

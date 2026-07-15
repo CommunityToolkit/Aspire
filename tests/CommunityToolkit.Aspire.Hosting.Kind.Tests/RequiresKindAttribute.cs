@@ -48,7 +48,14 @@ public sealed class RequiresKindAttribute : Attribute, ITraitAttribute
                 return false;
             }
 
-            process.WaitForExit(TimeSpan.FromSeconds(5));
+            if (!process.WaitForExit(TimeSpan.FromSeconds(5)))
+            {
+                // The kind process did not exit within the timeout. Kill it so we don't
+                // leak a running process, and treat kind as unavailable.
+                process.Kill(entireProcessTree: true);
+                return false;
+            }
+
             return process.ExitCode == 0;
         }
         catch
