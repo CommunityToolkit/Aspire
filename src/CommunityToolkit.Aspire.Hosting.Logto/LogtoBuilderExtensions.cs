@@ -54,16 +54,23 @@ public static class LogtoBuilderExtensions
                 context.EnvironmentVariables.TryAdd("ENDPOINT", resource.PrimaryEndpoint.Url);
             }
 
-            var adminEndpoint = resource.GetEndpoint(LogtoResource.AdminEndpointName);
-            if (adminEndpoint.IsAllocated)
+            if (resource.AdminEndpointUrl is not null)
             {
-                context.EnvironmentVariables.TryAdd("ADMIN_ENDPOINT", GetCorsSafeLocalAdminUrl(adminEndpoint.Url));
+                context.EnvironmentVariables.TryAdd("ADMIN_ENDPOINT", resource.AdminEndpointUrl);
+            }
+            else
+            {
+                var adminEndpoint = resource.GetEndpoint(LogtoResource.AdminEndpointName);
+                if (adminEndpoint.IsAllocated)
+                {
+                    context.EnvironmentVariables.TryAdd("ADMIN_ENDPOINT", GetCorsSafeLocalAdminUrl(adminEndpoint.Url));
+                }
             }
         });
         if (builder.ExecutionContext.IsRunMode)
         {
             builderWithResource.WithUrlForEndpoint(LogtoResource.AdminEndpointName, url =>
-                url.Url = GetCorsSafeLocalAdminUrl(url.Url));
+                url.Url = resource.AdminEndpointUrl ?? GetCorsSafeLocalAdminUrl(url.Url));
         }
         builderWithResource.WithDatabase(postgres, databaseName);
         SetHealthCheck(builder, builderWithResource, name);
@@ -182,9 +189,9 @@ public static class LogtoBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(url);
 
-        return builder
-            .WithEnvironment("ADMIN_ENDPOINT", url)
-            .WithUrlForEndpoint(LogtoResource.AdminEndpointName, annotation => annotation.Url = url);
+        builder.Resource.AdminEndpointUrl = url;
+
+        return builder;
     }
 
     /// <summary>

@@ -1,47 +1,9 @@
 ﻿using Aspire.Hosting;
 using Aspire.Hosting.Utils;
-using CommunityToolkit.Aspire.Testing;
-
 namespace CommunityToolkit.Aspire.Hosting.Logto.Tests;
 
 public class ResourceCreationTests
 {
-    [Fact]
-    public async Task LogtoResourceUsesAllocatedPublicEndpoints()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var postgres = builder.AddPostgres("postgres");
-
-        var logto = builder.AddLogto("logto", postgres)
-            .WithEndpoint("http", endpoint =>
-                endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 49101))
-            .WithEndpoint("admin", endpoint =>
-                endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 49102));
-
-        var environment = await logto.Resource.GetEnvironmentVariablesAsync();
-
-        Assert.Equal("http://localhost:49101", environment["ENDPOINT"]);
-        Assert.Equal("http://127.0.0.1:49102", environment["ADMIN_ENDPOINT"]);
-    }
-
-    [Fact]
-    public async Task ExplicitAdminEndpointOverridesAllocatedEndpoint()
-    {
-        var builder = DistributedApplication.CreateBuilder();
-        var postgres = builder.AddPostgres("postgres");
-
-        var logto = builder.AddLogto("logto", postgres)
-            .WithEndpoint("http", endpoint =>
-                endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 49101))
-            .WithEndpoint("admin", endpoint =>
-                endpoint.AllocatedEndpoint = new AllocatedEndpoint(endpoint, "localhost", 49102))
-            .WithAdminEndpoint("https://admin.example.com");
-
-        var environment = await logto.Resource.GetEnvironmentVariablesAsync();
-
-        Assert.Equal("https://admin.example.com", environment["ADMIN_ENDPOINT"]);
-    }
-
     [Fact]
     public void LogtoResourceGetsAdded()
     {

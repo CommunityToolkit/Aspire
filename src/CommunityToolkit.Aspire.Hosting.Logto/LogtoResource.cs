@@ -25,6 +25,8 @@ public sealed class LogtoResource(string name)
 
     internal PostgresServerResource? PostgresResource { get; set; }
 
+    internal string? AdminEndpointUrl { get; set; }
+
     /// Gets the primary endpoint associated with the container resource.
     /// This property provides a reference to the primary HTTP endpoint for the resource,
     /// facilitating network communication and identifying the primary access point.
