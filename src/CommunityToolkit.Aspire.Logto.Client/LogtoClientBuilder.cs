@@ -1,8 +1,8 @@
-﻿using Logto.AspNetCore.Authentication;
+﻿using CommunityToolkit.Aspire.Logto.Client;
+using Logto.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using CommunityToolkit.Aspire.Logto.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -60,6 +60,13 @@ public static class LogtoClientBuilder
             opt.Endpoint = options.Endpoint;
             opt.AppId = options.AppId;
             opt.AppSecret = options.AppSecret;
+            opt.Scopes = options.Scopes;
+            opt.Resource = options.Resource;
+            opt.Prompt = options.Prompt;
+            opt.CallbackPath = options.CallbackPath;
+            opt.SignedOutCallbackPath = options.SignedOutCallbackPath;
+            opt.GetClaimsFromUserInfoEndpoint = options.GetClaimsFromUserInfoEndpoint;
+            opt.CookieDomain = options.CookieDomain;
         });
         builder.Services.Configure<OpenIdConnectOptions>(authenticationScheme, opt =>
         {
@@ -183,6 +190,8 @@ public static class LogtoClientBuilder
             throw new InvalidOperationException("Logto Endpoint must be configured.");
         }
 
+        ValidateEndpoint(options.Endpoint);
+
         if (string.IsNullOrWhiteSpace(options.AppId))
         {
             throw new InvalidOperationException("Logto AppId must be configured.");
@@ -225,6 +234,16 @@ public static class LogtoClientBuilder
                 $"Logto Endpoint must be configured in configuration section '{configurationSectionName ?? DefaultConfigSectionName}' or in connection string '{connectionName}'.");
         }
 
+        ValidateEndpoint(options.Endpoint);
+
         return options;
+    }
+
+    private static void ValidateEndpoint(string endpoint)
+    {
+        if (!LogtoConnectionStringHelper.TryCreateHttpUri(endpoint, out _))
+        {
+            throw new InvalidOperationException("Logto Endpoint must be an absolute HTTP or HTTPS URI.");
+        }
     }
 }

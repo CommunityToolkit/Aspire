@@ -1,5 +1,6 @@
 ﻿using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
 
 #pragma warning disable ASPIREATS001 // AspireExport is experimental
 
@@ -25,7 +26,7 @@ public static class LogtoBuilderExtensions
     [AspireExport]
     public static IResourceBuilder<LogtoResource> AddLogto(
         this IDistributedApplicationBuilder builder,
-        string name,
+        [ResourceName] string name,
         IResourceBuilder<PostgresServerResource> postgres,
         string databaseName = "logto_db",
         int? port = null,
@@ -44,10 +45,50 @@ public static class LogtoBuilderExtensions
             .WithImageRegistry(LogtoContainerImageTags.Registry);
 
         builderWithResource.WithResourcePort(port, adminPort);
+        builderWithResource.WithEnvironment(context =>
+        {
+            // Logto uses these public URLs for browser redirects and Admin Console API calls.
+            // They are only concrete after Aspire allocates the run-mode host ports.
+            if (resource.PrimaryEndpoint.IsAllocated)
+            {
+                context.EnvironmentVariables.TryAdd("ENDPOINT", resource.PrimaryEndpoint.Url);
+            }
+
+            if (resource.AdminEndpointUrl is not null)
+            {
+                context.EnvironmentVariables.TryAdd("ADMIN_ENDPOINT", resource.AdminEndpointUrl);
+            }
+            else
+            {
+                var adminEndpoint = resource.GetEndpoint(LogtoResource.AdminEndpointName);
+                if (adminEndpoint.IsAllocated)
+                {
+                    context.EnvironmentVariables.TryAdd("ADMIN_ENDPOINT", GetCorsSafeLocalAdminUrl(adminEndpoint.Url));
+                }
+            }
+        });
+        if (builder.ExecutionContext.IsRunMode)
+        {
+            builderWithResource.WithUrlForEndpoint(LogtoResource.AdminEndpointName, url =>
+                url.Url = resource.AdminEndpointUrl ?? GetCorsSafeLocalAdminUrl(url.Url));
+        }
         builderWithResource.WithDatabase(postgres, databaseName);
         SetHealthCheck(builder, builderWithResource, name);
 
         return builderWithResource;
+    }
+
+    private static string GetCorsSafeLocalAdminUrl(string url)
+    {
+        var uri = new Uri(url);
+
+        if (!uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        var builder = new UriBuilder(uri) { Host = "127.0.0.1" };
+        return builder.Uri.GetLeftPart(UriPartial.Authority);
     }
 
     /// <summary>
@@ -131,7 +172,8 @@ public static class LogtoBuilderExtensions
             .WithHttpEndpoint(
                 port: adminPort,
                 targetPort: LogtoResource.DefaultHttpAdminPort,
-                name: LogtoResource.AdminEndpointName);
+                name: LogtoResource.AdminEndpointName)
+            .WithEndpoint(LogtoResource.AdminEndpointName, endpoint => endpoint.ExcludeReferenceEndpoint = true);
     }
 
     /// <summary>
@@ -147,7 +189,9 @@ public static class LogtoBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(url);
 
-        return builder.WithEnvironment("ADMIN_ENDPOINT", url);
+        builder.Resource.AdminEndpointUrl = url;
+
+        return builder;
     }
 
     /// <summary>
@@ -184,7 +228,9 @@ public static class LogtoBuilderExtensions
     /// <param name="builder">The resource builder for the Logto resource to configure.</param>
     /// <param name="sensitiveUsername">A value indicating whether usernames should be treated as case-sensitive.</param>
     /// <returns>The updated resource builder with the configured case-sensitivity setting.</returns>
-    [AspireExport]
+    [AspireExportIgnore(Reason = "CASE_SENSITIVE_USERNAME was removed in Logto 1.41 and is retained only for source compatibility.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Obsolete("CASE_SENSITIVE_USERNAME is deprecated in Logto 1.41. Configure username case sensitivity per tenant in the Logto Console instead.")]
     public static IResourceBuilder<LogtoResource> WithSensitiveUsername(this IResourceBuilder<LogtoResource> builder, bool sensitiveUsername)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -259,23 +305,58 @@ public static class LogtoBuilderExtensions
         dbUrlBuilder.Append($"{postgres.Resource.UriExpression}/{databaseName}");
         var dbUrl = dbUrlBuilder.Build();
 
+        builder.Resource.DatabaseUrl = dbUrl;
+        builder.Resource.PostgresResource = postgres.Resource;
+
         return builder.WithEnvironment("DB_URL", dbUrl)
             .WaitFor(postgres);
     }
 
     /// <summary>
-    /// Starts Logto by running the database seed command before the application process.
+    /// Seeds and upgrades the Logto database in a one-shot setup container before Logto starts.
     /// </summary>
     /// <param name="builder">The resource builder for the Logto resource to configure.</param>
+    /// <param name="disableAdminPwnedPasswordCheck">
+    /// Disables the Have I Been Pwned check for the initial admin password. Use this only in air-gapped environments.
+    /// </param>
     /// <returns>The resource builder for the configured Logto resource.</returns>
     [AspireExport]
-    public static IResourceBuilder<LogtoResource> WithDatabaseSeeding(this IResourceBuilder<LogtoResource> builder)
+    public static IResourceBuilder<LogtoResource> WithDatabaseSeeding(
+        this IResourceBuilder<LogtoResource> builder,
+        bool disableAdminPwnedPasswordCheck = false)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        return builder
+        if (builder.ApplicationBuilder.ExecutionContext.IsPublishMode)
+        {
+            return builder;
+        }
+
+        var databaseUrl = builder.Resource.DatabaseUrl
+            ?? throw new InvalidOperationException("Configure the Logto database before enabling database seeding.");
+        var postgres = builder.Resource.PostgresResource
+            ?? throw new InvalidOperationException("Configure the Logto PostgreSQL resource before enabling database seeding.");
+        var setupName = $"{builder.Resource.Name}-database-setup";
+        if (builder.ApplicationBuilder.TryCreateResourceBuilder<LogtoDatabaseSetupResource>(setupName, out _))
+        {
+            return builder;
+        }
+
+        var seedArguments = disableAdminPwnedPasswordCheck ? "--swe --dapc" : "--swe";
+
+        var setup = builder.ApplicationBuilder
+            .AddResource(new LogtoDatabaseSetupResource(setupName))
+            .WithImage(LogtoContainerImageTags.Image, LogtoContainerImageTags.Tag)
+            .WithImageRegistry(LogtoContainerImageTags.Registry)
             .WithEntrypoint("sh")
-            .WithArgs("-c", "npm run cli db seed -- --swe && npm start");
+            .WithArgs("-c", $"npm run cli db seed -- {seedArguments} && npm run alteration deploy latest")
+            .WithEnvironment("DB_URL", databaseUrl)
+            .WithEnvironment("CI", "true")
+            .WithParentRelationship(builder.Resource)
+            .ExcludeFromManifest()
+            .WaitFor(builder.ApplicationBuilder.CreateResourceBuilder(postgres));
+
+        return builder.WaitForCompletion(setup);
     }
 }
 

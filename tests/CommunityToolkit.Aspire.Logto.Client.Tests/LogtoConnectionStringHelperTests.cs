@@ -45,6 +45,16 @@ public class LogtoConnectionStringHelperTests
         Assert.Null(result);
     }
 
+    [Theory]
+    [InlineData("ftp://logto.example.com")]
+    [InlineData("file:///tmp/logto")]
+    public void GetEndpointFromConnectionString_ReturnsNull_WhenEndpointIsNotHttp(string connectionString)
+    {
+        var result = LogtoConnectionStringHelper.GetEndpointFromConnectionString(connectionString);
+
+        Assert.Null(result);
+    }
+
     [Fact]
     public void GetEndpointFromConnectionString_ReturnsNull_WhenEndpointKeyMissing()
     {

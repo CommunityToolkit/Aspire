@@ -120,4 +120,32 @@ public class LogtoClientBuilderIntegrationTests
         Assert.StartsWith("https://overridden.example.com", options.Endpoint);
         Assert.Equal("overridden-app-id", options.AppId);
     }
+
+    [Fact]
+    public void AddLogtoOIDC_PreservesAllLogtoOptions()
+    {
+        var builder = CreateBuilderWithBaseConfig();
+
+        builder.AddLogtoOIDC(logtoOptions: options =>
+        {
+            options.Scopes = ["openid", "email"];
+            options.Resource = "https://api.example.com";
+            options.Prompt = "consent";
+            options.CallbackPath = "/custom-callback";
+            options.SignedOutCallbackPath = "/custom-signout";
+            options.GetClaimsFromUserInfoEndpoint = true;
+            options.CookieDomain = "example.com";
+        });
+
+        using var host = builder.Build();
+        var options = host.Services.GetRequiredService<IOptionsMonitor<LogtoOptions>>().Get("Logto");
+
+        Assert.Equal(["openid", "email"], options.Scopes);
+        Assert.Equal("https://api.example.com", options.Resource);
+        Assert.Equal("consent", options.Prompt);
+        Assert.Equal("/custom-callback", options.CallbackPath);
+        Assert.Equal("/custom-signout", options.SignedOutCallbackPath);
+        Assert.True(options.GetClaimsFromUserInfoEndpoint);
+        Assert.Equal("example.com", options.CookieDomain);
+    }
 }

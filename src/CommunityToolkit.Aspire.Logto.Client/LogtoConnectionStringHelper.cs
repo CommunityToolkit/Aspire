@@ -27,8 +27,8 @@ public static class LogtoConnectionStringHelper
         {
             return null;
         }
-        
-        if (Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
+
+        if (TryCreateHttpUri(connectionString, out var uri))
         {
             return uri.ToString();
         }
@@ -45,11 +45,24 @@ public static class LogtoConnectionStringHelper
 
         if (builder.TryGetValue(ConnectionStringEndpointKey, out var endpointObj) &&
             endpointObj is string endpoint &&
-            Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri))
+            TryCreateHttpUri(endpoint, out var endpointUri))
         {
             return endpointUri.ToString();
         }
 
         return null;
+    }
+
+    internal static bool TryCreateHttpUri(string endpoint, out Uri uri)
+    {
+        if (Uri.TryCreate(endpoint, UriKind.Absolute, out var candidate) &&
+            (candidate.Scheme == Uri.UriSchemeHttp || candidate.Scheme == Uri.UriSchemeHttps))
+        {
+            uri = candidate;
+            return true;
+        }
+
+        uri = null!;
+        return false;
     }
 }
