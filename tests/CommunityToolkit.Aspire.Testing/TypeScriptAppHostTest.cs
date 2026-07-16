@@ -15,6 +15,7 @@ public static class TypeScriptAppHostTest
     /// <param name="waitStatus">The Aspire resource status to wait for.</param>
     /// <param name="requiredCommands">Optional commands that must exist on <c>PATH</c> before validation runs.</param>
     /// <param name="secrets">Optional dictionary of secret key-value pairs to set via <c>aspire secret set</c> before starting the app host.</param>
+    /// <param name="waitTimeoutSeconds">Optional timeout, in seconds, to wait for resources to reach the expected status.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public static async Task Run(
         string appHostProject,

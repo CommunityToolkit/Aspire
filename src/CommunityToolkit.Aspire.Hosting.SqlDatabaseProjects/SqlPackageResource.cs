@@ -17,7 +17,7 @@ public sealed class SqlPackageResource<TPackage>(string name) : Resource(name), 
             var packagePath = packageMetadata.PackagePath;
             if (this.TryGetLastAnnotation<DacpacMetadataAnnotation>(out var relativeDacpacMetadata))
             {
-                return Path.Combine(packagePath, relativeDacpacMetadata.DacpacPath);;
+                return Path.Combine(packagePath, relativeDacpacMetadata.DacpacPath);
             }
             else
             {
