@@ -6,6 +6,7 @@
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Docker" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Dapr" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="$(AspireVersion)" />
@@ -84,6 +85,7 @@
          MAF cuts the next preview. -->
     <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.3" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
+    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
     <PackageVersion Include="OpenFeature.Providers.GOFeatureFlag" Version="1.0.0" />
     <PackageVersion Include="Minio" Version="6.0.5" />
@@ -111,7 +113,6 @@
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
-    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="KurrentDB.Client" Version="1.2.0" />
     <PackageVersion Include="SSH.NET" Version="2025.1.0" />
   </ItemGroup>
@@ -141,6 +142,7 @@
     <PackageVersion Include="Testcontainers" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Testcontainers.MsSql" Version="$(TestContainersVersion)" />
     <PackageVersion Include="Polly" Version="8.6.4" />
+    <PackageVersion Include="Verify.XunitV3" Version="31.13.5" />
   </ItemGroup>
   <ItemGroup Label="System">
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
