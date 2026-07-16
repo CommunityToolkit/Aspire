@@ -83,7 +83,7 @@
          2026-06-10). Without it, copilot.exe never lands in bin/.../runtimes/
          {rid}/native/ and the SDK throws on first RunAsync. Drop this entry once
          MAF cuts the next preview. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.3" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.6" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
