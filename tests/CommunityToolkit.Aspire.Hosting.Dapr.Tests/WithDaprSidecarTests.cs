@@ -154,6 +154,63 @@ public class WithDaprSidecarTests
         Assert.Equal(sidecarResource, sidecarAnnotation.Sidecar);
     }
 
+    [Fact]
+    public void SidecarNameCanBeSetViaOptions()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WithDaprSidecar(new DaprSidecarOptions { SidecarName = "my-custom-sidecar" });
+
+        var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        Assert.Equal("my-custom-sidecar", resource.Name);
+    }
+
+    [Fact]
+    public void SidecarNameDefaultsToResourceNameWhenNotSet()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WithDaprSidecar();
+
+        var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        Assert.Equal("test-dapr", resource.Name);
+    }
+
+    [Fact]
+    public void SidecarNameDefaultsToResourceNameWhenSetToWhitespace()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("test")
+            .WithDaprSidecar(new DaprSidecarOptions { SidecarName = "   " });
+
+        var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        Assert.Equal("test-dapr", resource.Name);
+    }
+
+    [Fact]
+    public void SidecarNameCanBeSetWithAppId()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Dapr_ServiceA>("my-service")
+            .WithDaprSidecar(new DaprSidecarOptions
+            {
+                SidecarName = "my-custom-sidecar",
+                AppId = "my-service"
+            });
+
+        var resource = Assert.Single(builder.Resources.OfType<DaprSidecarResource>());
+        Assert.Equal("my-custom-sidecar", resource.Name);
+
+        var annotation = Assert.Single(resource.Annotations.OfType<DaprSidecarOptionsAnnotation>());
+        Assert.Equal("my-service", annotation.Options.AppId);
+        Assert.Equal("my-custom-sidecar", annotation.Options.SidecarName);
+    }
+
+
     [Fact] 
     public void ResourceWithMultipleWaitAnnotationsAndDaprSidecar_HasAllWaitDependencies()
     {

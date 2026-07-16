@@ -36,7 +36,10 @@ public static class IDistributedApplicationResourceBuilderExtensions
     [AspireExportIgnore(Reason = "Use the exported DTO-based overload instead to avoid ambiguous polyglot wrapper generation.")]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, DaprSidecarOptions? options = null) where T : IResource
     {
-        return builder.WithDaprSidecar(
+        var sidecarName = !string.IsNullOrWhiteSpace(options?.SidecarName) ? options.SidecarName : null;
+
+        return builder.WithDaprSidecarCore(
+            sidecarName,
             sidecarBuilder =>
             {
                 if (options is not null)
@@ -62,10 +65,17 @@ public static class IDistributedApplicationResourceBuilderExtensions
     [AspireExport("configureDaprSidecar", MethodName = "configureDaprSidecar", RunSyncOnBackgroundThread = true)]
     public static IResourceBuilder<T> WithDaprSidecar<T>(this IResourceBuilder<T> builder, Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
     {
+        return builder.WithDaprSidecarCore(null, configureSidecar);
+    }
+
+    private static IResourceBuilder<T> WithDaprSidecarCore<T>(this IResourceBuilder<T> builder, string? sidecarName, Action<IResourceBuilder<IDaprSidecarResource>> configureSidecar) where T : IResource
+    {
         // Add Dapr is idempotent, so we can call it multiple times.
         builder.ApplicationBuilder.AddDapr();
 
-        var sidecarBuilder = builder.ApplicationBuilder.AddResource(new DaprSidecarResource($"{builder.Resource.Name}-dapr"))
+        var name = !string.IsNullOrWhiteSpace(sidecarName) ? sidecarName : $"{builder.Resource.Name}-dapr";
+
+        var sidecarBuilder = builder.ApplicationBuilder.AddResource(new DaprSidecarResource(name))
                                                        .WithInitialState(new()
                                                        {
                                                            Properties = [],
