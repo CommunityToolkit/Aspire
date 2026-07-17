@@ -60,6 +60,36 @@ function Invoke-ExternalCommand {
     }
 }
 
+function Invoke-ExternalCommandWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments,
+
+        [int]$MaxAttempts = 3,
+
+        [int]$RetryDelaySeconds = 3
+    )
+
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            Invoke-ExternalCommand $FilePath $Arguments
+            return
+        }
+        catch {
+            if ($attempt -ge $MaxAttempts) {
+                throw
+            }
+
+            $joinedArguments = [string]::Join(" ", $Arguments)
+            Write-Warning "Attempt $attempt of $MaxAttempts failed for '$FilePath $joinedArguments': $($_.Exception.Message). Retrying in $RetryDelaySeconds second(s)..."
+            Start-Sleep -Seconds $RetryDelaySeconds
+        }
+    }
+}
+
 function Invoke-CleanupStep {
     param(
         [Parameter(Mandatory = $true)]
@@ -103,8 +133,8 @@ if ($RequiredCommands.Count -eq 1) {
 
 if ($RequiredCommands -contains "yarn") {
     if ($null -ne (Get-Command "corepack" -ErrorAction SilentlyContinue)) {
-        Invoke-ExternalCommand "corepack" @("enable")
-        Invoke-ExternalCommand "corepack" @("prepare", "yarn@stable", "--activate")
+        Invoke-ExternalCommandWithRetry "corepack" @("enable")
+        Invoke-ExternalCommandWithRetry "corepack" @("prepare", "yarn@stable", "--activate")
     }
 }
 

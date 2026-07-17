@@ -3,6 +3,8 @@
   <PropertyGroup>
     <RootNamespace>Aspire.Hosting</RootNamespace>
     <IsPreview>true</IsPreview>
+    <Description>An Aspire hosting integration for configuring Azure Cache for Redis as a Dapr state store or pub/sub component in your AppHost.</Description>
+    <AdditionalPackageTags>hosting azure dapr redis state-store pubsub</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -143,3 +143,9 @@
 /src/CommunityToolkit.Aspire.Hosting.Perl/ @Omnideth
 /tests/CommunityToolkit.Aspire.Hosting.Perl.Tests/ @Omnideth
 /examples/perl/ @Omnideth
+
+# CommunityToolkit.Aspire.Hosting.Squad
+
+/src/CommunityToolkit.Aspire.Hosting.Squad/ @tamirdresher
+/tests/CommunityToolkit.Aspire.Hosting.Squad.Tests/ @tamirdresher
+/examples/squad/ @tamirdresher

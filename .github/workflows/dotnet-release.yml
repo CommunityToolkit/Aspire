@@ -20,7 +20,7 @@ jobs:
       DAPR_VERSION: "1.15.0"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Runtimes, Caching, and Tools
         uses: ./.github/actions/setup-runtimes-caching
         with:
@@ -118,14 +118,23 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: nuget-stable
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Download package
         uses: actions/download-artifact@v8
         with:
           name: signed-nuget-packages
 
+      - name: NuGet login (OIDC)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Publish to NuGet
-        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ secrets.NUGET_PACKAGE_PUSH_TOKEN }}
+        run: dotnet nuget push ./*.nupkg --source "https://api.nuget.org/v3/index.json" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --skip-duplicate
 
   publish-coverage:
     needs: run-tests
@@ -133,4 +142,3 @@ jobs:
     with:
       fail_on_low_coverage: true
     secrets: inherit
-

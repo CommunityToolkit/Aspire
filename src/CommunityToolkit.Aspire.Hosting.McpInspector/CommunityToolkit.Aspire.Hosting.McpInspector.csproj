@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>An Aspire to run the MCP Inspector against a MCP server.</Description>
+    <Description>An Aspire hosting integration to run the MCP Inspector against a Model Context Protocol (MCP) server.</Description>
     <AdditionalPackageTags>ai mcp debugging hosting</AdditionalPackageTags>
   </PropertyGroup>
 

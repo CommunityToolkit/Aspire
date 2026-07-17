@@ -216,4 +216,22 @@ public class AddRavenDBTests
         Assert.Equal(hostLogPath, logMount.Source);
         Assert.Equal("/var/log/ravendb/logs", logMount.Target);
     }
+
+    [Theory]
+    [InlineData("http://localhost:9534", "ravenDatabase",
+        "http://localhost:9534/studio/index.html#databases/documents?&database=ravenDatabase")]
+    [InlineData("http://localhost:9534/", "ravenDatabase", // trailing slash trimmed
+        "http://localhost:9534/studio/index.html#databases/documents?&database=ravenDatabase")]
+    [InlineData("https://my.domain", "My DB", // secured base + name needing escaping
+        "https://my.domain/studio/index.html#databases/documents?&database=My%20DB")]
+    public void BuildStudioUrl_ComposesExpectedLink(string baseUrl, string databaseName, string expected)
+        => Assert.Equal(expected, global::Aspire.Hosting.RavenDBBuilderExtensions.BuildStudioUrl(baseUrl, databaseName));
+
+    [Theory]
+    [InlineData("tcp://localhost:9534", false, "http://localhost:9534")] // ForceTcpScheme -> normalized to http
+    [InlineData("tcp://localhost:9534", true, "https://localhost:9534")] // ForceTcpScheme + secured -> https
+    [InlineData("http://localhost:9534", false, "http://localhost:9534")] // already http -> unchanged
+    [InlineData("https://localhost:9534", true, "https://localhost:9534")] // already https -> unchanged
+    public void NormalizeToHttpBaseUrl_ForcesBrowserNavigableScheme(string endpointUrl, bool isSecured, string expected)
+        => Assert.Equal(expected, global::Aspire.Hosting.RavenDBBuilderExtensions.NormalizeToHttpBaseUrl(endpointUrl, isSecured));
 }
