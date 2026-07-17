@@ -5,8 +5,6 @@ import { createBuilder } from './.aspire/modules/aspire.mjs';
 const builder = await createBuilder();
 
 // ── Runtime path (actually executed) ─────────────────────────────────────────
-// Single Floci instance with the Docker socket mounted so Lambda and other
-// container-backed AWS services can launch sibling containers.
 const floci = await builder.addFloci('floci');
 
 const appHostDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -14,14 +12,30 @@ const apiServiceProject = "CommunityToolkit.Aspire.Hosting.Floci.ApiService";
 const apiServiceProjectPath = path.join(appHostDirectory, "..", apiServiceProject, apiServiceProject + ".csproj");
 
 const apiService = await builder.addProject("floci-api", apiServiceProjectPath)
-    .WithExternalHttpEndpoints()
-    .WithHttpHealthCheck("/health")
+    .withExternalHttpEndpoints()
+    .withHttpHealthCheck({ path: "/health" })
     .withReference(floci)
     .waitFor(floci);
 
+// ── Custom port and region ────────────────────────────────────────────────────
+await builder.addFloci('floci-custom', {
+    port: 14566,
+    defaultRegion: 'eu-west-1',
+    defaultAccountId: '123456789012',
+});
+
+// ── Persistent storage — named volume ─────────────────────────────────────────
+// Switches Floci from in-memory to persistent mode automatically.
+const flociPersistent = await builder.addFloci('floci-persistent');
+await flociPersistent.withDataVolume('floci-data');
+
+// ── Persistent storage — bind mount ───────────────────────────────────────────
+const flociMount = await builder.addFloci('floci-mount');
+await flociMount.withDataBindMount('/tmp/floci-data');
+
 // ── Compile-time coverage ─────────────────────────────────────────────────────
 // Guards with false so these are type-checked but never executed.
-// Covers the full exported API surface without requiring Docker in CI.
+// Covers API surface that requires special host setup (Docker socket, cert files, TLS).
 const includeCompileOnlyScenarios = false;
 
 if (includeCompileOnlyScenarios) {
@@ -30,23 +44,9 @@ if (includeCompileOnlyScenarios) {
     // Non-standard Docker installations (Podman, Rancher Desktop) expose the
     // socket at a different path; pass it explicitly.
     const _podman = await builder.addFloci('floci-podman');
-    await _podman.withDockerSocket('/run/user/1000/podman/podman.sock');
-
-    // ── Custom port and region ────────────────────────────────────────────────
-    const _custom = await builder.addFloci('floci-custom', {
-        port: 14566,
-        defaultRegion: 'eu-west-1',
-        defaultAccountId: '123456789012',
+    await _podman.withDockerSocket({
+        socketPath: '/run/user/1000/podman/podman.sock'
     });
-
-    // ── Persistent storage — named volume ─────────────────────────────────────
-    // Switches Floci from in-memory to persistent mode automatically.
-    const _persistent = await builder.addFloci('floci-persistent');
-    await _persistent.withDataVolume('floci-data');
-
-    // ── Persistent storage — bind mount ───────────────────────────────────────
-    const _mounted = await builder.addFloci('floci-mount');
-    await _mounted.withDataBindMount('/tmp/floci-data');
 
     // ── Custom Quarkus config file ─────────────────────────────────────────────
     // Mounts application.yml read-only at /deployments/config/application.yml
