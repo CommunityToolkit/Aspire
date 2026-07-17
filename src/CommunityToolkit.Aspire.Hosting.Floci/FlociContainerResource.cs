@@ -69,7 +69,7 @@ public class FlociContainerResource(string name) : ContainerResource(name), IRes
     {
         yield return new("Host", ReferenceExpression.Create($"{Host}"));
         yield return new("Port", ReferenceExpression.Create($"{Port}"));
-        yield return new("Endpoint", ConnectionStringExpression);
+        yield return new("Uri", ConnectionStringExpression);
     }
 }
 

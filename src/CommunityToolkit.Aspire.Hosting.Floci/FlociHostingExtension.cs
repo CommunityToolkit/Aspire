@@ -63,6 +63,10 @@ public static class FlociHostingExtension
                     // Containers cannot reach the host via localhost — use host.docker.internal
                     // so they can reach the host-exposed Floci port.
                     var flociPort = resource.Port;
+                    // Ensure host.docker.internal resolves inside containers.
+                    dependent.Annotations.Add(
+                        new ContainerRuntimeArgsCallbackAnnotation(
+                            args => args.Add("--add-host=host.docker.internal:host-gateway")));
                     dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
                     {
                         var scheme = resource.TlsEnabled ? "https" : "http";
@@ -131,10 +135,13 @@ public static class FlociHostingExtension
     /// <summary>
     /// Mounts the Docker socket into the Floci container so that Lambda and other
     /// container-backed AWS services can launch sibling containers.
-    /// Also sets <c>FLOCI_DOCKER_DOCKER_HOST</c> so Floci uses the correct socket path.
+    /// Also sets <c>FLOCI_DOCKER_DOCKER_HOST</c> to <c>unix:///var/run/docker.sock</c> (the
+    /// container-side path where the socket is always mounted) so Floci can connect to it.
     /// </summary>
     /// <param name="builder">The <see cref="IResourceBuilder{T}"/> used to configure the resource.</param>
-    /// <param name="socketPath">Optional. Host path to the Docker socket (default: <c>/var/run/docker.sock</c>).</param>
+    /// <param name="socketPath">Optional. Host path to the Docker socket (default: <c>/var/run/docker.sock</c>).
+    /// Non-standard paths (e.g. Podman at <c>/run/user/1000/podman/podman.sock</c>) are bind-mounted
+    /// to <c>/var/run/docker.sock</c> inside the container.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/> for further configuration.</returns>
     [AspireExport]
     public static IResourceBuilder<FlociContainerResource> WithDockerSocket(
@@ -144,9 +151,10 @@ public static class FlociHostingExtension
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(socketPath);
 
+        const string containerSocketPath = "/var/run/docker.sock";
         return builder
-            .WithEnvironment(FlociContainerResource.DockerHostEnvVar, $"unix://{socketPath}")
-            .WithContainerRuntimeArgs("-u", "root", "-v", $"{socketPath}:/var/run/docker.sock");
+            .WithEnvironment(FlociContainerResource.DockerHostEnvVar, $"unix://{containerSocketPath}")
+            .WithContainerRuntimeArgs("-u", "root", "-v", $"{socketPath}:{containerSocketPath}");
     }
 
     /// <summary>
