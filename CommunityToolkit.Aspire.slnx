@@ -53,7 +53,7 @@
   </Folder>
   <Folder Name="/examples/floci/">
     <Project Path="examples/floci/CommunityToolkit.Aspire.Hosting.Floci.AppHost/CommunityToolkit.Aspire.Hosting.Floci.AppHost.csproj" />
-    <Project Path="examples/floci/CommunityToolkit.Aspire.Hosting.Floci.Api/CommunityToolkit.Aspire.Hosting.Floci.Api.csproj" />
+    <Project Path="examples/floci/CommunityToolkit.Aspire.Hosting.Floci.ApiService/CommunityToolkit.Aspire.Hosting.Floci.ApiService.csproj" />
   </Folder>
   <Folder Name="/examples/flyway/">
     <Project Path="examples/flyway/01.Basic/01.Basic.csproj" />
