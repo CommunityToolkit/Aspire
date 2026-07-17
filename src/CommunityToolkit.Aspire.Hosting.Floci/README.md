@@ -103,7 +103,7 @@ var floci = builder.AddFloci("floci")
     .WithHttpsDeveloperCertificate();
 ```
 
-When TLS is enabled the `ConnectionStringExpression` and the injected `AWS_ENDPOINT_URL` automatically switch to the `https://` scheme. Both HTTP and HTTPS are served on the same port (4566) — no port change is required. Run `aspire certs trust` once to add the Aspire dev certificate to your system trust store so clients skip certificate verification errors.
+When TLS is enabled the `ConnectionStringExpression` and the injected `AWS_ENDPOINT_URL` automatically switch to the `https://` scheme. Both HTTP and HTTPS connect to the same port (4566); Floci's TLS proxy handles routing based on the connection protocol. Run `aspire certs trust` once to add the Aspire dev certificate to your system trust store so clients skip certificate verification errors.
 
 **Bring-your-own PEM certificate**
 

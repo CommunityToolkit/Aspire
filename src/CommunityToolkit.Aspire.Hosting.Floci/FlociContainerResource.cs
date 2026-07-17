@@ -45,6 +45,7 @@ public class FlociContainerResource(string name) : ContainerResource(name), IRes
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, AwsEndpointName);
 
+
     /// <summary>
     /// Gets the host endpoint reference for the AWS endpoint.
     /// </summary>
@@ -58,7 +59,7 @@ public class FlociContainerResource(string name) : ContainerResource(name), IRes
     /// <summary>
     /// Gets the AWS endpoint URL. Uses <c>https://</c> when a certificate is configured
     /// (via <c>WithHttpsDeveloperCertificate()</c> or <c>WithHttpsCertificate()</c>),
-    /// otherwise <c>http://</c>.
+    /// otherwise <c>http://</c>. Both schemes connect to the same port (4566) when TLS is enabled.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         TlsEnabled

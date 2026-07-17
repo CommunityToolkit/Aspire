@@ -61,7 +61,7 @@ public static class FlociHostingExtension
                 if (dependent is ContainerResource)
                 {
                     // Containers cannot reach the host via localhost — use host.docker.internal
-                    // so they can reach the host-exposed Floci port.
+                    // so they can reach the host-exposed Floci port (4566 for both HTTP and HTTPS).
                     var flociPort = resource.Port;
                     // Ensure host.docker.internal resolves inside containers.
                     dependent.Annotations.Add(

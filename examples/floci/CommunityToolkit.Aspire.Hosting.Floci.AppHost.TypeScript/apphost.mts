@@ -57,8 +57,8 @@ if (includeCompileOnlyScenarios) {
     // ── TLS — Aspire development certificate ──────────────────────────────────
     // Call the standard Aspire API directly on the AddFloci return value.
     // The integration automatically sets FLOCI_TLS_ENABLED / FLOCI_TLS_CERT_PATH /
-    // FLOCI_TLS_KEY_PATH when any certificate is configured.
-    // Both HTTP and HTTPS are served on the same port (4566).
+    // FLOCI_TLS_KEY_PATH when any certificate is configured, and forces Quarkus to
+    // bind HTTP on 4566 and HTTPS on 4567 so the port mappings remain stable.
     // ConnectionStringExpression and AWS_ENDPOINT_URL automatically switch to https://.
     // Run `aspire certs trust` once to add the dev cert to your system trust store.
     //

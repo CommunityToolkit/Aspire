@@ -8,6 +8,10 @@
     <UserSecretsId>a1b2c3d4-e5f6-7890-abcd-ef1234567890</UserSecretsId>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);ASPIRECERTIFICATES001</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.Floci\CommunityToolkit.Aspire.Hosting.Floci.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.Floci.ApiService\CommunityToolkit.Aspire.Hosting.Floci.ApiService.csproj" />

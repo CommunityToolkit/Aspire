@@ -33,6 +33,10 @@ builder.Services.AddHealthChecks()
         try
         {
             var response = await s3.ListBucketsAsync(ct);
+            if (response?.Buckets == null)
+            {
+                return HealthCheckResult.Unhealthy("Floci S3 returned null buckets list");
+            }
             return HealthCheckResult.Healthy($"Floci S3 reachable — {response.Buckets.Count} bucket(s)");
         }
         catch (Exception ex)
@@ -58,7 +62,7 @@ app.MapHealthChecks("/health");
 app.MapGet("/s3/buckets", async (IAmazonS3 s3) =>
 {
     var response = await s3.ListBucketsAsync();
-    return response.Buckets.Select(b => new { b.BucketName, b.CreationDate });
+    return (response?.Buckets ?? []).Select(b => new { b.BucketName, b.CreationDate });
 });
 
 // Create a new bucket
@@ -106,7 +110,12 @@ class BucketInitializer(IAmazonS3 s3, ILogger<BucketInitializer> logger) : IHost
         try
         {
             var buckets = await s3.ListBucketsAsync(ct);
-            if (!buckets.Buckets.Any(b => b.BucketName == DemoBucket))
+            if (buckets?.Buckets == null || buckets.Buckets.Count == 0)
+            {
+                await s3.PutBucketAsync(new PutBucketRequest { BucketName = DemoBucket }, ct);
+                logger.LogInformation("Created demo S3 bucket '{Bucket}'", DemoBucket);
+            }
+            else if (!buckets.Buckets.Any(b => b.BucketName == DemoBucket))
             {
                 await s3.PutBucketAsync(new PutBucketRequest { BucketName = DemoBucket }, ct);
                 logger.LogInformation("Created demo S3 bucket '{Bucket}'", DemoBucket);
