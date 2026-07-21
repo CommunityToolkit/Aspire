@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire hosting package for the Redpanda Kafka-compatible streaming platform.</Description>
+    <AdditionalPackageTags>hosting redpanda kafka streaming messaging</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <!-- Provides the Kafka producer-based health check used to gate the broker's readiness, matching
+         the health check registered by the built-in Aspire Kafka hosting integration. Transitively
+         brings in Confluent.Kafka for ProducerConfig. -->
+    <PackageReference Include="AspNetCore.HealthChecks.Kafka" />
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.RedPanda.Tests" />
+  </ItemGroup>
+
+</Project>
