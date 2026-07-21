@@ -6,6 +6,7 @@ const builder = await createBuilder();
 
 // ── Runtime path (actually executed) ─────────────────────────────────────────
 const floci = await builder.addFloci('floci');
+await floci.withFlociUI();
 
 const appHostDirectory = path.dirname(fileURLToPath(import.meta.url));
 const apiServiceProject = "CommunityToolkit.Aspire.Hosting.Floci.ApiService";
@@ -39,6 +40,15 @@ await flociMount.withDataBindMount('/tmp/floci-data');
 const includeCompileOnlyScenarios = false;
 
 if (includeCompileOnlyScenarios) {
+
+    // ── Floci UI web console — custom container name and host port ────────────
+    const _withUi = await builder.addFloci('floci-with-ui');
+    await _withUi.withFlociUI({
+        containerName: 'my-floci-ui',
+        configureContainer: async (ui) => {
+            await ui.withHostPort(14500);
+        },
+    });
 
     // ── Custom socket path ────────────────────────────────────────────────────
     // Non-standard Docker installations (Podman, Rancher Desktop) expose the
