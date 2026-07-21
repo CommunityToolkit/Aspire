@@ -70,7 +70,27 @@ var floci = builder.AddFloci("floci",
     defaultAccountId: "123456789012");
 ```
 
-### Example 5: Custom Quarkus configuration file
+### Example 5: Floci UI web console
+
+Run the [Floci UI](https://github.com/floci-io/floci-ui) web console alongside the emulator to browse the hosted AWS resources:
+
+```csharp
+var floci = builder.AddFloci("floci")
+    .WithFlociUI();
+```
+
+The UI container (`floci/floci-ui`) is added as a child resource of the Floci container, automatically wired to the Floci endpoint over the container network via `FLOCI_ENDPOINT`, inherits the region and account ID from `AddFloci`, and is excluded from the deployment manifest (it is a local development tool only).
+
+Customize the container name or pin the host port:
+
+```csharp
+var floci = builder.AddFloci("floci")
+    .WithFlociUI(ui => ui.WithHostPort(14500), containerName: "my-floci-ui");
+```
+
+> Note: Floci also has a built-in mechanism to launch the UI as a sidecar container on demand, but that relies on Floci itself talking to the Docker socket and self-discovered endpoints, which does not play well with Aspire's DCP-managed container networking. `WithFlociUI` runs the UI as a first-class Aspire resource instead.
+
+### Example 6: Custom Quarkus configuration file
 
 Mount a hand-crafted `application.yml` to tune any Floci setting that does not have an extension method. The file is injected read-only at `/deployments/config/application.yml` — the standard Quarkus Docker config override location.
 
@@ -92,7 +112,7 @@ quarkus:
 
 All Floci settings can also be set via `FLOCI_`-prefixed environment variables — `WithConfigFile` is only needed for settings that do not have a dedicated extension method.
 
-### Example 6: TLS / HTTPS
+### Example 7: TLS / HTTPS
 
 **Aspire development certificate**
 

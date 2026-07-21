@@ -41,6 +41,13 @@ public class FlociContainerResource(string name) : ContainerResource(name), IRes
     internal string DefaultRegion { get; init; } = "us-east-1";
 
     /// <summary>
+    /// Gets the default AWS account ID configured for this Floci instance.
+    /// Set by <see cref="FlociHostingExtension.AddFloci"/> from the <c>defaultAccountId</c> parameter.
+    /// Used by <c>WithFlociUI</c> to inject <c>FLOCI_DEFAULT_ACCOUNT_ID</c> into the UI container.
+    /// </summary>
+    internal string DefaultAccountId { get; init; } = "000000000000";
+
+    /// <summary>
     /// Gets the primary AWS endpoint reference for the Floci container.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, AwsEndpointName);
