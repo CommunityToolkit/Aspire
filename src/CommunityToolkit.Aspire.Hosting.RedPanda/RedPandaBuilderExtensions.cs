@@ -103,9 +103,16 @@ public static class RedPandaBuilderExtensions
         // Register directly rather than via AddKafkaHealthCheck: the health check captures the
         // connection string in its factory closure, so a per-resource registration avoids multiple
         // Redpanda resources sharing (and overwriting) a single health check instance.
+        //
+        // The registration factory runs on every health poll, so cache the check (and its underlying
+        // Kafka producer) once it can be built - i.e. once the connection string is available - instead
+        // of creating a new producer, and its background threads, on each interval. Before the
+        // connection string is published the factory throws, which keeps the resource unhealthy until
+        // it is ready without caching a broken instance.
+        KafkaHealthCheck? kafkaHealthCheck = null;
         builder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
             kafkaHealthCheckKey,
-            _ => new KafkaHealthCheck(new KafkaHealthCheckOptions
+            _ => kafkaHealthCheck ??= new KafkaHealthCheck(new KafkaHealthCheckOptions
             {
                 Configuration = new ProducerConfig
                 {
@@ -197,6 +204,9 @@ public static class RedPandaBuilderExtensions
             .WithHttpEndpoint(targetPort: RedPandaConsoleContainerResource.HttpPort, name: RedPandaConsoleContainerResource.HttpEndpointName)
             .WithEnvironment(context => ConfigureConsoleContainer(context, builder.Resource))
             .WaitFor(builder)
+            // Nest the Console under the Redpanda resource in the dashboard so the management UIs
+            // appear as children of the broker they belong to.
+            .WithParentRelationship(builder)
             .ExcludeFromManifest();
 
         configureContainer?.Invoke(consoleBuilder);
@@ -250,6 +260,9 @@ public static class RedPandaBuilderExtensions
             .WithHttpEndpoint(targetPort: RedPandaKafkaUiContainerResource.HttpPort, name: RedPandaKafkaUiContainerResource.HttpEndpointName)
             .WithEnvironment(context => ConfigureKafkaUiContainer(context, builder.Resource))
             .WaitFor(builder)
+            // Nest the Kafka UI under the Redpanda resource in the dashboard so the management UIs
+            // appear as children of the broker they belong to.
+            .WithParentRelationship(builder)
             .ExcludeFromManifest();
 
         configureContainer?.Invoke(kafkaUiBuilder);
