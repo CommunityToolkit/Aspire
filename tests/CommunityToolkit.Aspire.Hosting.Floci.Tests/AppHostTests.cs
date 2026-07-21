@@ -8,6 +8,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_Floci_AppHost>>
 {
     private const string ResourceName = "floci";
+    private const string UIResourceName = "floci-ui";
 
     [Fact]
     public async Task ResourceStartsAndBecomesHealthy()
@@ -15,5 +16,13 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
         await fixture.ResourceNotificationService
             .WaitForResourceHealthyAsync(ResourceName)
             .WaitAsync(TimeSpan.FromMinutes(3));
+    }
+
+    [Fact]
+    public async Task UIResourceStartsAndBecomesHealthy()
+    {
+        await fixture.ResourceNotificationService
+            .WaitForResourceHealthyAsync(UIResourceName)
+            .WaitAsync(TimeSpan.FromMinutes(5));
     }
 }

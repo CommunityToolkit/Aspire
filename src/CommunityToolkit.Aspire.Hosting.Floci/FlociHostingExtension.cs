@@ -10,7 +10,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Provides extension methods for adding Floci to an <see cref="IDistributedApplicationBuilder"/>.
 /// </summary>
-public static class FlociHostingExtension
+public static partial class FlociHostingExtension
 {
     /// <summary>
     /// Adds a Floci AWS emulator container resource to the <see cref="IDistributedApplicationBuilder"/>.
@@ -33,7 +33,7 @@ public static class FlociHostingExtension
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
 
-        FlociContainerResource resource = new(name) { DefaultRegion = defaultRegion };
+        FlociContainerResource resource = new(name) { DefaultRegion = defaultRegion, DefaultAccountId = defaultAccountId };
 
         // BeforeStartEvent: inject standard AWS env vars into every resource that called
         // WithReference(floci). Standard WithReference already injects ConnectionStrings__<name>;

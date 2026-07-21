@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Aspire component leveraging the Floci AWS emulator container.</Description>
-    <AdditionalPackageTags>floci aws localstack emulator hosting</AdditionalPackageTags>
+    <Description>An Aspire component leveraging the Floci AWS emulator container. Includes a WithFlociUI() extension for running the Floci UI web console alongside the emulator.</Description>
+    <AdditionalPackageTags>floci aws localstack emulator hosting ui</AdditionalPackageTags>
   </PropertyGroup>
 
   <ItemGroup>
