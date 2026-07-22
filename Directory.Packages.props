@@ -74,7 +74,7 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.2" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.3" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
     <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
