@@ -46,7 +46,7 @@ if (includeCompileOnlyScenarios) {
     await _withUi.withFlociUI({
         containerName: 'my-floci-ui',
         configureContainer: async (ui) => {
-            await ui.withHostPort(14500);
+            await ui.withHostPort({ port: 14500 });
         },
     });
 
