@@ -44,6 +44,70 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
+    public void WithDataVolumeAddsVolumeMount()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+
+        var posta = builder.AddPosta("posta", database, redis)
+            .WithDataVolume("posta-data", isReadOnly: true);
+
+        var mount = Assert.Single(posta.Resource.Annotations.OfType<ContainerMountAnnotation>());
+        Assert.Equal(ContainerMountType.Volume, mount.Type);
+        Assert.Equal("posta-data", mount.Source);
+        Assert.Equal("/data", mount.Target);
+        Assert.True(mount.IsReadOnly);
+    }
+
+    [Fact]
+    public void WithDataVolumeGeneratesVolumeNameWhenNotSpecified()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+
+        var posta = builder.AddPosta("posta", database, redis)
+            .WithDataVolume();
+
+        var mount = Assert.Single(posta.Resource.Annotations.OfType<ContainerMountAnnotation>());
+        Assert.Equal(ContainerMountType.Volume, mount.Type);
+        Assert.False(string.IsNullOrWhiteSpace(mount.Source));
+        Assert.Equal("/data", mount.Target);
+    }
+
+    [Fact]
+    public void WithDataBindMountAddsBindMount()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+
+        var posta = builder.AddPosta("posta", database, redis)
+            .WithDataBindMount("./posta-data", isReadOnly: true);
+
+        var mount = Assert.Single(posta.Resource.Annotations.OfType<ContainerMountAnnotation>());
+        Assert.Equal(ContainerMountType.BindMount, mount.Type);
+        var source = Assert.IsType<string>(mount.Source);
+        Assert.True(Path.IsPathFullyQualified(source));
+        Assert.EndsWith("posta-data", source);
+        Assert.Equal("/data", mount.Target);
+        Assert.True(mount.IsReadOnly);
+    }
+
+    [Fact]
+    public void WithDataMethodsValidateArguments()
+    {
+        IResourceBuilder<PostaResource> posta = null!;
+
+        Assert.Throws<ArgumentNullException>(() => posta.WithDataVolume());
+        Assert.Throws<ArgumentNullException>(() => posta.WithDataBindMount("./posta-data"));
+
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+        posta = builder.AddPosta("posta", database, redis);
+
+        Assert.Throws<ArgumentNullException>(() => posta.WithDataBindMount(null!));
+    }
+
+    [Fact]
     public void WithGroupedOptionCallbacksThrowWhenConfigureOptionsIsNull()
     {
         var builder = DistributedApplication.CreateBuilder();

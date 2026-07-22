@@ -29,6 +29,16 @@ builder.AddProject<Projects.Api>("api")
 builder.Build().Run();
 ```
 
+To persist filesystem-backed attachments across container restarts, add a named volume or a host bind mount:
+
+```csharp
+var posta = builder.AddPosta("posta", database, redis)
+    .WithDataVolume();
+
+// Alternatively:
+// .WithDataBindMount("./data/posta");
+```
+
 Posta stores data in PostgreSQL, uses Redis for queueing, and runs the embedded worker in the main container by default. `AddPosta` requires PostgreSQL database and Redis resources so the container starts with the dependencies it needs.
 
 ## Configuration
@@ -133,6 +143,8 @@ builder.AddPosta("posta", database, redis)
 | `AddPosta(name, database, redis, Action<PostaOptions>)` | Adds Posta with callback-based typed environment configuration. |
 | `WithReference(PostgresDatabaseResource)` | Configures the PostgreSQL database environment variables and waits for the database. |
 | `WithReference(RedisResource, redisPassword)` | Configures Redis address/password environment variables and waits for Redis. |
+| `WithDataVolume(name, isReadOnly)` | Adds a named volume at `/data` for filesystem-backed attachments. |
+| `WithDataBindMount(source, isReadOnly)` | Adds a host bind mount at `/data` for filesystem-backed attachments. |
 | `WithSystemSmtp(PostaSystemSmtpOptions)` | Configures parameter-based system SMTP settings. |
 | `WithSystemSmtp(Action<PostaSystemSmtpOptions>)` | Configures parameter-based system SMTP settings with a callback. |
 | `WithInboundSmtp(PostaInboundSmtpOptions)` | Configures parameter-based inbound SMTP receiver settings. |

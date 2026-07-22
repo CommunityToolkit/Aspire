@@ -1,4 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Posta;
 
 namespace Aspire.Hosting;
@@ -8,6 +9,8 @@ namespace Aspire.Hosting;
 /// </summary>
 public static class PostaHostingExtensions
 {
+    private const string DataContainerPath = "/data";
+
     /// <summary>
     /// Adds a Posta container resource to the <see cref="IDistributedApplicationBuilder"/> and configures PostgreSQL and Redis references.
     /// </summary>
@@ -110,6 +113,43 @@ public static class PostaHostingExtensions
         configureOptions.Invoke(options);
 
         return builder.AddPosta(name, database, redis, options, jwtSecret, adminPassword, adminEmail, port);
+    }
+
+    /// <summary>
+    /// Adds a named volume for Posta's filesystem-backed attachment data.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="name">The name of the volume. Defaults to an auto-generated name based on the application and resource names.</param>
+    /// <param name="isReadOnly">Indicates whether the volume should be read-only.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExport]
+    public static IResourceBuilder<PostaResource> WithDataVolume(
+        this IResourceBuilder<PostaResource> builder,
+        string? name = null,
+        bool isReadOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        return builder.WithVolume(name ?? VolumeNameGenerator.Generate(builder, "data"), DataContainerPath, isReadOnly);
+    }
+
+    /// <summary>
+    /// Adds a bind mount for Posta's filesystem-backed attachment data.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="source">The source directory on the host to mount into the container.</param>
+    /// <param name="isReadOnly">Indicates whether the bind mount should be read-only.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
+    [AspireExport]
+    public static IResourceBuilder<PostaResource> WithDataBindMount(
+        this IResourceBuilder<PostaResource> builder,
+        string source,
+        bool isReadOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(source);
+
+        return builder.WithBindMount(source, DataContainerPath, isReadOnly);
     }
 
     /// <summary>
