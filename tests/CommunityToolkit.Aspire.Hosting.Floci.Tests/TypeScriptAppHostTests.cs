@@ -13,7 +13,7 @@ public class TypeScriptAppHostTests
             appHostProject: "CommunityToolkit.Aspire.Hosting.Floci.AppHost.TypeScript",
             packageName: "CommunityToolkit.Aspire.Hosting.Floci",
             exampleName: "floci",
-            waitForResources: ["floci", "floci-custom", "floci-persistent", "floci-mount"],
+            waitForResources: ["floci-aws", "floci-az", "floci-gcp", "floci-custom", "floci-gcp-custom", "floci-persistent", "floci-mount"],
             cancellationToken: TestContext.Current.CancellationToken);
     }
 }

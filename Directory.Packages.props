@@ -76,6 +76,8 @@
     <!-- External packages -->
     <PackageVersion Include="AWSSDK.S3" Version="4.0.100.2" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.1" />
+    <PackageVersion Include="Google.Cloud.Storage.V1" Version="4.15.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
     <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
          Microsoft.Agents.AI.GitHub.Copilot preview ships with the buildTransitive
