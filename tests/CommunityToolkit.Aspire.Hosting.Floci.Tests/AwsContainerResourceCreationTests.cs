@@ -5,51 +5,51 @@ namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 public class ContainerResourceCreationTests
 {
     [Fact]
-    public void AddFlociBuilderShouldNotBeNull()
+    public void AddFlociAwsBuilderShouldNotBeNull()
     {
         IDistributedApplicationBuilder builder = null!;
-        Assert.Throws<ArgumentNullException>(() => builder.AddFloci("floci"));
+        Assert.Throws<ArgumentNullException>(() => builder.AddFlociAws("floci"));
     }
 
     [Fact]
-    public void AddFlociBuilderNameShouldNotBeNull()
+    public void AddFlociAwsBuilderNameShouldNotBeNull()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
-        Assert.Throws<ArgumentNullException>(() => builder.AddFloci(null!));
+        Assert.Throws<ArgumentNullException>(() => builder.AddFlociAws(null!));
     }
 
     [Fact]
-    public void AddFlociBuilderContainerDetailsSetOnResource()
+    public void AddFlociAwsBuilderContainerDetailsSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci");
+        builder.AddFlociAws("floci");
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<FlociContainerResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<FlociAwsContainerResource>().SingleOrDefault();
 
         Assert.NotNull(resource);
         Assert.Equal("floci", resource.Name);
 
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
-        Assert.Equal(FlociContainerImageTags.Tag, imageAnnotations.Tag);
-        Assert.Equal(FlociContainerImageTags.Image, imageAnnotations.Image);
-        Assert.Equal(FlociContainerImageTags.Registry, imageAnnotations.Registry);
+        Assert.Equal(FlociContainerImageTags.AwsTag, imageAnnotations.Tag);
+        Assert.Equal(FlociContainerImageTags.AwsImage, imageAnnotations.Image);
+        Assert.Equal(FlociContainerImageTags.AwsRegistry, imageAnnotations.Registry);
     }
 
     [Fact]
-    public async Task AddFlociBuilderSetsEnvironmentVariables()
+    public async Task AddFlociAwsBuilderSetsEnvironmentVariables()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci", defaultRegion: "eu-west-1", defaultAccountId: "111111111111");
+        builder.AddFlociAws("floci", defaultRegion: "eu-west-1", defaultAccountId: "111111111111");
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<FlociContainerResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<FlociAwsContainerResource>().SingleOrDefault();
 
         Assert.NotNull(resource);
         Assert.True(resource.TryGetAnnotationsOfType(out IEnumerable<EnvironmentCallbackAnnotation>? envAnnotations));
@@ -61,24 +61,24 @@ public class ContainerResourceCreationTests
             await annotation.Callback(context);
         }
 
-        Assert.Equal("floci", envVars[FlociContainerResource.HostnameEnvVar].ToString());
-        Assert.Equal("eu-west-1", envVars[FlociContainerResource.DefaultRegionEnvVar].ToString());
-        Assert.Equal("111111111111", envVars[FlociContainerResource.DefaultAccountIdEnvVar].ToString());
-        Assert.Equal("memory", envVars[FlociContainerResource.StorageModeEnvVar].ToString());
+        Assert.Equal("floci", envVars[FlociAwsContainerResource.HostnameEnvVar].ToString());
+        Assert.Equal("eu-west-1", envVars[FlociAwsContainerResource.DefaultRegionEnvVar].ToString());
+        Assert.Equal("111111111111", envVars[FlociAwsContainerResource.DefaultAccountIdEnvVar].ToString());
+        Assert.Equal("memory", envVars[resource.StorageModeEnvVar].ToString());
     }
 
     [Fact]
-    public void AddFlociBuilderWithDataVolumeSetOnResource()
+    public void AddFlociAwsBuilderWithDataVolumeSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci")
+        builder.AddFlociAws("floci")
             .WithDataVolume("floci-data", isReadOnly: false);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<FlociContainerResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<FlociAwsContainerResource>().SingleOrDefault();
 
         Assert.NotNull(resource);
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotations));
@@ -89,7 +89,7 @@ public class ContainerResourceCreationTests
     [Fact]
     public void WithFlociUIBuilderShouldNotBeNull()
     {
-        IResourceBuilder<FlociContainerResource> builder = null!;
+        IResourceBuilder<FlociAwsContainerResource> builder = null!;
         Assert.Throws<ArgumentNullException>(() => builder.WithFlociUI());
     }
 
@@ -98,13 +98,13 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci")
+        builder.AddFlociAws("floci")
             .WithFlociUI();
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var flociResource = appModel.Resources.OfType<FlociContainerResource>().SingleOrDefault();
+        var flociResource = appModel.Resources.OfType<FlociAwsContainerResource>().SingleOrDefault();
         var uiResource = appModel.Resources.OfType<FlociUIContainerResource>().SingleOrDefault();
 
         Assert.NotNull(flociResource);
@@ -127,7 +127,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci", defaultRegion: "eu-west-1", defaultAccountId: "111111111111")
+        builder.AddFlociAws("floci", defaultRegion: "eu-west-1", defaultAccountId: "111111111111")
             .WithFlociUI();
 
         using var app = builder.Build();
@@ -158,7 +158,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci")
+        builder.AddFlociAws("floci")
             .WithFlociUI(containerName: "my-floci-ui");
 
         using var app = builder.Build();
@@ -176,7 +176,7 @@ public class ContainerResourceCreationTests
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
         bool configureCallbackInvoked = false;
-        builder.AddFloci("floci")
+        builder.AddFlociAws("floci")
             .WithFlociUI()
             .WithFlociUI(configureContainer: _ => configureCallbackInvoked = true);
 
@@ -192,8 +192,8 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci1").WithFlociUI();
-        builder.AddFloci("floci2").WithFlociUI();
+        builder.AddFlociAws("floci1").WithFlociUI();
+        builder.AddFlociAws("floci2").WithFlociUI();
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -210,7 +210,7 @@ public class ContainerResourceCreationTests
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci")
+        builder.AddFlociAws("floci")
             .WithFlociUI(configureContainer: ui => ui.WithHostPort(14500));
 
         using var app = builder.Build();
@@ -224,17 +224,17 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
-    public void AddFlociBuilderWithDataBindMountSetOnResource()
+    public void AddFlociAwsBuilderWithDataBindMountSetOnResource()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
-        builder.AddFloci("floci")
+        builder.AddFlociAws("floci")
             .WithDataBindMount("floci-data", isReadOnly: false);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
 
-        var resource = appModel.Resources.OfType<FlociContainerResource>().SingleOrDefault();
+        var resource = appModel.Resources.OfType<FlociAwsContainerResource>().SingleOrDefault();
 
         Assert.NotNull(resource);
         Assert.True(resource.TryGetLastAnnotation(out ContainerMountAnnotation? mountAnnotations));

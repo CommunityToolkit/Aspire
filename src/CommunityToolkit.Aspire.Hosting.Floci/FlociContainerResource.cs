@@ -3,75 +3,38 @@
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
-/// Resource for the Floci AWS emulator container.
+/// Common base for Floci cloud-emulator container resources (AWS, Azure, GCP).
+/// Holds the shared endpoint/connection-string plumbing so each cloud only needs to
+/// implement its own image, container env vars, and Floci UI wiring.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
-[AspireExport(ExposeProperties = true)]
-public class FlociContainerResource(string name) : ContainerResource(name), IResourceWithConnectionString
+/// <param name="endpointName">The name of the primary HTTP endpoint for this cloud's emulator.</param>
+public abstract class FlociContainerResource(string name, string endpointName) : ContainerResource(name), IResourceWithConnectionString
 {
-    internal const int AwsEndpointPort = 4566;
-    internal const string AwsEndpointName = "aws";
-    internal const string HostnameEnvVar = "FLOCI_HOSTNAME";
-    internal const string DefaultRegionEnvVar = "FLOCI_DEFAULT_REGION";
-    internal const string DefaultAccountIdEnvVar = "FLOCI_DEFAULT_ACCOUNT_ID";
-    internal const string StorageModeEnvVar = "FLOCI_STORAGE_MODE";
-    internal const string DockerHostEnvVar = "FLOCI_DOCKER_DOCKER_HOST";
-    internal const string TlsEnabledEnvVar = "FLOCI_TLS_ENABLED";
-    internal const string TlsCertPathEnvVar = "FLOCI_TLS_CERT_PATH";
-    internal const string TlsKeyPathEnvVar = "FLOCI_TLS_KEY_PATH";
-
-    // Quarkus JVM Docker image config override path
-    internal const string ConfigMountPath = "/deployments/config/application.yml";
-
     private EndpointReference? _primaryEndpoint;
 
+    internal string EndpointName { get; } = endpointName;
+
     /// <summary>
-    /// Gets or sets whether TLS is enabled for this Floci instance.
-    /// Set by the <c>WithHttpsCertificateConfiguration</c> callback registered inside <c>AddFloci</c>
-    /// when any certificate (dev cert or custom) is configured on the builder.
-    /// Affects <see cref="ConnectionStringExpression"/> and the AWS_ENDPOINT_URL injected into dependent resources.
+    /// Gets the primary endpoint reference for the Floci container.
     /// </summary>
-    internal bool TlsEnabled { get; set; }
+    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, EndpointName);
 
     /// <summary>
-    /// Gets the AWS region configured for this Floci instance.
-    /// Set by <see cref="FlociHostingExtension.AddFloci"/> from the <c>defaultRegion</c> parameter.
-    /// Used by the <c>BeforeStartEvent</c> subscriber to inject <c>AWS_DEFAULT_REGION</c> into dependent resources.
-    /// </summary>
-    internal string DefaultRegion { get; init; } = "us-east-1";
-
-    /// <summary>
-    /// Gets the default AWS account ID configured for this Floci instance.
-    /// Set by <see cref="FlociHostingExtension.AddFloci"/> from the <c>defaultAccountId</c> parameter.
-    /// Used by <c>WithFlociUI</c> to inject <c>FLOCI_DEFAULT_ACCOUNT_ID</c> into the UI container.
-    /// </summary>
-    internal string DefaultAccountId { get; init; } = "000000000000";
-
-    /// <summary>
-    /// Gets the primary AWS endpoint reference for the Floci container.
-    /// </summary>
-    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new EndpointReference(this, AwsEndpointName);
-
-
-    /// <summary>
-    /// Gets the host endpoint reference for the AWS endpoint.
+    /// Gets the host endpoint reference for the primary endpoint.
     /// </summary>
     public EndpointReferenceExpression Host => PrimaryEndpoint.Property(EndpointProperty.Host);
 
     /// <summary>
-    /// Gets the port endpoint reference for the AWS endpoint.
+    /// Gets the port endpoint reference for the primary endpoint.
     /// </summary>
     public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
 
     /// <summary>
-    /// Gets the AWS endpoint URL. Uses <c>https://</c> when a certificate is configured
-    /// (via <c>WithHttpsDeveloperCertificate()</c> or <c>WithHttpsCertificate()</c>),
-    /// otherwise <c>http://</c>. Both schemes connect to the same port (4566) when TLS is enabled.
+    /// Gets the emulator endpoint URL.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
-        TlsEnabled
-            ? ReferenceExpression.Create($"https://{Host}:{Port}")
-            : ReferenceExpression.Create($"http://{Host}:{Port}");
+        ReferenceExpression.Create($"http://{Host}:{Port}");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
     {
@@ -79,6 +42,26 @@ public class FlociContainerResource(string name) : ContainerResource(name), IRes
         yield return new("Port", ReferenceExpression.Create($"{Port}"));
         yield return new("Uri", ConnectionStringExpression);
     }
+
+    /// <summary>
+    /// Sets the Floci UI environment variables needed for this cloud's adapter to connect.
+    /// Implemented by each concrete cloud resource so <c>WithFlociUI</c> and <c>WithPluggedCloud</c>
+    /// can attach any combination of clouds to a single shared UI container.
+    /// </summary>
+    internal abstract void ApplyUIEnvironment(EnvironmentCallbackContext context);
+
+    /// <summary>
+    /// Gets the name of the env var this cloud's image reads to locate the Docker socket.
+    /// Backs the shared <c>WithDockerSocket</c> implementation used by all three providers.
+    /// </summary>
+    internal abstract string DockerHostEnvVar { get; }
+
+    /// <summary>
+    /// Gets the name of the env var this cloud's image reads to select its storage mode
+    /// (memory vs. persistent). Backs the shared <c>WithDataVolume</c>/<c>WithDataBindMount</c>
+    /// implementation used by all three providers.
+    /// </summary>
+    internal abstract string StorageModeEnvVar { get; }
 }
 
 #pragma warning restore ASPIREATS001
