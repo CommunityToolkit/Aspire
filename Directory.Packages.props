@@ -151,7 +151,13 @@
   <ItemGroup Label="Overrides">
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+    <!-- Override to address below severity vulnerabilities:
+          - https://github.com/advisories/GHSA-23rf-6693-g89p
+          - https://github.com/advisories/GHSA-8q5v-6pqq-x66h
+          - https://github.com/advisories/GHSA-cvvh-rhrc-wg4q
+          - https://github.com/advisories/GHSA-g8r8-53c2-pm3f
+          - https://github.com/advisories/GHSA-mmjf-rqrv-855v -->
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <!-- Override to address https://github.com/advisories/GHSA-hv8m-jj95-wg3x -->
     <PackageVersion Include="MessagePack" Version="2.5.301" />
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
