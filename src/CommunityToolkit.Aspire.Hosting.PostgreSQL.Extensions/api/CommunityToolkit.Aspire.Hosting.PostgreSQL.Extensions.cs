@@ -15,6 +15,9 @@ namespace Aspire.Hosting
 
         [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbGateContainerResource>> is not ATS-compatible. Use the callback-free overload instead.")]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> WithDbGate(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbGateContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
+
+        [AspireExportIgnore(Reason = "Action<IResourceBuilder<DbxContainerResource>> is not supported reliably in polyglot app hosts. Use the container options overload instead.")]
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> WithDbx(this ApplicationModel.IResourceBuilder<ApplicationModel.PostgresServerResource> builder, System.Action<ApplicationModel.IResourceBuilder<ApplicationModel.DbxContainerResource>>? configureContainer = null, string? containerName = null) { throw null; }
     }
 
     public static partial class PostgresDatabaseResourceBuilderExtensions
