@@ -1,4 +1,4 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
+#pragma warning disable ASPIREATS001 // AspireExport is still experimental
 
 namespace Aspire.Hosting.ApplicationModel;
 
