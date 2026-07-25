@@ -1,0 +1,379 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting;
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
+
+namespace CommunityToolkit.Aspire.Hosting.Kind;
+
+/// <summary>
+/// Manages Kubernetes manifest applies to a Kind cluster by orchestrating kubectl CLI calls.
+/// </summary>
+internal sealed class KubectlManager(
+    IProcessRunner processRunner,
+    Func<TimeSpan, CancellationToken, Task>? delayAsync = null,
+    TimeSpan? clusterInfoMaxWait = null,
+    TimeSpan? clusterInfoProbeTimeout = null)
+{
+    private static readonly TimeSpan ClusterInfoMaxWait = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan ClusterInfoProbeTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan ClusterInfoInitialDelay = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan ClusterInfoMaxDelay = TimeSpan.FromSeconds(10);
+
+    private readonly Func<TimeSpan, CancellationToken, Task> _delayAsync = delayAsync ?? Task.Delay;
+    private readonly TimeSpan _clusterInfoMaxWait = clusterInfoMaxWait ?? ClusterInfoMaxWait;
+    private readonly TimeSpan _clusterInfoProbeTimeout = clusterInfoProbeTimeout ?? ClusterInfoProbeTimeout;
+
+    /// <summary>
+    /// Waits for the cluster API to answer, then applies the manifest via <c>kubectl apply</c>.
+    /// </summary>
+    public async Task ApplyAsync(K8sManifestResource resource, ILogger logger, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+
+        await WaitForClusterInfoAsync(resource, logger, cancellationToken).ConfigureAwait(false);
+
+        var args = CreateApplyArguments(resource);
+
+        if (resource.Recursive && resource.IsKustomize)
+        {
+            logger.LogWarning(
+                "Ignoring recursive apply for Kustomize manifest '{ManifestPath}' because kubectl apply -k does not support --recursive.",
+                resource.ManifestPath);
+        }
+        else if (resource.Recursive && resource.InlineContent is not null)
+        {
+            logger.LogWarning(
+                "Ignoring recursive apply for inline manifest '{ManifestPath}' because kubectl apply -f - does not support --recursive.",
+                resource.ManifestPath);
+        }
+
+        logger.LogInformation(
+            "Applying manifest '{ManifestPath}' to cluster '{ClusterName}'...",
+            resource.ManifestPath, resource.Parent.Name);
+
+        ProcessResult result;
+        var applyTimeout = KubectlTimeouts.Normalize(resource.ApplyTimeout, nameof(resource.ApplyTimeout));
+        using (var applyCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+        {
+            applyCts.CancelAfter(applyTimeout);
+
+            try
+            {
+                result = await processRunner.RunAsync(
+                    logger,
+                    "kubectl",
+                    args,
+                    standardInput: resource.InlineContent,
+                    cancellationToken: applyCts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                throw new TimeoutException(
+                    $"Timed out applying manifest '{resource.ManifestPath}' to cluster '{resource.Parent.Name}' after {applyTimeout}.");
+            }
+        }
+
+        if (result.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"Failed to apply manifest '{resource.ManifestPath}' to cluster '{resource.Parent.Name}': {result.Error}");
+        }
+
+        var crdNames = GetAppliedCrdNames(result.Output);
+        if (crdNames.Count > 0)
+        {
+            await WaitForCrdsAsync(crdNames, resource, logger, cancellationToken).ConfigureAwait(false);
+        }
+
+        logger.LogInformation(
+            "Manifest '{ManifestPath}' applied successfully.", resource.ManifestPath);
+    }
+
+    /// <summary>
+    /// Waits for applied CRDs to reach the Kubernetes <c>Established</c> condition.
+    /// </summary>
+    internal async Task WaitForCrdsAsync(
+        IEnumerable<string> crdNames,
+        K8sManifestResource resource,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(crdNames);
+        ArgumentNullException.ThrowIfNull(resource);
+
+        var crds = crdNames.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (crds.Length == 0)
+        {
+            return;
+        }
+
+        var args = CreateWaitArguments(crds, resource.Parent.KubeconfigPath, resource.CrdWaitTimeout);
+
+        logger.LogInformation(
+            "Waiting for {CrdCount} custom resource definition(s) to become Established...",
+            crds.Length);
+
+        var result = await processRunner.RunAsync(
+            logger,
+            "kubectl",
+            args,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (result.ExitCode != 0)
+        {
+            var message = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
+            if (resource.CrdWaitBehavior == CrdWaitBehavior.BestEffort)
+            {
+                logger.LogWarning(
+                    "Timed out or failed while waiting for custom resource definition(s) to become Established: {Error}",
+                    message);
+                return;
+            }
+
+            throw new InvalidOperationException(
+                $"Timed out or failed while waiting for custom resource definition(s) to become Established: {message}");
+        }
+    }
+
+    /// <summary>
+    /// Creates the <c>kubectl apply</c> argument list for a manifest resource.
+    /// </summary>
+    internal static IReadOnlyList<string> CreateApplyArguments(K8sManifestResource resource)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+        var isKustomize = resource.InlineContent is null &&
+            Directory.Exists(resource.ManifestPath) &&
+            IsKustomizeDirectory(resource.ManifestPath);
+        resource.IsKustomize = isKustomize;
+
+        List<string> arguments =
+        [
+            "apply",
+        ];
+
+        if (resource.InlineContent is not null)
+        {
+            arguments.Add("-f");
+            arguments.Add("-");
+        }
+        else if (isKustomize)
+        {
+            arguments.Add("-k");
+            arguments.Add(resource.ManifestPath);
+        }
+        else
+        {
+            arguments.Add("-f");
+            arguments.Add(resource.ManifestPath);
+        }
+
+        arguments.Add($"--kubeconfig={resource.Parent.KubeconfigPath}");
+
+        if (!string.IsNullOrEmpty(resource.Namespace))
+        {
+            arguments.Add("--namespace");
+            arguments.Add(resource.Namespace);
+        }
+
+        if (resource.Recursive && !isKustomize && resource.InlineContent is null)
+        {
+            arguments.Add("--recursive");
+        }
+
+        if (resource.ServerSide)
+        {
+            arguments.Add("--server-side");
+
+            if (resource.ForceConflicts)
+            {
+                arguments.Add("--force-conflicts");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(resource.FieldManager))
+        {
+            arguments.Add("--field-manager");
+            arguments.Add(resource.FieldManager);
+        }
+
+        return arguments;
+    }
+
+    /// <summary>
+    /// Creates the <c>kubectl wait</c> argument list for applied CRDs.
+    /// </summary>
+    internal static IReadOnlyList<string> CreateWaitArguments(
+        IEnumerable<string> crdNames,
+        string kubeconfigPath,
+        TimeSpan timeout)
+    {
+        ArgumentNullException.ThrowIfNull(crdNames);
+        ArgumentNullException.ThrowIfNull(kubeconfigPath);
+
+        List<string> arguments =
+        [
+            "wait",
+            "--for=condition=Established",
+        ];
+
+        arguments.AddRange(crdNames);
+        arguments.Add($"--timeout={KubectlTimeouts.ToSeconds(timeout, nameof(timeout))}s");
+        arguments.Add($"--kubeconfig={kubeconfigPath}");
+
+        return arguments;
+    }
+
+    /// <summary>
+    /// Creates the <c>kubectl cluster-info</c> argument list for an API reachability probe.
+    /// </summary>
+    internal static IReadOnlyList<string> CreateClusterInfoArguments(string kubeconfigPath)
+    {
+        ArgumentNullException.ThrowIfNull(kubeconfigPath);
+
+        return
+        [
+            "cluster-info",
+            $"--kubeconfig={kubeconfigPath}",
+        ];
+    }
+
+    /// <summary>
+    /// Returns whether the directory contains a Kustomize marker file recognized by <c>kubectl apply -k</c>.
+    /// </summary>
+    internal static bool IsKustomizeDirectory(string directory)
+    {
+        ArgumentNullException.ThrowIfNull(directory);
+
+        if (!Directory.Exists(directory))
+        {
+            return false;
+        }
+
+        return Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .Any(fileName =>
+                string.Equals(fileName, "kustomization.yaml", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fileName, "kustomization.yml", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fileName, "kustomization", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Waits until the cluster API server is reachable through <c>kubectl cluster-info</c>.
+    /// </summary>
+    internal async Task WaitForClusterInfoAsync(
+        K8sManifestResource resource,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(resource);
+
+        var args = CreateClusterInfoArguments(resource.Parent.KubeconfigPath);
+        var nextDelay = ClusterInfoInitialDelay;
+        var stopwatch = Stopwatch.StartNew();
+
+        while (true)
+        {
+            if (stopwatch.Elapsed >= _clusterInfoMaxWait)
+            {
+                throw new InvalidOperationException(
+                    $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable.");
+            }
+
+            var remaining = _clusterInfoMaxWait - stopwatch.Elapsed;
+            var probeTimeout = Min(remaining, _clusterInfoProbeTimeout);
+            ProcessResult result;
+            using (var probeCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                probeCts.CancelAfter(probeTimeout);
+
+                try
+                {
+                    result = await processRunner.RunAsync(
+                        logger,
+                        "kubectl",
+                        args,
+                        cancellationToken: probeCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    if (stopwatch.Elapsed >= _clusterInfoMaxWait)
+                    {
+                        throw new InvalidOperationException(
+                            $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable.");
+                    }
+
+                    result = new ProcessResult(1, "", "kubectl cluster-info probe timed out.");
+                }
+            }
+
+            if (result.ExitCode == 0)
+            {
+                return;
+            }
+
+            if (stopwatch.Elapsed >= _clusterInfoMaxWait)
+            {
+                throw new InvalidOperationException(
+                    $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable: " +
+                    (string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error));
+            }
+
+            remaining = _clusterInfoMaxWait - stopwatch.Elapsed;
+            var delay = Min(nextDelay, remaining);
+            if (delay <= TimeSpan.Zero)
+            {
+                throw new InvalidOperationException(
+                    $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable: " +
+                    (string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error));
+            }
+
+            logger.LogWarning(
+                "Cluster '{ClusterName}' API is not reachable yet; retrying kubectl cluster-info in {DelaySeconds:n1}s. Last error: {Error}",
+                resource.Parent.Name,
+                delay.TotalSeconds,
+                string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error);
+
+            await _delayAsync(delay, cancellationToken).ConfigureAwait(false);
+            nextDelay = TimeSpan.FromSeconds(Math.Min(nextDelay.TotalSeconds * 2, ClusterInfoMaxDelay.TotalSeconds));
+        }
+    }
+
+    private static TimeSpan Min(TimeSpan left, TimeSpan right)
+    {
+        return left <= right ? left : right;
+    }
+
+    /// <summary>
+    /// Extracts CRD resource names from <c>kubectl apply</c> output.
+    /// </summary>
+    private static IReadOnlyList<string> GetAppliedCrdNames(string output)
+    {
+        if (string.IsNullOrWhiteSpace(output))
+        {
+            return [];
+        }
+
+        var crds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        using var reader = new StringReader(output);
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
+        {
+            if (!line.StartsWith("customresourcedefinition.", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var resourceName = line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(resourceName))
+            {
+                crds.Add(resourceName);
+            }
+        }
+
+        return [.. crds];
+    }
+}

@@ -174,6 +174,10 @@ public static class KindHelmChartResourceBuilderExtensions
     /// <summary>
     /// Sets the Kubernetes namespace for the deployment.
     /// </summary>
+    /// <remarks>
+    /// Helm chart resources pass <c>--create-namespace</c>. Manifest resources only pass
+    /// <c>--namespace</c> to <c>kubectl apply</c>; they do not create the namespace.
+    /// </remarks>
     /// <typeparam name="T">The deployed resource type.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="namespace">The Kubernetes namespace.</param>

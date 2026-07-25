@@ -20,15 +20,17 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         IReadOnlyList<string> arguments,
         string? workingDirectory = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null,
+        string? standardInput = null,
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Executing: {FileName} {Arguments}", fileName, string.Join(' ', arguments));
+        logger.LogDebug("Executing: {FileName} {Arguments}", fileName, RedactSensitiveArgs(arguments));
 
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = standardInput is not null,
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -79,6 +81,12 @@ internal sealed class DefaultProcessRunner : IProcessRunner
 
         try
         {
+            if (standardInput is not null)
+            {
+                await process.StandardInput.WriteAsync(standardInput.AsMemory(), cancellationToken).ConfigureAwait(false);
+                process.StandardInput.Close();
+            }
+
             // WaitForExitAsync observes process termination; WaitForExit() then lets async stdout/stderr event handlers finish draining redirected output.
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             process.WaitForExit();
@@ -98,5 +106,37 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         }
 
         return new ProcessResult(process.ExitCode, stdout.ToString().TrimEnd(), stderr.ToString().TrimEnd());
+    }
+
+    internal static string RedactSensitiveArgs(IReadOnlyList<string> arguments)
+    {
+        ArgumentNullException.ThrowIfNull(arguments);
+
+        var redacted = new string[arguments.Count];
+        var redactNext = false;
+
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            var argument = arguments[i];
+
+            if (redactNext)
+            {
+                redacted[i] = "[REDACTED]";
+                redactNext = false;
+            }
+            else if (string.Equals(argument, "--kubeconfig", StringComparison.OrdinalIgnoreCase))
+            {
+                redacted[i] = argument;
+                redactNext = true;
+            }
+            else
+            {
+                redacted[i] = argument.StartsWith("--kubeconfig=", StringComparison.OrdinalIgnoreCase)
+                    ? "--kubeconfig=[REDACTED]"
+                    : argument;
+            }
+        }
+
+        return string.Join(' ', redacted);
     }
 }

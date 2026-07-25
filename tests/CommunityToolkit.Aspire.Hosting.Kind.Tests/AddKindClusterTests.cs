@@ -6,6 +6,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Testing;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -533,6 +534,38 @@ public class AddKindClusterTests
         Assert.NotEqual(0, result.ExitCode);
     }
 
+    [Fact]
+    public async Task DefaultProcessRunner_RedactsKubeconfigPathInDebugLog()
+    {
+        var runner = new DefaultProcessRunner();
+        var logger = new CapturingLogger();
+        const string kubeconfigPath = "C:\\Users\\tamirdresher\\.kube\\kind-config.yaml";
+
+        _ = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? await runner.RunAsync(logger, "cmd", ["/c", "echo", "hello", $"--kubeconfig={kubeconfigPath}"])
+            : await runner.RunAsync(logger, "sh", ["-c", "echo hello", $"--kubeconfig={kubeconfigPath}"]);
+
+        var executingMessage = Assert.Single(logger.Messages, message => message.StartsWith("Executing:", StringComparison.Ordinal));
+        Assert.DoesNotContain(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("--kubeconfig=[REDACTED]", executingMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task DefaultProcessRunner_RedactsSpaceSeparatedKubeconfigPathInDebugLog()
+    {
+        var runner = new DefaultProcessRunner();
+        var logger = new CapturingLogger();
+        const string kubeconfigPath = "C:\\Users\\tamirdresher\\.kube\\kind-config.yaml";
+
+        _ = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? await runner.RunAsync(logger, "cmd", ["/c", "echo", "hello", "--kubeconfig", kubeconfigPath])
+            : await runner.RunAsync(logger, "sh", ["-c", "echo hello", "--kubeconfig", kubeconfigPath]);
+
+        var executingMessage = Assert.Single(logger.Messages, message => message.StartsWith("Executing:", StringComparison.Ordinal));
+        Assert.DoesNotContain(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("--kubeconfig [REDACTED]", executingMessage, StringComparison.Ordinal);
+    }
+
     // ── Edge-case tests ──────────────────────────────────────────────────
 
     [Fact]
@@ -553,6 +586,7 @@ public class AddKindClusterTests
             Assert.Contains("- role: control-plane", yaml);
             Assert.DoesNotContain("- role: worker", yaml);
         }
+
         finally
         {
             File.Delete(configPath);
@@ -570,4 +604,24 @@ public class AddKindClusterTests
     }
 
     private sealed class TestResource(string name) : Resource(name), IResourceWithEnvironment;
+
+    private sealed class CapturingLogger : ILogger
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Messages.Add(formatter(state, exception));
+        }
+    }
 }
