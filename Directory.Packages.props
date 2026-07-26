@@ -151,7 +151,7 @@
   <ItemGroup Label="Overrides">
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.14" />
     <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <!-- Override to address https://github.com/advisories/GHSA-hv8m-jj95-wg3x -->
     <PackageVersion Include="MessagePack" Version="2.5.301" />
     <!-- Override to address https://github.com/advisories/GHSA-pggp-6c3x-2xmx -->
