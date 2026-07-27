@@ -61,7 +61,7 @@ public static class StripeExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(forwardTo, nameof(forwardTo));
 
-        builder.WithArgs("listen");
+        builder.EnsureListenCommand();
         builder.WithArgs(context =>
         {
             if (!forwardTo.Resource.TryGetEndpoints(out var endpoints) || !endpoints.Any())
@@ -69,7 +69,7 @@ public static class StripeExtensions
                 throw new InvalidOperationException($"The resource '{forwardTo.Resource.Name}' does not have any endpoints defined.");
             }
             context.Args.Add("--forward-to");
-            context.Args.Add($"{endpoints.First().AllocatedEndpoint}{webhookPath}");
+            context.Args.Add(CombineUrl($"{endpoints.First().AllocatedEndpoint}", webhookPath));
         });
 
         if (events is not null && events.Any())
@@ -98,12 +98,12 @@ public static class StripeExtensions
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
         ArgumentNullException.ThrowIfNull(forwardTo, nameof(forwardTo));
 
-        builder.WithArgs("listen");
+        builder.EnsureListenCommand();
 
         if (forwardTo.Resource.Uri is not null)
         {
             builder.WithArgs($"--forward-to");
-            builder.WithArgs(ReferenceExpression.Create($"{forwardTo.Resource.Uri.ToString()}{webhookPath}"));
+            builder.WithArgs(ReferenceExpression.Create($"{CombineUrl(forwardTo.Resource.Uri.ToString(), webhookPath)}"));
         }
         else if (forwardTo.Resource.UrlParameter is not null)
         {
@@ -118,7 +118,7 @@ public static class StripeExtensions
                     }
                 }
                 context.Args.Add($"--forward-to");
-                context.Args.Add(ReferenceExpression.Create($"{url}{webhookPath}"));
+                context.Args.Add(ReferenceExpression.Create($"{CombineUrl(url!, webhookPath)}"));
             });
         }
         else
@@ -129,6 +129,107 @@ public static class StripeExtensions
         if (events is not null && events.Any())
         {
             builder.WithArgs("--events", string.Join(",", events));
+        }
+
+        return builder.ResolveSecret();
+    }
+
+    /// <summary>
+    /// Configures the Stripe CLI to listen for thin (v2) events and forward them to the
+    /// specified resource. Thin events are the delivery style of Stripe's v2 event family
+    /// (for example <c>v2.core.account[configuration.recipient].capability_status_updated</c>)
+    /// and are forwarded separately from snapshot events via <c>--forward-thin-to</c>.
+    /// Can be combined with <see cref="WithListen(IResourceBuilder{StripeResource}, IResourceBuilder{IResourceWithEndpoints}, string, IEnumerable{string}?)"/>
+    /// on the same resource to forward both families from one CLI session.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="forwardTo">The resource to forward thin events to.</param>
+    /// <param name="webhookPath">The path to the thin-event webhook endpoint.</param>
+    /// <param name="thinEvents">Optional collection of specific thin event types to listen for (e.g., ["v2.core.account[configuration.recipient].capability_status_updated"]). If not specified, all thin events are forwarded.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<StripeResource> WithThinListen(
+        this IResourceBuilder<StripeResource> builder,
+        IResourceBuilder<IResourceWithEndpoints> forwardTo,
+        string webhookPath = "/webhooks/stripe/thin",
+        IEnumerable<string>? thinEvents = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(forwardTo, nameof(forwardTo));
+
+        builder.EnsureListenCommand();
+        builder.WithArgs(context =>
+        {
+            if (!forwardTo.Resource.TryGetEndpoints(out var endpoints) || !endpoints.Any())
+            {
+                throw new InvalidOperationException($"The resource '{forwardTo.Resource.Name}' does not have any endpoints defined.");
+            }
+            context.Args.Add("--forward-thin-to");
+            context.Args.Add(CombineUrl($"{endpoints.First().AllocatedEndpoint}", webhookPath));
+        });
+
+        if (thinEvents is not null && thinEvents.Any())
+        {
+            builder.WithArgs("--thin-events", string.Join(",", thinEvents));
+        }
+
+        return builder.ResolveSecret();
+    }
+
+    /// <summary>
+    /// Configures the Stripe CLI to listen for thin (v2) events and forward them to the
+    /// specified external service. Thin events are the delivery style of Stripe's v2 event family
+    /// (for example <c>v2.core.account[configuration.recipient].capability_status_updated</c>)
+    /// and are forwarded separately from snapshot events via <c>--forward-thin-to</c>.
+    /// Can be combined with <see cref="WithListen(IResourceBuilder{StripeResource}, IResourceBuilder{ExternalServiceResource}, string, IEnumerable{string}?)"/>
+    /// on the same resource to forward both families from one CLI session.
+    /// </summary>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="forwardTo">The external service to forward thin events to.</param>
+    /// <param name="webhookPath">The path to the thin-event webhook endpoint.</param>
+    /// <param name="thinEvents">Optional collection of specific thin event types to listen for (e.g., ["v2.core.account[configuration.recipient].capability_status_updated"]). If not specified, all thin events are forwarded.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport("withThinListenExternalService")]
+    public static IResourceBuilder<StripeResource> WithThinListen(
+        this IResourceBuilder<StripeResource> builder,
+        IResourceBuilder<ExternalServiceResource> forwardTo,
+        string webhookPath = "/webhooks/stripe/thin",
+        IEnumerable<string>? thinEvents = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(forwardTo, nameof(forwardTo));
+
+        builder.EnsureListenCommand();
+
+        if (forwardTo.Resource.Uri is not null)
+        {
+            builder.WithArgs($"--forward-thin-to");
+            builder.WithArgs(ReferenceExpression.Create($"{CombineUrl(forwardTo.Resource.Uri.ToString(), webhookPath)}"));
+        }
+        else if (forwardTo.Resource.UrlParameter is not null)
+        {
+            builder.WithArgs(async context =>
+            {
+                string? url = await forwardTo.Resource.UrlParameter.GetValueAsync(context.CancellationToken).ConfigureAwait(false);
+                if (!context.ExecutionContext.IsPublishMode)
+                {
+                    if (!UrlIsValidForExternalService(url, out var _, out var message))
+                    {
+                        throw new DistributedApplicationException($"The URL parameter '{forwardTo.Resource.UrlParameter.Name}' for the external service '{forwardTo.Resource.Name}' is invalid: {message}");
+                    }
+                }
+                context.Args.Add($"--forward-thin-to");
+                context.Args.Add(ReferenceExpression.Create($"{CombineUrl(url!, webhookPath)}"));
+            });
+        }
+        else
+        {
+            throw new InvalidOperationException($"The external service resource '{forwardTo.Resource.Name}' does not have a defined URI.");
+        }
+
+        if (thinEvents is not null && thinEvents.Any())
+        {
+            builder.WithArgs("--thin-events", string.Join(",", thinEvents));
         }
 
         return builder.ResolveSecret();
@@ -184,8 +285,47 @@ public static class StripeExtensions
         });
     }
 
+    /// <summary>
+    /// Adds the <c>listen</c> command argument exactly once, so snapshot
+    /// (<see cref="WithListen(IResourceBuilder{StripeResource}, IResourceBuilder{IResourceWithEndpoints}, string, IEnumerable{string}?)"/>)
+    /// and thin (<see cref="WithThinListen(IResourceBuilder{StripeResource}, IResourceBuilder{IResourceWithEndpoints}, string, IEnumerable{string}?)"/>)
+    /// configuration can be combined on the same resource.
+    /// </summary>
+    private static void EnsureListenCommand(this IResourceBuilder<StripeResource> builder)
+    {
+        if (builder.Resource.Annotations.OfType<StripeListenCommandAnnotation>().Any())
+        {
+            return;
+        }
+
+        builder.Resource.Annotations.Add(new StripeListenCommandAnnotation());
+        // Insert rather than append so the command stays valid regardless of the order
+        // extension methods were called in (e.g. WithApiKey before WithListen).
+        builder.WithArgs(context => context.Args.Insert(0, "listen"));
+    }
+
+    /// <summary>
+    /// Joins a base URL and a webhook path with exactly one slash, regardless of
+    /// whether the base ends with '/' or the path starts with one.
+    /// </summary>
+    private static string CombineUrl(string baseUrl, string path) =>
+        $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
+
+    private sealed class StripeListenCommandAnnotation : IResourceAnnotation;
+
+    private sealed class StripeSecretWatcherAnnotation : IResourceAnnotation;
+
     private static IResourceBuilder<StripeResource> ResolveSecret(this IResourceBuilder<StripeResource> builder)
     {
+        // Both listen configurations may call this; the CLI emits a single signing secret
+        // per session, so one log watcher suffices.
+        if (builder.Resource.Annotations.OfType<StripeSecretWatcherAnnotation>().Any())
+        {
+            return builder;
+        }
+
+        builder.Resource.Annotations.Add(new StripeSecretWatcherAnnotation());
+
         builder.OnBeforeResourceStarted((resource, @event, ct) =>
         {
             return Task.Run(async () =>
