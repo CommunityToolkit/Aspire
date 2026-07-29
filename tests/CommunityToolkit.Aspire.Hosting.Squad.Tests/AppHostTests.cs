@@ -9,7 +9,7 @@ public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit
     public async Task SquadSampleAppHost_StartsAndServesMetadata()
     {
         const string resourceName = "squad-api";
-        var httpClient = fixture.CreateHttpClient(resourceName);
+        var httpClient = fixture.CreateHttpClient(resourceName, endpointName: "http");
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
         HttpResponseMessage? response = null;
