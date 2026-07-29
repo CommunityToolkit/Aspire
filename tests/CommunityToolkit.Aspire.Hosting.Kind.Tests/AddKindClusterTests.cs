@@ -82,10 +82,11 @@ public class AddKindClusterTests
     public async Task WithNodeMountAddsMountOnAllNodes()
     {
         var builder = DistributedApplication.CreateBuilder();
+        var hostPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "host-data"));
 
         builder.AddKindCluster("test-cluster")
             .WithWorkerNodes(1)
-            .WithNodeMount(@"C:\host-data", "/container-data", readOnly: true);
+            .WithNodeMount(hostPath, "/container-data", readOnly: true);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -95,7 +96,7 @@ public class AddKindClusterTests
         try
         {
             var yaml = await File.ReadAllTextAsync(configPath);
-            Assert.Equal(2, yaml.Split("hostPath: C:\\host-data").Length - 1);
+            Assert.Equal(2, yaml.Split($"hostPath: {hostPath}").Length - 1);
             Assert.Equal(2, yaml.Split("containerPath: /container-data").Length - 1);
             Assert.Equal(2, yaml.Split("readOnly: true").Length - 1);
         }

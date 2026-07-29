@@ -45,13 +45,14 @@ public class WithKindTests
     public void FluentMethodsWorkAfterWithKind()
     {
         using var builder = TestDistributedApplicationBuilder.Create(DistributedApplicationOperation.Publish);
+        var hostPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "kind-data"));
 
         builder.AddKubernetesEnvironment("k8s")
             .WithKind()
             .WithKubernetesVersion("v1.32.2")
             .WithWorkerNodes(2)
             .WithNodeImage("myacr.azurecr.io/kindest/node:v1.32.2")
-            .WithNodeMount(@"C:\kind-data", "/kind-data", readOnly: true);
+            .WithNodeMount(hostPath, "/kind-data", readOnly: true);
 
         using var app = builder.Build();
         var model = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -64,7 +65,7 @@ public class WithKindTests
         Assert.Equal(2, workerAnnotation.Count);
         Assert.True(kindEnv.TryGetLastAnnotation<KindNodeMountsAnnotation>(out var mountAnnotation));
         var mount = Assert.Single(mountAnnotation.Mounts);
-        Assert.Equal(@"C:\kind-data", mount.HostPath);
+        Assert.Equal(hostPath, mount.HostPath);
         Assert.Equal("/kind-data", mount.ContainerPath);
         Assert.True(mount.ReadOnly);
     }
