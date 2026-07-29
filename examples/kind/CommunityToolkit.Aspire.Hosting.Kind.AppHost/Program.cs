@@ -5,8 +5,8 @@ var manifestMountSource = Path.Combine(builder.AppHostDirectory, "manifests");
 // The cluster appears in the Aspire dashboard, your apps get KUBECONFIG injected.
 var cluster = builder.AddKindCluster("kind-cluster")
     .WithNodeImage("kindest/node:v1.32.2")
-    // Mount the same manifest directory that the sample applies from the host so
-    // workloads inside the cluster can also reference it if needed.
+    // Configuration example: mount the same manifest directory into each Kind node.
+    // This sample still applies manifests from the host path below rather than from inside a workload.
     .WithNodeMount(manifestMountSource, "/var/local/aspire/manifests", readOnly: true);
 
 // Run Headlamp (a lightweight Kubernetes web UI) as an Aspire-managed container

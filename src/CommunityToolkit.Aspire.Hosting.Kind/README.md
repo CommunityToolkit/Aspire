@@ -64,7 +64,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 #### WithNodeMount
 
-Use `WithNodeMount` to project host content into every Kind node. This is useful for local charts, registries, or other host-side assets that must be visible from inside the cluster nodes. Relative host paths are resolved against the AppHost project directory.
+Use `WithNodeMount` to project host content into every Kind node. This is useful for local charts, registries, or other host-side assets that must be visible from inside the cluster nodes. Relative host paths are resolved against the AppHost project directory. The sample AppHost shows this as a cluster-configuration example; it does not include a workload that reads the mounted path from inside the cluster.
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster")
