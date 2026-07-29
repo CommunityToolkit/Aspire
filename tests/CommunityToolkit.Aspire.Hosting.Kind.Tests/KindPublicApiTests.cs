@@ -55,6 +55,28 @@ public class KindPublicApiTests
     }
 
     [Fact]
+    public void WithNodeImageShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<KindClusterResource> builder = null!;
+
+        var action = () => builder.WithNodeImage("kindest/node:v1.32.2");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithNodeMountShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<KindClusterResource> builder = null!;
+
+        var action = () => builder.WithNodeMount(@"C:\host", "/container");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
     public void WithClusterLifetimeShouldThrowWhenBuilderIsNull()
     {
         IResourceBuilder<KindClusterResource> builder = null!;

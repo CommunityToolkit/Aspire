@@ -5,6 +5,7 @@ using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind;
@@ -18,18 +19,37 @@ internal sealed class KindClusterLifecycleHook(
     DistributedApplicationModel appModel,
     ResourceLoggerService loggerService,
     IProcessRunner processRunner,
-    IKindContainerRuntimeResolver containerRuntimeResolver) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
+    IKindContainerRuntimeResolver containerRuntimeResolver,
+    IHostApplicationLifetime hostApplicationLifetime) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
 {
+    private readonly object _cleanupLock = new();
+    private Task? _cleanupTask;
+
     /// <inheritdoc />
     public Task SubscribeAsync(
         IDistributedApplicationEventing eventing,
         DistributedApplicationExecutionContext executionContext,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(eventing);
+
+        hostApplicationLifetime.ApplicationStopping.Register(() => _ = EnsureCleanupStarted());
         return Task.CompletedTask;
     }
+
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync() => new(EnsureCleanupStarted());
+
+    private Task EnsureCleanupStarted()
+    {
+        lock (_cleanupLock)
+        {
+            _cleanupTask ??= CleanupClustersAsync();
+            return _cleanupTask;
+        }
+    }
+
+    private async Task CleanupClustersAsync()
     {
         var clusters = appModel.Resources.OfType<KindClusterResource>();
 

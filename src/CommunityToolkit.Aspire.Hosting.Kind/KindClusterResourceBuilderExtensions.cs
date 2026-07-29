@@ -138,6 +138,58 @@ public static class KindClusterResourceBuilderExtensions
     }
 
     /// <summary>
+    /// Sets the Kind node image for every node in the cluster.
+    /// </summary>
+    /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="image">The fully qualified Kind node image.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<T> WithNodeImage<T>(
+        this IResourceBuilder<T> builder,
+        string image)
+        where T : IKindResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(image);
+
+        var annotation = GetOrCreateNodeImageAnnotation(builder.Resource);
+        annotation.Image = image;
+        return builder;
+    }
+
+    /// <summary>
+    /// Adds an extra host mount to every Kind node container.
+    /// </summary>
+    /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
+    /// <param name="builder">The resource builder.</param>
+    /// <param name="hostPath">The path on the host.</param>
+    /// <param name="containerPath">The path inside the Kind node container.</param>
+    /// <param name="readOnly"><see langword="true"/> to mount the path read-only.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<T> WithNodeMount<T>(
+        this IResourceBuilder<T> builder,
+        string hostPath,
+        string containerPath,
+        bool readOnly = false)
+        where T : IKindResource
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrEmpty(hostPath);
+        ArgumentException.ThrowIfNullOrEmpty(containerPath);
+
+        var annotation = GetOrCreateNodeMountsAnnotation(builder.Resource);
+        annotation.Mounts.Add(new KindMountModel
+        {
+            HostPath = hostPath,
+            ContainerPath = containerPath,
+            ReadOnly = readOnly,
+        });
+        return builder;
+    }
+
+    /// <summary>
     /// Sets the number of worker nodes for the Kind cluster.
     /// </summary>
     /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
@@ -207,6 +259,18 @@ public static class KindClusterResourceBuilderExtensions
         }
 
         var annotation = new KindNodeImageAnnotation();
+        resource.Annotations.Add(annotation);
+        return annotation;
+    }
+
+    private static KindNodeMountsAnnotation GetOrCreateNodeMountsAnnotation(IResource resource)
+    {
+        if (resource.TryGetLastAnnotation<KindNodeMountsAnnotation>(out var existing))
+        {
+            return existing;
+        }
+
+        var annotation = new KindNodeMountsAnnotation();
         resource.Annotations.Add(annotation);
         return annotation;
     }
