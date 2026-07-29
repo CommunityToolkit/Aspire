@@ -106,6 +106,32 @@ public class AddKindClusterTests
     }
 
     [Fact]
+    public async Task WithNodeMountResolvesRelativeHostPathFromAppHostDirectory()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var relativeHostPath = Path.Combine("mounts", "charts");
+        var expectedHostPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, relativeHostPath));
+
+        builder.AddKindCluster("test-cluster")
+            .WithNodeMount(relativeHostPath, "/container-data");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindClusterResource>());
+        var configPath = await KindConfigGenerator.GenerateConfigAsync(resource, CancellationToken.None);
+        try
+        {
+            var yaml = await File.ReadAllTextAsync(configPath);
+            Assert.Contains($"hostPath: {expectedHostPath}", yaml);
+        }
+        finally
+        {
+            File.Delete(configPath);
+        }
+    }
+
+    [Fact]
     public async Task WithWorkerNodesSetsCount()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -205,6 +231,15 @@ public class AddKindClusterTests
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentNullException>(() => cluster.WithNodeMount(@"C:\host-data", null!));
+    }
+
+    [Fact]
+    public void WithNodeMountRejectsEmptyHostPath()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentException>(() => cluster.WithNodeMount("", "/container-data"));
     }
 
     [Fact]
@@ -331,6 +366,40 @@ public class AddKindClusterTests
 
         await hook.SubscribeAsync(new NoOpEventing(), null!);
         hostLifetime.StopApplication();
+
+        await WaitForConditionAsync(() =>
+            processRunner.Commands.Any(command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal)));
+
+        Assert.Single(
+            processRunner.Commands,
+            command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal));
+
+        await hook.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task KindClusterLifecycleHook_DoesNotDoubleDeleteWhenStoppingThenDisposed()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        builder.AddKindCluster("test-cluster");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
+        var processRunner = new FakeProcessRunner();
+        var hostLifetime = new TestHostApplicationLifetime();
+        var hook = new KindClusterLifecycleHook(
+            model,
+            loggerService,
+            processRunner,
+            new TestKindContainerRuntimeResolver(),
+            hostLifetime);
+
+        await hook.SubscribeAsync(new NoOpEventing(), null!);
+        hostLifetime.StopApplication();
+        await WaitForConditionAsync(() =>
+            processRunner.Commands.Any(command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal)));
+
         await hook.DisposeAsync();
 
         Assert.Single(
@@ -783,6 +852,21 @@ public class AddKindClusterTests
 
         public Task PublishAsync<T>(T @event, EventDispatchBehavior dispatchBehavior, CancellationToken cancellationToken = default)
             where T : IDistributedApplicationEvent => Task.CompletedTask;
+    }
+
+    private static async Task WaitForConditionAsync(Func<bool> condition)
+    {
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            if (condition())
+            {
+                return;
+            }
+
+            await Task.Delay(20);
+        }
+
+        throw new Xunit.Sdk.XunitException("Timed out waiting for asynchronous condition.");
     }
 
     private sealed class CapturingLogger : ILogger
