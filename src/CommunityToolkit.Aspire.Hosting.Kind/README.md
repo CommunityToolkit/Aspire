@@ -53,6 +53,16 @@ var cluster = builder.AddKindCluster("mycluster")
     .WithKubernetesVersion("v1.32.2");
 ```
 
+#### Node image and host mounts
+
+When you need the full Kind node image name (for example, a private registry mirror) use `WithNodeImage`. To project local content into every Kind node, use `WithNodeMount`.
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster")
+    .WithNodeImage("registry.example.com/kindest/node:v1.32.2")
+    .WithNodeMount(@"C:\dev\charts", "/var/local/charts", readOnly: true);
+```
+
 #### Cluster lifetime
 
 By default the cluster is deleted when the AppHost shuts down (`ClusterLifetime.Session`). To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
@@ -151,8 +161,12 @@ var cluster = builder.AddKindCluster("mycluster")
 var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
     .WithChartVersion("20.0.0")
     .WithHelmValue("replica.replicaCount", "0")
+    .WithHelmStringValue("auth.password", "000123")
+    .WithCrdWaitRetry()
     .WithNamespace("cache");
 ```
+
+Use `WithHelmStringValue` when a value looks numeric or boolean but must remain a string in the rendered chart. `WithCrdWaitRetry` retries installs that race CRD registration, waiting for newly-created CRDs to reach `Established` before re-running Helm.
 
 ### Applying raw manifests to the cluster
 
@@ -201,6 +215,8 @@ var operatorContainer = builder.AddContainer("my-operator", "my-org/operator")
 Manifests persist with the cluster - deleted with session clusters, retained with persistent clusters.
 
 When `kubectl apply` reports custom resource definitions, Kind waits up to 5 minutes for those CRDs to reach the `Established` condition before marking the manifest resource running. The default behavior is fail-fast: a CRD wait timeout fails the manifest resource. Use `.WithCrdWaitTimeout(...)` to adjust the timeout, or `.WithCrdWaitBehavior(CrdWaitBehavior.BestEffort)` to log a warning and continue.
+
+If the Kubernetes API needs longer to become reachable before `kubectl apply`, use `.WithClusterReadyTimeout(...)` to extend the `kubectl cluster-info` readiness budget for that manifest resource.
 
 #### Namespace behavior
 
