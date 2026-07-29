@@ -53,13 +53,21 @@ var cluster = builder.AddKindCluster("mycluster")
     .WithKubernetesVersion("v1.32.2");
 ```
 
-#### Node image and host mounts
+#### WithNodeImage
 
-When you need the full Kind node image name (for example, a private registry mirror) use `WithNodeImage`. To project local content into every Kind node, use `WithNodeMount`.
+Use `WithNodeImage` when you need to pin the full Kind node image name instead of composing one from a Kubernetes version. This is useful with private mirrors or pre-approved node images.
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster")
-    .WithNodeImage("registry.example.com/kindest/node:v1.32.2")
+    .WithNodeImage("registry.example.com/kindest/node:v1.32.2");
+```
+
+#### WithNodeMount
+
+Use `WithNodeMount` to project host content into every Kind node. This is useful for local charts, registries, or other host-side assets that must be visible from inside the cluster nodes.
+
+```csharp
+var cluster = builder.AddKindCluster("mycluster")
     .WithNodeMount(@"C:\dev\charts", "/var/local/charts", readOnly: true);
 ```
 
@@ -166,7 +174,23 @@ var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicha
     .WithNamespace("cache");
 ```
 
-Use `WithHelmStringValue` when a value looks numeric or boolean but must remain a string in the rendered chart. `WithCrdWaitRetry` retries installs that race CRD registration, waiting for newly-created CRDs to reach `Established` before re-running Helm.
+#### WithHelmStringValue
+
+Use `WithHelmStringValue` when a value looks numeric or boolean but must remain a string in the rendered chart. Kind emits `--set-string` for these values instead of `--set`.
+
+```csharp
+var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+    .WithHelmStringValue("auth.password", "000123");
+```
+
+#### WithCrdWaitRetry
+
+Use `WithCrdWaitRetry` for charts that install CRDs and then immediately reference them. Kind retries the Helm install, waits for newly-created CRDs to reach `Established`, then re-runs Helm.
+
+```csharp
+var certManager = cluster.AddHelmChart("cert-manager", "jetstack/cert-manager")
+    .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(5));
+```
 
 ### Applying raw manifests to the cluster
 
@@ -216,7 +240,14 @@ Manifests persist with the cluster - deleted with session clusters, retained wit
 
 When `kubectl apply` reports custom resource definitions, Kind waits up to 5 minutes for those CRDs to reach the `Established` condition before marking the manifest resource running. The default behavior is fail-fast: a CRD wait timeout fails the manifest resource. Use `.WithCrdWaitTimeout(...)` to adjust the timeout, or `.WithCrdWaitBehavior(CrdWaitBehavior.BestEffort)` to log a warning and continue.
 
-If the Kubernetes API needs longer to become reachable before `kubectl apply`, use `.WithClusterReadyTimeout(...)` to extend the `kubectl cluster-info` readiness budget for that manifest resource.
+#### WithClusterReadyTimeout
+
+If the Kubernetes API needs longer to become reachable before `kubectl apply`, use `WithClusterReadyTimeout` to extend the `kubectl cluster-info` readiness budget for that manifest resource.
+
+```csharp
+cluster.AddManifest("platform", "./manifests/platform")
+    .WithClusterReadyTimeout(TimeSpan.FromMinutes(2));
+```
 
 #### Namespace behavior
 
