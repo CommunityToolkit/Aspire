@@ -1,9 +1,11 @@
 var builder = DistributedApplication.CreateBuilder(args);
+var manifestMountSource = Path.Combine(builder.AppHostDirectory, "manifests");
 
 // Kind cluster as a managed dependency (F5 mode).
 // The cluster appears in the Aspire dashboard, your apps get KUBECONFIG injected.
 var cluster = builder.AddKindCluster("kind-cluster")
-    .WithKubernetesVersion("v1.32.2");
+    .WithNodeImage("kindest/node:v1.32.2")
+    .WithNodeMount(manifestMountSource, "/var/local/aspire/manifests", readOnly: true);
 
 // Run Headlamp (a lightweight Kubernetes web UI) as an Aspire-managed container
 // connected to the Kind cluster.
@@ -17,10 +19,13 @@ var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicha
     .WithHelmValue("replica.replicaCount", "0")
     .WithHelmValue("master.service.type", "NodePort")
     .WithHelmValue("master.service.nodePorts.redis", "30379")
+    .WithHelmStringValue("auth.password", "000123")
+    .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(5))
     .WithNamespace("cache");
 
 // Apply raw Kubernetes YAML to the Kind cluster and target the namespace declared by the sample manifest.
 var manifestResource = cluster.AddManifest("extra-config", "manifests/extra-config.yaml")
+    .WithClusterReadyTimeout(TimeSpan.FromMinutes(2))
     .WithNamespace("aspire-demo");
 
 // Demonstrate recursive directory apply for manifest folders.
