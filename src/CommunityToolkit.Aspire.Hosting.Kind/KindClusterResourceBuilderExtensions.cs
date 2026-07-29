@@ -142,7 +142,10 @@ public static class KindClusterResourceBuilderExtensions
     /// </summary>
     /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="image">The fully qualified Kind node image.</param>
+    /// <param name="image">
+    /// The fully qualified Kind node image, such as <c>kindest/node:v1.33.1</c>.
+    /// This overrides the image that would otherwise be derived from <see cref="WithKubernetesVersion{T}(IResourceBuilder{T}, string)"/>.
+    /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
     [AspireExport]
     public static IResourceBuilder<T> WithNodeImage<T>(
@@ -163,10 +166,17 @@ public static class KindClusterResourceBuilderExtensions
     /// </summary>
     /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
     /// <param name="builder">The resource builder.</param>
-    /// <param name="hostPath">The path on the host.</param>
-    /// <param name="containerPath">The path inside the Kind node container.</param>
+    /// <param name="hostPath">
+    /// The path on the host. Relative paths are resolved against the AppHost directory before being written to the Kind config.
+    /// </param>
+    /// <param name="containerPath">The absolute path inside the Kind node container.</param>
     /// <param name="readOnly"><see langword="true"/> to mount the path read-only.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{T}"/>.</returns>
+    /// <remarks>
+    /// This configures Kind node-container mounts, which are useful for surfacing host-side assets
+    /// such as local manifest directories, certificates, or other development-time inputs to workloads
+    /// that later mount paths from the node filesystem.
+    /// </remarks>
     [AspireExport]
     public static IResourceBuilder<T> WithNodeMount<T>(
         this IResourceBuilder<T> builder,

@@ -161,6 +161,12 @@ public static class KindHelmChartResourceBuilderExtensions
     /// <param name="key">The Helm value key.</param>
     /// <param name="value">The Helm value.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    /// <remarks>
+    /// Use this overload when Helm would otherwise coerce the value into a numeric, boolean,
+    /// or other non-string type. If the same key was previously configured with
+    /// <see cref="WithHelmValue(IResourceBuilder{KindHelmChartResource}, string, string)"/>,
+    /// the string-preserving value replaces it.
+    /// </remarks>
     [AspireExport]
     public static IResourceBuilder<KindHelmChartResource> WithHelmStringValue(
         this IResourceBuilder<KindHelmChartResource> builder,
@@ -187,6 +193,11 @@ public static class KindHelmChartResourceBuilderExtensions
     /// When <see langword="null"/>, Kind uses a 5 second initial backoff.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    /// <remarks>
+    /// This is useful for charts that create CRDs and immediately render custom resources
+    /// that depend on those CRDs. Between attempts, Kind waits for newly observed CRDs
+    /// to report <c>Established</c>.
+    /// </remarks>
     [AspireExport]
     public static IResourceBuilder<KindHelmChartResource> WithCrdWaitRetry(
         this IResourceBuilder<KindHelmChartResource> builder,

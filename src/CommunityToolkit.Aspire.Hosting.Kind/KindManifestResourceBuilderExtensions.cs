@@ -213,8 +213,15 @@ public static class KindManifestResourceBuilderExtensions
     /// before running <c>kubectl apply</c>.
     /// </summary>
     /// <param name="builder">The manifest resource builder.</param>
-    /// <param name="timeout">The cluster readiness timeout.</param>
+    /// <param name="timeout">
+    /// The total readiness budget shared across repeated <c>kubectl cluster-info</c> probes.
+    /// Values are normalized to whole seconds and must fall within the supported timeout range.
+    /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
+    /// <remarks>
+    /// Use this when the cluster control plane can take longer than the default 60 seconds
+    /// to begin serving the Kubernetes API, such as on slower developer machines or busy CI hosts.
+    /// </remarks>
     [AspireExport]
     public static IResourceBuilder<K8sManifestResource> WithClusterReadyTimeout(
         this IResourceBuilder<K8sManifestResource> builder,
