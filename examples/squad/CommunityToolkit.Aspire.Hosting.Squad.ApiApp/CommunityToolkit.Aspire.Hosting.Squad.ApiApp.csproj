@@ -1,16 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!-- MAF 1.15.0-rc1 still defaults its buildTransitive bridge to GitHub.Copilot.SDK
+         1.0.5. Force the bridge to the newer 1.0.8 SDK path that Squad.Agents.AI
+         already restores transitively so the split CopilotClient assembly + CLI
+         land from the same SDK version without duplicate target imports. -->
+    <_MicrosoftAgentsAICopilotSdkVersion>1.0.8</_MicrosoftAgentsAICopilotSdkVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
-    <!-- Squad.Agents.AI 0.2.0-preview.4 (or later) — bumped from preview.3 to pick up
-         the MAF 1.10.0-rc1 / GitHub.Copilot.SDK 1.0.0 GA transitive upgrade, which
-         is what makes the agent's runtime file-IO actually work (the older preview
-         was wedged on SDK 1.0.0-beta.2 + an incompatible CLI protocol). The
-         GitHub.Copilot.SDK direct ref is a temporary workaround — see the comment
-         in Directory.Packages.props. -->
+    <!-- Pin the Squad sample's agent stack explicitly so the AppHost sample rides the
+         newer MAF adapter and Copilot SDK packaging together:
+           - Squad.Agents.AI 0.5.6-preview.23 (latest published adapter)
+           - Microsoft.Agents.AI.GitHub.Copilot 1.15.0-rc1
+           - GitHub.Copilot.SDK 1.0.8 -->
     <PackageReference Include="Squad.Agents.AI" />
-    <PackageReference Include="GitHub.Copilot.SDK" />
+    <PackageReference Include="Microsoft.Agents.AI.GitHub.Copilot" />
+    <PackageReference Include="GitHub.Copilot.SDK" ExcludeAssets="build" />
   </ItemGroup>
 
   <ItemGroup>
