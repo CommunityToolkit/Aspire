@@ -143,11 +143,15 @@ internal sealed class HelmManager(
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(failureCount, 1);
 
-        var multiplier = 1 << (failureCount - 1);
-        var scaledTicks = initialBackoff.Ticks * multiplier;
-        return scaledTicks >= TimeSpan.MaxValue.Ticks
+        if (failureCount >= 64)
+        {
+            return TimeSpan.MaxValue;
+        }
+
+        var multiplier = 1L << (failureCount - 1);
+        return initialBackoff.Ticks > TimeSpan.MaxValue.Ticks / multiplier
             ? TimeSpan.MaxValue
-            : TimeSpan.FromTicks(scaledTicks);
+            : TimeSpan.FromTicks(initialBackoff.Ticks * multiplier);
     }
 
     private static bool ShouldRetryForCrdRace(ProcessResult result)

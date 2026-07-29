@@ -424,6 +424,12 @@ public class KindHelmChartTests
         Assert.Equal(TimeSpan.FromSeconds(20), HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 3));
     }
 
+    [Fact]
+    public void ComputeRetryBackoffSaturatesInsteadOfOverflowing()
+    {
+        Assert.Equal(TimeSpan.MaxValue, HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 64));
+    }
+
     // ── Null-check tests ─────────────────────────────────────────────────
 
     [Fact]

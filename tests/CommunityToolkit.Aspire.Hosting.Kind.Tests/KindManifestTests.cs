@@ -4,6 +4,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
@@ -81,7 +82,19 @@ public class KindManifestTests
     {
         var builder = DistributedApplication.CreateBuilder();
         var cluster = builder.AddKindCluster("test-cluster");
+
         Assert.Throws<ArgumentNullException>(() => cluster.AddManifest("crds", null!));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void AddManifestThrowsOnWhitespaceManifestPath(string manifestPath)
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentException>(() => cluster.AddManifest("crds", manifestPath));
     }
 
     [Fact]
@@ -834,6 +847,20 @@ public class KindManifestTests
         Assert.Contains("--timeout=1s", args);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void CreateKubectlArguments_RejectWhitespaceKubeconfigPath(string kubeconfigPath)
+    {
+        Assert.Throws<ArgumentException>(() =>
+            KubectlManager.CreateWaitArguments(
+                ["customresourcedefinition.apiextensions.k8s.io/widgets.example.com"],
+                kubeconfigPath,
+                TimeSpan.FromSeconds(1)));
+        Assert.Throws<ArgumentException>(() => KubectlManager.CreateClusterInfoArguments(kubeconfigPath));
+        Assert.Throws<ArgumentException>(() => KubectlManager.CreateGetCrdsArguments(kubeconfigPath));
+    }
+
     [Fact]
     public async Task ApplyAsync_WaitsForAppliedCrdsBestEffort()
     {
@@ -958,6 +985,35 @@ public class KindManifestTests
     }
 
     [Fact]
+    public async Task ApplyAsync_IncludesStdoutWhenApplyFailsWithoutStderr()
+    {
+        var processRunner = new FakeProcessRunner();
+        processRunner.Results.Enqueue(new(0, "cluster is running", ""));
+        processRunner.Results.Enqueue(new(1, "resource mapping not found", ""));
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var manager = new KubectlManager(processRunner);
+        var resource = new K8sManifestResource("manifest", "./manifest.yaml", new KindClusterResource("test-cluster"));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => manager.ApplyAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+
+        Assert.Contains("resource mapping not found", ex.Message);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_ThrowsHelpfulErrorWhenKubectlIsMissing()
+    {
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var manager = new KubectlManager(new ThrowingProcessRunner(new Win32Exception("kubectl not found")));
+        var resource = new K8sManifestResource("manifest", "./manifest.yaml", new KindClusterResource("test-cluster"));
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => manager.ApplyAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+
+        Assert.Contains("kubectl CLI not found", ex.Message);
+    }
+
+    [Fact]
     public async Task ApplyAsync_InlineContent_PassesStandardInput()
     {
         const string content = "apiVersion: v1\nkind: Namespace";
@@ -1001,5 +1057,17 @@ public class KindManifestTests
         var directory = Path.Combine(AppContext.BaseDirectory, "kind-manifest-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         return directory;
+    }
+
+    private sealed class ThrowingProcessRunner(Exception exception) : IProcessRunner
+    {
+        public Task<ProcessResult> RunAsync(
+            ILogger logger,
+            string fileName,
+            IReadOnlyList<string> arguments,
+            string? workingDirectory = null,
+            IReadOnlyDictionary<string, string>? environmentVariables = null,
+            string? standardInput = null,
+            CancellationToken cancellationToken = default) => Task.FromException<ProcessResult>(exception);
     }
 }

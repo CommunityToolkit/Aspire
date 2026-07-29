@@ -39,7 +39,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(manifestPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestPath);
 
         var absolutePath = System.IO.Path.IsPathRooted(manifestPath)
             ? manifestPath

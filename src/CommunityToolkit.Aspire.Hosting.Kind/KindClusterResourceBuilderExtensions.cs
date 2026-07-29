@@ -188,6 +188,10 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(hostPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(containerPath);
+        if (!containerPath.StartsWith("/", StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Container path must be an absolute Linux path (for example '/var/local/data').", nameof(containerPath));
+        }
 
         var normalizedHostPath = Path.IsPathRooted(hostPath)
             ? Path.GetFullPath(hostPath)

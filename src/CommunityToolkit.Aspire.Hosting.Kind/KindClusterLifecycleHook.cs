@@ -23,6 +23,7 @@ internal sealed class KindClusterLifecycleHook(
     IKindContainerRuntimeResolver containerRuntimeResolver,
     IHostApplicationLifetime hostApplicationLifetime) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
 {
+    private static readonly TimeSpan SynchronousCleanupWaitTimeout = TimeSpan.FromSeconds(15);
     private readonly object _cleanupLock = new();
     private readonly object _registrationLock = new();
     private Task? _cleanupTask;
@@ -119,7 +120,11 @@ internal sealed class KindClusterLifecycleHook(
     {
         try
         {
-            EnsureCleanupStarted().GetAwaiter().GetResult();
+            var cleanupTask = EnsureCleanupStarted();
+            if (cleanupTask.Wait(SynchronousCleanupWaitTimeout))
+            {
+                cleanupTask.GetAwaiter().GetResult();
+            }
         }
         catch
         {

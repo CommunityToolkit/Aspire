@@ -4,6 +4,7 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind;
@@ -17,6 +18,7 @@ internal sealed class KubectlManager(
     TimeSpan? clusterInfoMaxWait = null,
     TimeSpan? clusterInfoProbeTimeout = null)
 {
+    private const string KubectlNotFoundMessage = "kubectl CLI not found. Install it from https://kubernetes.io/docs/tasks/tools/";
     private static readonly TimeSpan ClusterInfoMaxWait = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan ClusterInfoProbeTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan ClusterInfoInitialDelay = TimeSpan.FromSeconds(1);
@@ -64,9 +66,8 @@ internal sealed class KubectlManager(
 
             try
             {
-                result = await processRunner.RunAsync(
+                result = await RunKubectlAsync(
                     logger,
-                    "kubectl",
                     args,
                     standardInput: resource.InlineContent,
                     cancellationToken: applyCts.Token).ConfigureAwait(false);
@@ -81,7 +82,7 @@ internal sealed class KubectlManager(
         if (result.ExitCode != 0)
         {
             throw new InvalidOperationException(
-                $"Failed to apply manifest '{resource.ManifestPath}' to cluster '{resource.Parent.Name}': {result.Error}");
+                $"Failed to apply manifest '{resource.ManifestPath}' to cluster '{resource.Parent.Name}': {FormatFailureOutput(result)}");
         }
 
         var crdNames = GetAppliedCrdNames(result.Output);
@@ -118,9 +119,8 @@ internal sealed class KubectlManager(
             "Waiting for {CrdCount} custom resource definition(s) to become Established...",
             crds.Length);
 
-        var result = await processRunner.RunAsync(
+        var result = await RunKubectlAsync(
             logger,
-            "kubectl",
             args,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -153,11 +153,10 @@ internal sealed class KubectlManager(
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrEmpty(kubeconfigPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(kubeconfigPath);
 
-        var result = await processRunner.RunAsync(
+        var result = await RunKubectlAsync(
             logger,
-            "kubectl",
             CreateGetCrdsArguments(kubeconfigPath),
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -244,7 +243,7 @@ internal sealed class KubectlManager(
         TimeSpan timeout)
     {
         ArgumentNullException.ThrowIfNull(crdNames);
-        ArgumentNullException.ThrowIfNull(kubeconfigPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(kubeconfigPath);
 
         List<string> arguments =
         [
@@ -264,7 +263,7 @@ internal sealed class KubectlManager(
     /// </summary>
     internal static IReadOnlyList<string> CreateClusterInfoArguments(string kubeconfigPath)
     {
-        ArgumentNullException.ThrowIfNull(kubeconfigPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(kubeconfigPath);
 
         return
         [
@@ -275,7 +274,7 @@ internal sealed class KubectlManager(
 
     internal static IReadOnlyList<string> CreateGetCrdsArguments(string kubeconfigPath)
     {
-        ArgumentNullException.ThrowIfNull(kubeconfigPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(kubeconfigPath);
 
         return
         [
@@ -338,9 +337,8 @@ internal sealed class KubectlManager(
 
                 try
                 {
-                    result = await processRunner.RunAsync(
+                    result = await RunKubectlAsync(
                         logger,
-                        "kubectl",
                         args,
                         cancellationToken: probeCts.Token).ConfigureAwait(false);
                 }
@@ -393,6 +391,40 @@ internal sealed class KubectlManager(
         return left <= right ? left : right;
     }
 
+    private async Task<ProcessResult> RunKubectlAsync(
+        ILogger logger,
+        IReadOnlyList<string> arguments,
+        string? standardInput = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await processRunner.RunAsync(
+                logger,
+                "kubectl",
+                arguments,
+                standardInput: standardInput,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+        catch (Win32Exception ex)
+        {
+            throw new InvalidOperationException(KubectlNotFoundMessage, ex);
+        }
+    }
+
+    private static string FormatFailureOutput(ProcessResult result)
+    {
+        var messages = new[]
+        {
+            result.Error?.Trim(),
+            result.Output?.Trim(),
+        };
+
+        return string.Join(
+            Environment.NewLine,
+            messages.Where(static message => !string.IsNullOrWhiteSpace(message)).Distinct(StringComparer.Ordinal));
+    }
+
     /// <summary>
     /// Extracts CRD resource names from <c>kubectl apply</c> output.
     /// </summary>
@@ -433,7 +465,7 @@ internal sealed class KubectlManager(
         bool bestEffort)
     {
         ArgumentNullException.ThrowIfNull(crdNames);
-        ArgumentException.ThrowIfNullOrEmpty(kubeconfigPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(kubeconfigPath);
 
         var crds = crdNames.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (crds.Length == 0)
@@ -447,9 +479,8 @@ internal sealed class KubectlManager(
             "Waiting for {CrdCount} custom resource definition(s) to become Established...",
             crds.Length);
 
-        var result = await processRunner.RunAsync(
+        var result = await RunKubectlAsync(
             logger,
-            "kubectl",
             args,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 

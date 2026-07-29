@@ -244,6 +244,15 @@ public class AddKindClusterTests
     }
 
     [Fact]
+    public void WithNodeMountRejectsRelativeContainerPath()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentException>(() => cluster.WithNodeMount(@"C:\host-data", "container-data"));
+    }
+
+    [Fact]
     public async Task GeneratedConfigContainsImageFromKindContainerImageTags()
     {
         var resource = new KindClusterResource("test-cluster");
