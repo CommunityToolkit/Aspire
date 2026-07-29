@@ -5,6 +5,8 @@ var manifestMountSource = Path.Combine(builder.AppHostDirectory, "manifests");
 // The cluster appears in the Aspire dashboard, your apps get KUBECONFIG injected.
 var cluster = builder.AddKindCluster("kind-cluster")
     .WithNodeImage("kindest/node:v1.32.2")
+    // Mount the same manifest directory that the sample applies from the host so
+    // workloads inside the cluster can also reference it if needed.
     .WithNodeMount(manifestMountSource, "/var/local/aspire/manifests", readOnly: true);
 
 // Run Headlamp (a lightweight Kubernetes web UI) as an Aspire-managed container
@@ -23,22 +25,22 @@ var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicha
     .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(5))
     .WithNamespace("cache");
 
-// Apply raw Kubernetes YAML to the Kind cluster and target the namespace declared by the sample manifest.
-var manifestResource = cluster.AddManifest("extra-config", "manifests/extra-config.yaml")
+// Apply raw Kubernetes YAML from the same host directory mounted into each Kind node.
+var manifestResource = cluster.AddManifest("extra-config", Path.Combine(manifestMountSource, "extra-config.yaml"))
     .WithClusterReadyTimeout(TimeSpan.FromMinutes(2))
     .WithNamespace("aspire-demo");
 
 // Demonstrate recursive directory apply for manifest folders.
-cluster.AddManifest("recursive-config", "manifests")
+cluster.AddManifest("recursive-config", manifestMountSource)
     .WithRecursive();
 
 // Demonstrate server-side apply with conflict forcing and a stable field manager.
-cluster.AddManifest("ssa-config", "manifests/extra-config.yaml")
+cluster.AddManifest("ssa-config", Path.Combine(manifestMountSource, "extra-config.yaml"))
     .WithServerSideApply(forceConflicts: true)
     .WithFieldManager("aspire-example");
 
 // Demonstrate best-effort CRD waiting when a local demo should continue after a CRD wait timeout.
-cluster.AddManifest("best-effort-crds", "manifests/extra-config.yaml")
+cluster.AddManifest("best-effort-crds", Path.Combine(manifestMountSource, "extra-config.yaml"))
     .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort);
 
 cluster.AddManifestFromContent("demo-ns", """

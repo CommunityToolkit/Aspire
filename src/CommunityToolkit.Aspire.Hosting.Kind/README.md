@@ -27,7 +27,7 @@ var cluster = builder.AddKindCluster("mycluster");
 builder.Build().Run();
 ```
 
-This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and deleted when it shuts down.
+This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and is cleaned up on graceful shutdown, Ctrl+C, or other process-exit signals on a best-effort basis.
 
 ## Scenario 1: Kind cluster as a managed dependency (F5 mode)
 
@@ -64,7 +64,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 #### WithNodeMount
 
-Use `WithNodeMount` to project host content into every Kind node. This is useful for local charts, registries, or other host-side assets that must be visible from inside the cluster nodes.
+Use `WithNodeMount` to project host content into every Kind node. This is useful for local charts, registries, or other host-side assets that must be visible from inside the cluster nodes. Relative host paths are resolved against the AppHost project directory.
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster")
@@ -73,7 +73,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 #### Cluster lifetime
 
-By default the cluster is deleted when the AppHost shuts down (`ClusterLifetime.Session`). To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
+By default the cluster is deleted on graceful shutdown or other process-exit signals (`ClusterLifetime.Session`) on a best-effort basis. To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster")
@@ -82,7 +82,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 | Value | Behavior |
 |---|---|
-| `ClusterLifetime.Session` | Cluster is deleted on AppHost shutdown (default). |
+| `ClusterLifetime.Session` | Cluster is deleted on graceful shutdown or process exit on a best-effort basis (default). |
 | `ClusterLifetime.Persistent` | Cluster survives AppHost restarts and is reused on next startup. |
 
 ## Networking model
