@@ -154,6 +154,52 @@ public static class KindHelmChartResourceBuilderExtensions
     }
 
     /// <summary>
+    /// Sets a Helm value while preserving it as a string (maps to <c>helm install --set-string key=value</c>).
+    /// </summary>
+    /// <param name="builder">The Helm chart resource builder.</param>
+    /// <param name="key">The Helm value key.</param>
+    /// <param name="value">The Helm value.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<KindHelmChartResource> WithHelmStringValue(
+        this IResourceBuilder<KindHelmChartResource> builder,
+        string key,
+        string value)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(value);
+
+        builder.Resource.StringValues[key] = value;
+        return builder;
+    }
+
+    /// <summary>
+    /// Retries Helm installs that race newly-created CRDs which have not reached the
+    /// <c>Established</c> condition yet.
+    /// </summary>
+    /// <param name="builder">The Helm chart resource builder.</param>
+    /// <param name="maxAttempts">The total number of install attempts. Must be 2 or greater.</param>
+    /// <param name="backoff">
+    /// The initial delay before retrying. Later retries back off exponentially.
+    /// When <see langword="null"/>, Kind uses a 5 second initial backoff.
+    /// </param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<KindHelmChartResource> WithCrdWaitRetry(
+        this IResourceBuilder<KindHelmChartResource> builder,
+        int maxAttempts = 3,
+        TimeSpan? backoff = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxAttempts, 2);
+
+        builder.Resource.CrdWaitRetryMaxAttempts = maxAttempts;
+        builder.Resource.CrdWaitRetryBackoff = KubectlTimeouts.Normalize(backoff ?? TimeSpan.FromSeconds(5), nameof(backoff));
+        return builder;
+    }
+
+    /// <summary>
     /// Adds a values file (maps to <c>helm install -f path</c>).
     /// </summary>
     /// <param name="builder">The Helm chart resource builder.</param>

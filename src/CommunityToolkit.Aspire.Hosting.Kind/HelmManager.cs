@@ -9,33 +9,87 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 /// <summary>
 /// Manages Helm chart deployments to a Kind cluster by orchestrating Helm CLI calls.
 /// </summary>
-internal sealed class HelmManager(IProcessRunner processRunner)
+internal sealed class HelmManager(
+    IProcessRunner processRunner,
+    Func<TimeSpan, CancellationToken, Task>? delayAsync = null,
+    KubectlManager? kubectlManager = null)
 {
+    private static readonly TimeSpan DefaultCrdWaitTimeout = TimeSpan.FromMinutes(5);
+
+    private readonly Func<TimeSpan, CancellationToken, Task> _delayAsync = delayAsync ?? Task.Delay;
+    private readonly KubectlManager _kubectlManager = kubectlManager ?? new KubectlManager(processRunner, delayAsync);
+
     /// <summary>
     /// Installs or upgrades the Helm release.
     /// </summary>
     public async Task InstallAsync(KindHelmChartResource resource, ILogger logger, CancellationToken cancellationToken)
     {
         var args = CreateInstallArguments(resource);
+        var maxAttempts = resource.CrdWaitRetryMaxAttempts;
+        IReadOnlySet<string> knownCrds = maxAttempts > 1
+            ? await TryGetCustomResourceDefinitionsAsync(resource, logger, cancellationToken).ConfigureAwait(false)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        logger.LogInformation(
-            "Installing Helm chart '{ChartRef}' as release '{ReleaseName}' in cluster '{ClusterName}'...",
-            resource.ChartRef, resource.ReleaseName, resource.Parent.Name);
-
-        var result = await processRunner.RunAsync(
-            logger,
-            "helm",
-            args,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
-
-        if (result.ExitCode != 0)
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            throw new InvalidOperationException(
-                $"Failed to install Helm chart '{resource.ChartRef}' as release '{resource.ReleaseName}': {result.Error}");
-        }
+            logger.LogInformation(
+                "Installing Helm chart '{ChartRef}' as release '{ReleaseName}' in cluster '{ClusterName}' (attempt {Attempt}/{MaxAttempts})...",
+                resource.ChartRef,
+                resource.ReleaseName,
+                resource.Parent.Name,
+                attempt,
+                maxAttempts);
 
-        logger.LogInformation(
-            "Helm release '{ReleaseName}' installed successfully.", resource.ReleaseName);
+            var result = await processRunner.RunAsync(
+                logger,
+                "helm",
+                args,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            if (result.ExitCode == 0)
+            {
+                logger.LogInformation(
+                    "Helm release '{ReleaseName}' installed successfully.", resource.ReleaseName);
+                return;
+            }
+
+            if (attempt >= maxAttempts || !ShouldRetryForCrdRace(result))
+            {
+                throw new InvalidOperationException(
+                    $"Failed to install Helm chart '{resource.ChartRef}' as release '{resource.ReleaseName}': {result.Error}");
+            }
+
+            var discoveredCrds = await TryGetCustomResourceDefinitionsAsync(resource, logger, cancellationToken).ConfigureAwait(false);
+            var newCrds = discoveredCrds
+                .Except(knownCrds, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            if (newCrds.Length == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to install Helm chart '{resource.ChartRef}' as release '{resource.ReleaseName}': {result.Error}");
+            }
+
+            logger.LogWarning(
+                "Helm release '{ReleaseName}' failed before CRDs finished registering. Waiting for {CrdCount} CRD(s) before retrying.",
+                resource.ReleaseName,
+                newCrds.Length);
+
+            await _kubectlManager.WaitForCrdsAsync(
+                newCrds,
+                resource.Parent.KubeconfigPath,
+                DefaultCrdWaitTimeout,
+                logger,
+                cancellationToken).ConfigureAwait(false);
+
+            knownCrds = discoveredCrds;
+            var backoff = ComputeRetryBackoff(resource.CrdWaitRetryBackoff, attempt);
+            logger.LogInformation(
+                "Retrying Helm release '{ReleaseName}' in {DelaySeconds:n1}s.",
+                resource.ReleaseName,
+                backoff.TotalSeconds);
+            await _delayAsync(backoff, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     internal static IReadOnlyList<string> CreateInstallArguments(KindHelmChartResource resource)
@@ -70,6 +124,12 @@ internal sealed class HelmManager(IProcessRunner processRunner)
             arguments.Add($"{key}={value}");
         }
 
+        foreach (var (key, value) in resource.StringValues)
+        {
+            arguments.Add("--set-string");
+            arguments.Add($"{key}={value}");
+        }
+
         foreach (string valuesFile in resource.ValuesFiles)
         {
             arguments.Add("-f");
@@ -77,5 +137,45 @@ internal sealed class HelmManager(IProcessRunner processRunner)
         }
 
         return arguments;
+    }
+
+    internal static TimeSpan ComputeRetryBackoff(TimeSpan initialBackoff, int failureCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(failureCount, 1);
+
+        var multiplier = 1 << (failureCount - 1);
+        var scaledTicks = initialBackoff.Ticks * multiplier;
+        return scaledTicks >= TimeSpan.MaxValue.Ticks
+            ? TimeSpan.MaxValue
+            : TimeSpan.FromTicks(scaledTicks);
+    }
+
+    private static bool ShouldRetryForCrdRace(ProcessResult result)
+    {
+        var combined = string.Concat(result.Error, "\n", result.Output);
+        return combined.Contains("no matches for kind", StringComparison.OrdinalIgnoreCase)
+            || combined.Contains("ensure CRDs are installed first", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task<IReadOnlySet<string>> TryGetCustomResourceDefinitionsAsync(
+        KindHelmChartResource resource,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _kubectlManager.GetCustomResourceDefinitionsAsync(
+                resource.Parent.KubeconfigPath,
+                logger,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug(
+                ex,
+                "Unable to snapshot CRDs for Helm release '{ReleaseName}'.",
+                resource.ReleaseName);
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 }

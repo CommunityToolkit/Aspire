@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
 
@@ -85,6 +86,79 @@ public class KindHelmChartTests
     }
 
     [Fact]
+    public void WithHelmStringValueAddsStringValue()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+            .WithHelmStringValue("auth.password", "000123")
+            .WithHelmStringValue("feature.flag", "false");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
+        Assert.Equal(2, resource.StringValues.Count);
+        Assert.Equal("000123", resource.StringValues["auth.password"]);
+        Assert.Equal("false", resource.StringValues["feature.flag"]);
+    }
+
+    [Fact]
+    public void WithCrdWaitRetrySetsRetryConfiguration()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+            .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(7));
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
+        Assert.Equal(3, resource.CrdWaitRetryMaxAttempts);
+        Assert.Equal(TimeSpan.FromSeconds(7), resource.CrdWaitRetryBackoff);
+    }
+
+    [Fact]
+    public void WithCrdWaitRetryUsesDefaultBackoff()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+            .WithCrdWaitRetry();
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
+        Assert.Equal(3, resource.CrdWaitRetryMaxAttempts);
+        Assert.Equal(TimeSpan.FromSeconds(5), resource.CrdWaitRetryBackoff);
+    }
+
+    [Fact]
+    public void WithCrdWaitRetryRejectsLessThanTwoAttempts()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cluster.AddHelmChart("redis", "chart/ref").WithCrdWaitRetry(1, TimeSpan.FromSeconds(5)));
+    }
+
+    [Fact]
+    public void WithCrdWaitRetryRejectsInvalidBackoff()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cluster.AddHelmChart("redis", "chart/ref").WithCrdWaitRetry(3, TimeSpan.Zero));
+    }
+
+    [Fact]
     public void WithHelmValuesFileAddsPath()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -144,6 +218,7 @@ public class KindHelmChartTests
         var resource = new KindHelmChartResource("redis", "chart/ref", cluster);
 
         Assert.Empty(resource.Values);
+        Assert.Empty(resource.StringValues);
         Assert.Empty(resource.ValuesFiles);
     }
 
@@ -173,6 +248,7 @@ public class KindHelmChartTests
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
             .WithChartVersion("20.0.0")
             .WithHelmValue("replica.replicaCount", "2")
+            .WithHelmStringValue("auth.password", "000123")
             .WithHelmValuesFile("./values.yaml")
             .WithNamespace("cache");
 
@@ -182,6 +258,7 @@ public class KindHelmChartTests
         var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
         Assert.Equal("20.0.0", resource.Version);
         Assert.Equal("2", resource.Values["replica.replicaCount"]);
+        Assert.Equal("000123", resource.StringValues["auth.password"]);
         Assert.Single(resource.ValuesFiles);
         Assert.Equal("cache", resource.Namespace);
     }
@@ -197,6 +274,7 @@ public class KindHelmChartTests
         };
 
         resource.Values["annotations.description"] = "My \"Redis\" App";
+        resource.StringValues["auth.password"] = "000123";
         resource.ValuesFiles.Add(@"C:\temp path\values file.yaml");
 
         var arguments = HelmManager.CreateInstallArguments(resource);
@@ -215,10 +293,82 @@ public class KindHelmChartTests
             "--create-namespace",
             "--set",
             "annotations.description=My \"Redis\" App",
+            "--set-string",
+            "auth.password=000123",
             "-f",
             @"C:\temp path\values file.yaml",
         ],
         arguments);
+    }
+
+    [Fact]
+    public async Task InstallAsync_RetriesAfterWaitingForNewCrds()
+    {
+        var cluster = new KindClusterResource("cluster");
+        var resource = new KindHelmChartResource("redis", "chart/ref", cluster)
+        {
+            CrdWaitRetryMaxAttempts = 3,
+            CrdWaitRetryBackoff = TimeSpan.FromSeconds(2),
+        };
+        var processRunner = new FakeProcessRunner();
+        processRunner.Results.Enqueue(new(0, "", "")); // kubectl get crd baseline
+        processRunner.Results.Enqueue(new(1, "", "no matches for kind \"Widget\" in version \"widgets.example.com/v1\"; ensure CRDs are installed first"));
+        processRunner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", "")); // kubectl get crd after failure
+        processRunner.Results.Enqueue(new(0, "", "")); // kubectl wait
+        processRunner.Results.Enqueue(new(0, "release installed", "")); // retry succeeds
+        var delays = new List<TimeSpan>();
+        var manager = new HelmManager(
+            processRunner,
+            (delay, _) =>
+            {
+                delays.Add(delay);
+                return Task.CompletedTask;
+            });
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+
+        await manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None);
+
+        Assert.Equal(5, processRunner.Commands.Count);
+        Assert.Equal("kubectl", processRunner.Commands[0].FileName);
+        Assert.Contains("get crd -o name", processRunner.Commands[0].Arguments);
+        Assert.Equal("helm", processRunner.Commands[1].FileName);
+        Assert.Equal("kubectl", processRunner.Commands[2].FileName);
+        Assert.Contains("get crd -o name", processRunner.Commands[2].Arguments);
+        Assert.Equal("kubectl", processRunner.Commands[3].FileName);
+        Assert.Contains("wait --for=condition=Established customresourcedefinition.apiextensions.k8s.io/widgets.example.com", processRunner.Commands[3].Arguments);
+        Assert.Equal("helm", processRunner.Commands[4].FileName);
+        Assert.Equal([TimeSpan.FromSeconds(2)], delays);
+    }
+
+    [Fact]
+    public async Task InstallAsync_DoesNotRetryWithoutNewCrds()
+    {
+        var cluster = new KindClusterResource("cluster");
+        var resource = new KindHelmChartResource("redis", "chart/ref", cluster)
+        {
+            CrdWaitRetryMaxAttempts = 3,
+            CrdWaitRetryBackoff = TimeSpan.FromSeconds(2),
+        };
+        var processRunner = new FakeProcessRunner();
+        processRunner.Results.Enqueue(new(0, "", "")); // kubectl get crd baseline
+        processRunner.Results.Enqueue(new(1, "", "no matches for kind \"Widget\" in version \"widgets.example.com/v1\"; ensure CRDs are installed first"));
+        processRunner.Results.Enqueue(new(0, "", "")); // kubectl get crd after failure
+        var manager = new HelmManager(processRunner, static (_, _) => Task.CompletedTask);
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+
+        Assert.Contains("Failed to install Helm chart", ex.Message);
+        Assert.Equal(3, processRunner.Commands.Count);
+    }
+
+    [Fact]
+    public void ComputeRetryBackoffDoublesPerFailure()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(5), HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 1));
+        Assert.Equal(TimeSpan.FromSeconds(10), HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 2));
+        Assert.Equal(TimeSpan.FromSeconds(20), HelmManager.ComputeRetryBackoff(TimeSpan.FromSeconds(5), 3));
     }
 
     // ── Null-check tests ─────────────────────────────────────────────────
@@ -283,11 +433,33 @@ public class KindHelmChartTests
     }
 
     [Fact]
+    public void WithHelmStringValueShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<KindHelmChartResource> builder = null!;
+
+        var action = () => builder.WithHelmStringValue("key", "value");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
     public void WithHelmValuesFileShouldThrowWhenBuilderIsNull()
     {
         IResourceBuilder<KindHelmChartResource> builder = null!;
 
         var action = () => builder.WithHelmValuesFile("./values.yaml");
+
+        var exception = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(nameof(builder), exception.ParamName);
+    }
+
+    [Fact]
+    public void WithCrdWaitRetryShouldThrowWhenBuilderIsNull()
+    {
+        IResourceBuilder<KindHelmChartResource> builder = null!;
+
+        var action = () => builder.WithCrdWaitRetry();
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(builder), exception.ParamName);

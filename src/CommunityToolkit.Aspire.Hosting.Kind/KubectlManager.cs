@@ -138,6 +138,37 @@ internal sealed class KubectlManager(
         }
     }
 
+    internal Task WaitForCrdsAsync(
+        IEnumerable<string> crdNames,
+        string kubeconfigPath,
+        TimeSpan timeout,
+        ILogger logger,
+        CancellationToken cancellationToken) =>
+        WaitForCrdsCoreAsync(crdNames, kubeconfigPath, timeout, logger, cancellationToken, bestEffort: false);
+
+    internal async Task<IReadOnlySet<string>> GetCustomResourceDefinitionsAsync(
+        string kubeconfigPath,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(kubeconfigPath);
+
+        var result = await processRunner.RunAsync(
+            logger,
+            "kubectl",
+            CreateGetCrdsArguments(kubeconfigPath),
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (result.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                "Failed to query custom resource definitions: " +
+                (string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error));
+        }
+
+        return ParseResourceNames(result.Output);
+    }
+
     /// <summary>
     /// Creates the <c>kubectl apply</c> argument list for a manifest resource.
     /// </summary>
@@ -236,6 +267,20 @@ internal sealed class KubectlManager(
         return
         [
             "cluster-info",
+            $"--kubeconfig={kubeconfigPath}",
+        ];
+    }
+
+    internal static IReadOnlyList<string> CreateGetCrdsArguments(string kubeconfigPath)
+    {
+        ArgumentNullException.ThrowIfNull(kubeconfigPath);
+
+        return
+        [
+            "get",
+            "crd",
+            "-o",
+            "name",
             $"--kubeconfig={kubeconfigPath}",
         ];
     }
@@ -375,5 +420,64 @@ internal sealed class KubectlManager(
         }
 
         return [.. crds];
+    }
+
+    private async Task WaitForCrdsCoreAsync(
+        IEnumerable<string> crdNames,
+        string kubeconfigPath,
+        TimeSpan timeout,
+        ILogger logger,
+        CancellationToken cancellationToken,
+        bool bestEffort)
+    {
+        ArgumentNullException.ThrowIfNull(crdNames);
+        ArgumentException.ThrowIfNullOrEmpty(kubeconfigPath);
+
+        var crds = crdNames.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (crds.Length == 0)
+        {
+            return;
+        }
+
+        var args = CreateWaitArguments(crds, kubeconfigPath, timeout);
+
+        logger.LogInformation(
+            "Waiting for {CrdCount} custom resource definition(s) to become Established...",
+            crds.Length);
+
+        var result = await processRunner.RunAsync(
+            logger,
+            "kubectl",
+            args,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (result.ExitCode == 0)
+        {
+            return;
+        }
+
+        var message = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
+        if (bestEffort)
+        {
+            logger.LogWarning(
+                "Timed out or failed while waiting for custom resource definition(s) to become Established: {Error}",
+                message);
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Timed out or failed while waiting for custom resource definition(s) to become Established: {message}");
+    }
+
+    private static IReadOnlySet<string> ParseResourceNames(string output)
+    {
+        if (string.IsNullOrWhiteSpace(output))
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        return output
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 }
