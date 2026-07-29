@@ -81,7 +81,7 @@ public static class KindHelmChartResourceBuilderExtensions
             await notifications.WaitForResourceAsync(resource.Parent.Name, KnownResourceStates.Running, ct);
 
             await e.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, e.Services), ct);
-            
+
             await notifications.PublishUpdateAsync(resource,
                 state => state with { State = KnownResourceStates.Starting });
 
