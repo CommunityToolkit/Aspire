@@ -110,7 +110,9 @@ public static class KindManifestResourceBuilderExtensions
             try
             {
                 var processRunner = e.Services.GetRequiredService<IProcessRunner>();
-                var kubectlManager = new KubectlManager(processRunner);
+                var kubectlManager = new KubectlManager(
+                    processRunner,
+                    clusterInfoMaxWait: resource.ClusterReadyTimeout);
                 await kubectlManager.ApplyAsync(resource, logger, ct);
 
                 await notifications.PublishUpdateAsync(resource,
@@ -193,6 +195,24 @@ public static class KindManifestResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(fieldManager);
 
         builder.Resource.FieldManager = fieldManager;
+        return builder;
+    }
+
+    /// <summary>
+    /// Sets the maximum time to wait for the Kubernetes API to become reachable
+    /// before running <c>kubectl apply</c>.
+    /// </summary>
+    /// <param name="builder">The manifest resource builder.</param>
+    /// <param name="timeout">The cluster readiness timeout.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
+    [AspireExport]
+    public static IResourceBuilder<K8sManifestResource> WithClusterReadyTimeout(
+        this IResourceBuilder<K8sManifestResource> builder,
+        TimeSpan timeout)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.Resource.ClusterReadyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
         return builder;
     }
 

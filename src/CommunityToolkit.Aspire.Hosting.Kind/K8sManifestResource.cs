@@ -72,6 +72,12 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
     public TimeSpan ApplyTimeout { get; set; } = TimeSpan.FromMinutes(5);
 
     /// <summary>
+    /// Gets or sets the maximum time to wait for the Kubernetes API to become reachable
+    /// before running <c>kubectl apply</c>.
+    /// </summary>
+    public TimeSpan ClusterReadyTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
     /// Gets or sets the maximum time to wait for applied CRDs to reach the <c>Established</c> condition.
     /// </summary>
     public TimeSpan CrdWaitTimeout { get; set; } = TimeSpan.FromMinutes(5);

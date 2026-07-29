@@ -283,6 +283,71 @@ public class KindManifestTests
     }
 
     [Fact]
+    public void WithClusterReadyTimeoutSetsClusterReadyTimeout()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddManifest("crds", "./crds.yaml")
+            .WithClusterReadyTimeout(TimeSpan.FromSeconds(90));
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
+        Assert.Equal(TimeSpan.FromSeconds(90), resource.ClusterReadyTimeout);
+    }
+
+    [Fact]
+    public void WithClusterReadyTimeoutRejectsZero()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cluster.AddManifest("crds", "./crds.yaml")
+                .WithClusterReadyTimeout(TimeSpan.Zero));
+    }
+
+    [Fact]
+    public void WithClusterReadyTimeoutRejectsNegative()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cluster.AddManifest("crds", "./crds.yaml")
+                .WithClusterReadyTimeout(TimeSpan.FromSeconds(-1)));
+    }
+
+    [Fact]
+    public void WithClusterReadyTimeoutRoundsSubSecondUpToOneSecond()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddManifest("crds", "./crds.yaml")
+            .WithClusterReadyTimeout(TimeSpan.FromMilliseconds(500));
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
+        Assert.Equal(TimeSpan.FromSeconds(1), resource.ClusterReadyTimeout);
+    }
+
+    [Fact]
+    public void WithClusterReadyTimeoutRejectsMoreThanOneHour()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cluster.AddManifest("crds", "./crds.yaml")
+                .WithClusterReadyTimeout(TimeSpan.MaxValue));
+    }
+
+    [Fact]
     public void WithApplyTimeoutRejectsZero()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -447,6 +512,15 @@ public class KindManifestTests
         var resource = new K8sManifestResource("crds", "./crds.yaml", cluster);
 
         Assert.Equal(TimeSpan.FromMinutes(5), resource.ApplyTimeout);
+    }
+
+    [Fact]
+    public void DefaultClusterReadyTimeoutIsSixtySeconds()
+    {
+        var cluster = new KindClusterResource("cluster");
+        var resource = new K8sManifestResource("crds", "./crds.yaml", cluster);
+
+        Assert.Equal(TimeSpan.FromSeconds(60), resource.ClusterReadyTimeout);
     }
 
     [Fact]
