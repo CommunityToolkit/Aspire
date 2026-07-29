@@ -1,13 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <!-- MAF 1.15.0-rc1 still defaults its buildTransitive bridge to GitHub.Copilot.SDK
-         1.0.5. Force the bridge to the newer 1.0.8 SDK path that Squad.Agents.AI
-         already restores transitively so the split CopilotClient assembly + CLI
-         land from the same SDK version without duplicate target imports. -->
-    <_MicrosoftAgentsAICopilotSdkVersion>1.0.8</_MicrosoftAgentsAICopilotSdkVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
