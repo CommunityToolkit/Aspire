@@ -54,8 +54,7 @@ static class App
             var diffFiles = await ChangedFilesAsync(repoRoot, options.BaseSha, options.HeadSha);
             var (projectRefs, packageRefs, projectPaths) = ProjectData(repoRoot);
             var nodeToTests = BuildNodeToTests(allTests, projectRefs);
-            var exampleToTests = BuildExampleToTests(projectPaths, projectRefs, nodeToTests);
-            var packageToTests = BuildPackageToTests(packageRefs, projectRefs, nodeToTests, exampleToTests);
+            var packageToTests = BuildPackageToTests(packageRefs, nodeToTests);
             var packageToProjects = BuildPackageToProjects(packageRefs);
             var testInfraPackages = LoadTestInfraPackages(repoRoot);
             var typeScriptAppHostToTests = BuildTypeScriptAppHostToTests(repoRoot, projectPaths);
@@ -145,18 +144,13 @@ static class App
                 var project = NearestProject(filePath, projectPaths);
                 if (project is not null)
                 {
-                    var impacted = CollectImpactedTests(project, projectRefs, nodeToTests);
-                    if (impacted.Count == 0 &&
-                        TryGetExampleName(project, out var projectExampleName) &&
-                        exampleToTests.TryGetValue(projectExampleName, out var exampleImpacted))
-                    {
-                        impacted = exampleImpacted;
-                    }
-
-                    if (impacted.Count > 0)
+                    if (nodeToTests.TryGetValue(project, out var impacted))
                     {
                         selected.UnionWith(impacted);
-                        reasons.Add($"Selected {impacted.Count} tests because {filePath} belongs to {project}.");
+                        if (impacted.Count > 0)
+                        {
+                            reasons.Add($"Selected {impacted.Count} tests because {filePath} belongs to {project}.");
+                        }
                     }
 
                     continue;
@@ -178,7 +172,7 @@ static class App
                     continue;
                 }
 
-                if (TryGetExampleTests(filePath, exampleToTests, out var exampleName, out var impactedExampleTests))
+                if (TryGetExampleTests(filePath, projectPaths, nodeToTests, out var exampleName, out var impactedExampleTests))
                 {
                     selected.UnionWith(impactedExampleTests);
                     reasons.Add($"Selected {impactedExampleTests.Count} tests because {filePath} belongs to example {exampleName}.");
@@ -425,23 +419,13 @@ static class App
 
     private static Dictionary<string, HashSet<string>> BuildPackageToTests(
         Dictionary<string, HashSet<string>> packageRefs,
-        Dictionary<string, HashSet<string>> projectRefs,
-        Dictionary<string, HashSet<string>> nodeToTests,
-        Dictionary<string, HashSet<string>> exampleToTests)
+        Dictionary<string, HashSet<string>> nodeToTests)
     {
         var packageToTests = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
 
         foreach (var (project, packages) in packageRefs)
         {
-            var impacted = CollectImpactedTests(project, projectRefs, nodeToTests);
-            if (impacted.Count == 0 &&
-                TryGetExampleName(project, out var exampleName) &&
-                exampleToTests.TryGetValue(exampleName, out var exampleImpacted))
-            {
-                impacted = exampleImpacted;
-            }
-
-            if (impacted.Count == 0)
+            if (!nodeToTests.TryGetValue(project, out var impacted))
             {
                 continue;
             }
@@ -459,68 +443,6 @@ static class App
         }
 
         return packageToTests;
-    }
-
-    private static Dictionary<string, HashSet<string>> BuildExampleToTests(
-        List<string> projectPaths,
-        Dictionary<string, HashSet<string>> projectRefs,
-        Dictionary<string, HashSet<string>> nodeToTests)
-    {
-        var exampleToTests = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
-
-        foreach (var projectPath in projectPaths.Where(static path => path.StartsWith("examples/", StringComparison.Ordinal)))
-        {
-            if (!TryGetExampleName(projectPath, out var exampleName))
-            {
-                continue;
-            }
-
-            if (!exampleToTests.TryGetValue(exampleName, out var tests))
-            {
-                tests = new HashSet<string>(StringComparer.Ordinal);
-                exampleToTests[exampleName] = tests;
-            }
-
-            tests.UnionWith(CollectImpactedTests(projectPath, projectRefs, nodeToTests));
-        }
-
-        return exampleToTests;
-    }
-
-    private static HashSet<string> CollectImpactedTests(
-        string project,
-        Dictionary<string, HashSet<string>> projectRefs,
-        Dictionary<string, HashSet<string>> nodeToTests)
-    {
-        var impacted = new HashSet<string>(StringComparer.Ordinal);
-        var queue = new Stack<string>();
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-
-        queue.Push(project);
-
-        while (queue.Count > 0)
-        {
-            var current = queue.Pop();
-            if (!seen.Add(current))
-            {
-                continue;
-            }
-
-            if (nodeToTests.TryGetValue(current, out var currentTests))
-            {
-                impacted.UnionWith(currentTests);
-            }
-
-            if (projectRefs.TryGetValue(current, out var refs))
-            {
-                foreach (var reference in refs)
-                {
-                    queue.Push(reference);
-                }
-            }
-        }
-
-        return impacted;
     }
 
     private static Dictionary<string, HashSet<string>> BuildPackageToProjects(Dictionary<string, HashSet<string>> packageRefs)
@@ -658,44 +580,38 @@ static class App
 
     private static bool TryGetExampleTests(
         string filePath,
-        Dictionary<string, HashSet<string>> exampleToTests,
+        List<string> projectPaths,
+        Dictionary<string, HashSet<string>> nodeToTests,
         out string exampleName,
         out HashSet<string> tests)
     {
         tests = [];
         exampleName = string.Empty;
 
-        if (!TryGetExampleName(filePath, out exampleName))
+        if (!filePath.StartsWith("examples/", StringComparison.Ordinal))
         {
             return false;
         }
 
-        if (!exampleToTests.TryGetValue(exampleName, out var impacted))
-        {
-            return false;
-        }
-
-        tests = impacted;
-        return impacted.Count > 0;
-    }
-
-    private static bool TryGetExampleName(string path, out string exampleName)
-    {
-        exampleName = string.Empty;
-
-        if (!path.StartsWith("examples/", StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var segments = filePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length < 2)
         {
             return false;
         }
 
         exampleName = segments[1];
-        return true;
+        var examplePrefix = $"examples/{exampleName}/";
+        var exampleProjects = projectPaths.Where(projectPath => projectPath.StartsWith(examplePrefix, StringComparison.Ordinal));
+
+        foreach (var projectPath in exampleProjects)
+        {
+            if (nodeToTests.TryGetValue(projectPath, out var impacted))
+            {
+                tests.UnionWith(impacted);
+            }
+        }
+
+        return tests.Count > 0;
     }
 
     private static Dictionary<string, string> ParseStringConstants(string contents)
