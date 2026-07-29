@@ -23,7 +23,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/stale@v10
+      - uses: actions/stale@v11
         name: Standard issue and PR stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +43,7 @@ jobs:
           stale-issue-label: "stale"
           stale-pr-label: "stale"
 
-      - uses: actions/stale@v10
+      - uses: actions/stale@v11
         name: Question and Resolved issue stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -58,7 +58,7 @@ jobs:
           close-issue-message: "This issue has remained stale after being marked as Question or Resolved and has been automatically closed."
           stale-issue-label: "stale"
 
-      - uses: actions/stale@v10
+      - uses: actions/stale@v11
         name: Awaiting response issue and PR stale bot
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
