@@ -176,13 +176,17 @@ public static class KindClusterResourceBuilderExtensions
         where T : IKindResource
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(hostPath);
-        ArgumentException.ThrowIfNullOrEmpty(containerPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(hostPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(containerPath);
+
+        var normalizedHostPath = Path.IsPathRooted(hostPath)
+            ? Path.GetFullPath(hostPath)
+            : Path.GetFullPath(Path.Combine(builder.ApplicationBuilder.AppHostDirectory, hostPath));
 
         var annotation = GetOrCreateNodeMountsAnnotation(builder.Resource);
         annotation.Mounts.Add(new KindMountModel
         {
-            HostPath = hostPath,
+            HostPath = normalizedHostPath,
             ContainerPath = containerPath,
             ReadOnly = readOnly,
         });
@@ -210,8 +214,8 @@ public static class KindClusterResourceBuilderExtensions
 
     /// <summary>
     /// Sets the cluster lifetime. When <see cref="ClusterLifetime.Session"/> (the default),
-    /// the cluster is deleted when the AppHost shuts down. When <see cref="ClusterLifetime.Persistent"/>,
-    /// the cluster survives AppHost restarts and is reused on next startup.
+    /// the cluster is deleted on graceful shutdown or other process-exit signals on a best-effort basis.
+    /// When <see cref="ClusterLifetime.Persistent"/>, the cluster survives AppHost restarts and is reused on next startup.
     /// </summary>
     /// <typeparam name="T">A resource type implementing <see cref="IKindResource"/>.</typeparam>
     /// <param name="builder">The resource builder.</param>

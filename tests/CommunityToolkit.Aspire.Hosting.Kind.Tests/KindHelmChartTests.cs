@@ -105,6 +105,59 @@ public class KindHelmChartTests
     }
 
     [Fact]
+    public void WithHelmValueLastWriteWinsForDuplicateKey()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+            .WithHelmValue("replica.replicaCount", "1")
+            .WithHelmValue("replica.replicaCount", "2");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
+        Assert.Equal("2", resource.Values["replica.replicaCount"]);
+    }
+
+    [Fact]
+    public void WithHelmValueAndStringValueUseLastWriteWinsAcrossModes()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+            .WithHelmValue("auth.password", "123")
+            .WithHelmStringValue("auth.password", "000123");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
+        Assert.False(resource.Values.ContainsKey("auth.password"));
+        Assert.Equal("000123", resource.StringValues["auth.password"]);
+    }
+
+    [Fact]
+    public void WithHelmStringValueAndValueUseLastWriteWinsAcrossModes()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
+            .WithHelmStringValue("auth.password", "000123")
+            .WithHelmValue("auth.password", "123");
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
+        Assert.False(resource.StringValues.ContainsKey("auth.password"));
+        Assert.Equal("123", resource.Values["auth.password"]);
+    }
+
+    [Fact]
     public void WithCrdWaitRetrySetsRetryConfiguration()
     {
         var builder = DistributedApplication.CreateBuilder();

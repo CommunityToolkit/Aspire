@@ -149,6 +149,7 @@ public static class KindHelmChartResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(value);
 
+        builder.Resource.StringValues.Remove(key);
         builder.Resource.Values[key] = value;
         return builder;
     }
@@ -170,6 +171,7 @@ public static class KindHelmChartResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(value);
 
+        builder.Resource.Values.Remove(key);
         builder.Resource.StringValues[key] = value;
         return builder;
     }
