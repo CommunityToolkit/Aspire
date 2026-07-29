@@ -26,6 +26,8 @@ internal sealed class KubectlManager(
     private readonly TimeSpan _clusterInfoMaxWait = clusterInfoMaxWait ?? ClusterInfoMaxWait;
     private readonly TimeSpan _clusterInfoProbeTimeout = clusterInfoProbeTimeout ?? ClusterInfoProbeTimeout;
 
+    internal TimeSpan ClusterInfoMaxWaitForTesting => _clusterInfoMaxWait;
+
     /// <summary>
     /// Waits for the cluster API to answer, then applies the manifest via <c>kubectl apply</c>.
     /// </summary>

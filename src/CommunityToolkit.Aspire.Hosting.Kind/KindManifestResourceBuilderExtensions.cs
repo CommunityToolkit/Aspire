@@ -110,9 +110,7 @@ public static class KindManifestResourceBuilderExtensions
             try
             {
                 var processRunner = e.Services.GetRequiredService<IProcessRunner>();
-                var kubectlManager = new KubectlManager(
-                    processRunner,
-                    clusterInfoMaxWait: resource.ClusterReadyTimeout);
+                var kubectlManager = CreateKubectlManager(processRunner, resource);
                 await kubectlManager.ApplyAsync(resource, logger, ct);
 
                 await notifications.PublishUpdateAsync(resource,
@@ -136,6 +134,18 @@ public static class KindManifestResourceBuilderExtensions
         });
 
         return resourceBuilder;
+    }
+
+    internal static KubectlManager CreateKubectlManager(
+        IProcessRunner processRunner,
+        K8sManifestResource resource)
+    {
+        ArgumentNullException.ThrowIfNull(processRunner);
+        ArgumentNullException.ThrowIfNull(resource);
+
+        return new KubectlManager(
+            processRunner,
+            clusterInfoMaxWait: resource.ClusterReadyTimeout);
     }
 
     /// <summary>

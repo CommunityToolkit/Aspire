@@ -299,6 +299,24 @@ public class KindManifestTests
     }
 
     [Fact]
+    public void WithClusterReadyTimeoutWiresValueIntoKubectlManagerCreation()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+
+        var cluster = builder.AddKindCluster("test-cluster");
+        cluster.AddManifest("crds", "./crds.yaml")
+            .WithClusterReadyTimeout(TimeSpan.FromSeconds(90));
+
+        using var app = builder.Build();
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
+
+        var manager = KindManifestResourceBuilderExtensions.CreateKubectlManager(new FakeProcessRunner(), resource);
+
+        Assert.Equal(TimeSpan.FromSeconds(90), manager.ClusterInfoMaxWaitForTesting);
+    }
+
+    [Fact]
     public void WithClusterReadyTimeoutRejectsZero()
     {
         var builder = DistributedApplication.CreateBuilder();
