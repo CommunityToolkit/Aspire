@@ -3,13 +3,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
-    <!-- Pin the Squad sample's agent stack explicitly so the AppHost sample rides the
-         newer MAF adapter and Copilot SDK packaging together:
-           - Squad.Agents.AI 0.5.6-preview.23 (latest published adapter)
-           - Microsoft.Agents.AI.GitHub.Copilot 1.15.0-rc1
-           - GitHub.Copilot.SDK 1.0.8 -->
+    <!-- Keep the Squad sample's agent packages explicit so the sample stays on the
+         same tested MAF adapter + Copilot SDK combination end-to-end. The direct
+         MAF reference overrides the older adapter that still flows transitively via
+         Squad.Agents.AI, while the direct Copilot SDK reference keeps the managed
+         SDK version aligned with that stack. -->
     <PackageReference Include="Squad.Agents.AI" />
     <PackageReference Include="Microsoft.Agents.AI.GitHub.Copilot" />
+    <!-- MAF's buildTransitive bridge already imports GitHub.Copilot.SDK's build
+         targets for downstream consumers, so exclude the direct SDK build assets
+         here to avoid duplicate target imports. -->
     <PackageReference Include="GitHub.Copilot.SDK" ExcludeAssets="build" />
   </ItemGroup>
 
