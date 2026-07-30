@@ -214,6 +214,9 @@
     <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.AppHost/CommunityToolkit.Aspire.Hosting.Squad.AppHost.csproj" />
     <Project Path="examples/squad/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults/CommunityToolkit.Aspire.Hosting.Squad.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/examples/stable-diffusion-cpp/">
+    <Project Path="examples/stable-diffusion-cpp/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.AppHost/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.AppHost.csproj" />
+  </Folder>
   <Folder Name="/examples/stripe/">
     <Project Path="examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.Api/CommunityToolkit.Aspire.Hosting.Stripe.Api.csproj" />
     <Project Path="examples/stripe/CommunityToolkit.Aspire.Hosting.Stripe.AppHost/CommunityToolkit.Aspire.Hosting.Stripe.AppHost.csproj" />
@@ -288,6 +291,7 @@
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Sqlite/CommunityToolkit.Aspire.Hosting.Sqlite.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Squad/CommunityToolkit.Aspire.Hosting.Squad.csproj" />
+    <Project Path="src/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Stripe/CommunityToolkit.Aspire.Hosting.Stripe.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.SurrealDb/CommunityToolkit.Aspire.Hosting.SurrealDb.csproj" />
     <Project Path="src/CommunityToolkit.Aspire.Hosting.Zitadel/CommunityToolkit.Aspire.Hosting.Zitadel.csproj" />
@@ -363,6 +367,7 @@
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests/CommunityToolkit.Aspire.Hosting.Sqlite.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests/CommunityToolkit.Aspire.Hosting.SqlServer.Extensions.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Squad.Tests/CommunityToolkit.Aspire.Hosting.Squad.Tests.csproj" />
+    <Project Path="tests/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.Tests/CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests/CommunityToolkit.Aspire.Hosting.Stripe.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests/CommunityToolkit.Aspire.Hosting.SurrealDb.Tests.csproj" />
     <Project Path="tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests/CommunityToolkit.Aspire.Hosting.Zitadel.Tests.csproj" />
