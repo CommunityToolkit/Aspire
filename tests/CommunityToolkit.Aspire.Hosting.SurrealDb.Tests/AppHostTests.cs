@@ -7,24 +7,8 @@ using System.Net.Http.Json;
 
 namespace CommunityToolkit.Aspire.Hosting.SurrealDb.Tests;
 
-public class AppHostTraceSurrealFixture : AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_SurrealDb_AppHost>
-{
-    private readonly string? previousTraceSetting = Environment.GetEnvironmentVariable("ASPIRE_SURREAL_TRACE_FOR_TESTS");
-
-    public AppHostTraceSurrealFixture()
-    {
-        Environment.SetEnvironmentVariable("ASPIRE_SURREAL_TRACE_FOR_TESTS", "1");
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        Environment.SetEnvironmentVariable("ASPIRE_SURREAL_TRACE_FOR_TESTS", previousTraceSetting);
-        await base.DisposeAsync();
-    }
-}
-
 [RequiresDocker]
-public class AppHostTests(AppHostTraceSurrealFixture fixture) : IClassFixture<AppHostTraceSurrealFixture>
+public class AppHostTests(AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_SurrealDb_AppHost> fixture) : IClassFixture<AspireIntegrationTestFixture<Projects.CommunityToolkit_Aspire_Hosting_SurrealDb_AppHost>>
 {
     [Fact]
     public async Task SurrealResourceStartsAndRespondsOk()
