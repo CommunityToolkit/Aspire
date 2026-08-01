@@ -716,14 +716,14 @@ public static class SurrealDbBuilderExtensions
         {
             try
             {
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-                var connectionString = await server.ConnectionStringExpression.GetValueAsync(cts.Token).ConfigureAwait(false)
+                var connectionString = await server.ConnectionStringExpression.GetValueAsync(cancellationToken).ConfigureAwait(false)
                     ?? throw new InvalidOperationException($"Connection string for resource '{server.Name}' is not available.");
 
                 var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
                 await using var client = new SurrealDbClient(options);
+
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(5));
 
                 return await client.Health(cts.Token).ConfigureAwait(false)
                     ? HealthCheckResult.Healthy()
