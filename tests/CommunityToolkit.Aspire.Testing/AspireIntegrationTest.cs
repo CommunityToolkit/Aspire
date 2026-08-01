@@ -22,7 +22,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
                 if (Environment.GetEnvironmentVariable("RUNNER_DEBUG") is not null && Environment.GetEnvironmentVariable("RUNNER_DEBUG") == "1")
                     builder.SetMinimumLevel(LogLevel.Trace);
                 else
-                    builder.SetMinimumLevel(LogLevel.Information);
+                    builder.SetMinimumLevel(LogLevel.Debug);
             })
             .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 

@@ -121,27 +121,6 @@ public static class SurrealDbBuilderExtensions
                 await CreateNamespaceAsync(surrealClient, surrealDbNamespace, services, ct)
                     .ConfigureAwait(false);
 
-                // 💡 Wait until the Namespace is really created?!
-                bool nsCreationValidated = false;
-                while (!ct.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
-                        nsCreationValidated = true;
-                        break;
-                    }
-                    catch
-                    {
-                        await Task.Delay(200, ct).ConfigureAwait(false);
-                    }
-                }
-
-                if (!nsCreationValidated)
-                {
-                    throw new DistributedApplicationException($"Namespace '{surrealDbNamespace.Name}' was not created successfully.");
-                }
-
                 foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
                 {
                     if (builder.Resources.FirstOrDefault(n =>
@@ -685,6 +664,35 @@ public static class SurrealDbBuilderExtensions
         {
             logger.LogError(e, "Failed to create namespace '{NamespaceName}'", namespaceResource.NamespaceName);
         }
+
+        await EnsureNamespaceExists(surrealClient, namespaceResource, logger, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task EnsureNamespaceExists(
+        SurrealDbClient surrealClient,
+        SurrealDbNamespaceResource namespaceResource,
+        ILogger logger,
+        CancellationToken cancellationToken
+    )
+    {
+        logger.LogDebug("Ensuring namespace '{NamespaceName}' exists", namespaceResource.NamespaceName);
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                logger.LogDebug("Testing namespace '{NamespaceName}' is available", namespaceResource.NamespaceName);
+                await surrealClient.Use(namespaceResource.NamespaceName, null!, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            catch (Exception e)
+            {
+                logger.LogDebug(e, "Namespace '{NamespaceName}' is not available yet", namespaceResource.NamespaceName);
+                await Task.Delay(200, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        throw new DistributedApplicationException($"Namespace '{namespaceResource.Name}' was not created successfully.");
     }
 
     private static async Task CreateDatabaseAsync(
