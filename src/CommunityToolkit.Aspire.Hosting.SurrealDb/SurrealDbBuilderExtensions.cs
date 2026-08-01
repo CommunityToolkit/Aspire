@@ -676,6 +676,7 @@ public static class SurrealDbBuilderExtensions
     )
     {
         logger.LogDebug("Ensuring namespace '{NamespaceName}' exists", namespaceResource.NamespaceName);
+        cancellationToken.ThrowIfCancellationRequested();
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -685,6 +686,10 @@ public static class SurrealDbBuilderExtensions
                 await surrealClient.Use(namespaceResource.NamespaceName, null!, cancellationToken).ConfigureAwait(false);
                 return;
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 logger.LogDebug(e, "Namespace '{NamespaceName}' is not available yet", namespaceResource.NamespaceName);
@@ -692,7 +697,7 @@ public static class SurrealDbBuilderExtensions
             }
         }
 
-        throw new DistributedApplicationException($"Namespace '{namespaceResource.Name}' was not created successfully.");
+        throw new DistributedApplicationException($"Namespace '{namespaceResource.NamespaceName}' (resource '{namespaceResource.Name}') was not created successfully.");
     }
 
     private static async Task CreateDatabaseAsync(
