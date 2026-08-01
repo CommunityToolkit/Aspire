@@ -78,6 +78,14 @@ public static class SurrealDbBuilderExtensions
 
         var surrealServer = new SurrealDbServerResource(name, userName?.Resource, passwordParameter);
 
+        string serverHealthCheckKey = $"{name}_server_check";
+        builder.Services.AddHealthChecks().Add(new HealthCheckRegistration(
+            name: serverHealthCheckKey,
+            sp => new SurrealDbServerHealthCheck(surrealServer, sp.GetRequiredService<ILogger<SurrealDbServerHealthCheck>>()),
+            failureStatus: null,
+            tags: null
+        ));
+
         return builder.AddResource(surrealServer)
                       .WithEndpoint(port: port, targetPort: SurrealDbPort, name: SurrealDbServerResource.PrimaryEndpointName)
                       .WithImage(SurrealDbContainerImageTags.Image, imageTag)
@@ -89,6 +97,7 @@ public static class SurrealDbBuilderExtensions
                       })
                       .WithEntrypoint("/surreal")
                       .WithArgs([.. args])
+                      .WithHealthCheck(serverHealthCheckKey)
                       .OnResourceReady(async (_, @event, ct) =>
                       {
                           var connectionString = await surrealServer.GetConnectionStringAsync(ct).ConfigureAwait(false);
@@ -121,26 +130,7 @@ public static class SurrealDbBuilderExtensions
                 await CreateNamespaceAsync(surrealClient, surrealDbNamespace, services, ct)
                     .ConfigureAwait(false);
 
-                // 💡 Wait until the Namespace is really created?!
-                bool nsCreationValidated = false;
-                while (!ct.IsCancellationRequested)
-                {
-                    try
-                    {
-                        await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
-                        nsCreationValidated = true;
-                        break;
-                    }
-                    catch
-                    {
-                        await Task.Delay(200, ct).ConfigureAwait(false);
-                    }
-                }
-
-                if (!nsCreationValidated)
-                {
-                    throw new DistributedApplicationException($"Namespace '{surrealDbNamespace.Name}' was not created successfully.");
-                }
+                await surrealClient.Use(surrealDbNamespace.NamespaceName, null!, ct).ConfigureAwait(false);
 
                 foreach (var dbResourceName in surrealDbNamespace.Databases.Keys)
                 {
@@ -681,9 +671,11 @@ public static class SurrealDbBuilderExtensions
 
             logger.LogDebug("Namespace '{NamespaceName}' created successfully", namespaceResource.NamespaceName);
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
-            logger.LogError(e, "Failed to create namespace '{NamespaceName}'", namespaceResource.NamespaceName);
+            logger.LogError(e, "Failed to create namespace '{NamespaceName}' on resource '{ResourceName}'", namespaceResource.NamespaceName, namespaceResource.Parent.Name);
+            throw new DistributedApplicationException(
+                $"Failed to create namespace '{namespaceResource.NamespaceName}' on resource '{namespaceResource.Parent.Name}': {e.Message}", e);
         }
     }
 
@@ -710,9 +702,38 @@ public static class SurrealDbBuilderExtensions
 
             logger.LogDebug("Database '{DatabaseName}' created successfully", databaseResource.DatabaseName);
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
-            logger.LogError(e, "Failed to create database '{DatabaseName}'", databaseResource.DatabaseName);
+            logger.LogError(e, "Failed to create database '{DatabaseName}' in namespace '{NamespaceName}' on resource '{ResourceName}'", databaseResource.DatabaseName, databaseResource.Parent.NamespaceName, databaseResource.Parent.Parent.Name);
+            throw new DistributedApplicationException(
+                $"Failed to create database '{databaseResource.DatabaseName}' in namespace '{databaseResource.Parent.NamespaceName}' on resource '{databaseResource.Parent.Parent.Name}': {e.Message}", e);
+        }
+    }
+
+    private sealed class SurrealDbServerHealthCheck(SurrealDbServerResource server, ILogger<SurrealDbServerHealthCheck> logger) : IHealthCheck
+    {
+        public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var connectionString = await server.ConnectionStringExpression.GetValueAsync(cancellationToken).ConfigureAwait(false)
+                    ?? throw new InvalidOperationException($"Connection string for resource '{server.Name}' is not available.");
+
+                var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
+                await using var client = new SurrealDbClient(options);
+
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(5));
+
+                return await client.Health(cts.Token).ConfigureAwait(false)
+                    ? HealthCheckResult.Healthy()
+                    : new HealthCheckResult(context.Registration.FailureStatus);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "SurrealDB server health check for '{ResourceName}' raised an exception.", server.Name);
+                return new HealthCheckResult(context.Registration.FailureStatus, exception: ex);
+            }
         }
     }
 }

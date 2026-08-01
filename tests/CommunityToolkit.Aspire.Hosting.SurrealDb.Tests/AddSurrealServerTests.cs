@@ -78,6 +78,22 @@ public class AddSurrealServerTests
     }
 
     [Fact]
+    public void AddSurrealServerRegistersHealthCheck()
+    {
+        using var appBuilder = TestDistributedApplicationBuilder.Create();
+
+        appBuilder.AddSurrealServer("surreal");
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var containerResource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
+        var healthCheckAnnotation = Assert.Single(containerResource.Annotations.OfType<HealthCheckAnnotation>());
+        Assert.Equal("surreal_server_check", healthCheckAnnotation.Key);
+    }
+
+    [Fact]
     public async Task SurrealServerCreatesConnectionString()
     {
         var appBuilder = DistributedApplication.CreateBuilder();
