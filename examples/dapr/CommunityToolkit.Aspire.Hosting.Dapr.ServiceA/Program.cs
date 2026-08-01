@@ -10,6 +10,9 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddDaprClient();
+builder.Services.AddHttpClient("serviceb", client =>
+    client.BaseAddress = new Uri("http://serviceb"))
+    .AddHttpMessageHandler(() => new InvocationHandler());
 
 var app = builder.Build();
 
@@ -17,7 +20,7 @@ var app = builder.Build();
 app.UseCloudEvents();
 app.MapSubscribeHandler();
 
-app.MapGet("/weatherforecast", async (DaprClient client) =>
+app.MapGet("/weatherforecast", async (DaprClient client, IHttpClientFactory httpClientFactory) =>
 {
     var cachedForecasts = await client.GetStateAsync<CachedWeatherForecast>("statestore", "cache");
 
@@ -26,7 +29,9 @@ app.MapGet("/weatherforecast", async (DaprClient client) =>
         return cachedForecasts.Forecasts;
     }
 
-    var forecasts = await client.InvokeMethodAsync<WeatherForecast[]>(HttpMethod.Get, "serviceb", "weatherforecast");
+    var httpClient = httpClientFactory.CreateClient("serviceb");
+    var forecasts = await httpClient.GetFromJsonAsync<WeatherForecast[]>("/weatherforecast")
+        ?? throw new InvalidOperationException("Failed to retrieve weather forecasts from serviceb.");
 
     await client.SaveStateAsync("statestore", "cache", new CachedWeatherForecast(forecasts, DateTimeOffset.UtcNow));
 
