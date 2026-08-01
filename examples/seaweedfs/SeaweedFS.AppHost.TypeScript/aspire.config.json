@@ -1,10 +1,10 @@
-﻿{
+{
   "appHost": {
     "path": "apphost.mts",
     "language": "typescript/nodejs"
   },
   "sdk": {
-    "version": "13.4.3"
+    "version": "13.4.6"
   },
   "profiles": {
     "http": {

@@ -12,6 +12,7 @@
     <Nullable>enable</Nullable>
 
     <AspireMajorVersion>13</AspireMajorVersion>
+    <!-- When updating AspireVersion, also update the "aspire.version" field in global.json and the "sdk.version" in all examples/**/aspire.config.json files -->
     <AspireVersion>$(AspireMajorVersion).4.6</AspireVersion>
     <AspirePreviewSuffix>-preview.1.26305.13</AspirePreviewSuffix> <!-- Used for Aspire packages that still only ship as prerelease packages on nuget.org. -->
     <AspNetCoreVersion>9.0.0</AspNetCoreVersion>

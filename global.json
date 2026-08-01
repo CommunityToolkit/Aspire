@@ -2,6 +2,9 @@
   "sdk": {
     "allowPrerelease": true
   },
+  "aspire": {
+    "version": "13.4.6"
+  },
   "test": {
     "runner": "Microsoft.Testing.Platform"
   }
