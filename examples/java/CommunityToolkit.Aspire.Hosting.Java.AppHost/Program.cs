@@ -4,7 +4,8 @@ var apiapp = builder.AddProject<Projects.CommunityToolkit_Aspire_Hosting_Java_Ap
 
 var containerapp = builder.AddJavaContainerApp("containerapp", image: "docker.io/aliencube/aspire-spring-maven-sample")
                           .WithOtelAgent("/agents/opentelemetry-javaagent.jar")
-                          .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT");
+                          .WithHttpEndpoint(targetPort: 8080, env: "SERVER_PORT")
+                          .WithHttpHealthCheck("/health");
 
 var executableapp = builder.AddJavaApp("executableapp",
                            workingDirectory: "../CommunityToolkit.Aspire.Hosting.Java.Spring.Maven")
