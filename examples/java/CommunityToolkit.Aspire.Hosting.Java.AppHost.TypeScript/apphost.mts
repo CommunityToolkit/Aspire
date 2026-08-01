@@ -20,7 +20,7 @@ const containerApp = await builder.addJavaContainerApp(
 await containerApp.withJvmArgs(["-Djava.awt.headless=true"]);
 await containerApp.withOtelAgent();
 await containerApp.withHttpEndpoint({ targetPort: 8080, env: "SERVER_PORT" });
-await containerApp.withHttpHealthCheck({ path: "/health" });
+await containerApp.withHttpHealthCheck({ path: "/" });
 await containerApp.withExplicitStart();
 
 await containerApp.entrypoint.set("java");
