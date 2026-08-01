@@ -19,8 +19,6 @@ jobs:
         uses: actions/github-script@v9.0.0
         with:
           script: |
-            const core = require('@actions/core');
-
             const pr = context.payload.pull_request;
             const files = await github.paginate(github.rest.pulls.listFiles, {
               owner: context.repo.owner,
@@ -101,8 +99,6 @@ jobs:
         uses: actions/github-script@v9.0.0
         with:
           script: |
-            const core = require('@actions/core');
-
             const comment = context.payload.comment;
             const command = comment.body.trim();
             const accepted = command === '/codeowner-accept';
