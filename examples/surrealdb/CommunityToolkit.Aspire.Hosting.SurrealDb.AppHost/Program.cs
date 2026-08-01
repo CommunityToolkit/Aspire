@@ -1,10 +1,12 @@
 using Projects;
+using Microsoft.Extensions.Logging;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 bool strictMode = false;
 
 var db = builder.AddSurrealServer("surreal")
+    .WithLogLevel(LogLevel.Trace)
     .WithSurrealist()
     .AddNamespace("ns")
     .AddDatabase("db");

@@ -645,17 +645,23 @@ public static class SurrealDbBuilderExtensions
     )
     {
         var scriptAnnotation = namespaceResource.Annotations.OfType<SurrealDbCreateNamespaceScriptAnnotation>().LastOrDefault();
+        string query = scriptAnnotation?.Script ?? $"DEFINE NAMESPACE IF NOT EXISTS `{namespaceResource.NamespaceName}`;";
 
         var logger = serviceProvider.GetRequiredService<ResourceLoggerService>().GetLogger(namespaceResource.Parent);
         logger.LogDebug("Creating namespace '{NamespaceName}'", namespaceResource.NamespaceName);
+        logger.LogTrace("Namespace creation query for '{NamespaceName}': {Query}", namespaceResource.NamespaceName, query);
 
         try
         {
             var response = await surrealClient.RawQuery(
-                scriptAnnotation?.Script ?? $"DEFINE NAMESPACE IF NOT EXISTS `{namespaceResource.NamespaceName}`;",
+                query,
                 cancellationToken: cancellationToken
             ).ConfigureAwait(false);
 
+            logger.LogTrace(
+                "Namespace creation response for '{NamespaceName}': {Response}",
+                namespaceResource.NamespaceName,
+                JsonSerializer.Serialize(response));
             response.EnsureAllOks();
 
             logger.LogDebug("Namespace '{NamespaceName}' created successfully", namespaceResource.NamespaceName);
