@@ -4,9 +4,18 @@ using Microsoft.Extensions.Logging;
 var builder = DistributedApplication.CreateBuilder(args);
 
 bool strictMode = false;
+bool enableSurrealTraceLogging = string.Equals(
+    Environment.GetEnvironmentVariable("ASPIRE_SURREAL_TRACE_FOR_TESTS"),
+    "1",
+    StringComparison.Ordinal);
 
-var db = builder.AddSurrealServer("surreal")
-    .WithLogLevel(LogLevel.Trace)
+var surrealBuilder = builder.AddSurrealServer("surreal");
+if (enableSurrealTraceLogging)
+{
+    surrealBuilder = surrealBuilder.WithLogLevel(LogLevel.Trace);
+}
+
+var db = surrealBuilder
     .WithSurrealist()
     .AddNamespace("ns")
     .AddDatabase("db");
