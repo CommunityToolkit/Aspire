@@ -710,34 +710,4 @@ public static class SurrealDbBuilderExtensions
         }
     }
 
-    private sealed class SurrealDbServerHealthCheck(SurrealDbServerResource server, ILogger<SurrealDbServerHealthCheck> logger) : IHealthCheck
-    {
-        public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var connectionString = await server.ConnectionStringExpression.GetValueAsync(cancellationToken).ConfigureAwait(false)
-                    ?? throw new InvalidOperationException($"Connection string for resource '{server.Name}' is not available.");
-
-                var options = new SurrealDbOptionsBuilder().FromConnectionString(connectionString).Build();
-                await using var client = new SurrealDbClient(options);
-
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(5));
-
-                return await client.Health(cts.Token).ConfigureAwait(false)
-                    ? HealthCheckResult.Healthy()
-                    : new HealthCheckResult(context.Registration.FailureStatus);
-            }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-            {
-                return new HealthCheckResult(context.Registration.FailureStatus);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "SurrealDB server health check for '{ResourceName}' raised an exception.", server.Name);
-                return new HealthCheckResult(context.Registration.FailureStatus, exception: ex);
-            }
-        }
-    }
 }
