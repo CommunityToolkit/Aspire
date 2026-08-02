@@ -4,6 +4,11 @@ namespace CommunityToolkit.Aspire.Testing;
 
 public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
 {
+    static AspireIntegrationTestFixture()
+    {
+        Environment.SetEnvironmentVariable("ASPIRE_TESTING_DISABLE_HTTP_CLIENT", "true");
+    }
+
     public ResourceNotificationService ResourceNotificationService => App.Services.GetRequiredService<ResourceNotificationService>();
 
     public DistributedApplication App { get; private set; } = null!;
@@ -23,8 +28,7 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
                     builder.SetMinimumLevel(LogLevel.Trace);
                 else
                     builder.SetMinimumLevel(LogLevel.Information);
-            })
-            .ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
+            });
 
         if (Environment.GetEnvironmentVariable("CUSTOM_CONTAINER_REGISTRY") is not null)
         {
