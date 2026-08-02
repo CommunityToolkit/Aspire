@@ -4,11 +4,6 @@ namespace CommunityToolkit.Aspire.Testing;
 
 public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicationFactory(typeof(TEntryPoint), []), IAsyncLifetime where TEntryPoint : class
 {
-    static AspireIntegrationTestFixture()
-    {
-        Environment.SetEnvironmentVariable("ASPIRE_TESTING_DISABLE_HTTP_CLIENT", "true");
-    }
-
     public ResourceNotificationService ResourceNotificationService => App.Services.GetRequiredService<ResourceNotificationService>();
 
     public DistributedApplication App { get; private set; } = null!;
@@ -21,6 +16,8 @@ public class AspireIntegrationTestFixture<TEntryPoint>() : DistributedApplicatio
 
     protected override void OnBuilderCreated(DistributedApplicationBuilder applicationBuilder)
     {
+        applicationBuilder.Configuration["ASPIRE_TESTING_DISABLE_HTTP_CLIENT"] = "true";
+
         applicationBuilder.Services.AddLogging(builder =>
             {
                 builder.AddXUnit();

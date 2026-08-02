@@ -47,9 +47,9 @@ public static class TestDistributedApplicationBuilder
 
     private static IDistributedApplicationTestingBuilder CreateCore(string[] args, Action<DistributedApplicationOptions>? configureOptions, ITestOutputHelper? testOutputHelper = null)
     {
-        Environment.SetEnvironmentVariable("ASPIRE_TESTING_DISABLE_HTTP_CLIENT", "true");
-
         var builder = DistributedApplicationTestingBuilder.Create(args, (applicationOptions, hostBuilderOptions) => configureOptions?.Invoke(applicationOptions));
+
+        builder.Configuration["ASPIRE_TESTING_DISABLE_HTTP_CLIENT"] = "true";
 
         builder.Services.AddLogging(builder =>
             {
