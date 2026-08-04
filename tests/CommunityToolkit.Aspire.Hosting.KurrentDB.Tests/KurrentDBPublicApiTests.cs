@@ -132,7 +132,7 @@ public class KurrentDBPublicApiTests
         var builder = new DistributedApplicationBuilder([]);
         const string name = null!;
 
-        var action = () => new KurrentDBResource(name);
+        var action = () => new KurrentDBResource(name!);
 
         var exception = Assert.Throws<ArgumentNullException>(action);
         Assert.Equal(nameof(name), exception.ParamName);
