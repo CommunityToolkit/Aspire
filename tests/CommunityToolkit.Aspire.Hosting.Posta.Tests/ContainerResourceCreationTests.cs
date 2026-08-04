@@ -181,6 +181,73 @@ public class ContainerResourceCreationTests
     }
 
     [Fact]
+    public void WithInboundSmtpAddsSmtpEndpoint()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+
+        var posta = builder.AddPosta("posta", database, redis)
+            .WithInboundSmtp(_ => { }, port: 2526);
+
+        var endpoint = Assert.Single(
+            posta.Resource.Annotations.OfType<EndpointAnnotation>(),
+            x => x.Name == PostaResource.SmtpEndpointName);
+
+        Assert.Equal("tcp", endpoint.UriScheme);
+        Assert.Equal(PostaResource.SmtpEndpointPort, endpoint.TargetPort);
+        Assert.Equal(2526, endpoint.Port);
+    }
+
+    [Fact]
+    public void AddPostaWithInboundEnabledAddsSmtpEndpointUsingConfiguredTargetPort()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+
+        var posta = builder.AddPosta("posta", database, redis, options =>
+        {
+            options.InboundEnabled = true;
+            options.InboundSmtpPort = 2526;
+        });
+
+        var endpoint = Assert.Single(
+            posta.Resource.Annotations.OfType<EndpointAnnotation>(),
+            x => x.Name == PostaResource.SmtpEndpointName);
+
+        Assert.Equal("tcp", endpoint.UriScheme);
+        Assert.Equal(2526, endpoint.TargetPort);
+    }
+
+    [Fact]
+    public async Task WithSmtpRelayAddsEndpointAndEnvironment()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var (database, redis) = AddPostaDependencies(builder);
+        var enabled = builder.AddParameter("posta-relay-enabled", "true");
+
+        var posta = builder.AddPosta("posta", database, redis)
+            .WithSmtpRelay(options => options.Enabled = enabled, port: 2527);
+
+        var endpoint = Assert.Single(
+            posta.Resource.Annotations.OfType<EndpointAnnotation>(),
+            x => x.Name == PostaResource.SmtpRelayEndpointName);
+        Assert.Equal("tcp", endpoint.UriScheme);
+        Assert.Equal(PostaResource.SmtpRelayEndpointPort, endpoint.TargetPort);
+        Assert.Equal(2527, endpoint.Port);
+
+        var context = new EnvironmentCallbackContext(
+            new DistributedApplicationExecutionContext(
+                new DistributedApplicationExecutionContextOptions(DistributedApplicationOperation.Run)));
+        foreach (var annotation in posta.Resource.Annotations.OfType<EnvironmentCallbackAnnotation>())
+        {
+            await annotation.Callback(context);
+        }
+
+        Assert.Same(enabled.Resource, context.EnvironmentVariables["POSTA_SMTP_RELAY_ENABLED"]);
+        Assert.Equal("2526", context.EnvironmentVariables["POSTA_SMTP_RELAY_PORT"]);
+    }
+
+    [Fact]
     public void AddPostaRegistersHealthChecks()
     {
         var builder = DistributedApplication.CreateBuilder();
@@ -429,7 +496,7 @@ public class ContainerResourceCreationTests
                 TlsKeyFile = Parameter("inbound-tls-key-file", "/certs/privkey.pem"),
                 RateLimit = Parameter("inbound-smtp-rate-limit", "10"),
                 RateWindow = Parameter("inbound-smtp-rate-window", "20")
-            })
+            }, targetPort: 2526)
             .WithS3BlobStorage(new PostaS3BlobStorageOptions
             {
                 Endpoint = Parameter("blob-s3-endpoint", "https://s3.example.com"),

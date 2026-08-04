@@ -12,13 +12,29 @@ public sealed class PostaResource(string name, ParameterResource jwtSecret, Para
 {
     internal const int HttpEndpointPort = 9000;
     internal const string HttpEndpointName = "http";
+    internal const int SmtpEndpointPort = 2525;
+    internal const string SmtpEndpointName = "smtp";
+    internal const int SmtpRelayEndpointPort = 2526;
+    internal const string SmtpRelayEndpointName = "smtp-relay";
 
     private EndpointReference? _primaryEndpoint;
+    private EndpointReference? _smtpEndpoint;
+    private EndpointReference? _smtpRelayEndpoint;
 
     /// <summary>
     /// Gets the primary HTTP endpoint for the Posta server.
     /// </summary>
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, HttpEndpointName);
+
+    /// <summary>
+    /// Gets the inbound SMTP endpoint for the Posta server.
+    /// </summary>
+    public EndpointReference SmtpEndpoint => _smtpEndpoint ??= new(this, SmtpEndpointName);
+
+    /// <summary>
+    /// Gets the authenticated SMTP relay endpoint for the Posta server.
+    /// </summary>
+    public EndpointReference SmtpRelayEndpoint => _smtpRelayEndpoint ??= new(this, SmtpRelayEndpointName);
 
     /// <summary>
     /// Gets the host endpoint reference for the HTTP endpoint.

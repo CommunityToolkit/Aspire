@@ -68,6 +68,13 @@ internal static class PostaEnvironmentVariables
     public const string InboundTlsKeyFile = "POSTA_INBOUND_TLS_KEY_FILE";
     public const string InboundSmtpRateLimit = "POSTA_INBOUND_SMTP_RATE_LIMIT";
     public const string InboundSmtpRateWindow = "POSTA_INBOUND_SMTP_RATE_WINDOW";
+    public const string SmtpRelayEnabled = "POSTA_SMTP_RELAY_ENABLED";
+    public const string SmtpRelayHost = "POSTA_SMTP_RELAY_HOST";
+    public const string SmtpRelayPort = "POSTA_SMTP_RELAY_PORT";
+    public const string SmtpRelayHostname = "POSTA_SMTP_RELAY_HOSTNAME";
+    public const string SmtpRelayMaxMessageSize = "POSTA_SMTP_RELAY_MAX_MESSAGE_SIZE";
+    public const string SmtpRelayRateLimit = "POSTA_SMTP_RELAY_RATE_LIMIT";
+    public const string SmtpRelayRateWindow = "POSTA_SMTP_RELAY_RATE_WINDOW";
     public const string EmailVerificationRequired = "POSTA_EMAIL_VERIFICATION_REQUIRED";
     public const string AutoSuppressOnReject = "POSTA_AUTO_SUPPRESS_ON_REJECT";
     public const string EmailVerifyEnabled = "POSTA_EMAIL_VERIFY_ENABLED";

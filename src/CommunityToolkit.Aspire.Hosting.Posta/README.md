@@ -66,6 +66,8 @@ var posta = builder.AddPosta("posta", database, redis, options =>
 });
 ```
 
+For production deployments, configure `EncryptionKey`. Posta uses it for AES-256-GCM encryption of stored SMTP passwords; without it, those passwords are only base64-encoded. Keep this value stable across container restarts and upgrades.
+
 For values coming from configuration, environment variables, user secrets, or publish-time parameters, use the grouped parameter-based methods. These methods accept options objects whose properties are `IResourceBuilder<ParameterResource>?`, so they work with `AddParameter` and `AddParameterFromConfiguration`.
 
 ```csharp
@@ -116,7 +118,6 @@ You can also configure inbound SMTP and email verification through parameter-bas
 
 ```csharp
 var inboundEnabled = builder.AddParameterFromConfiguration("posta-inbound-enabled", "Posta:Inbound:Enabled");
-var inboundPort = builder.AddParameterFromConfiguration("posta-inbound-port", "Posta:Inbound:Port");
 var inboundWebhookSecret = builder.AddParameterFromConfiguration("posta-inbound-webhook-secret", "Posta:Inbound:WebhookSecret", secret: true);
 
 var emailVerificationRequired = builder.AddParameterFromConfiguration("posta-email-verification-required", "Posta:EmailVerification:Required");
@@ -125,13 +126,41 @@ builder.AddPosta("posta", database, redis)
     .WithInboundSmtp(options =>
     {
         options.Enabled = inboundEnabled;
-        options.Port = inboundPort;
         options.WebhookSecret = inboundWebhookSecret;
-    })
+    }, port: 2525)
     .WithEmailVerification(options =>
     {
         options.Required = emailVerificationRequired;
-    });
+});
+```
+
+`WithInboundSmtp` exposes a TCP endpoint named `smtp`. Its host port is optional and its container target port defaults to `2525`. If `options.Port` is supplied as a parameter, pass the same numeric value as `targetPort` so the endpoint and `POSTA_INBOUND_SMTP_PORT` remain aligned.
+
+These SMTP features have different purposes:
+
+* `WithSystemSmtp` configures an external SMTP server used by Posta to send platform notifications. It does not expose a listener.
+* `WithInboundSmtp` exposes the `smtp` endpoint, default target port `2525`, for receiving email addressed to domains managed by Posta.
+* `WithSmtpRelay` exposes the authenticated `smtp-relay` endpoint, default target port `2526`, for applications that submit outgoing email over SMTP instead of the HTTP API.
+
+```csharp
+var relayEnabled = builder.AddParameter("posta-relay-enabled", "true");
+
+builder.AddPosta("posta", database, redis)
+    .WithSmtpRelay(options => options.Enabled = relayEnabled);
+```
+
+When inbound STARTTLS is enabled, mount the certificate and private key into the container and configure their container paths. For example:
+
+```csharp
+builder.AddPosta("posta", database, redis)
+    .WithInboundSmtp(options =>
+    {
+        options.Enabled = inboundEnabled;
+        options.TlsMode = builder.AddParameter("posta-inbound-tls-mode", "starttls");
+        options.TlsCertFile = builder.AddParameter("posta-inbound-tls-cert", "/etc/posta/tls/fullchain.pem");
+        options.TlsKeyFile = builder.AddParameter("posta-inbound-tls-key", "/etc/posta/tls/privkey.pem");
+    })
+    .WithBindMount("./certs", "/etc/posta/tls", isReadOnly: true);
 ```
 
 ## API overview
@@ -147,8 +176,10 @@ builder.AddPosta("posta", database, redis)
 | `WithDataBindMount(source, isReadOnly)` | Adds a host bind mount at `/data` for filesystem-backed attachments. |
 | `WithSystemSmtp(PostaSystemSmtpOptions)` | Configures parameter-based system SMTP settings. |
 | `WithSystemSmtp(Action<PostaSystemSmtpOptions>)` | Configures parameter-based system SMTP settings with a callback. |
-| `WithInboundSmtp(PostaInboundSmtpOptions)` | Configures parameter-based inbound SMTP receiver settings. |
-| `WithInboundSmtp(Action<PostaInboundSmtpOptions>)` | Configures parameter-based inbound SMTP receiver settings with a callback. |
+| `WithInboundSmtp(PostaInboundSmtpOptions, port, targetPort)` | Configures inbound SMTP and exposes the `smtp` TCP endpoint. |
+| `WithInboundSmtp(Action<PostaInboundSmtpOptions>, port, targetPort)` | Configures inbound SMTP with a callback and exposes the `smtp` TCP endpoint. |
+| `WithSmtpRelay(PostaSmtpRelayOptions, port, targetPort)` | Configures authenticated SMTP submission and exposes the `smtp-relay` TCP endpoint. |
+| `WithSmtpRelay(Action<PostaSmtpRelayOptions>, port, targetPort)` | Configures authenticated SMTP submission with a callback. |
 | `WithS3BlobStorage(PostaS3BlobStorageOptions)` | Configures parameter-based S3-compatible attachment storage and sets the blob provider to `s3`. |
 | `WithS3BlobStorage(Action<PostaS3BlobStorageOptions>)` | Configures parameter-based S3-compatible attachment storage with a callback and sets the blob provider to `s3`. |
 | `WithGoogleOAuth(PostaGoogleOAuthOptions)` | Configures parameter-based Google OAuth login settings. |

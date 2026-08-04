@@ -258,16 +258,29 @@ public static class PostaHostingExtensions
     /// </summary>
     /// <param name="builder">The Posta resource builder.</param>
     /// <param name="options">The parameter-based inbound SMTP configuration.</param>
+    /// <param name="port">Optional host port for the inbound SMTP endpoint.</param>
+    /// <param name="targetPort">The port on which Posta listens for inbound SMTP inside the container. This must match <see cref="PostaInboundSmtpOptions.Port"/> when that option is supplied.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
     [AspireExportIgnore(Reason = "PostaInboundSmtpOptions contains parameter builders and is intended for C# AppHosts.")]
     public static IResourceBuilder<PostaResource> WithInboundSmtp(
         this IResourceBuilder<PostaResource> builder,
-        PostaInboundSmtpOptions options)
+        PostaInboundSmtpOptions options,
+        int? port = null,
+        int targetPort = PostaResource.SmtpEndpointPort)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(options);
 
-        return builder.WithEnvironment(context => ConfigureInboundSmtp(context, options));
+        return builder
+            .WithEndpoint(port: port, targetPort: targetPort, name: PostaResource.SmtpEndpointName, scheme: "tcp")
+            .WithEnvironment(context =>
+            {
+                ConfigureInboundSmtp(context, options);
+                if (options.Port is null)
+                {
+                    Set(context, PostaEnvironmentVariables.InboundSmtpPort, targetPort);
+                }
+            });
     }
 
     /// <summary>
@@ -275,11 +288,15 @@ public static class PostaHostingExtensions
     /// </summary>
     /// <param name="builder">The Posta resource builder.</param>
     /// <param name="configureOptions">A delegate that configures the parameter-based inbound SMTP options.</param>
+    /// <param name="port">Optional host port for the inbound SMTP endpoint.</param>
+    /// <param name="targetPort">The port on which Posta listens for inbound SMTP inside the container. This must match <see cref="PostaInboundSmtpOptions.Port"/> when that option is supplied.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{PostaResource}"/> for further resource configuration.</returns>
     [AspireExportIgnore(Reason = "Action<PostaInboundSmtpOptions> is not supported in polyglot app hosts. Use the options object overload instead.")]
     public static IResourceBuilder<PostaResource> WithInboundSmtp(
         this IResourceBuilder<PostaResource> builder,
-        Action<PostaInboundSmtpOptions> configureOptions)
+        Action<PostaInboundSmtpOptions> configureOptions,
+        int? port = null,
+        int targetPort = PostaResource.SmtpEndpointPort)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(configureOptions);
@@ -287,7 +304,60 @@ public static class PostaHostingExtensions
         var options = new PostaInboundSmtpOptions();
         configureOptions.Invoke(options);
 
-        return builder.WithInboundSmtp(options);
+        return builder.WithInboundSmtp(options, port, targetPort);
+    }
+
+    /// <summary>
+    /// Configures and exposes Posta's authenticated SMTP relay.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="options">The parameter-based SMTP relay configuration.</param>
+    /// <param name="port">Optional host port.</param>
+    /// <param name="targetPort">The relay port inside the container.</param>
+    /// <returns>The Posta resource builder.</returns>
+    [AspireExportIgnore(Reason = "PostaSmtpRelayOptions contains parameter builders and is intended for C# AppHosts.")]
+    public static IResourceBuilder<PostaResource> WithSmtpRelay(
+        this IResourceBuilder<PostaResource> builder,
+        PostaSmtpRelayOptions options,
+        int? port = null,
+        int targetPort = PostaResource.SmtpRelayEndpointPort)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return builder
+            .WithEndpoint(port: port, targetPort: targetPort, name: PostaResource.SmtpRelayEndpointName, scheme: "tcp")
+            .WithEnvironment(context =>
+            {
+                ConfigureSmtpRelay(context, options);
+                if (options.Port is null)
+                {
+                    Set(context, PostaEnvironmentVariables.SmtpRelayPort, targetPort);
+                }
+            });
+    }
+
+    /// <summary>
+    /// Configures and exposes Posta's authenticated SMTP relay.
+    /// </summary>
+    /// <param name="builder">The Posta resource builder.</param>
+    /// <param name="configureOptions">A delegate that configures the SMTP relay.</param>
+    /// <param name="port">Optional host port.</param>
+    /// <param name="targetPort">The relay port inside the container.</param>
+    /// <returns>The Posta resource builder.</returns>
+    [AspireExportIgnore(Reason = "Action<PostaSmtpRelayOptions> is not supported in polyglot app hosts.")]
+    public static IResourceBuilder<PostaResource> WithSmtpRelay(
+        this IResourceBuilder<PostaResource> builder,
+        Action<PostaSmtpRelayOptions> configureOptions,
+        int? port = null,
+        int targetPort = PostaResource.SmtpRelayEndpointPort)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var options = new PostaSmtpRelayOptions();
+        configureOptions(options);
+        return builder.WithSmtpRelay(options, port, targetPort);
     }
 
     /// <summary>
@@ -423,7 +493,7 @@ public static class PostaHostingExtensions
 
         var resource = new PostaResource(name, jwtSecretParameter, adminPasswordParameter);
 
-        return builder.AddResource(resource)
+        var resourceBuilder = builder.AddResource(resource)
             .WithImage(PostaContainerImageTags.Image)
             .WithImageTag(PostaContainerImageTags.Tag)
             .WithImageRegistry(PostaContainerImageTags.Registry)
@@ -457,6 +527,24 @@ public static class PostaHostingExtensions
                 statusCode: 200,
                 endpointName: PostaResource.HttpEndpointName)
             .WithUrlForEndpoint(PostaResource.HttpEndpointName, url => url.DisplayText = "Posta Dashboard");
+
+        if (options.InboundEnabled)
+        {
+            resourceBuilder.WithEndpoint(
+                targetPort: options.InboundSmtpPort,
+                name: PostaResource.SmtpEndpointName,
+                scheme: "tcp");
+        }
+
+        if (options.SmtpRelayEnabled)
+        {
+            resourceBuilder.WithEndpoint(
+                targetPort: options.SmtpRelayPort,
+                name: PostaResource.SmtpRelayEndpointName,
+                scheme: "tcp");
+        }
+
+        return resourceBuilder;
     }
 
     private static void ConfigurePostaEnvironment(EnvironmentCallbackContext context, PostaOptions options)
@@ -485,6 +573,7 @@ public static class PostaHostingExtensions
         SetParameter(context, PostaEnvironmentVariables.EncryptionKey, options.EncryptionKey);
         ConfigureSystemSmtp(context, options);
         ConfigureInboundSmtp(context, options);
+        ConfigureSmtpRelay(context, options);
         ConfigureEmailVerification(context, options);
         Set(context, PostaEnvironmentVariables.AllowDowngrade, options.AllowDowngrade);
         Set(context, PostaEnvironmentVariables.PlanEnforcement, options.PlanEnforcement);
@@ -579,6 +668,28 @@ public static class PostaHostingExtensions
         SetParameter(context, PostaEnvironmentVariables.InboundTlsKeyFile, options.TlsKeyFile);
         SetParameter(context, PostaEnvironmentVariables.InboundSmtpRateLimit, options.RateLimit);
         SetParameter(context, PostaEnvironmentVariables.InboundSmtpRateWindow, options.RateWindow);
+    }
+
+    private static void ConfigureSmtpRelay(EnvironmentCallbackContext context, PostaOptions options)
+    {
+        Set(context, PostaEnvironmentVariables.SmtpRelayEnabled, options.SmtpRelayEnabled);
+        Set(context, PostaEnvironmentVariables.SmtpRelayHost, options.SmtpRelayHost);
+        Set(context, PostaEnvironmentVariables.SmtpRelayPort, options.SmtpRelayPort);
+        Set(context, PostaEnvironmentVariables.SmtpRelayHostname, options.SmtpRelayHostname);
+        Set(context, PostaEnvironmentVariables.SmtpRelayMaxMessageSize, options.SmtpRelayMaxMessageSize);
+        Set(context, PostaEnvironmentVariables.SmtpRelayRateLimit, options.SmtpRelayRateLimit);
+        Set(context, PostaEnvironmentVariables.SmtpRelayRateWindow, options.SmtpRelayRateWindow);
+    }
+
+    private static void ConfigureSmtpRelay(EnvironmentCallbackContext context, PostaSmtpRelayOptions options)
+    {
+        SetParameter(context, PostaEnvironmentVariables.SmtpRelayEnabled, options.Enabled);
+        SetParameter(context, PostaEnvironmentVariables.SmtpRelayHost, options.Host);
+        SetParameter(context, PostaEnvironmentVariables.SmtpRelayPort, options.Port);
+        SetParameter(context, PostaEnvironmentVariables.SmtpRelayHostname, options.Hostname);
+        SetParameter(context, PostaEnvironmentVariables.SmtpRelayMaxMessageSize, options.MaxMessageSize);
+        SetParameter(context, PostaEnvironmentVariables.SmtpRelayRateLimit, options.RateLimit);
+        SetParameter(context, PostaEnvironmentVariables.SmtpRelayRateWindow, options.RateWindow);
     }
 
     private static void ConfigureEmailVerification(EnvironmentCallbackContext context, PostaOptions options)

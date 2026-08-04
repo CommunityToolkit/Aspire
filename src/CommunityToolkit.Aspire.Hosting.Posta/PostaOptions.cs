@@ -253,6 +253,27 @@ public sealed class PostaOptions
     /// </summary>
     public int InboundSmtpRateWindow { get; set; } = 60;
 
+    /// <summary>Gets or sets whether the authenticated SMTP relay is enabled.</summary>
+    public bool SmtpRelayEnabled { get; set; }
+
+    /// <summary>Gets or sets the SMTP relay bind address.</summary>
+    public string SmtpRelayHost { get; set; } = "0.0.0.0";
+
+    /// <summary>Gets or sets the SMTP relay listener port.</summary>
+    public int SmtpRelayPort { get; set; } = 2526;
+
+    /// <summary>Gets or sets the hostname announced by the SMTP relay.</summary>
+    public string SmtpRelayHostname { get; set; } = "posta.local";
+
+    /// <summary>Gets or sets the SMTP relay maximum message size in bytes.</summary>
+    public int SmtpRelayMaxMessageSize { get; set; } = 26214400;
+
+    /// <summary>Gets or sets the SMTP relay per-IP session rate limit.</summary>
+    public int SmtpRelayRateLimit { get; set; } = 60;
+
+    /// <summary>Gets or sets the SMTP relay rate-limit window in seconds.</summary>
+    public int SmtpRelayRateWindow { get; set; } = 60;
+
     /// <summary>
     /// Gets or sets a value indicating whether users must verify their email address before sign-in.
     /// </summary>
