@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Utils;
+#pragma warning disable CS0618 // Type or member is obsolete
 using UvicornAppResource = Aspire.Hosting.ApplicationModel.UvicornAppResource;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 namespace Aspire.Hosting;
 
