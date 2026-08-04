@@ -29,12 +29,17 @@ public class RedPandaServerResource(string name) : ContainerResource(name), IRes
     /// <summary>
     /// Gets the primary (Kafka API) endpoint for the Redpanda broker. This endpoint is reachable from the host.
     /// </summary>
-    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
+    /// <remarks>
+    /// The endpoint is pinned to the localhost network so that it always resolves to the published host
+    /// address, even when the expression is evaluated for the Redpanda container itself (which otherwise
+    /// resolves endpoints over the container network and would yield the container's own broker port).
+    /// </remarks>
+    public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName, KnownNetworkIdentifiers.LocalhostNetwork);
 
     /// <summary>
     /// Gets the internal Kafka API endpoint used for container-to-container communication.
     /// </summary>
-    public EndpointReference InternalEndpoint => _internalEndpoint ??= new(this, InternalEndpointName);
+    public EndpointReference InternalEndpoint => _internalEndpoint ??= new(this, InternalEndpointName, KnownNetworkIdentifiers.DefaultAspireContainerNetwork);
 
     /// <summary>
     /// Gets the Schema Registry HTTP endpoint for the Redpanda broker.

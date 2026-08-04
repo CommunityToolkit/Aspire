@@ -76,6 +76,26 @@ public class ResourceCreationTests
     }
 
     [Fact]
+    public void AddRedPandaDoesNotPinHostPortWhenPortIsNotProvided()
+    {
+        // A non-proxied endpoint publishes the host port directly on the container's broker port, which
+        // means every Redpanda resource would bind host port 9092 and only one could ever start. Keep the
+        // Kafka endpoint proxied and unpinned so multiple brokers can coexist in the same app host.
+        IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
+        builder.AddRedPanda("redpanda");
+        builder.AddRedPanda("redpanda-pinned", port: 9092);
+
+        using DistributedApplication app = builder.Build();
+        DistributedApplicationModel appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        RedPandaServerResource resource = Assert.Single(appModel.Resources.OfType<RedPandaServerResource>(), r => r.Name == "redpanda");
+        EndpointAnnotation kafka = resource.GetEndpoint("kafka").EndpointAnnotation;
+
+        Assert.Null(kafka.Port);
+        Assert.True(kafka.IsProxied);
+    }
+
+    [Fact]
     public void ConnectionStringExpressionUsesKafkaEndpoint()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();

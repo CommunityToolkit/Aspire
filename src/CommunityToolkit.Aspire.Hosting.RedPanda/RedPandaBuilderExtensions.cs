@@ -126,10 +126,12 @@ public static class RedPandaBuilderExtensions
             .WithImage(RedPandaContainerImageTags.Image, RedPandaContainerImageTags.Tag)
             .WithImageRegistry(RedPandaContainerImageTags.Registry)
             // The external Kafka listener advertises its own host address (localhost:{port}) so that
-            // clients running on the host can reconnect after the initial metadata exchange. That only
-            // works if the advertised port is the real host port, so the endpoint is not proxied and
-            // the host port is published directly to the container's Kafka broker port.
-            .WithEndpoint(targetPort: RedPandaServerResource.KafkaBrokerPort, port: port, name: RedPandaServerResource.PrimaryEndpointName, isProxied: false)
+            // clients running on the host can reconnect after the initial metadata exchange. The
+            // advertised port resolves to the real host port because RedPandaServerResource.PrimaryEndpoint
+            // is pinned to the localhost network, so the endpoint can stay proxied and a random host port
+            // is allocated when the caller does not pin one. This mirrors the built-in Aspire Kafka
+            // integration and lets multiple Redpanda resources coexist in the same app host.
+            .WithEndpoint(targetPort: RedPandaServerResource.KafkaBrokerPort, port: port, name: RedPandaServerResource.PrimaryEndpointName)
             .WithEndpoint(targetPort: RedPandaServerResource.KafkaInternalBrokerPort, name: RedPandaServerResource.InternalEndpointName)
             .WithHttpEndpoint(targetPort: RedPandaServerResource.SchemaRegistryPort, name: RedPandaServerResource.SchemaRegistryEndpointName)
             .WithHttpEndpoint(targetPort: RedPandaServerResource.AdminPort, name: RedPandaServerResource.AdminEndpointName)
