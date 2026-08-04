@@ -436,6 +436,9 @@ public static class PostaHostingExtensions
                 Set(context, PostaEnvironmentVariables.Port, PostaResource.HttpEndpointPort);
                 SetParameter(context, PostaEnvironmentVariables.DbUrl, options.DatabaseUrl);
                 SetIfNotNull(context, PostaEnvironmentVariables.RedisAddress, options.RedisAddress);
+                SetParameter(context, PostaEnvironmentVariables.RedisUrl, options.RedisUrl);
+                SetIfNotNull(context, PostaEnvironmentVariables.RedisUsername, options.RedisUsername);
+                Set(context, PostaEnvironmentVariables.RedisDatabase, options.RedisDatabase);
                 if (options.RedisPassword is not null)
                 {
                     Set(context, PostaEnvironmentVariables.RedisPassword, options.RedisPassword.Resource);

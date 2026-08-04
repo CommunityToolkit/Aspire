@@ -11,7 +11,10 @@ internal static class PostaEnvironmentVariables
     public const string DbName = "POSTA_DB_NAME";
     public const string DbSslMode = "POSTA_DB_SSL_MODE";
     public const string RedisAddress = "POSTA_REDIS_ADDR";
+    public const string RedisUrl = "POSTA_REDIS_URL";
+    public const string RedisUsername = "POSTA_REDIS_USERNAME";
     public const string RedisPassword = "POSTA_REDIS_PASSWORD";
+    public const string RedisDatabase = "POSTA_REDIS_DB";
     public const string JwtSecret = "POSTA_JWT_SECRET";
     public const string AdminEmail = "POSTA_ADMIN_EMAIL";
     public const string AdminPassword = "POSTA_ADMIN_PASSWORD";

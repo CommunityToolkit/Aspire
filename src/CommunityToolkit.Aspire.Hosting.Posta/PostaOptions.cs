@@ -301,4 +301,13 @@ public sealed class PostaOptions
     /// Gets or sets an external Redis address in the form host:port.
     /// </summary>
     public string? RedisAddress { get; set; }
+
+    /// <summary>Gets or sets a Redis URL that overrides individual Redis settings.</summary>
+    public IResourceBuilder<ParameterResource>? RedisUrl { get; set; }
+
+    /// <summary>Gets or sets the Redis username.</summary>
+    public string? RedisUsername { get; set; }
+
+    /// <summary>Gets or sets the Redis database number.</summary>
+    public int RedisDatabase { get; set; }
 }
