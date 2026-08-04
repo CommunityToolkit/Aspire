@@ -3,7 +3,9 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.Utils;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net.Sockets;
 using CommunityToolkit.Aspire.Testing;
 
@@ -75,6 +77,25 @@ public class AddSurrealServerTests
                 Assert.NotNull(env.Value);
                 Assert.True(env.Value.Length >= 8);
             });
+    }
+
+    [Fact]
+    public void AddSurrealServerRegistersHealthCheck()
+    {
+        using var appBuilder = TestDistributedApplicationBuilder.Create();
+
+        appBuilder.AddSurrealServer("surreal");
+
+        using var app = appBuilder.Build();
+
+        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+
+        var containerResource = Assert.Single(appModel.Resources.OfType<SurrealDbServerResource>());
+        var healthCheckAnnotation = Assert.Single(containerResource.Annotations.OfType<HealthCheckAnnotation>());
+        Assert.Equal("surreal_server_check", healthCheckAnnotation.Key);
+
+        var registrations = app.Services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
+        Assert.Contains(registrations, registration => registration.Name == "surreal_server_check");
     }
 
     [Fact]

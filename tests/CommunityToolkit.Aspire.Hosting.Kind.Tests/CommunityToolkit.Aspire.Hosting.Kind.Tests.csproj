@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- Verify.XunitV3 brings in newer xunit.v3.common/extensibility.core transitively.
+         When upstreaming, update the xunit package versions instead of suppressing. -->
+    <NoWarn>$(NoWarn);NU1608</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+    <PackageReference Include="Verify.XunitV3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\examples\kind\CommunityToolkit.Aspire.Hosting.Kind.AppHost\CommunityToolkit.Aspire.Hosting.Kind.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\CommunityToolkit.Aspire.Hosting.Kind\CommunityToolkit.Aspire.Hosting.Kind.csproj" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Testing\CommunityToolkit.Aspire.Testing.csproj" />
+  </ItemGroup>
+
+</Project>
