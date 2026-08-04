@@ -155,6 +155,7 @@ public class ContainerResourceCreationTests
 
         Assert.Equal("posta", resource.Name);
         Assert.True(resource.TryGetLastAnnotation(out ContainerImageAnnotation? imageAnnotations));
+        Assert.Equal("0.13.1", imageAnnotations.Tag);
         Assert.Equal(PostaContainerImageTags.Tag, imageAnnotations.Tag);
         Assert.NotEqual("latest", imageAnnotations.Tag);
         Assert.Equal(PostaContainerImageTags.Image, imageAnnotations.Image);
