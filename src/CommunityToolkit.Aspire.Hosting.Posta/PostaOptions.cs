@@ -42,6 +42,12 @@ public sealed class PostaOptions
     /// </summary>
     public bool MetricsEnabled { get; set; }
 
+    /// <summary>Gets or sets whether Posta checks GitHub for new releases.</summary>
+    public bool UpdateCheck { get; set; } = true;
+
+    /// <summary>Gets or sets whether users must operate within workspaces.</summary>
+    public bool WorkspaceOnlyMode { get; set; }
+
     /// <summary>
     /// Gets or sets the Vue dashboard build directory.
     /// </summary>

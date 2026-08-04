@@ -25,6 +25,8 @@ internal static class PostaEnvironmentVariables
     public const string RateLimitDaily = "POSTA_RATE_LIMIT_DAILY";
     public const string OpenApiDocs = "POSTA_OPENAPI_DOCS";
     public const string MetricsEnabled = "POSTA_METRICS_ENABLED";
+    public const string UpdateCheck = "POSTA_UPDATE_CHECK";
+    public const string WorkspaceOnlyMode = "POSTA_WORKSPACE_ONLY_MODE";
     public const string WebDir = "POSTA_WEB_DIR";
     public const string WebUrl = "POSTA_WEB_URL";
     public const string ApiUrl = "POSTA_API_URL";

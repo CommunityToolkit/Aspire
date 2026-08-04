@@ -468,6 +468,8 @@ public static class PostaHostingExtensions
         Set(context, PostaEnvironmentVariables.RateLimitDaily, options.RateLimitDaily);
         Set(context, PostaEnvironmentVariables.OpenApiDocs, options.OpenApiDocs);
         Set(context, PostaEnvironmentVariables.MetricsEnabled, options.MetricsEnabled);
+        Set(context, PostaEnvironmentVariables.UpdateCheck, options.UpdateCheck);
+        Set(context, PostaEnvironmentVariables.WorkspaceOnlyMode, options.WorkspaceOnlyMode);
         SetIfNotNull(context, PostaEnvironmentVariables.WebDir, options.WebDir);
         SetIfNotNull(context, PostaEnvironmentVariables.WebUrl, options.WebUrl);
         SetIfNotNull(context, PostaEnvironmentVariables.ApiUrl, options.ApiUrl);
