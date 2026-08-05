@@ -4,6 +4,8 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Retry;
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -318,78 +320,73 @@ internal sealed class KubectlManager(
         ArgumentNullException.ThrowIfNull(resource);
 
         var args = CreateClusterInfoArguments(resource.Parent.KubeconfigPath);
-        var nextDelay = ClusterInfoInitialDelay;
-        var stopwatch = Stopwatch.StartNew();
+        string? lastFailureMessage = null;
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(_clusterInfoMaxWait);
 
-        while (true)
+        var pipeline = new ResiliencePipelineBuilder<ProcessResult>()
+            .AddRetry(new RetryStrategyOptions<ProcessResult>
+            {
+                MaxRetryAttempts = int.MaxValue,
+                Delay = TimeSpan.Zero,
+                UseJitter = false,
+                ShouldHandle = new PredicateBuilder<ProcessResult>()
+                    .HandleResult(static result => result.ExitCode != 0),
+                OnRetry = async arguments =>
+                {
+                    var delay = ComputeClusterInfoRetryDelay(arguments.AttemptNumber + 1);
+                    var result = arguments.Outcome.Result!;
+                    var error = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
+                    logger.LogWarning(
+                        "Cluster '{ClusterName}' API is not reachable yet; retrying kubectl cluster-info in {DelaySeconds:n1}s. Last error: {Error}",
+                        resource.Parent.Name,
+                        delay.TotalSeconds,
+                        error);
+                    await _delayAsync(delay, arguments.Context.CancellationToken).ConfigureAwait(false);
+                }
+            })
+            .Build();
+
+        try
         {
-            if (stopwatch.Elapsed >= _clusterInfoMaxWait)
+            await pipeline.ExecuteAsync(async token =>
             {
-                throw new InvalidOperationException(
-                    $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable.");
-            }
-
-            var remaining = _clusterInfoMaxWait - stopwatch.Elapsed;
-            var probeTimeout = Min(remaining, _clusterInfoProbeTimeout);
-            ProcessResult result;
-            using (var probeCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
-            {
-                probeCts.CancelAfter(probeTimeout);
+                using var probeCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                probeCts.CancelAfter(_clusterInfoProbeTimeout);
 
                 try
                 {
-                    result = await RunKubectlAsync(
+                    var result = await RunKubectlAsync(
                         logger,
                         args,
                         cancellationToken: probeCts.Token).ConfigureAwait(false);
+                    lastFailureMessage = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
+                    return result;
                 }
-                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && !timeoutCts.IsCancellationRequested)
                 {
-                    if (stopwatch.Elapsed >= _clusterInfoMaxWait)
-                    {
-                        throw new InvalidOperationException(
-                            $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable.");
-                    }
-
-                    result = new ProcessResult(1, "", "kubectl cluster-info probe timed out.");
+                    lastFailureMessage = "kubectl cluster-info probe timed out.";
+                    return new ProcessResult(1, "", lastFailureMessage);
                 }
-            }
-
-            if (result.ExitCode == 0)
-            {
-                return;
-            }
-
-            if (stopwatch.Elapsed >= _clusterInfoMaxWait)
-            {
-                throw new InvalidOperationException(
-                    $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable: " +
-                    (string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error));
-            }
-
-            remaining = _clusterInfoMaxWait - stopwatch.Elapsed;
-            var delay = Min(nextDelay, remaining);
-            if (delay <= TimeSpan.Zero)
-            {
-                throw new InvalidOperationException(
-                    $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable: " +
-                    (string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error));
-            }
-
-            logger.LogWarning(
-                "Cluster '{ClusterName}' API is not reachable yet; retrying kubectl cluster-info in {DelaySeconds:n1}s. Last error: {Error}",
-                resource.Parent.Name,
-                delay.TotalSeconds,
-                string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error);
-
-            await _delayAsync(delay, cancellationToken).ConfigureAwait(false);
-            nextDelay = TimeSpan.FromSeconds(Math.Min(nextDelay.TotalSeconds * 2, ClusterInfoMaxDelay.TotalSeconds));
+            }, timeoutCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new InvalidOperationException(
+                $"Timed out waiting for cluster '{resource.Parent.Name}' API to become reachable" +
+                (string.IsNullOrWhiteSpace(lastFailureMessage) ? "." : $": {lastFailureMessage}"));
         }
     }
 
     private static TimeSpan Min(TimeSpan left, TimeSpan right)
     {
         return left <= right ? left : right;
+    }
+
+    private static TimeSpan ComputeClusterInfoRetryDelay(int failureCount)
+    {
+        var delay = TimeSpan.FromSeconds(ClusterInfoInitialDelay.TotalSeconds * Math.Pow(2, failureCount - 1));
+        return Min(delay, ClusterInfoMaxDelay);
     }
 
     private async Task<ProcessResult> RunKubectlAsync(

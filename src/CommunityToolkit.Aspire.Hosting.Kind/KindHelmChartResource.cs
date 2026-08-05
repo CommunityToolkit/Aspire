@@ -51,5 +51,7 @@ public class KindHelmChartResource(string name, string chartRef, KindClusterReso
 
     internal int CrdWaitRetryMaxAttempts { get; set; } = 1;
 
+    internal TimeSpan CrdWaitRetryTimeout { get; set; } = KubectlTimeouts.DefaultCrdWaitTimeout;
+
     internal TimeSpan CrdWaitRetryBackoff { get; set; } = KubectlTimeouts.DefaultCrdWaitRetryBackoff;
 }

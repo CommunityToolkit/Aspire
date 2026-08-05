@@ -165,7 +165,7 @@ public class KindHelmChartTests
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
-            .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(7));
+            .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(7), crdWaitTimeout: TimeSpan.FromSeconds(42));
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -173,6 +173,7 @@ public class KindHelmChartTests
         var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
         Assert.Equal(3, resource.CrdWaitRetryMaxAttempts);
         Assert.Equal(TimeSpan.FromSeconds(7), resource.CrdWaitRetryBackoff);
+        Assert.Equal(TimeSpan.FromSeconds(42), resource.CrdWaitRetryTimeout);
     }
 
     [Fact]
@@ -190,6 +191,7 @@ public class KindHelmChartTests
         var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
         Assert.Equal(3, resource.CrdWaitRetryMaxAttempts);
         Assert.Equal(KubectlTimeouts.DefaultCrdWaitRetryBackoff, resource.CrdWaitRetryBackoff);
+        Assert.Equal(KubectlTimeouts.DefaultCrdWaitTimeout, resource.CrdWaitRetryTimeout);
     }
 
     [Fact]
@@ -210,6 +212,16 @@ public class KindHelmChartTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             cluster.AddHelmChart("redis", "chart/ref").WithCrdWaitRetry(3, TimeSpan.Zero));
+    }
+
+    [Fact]
+    public void WithCrdWaitRetryRejectsInvalidCrdWaitTimeout()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cluster.AddHelmChart("redis", "chart/ref").WithCrdWaitRetry(3, TimeSpan.FromSeconds(5), TimeSpan.Zero));
     }
 
     [Fact]
@@ -392,6 +404,30 @@ public class KindHelmChartTests
         Assert.Contains("wait --for=condition=Established customresourcedefinition.apiextensions.k8s.io/widgets.example.com", processRunner.Commands[3].Arguments);
         Assert.Equal("helm", processRunner.Commands[4].FileName);
         Assert.Equal([TimeSpan.FromSeconds(2)], delays);
+    }
+
+    [Fact]
+    public async Task InstallAsync_UsesConfiguredCrdWaitTimeoutBetweenRetries()
+    {
+        var cluster = new KindClusterResource("cluster");
+        var resource = new KindHelmChartResource("redis", "chart/ref", cluster)
+        {
+            CrdWaitRetryMaxAttempts = 2,
+            CrdWaitRetryBackoff = TimeSpan.FromSeconds(2),
+            CrdWaitRetryTimeout = TimeSpan.FromSeconds(42),
+        };
+        var processRunner = new FakeProcessRunner();
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(1, "", "no matches for kind \"Widget\" in version \"widgets.example.com/v1\"; ensure CRDs are installed first"));
+        processRunner.Results.Enqueue(new(0, "customresourcedefinition.apiextensions.k8s.io/widgets.example.com", ""));
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(0, "release installed", ""));
+        var manager = new HelmManager(processRunner, static (_, _) => Task.CompletedTask);
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+
+        await manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None);
+
+        Assert.Contains("--timeout=42s", processRunner.Commands[3].Arguments);
     }
 
     [Fact]

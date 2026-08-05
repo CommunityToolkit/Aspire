@@ -192,6 +192,10 @@ public static class KindHelmChartResourceBuilderExtensions
     /// The initial delay before retrying. Later retries back off exponentially.
     /// When <see langword="null"/>, Kind uses a 5 second initial backoff.
     /// </param>
+    /// <param name="crdWaitTimeout">
+    /// The timeout used while waiting for newly discovered CRDs to become <c>Established</c>
+    /// between retry attempts. When <see langword="null"/>, Kind uses a 5 minute timeout.
+    /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
     /// <remarks>
     /// This is useful for charts that create CRDs and immediately render custom resources
@@ -202,13 +206,15 @@ public static class KindHelmChartResourceBuilderExtensions
     public static IResourceBuilder<KindHelmChartResource> WithCrdWaitRetry(
         this IResourceBuilder<KindHelmChartResource> builder,
         int maxAttempts = 3,
-        TimeSpan? backoff = null)
+        TimeSpan? backoff = null,
+        TimeSpan? crdWaitTimeout = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxAttempts, 2);
 
         builder.Resource.CrdWaitRetryMaxAttempts = maxAttempts;
         builder.Resource.CrdWaitRetryBackoff = KubectlTimeouts.Normalize(backoff ?? KubectlTimeouts.DefaultCrdWaitRetryBackoff, nameof(backoff));
+        builder.Resource.CrdWaitRetryTimeout = KubectlTimeouts.Normalize(crdWaitTimeout ?? KubectlTimeouts.DefaultCrdWaitTimeout, nameof(crdWaitTimeout));
         return builder;
     }
 

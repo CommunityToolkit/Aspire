@@ -71,7 +71,7 @@ namespace Aspire.Hosting
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> WithChartVersion(this ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> builder, string version) { throw null; }
 
         [AspireExport]
-        public static ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> WithCrdWaitRetry(this ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> builder, int maxAttempts = 3, System.TimeSpan? backoff = null) { throw null; }
+        public static ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> WithCrdWaitRetry(this ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> builder, int maxAttempts = 3, System.TimeSpan? backoff = null, System.TimeSpan? crdWaitTimeout = null) { throw null; }
 
         [AspireExport]
         public static ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> WithHelmStringValue(this ApplicationModel.IResourceBuilder<ApplicationModel.KindHelmChartResource> builder, string key, string value) { throw null; }

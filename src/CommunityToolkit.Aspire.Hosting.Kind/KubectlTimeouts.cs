@@ -5,6 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.Kind;
 
 internal static class KubectlTimeouts
 {
+    internal static readonly TimeSpan DefaultCrdWaitTimeout = TimeSpan.FromMinutes(5);
     internal static readonly TimeSpan DefaultCrdWaitRetryBackoff = TimeSpan.FromSeconds(5);
     internal static readonly TimeSpan MaximumTimeout = TimeSpan.FromHours(1);
 
