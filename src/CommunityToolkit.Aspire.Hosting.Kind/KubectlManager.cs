@@ -34,31 +34,20 @@ internal sealed class KubectlManager(
 
     /// <summary>
     /// Waits for the cluster API to answer, then applies the manifest via <c>kubectl apply</c>.
+    /// Callers should pass the manifest resource's scoped logger from <see cref="ResourceLoggerService"/>.
     /// </summary>
-    public async Task ApplyAsync(K8sManifestResource resource, ILogger logger, CancellationToken cancellationToken)
+    public async Task ApplyAsync(K8sManifestResource resource, ILogger resourceLogger, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(resource);
         var applyOptions = K8sManifestAnnotations.GetApplyOptions(resource);
 
-        await WaitForClusterInfoAsync(resource, logger, cancellationToken).ConfigureAwait(false);
+        await WaitForClusterInfoAsync(resource, resourceLogger, cancellationToken).ConfigureAwait(false);
         ValidateRecursiveManifestTarget(resource);
+        LogConfigurationWarnings(resource, resourceLogger, applyOptions);
 
         var args = CreateApplyArguments(resource);
 
-        if (applyOptions.Recursive && applyOptions.IsKustomize)
-        {
-            logger.LogWarning(
-                "Ignoring recursive apply for Kustomize manifest '{ManifestPath}' because kubectl apply -k does not support --recursive.",
-                resource.ManifestPath);
-        }
-        else if (applyOptions.Recursive && resource.InlineContent is not null)
-        {
-            logger.LogWarning(
-                "Ignoring recursive apply for inline manifest '{ManifestPath}' because kubectl apply -f - does not support --recursive.",
-                resource.ManifestPath);
-        }
-
-        logger.LogInformation(
+        resourceLogger.LogInformation(
             "Applying manifest '{ManifestPath}' to cluster '{ClusterName}'...",
             resource.ManifestPath, resource.Parent.Name);
 
@@ -71,7 +60,7 @@ internal sealed class KubectlManager(
             try
             {
                 result = await RunKubectlAsync(
-                    logger,
+                    resourceLogger,
                     args,
                     standardInput: resource.InlineContent,
                     cancellationToken: applyCts.Token).ConfigureAwait(false);
@@ -92,10 +81,10 @@ internal sealed class KubectlManager(
         var crdNames = GetAppliedCrdNames(result.Output);
         if (crdNames.Count > 0)
         {
-            await WaitForCrdsAsync(crdNames, resource, logger, cancellationToken).ConfigureAwait(false);
+            await WaitForCrdsAsync(crdNames, resource, resourceLogger, cancellationToken).ConfigureAwait(false);
         }
 
-        logger.LogInformation(
+        resourceLogger.LogInformation(
             "Manifest '{ManifestPath}' applied successfully.", resource.ManifestPath);
     }
 
@@ -105,7 +94,7 @@ internal sealed class KubectlManager(
     internal async Task WaitForCrdsAsync(
         IEnumerable<string> crdNames,
         K8sManifestResource resource,
-        ILogger logger,
+        ILogger resourceLogger,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(crdNames);
@@ -120,12 +109,12 @@ internal sealed class KubectlManager(
         var waitPolicy = K8sManifestAnnotations.GetWaitPolicy(resource);
         var args = CreateWaitArguments(crds, resource.Parent.KubeconfigPath, waitPolicy.Crd.Timeout);
 
-        logger.LogInformation(
+        resourceLogger.LogInformation(
             "Waiting for {CrdCount} custom resource definition(s) to become Established...",
             crds.Length);
 
         var result = await RunKubectlAsync(
-            logger,
+            resourceLogger,
             args,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -134,7 +123,7 @@ internal sealed class KubectlManager(
             var message = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
             if (waitPolicy.Crd.FailureBehavior == CrdWaitBehavior.BestEffort)
             {
-                logger.LogWarning(
+                resourceLogger.LogWarning(
                     "Timed out or failed while waiting for custom resource definition(s) to become Established: {Error}",
                     message);
                 return;
@@ -149,19 +138,19 @@ internal sealed class KubectlManager(
         IEnumerable<string> crdNames,
         string kubeconfigPath,
         TimeSpan timeout,
-        ILogger logger,
+        ILogger resourceLogger,
         CancellationToken cancellationToken) =>
-        WaitForCrdsCoreAsync(crdNames, kubeconfigPath, timeout, logger, cancellationToken, bestEffort: false);
+        WaitForCrdsCoreAsync(crdNames, kubeconfigPath, timeout, resourceLogger, cancellationToken, bestEffort: false);
 
     internal async Task<IReadOnlySet<string>> GetCustomResourceDefinitionsAsync(
         string kubeconfigPath,
-        ILogger logger,
+        ILogger resourceLogger,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(kubeconfigPath);
 
         var result = await RunKubectlAsync(
-            logger,
+            resourceLogger,
             CreateGetCrdsArguments(kubeconfigPath),
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -317,7 +306,7 @@ internal sealed class KubectlManager(
     /// </summary>
     internal async Task WaitForClusterInfoAsync(
         K8sManifestResource resource,
-        ILogger logger,
+        ILogger resourceLogger,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(resource);
@@ -340,7 +329,7 @@ internal sealed class KubectlManager(
                     var delay = ComputeClusterInfoRetryDelay(arguments.AttemptNumber + 1);
                     var result = arguments.Outcome.Result!;
                     var error = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
-                    logger.LogWarning(
+                    resourceLogger.LogWarning(
                         "Cluster '{ClusterName}' API is not reachable yet; retrying kubectl cluster-info in {DelaySeconds:n1}s. Last error: {Error}",
                         resource.Parent.Name,
                         delay.TotalSeconds,
@@ -360,7 +349,7 @@ internal sealed class KubectlManager(
                 try
                 {
                     var result = await RunKubectlAsync(
-                        logger,
+                        resourceLogger,
                         args,
                         cancellationToken: probeCts.Token).ConfigureAwait(false);
                     lastFailureMessage = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
@@ -393,7 +382,7 @@ internal sealed class KubectlManager(
     }
 
     private async Task<ProcessResult> RunKubectlAsync(
-        ILogger logger,
+        ILogger resourceLogger,
         IReadOnlyList<string> arguments,
         string? standardInput = null,
         CancellationToken cancellationToken = default)
@@ -401,7 +390,7 @@ internal sealed class KubectlManager(
         try
         {
             return await processRunner.RunAsync(
-                logger,
+                resourceLogger,
                 "kubectl",
                 arguments,
                 standardInput: standardInput,
@@ -441,6 +430,25 @@ internal sealed class KubectlManager(
         }
     }
 
+    private static void LogConfigurationWarnings(
+        K8sManifestResource resource,
+        ILogger resourceLogger,
+        K8sManifestApplyOptionsAnnotation applyOptions)
+    {
+        if (applyOptions.Recursive && applyOptions.IsKustomize)
+        {
+            resourceLogger.LogWarning(
+                "Ignoring recursive apply for Kustomize manifest '{ManifestPath}' because kubectl apply -k does not support --recursive.",
+                resource.ManifestPath);
+        }
+        else if (applyOptions.Recursive && resource.InlineContent is not null)
+        {
+            resourceLogger.LogWarning(
+                "Ignoring recursive apply for inline manifest '{ManifestPath}' because kubectl apply -f - does not support --recursive.",
+                resource.ManifestPath);
+        }
+    }
+
     /// <summary>
     /// Extracts CRD resource names from <c>kubectl apply</c> output.
     /// </summary>
@@ -476,7 +484,7 @@ internal sealed class KubectlManager(
         IEnumerable<string> crdNames,
         string kubeconfigPath,
         TimeSpan timeout,
-        ILogger logger,
+        ILogger resourceLogger,
         CancellationToken cancellationToken,
         bool bestEffort)
     {
@@ -491,12 +499,12 @@ internal sealed class KubectlManager(
 
         var args = CreateWaitArguments(crds, kubeconfigPath, timeout);
 
-        logger.LogInformation(
+        resourceLogger.LogInformation(
             "Waiting for {CrdCount} custom resource definition(s) to become Established...",
             crds.Length);
 
         var result = await RunKubectlAsync(
-            logger,
+            resourceLogger,
             args,
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -508,7 +516,7 @@ internal sealed class KubectlManager(
         var message = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
         if (bestEffort)
         {
-            logger.LogWarning(
+            resourceLogger.LogWarning(
                 "Timed out or failed while waiting for custom resource definition(s) to become Established: {Error}",
                 message);
             return;

@@ -21,21 +21,22 @@ internal sealed class HelmManager(
 
     /// <summary>
     /// Installs or upgrades the Helm release.
+    /// Callers should pass the Helm resource's scoped logger from <see cref="ResourceLoggerService"/>.
     /// </summary>
-    public async Task InstallAsync(KindHelmChartResource resource, ILogger logger, CancellationToken cancellationToken)
+    public async Task InstallAsync(KindHelmChartResource resource, ILogger resourceLogger, CancellationToken cancellationToken)
     {
         var args = CreateInstallArguments(resource);
         var maxAttempts = resource.CrdWaitRetryMaxAttempts;
         if (maxAttempts <= 1)
         {
-            logger.LogInformation(
+            resourceLogger.LogInformation(
                 "Installing Helm chart '{ChartRef}' as release '{ReleaseName}' in cluster '{ClusterName}' (attempt 1/1)...",
                 resource.ChartRef,
                 resource.ReleaseName,
                 resource.Parent.Name);
 
             var result = await processRunner.RunAsync(
-                logger,
+                resourceLogger,
                 "helm",
                 args,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -46,13 +47,13 @@ internal sealed class HelmManager(
                     $"Failed to install Helm chart '{resource.ChartRef}' as release '{resource.ReleaseName}': {FormatFailureOutput(result)}");
             }
 
-            logger.LogInformation(
+            resourceLogger.LogInformation(
                 "Helm release '{ReleaseName}' installed successfully.", resource.ReleaseName);
             return;
         }
 
         IReadOnlySet<string> knownCrds = maxAttempts > 1
-            ? await TryGetCustomResourceDefinitionsAsync(resource, logger, cancellationToken).ConfigureAwait(false)
+            ? await TryGetCustomResourceDefinitionsAsync(resource, resourceLogger, cancellationToken).ConfigureAwait(false)
             : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var attempt = 0;
         var pipeline = new ResiliencePipelineBuilder<HelmInstallAttemptResult>()
@@ -68,7 +69,7 @@ internal sealed class HelmManager(
                     var retryResult = arguments.Outcome.Result!;
                     if (retryResult.NewCrds.Length > 0)
                     {
-                        logger.LogWarning(
+                        resourceLogger.LogWarning(
                             "Helm release '{ReleaseName}' failed and discovered {CrdCount} new CRD(s). Waiting for them to become Established before retrying.",
                             resource.ReleaseName,
                             retryResult.NewCrds.Length);
@@ -77,12 +78,12 @@ internal sealed class HelmManager(
                             retryResult.NewCrds,
                             resource.Parent.KubeconfigPath,
                             resource.CrdWaitRetryTimeout,
-                            logger,
+                            resourceLogger,
                             arguments.Context.CancellationToken).ConfigureAwait(false);
                     }
                     else
                     {
-                        logger.LogWarning(
+                        resourceLogger.LogWarning(
                             "Helm release '{ReleaseName}' failed. Retrying because {MethodName} is enabled.",
                             resource.ReleaseName,
                             "WithCrdWaitRetry");
@@ -90,7 +91,7 @@ internal sealed class HelmManager(
 
                     knownCrds = retryResult.DiscoveredCrds;
                     var backoff = ComputeRetryBackoff(resource.CrdWaitRetryBackoff, arguments.AttemptNumber + 1);
-                    logger.LogInformation(
+                    resourceLogger.LogInformation(
                         "Retrying Helm release '{ReleaseName}' in {DelaySeconds:n1}s.",
                         resource.ReleaseName,
                         backoff.TotalSeconds);
@@ -102,7 +103,7 @@ internal sealed class HelmManager(
         var finalResult = await pipeline.ExecuteAsync(async token =>
         {
             attempt++;
-            logger.LogInformation(
+            resourceLogger.LogInformation(
                 "Installing Helm chart '{ChartRef}' as release '{ReleaseName}' in cluster '{ClusterName}' (attempt {Attempt}/{MaxAttempts})...",
                 resource.ChartRef,
                 resource.ReleaseName,
@@ -111,7 +112,7 @@ internal sealed class HelmManager(
                 maxAttempts);
 
             var result = await processRunner.RunAsync(
-                logger,
+                resourceLogger,
                 "helm",
                 args,
                 cancellationToken: token).ConfigureAwait(false);
@@ -126,7 +127,7 @@ internal sealed class HelmManager(
                 return HelmInstallAttemptResult.Fail(result);
             }
 
-            var discoveredCrds = await TryGetCustomResourceDefinitionsAsync(resource, logger, token).ConfigureAwait(false);
+            var discoveredCrds = await TryGetCustomResourceDefinitionsAsync(resource, resourceLogger, token).ConfigureAwait(false);
             var newCrds = discoveredCrds
                 .Except(knownCrds, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
@@ -140,7 +141,7 @@ internal sealed class HelmManager(
                 $"Failed to install Helm chart '{resource.ChartRef}' as release '{resource.ReleaseName}': {FormatFailureOutput(finalResult.Result)}");
         }
 
-        logger.LogInformation(
+        resourceLogger.LogInformation(
             "Helm release '{ReleaseName}' installed successfully.", resource.ReleaseName);
     }
 
@@ -213,19 +214,19 @@ internal sealed class HelmManager(
 
     private async Task<IReadOnlySet<string>> TryGetCustomResourceDefinitionsAsync(
         KindHelmChartResource resource,
-        ILogger logger,
+        ILogger resourceLogger,
         CancellationToken cancellationToken)
     {
         try
         {
             return await _kubectlManager.GetCustomResourceDefinitionsAsync(
                 resource.Parent.KubeconfigPath,
-                logger,
+                resourceLogger,
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            logger.LogDebug(
+            resourceLogger.LogDebug(
                 ex,
                 "Unable to snapshot CRDs for Helm release '{ReleaseName}'.",
                 resource.ReleaseName);
