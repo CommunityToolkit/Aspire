@@ -117,8 +117,8 @@ internal sealed class KubectlManager(
             return;
         }
 
-        var waitOptions = K8sManifestAnnotations.GetWaitOptions(resource);
-        var args = CreateWaitArguments(crds, resource.Parent.KubeconfigPath, waitOptions.CrdWaitTimeout);
+        var waitPolicy = K8sManifestAnnotations.GetWaitPolicy(resource);
+        var args = CreateWaitArguments(crds, resource.Parent.KubeconfigPath, waitPolicy.Crd.Timeout);
 
         logger.LogInformation(
             "Waiting for {CrdCount} custom resource definition(s) to become Established...",
@@ -132,7 +132,7 @@ internal sealed class KubectlManager(
         if (result.ExitCode != 0)
         {
             var message = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
-            if (waitOptions.CrdWaitBehavior == CrdWaitBehavior.BestEffort)
+            if (waitPolicy.Crd.FailureBehavior == CrdWaitBehavior.BestEffort)
             {
                 logger.LogWarning(
                     "Timed out or failed while waiting for custom resource definition(s) to become Established: {Error}",

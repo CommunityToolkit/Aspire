@@ -21,13 +21,18 @@ internal sealed class K8sManifestApplyOptionsAnnotation : IResourceAnnotation
     public TimeSpan ApplyTimeout { get; set; } = KubectlTimeouts.DefaultApplyTimeout;
 }
 
-internal sealed class K8sManifestWaitOptionsAnnotation : IResourceAnnotation
+internal sealed class K8sManifestCrdWaitPolicy
+{
+    public TimeSpan Timeout { get; set; } = KubectlTimeouts.DefaultCrdWaitTimeout;
+
+    public CrdWaitBehavior FailureBehavior { get; set; } = CrdWaitBehavior.Fail;
+}
+
+internal sealed class K8sManifestWaitPolicyAnnotation : IResourceAnnotation
 {
     public TimeSpan ClusterReadyTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
-    public TimeSpan CrdWaitTimeout { get; set; } = KubectlTimeouts.DefaultCrdWaitTimeout;
-
-    public CrdWaitBehavior CrdWaitBehavior { get; set; } = CrdWaitBehavior.Fail;
+    public K8sManifestCrdWaitPolicy Crd { get; } = new();
 }
 
 internal static class K8sManifestAnnotations
@@ -54,24 +59,24 @@ internal static class K8sManifestAnnotations
         return annotation;
     }
 
-    public static K8sManifestWaitOptionsAnnotation GetWaitOptions(K8sManifestResource resource)
+    public static K8sManifestWaitPolicyAnnotation GetWaitPolicy(K8sManifestResource resource)
     {
         ArgumentNullException.ThrowIfNull(resource);
-        return resource.TryGetLastAnnotation<K8sManifestWaitOptionsAnnotation>(out var annotation)
+        return resource.TryGetLastAnnotation<K8sManifestWaitPolicyAnnotation>(out var annotation)
             ? annotation
-            : new K8sManifestWaitOptionsAnnotation();
+            : new K8sManifestWaitPolicyAnnotation();
     }
 
-    public static K8sManifestWaitOptionsAnnotation GetOrCreateWaitOptions(K8sManifestResource resource)
+    public static K8sManifestWaitPolicyAnnotation GetOrCreateWaitPolicy(K8sManifestResource resource)
     {
         ArgumentNullException.ThrowIfNull(resource);
 
-        if (resource.TryGetLastAnnotation<K8sManifestWaitOptionsAnnotation>(out var annotation))
+        if (resource.TryGetLastAnnotation<K8sManifestWaitPolicyAnnotation>(out var annotation))
         {
             return annotation;
         }
 
-        annotation = new K8sManifestWaitOptionsAnnotation();
+        annotation = new K8sManifestWaitPolicyAnnotation();
         resource.Annotations.Add(annotation);
         return annotation;
     }

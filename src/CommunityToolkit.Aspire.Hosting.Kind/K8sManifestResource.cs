@@ -101,8 +101,8 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
     /// </summary>
     public TimeSpan ClusterReadyTimeout
     {
-        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitOptions(this).ClusterReadyTimeout;
-        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitOptions(this).ClusterReadyTimeout = value;
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitPolicy(this).ClusterReadyTimeout;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitPolicy(this).ClusterReadyTimeout = value;
     }
 
     /// <summary>
@@ -110,8 +110,8 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
     /// </summary>
     public TimeSpan CrdWaitTimeout
     {
-        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitOptions(this).CrdWaitTimeout;
-        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitOptions(this).CrdWaitTimeout = value;
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitPolicy(this).Crd.Timeout;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitPolicy(this).Crd.Timeout = value;
     }
 
     /// <summary>
@@ -119,8 +119,8 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
     /// </summary>
     public CrdWaitBehavior CrdWaitBehavior
     {
-        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitOptions(this).CrdWaitBehavior;
-        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitOptions(this).CrdWaitBehavior = value;
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitPolicy(this).Crd.FailureBehavior;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitPolicy(this).Crd.FailureBehavior = value;
     }
 }
 

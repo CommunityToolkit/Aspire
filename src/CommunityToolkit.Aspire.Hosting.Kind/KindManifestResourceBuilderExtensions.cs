@@ -147,7 +147,7 @@ public static class KindManifestResourceBuilderExtensions
 
         return new KubectlManager(
             processRunner,
-            clusterInfoMaxWait: K8sManifestAnnotations.GetWaitOptions(resource).ClusterReadyTimeout);
+            clusterInfoMaxWait: K8sManifestAnnotations.GetWaitPolicy(resource).ClusterReadyTimeout);
     }
 
     /// <summary>
@@ -232,7 +232,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        K8sManifestAnnotations.GetOrCreateWaitOptions(builder.Resource).ClusterReadyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
+        K8sManifestAnnotations.GetOrCreateWaitPolicy(builder.Resource).ClusterReadyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
         return builder;
     }
 
@@ -266,7 +266,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        K8sManifestAnnotations.GetOrCreateWaitOptions(builder.Resource).CrdWaitTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
+        K8sManifestAnnotations.GetOrCreateWaitPolicy(builder.Resource).Crd.Timeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
         return builder;
     }
 
@@ -283,7 +283,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        K8sManifestAnnotations.GetOrCreateWaitOptions(builder.Resource).CrdWaitBehavior = behavior;
+        K8sManifestAnnotations.GetOrCreateWaitPolicy(builder.Resource).Crd.FailureBehavior = behavior;
         return builder;
     }
 
