@@ -38,19 +38,20 @@ internal sealed class KubectlManager(
     public async Task ApplyAsync(K8sManifestResource resource, ILogger logger, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(resource);
+        var applyOptions = K8sManifestAnnotations.GetApplyOptions(resource);
 
         await WaitForClusterInfoAsync(resource, logger, cancellationToken).ConfigureAwait(false);
         ValidateRecursiveManifestTarget(resource);
 
         var args = CreateApplyArguments(resource);
 
-        if (resource.Recursive && resource.IsKustomize)
+        if (applyOptions.Recursive && applyOptions.IsKustomize)
         {
             logger.LogWarning(
                 "Ignoring recursive apply for Kustomize manifest '{ManifestPath}' because kubectl apply -k does not support --recursive.",
                 resource.ManifestPath);
         }
-        else if (resource.Recursive && resource.InlineContent is not null)
+        else if (applyOptions.Recursive && resource.InlineContent is not null)
         {
             logger.LogWarning(
                 "Ignoring recursive apply for inline manifest '{ManifestPath}' because kubectl apply -f - does not support --recursive.",
@@ -62,7 +63,7 @@ internal sealed class KubectlManager(
             resource.ManifestPath, resource.Parent.Name);
 
         ProcessResult result;
-        var applyTimeout = KubectlTimeouts.Normalize(resource.ApplyTimeout, nameof(resource.ApplyTimeout));
+        var applyTimeout = KubectlTimeouts.Normalize(applyOptions.ApplyTimeout, nameof(resource.ApplyTimeout));
         using (var applyCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
         {
             applyCts.CancelAfter(applyTimeout);
@@ -116,7 +117,8 @@ internal sealed class KubectlManager(
             return;
         }
 
-        var args = CreateWaitArguments(crds, resource.Parent.KubeconfigPath, resource.CrdWaitTimeout);
+        var waitOptions = K8sManifestAnnotations.GetWaitOptions(resource);
+        var args = CreateWaitArguments(crds, resource.Parent.KubeconfigPath, waitOptions.CrdWaitTimeout);
 
         logger.LogInformation(
             "Waiting for {CrdCount} custom resource definition(s) to become Established...",
@@ -130,7 +132,7 @@ internal sealed class KubectlManager(
         if (result.ExitCode != 0)
         {
             var message = string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
-            if (resource.CrdWaitBehavior == CrdWaitBehavior.BestEffort)
+            if (waitOptions.CrdWaitBehavior == CrdWaitBehavior.BestEffort)
             {
                 logger.LogWarning(
                     "Timed out or failed while waiting for custom resource definition(s) to become Established: {Error}",
@@ -179,10 +181,11 @@ internal sealed class KubectlManager(
     internal static IReadOnlyList<string> CreateApplyArguments(K8sManifestResource resource)
     {
         ArgumentNullException.ThrowIfNull(resource);
+        var applyOptions = K8sManifestAnnotations.GetApplyOptions(resource);
         var isKustomize = resource.InlineContent is null &&
             Directory.Exists(resource.ManifestPath) &&
             IsKustomizeDirectory(resource.ManifestPath);
-        resource.IsKustomize = isKustomize;
+        K8sManifestAnnotations.GetOrCreateApplyOptions(resource).IsKustomize = isKustomize;
 
         List<string> arguments =
         [
@@ -213,25 +216,25 @@ internal sealed class KubectlManager(
             arguments.Add(resource.Namespace);
         }
 
-        if (resource.Recursive && !isKustomize && resource.InlineContent is null)
+        if (applyOptions.Recursive && !isKustomize && resource.InlineContent is null)
         {
             arguments.Add("--recursive");
         }
 
-        if (resource.ServerSide)
+        if (applyOptions.ServerSide)
         {
             arguments.Add("--server-side");
 
-            if (resource.ForceConflicts)
+            if (applyOptions.ForceConflicts)
             {
                 arguments.Add("--force-conflicts");
             }
         }
 
-        if (!string.IsNullOrEmpty(resource.FieldManager))
+        if (!string.IsNullOrEmpty(applyOptions.FieldManager))
         {
             arguments.Add("--field-manager");
-            arguments.Add(resource.FieldManager);
+            arguments.Add(applyOptions.FieldManager);
         }
 
         return arguments;
@@ -425,7 +428,8 @@ internal sealed class KubectlManager(
 
     private static void ValidateRecursiveManifestTarget(K8sManifestResource resource)
     {
-        if (!resource.Recursive || resource.InlineContent is not null || resource.IsKustomize)
+        var applyOptions = K8sManifestAnnotations.GetApplyOptions(resource);
+        if (!applyOptions.Recursive || resource.InlineContent is not null || applyOptions.IsKustomize)
         {
             return;
         }

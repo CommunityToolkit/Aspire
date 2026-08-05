@@ -31,7 +31,11 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
     /// <summary>
     /// Gets or sets whether this resource represents a Kustomize overlay directory.
     /// </summary>
-    public bool IsKustomize { get; set; }
+    public bool IsKustomize
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetApplyOptions(this).IsKustomize;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateApplyOptions(this).IsKustomize = value;
+    }
 
     /// <summary>
     /// Gets or sets inline manifest content applied with <c>kubectl apply -f -</c>.
@@ -43,49 +47,81 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
     /// (maps to <c>kubectl apply --recursive</c>).
     /// Only meaningful when <see cref="ManifestPath"/> is a directory.
     /// </summary>
-    public bool Recursive { get; set; }
+    public bool Recursive
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetApplyOptions(this).Recursive;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateApplyOptions(this).Recursive = value;
+    }
 
     /// <summary>
     /// Gets or sets whether to apply the manifest server-side
     /// (maps to <c>kubectl apply --server-side</c>).
     /// Server-side apply is required for large CRDs that exceed the client-side annotation size limit.
     /// </summary>
-    public bool ServerSide { get; set; }
+    public bool ServerSide
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetApplyOptions(this).ServerSide;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateApplyOptions(this).ServerSide = value;
+    }
 
     /// <summary>
     /// Gets or sets whether to force conflicts on server-side apply
     /// (maps to <c>kubectl apply --server-side --force-conflicts</c>).
     /// Only meaningful when <see cref="ServerSide"/> is <see langword="true"/>.
     /// </summary>
-    public bool ForceConflicts { get; set; }
+    public bool ForceConflicts
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetApplyOptions(this).ForceConflicts;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateApplyOptions(this).ForceConflicts = value;
+    }
 
     /// <summary>
     /// Gets the field manager name used with server-side apply
     /// (maps to <c>kubectl apply --field-manager</c>).
     /// When <see langword="null"/>, kubectl uses its default (<c>kubectl</c>).
     /// </summary>
-    public string? FieldManager { get; set; }
+    public string? FieldManager
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetApplyOptions(this).FieldManager;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateApplyOptions(this).FieldManager = value;
+    }
 
     /// <summary>
     /// Gets or sets the maximum time to wait for <c>kubectl apply</c> to complete.
     /// </summary>
-    public TimeSpan ApplyTimeout { get; set; } = TimeSpan.FromMinutes(5);
+    public TimeSpan ApplyTimeout
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetApplyOptions(this).ApplyTimeout;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateApplyOptions(this).ApplyTimeout = value;
+    }
 
     /// <summary>
     /// Gets or sets the maximum time to wait for the Kubernetes API to become reachable
     /// before running <c>kubectl apply</c>.
     /// </summary>
-    public TimeSpan ClusterReadyTimeout { get; set; } = TimeSpan.FromSeconds(60);
+    public TimeSpan ClusterReadyTimeout
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitOptions(this).ClusterReadyTimeout;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitOptions(this).ClusterReadyTimeout = value;
+    }
 
     /// <summary>
     /// Gets or sets the maximum time to wait for applied CRDs to reach the <c>Established</c> condition.
     /// </summary>
-    public TimeSpan CrdWaitTimeout { get; set; } = TimeSpan.FromMinutes(5);
+    public TimeSpan CrdWaitTimeout
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitOptions(this).CrdWaitTimeout;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitOptions(this).CrdWaitTimeout = value;
+    }
 
     /// <summary>
     /// Gets or sets how CRD wait failures are handled.
     /// </summary>
-    public CrdWaitBehavior CrdWaitBehavior { get; set; } = CrdWaitBehavior.Fail;
+    public CrdWaitBehavior CrdWaitBehavior
+    {
+        get => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetWaitOptions(this).CrdWaitBehavior;
+        set => CommunityToolkit.Aspire.Hosting.Kind.K8sManifestAnnotations.GetOrCreateWaitOptions(this).CrdWaitBehavior = value;
+    }
 }
 
 #pragma warning restore ASPIREATS001

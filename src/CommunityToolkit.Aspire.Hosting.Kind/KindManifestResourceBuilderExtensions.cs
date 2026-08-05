@@ -113,6 +113,7 @@ public static class KindManifestResourceBuilderExtensions
                 var processRunner = e.Services.GetRequiredService<IProcessRunner>();
                 var kubectlManager = CreateKubectlManager(processRunner, resource);
                 await kubectlManager.ApplyAsync(resource, logger, ct);
+                var applyOptions = K8sManifestAnnotations.GetApplyOptions(resource);
 
                 await notifications.PublishUpdateAsync(resource,
                     state => state with
@@ -121,8 +122,8 @@ public static class KindManifestResourceBuilderExtensions
                         Properties = [
                             new("ManifestPath", resource.ManifestPath),
                             new("Namespace", resource.Namespace ?? "(default)"),
-                            new("ServerSide", resource.ServerSide.ToString()),
-                            new("Mode", resource.IsKustomize ? "kustomize" : "apply"),
+                            new("ServerSide", applyOptions.ServerSide.ToString()),
+                            new("Mode", applyOptions.IsKustomize ? "kustomize" : "apply"),
                         ]
                     });
             }
@@ -146,7 +147,7 @@ public static class KindManifestResourceBuilderExtensions
 
         return new KubectlManager(
             processRunner,
-            clusterInfoMaxWait: resource.ClusterReadyTimeout);
+            clusterInfoMaxWait: K8sManifestAnnotations.GetWaitOptions(resource).ClusterReadyTimeout);
     }
 
     /// <summary>
@@ -161,7 +162,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.Recursive = true;
+        K8sManifestAnnotations.GetOrCreateApplyOptions(builder.Resource).Recursive = true;
         return builder;
     }
 
@@ -182,8 +183,9 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.ServerSide = true;
-        builder.Resource.ForceConflicts = forceConflicts;
+        var applyOptions = K8sManifestAnnotations.GetOrCreateApplyOptions(builder.Resource);
+        applyOptions.ServerSide = true;
+        applyOptions.ForceConflicts = forceConflicts;
         return builder;
     }
 
@@ -205,7 +207,7 @@ public static class KindManifestResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrEmpty(fieldManager);
 
-        builder.Resource.FieldManager = fieldManager;
+        K8sManifestAnnotations.GetOrCreateApplyOptions(builder.Resource).FieldManager = fieldManager;
         return builder;
     }
 
@@ -230,7 +232,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.ClusterReadyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
+        K8sManifestAnnotations.GetOrCreateWaitOptions(builder.Resource).ClusterReadyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
         return builder;
     }
 
@@ -247,7 +249,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.ApplyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
+        K8sManifestAnnotations.GetOrCreateApplyOptions(builder.Resource).ApplyTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
         return builder;
     }
 
@@ -264,7 +266,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.CrdWaitTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
+        K8sManifestAnnotations.GetOrCreateWaitOptions(builder.Resource).CrdWaitTimeout = KubectlTimeouts.Normalize(timeout, nameof(timeout));
         return builder;
     }
 
@@ -281,7 +283,7 @@ public static class KindManifestResourceBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Resource.CrdWaitBehavior = behavior;
+        K8sManifestAnnotations.GetOrCreateWaitOptions(builder.Resource).CrdWaitBehavior = behavior;
         return builder;
     }
 
