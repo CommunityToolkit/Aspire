@@ -26,6 +26,31 @@ internal sealed class HelmManager(
     {
         var args = CreateInstallArguments(resource);
         var maxAttempts = resource.CrdWaitRetryMaxAttempts;
+        if (maxAttempts <= 1)
+        {
+            logger.LogInformation(
+                "Installing Helm chart '{ChartRef}' as release '{ReleaseName}' in cluster '{ClusterName}' (attempt 1/1)...",
+                resource.ChartRef,
+                resource.ReleaseName,
+                resource.Parent.Name);
+
+            var result = await processRunner.RunAsync(
+                logger,
+                "helm",
+                args,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            if (result.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to install Helm chart '{resource.ChartRef}' as release '{resource.ReleaseName}': {FormatFailureOutput(result)}");
+            }
+
+            logger.LogInformation(
+                "Helm release '{ReleaseName}' installed successfully.", resource.ReleaseName);
+            return;
+        }
+
         IReadOnlySet<string> knownCrds = maxAttempts > 1
             ? await TryGetCustomResourceDefinitionsAsync(resource, logger, cancellationToken).ConfigureAwait(false)
             : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -41,17 +66,27 @@ internal sealed class HelmManager(
                 OnRetry = async arguments =>
                 {
                     var retryResult = arguments.Outcome.Result!;
-                    logger.LogWarning(
-                        "Helm release '{ReleaseName}' failed before CRDs finished registering. Waiting for {CrdCount} CRD(s) before retrying.",
-                        resource.ReleaseName,
-                        retryResult.NewCrds.Length);
+                    if (retryResult.NewCrds.Length > 0)
+                    {
+                        logger.LogWarning(
+                            "Helm release '{ReleaseName}' failed and discovered {CrdCount} new CRD(s). Waiting for them to become Established before retrying.",
+                            resource.ReleaseName,
+                            retryResult.NewCrds.Length);
 
-                    await _kubectlManager.WaitForCrdsAsync(
-                        retryResult.NewCrds,
-                        resource.Parent.KubeconfigPath,
-                        resource.CrdWaitRetryTimeout,
-                        logger,
-                        arguments.Context.CancellationToken).ConfigureAwait(false);
+                        await _kubectlManager.WaitForCrdsAsync(
+                            retryResult.NewCrds,
+                            resource.Parent.KubeconfigPath,
+                            resource.CrdWaitRetryTimeout,
+                            logger,
+                            arguments.Context.CancellationToken).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        logger.LogWarning(
+                            "Helm release '{ReleaseName}' failed. Retrying because {MethodName} is enabled.",
+                            resource.ReleaseName,
+                            "WithCrdWaitRetry");
+                    }
 
                     knownCrds = retryResult.DiscoveredCrds;
                     var backoff = ComputeRetryBackoff(resource.CrdWaitRetryBackoff, arguments.AttemptNumber + 1);
@@ -86,7 +121,7 @@ internal sealed class HelmManager(
                 return HelmInstallAttemptResult.Success(result);
             }
 
-            if (attempt >= maxAttempts || !ShouldRetryForCrdRace(result))
+            if (attempt >= maxAttempts)
             {
                 return HelmInstallAttemptResult.Fail(result);
             }
@@ -96,9 +131,7 @@ internal sealed class HelmManager(
                 .Except(knownCrds, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
-            return newCrds.Length == 0
-                ? HelmInstallAttemptResult.Fail(result)
-                : HelmInstallAttemptResult.Retry(result, discoveredCrds, newCrds);
+            return HelmInstallAttemptResult.Retry(result, discoveredCrds, newCrds);
         }, cancellationToken).ConfigureAwait(false);
 
         if (finalResult.Result.ExitCode != 0)
@@ -176,13 +209,6 @@ internal sealed class HelmManager(
     private static string FormatFailureOutput(ProcessResult result)
     {
         return string.IsNullOrWhiteSpace(result.Error) ? result.Output : result.Error;
-    }
-
-    private static bool ShouldRetryForCrdRace(ProcessResult result)
-    {
-        var combined = string.Concat(result.Error, "\n", result.Output);
-        return combined.Contains("no matches for kind", StringComparison.OrdinalIgnoreCase)
-            || combined.Contains("ensure CRDs are installed first", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<IReadOnlySet<string>> TryGetCustomResourceDefinitionsAsync(

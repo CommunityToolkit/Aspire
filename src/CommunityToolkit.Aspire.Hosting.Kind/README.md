@@ -185,11 +185,16 @@ var redis = cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicha
 
 #### WithCrdWaitRetry
 
-Use `WithCrdWaitRetry` for charts that install CRDs and then immediately reference them. Kind retries the Helm install, waits for newly-created CRDs to reach `Established`, then re-runs Helm.
+Use `WithCrdWaitRetry` as an explicit opt-in retry policy for Helm installs. Without it, Kind makes a single Helm attempt and surfaces the original failure immediately. With it, Kind retries failed installs up to the configured attempt count, waits for any newly observed CRDs to reach `Established` between attempts, and then re-runs Helm after the configured backoff.
+
+Prefer `.WaitFor(...)` ordering or packaging tightly coupled CRDs and dependents into a single chart when you can; `WithCrdWaitRetry` is a fallback for charts that still need bounded retry behavior.
 
 ```csharp
 var certManager = cluster.AddHelmChart("cert-manager", "jetstack/cert-manager")
-    .WithCrdWaitRetry(maxAttempts: 3, backoff: TimeSpan.FromSeconds(5));
+    .WithCrdWaitRetry(
+        maxAttempts: 3,
+        backoff: TimeSpan.FromSeconds(5),
+        crdWaitTimeout: TimeSpan.FromMinutes(2));
 ```
 
 ### Applying raw manifests to the cluster

@@ -431,7 +431,24 @@ public class KindHelmChartTests
     }
 
     [Fact]
-    public async Task InstallAsync_DoesNotRetryWithoutNewCrds()
+    public async Task InstallAsync_DoesNotRetryByDefault()
+    {
+        var cluster = new KindClusterResource("cluster");
+        var resource = new KindHelmChartResource("redis", "chart/ref", cluster);
+        var processRunner = new FakeProcessRunner();
+        processRunner.Results.Enqueue(new(1, "", "release failed"));
+        var manager = new HelmManager(processRunner, static (_, _) => Task.CompletedTask);
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+
+        Assert.Contains("Failed to install Helm chart", ex.Message);
+        Assert.Single(processRunner.Commands);
+    }
+
+    [Fact]
+    public async Task InstallAsync_RetriesExplicitlyConfiguredFailuresEvenWithoutNewCrds()
     {
         var cluster = new KindClusterResource("cluster");
         var resource = new KindHelmChartResource("redis", "chart/ref", cluster)
@@ -440,17 +457,26 @@ public class KindHelmChartTests
             CrdWaitRetryBackoff = TimeSpan.FromSeconds(2),
         };
         var processRunner = new FakeProcessRunner();
-        processRunner.Results.Enqueue(new(0, "", "")); // kubectl get crd baseline
-        processRunner.Results.Enqueue(new(1, "", "no matches for kind \"Widget\" in version \"widgets.example.com/v1\"; ensure CRDs are installed first"));
-        processRunner.Results.Enqueue(new(0, "", "")); // kubectl get crd after failure
-        var manager = new HelmManager(processRunner, static (_, _) => Task.CompletedTask);
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(1, "", "release failed"));
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(1, "", "release still failed"));
+        processRunner.Results.Enqueue(new(0, "", ""));
+        processRunner.Results.Enqueue(new(0, "release installed", ""));
+        var delays = new List<TimeSpan>();
+        var manager = new HelmManager(processRunner, (delay, _) =>
+        {
+            delays.Add(delay);
+            return Task.CompletedTask;
+        });
         using var loggerFactory = LoggerFactory.Create(_ => { });
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+        await manager.InstallAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None);
 
-        Assert.Contains("Failed to install Helm chart", ex.Message);
-        Assert.Equal(3, processRunner.Commands.Count);
+        Assert.Equal(6, processRunner.Commands.Count);
+        Assert.Equal(3, processRunner.Commands.Count(command => command.FileName == "helm"));
+        Assert.Equal(3, processRunner.Commands.Count(command => command.FileName == "kubectl"));
+        Assert.Equal([TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4)], delays);
     }
 
     [Fact]
