@@ -408,6 +408,32 @@ public class AddKindClusterTests
     }
 
     [Fact]
+    public async Task KindClusterLifecycleHook_CleansUpOnDisposeAsyncWithoutApplicationStopping()
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        builder.AddKindCluster("test-cluster");
+
+        using var app = builder.Build();
+        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var loggerService = app.Services.GetRequiredService<ResourceLoggerService>();
+        var processRunner = new FakeProcessRunner();
+        var hostLifetime = new TestHostApplicationLifetime();
+        var hook = new KindClusterLifecycleHook(
+            model,
+            loggerService,
+            processRunner,
+            new TestKindContainerRuntimeResolver(),
+            hostLifetime);
+
+        await hook.SubscribeAsync(new NoOpEventing(), null!);
+        await hook.DisposeAsync();
+
+        Assert.Single(
+            processRunner.Commands,
+            command => command.FileName == "kind" && command.Arguments.Contains("delete cluster --name=test-cluster", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task KindClusterLifecycleHook_DoesNotDoubleDeleteWhenStoppingThenDisposed()
     {
         using var builder = TestDistributedApplicationBuilder.Create();

@@ -7,12 +7,10 @@ using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Runtime.Loader;
-
 namespace CommunityToolkit.Aspire.Hosting.Kind;
 
 /// <summary>
-/// Handles cleanup of Kind clusters on graceful shutdown and best-effort process-exit signals.
+/// Handles cleanup of Kind clusters during graceful host shutdown and disposal.
 /// Clusters with <see cref="ClusterLifetime.Session"/> lifetime are deleted;
 /// clusters with <see cref="ClusterLifetime.Persistent"/> lifetime are left running.
 /// </summary>
@@ -23,15 +21,9 @@ internal sealed class KindClusterLifecycleHook(
     IKindContainerRuntimeResolver containerRuntimeResolver,
     IHostApplicationLifetime hostApplicationLifetime) : IDistributedApplicationEventingSubscriber, IAsyncDisposable
 {
-    private static readonly TimeSpan SynchronousCleanupWaitTimeout = TimeSpan.FromSeconds(15);
     private readonly object _cleanupLock = new();
-    private readonly object _registrationLock = new();
     private Task? _cleanupTask;
     private CancellationTokenRegistration _applicationStoppingRegistration;
-    private EventHandler? _processExitHandler;
-    private Action<AssemblyLoadContext>? _unloadingHandler;
-    private ConsoleCancelEventHandler? _cancelKeyPressHandler;
-    private bool _terminationHandlersRegistered;
 
     /// <inheritdoc />
     public Task SubscribeAsync(
@@ -41,7 +33,7 @@ internal sealed class KindClusterLifecycleHook(
     {
         ArgumentNullException.ThrowIfNull(eventing);
 
-        RegisterTerminationHandlers();
+        _applicationStoppingRegistration = hostApplicationLifetime.ApplicationStopping.Register(() => _ = EnsureCleanupStarted());
         return Task.CompletedTask;
     }
 
@@ -54,7 +46,7 @@ internal sealed class KindClusterLifecycleHook(
         }
         finally
         {
-            UnregisterTerminationHandlers();
+            _applicationStoppingRegistration.Dispose();
         }
     }
 
@@ -64,70 +56,6 @@ internal sealed class KindClusterLifecycleHook(
         {
             _cleanupTask ??= CleanupClustersAsync();
             return _cleanupTask;
-        }
-    }
-
-    private void RegisterTerminationHandlers()
-    {
-        lock (_registrationLock)
-        {
-            if (_terminationHandlersRegistered)
-            {
-                return;
-            }
-
-            _applicationStoppingRegistration = hostApplicationLifetime.ApplicationStopping.Register(() => _ = EnsureCleanupStarted());
-            _processExitHandler ??= (_, _) => RunCleanupSynchronously();
-            _unloadingHandler ??= _ => RunCleanupSynchronously();
-            _cancelKeyPressHandler ??= (_, _) => RunCleanupSynchronously();
-            AppDomain.CurrentDomain.ProcessExit += _processExitHandler;
-            AssemblyLoadContext.Default.Unloading += _unloadingHandler;
-            Console.CancelKeyPress += _cancelKeyPressHandler;
-            _terminationHandlersRegistered = true;
-        }
-    }
-
-    private void UnregisterTerminationHandlers()
-    {
-        lock (_registrationLock)
-        {
-            if (!_terminationHandlersRegistered)
-            {
-                return;
-            }
-
-            _applicationStoppingRegistration.Dispose();
-            if (_processExitHandler is not null)
-            {
-                AppDomain.CurrentDomain.ProcessExit -= _processExitHandler;
-            }
-
-            if (_unloadingHandler is not null)
-            {
-                AssemblyLoadContext.Default.Unloading -= _unloadingHandler;
-            }
-
-            if (_cancelKeyPressHandler is not null)
-            {
-                Console.CancelKeyPress -= _cancelKeyPressHandler;
-            }
-
-            _terminationHandlersRegistered = false;
-        }
-    }
-
-    private void RunCleanupSynchronously()
-    {
-        try
-        {
-            var cleanupTask = EnsureCleanupStarted();
-            if (cleanupTask.Wait(SynchronousCleanupWaitTimeout))
-            {
-                cleanupTask.GetAwaiter().GetResult();
-            }
-        }
-        catch
-        {
         }
     }
 

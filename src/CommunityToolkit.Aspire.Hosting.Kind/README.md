@@ -27,7 +27,7 @@ var cluster = builder.AddKindCluster("mycluster");
 builder.Build().Run();
 ```
 
-This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and is cleaned up during graceful host shutdown on a best-effort basis.
+This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and is cleaned up during graceful host shutdown (via `ApplicationStopping`) or when the lifecycle hook is disposed, on a best-effort basis.
 
 ## Scenario 1: Kind cluster as a managed dependency (F5 mode)
 
@@ -73,7 +73,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 #### Cluster lifetime
 
-By default the cluster is deleted during graceful host shutdown (`ClusterLifetime.Session`) on a best-effort basis. To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
+By default the cluster is deleted during graceful host shutdown (`ClusterLifetime.Session`) or when the lifecycle hook is disposed, on a best-effort basis. To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster")
@@ -82,7 +82,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 | Value | Behavior |
 |---|---|
-| `ClusterLifetime.Session` | Cluster is deleted during graceful host shutdown on a best-effort basis (default). |
+| `ClusterLifetime.Session` | Cluster is deleted during graceful host shutdown or lifecycle-hook disposal on a best-effort basis (default). |
 | `ClusterLifetime.Persistent` | Cluster survives AppHost restarts and is reused on next startup. |
 
 ## Networking model
