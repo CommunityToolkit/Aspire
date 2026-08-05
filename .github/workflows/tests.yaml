@@ -107,6 +107,7 @@ jobs:
           dotnet build ${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }} /bl --configuration ${{ env.DOTNET_CONFIGURATION }}
 
       - name: Run tests
+        id: run-tests
         run: >-
           dotnet run
           --project "${{ github.workspace }}/${{ env.TEST_PROJECT_PATH }}"
@@ -150,19 +151,19 @@ jobs:
           path: testresults/**
 
       - name: Upload npm logs if failed
-        if: failure()
+        if: failure() && steps.run-tests.outcome != 'skipped'
         uses: actions/upload-artifact@v7
         with:
           name: npm-logs-${{ matrix.name }}-${{ matrix.os }}
           path: ${{ runner.os == 'Windows' && 'C:\\npm\\cache\\_logs\\**' || '~/.npm/cache/_logs/**' }}
 
       - name: Upload TypeScript app host logs if failed
-        if: failure()
+        if: failure() && steps.run-tests.outcome != 'skipped'
         uses: actions/upload-artifact@v7
         with:
           name: ts-app-host-logs-${{ matrix.name }}-${{ matrix.os }}
           path: ${{ runner.os == 'Windows' && 'C:\\Users\\runneradmin\\.aspire\\logs\\**' || '/home/runner/.aspire/logs/**' }}
 
       - name: Aspire doctor
-        if: failure()
+        if: failure() && steps.run-tests.outcome != 'skipped'
         run: aspire doctor
