@@ -133,6 +133,7 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(version);
 
         var annotation = GetOrCreateNodeImageAnnotation(builder.Resource);
+        ThrowIfNodeImageConfigurationConflicts(annotation, configuredValueName: nameof(annotation.Version), conflictingValueName: nameof(annotation.Image));
         annotation.Version = version;
         return builder;
     }
@@ -157,6 +158,7 @@ public static class KindClusterResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrEmpty(image);
 
         var annotation = GetOrCreateNodeImageAnnotation(builder.Resource);
+        ThrowIfNodeImageConfigurationConflicts(annotation, configuredValueName: nameof(annotation.Image), conflictingValueName: nameof(annotation.Version));
         annotation.Image = image;
         return builder;
     }
@@ -291,6 +293,24 @@ public static class KindClusterResourceBuilderExtensions
         var annotation = new KindNodeMountsAnnotation();
         resource.Annotations.Add(annotation);
         return annotation;
+    }
+
+    private static void ThrowIfNodeImageConfigurationConflicts(
+        KindNodeImageAnnotation annotation,
+        string configuredValueName,
+        string conflictingValueName)
+    {
+        ArgumentNullException.ThrowIfNull(annotation);
+
+        var hasConflictingValue = configuredValueName == nameof(annotation.Version)
+            ? !string.IsNullOrEmpty(annotation.Image)
+            : !string.IsNullOrEmpty(annotation.Version);
+
+        if (hasConflictingValue)
+        {
+            throw new InvalidOperationException(
+                $"Kind node image configuration cannot set both {configuredValueName} and {conflictingValueName} on the same cluster. Use either {nameof(WithKubernetesVersion)} or {nameof(WithNodeImage)}.");
+        }
     }
 
     /// <summary>

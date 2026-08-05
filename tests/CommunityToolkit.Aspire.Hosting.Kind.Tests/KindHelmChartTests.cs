@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -12,7 +13,7 @@ public class KindHelmChartTests
     [Fact]
     public void AddHelmChartCreatesResource()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis");
@@ -28,7 +29,7 @@ public class KindHelmChartTests
     [Fact]
     public void AddHelmChartSetsParent()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis");
@@ -53,7 +54,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithChartVersionSetsVersion()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -69,7 +70,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithHelmValueAddsValue()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -88,7 +89,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithHelmStringValueAddsStringValue()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -107,7 +108,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithHelmValueLastWriteWinsForDuplicateKey()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -124,7 +125,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithHelmValueAndStringValueUseLastWriteWinsAcrossModes()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -142,7 +143,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithHelmStringValueAndValueUseLastWriteWinsAcrossModes()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -160,7 +161,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithCrdWaitRetrySetsRetryConfiguration()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -177,7 +178,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithCrdWaitRetryUsesDefaultBackoff()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -188,13 +189,13 @@ public class KindHelmChartTests
 
         var resource = Assert.Single(appModel.Resources.OfType<KindHelmChartResource>());
         Assert.Equal(3, resource.CrdWaitRetryMaxAttempts);
-        Assert.Equal(TimeSpan.FromSeconds(5), resource.CrdWaitRetryBackoff);
+        Assert.Equal(KubectlTimeouts.DefaultCrdWaitRetryBackoff, resource.CrdWaitRetryBackoff);
     }
 
     [Fact]
     public void WithCrdWaitRetryRejectsLessThanTwoAttempts()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -204,7 +205,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithCrdWaitRetryRejectsInvalidBackoff()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -214,7 +215,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithHelmValuesFileAddsPath()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -233,7 +234,7 @@ public class KindHelmChartTests
     [Fact]
     public void WithNamespaceSetsNamespace()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -278,7 +279,7 @@ public class KindHelmChartTests
     [Fact]
     public void MultipleHelmChartsCanBeAddedToSameCluster()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis");
@@ -295,7 +296,7 @@ public class KindHelmChartTests
     [Fact]
     public void FluentApiChainingWorks()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis")
@@ -446,7 +447,7 @@ public class KindHelmChartTests
     [Fact]
     public void AddHelmChartShouldThrowWhenNameIsNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
         string name = null!;
 
@@ -459,7 +460,7 @@ public class KindHelmChartTests
     [Fact]
     public void AddHelmChartShouldThrowWhenChartRefIsNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
         string chartRef = null!;
 
@@ -561,7 +562,7 @@ public class KindHelmChartTests
     [Fact]
     public void AddHelmChartRegistersHealthCheck()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis");
@@ -577,7 +578,7 @@ public class KindHelmChartTests
     [Fact]
     public void AddHelmChartRegistersUniqueHealthCheckPerResource()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddHelmChart("redis", "oci://registry-1.docker.io/bitnamicharts/redis");

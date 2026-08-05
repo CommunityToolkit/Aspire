@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
 using CommunityToolkit.Aspire.Hosting.Kind;
 
 namespace CommunityToolkit.Aspire.Hosting.Kind.Tests;
@@ -23,7 +24,7 @@ public class KindPublicApiTests
     [Fact]
     public void AddKindClusterShouldThrowWhenNameIsNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         string name = null!;
 
         var action = () => builder.AddKindCluster(name);
@@ -124,7 +125,7 @@ public class KindPublicApiTests
     [Fact]
     public void WithKindConfigShouldThrowWhenConfigureIsNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test");
         Action<KindConfigModel> configure = null!;
 

@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 
@@ -13,10 +14,11 @@ public class KindManifestTests
     [Fact]
     public void AddManifestCreatesResource()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./manifests/crds.yaml");
+        var absolutePath = Path.Combine(AppContext.BaseDirectory, "manifests", "crds.yaml");
+        cluster.AddManifest("crds", absolutePath);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -24,16 +26,17 @@ public class KindManifestTests
         var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
         Assert.Equal("crds", resource.Name);
         Assert.True(Path.IsPathRooted(resource.ManifestPath));
-        Assert.EndsWith(Path.Combine("manifests", "crds.yaml"), resource.ManifestPath, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(absolutePath, resource.ManifestPath);
     }
 
     [Fact]
     public void AddManifestSetsParent()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./manifests/crds.yaml");
+        var absolutePath = Path.Combine(AppContext.BaseDirectory, "manifests", "crds.yaml");
+        cluster.AddManifest("crds", absolutePath);
 
         using var app = builder.Build();
         var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
@@ -47,7 +50,7 @@ public class KindManifestTests
     public void AddManifestFromContentCreatesResource()
     {
         const string content = "apiVersion: v1\nkind: Namespace\nmetadata:\n  name: aspire-demo";
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddManifestFromContent("demo-ns", content);
@@ -66,21 +69,21 @@ public class KindManifestTests
     public void AddManifestThrowsOnNullBuilder()
     {
         IResourceBuilder<KindClusterResource> builder = null!;
-        Assert.Throws<ArgumentNullException>(() => builder.AddManifest("crds", "./crds.yaml"));
+        Assert.Throws<ArgumentNullException>(() => builder.AddManifest("crds", @"C:\manifests\crds.yaml"));
     }
 
     [Fact]
     public void AddManifestThrowsOnNullName()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
-        Assert.Throws<ArgumentNullException>(() => cluster.AddManifest(null!, "./crds.yaml"));
+        Assert.Throws<ArgumentNullException>(() => cluster.AddManifest(null!, @"C:\manifests\crds.yaml"));
     }
 
     [Fact]
     public void AddManifestThrowsOnNullManifestPath()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentNullException>(() => cluster.AddManifest("crds", null!));
@@ -91,7 +94,7 @@ public class KindManifestTests
     [InlineData("   ")]
     public void AddManifestThrowsOnWhitespaceManifestPath(string manifestPath)
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentException>(() => cluster.AddManifest("crds", manifestPath));
@@ -107,7 +110,7 @@ public class KindManifestTests
     [Fact]
     public void AddManifestFromContentThrowsOnNullName()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
         Assert.Throws<ArgumentNullException>(() => cluster.AddManifestFromContent(null!, "apiVersion: v1"));
     }
@@ -115,32 +118,26 @@ public class KindManifestTests
     [Fact]
     public void AddManifestFromContentThrowsOnNullContent()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
         Assert.Throws<ArgumentNullException>(() => cluster.AddManifestFromContent("crds", null!));
     }
 
     [Fact]
-    public void AddManifestUsesAppHostRelativePath()
+    public void AddManifestRejectsRelativePath()
     {
-        var builder = DistributedApplication.CreateBuilder();
-        var relativePath = Path.Combine("manifests", "crds.yaml");
-        var expected = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, relativePath));
-
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", relativePath);
 
-        using var app = builder.Build();
-        var appModel = app.Services.GetRequiredService<DistributedApplicationModel>();
+        var exception = Assert.Throws<ArgumentException>(() => cluster.AddManifest("crds", Path.Combine("manifests", "crds.yaml")));
 
-        var resource = Assert.Single(appModel.Resources.OfType<K8sManifestResource>());
-        Assert.Equal(expected, resource.ManifestPath);
+        Assert.Contains("absolute path", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void AddManifestUsesAbsolutePathAsIs()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var absolutePath = Path.Combine(AppContext.BaseDirectory, "manifests", "crds.yaml");
 
         var cluster = builder.AddKindCluster("test-cluster");
@@ -216,10 +213,10 @@ public class KindManifestTests
     [Fact]
     public void WithRecursiveSetsRecursive()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("all", "./manifests")
+        cluster.AddManifest("all", Path.Combine(AppContext.BaseDirectory, "manifests"))
             .WithRecursive();
 
         using var app = builder.Build();
@@ -232,10 +229,10 @@ public class KindManifestTests
     [Fact]
     public void WithServerSideApplySetsServerSide()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithServerSideApply();
 
         using var app = builder.Build();
@@ -249,10 +246,10 @@ public class KindManifestTests
     [Fact]
     public void WithServerSideApplyForceConflictsSetsBoth()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithServerSideApply(forceConflicts: true);
 
         using var app = builder.Build();
@@ -266,10 +263,10 @@ public class KindManifestTests
     [Fact]
     public void WithFieldManagerSetsFieldManager()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithFieldManager("my-tool");
 
         using var app = builder.Build();
@@ -282,10 +279,10 @@ public class KindManifestTests
     [Fact]
     public void WithApplyTimeoutSetsApplyTimeout()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithApplyTimeout(TimeSpan.FromSeconds(30));
 
         using var app = builder.Build();
@@ -298,10 +295,10 @@ public class KindManifestTests
     [Fact]
     public void WithClusterReadyTimeoutSetsClusterReadyTimeout()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithClusterReadyTimeout(TimeSpan.FromSeconds(90));
 
         using var app = builder.Build();
@@ -314,10 +311,10 @@ public class KindManifestTests
     [Fact]
     public void WithClusterReadyTimeoutWiresValueIntoKubectlManagerCreation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithClusterReadyTimeout(TimeSpan.FromSeconds(90));
 
         using var app = builder.Build();
@@ -332,32 +329,32 @@ public class KindManifestTests
     [Fact]
     public void WithClusterReadyTimeoutRejectsZero()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithClusterReadyTimeout(TimeSpan.Zero));
     }
 
     [Fact]
     public void WithClusterReadyTimeoutRejectsNegative()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithClusterReadyTimeout(TimeSpan.FromSeconds(-1)));
     }
 
     [Fact]
     public void WithClusterReadyTimeoutRoundsSubSecondUpToOneSecond()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithClusterReadyTimeout(TimeSpan.FromMilliseconds(500));
 
         using var app = builder.Build();
@@ -370,43 +367,43 @@ public class KindManifestTests
     [Fact]
     public void WithClusterReadyTimeoutRejectsMoreThanOneHour()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithClusterReadyTimeout(TimeSpan.MaxValue));
     }
 
     [Fact]
     public void WithApplyTimeoutRejectsZero()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithApplyTimeout(TimeSpan.Zero));
     }
 
     [Fact]
     public void WithApplyTimeoutRejectsNegative()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithApplyTimeout(TimeSpan.FromSeconds(-1)));
     }
 
     [Fact]
     public void WithApplyTimeoutRoundsSubSecondUpToOneSecond()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithApplyTimeout(TimeSpan.FromMilliseconds(500));
 
         using var app = builder.Build();
@@ -419,21 +416,21 @@ public class KindManifestTests
     [Fact]
     public void WithApplyTimeoutRejectsMoreThanOneHour()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithApplyTimeout(TimeSpan.MaxValue));
     }
 
     [Fact]
     public void WithCrdWaitTimeoutSetsCrdWaitTimeout()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithCrdWaitTimeout(TimeSpan.FromSeconds(45));
 
         using var app = builder.Build();
@@ -446,32 +443,32 @@ public class KindManifestTests
     [Fact]
     public void WithCrdWaitTimeoutRejectsZero()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithCrdWaitTimeout(TimeSpan.Zero));
     }
 
     [Fact]
     public void WithCrdWaitTimeoutRejectsNegative()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithCrdWaitTimeout(TimeSpan.FromSeconds(-1)));
     }
 
     [Fact]
     public void WithCrdWaitTimeoutRoundsSubSecondUpToOneSecond()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithCrdWaitTimeout(TimeSpan.FromMilliseconds(500));
 
         using var app = builder.Build();
@@ -484,21 +481,21 @@ public class KindManifestTests
     [Fact]
     public void WithCrdWaitTimeoutRejectsMoreThanOneHour()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            cluster.AddManifest("crds", "./crds.yaml")
+            cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
                 .WithCrdWaitTimeout(TimeSpan.MaxValue));
     }
 
     [Fact]
     public void WithCrdWaitBehaviorSetsCrdWaitBehavior()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var cluster = builder.AddKindCluster("test-cluster");
-        cluster.AddManifest("crds", "./crds.yaml")
+        cluster.AddManifest("crds", Path.Combine(AppContext.BaseDirectory, "crds.yaml"))
             .WithCrdWaitBehavior(CrdWaitBehavior.BestEffort);
 
         using var app = builder.Build();
@@ -968,7 +965,15 @@ public class KindManifestTests
     [Fact]
     public async Task ApplyAsync_CancelsApplyAfterConfiguredTimeout()
     {
-        var processRunner = new FakeProcessRunner();
+        var processRunner = new FakeProcessRunner
+        {
+            DelayAsync = static (_, cancellationToken) =>
+            {
+                var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                cancellationToken.Register(() => tcs.TrySetCanceled(cancellationToken));
+                return tcs.Task;
+            }
+        };
         processRunner.Results.Enqueue(new(0, "cluster is running", ""));
         processRunner.Results.Enqueue(new(0, "namespace/default unchanged", ""));
         processRunner.Delays.Enqueue(TimeSpan.Zero);
@@ -982,6 +987,38 @@ public class KindManifestTests
 
         await Assert.ThrowsAsync<TimeoutException>(
             () => manager.ApplyAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WithRecursiveFilePath_ThrowsBeforeKubectlApply()
+    {
+        var directory = CreateTestDirectory();
+
+        try
+        {
+            var manifestPath = Path.Combine(directory, "manifest.yaml");
+            await File.WriteAllTextAsync(manifestPath, "apiVersion: v1");
+
+            var processRunner = new FakeProcessRunner();
+            processRunner.Results.Enqueue(new(0, "cluster is running", ""));
+            using var loggerFactory = LoggerFactory.Create(_ => { });
+            var manager = new KubectlManager(processRunner);
+            var resource = new K8sManifestResource("manifest", manifestPath, new KindClusterResource("test-cluster"))
+            {
+                Recursive = true,
+            };
+
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => manager.ApplyAsync(resource, loggerFactory.CreateLogger("test"), CancellationToken.None));
+
+            Assert.Contains("existing directory", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Single(processRunner.Commands);
+            Assert.Contains("cluster-info", processRunner.Commands[0].Arguments);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]
@@ -1042,7 +1079,7 @@ public class KindManifestTests
 
     private static K8sManifestResource AddManifestAndGetResource(string path)
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
         cluster.AddManifest("kustom", path);
 

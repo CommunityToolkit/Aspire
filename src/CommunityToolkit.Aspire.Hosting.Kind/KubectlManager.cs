@@ -38,6 +38,7 @@ internal sealed class KubectlManager(
         ArgumentNullException.ThrowIfNull(resource);
 
         await WaitForClusterInfoAsync(resource, logger, cancellationToken).ConfigureAwait(false);
+        ValidateRecursiveManifestTarget(resource);
 
         var args = CreateApplyArguments(resource);
 
@@ -423,6 +424,20 @@ internal sealed class KubectlManager(
         return string.Join(
             Environment.NewLine,
             messages.Where(static message => !string.IsNullOrWhiteSpace(message)).Distinct(StringComparer.Ordinal));
+    }
+
+    private static void ValidateRecursiveManifestTarget(K8sManifestResource resource)
+    {
+        if (!resource.Recursive || resource.InlineContent is not null || resource.IsKustomize)
+        {
+            return;
+        }
+
+        if (!Directory.Exists(resource.ManifestPath))
+        {
+            throw new InvalidOperationException(
+                $"Manifest '{resource.ManifestPath}' must be an existing directory when {nameof(KindManifestResourceBuilderExtensions.WithRecursive)} is used.");
+        }
     }
 
     /// <summary>

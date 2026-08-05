@@ -20,8 +20,8 @@ public static class KindManifestResourceBuilderExtensions
     /// <param name="builder">The Kind cluster resource builder.</param>
     /// <param name="name">The name of the manifest resource.</param>
     /// <param name="manifestPath">
-    /// Absolute or relative path to a Kubernetes manifest file, a directory of manifest files,
-    /// or a Kustomize overlay directory. Relative paths are resolved against the AppHost project directory.
+    /// Absolute path to a Kubernetes manifest file, a directory of manifest files,
+    /// or a Kustomize overlay directory. Relative paths are not supported.
     /// URL fetch is not supported; reference a local file or directory.
     /// </param>
     /// <returns>A reference to the <see cref="IResourceBuilder{K8sManifestResource}"/>.</returns>
@@ -40,13 +40,14 @@ public static class KindManifestResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(manifestPath);
+        if (!Path.IsPathRooted(manifestPath))
+        {
+            throw new ArgumentException(
+                "Manifest path must be an absolute path. Pass a rooted file or directory path so published AppHosts do not depend on the original AppHost project location.",
+                nameof(manifestPath));
+        }
 
-        var absolutePath = System.IO.Path.IsPathRooted(manifestPath)
-            ? manifestPath
-            : System.IO.Path.GetFullPath(
-                System.IO.Path.Combine(builder.ApplicationBuilder.AppHostDirectory, manifestPath));
-
-        var resource = new K8sManifestResource(name, absolutePath, builder.Resource);
+        var resource = new K8sManifestResource(name, Path.GetFullPath(manifestPath), builder.Resource);
 
         return AddManifestResource(builder, resource);
     }

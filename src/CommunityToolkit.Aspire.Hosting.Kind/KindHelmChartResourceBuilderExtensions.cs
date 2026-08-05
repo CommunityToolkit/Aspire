@@ -208,7 +208,7 @@ public static class KindHelmChartResourceBuilderExtensions
         ArgumentOutOfRangeException.ThrowIfLessThan(maxAttempts, 2);
 
         builder.Resource.CrdWaitRetryMaxAttempts = maxAttempts;
-        builder.Resource.CrdWaitRetryBackoff = KubectlTimeouts.Normalize(backoff ?? TimeSpan.FromSeconds(5), nameof(backoff));
+        builder.Resource.CrdWaitRetryBackoff = KubectlTimeouts.Normalize(backoff ?? KubectlTimeouts.DefaultCrdWaitRetryBackoff, nameof(backoff));
         return builder;
     }
 

@@ -21,6 +21,7 @@ internal sealed class FakeProcessRunner : IProcessRunner
     public Dictionary<string, ProcessResult> ResultsByFileName { get; } = [];
     public TimeSpan Delay { get; set; }
     public Queue<TimeSpan> Delays { get; } = new();
+    public Func<TimeSpan, CancellationToken, Task> DelayAsync { get; set; } = Task.Delay;
 
     public async Task<ProcessResult> RunAsync(
         ILogger logger,
@@ -47,7 +48,7 @@ internal sealed class FakeProcessRunner : IProcessRunner
 
         if (delay > TimeSpan.Zero)
         {
-            await Task.Delay(delay, cancellationToken);
+            await DelayAsync(delay, cancellationToken);
         }
 
         return result;

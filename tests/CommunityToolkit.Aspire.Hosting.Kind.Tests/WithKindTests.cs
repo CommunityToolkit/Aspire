@@ -49,7 +49,6 @@ public class WithKindTests
 
         builder.AddKubernetesEnvironment("k8s")
             .WithKind()
-            .WithKubernetesVersion("v1.32.2")
             .WithWorkerNodes(2)
             .WithNodeImage("myacr.azurecr.io/kindest/node:v1.32.2")
             .WithNodeMount(hostPath, "/kind-data", readOnly: true);
@@ -59,7 +58,6 @@ public class WithKindTests
 
         var kindEnv = Assert.Single(model.Resources.OfType<KindEnvironmentResource>());
         Assert.True(kindEnv.TryGetLastAnnotation<KindNodeImageAnnotation>(out var imageAnnotation));
-        Assert.Equal("v1.32.2", imageAnnotation.Version);
         Assert.Equal("myacr.azurecr.io/kindest/node:v1.32.2", imageAnnotation.Image);
         Assert.True(kindEnv.TryGetLastAnnotation<WorkerNodesAnnotation>(out var workerAnnotation));
         Assert.Equal(2, workerAnnotation.Count);

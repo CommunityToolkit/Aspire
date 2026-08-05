@@ -3,6 +3,7 @@
 
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
+using Aspire.Hosting.Utils;
 using Aspire.Hosting.Eventing;
 using Aspire.Hosting.Lifecycle;
 using CommunityToolkit.Aspire.Testing;
@@ -18,7 +19,7 @@ public class AddKindClusterTests
     [Fact]
     public void AddKindClusterCreatesResource()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -32,7 +33,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithKubernetesVersionSetsVersion()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster")
             .WithKubernetesVersion("v1.32.2");
@@ -53,10 +54,29 @@ public class AddKindClusterTests
         }
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void WithKubernetesVersionAndNodeImageConflict_Throws(bool setVersionFirst)
+    {
+        using var builder = TestDistributedApplicationBuilder.Create();
+        var cluster = builder.AddKindCluster("test-cluster");
+
+        if (setVersionFirst)
+        {
+            cluster.WithKubernetesVersion("v1.32.2");
+            Assert.Throws<InvalidOperationException>(() => cluster.WithNodeImage("kindest/node:v1.32.2"));
+            return;
+        }
+
+        cluster.WithNodeImage("kindest/node:v1.32.2");
+        Assert.Throws<InvalidOperationException>(() => cluster.WithKubernetesVersion("v1.32.2"));
+    }
+
     [Fact]
     public async Task WithNodeImageSetsImageOnAllNodes()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster")
             .WithWorkerNodes(2)
@@ -81,7 +101,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithNodeMountAddsMountOnAllNodes()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var hostPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "host-data"));
 
         builder.AddKindCluster("test-cluster")
@@ -109,7 +129,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithNodeMountResolvesRelativeHostPathFromAppHostDirectory()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var relativeHostPath = Path.Combine("mounts", "charts");
         var expectedHostPath = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, relativeHostPath));
 
@@ -135,7 +155,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithWorkerNodesSetsCount()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster")
             .WithWorkerNodes(3);
@@ -160,7 +180,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task DefaultsAreCorrect()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -185,7 +205,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithWorkerNodesRejectsNegative()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var resourceBuilder = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentOutOfRangeException>(() => resourceBuilder.WithWorkerNodes(-1));
@@ -202,7 +222,7 @@ public class AddKindClusterTests
     [Fact]
     public void AddKindClusterThrowsOnNullName()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         Assert.Throws<ArgumentNullException>(() => builder.AddKindCluster(null!));
     }
@@ -210,7 +230,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithNodeImageRejectsNull()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentNullException>(() => cluster.WithNodeImage(null!));
@@ -219,7 +239,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithNodeMountRejectsNullHostPath()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentNullException>(() => cluster.WithNodeMount(null!, "/container-data"));
@@ -228,7 +248,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithNodeMountRejectsNullContainerPath()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentNullException>(() => cluster.WithNodeMount(@"C:\host-data", null!));
@@ -237,7 +257,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithNodeMountRejectsEmptyHostPath()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentException>(() => cluster.WithNodeMount("", "/container-data"));
@@ -246,7 +266,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithNodeMountRejectsRelativeContainerPath()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         var cluster = builder.AddKindCluster("test-cluster");
 
         Assert.Throws<ArgumentException>(() => cluster.WithNodeMount(@"C:\host-data", "container-data"));
@@ -281,7 +301,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithReferenceInjectsEnvironmentAnnotation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var kind = builder.AddKindCluster("test-cluster");
         builder.AddResource(new TestResource("svc"))
@@ -297,7 +317,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithReference_NonContainer_SetsHostKubeconfigEnvironmentValue()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         var kind = builder.AddKindCluster("test-cluster");
         var service = builder.AddResource(new TestResource("svc"))
@@ -313,7 +333,7 @@ public class AddKindClusterTests
     [Fact]
     public void DefaultClusterLifetimeIsSession()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -328,7 +348,7 @@ public class AddKindClusterTests
     [Fact]
     public void WithClusterLifetimeSetsAnnotation()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster")
             .WithClusterLifetime(ClusterLifetime.Persistent);
@@ -344,7 +364,7 @@ public class AddKindClusterTests
     [Fact]
     public void AddKindClusterRegistersLifecycleHook()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
 
         builder.AddKindCluster("test-cluster");
 
@@ -359,7 +379,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task KindClusterLifecycleHook_CleansUpOnApplicationStopping()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         builder.AddKindCluster("test-cluster");
 
         using var app = builder.Build();
@@ -390,7 +410,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task KindClusterLifecycleHook_DoesNotDoubleDeleteWhenStoppingThenDisposed()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         builder.AddKindCluster("test-cluster");
 
         using var app = builder.Build();
@@ -420,7 +440,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task KindClusterLifecycleHook_DoesNotDeletePersistentClustersOnApplicationStopping()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         builder.AddKindCluster("persistent-cluster")
             .WithClusterLifetime(ClusterLifetime.Persistent);
 
@@ -684,7 +704,7 @@ public class AddKindClusterTests
         var expectedImage = $"{"kindest/node"}:v1.31.0";
 
         // Order 1: workers first, then version
-        var builder1 = DistributedApplication.CreateBuilder();
+        using var builder1 = TestDistributedApplicationBuilder.Create();
         builder1.AddKindCluster("order1")
             .WithWorkerNodes(2)
             .WithKubernetesVersion("v1.31.0");
@@ -702,7 +722,7 @@ public class AddKindClusterTests
         finally { File.Delete(path1); }
 
         // Order 2: version first, then workers
-        var builder2 = DistributedApplication.CreateBuilder();
+        using var builder2 = TestDistributedApplicationBuilder.Create();
         builder2.AddKindCluster("order2")
             .WithKubernetesVersion("v1.31.0")
             .WithWorkerNodes(2);
@@ -784,7 +804,7 @@ public class AddKindClusterTests
     [Fact]
     public async Task WithWorkerNodes_Zero_IsValid()
     {
-        var builder = DistributedApplication.CreateBuilder();
+        using var builder = TestDistributedApplicationBuilder.Create();
         builder.AddKindCluster("edge-zero")
             .WithWorkerNodes(0);
 

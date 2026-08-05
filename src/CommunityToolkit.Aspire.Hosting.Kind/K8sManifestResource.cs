@@ -24,7 +24,7 @@ public class K8sManifestResource(string name, string manifestPath, KindClusterRe
 
     /// <summary>
     /// Gets the manifest path passed to <c>kubectl apply</c>.
-    /// Accepts a file path, a directory path, or <c>&lt;inline&gt;</c> for standard input.
+    /// Accepts an absolute file path, an absolute directory path, or <c>&lt;inline&gt;</c> for standard input.
     /// </summary>
     public string ManifestPath { get; } = manifestPath ?? throw new ArgumentNullException(nameof(manifestPath));
 

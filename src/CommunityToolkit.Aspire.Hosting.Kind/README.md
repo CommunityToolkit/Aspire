@@ -27,7 +27,7 @@ var cluster = builder.AddKindCluster("mycluster");
 builder.Build().Run();
 ```
 
-This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and is cleaned up on graceful shutdown, Ctrl+C, or other process-exit signals on a best-effort basis.
+This creates a Kind cluster named **mycluster** that is provisioned when the AppHost starts and is cleaned up during graceful host shutdown on a best-effort basis.
 
 ## Scenario 1: Kind cluster as a managed dependency (F5 mode)
 
@@ -73,7 +73,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 #### Cluster lifetime
 
-By default the cluster is deleted on graceful shutdown or other process-exit signals (`ClusterLifetime.Session`) on a best-effort basis. To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
+By default the cluster is deleted during graceful host shutdown (`ClusterLifetime.Session`) on a best-effort basis. To keep the cluster across AppHost restarts, use `ClusterLifetime.Persistent`:
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster")
@@ -82,7 +82,7 @@ var cluster = builder.AddKindCluster("mycluster")
 
 | Value | Behavior |
 |---|---|
-| `ClusterLifetime.Session` | Cluster is deleted on graceful shutdown or process exit on a best-effort basis (default). |
+| `ClusterLifetime.Session` | Cluster is deleted during graceful host shutdown on a best-effort basis (default). |
 | `ClusterLifetime.Persistent` | Cluster survives AppHost restarts and is reused on next startup. |
 
 ## Networking model
@@ -194,7 +194,7 @@ var certManager = cluster.AddHelmChart("cert-manager", "jetstack/cert-manager")
 
 ### Applying raw manifests to the cluster
 
-Use `AddManifest` to apply a Kubernetes manifest (file, directory, or Kustomize overlay) to the cluster after it becomes healthy. This runs `kubectl apply -f <path> --kubeconfig <path>` against the cluster kubeconfig and is the natural equivalent of `AddHelmChart` for scenarios where a chart would be overkill. Relative paths are resolved against the AppHost project directory.
+Use `AddManifest` to apply a Kubernetes manifest (file, directory, or Kustomize overlay) to the cluster after it becomes healthy. This runs `kubectl apply -f <path> --kubeconfig <path>` against the cluster kubeconfig and is the natural equivalent of `AddHelmChart` for scenarios where a chart would be overkill. Manifest paths must be absolute so published AppHosts do not depend on the original AppHost project directory.
 
 `AddManifest` supports a single file, a directory, or a Kustomize overlay. URL fetch is not supported today — use a local file. For URL support, `curl` the file down as a build step and reference the local path.
 
@@ -202,18 +202,19 @@ If the path is a directory containing a Kustomize marker file such as `kustomiza
 
 ```csharp
 var cluster = builder.AddKindCluster("mycluster");
+var manifestsRoot = Path.Combine(builder.AppHostDirectory, "manifests");
 
 // Single file
-cluster.AddManifest("crds", "./manifests/crds.yaml");
+cluster.AddManifest("crds", Path.Combine(manifestsRoot, "crds.yaml"));
 
 // Directory, recursive, into a namespace
-cluster.AddManifest("platform", "./manifests/platform")
+cluster.AddManifest("platform", Path.Combine(manifestsRoot, "platform"))
     .WithRecursive()
     .WithNamespace("platform");
 
 // Server-side apply with a stable field manager (useful for CRDs and controllers
 // that reconcile large objects)
-cluster.AddManifest("operator", "./manifests/argocd/install.yaml")
+cluster.AddManifest("operator", Path.Combine(manifestsRoot, "argocd", "install.yaml"))
     .WithServerSideApply(forceConflicts: true)
     .WithFieldManager("aspire-apphost");
 
@@ -229,7 +230,7 @@ cluster.AddManifestFromContent("demo-ns", """
 Downstream resources can wait on the manifest resource before starting so they only see the cluster after the manifests have been applied:
 
 ```csharp
-var crds = cluster.AddManifest("crds", "./manifests/crds.yaml");
+var crds = cluster.AddManifest("crds", Path.Combine(manifestsRoot, "crds.yaml"));
 
 var operatorContainer = builder.AddContainer("my-operator", "my-org/operator")
     .WithReference(cluster)
@@ -245,7 +246,7 @@ When `kubectl apply` reports custom resource definitions, Kind waits up to 5 min
 If the Kubernetes API needs longer to become reachable before `kubectl apply`, use `WithClusterReadyTimeout` to extend the `kubectl cluster-info` readiness budget for that manifest resource.
 
 ```csharp
-cluster.AddManifest("platform", "./manifests/platform")
+cluster.AddManifest("platform", Path.Combine(builder.AppHostDirectory, "manifests", "platform"))
     .WithClusterReadyTimeout(TimeSpan.FromMinutes(2));
 ```
 
@@ -255,7 +256,7 @@ cluster.AddManifest("platform", "./manifests/platform")
 
 If a manifest declares its own `metadata.namespace` that conflicts with `--namespace`, `kubectl` rejects the apply. Prefer one of these patterns:
 
-- Create the namespace with a separate `AddManifest("ns", "namespace.yaml")` and `.WaitFor()` it before applying namespaced manifests.
+- Create the namespace with a separate `AddManifest("ns", Path.Combine(builder.AppHostDirectory, "manifests", "namespace.yaml"))` and `.WaitFor()` it before applying namespaced manifests.
 - Omit `.WithNamespace()` and let each manifest declare its own namespace.
 
 #### WithServerSideApply
@@ -360,7 +361,7 @@ builder.AddContainer("my-container", "my-image")
 
 ## Security & scope notes
 
-- Relative paths are resolved against the AppHost directory but are not sandboxed; do not apply untrusted manifests.
+- Absolute manifest paths are not sandboxed; do not apply untrusted manifests.
 - `AddManifestFromContent(string)` holds stdin content in memory. For very large manifests, use `AddManifest(file)` instead.
 - `AddManifest` runs with whatever authority the cluster kubeconfig has — cluster-admin on a default Kind cluster.
 
