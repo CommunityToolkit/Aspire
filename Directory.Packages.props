@@ -5,6 +5,7 @@
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Confluent.Kafka" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Docker" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
@@ -30,14 +31,15 @@
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
+    <PackageVersion Include="AspNetCore.HealthChecks.Kafka" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Sqlite" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SqlServer" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.SurrealDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
-    <PackageVersion Include="Dapr.AspNetCore" Version="1.15.3" />
-    <PackageVersion Include="Dapr.Client" Version="1.15.3" />
+    <PackageVersion Include="Dapr.AspNetCore" Version="1.18.5" />
+    <PackageVersion Include="Dapr.Client" Version="1.18.5" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
@@ -60,6 +62,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="$(DotNetExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
     <!-- OpenTelemetry packages -->
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
@@ -74,12 +77,15 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.2" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.7" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
     <!-- Keep an explicit GitHub.Copilot.SDK pin for the Squad sample so the split
          CopilotClient assembly and native CLI payload always resolve from the
-         same SDK version we validate locally/CI. -->
+         same SDK version we validate locally/CI. This remains a temporary
+         workaround until Microsoft.Agents.AI.GitHub.Copilot ships the
+         buildTransitive bridge from microsoft/agent-framework#6457, so keep the
+         direct ref pinned until that preview lands. -->
     <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.8" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
@@ -90,7 +96,7 @@
     <PackageVersion Include="MassTransit.ActiveMQ" Version="8.5.5" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.5" />
     <PackageVersion Include="MeiliSearch" Version="0.20.0" />
-    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.3" />
+    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.5" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetExtensionsVersion)" />
@@ -105,8 +111,8 @@
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Microsoft.Agents.AI.GitHub.Copilot" Version="1.15.0-rc1" />
     <PackageVersion Include="Squad.Agents.AI" Version="0.5.6-preview.23" />
-    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.10.2" />
-    <PackageVersion Include="SurrealDb.Net" Version="0.10.2" />
+    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />
+    <PackageVersion Include="SurrealDb.Net" Version="1.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />
@@ -132,7 +138,7 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="2.0.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="2.0.2" />
-    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.4" />
+    <PackageVersion Include="GitHubActionsTestLogger" Version="3.0.5" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
     <!-- Build dependencies -->
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" />
