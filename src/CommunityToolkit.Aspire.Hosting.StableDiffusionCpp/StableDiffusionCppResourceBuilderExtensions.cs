@@ -1,8 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.StableDiffusionCpp;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 /// <summary>
@@ -54,7 +52,8 @@ public static class StableDiffusionCppResourceBuilderExtensions
             outputDirectory);
 
         return builder.AddResource(resource)
-            .WithImage(StableDiffusionCppContainerImageTags.Image, GetImageTag(imageVariant))
+            .WithImage(StableDiffusionCppContainerImageTags.Image)
+            .WithImageSHA256(GetImageSha256(imageVariant))
             .WithImageRegistry(StableDiffusionCppContainerImageTags.Registry)
             .WithEntrypoint("/sd-server")
             .WithArgs(
@@ -157,9 +156,7 @@ public static class StableDiffusionCppResourceBuilderExtensions
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
         ArgumentException.ThrowIfNullOrWhiteSpace(revision);
 
-        var modelName = Path.GetFileNameWithoutExtension(fileName)
-            .Replace('.', '-')
-            .Replace('_', '-');
+        var modelName = SanitizeResourceName(Path.GetFileNameWithoutExtension(fileName));
 
         return AddHuggingFaceModel(
             builder,
@@ -211,23 +208,35 @@ public static class StableDiffusionCppResourceBuilderExtensions
             .WithParentRelationship(builder.Resource);
     }
 
-    private static string GetImageTag(StableDiffusionCppImageVariant imageVariant) =>
+    private static string GetImageSha256(StableDiffusionCppImageVariant imageVariant) =>
         imageVariant switch
         {
-            StableDiffusionCppImageVariant.Cuda => StableDiffusionCppContainerImageTags.CudaTag,
-            StableDiffusionCppImageVariant.CudaSpark => StableDiffusionCppContainerImageTags.CudaSparkTag,
-            StableDiffusionCppImageVariant.Vulkan => StableDiffusionCppContainerImageTags.VulkanTag,
-            StableDiffusionCppImageVariant.Sycl => StableDiffusionCppContainerImageTags.SyclTag,
-            StableDiffusionCppImageVariant.Musa => StableDiffusionCppContainerImageTags.MusaTag,
+            StableDiffusionCppImageVariant.Cuda => StableDiffusionCppContainerImageTags.CudaSha256,
+            StableDiffusionCppImageVariant.CudaSpark => StableDiffusionCppContainerImageTags.CudaSparkSha256,
+            StableDiffusionCppImageVariant.Vulkan => StableDiffusionCppContainerImageTags.VulkanSha256,
+            StableDiffusionCppImageVariant.Sycl => StableDiffusionCppContainerImageTags.SyclSha256,
+            StableDiffusionCppImageVariant.Musa => StableDiffusionCppContainerImageTags.MusaSha256,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(imageVariant),
                 imageVariant,
                 "Unsupported stable-diffusion.cpp image variant."),
         };
 
+    private static string SanitizeResourceName(string name)
+    {
+        var sanitized = new string(name.Select(static character =>
+            char.IsLetterOrDigit(character) || character == '-' ? character : '-').ToArray());
+
+        while (sanitized.Contains("--", StringComparison.Ordinal))
+        {
+            sanitized = sanitized.Replace("--", "-", StringComparison.Ordinal);
+        }
+
+        sanitized = sanitized.Trim('-');
+        return sanitized.Length == 0 ? "model" : sanitized;
+    }
+
     private static string? GetContainerRuntime(this IDistributedApplicationBuilder builder) =>
         (builder.Configuration["ASPIRE_CONTAINER_RUNTIME"] ??
          builder.Configuration["DOTNET_ASPIRE_CONTAINER_RUNTIME"])?.ToLowerInvariant();
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental

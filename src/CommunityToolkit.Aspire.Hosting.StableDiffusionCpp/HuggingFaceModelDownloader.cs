@@ -187,7 +187,7 @@ internal static class HuggingFaceModelDownloader
         static string EscapePath(string value) =>
             string.Join(
                 '/',
-                value.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                value.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries)
                     .Select(Uri.EscapeDataString));
 
         return new Uri(

@@ -8,14 +8,14 @@ namespace CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.Tests;
 public class AddStableDiffusionCppTests
 {
     [Theory]
-    [InlineData(StableDiffusionCppImageVariant.Cuda, "master-cuda")]
-    [InlineData(StableDiffusionCppImageVariant.CudaSpark, "master-cuda-spark")]
-    [InlineData(StableDiffusionCppImageVariant.Vulkan, "master-vulkan")]
-    [InlineData(StableDiffusionCppImageVariant.Sycl, "master-sycl")]
-    [InlineData(StableDiffusionCppImageVariant.Musa, "master-musa")]
+    [InlineData(StableDiffusionCppImageVariant.Cuda, "sha256:5964ac823c6d33cc926aceb42d924a12b75d7cadc7c9fc5f6cd5542f295d75b8")]
+    [InlineData(StableDiffusionCppImageVariant.CudaSpark, "sha256:979eb3a8a5c2ad3a6e47b346566742149847b9ce85dd832a503a3f784700eb5c")]
+    [InlineData(StableDiffusionCppImageVariant.Vulkan, "sha256:a328852144b7e89619e18e891cfdaa42e069eb853cde91c3b50246565bcaa2f6")]
+    [InlineData(StableDiffusionCppImageVariant.Sycl, "sha256:81129b0be87297bd089c043c0fe9be5ca2a29a089727e0e37142204676433d82")]
+    [InlineData(StableDiffusionCppImageVariant.Musa, "sha256:c112ba72d4904c493392c59526cdb0e850da9ecfb9d3e12e4601000a7236c5d5")]
     public void ResourceUsesSelectedOfficialImage(
         StableDiffusionCppImageVariant variant,
-        string expectedTag)
+        string expectedSha256)
     {
         var builder = DistributedApplication.CreateBuilder();
 
@@ -27,7 +27,8 @@ public class AddStableDiffusionCppTests
 
         Assert.Equal("ghcr.io", image.Registry);
         Assert.Equal("leejet/stable-diffusion.cpp", image.Image);
-        Assert.Equal(expectedTag, image.Tag);
+        Assert.Null(image.Tag);
+        Assert.Equal(expectedSha256, image.SHA256);
         Assert.Equal(variant, resource.ImageVariant);
     }
 
@@ -91,6 +92,19 @@ public class AddStableDiffusionCppTests
         Assert.Contains(
             model.Annotations.OfType<ResourceRelationshipAnnotation>(),
             annotation => annotation.Resource == server.Resource && annotation.Type == "Parent");
+    }
+
+    [Fact]
+    public void GeneratedModelResourceNameIsSanitized()
+    {
+        var builder = DistributedApplication.CreateBuilder();
+        var server = builder.AddStableDiffusionCpp("stable-diffusion");
+
+        var model = server.AddHuggingFaceModel(
+            "organization/model",
+            "checkpoints/model name_(v1).safetensors");
+
+        Assert.Equal("stable-diffusion-model-name-v1", model.Resource.Name);
     }
 
     [Fact]
@@ -170,6 +184,19 @@ public class AddStableDiffusionCppTests
 
         Assert.Equal(
             "https://huggingface.co/organization/model/resolve/feature%20branch/checkpoints/model%20file.safetensors",
+            uri.AbsoluteUri);
+    }
+
+    [Fact]
+    public void DownloadUriNormalizesWindowsFilePath()
+    {
+        var uri = HuggingFaceModelDownloader.BuildDownloadUri(
+            "organization/model",
+            "main",
+            "checkpoints\\model.safetensors");
+
+        Assert.Equal(
+            "https://huggingface.co/organization/model/resolve/main/checkpoints/model.safetensors",
             uri.AbsoluteUri);
     }
 

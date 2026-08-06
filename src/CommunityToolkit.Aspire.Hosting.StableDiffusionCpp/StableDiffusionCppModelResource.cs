@@ -1,8 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -57,5 +55,3 @@ public sealed class StableDiffusionCppModelResource(
         [CallerArgumentExpression(nameof(argument))] string? parameterName = null) =>
         argument ?? throw new ArgumentNullException(parameterName);
 }
-
-#pragma warning restore ASPIREATS001 // AspireExport is experimental
