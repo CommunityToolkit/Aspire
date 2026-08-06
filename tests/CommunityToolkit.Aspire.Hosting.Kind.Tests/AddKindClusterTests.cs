@@ -794,7 +794,7 @@ public class AddKindClusterTests
     }
 
     [Fact]
-    public async Task DefaultProcessRunner_RedactsKubeconfigPathInDebugLog()
+    public async Task DefaultProcessRunner_LogsInlineKubeconfigPathInDebugLog()
     {
         var runner = new DefaultProcessRunner();
         var logger = new CapturingLogger();
@@ -805,12 +805,12 @@ public class AddKindClusterTests
             : await runner.RunAsync(logger, "sh", ["-c", "echo hello", $"--kubeconfig={kubeconfigPath}"]);
 
         var executingMessage = Assert.Single(logger.Messages, message => message.StartsWith("Executing:", StringComparison.Ordinal));
-        Assert.DoesNotContain(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--kubeconfig=[REDACTED]", executingMessage, StringComparison.Ordinal);
+        Assert.Contains(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"--kubeconfig={kubeconfigPath}", executingMessage, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task DefaultProcessRunner_RedactsSpaceSeparatedKubeconfigPathInDebugLog()
+    public async Task DefaultProcessRunner_LogsSpaceSeparatedKubeconfigPathInDebugLog()
     {
         var runner = new DefaultProcessRunner();
         var logger = new CapturingLogger();
@@ -821,8 +821,8 @@ public class AddKindClusterTests
             : await runner.RunAsync(logger, "sh", ["-c", "echo hello", "--kubeconfig", kubeconfigPath]);
 
         var executingMessage = Assert.Single(logger.Messages, message => message.StartsWith("Executing:", StringComparison.Ordinal));
-        Assert.DoesNotContain(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("--kubeconfig [REDACTED]", executingMessage, StringComparison.Ordinal);
+        Assert.Contains(kubeconfigPath, executingMessage, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"--kubeconfig {kubeconfigPath}", executingMessage, StringComparison.Ordinal);
     }
 
     // ── Edge-case tests ──────────────────────────────────────────────────

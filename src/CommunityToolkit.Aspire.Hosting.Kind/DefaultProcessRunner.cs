@@ -23,7 +23,7 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         string? standardInput = null,
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Executing: {FileName} {Arguments}", fileName, RedactSensitiveArgs(arguments));
+        logger.LogDebug("Executing: {FileName} {Arguments}", fileName, string.Join(' ', arguments));
 
         var psi = new ProcessStartInfo
         {
@@ -106,37 +106,5 @@ internal sealed class DefaultProcessRunner : IProcessRunner
         }
 
         return new ProcessResult(process.ExitCode, stdout.ToString().TrimEnd(), stderr.ToString().TrimEnd());
-    }
-
-    internal static string RedactSensitiveArgs(IReadOnlyList<string> arguments)
-    {
-        ArgumentNullException.ThrowIfNull(arguments);
-
-        var redacted = new string[arguments.Count];
-        var redactNext = false;
-
-        for (var i = 0; i < arguments.Count; i++)
-        {
-            var argument = arguments[i];
-
-            if (redactNext)
-            {
-                redacted[i] = "[REDACTED]";
-                redactNext = false;
-            }
-            else if (string.Equals(argument, "--kubeconfig", StringComparison.OrdinalIgnoreCase))
-            {
-                redacted[i] = argument;
-                redactNext = true;
-            }
-            else
-            {
-                redacted[i] = argument.StartsWith("--kubeconfig=", StringComparison.OrdinalIgnoreCase)
-                    ? "--kubeconfig=[REDACTED]"
-                    : argument;
-            }
-        }
-
-        return string.Join(' ', redacted);
     }
 }
