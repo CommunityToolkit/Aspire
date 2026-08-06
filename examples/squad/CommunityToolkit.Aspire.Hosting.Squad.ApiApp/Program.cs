@@ -10,7 +10,7 @@
 // or CliArgs boilerplate required.
 //
 // The single POST /ask endpoint takes a ?squad=research|dev query parameter and a
-// JSON body with a list of prompts. The coordinator decides per-prompt whether to
+// JSON body with either a single `prompt` or a list of `prompts`. The coordinator decides per-prompt whether to
 // answer directly (Direct Mode in squad.agent.md), do a single agent spawn
 // (Lightweight), or fan out via the task tool (Full). The "Sample prompts"
 // section returned from GET / shows what each mode looks like — paste them
@@ -131,11 +131,12 @@ if (app.Environment.IsDevelopment())
 
 // Index: shows the single /ask endpoint plus a copy-paste menu of sample
 // prompts that exercise each coordinator mode (Direct, Lightweight, Full).
-// Same body shape as /ask accepts — just `{"prompts": [...]}`.
+// Same body shape as /ask accepts — either `{"prompts": [...]}` or, for a
+// quick single turn, `{"prompt": "..."}`.
 app.MapGet("/", () => Results.Ok(new
 {
     squads = squadKeysByShortName,
-    endpoint = "POST /ask?squad=research|dev — body: { \"prompts\": [...] }. " +
+    endpoint = "POST /ask?squad=research|dev — body: { \"prompts\": [...] } or { \"prompt\": \"...\" }. " +
                "Each prompt runs sequentially on a single AgentSession (multi-turn memory). " +
                "The coordinator picks Direct / Lightweight / Full mode per prompt; only Full mode produces squad.subagent spans.",
     sample_prompts = new
@@ -201,17 +202,23 @@ app.MapPost("/ask",
         var agent = ResolveSquad(sp, q.Squad, out var error);
         if (agent is null) return Results.BadRequest(new { error });
 
+        var prompts = req.GetPrompts();
+        if (prompts.Length == 0)
+        {
+            return Results.BadRequest(new { error = "Provide either 'prompt' or a non-empty 'prompts' array." });
+        }
+
         using var activity = ApiAppDiagnostics.ActivitySource
             .StartActivity($"squad.ask {q.Squad}", ActivityKind.Server);
         activity?.SetTag("squad.name", q.Squad);
-        activity?.SetTag("squad.prompt.count", req.Prompts.Length);
+        activity?.SetTag("squad.prompt.count", prompts.Length);
 
-        logger.LogInformation("/ask squad={Squad} prompts={Count}", q.Squad, req.Prompts.Length);
+        logger.LogInformation("/ask squad={Squad} prompts={Count}", q.Squad, prompts.Length);
 
         var turns = new List<TurnResult>();
         var session = await agent.CreateSessionAsync(ct);
 
-        foreach (var prompt in req.Prompts)
+        foreach (var prompt in prompts)
         {
             var response = await agent.RunAsync(prompt, session, cancellationToken: ct);
             turns.Add(new TurnResult(prompt, response.Text));
@@ -239,7 +246,18 @@ SquadAgent? ResolveSquad(IServiceProvider sp, string shortName, out string? erro
 
 internal sealed record SquadQuery(string Squad = "research");
 
-internal sealed record AskRequest(string[] Prompts);
+internal sealed record AskRequest(string[]? Prompts, string? Prompt = null)
+{
+    public string[] GetPrompts()
+    {
+        if (Prompts is { Length: > 0 })
+        {
+            return Prompts;
+        }
+
+        return string.IsNullOrWhiteSpace(Prompt) ? [] : [Prompt];
+    }
+}
 
 internal sealed record TurnResult(string Prompt, string? Response);
 
