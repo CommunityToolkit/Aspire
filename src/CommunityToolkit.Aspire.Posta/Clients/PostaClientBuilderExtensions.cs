@@ -2,6 +2,7 @@ using CommunityToolkit.Aspire.Posta.Clients;
 using CommunityToolkit.Aspire.Posta.Configuration;
 using CommunityToolkit.Aspire.Posta.Endpoints;
 using CommunityToolkit.Aspire.Posta.Transport;
+using System.Data.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -15,7 +16,7 @@ public static class AspirePostaExtensions
 {
     private const string DefaultConfigurationSection = "Aspire:Posta:Client";
 
-    /// <summary>Registers a keyed <see cref="IPostaClient"/> using Aspire service discovery or a configured endpoint.</summary>
+    /// <summary>Registers an <see cref="IPostaClient"/> using Aspire service discovery or a configured endpoint.</summary>
     /// <param name="builder">The application builder.</param>
     /// <param name="connectionName">The Posta resource or connection string name.</param>
     /// <param name="configureSettings">An optional settings callback applied last.</param>
@@ -26,7 +27,7 @@ public static class AspirePostaExtensions
         Action<PostaClientSettings>? configureSettings = null,
         string? configurationSectionName = null)
     {
-        AddPostaClientCore(builder, connectionName, connectionName, registerDefault: true, configureSettings, configurationSectionName);
+        AddPostaClientCore(builder, serviceKey: null, connectionName, configureSettings, configurationSectionName);
     }
 
     /// <summary>Registers a keyed <see cref="IPostaClient"/> whose service key is the connection name.</summary>
@@ -40,7 +41,7 @@ public static class AspirePostaExtensions
         Action<PostaClientSettings>? configureSettings = null,
         string? configurationSectionName = null)
     {
-        AddPostaClientCore(builder, connectionName, connectionName, registerDefault: false, configureSettings, configurationSectionName);
+        AddPostaClientCore(builder, connectionName, connectionName, configureSettings, configurationSectionName);
     }
 
     /// <summary>Registers a keyed <see cref="IPostaClient"/> using a custom service key.</summary>
@@ -57,14 +58,13 @@ public static class AspirePostaExtensions
         string? configurationSectionName = null)
     {
         ArgumentNullException.ThrowIfNull(serviceKey);
-        AddPostaClientCore(builder, serviceKey, connectionName, registerDefault: false, configureSettings, configurationSectionName);
+        AddPostaClientCore(builder, serviceKey, connectionName, configureSettings, configurationSectionName);
     }
 
     private static void AddPostaClientCore(
         IHostApplicationBuilder builder,
-        object serviceKey,
+        object? serviceKey,
         string connectionName,
-        bool registerDefault,
         Action<PostaClientSettings>? configureSettings,
         string? configurationSectionName)
     {
@@ -86,15 +86,20 @@ public static class AspirePostaExtensions
         }).AddServiceDiscovery();
 
         builder.Services.TryAddSingleton<IPostaEndpoints, PostaEndpoints>();
-        builder.Services.AddKeyedSingleton<IPostaClient>(serviceKey, (services, _) =>
+        IPostaClient CreateClient(IServiceProvider services)
         {
             IPostaCredentialProvider credentialProvider = services.GetService<IPostaCredentialProvider>() ?? new PostaCredentialProvider(settings);
             HttpClient httpClient = services.GetRequiredService<IHttpClientFactory>().CreateClient($"Posta:{connectionName}");
             return new PostaClient(new PostaTransport(httpClient, credentialProvider), services.GetRequiredService<IPostaEndpoints>());
-        });
-        if (registerDefault)
+        }
+
+        if (serviceKey is null)
         {
-            builder.Services.TryAddSingleton(services => services.GetRequiredKeyedService<IPostaClient>(serviceKey));
+            builder.Services.AddSingleton<IPostaClient>(CreateClient);
+        }
+        else
+        {
+            builder.Services.AddKeyedSingleton<IPostaClient>(serviceKey, (services, _) => CreateClient(services));
         }
     }
 
@@ -111,28 +116,23 @@ public static class AspirePostaExtensions
             return;
         }
 
-        foreach (string part in connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        DbConnectionStringBuilder connectionStringBuilder = new()
         {
-            int separator = part.IndexOf('=');
-            if (separator <= 0)
-            {
-                continue;
-            }
+            ConnectionString = connectionString
+        };
 
-            string name = part[..separator];
-            string value = part[(separator + 1)..];
-            if (name.Equals("Endpoint", StringComparison.OrdinalIgnoreCase) && Uri.TryCreate(value, UriKind.Absolute, out uri))
-            {
-                settings.Endpoint = uri;
-            }
-            else if (name.Equals("ApiKey", StringComparison.OrdinalIgnoreCase))
-            {
-                settings.ApiKey = value;
-            }
-            else if (name.Equals("AccessToken", StringComparison.OrdinalIgnoreCase))
-            {
-                settings.AccessToken = value;
-            }
+        if (connectionStringBuilder.TryGetValue("Endpoint", out object? endpoint) &&
+            Uri.TryCreate(endpoint.ToString(), UriKind.Absolute, out uri))
+        {
+            settings.Endpoint = uri;
+        }
+        if (connectionStringBuilder.TryGetValue("ApiKey", out object? apiKey))
+        {
+            settings.ApiKey = apiKey.ToString();
+        }
+        if (connectionStringBuilder.TryGetValue("AccessToken", out object? accessToken))
+        {
+            settings.AccessToken = accessToken.ToString();
         }
     }
 }

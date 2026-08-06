@@ -112,6 +112,11 @@ internal sealed class PostaTransport(HttpClient httpClient, IPostaCredentialProv
         string result = template;
         foreach ((string name, object? value) in values)
         {
+            if (value is null)
+            {
+                continue;
+            }
+
             result = result.Replace("{" + name + "}", Uri.EscapeDataString(ConvertToString(value)), StringComparison.Ordinal);
         }
 

@@ -3,6 +3,8 @@ using CommunityToolkit.Aspire.Posta.Configuration;
 using CommunityToolkit.Aspire.Posta.Endpoints;
 using CommunityToolkit.Aspire.Posta.Models.Emails;
 using CommunityToolkit.Aspire.Posta.Transport;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -87,6 +89,51 @@ public class PostaClientTests
         Assert.Equal(new AuthenticationHeaderValue("Bearer", "secret-key"), handler.Request.Headers.Authorization);
         Assert.Contains("\"subject\":\"Hello\"", handler.Body, StringComparison.Ordinal);
         Assert.Equal("queued", result!.RootElement.GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task SendAsyncRejectsNullPathParameter()
+    {
+        RecordingHandler handler = new(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        PostaTransport transport = CreateTransport(handler);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => transport.SendAsync(
+            new PostaEndpoint(HttpMethod.Get, "/api/v1/emails/{id}", PostaAuthentication.None),
+            new PostaRequest
+            {
+                PathParameters = new Dictionary<string, object?> { ["id"] = null }
+            },
+            TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public void AddPostaClientRegistersOnlyUnkeyedClient()
+    {
+        HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+        builder.AddPostaClient("posta");
+
+        using IHost host = builder.Build();
+
+        Assert.NotNull(host.Services.GetRequiredService<IPostaClient>());
+        Assert.Null(host.Services.GetKeyedService<IPostaClient>("posta"));
+    }
+
+    [Fact]
+    public void AddKeyedPostaClientRegistersOnlyKeyedClientAndParsesConnectionString()
+    {
+        HostApplicationBuilder builder = Host.CreateApplicationBuilder();
+        builder.Configuration["ConnectionStrings:posta"] =
+            "Endpoint=https://posta.example;ApiKey=key;AccessToken=token";
+        PostaClientSettings? configuredSettings = null;
+        builder.AddKeyedPostaClient("posta", settings => configuredSettings = settings);
+
+        using IHost host = builder.Build();
+
+        Assert.NotNull(host.Services.GetRequiredKeyedService<IPostaClient>("posta"));
+        Assert.Null(host.Services.GetService<IPostaClient>());
+        Assert.Equal(new Uri("https://posta.example"), configuredSettings!.Endpoint);
+        Assert.Equal("key", configuredSettings.ApiKey);
+        Assert.Equal("token", configuredSettings.AccessToken);
     }
 
     [Fact]

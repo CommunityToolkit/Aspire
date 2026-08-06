@@ -3,14 +3,17 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
-    <!-- Squad.Agents.AI 0.2.0-preview.4 (or later) — bumped from preview.3 to pick up
-         the MAF 1.10.0-rc1 / GitHub.Copilot.SDK 1.0.0 GA transitive upgrade, which
-         is what makes the agent's runtime file-IO actually work (the older preview
-         was wedged on SDK 1.0.0-beta.2 + an incompatible CLI protocol). The
-         GitHub.Copilot.SDK direct ref is a temporary workaround — see the comment
-         in Directory.Packages.props. -->
+    <!-- Keep the Squad sample's agent packages explicit so the sample stays on the
+         same tested MAF adapter + Copilot SDK combination end-to-end. The direct
+         MAF reference overrides the older adapter that still flows transitively via
+         Squad.Agents.AI, while the direct Copilot SDK reference keeps the managed
+         SDK version aligned with that stack. -->
     <PackageReference Include="Squad.Agents.AI" />
-    <PackageReference Include="GitHub.Copilot.SDK" />
+    <PackageReference Include="Microsoft.Agents.AI.GitHub.Copilot" />
+    <!-- MAF's buildTransitive bridge already imports GitHub.Copilot.SDK's build
+         targets for downstream consumers, so exclude the direct SDK build assets
+         here to avoid duplicate target imports. -->
+    <PackageReference Include="GitHub.Copilot.SDK" ExcludeAssets="build" />
   </ItemGroup>
 
   <ItemGroup>
