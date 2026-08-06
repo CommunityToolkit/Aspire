@@ -5,6 +5,7 @@
   <ItemGroup Label="Aspire Packages">
     <!-- Aspire packages -->
     <PackageVersion Include="Aspire.Hosting" Version="$(AspireVersion)" />
+    <PackageVersion Include="Aspire.Confluent.Kafka" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Docker" Version="$(AspireVersion)" />
     <PackageVersion Include="Aspire.Hosting.Kubernetes" Version="$(AspireVersion)$(AspirePreviewSuffix)" />
     <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="$(AspireVersion)" />
@@ -30,6 +31,7 @@
   </ItemGroup>
   <ItemGroup Label="Core Packages">
     <!-- AspNetCore packages -->
+    <PackageVersion Include="AspNetCore.HealthChecks.Kafka" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.RavenDB" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Sqlite" Version="9.0.0" />
@@ -37,7 +39,7 @@
     <PackageVersion Include="AspNetCore.HealthChecks.SurrealDb" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
     <PackageVersion Include="Dapr.AspNetCore" Version="1.15.3" />
-    <PackageVersion Include="Dapr.Client" Version="1.15.3" />
+    <PackageVersion Include="Dapr.Client" Version="1.18.5" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.QuickGrid" Version="$(AspNetCoreVersion)" />
@@ -60,6 +62,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetExtensionsVersion)" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="$(DotNetExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
     <!-- OpenTelemetry packages -->
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.3" />
@@ -74,7 +77,7 @@
   </ItemGroup>
   <ItemGroup Label="Integration Packages">
     <!-- External packages -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.100.2" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.5" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
     <!-- Direct ref to GitHub.Copilot.SDK is a temporary workaround until a
@@ -83,7 +86,7 @@
          2026-06-10). Without it, copilot.exe never lands in bin/.../runtimes/
          {rid}/native/ and the SDK throws on first RunAsync. Drop this entry once
          MAF cuts the next preview. -->
-    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.3" />
+    <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.8" />
     <PackageVersion Include="JsonSchema.Net" Version="7.4.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
     <PackageVersion Include="OllamaSharp" Version="5.4.12" />
@@ -107,8 +110,8 @@
     <PackageVersion Include="RavenDB.TestDriver" Version="6.2.1" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="Squad.Agents.AI" Version="0.5.1-preview.16" />
-    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="0.10.2" />
-    <PackageVersion Include="SurrealDb.Net" Version="0.10.2" />
+    <PackageVersion Include="SurrealDb.MinimalApis.Extensions" Version="1.0.0" />
+    <PackageVersion Include="SurrealDb.Net" Version="1.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.3.1" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.10" />
     <PackageVersion Include="ModelContextProtocol" Version="0.4.0-preview.3" />

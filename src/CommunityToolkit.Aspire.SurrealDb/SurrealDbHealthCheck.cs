@@ -23,9 +23,6 @@ internal sealed class SurrealDbHealthCheck(SurrealDbOptions options, ILogger<Sur
             var response = await surrealdbClient.RawQuery("RETURN 1", cancellationToken: cancellationToken).ConfigureAwait(false);
             response.EnsureAllOks();
 
-            logger.LogInformation("SurrealDB health check passed. Response: {Response}", response);
-            logger.LogInformation("SurrealDB health check outcome: {Outcome}", isHealthy ? "Healthy" : "Unhealthy");
-
             return isHealthy
                 ? HealthCheckResult.Healthy()
                 : new HealthCheckResult(context.Registration.FailureStatus);

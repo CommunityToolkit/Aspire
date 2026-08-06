@@ -1,0 +1,24 @@
+name: README Integrations Check
+
+on:
+  pull_request:
+    paths:
+      - README.md
+      - src/**/CommunityToolkit.Aspire*.csproj
+      - src/CommunityToolkit.Aspire*/README.md
+      - eng/scripts/generate-readme-integrations.cs
+      - .github/workflows/readme-integrations-check.yml
+
+jobs:
+  validate-readme-integrations:
+    name: Validate integrations table
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify README integrations table is up to date
+        run: dotnet run eng/scripts/generate-readme-integrations.cs -- --check

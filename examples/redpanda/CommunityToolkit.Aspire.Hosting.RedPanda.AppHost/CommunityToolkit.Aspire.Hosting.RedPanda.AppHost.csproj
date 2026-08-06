@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.3">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>3dc32fad-1d56-45b5-bea8-b96fa74a9628</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CommunityToolkit.Aspire.Hosting.RedPanda\CommunityToolkit.Aspire.Hosting.RedPanda.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\CommunityToolkit.Aspire.Hosting.RedPanda.Consumer\CommunityToolkit.Aspire.Hosting.RedPanda.Consumer.csproj" />
+  </ItemGroup>
+
+</Project>
