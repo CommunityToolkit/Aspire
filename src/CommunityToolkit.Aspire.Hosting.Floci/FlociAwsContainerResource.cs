@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -14,6 +12,11 @@ public class FlociAwsContainerResource(string name) : FlociContainerResource(nam
     internal const string HostnameEnvVar = "FLOCI_HOSTNAME";
     internal const string DefaultRegionEnvVar = "FLOCI_DEFAULT_REGION";
     internal const string DefaultAccountIdEnvVar = "FLOCI_DEFAULT_ACCOUNT_ID";
+
+    // Floci does not enforce SigV4 signatures, but the AWS SDKs refuse to sign a request without
+    // credentials — these placeholders satisfy the SDK credential chain.
+    internal const string DefaultAccessKeyId = "test";
+    internal const string DefaultSecretAccessKey = "test";
 
     // Quarkus JVM Docker image config override path
     internal const string ConfigMountPath = "/deployments/config/application.yml";
@@ -38,8 +41,8 @@ public class FlociAwsContainerResource(string name) : FlociContainerResource(nam
         context.EnvironmentVariables[FlociUIContainerResource.EndpointEnvVar] =
             ReferenceExpression.Create($"{PrimaryEndpoint}");
         context.EnvironmentVariables[FlociUIContainerResource.RegionEnvVar] = DefaultRegion;
-        context.EnvironmentVariables[FlociUIContainerResource.AccessKeyIdEnvVar] = "test";
-        context.EnvironmentVariables[FlociUIContainerResource.SecretAccessKeyEnvVar] = "test";
+        context.EnvironmentVariables[FlociUIContainerResource.AccessKeyIdEnvVar] = DefaultAccessKeyId;
+        context.EnvironmentVariables[FlociUIContainerResource.SecretAccessKeyEnvVar] = DefaultSecretAccessKey;
         context.EnvironmentVariables[FlociUIContainerResource.DefaultAccountIdEnvVar] = DefaultAccountId;
     }
 
@@ -47,4 +50,3 @@ public class FlociAwsContainerResource(string name) : FlociContainerResource(nam
     internal override string StorageModeEnvVar => "FLOCI_STORAGE_MODE";
 }
 
-#pragma warning restore ASPIREATS001

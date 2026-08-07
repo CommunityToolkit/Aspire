@@ -1,8 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Floci;
 
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting;
 
 public static partial class FlociHostingExtension
@@ -25,7 +23,7 @@ public static partial class FlociHostingExtension
     /// </example>
     /// <param name="builder">The Floci resource builder.</param>
     /// <param name="configureContainer">Configuration callback for the Floci UI container resource.
-    /// Use this to attach additional clouds to the same UI console via <c>WithPluggedCloud</c>.</param>
+    /// Use this to attach additional clouds to the same UI console via <c>WithReference</c>.</param>
     /// <param name="containerName">Optional. The name of the Floci UI container (default: <c>{floci-name}-ui</c>).</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociAwsContainerResource}"/> for further resource configuration.</returns>
     [AspireExport(RunSyncOnBackgroundThread = true)]
@@ -63,42 +61,45 @@ public static partial class FlociHostingExtension
     /// Attaches an additional Floci AWS emulator resource to an existing Floci UI console, so a
     /// single console can browse multiple clouds at once instead of creating a UI container per cloud.
     /// </summary>
+    /// <ats-summary>Attaches an additional Floci AWS resource to a Floci UI console</ats-summary>
     /// <param name="builder">The Floci UI resource builder (from the <c>configureContainer</c> callback of <c>WithFlociUI</c>).</param>
     /// <param name="cloud">The additional Floci AWS resource to attach.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociUIContainerResource}"/> for further configuration.</returns>
-    [AspireExport("withPluggedCloudAws")]
-    public static IResourceBuilder<FlociUIContainerResource> WithPluggedCloud(
+    [AspireExport("withCloudReferenceAws")]
+    public static IResourceBuilder<FlociUIContainerResource> WithReference(
         this IResourceBuilder<FlociUIContainerResource> builder,
         IResourceBuilder<FlociAwsContainerResource> cloud)
-        => WithPluggedCloudCore(builder, cloud);
+        => WithCloudReferenceCore(builder, cloud);
 
     /// <summary>
     /// Attaches an additional Floci Azure emulator resource to an existing Floci UI console, so a
     /// single console can browse multiple clouds at once instead of creating a UI container per cloud.
     /// </summary>
+    /// <ats-summary>Attaches an additional Floci Azure resource to a Floci UI console</ats-summary>
     /// <param name="builder">The Floci UI resource builder (from the <c>configureContainer</c> callback of <c>WithFlociUI</c>).</param>
     /// <param name="cloud">The additional Floci Azure resource to attach.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociUIContainerResource}"/> for further configuration.</returns>
-    [AspireExport("withPluggedCloudAzure")]
-    public static IResourceBuilder<FlociUIContainerResource> WithPluggedCloud(
+    [AspireExport("withCloudReferenceAzure")]
+    public static IResourceBuilder<FlociUIContainerResource> WithReference(
         this IResourceBuilder<FlociUIContainerResource> builder,
         IResourceBuilder<FlociAzureContainerResource> cloud)
-        => WithPluggedCloudCore(builder, cloud);
+        => WithCloudReferenceCore(builder, cloud);
 
     /// <summary>
     /// Attaches an additional Floci GCP emulator resource to an existing Floci UI console, so a
     /// single console can browse multiple clouds at once instead of creating a UI container per cloud.
     /// </summary>
+    /// <ats-summary>Attaches an additional Floci GCP resource to a Floci UI console</ats-summary>
     /// <param name="builder">The Floci UI resource builder (from the <c>configureContainer</c> callback of <c>WithFlociUI</c>).</param>
     /// <param name="cloud">The additional Floci GCP resource to attach.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociUIContainerResource}"/> for further configuration.</returns>
-    [AspireExport("withPluggedCloudGcp")]
-    public static IResourceBuilder<FlociUIContainerResource> WithPluggedCloud(
+    [AspireExport("withCloudReferenceGcp")]
+    public static IResourceBuilder<FlociUIContainerResource> WithReference(
         this IResourceBuilder<FlociUIContainerResource> builder,
         IResourceBuilder<FlociGcpContainerResource> cloud)
-        => WithPluggedCloudCore(builder, cloud);
+        => WithCloudReferenceCore(builder, cloud);
 
-    private static IResourceBuilder<FlociUIContainerResource> WithPluggedCloudCore<TCloud>(
+    private static IResourceBuilder<FlociUIContainerResource> WithCloudReferenceCore<TCloud>(
         IResourceBuilder<FlociUIContainerResource> builder,
         IResourceBuilder<TCloud> cloud)
         where TCloud : FlociContainerResource
@@ -157,4 +158,3 @@ public static partial class FlociHostingExtension
     }
 }
 
-#pragma warning restore ASPIREATS001

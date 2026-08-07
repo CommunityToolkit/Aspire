@@ -30,21 +30,23 @@ const builder = await createBuilder();
 const aws = await builder.addFlociAws('floci-aws');
 
 const api = await builder.addProject('api', '../MyApi/MyApi.csproj')
-    .withReference(aws)
+    .withFlociAwsReference(aws)
     .waitFor(aws);
 
 await builder.build().run();
 ```
 
-`WithReference(aws)` / `withReference(aws)` uses the standard Aspire connection string injection and automatically injects the following environment variables into the dependent resource:
+`WithReference(aws)` / `withFlociAwsReference(aws)` uses the standard Aspire connection string injection and additionally injects the environment variables the AWS SDKs already read, so no SDK configuration is needed in the dependent:
 
 | Variable | Value |
 |---|---|
 | `ConnectionStrings__floci-aws` | `http://localhost:{port}` (standard Aspire connection string) |
-| `AWS_ENDPOINT_URL` | `http://localhost:{port}` (host processes) / `http://host.docker.internal:{port}` (containers) |
+| `AWS_ENDPOINT_URL` | The emulator endpoint, resolved by Aspire per dependent (see [Endpoint resolution](#endpoint-resolution)) |
 | `AWS_DEFAULT_REGION` | Region passed to `AddFlociAws`/`addFlociAws` (default: `us-east-1`) |
 | `AWS_ACCESS_KEY_ID` | `test` |
 | `AWS_SECRET_ACCESS_KEY` | `test` |
+
+> Note: In C# each cloud contributes a `WithReference` overload, so `WithReference(aws)` is picked by argument type. The generated TypeScript bindings have no overload resolution, so each cloud gets its own method: `withFlociAwsReference`, `withFlociAzureReference`, `withFlociGcpReference`.
 
 **Azure**
 
@@ -60,16 +62,16 @@ builder.AddProject<MyApi>("api")
 const azure = await builder.addFlociAzure('floci-az');
 
 await builder.addProject('api', '../MyApi/MyApi.csproj')
-    .withReference(azure)
+    .withFlociAzureReference(azure)
     .waitFor(azure);
 ```
 
-`WithReference(azure)` / `withReference(azure)` injects the following environment variables into the dependent resource:
+`WithReference(azure)` / `withFlociAzureReference(azure)` injects the following environment variables into the dependent resource:
 
 | Variable | Value |
 |---|---|
 | `ConnectionStrings__floci-az` | `http://localhost:{port}` (standard Aspire connection string) |
-| `AZURE_STORAGE_CONNECTION_STRING` | Connection string pointed at the Floci Azure endpoint, using the well-known `devstoreaccount1` dev storage account credentials |
+| `AZURE_STORAGE_CONNECTION_STRING` | Development storage connection string pointed at the Floci Azure endpoint, carrying `BlobEndpoint`, `QueueEndpoint` and `TableEndpoint` and the well-known `devstoreaccount1` dev credentials |
 
 **GCP**
 
@@ -87,20 +89,20 @@ const gcp = await builder.addFlociGcp('floci-gcp', {
 });
 
 await builder.addProject('api', '../MyApi/MyApi.csproj')
-    .withReference(gcp)
+    .withFlociGcpReference(gcp)
     .waitFor(gcp);
 ```
 
-`WithReference(gcp)` / `withReference(gcp)` injects the following environment variables into the dependent resource:
+`WithReference(gcp)` / `withFlociGcpReference(gcp)` injects the following environment variables into the dependent resource:
 
 | Variable | Value |
 |---|---|
 | `ConnectionStrings__floci-gcp` | `http://localhost:{port}` (standard Aspire connection string) |
-| `PUBSUB_EMULATOR_HOST` | `localhost:{port}` (host processes) / `host.docker.internal:{port}` (containers) |
-| `FIRESTORE_EMULATOR_HOST` | `localhost:{port}` (host processes) / `host.docker.internal:{port}` (containers) |
-| `DATASTORE_EMULATOR_HOST` | `localhost:{port}` (host processes) / `host.docker.internal:{port}` (containers) |
-| `STORAGE_EMULATOR_HOST` | `http://localhost:{port}` (host processes) / `http://host.docker.internal:{port}` (containers) |
-| `SECRET_MANAGER_EMULATOR_HOST` | `localhost:{port}` (host processes) / `host.docker.internal:{port}` (containers) |
+| `PUBSUB_EMULATOR_HOST` | `{host}:{port}` (see [Endpoint resolution](#endpoint-resolution)) |
+| `FIRESTORE_EMULATOR_HOST` | `{host}:{port}` |
+| `DATASTORE_EMULATOR_HOST` | `{host}:{port}` |
+| `STORAGE_EMULATOR_HOST` | `http://{host}:{port}` — the Storage SDK expects a full URL here, unlike the others |
+| `SECRET_MANAGER_EMULATOR_HOST` | `{host}:{port}` |
 | `GOOGLE_CLOUD_PROJECT` | Project ID passed to `AddFlociGcp`/`addFlociGcp` (default: `floci-local`) |
 | `CLOUDSDK_CORE_PROJECT` | Same project ID, for tools that read the `gcloud` CLI's config var instead |
 
@@ -237,7 +239,7 @@ await floci.withFlociUI({
 
 ### Example 6: Floci UI web console — all three clouds in one console
 
-A single UI console can attach to any combination of clouds — call `WithFlociUI`/`withFlociUI` on whichever cloud creates the console, then attach the others with `WithPluggedCloud`/`withPluggedCloud`:
+A single UI console can attach to any combination of clouds — call `WithFlociUI`/`withFlociUI` on whichever cloud creates the console, then attach the others with `WithReference`/`withCloudReference*`:
 
 ```csharp
 var aws = builder.AddFlociAws("floci-aws");
@@ -246,8 +248,8 @@ var gcp = builder.AddFlociGcp("floci-gcp");
 
 aws.WithFlociUI(configureContainer: ui =>
 {
-    ui.WithPluggedCloud(azure);
-    ui.WithPluggedCloud(gcp);
+    ui.WithReference(azure);
+    ui.WithReference(gcp);
 });
 ```
 
@@ -258,15 +260,15 @@ const gcp = await builder.addFlociGcp('floci-gcp');
 
 await aws.withFlociUI({
     configureContainer: async (ui) => {
-        await ui.withPluggedCloudAzure(azure);
-        await ui.withPluggedCloudGcp(gcp);
+        await ui.withCloudReferenceAzure(azure);
+        await ui.withCloudReferenceGcp(gcp);
     },
 });
 ```
 
 The UI container (`floci/floci-ui`) is added as a child resource of whichever cloud resource created it, wired to each attached cloud's endpoint over the container network (`FLOCI_ENDPOINT`/`FLOCI_AZURE_ENDPOINT`/`FLOCI_GCP_ENDPOINT`), and is excluded from the deployment manifest (it is a local development tool only).
 
-> Note: In C# `WithPluggedCloud` is a single overloaded method name — the compiler picks the right one from the argument type. In TypeScript there is no overload resolution on the generated bindings, so each cloud gets its own method: `withPluggedCloudAws`, `withPluggedCloudAzure`, `withPluggedCloudGcp`.
+> Note: In C# these are `WithReference` overloads on the UI resource builder — the compiler picks the right one from the argument type. In TypeScript there is no overload resolution on the generated bindings, so each cloud gets its own method: `withCloudReferenceAws`, `withCloudReferenceAzure`, `withCloudReferenceGcp`.
 
 ### Example 7: Custom Quarkus configuration file (AWS only)
 
@@ -313,4 +315,15 @@ const port = await floci.port();
 const connectionString = await floci.connectionStringExpression();
 ```
 
-`connectionStringExpression` resolves to `http://localhost:{port}` for host processes and `http://host.docker.internal:{port}` for container dependents that call `WithReference`/`withReference`.
+`connectionStringExpression` is an unresolved endpoint expression — see below.
+
+### Endpoint resolution
+
+Every environment variable this integration injects carries an Aspire endpoint expression rather than a literal address, so Aspire resolves it against the network the *dependent* is on:
+
+| Dependent | Resolves to |
+|---|---|
+| Project / executable (host process) | `localhost:{hostPort}` |
+| Sibling container | `{flociResourceName}:{targetPort}` on the container network |
+
+Nothing is hard-coded to `host.docker.internal`, so this works on Docker Desktop, plain Linux Docker, Podman and Rancher Desktop alike.

@@ -2,7 +2,7 @@ using Aspire.Hosting;
 
 namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 
-public class ContainerResourceCreationTests
+public class AwsContainerResourceCreationTests
 {
     [Fact]
     public void AddFlociAwsBuilderShouldNotBeNull()

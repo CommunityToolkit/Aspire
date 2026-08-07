@@ -1,8 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Floci;
-using Microsoft.Extensions.DependencyInjection;
-
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -29,63 +26,6 @@ public static partial class FlociHostingExtension
 
         FlociGcpContainerResource resource = new(name) { DefaultProjectId = defaultProjectId };
 
-        // BeforeStartEvent: inject the *_EMULATOR_HOST vars the GCP SDKs already honor into every
-        // resource that called WithReference(floci). Deferred so resources can be wired up in any
-        // order in Program.cs without worrying about whether Floci is fully configured yet.
-        builder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
-        {
-            var appModel = evt.Services.GetRequiredService<DistributedApplicationModel>();
-
-            foreach (var dependent in appModel.Resources)
-            {
-                bool referencesFloci = dependent.Annotations
-                    .OfType<ResourceRelationshipAnnotation>()
-                    .Any(a => ReferenceEquals(a.Resource, resource));
-
-                if (!referencesFloci)
-                    continue;
-
-                if (dependent is ContainerResource)
-                {
-                    // Containers cannot reach the host via localhost — use host.docker.internal
-                    // so they can reach the host-exposed Floci port (4588).
-                    var flociPort = resource.Port;
-                    dependent.Annotations.Add(
-                        new ContainerRuntimeArgsCallbackAnnotation(
-                            args => args.Add("--add-host=host.docker.internal:host-gateway")));
-                    dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
-                    {
-                        var hostAndPort = ReferenceExpression.Create($"host.docker.internal:{flociPort}");
-                        ctx.EnvironmentVariables["PUBSUB_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["FIRESTORE_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["DATASTORE_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["STORAGE_EMULATOR_HOST"] = ReferenceExpression.Create($"http://{hostAndPort}");
-                        ctx.EnvironmentVariables["SECRET_MANAGER_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["GOOGLE_CLOUD_PROJECT"] = resource.DefaultProjectId;
-                        ctx.EnvironmentVariables["CLOUDSDK_CORE_PROJECT"] = resource.DefaultProjectId;
-                    }));
-                }
-                else
-                {
-                    // Host processes (projects, executables) use the standard connection string
-                    // which resolves to http://localhost:{port}.
-                    dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
-                    {
-                        var hostAndPort = ReferenceExpression.Create($"{resource.Host}:{resource.Port}");
-                        ctx.EnvironmentVariables["PUBSUB_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["FIRESTORE_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["DATASTORE_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["STORAGE_EMULATOR_HOST"] = resource.ConnectionStringExpression;
-                        ctx.EnvironmentVariables["SECRET_MANAGER_EMULATOR_HOST"] = hostAndPort;
-                        ctx.EnvironmentVariables["GOOGLE_CLOUD_PROJECT"] = resource.DefaultProjectId;
-                        ctx.EnvironmentVariables["CLOUDSDK_CORE_PROJECT"] = resource.DefaultProjectId;
-                    }));
-                }
-            }
-
-            return Task.CompletedTask;
-        });
-
         var flociBuilder = builder.AddResource(resource)
             .WithImage(FlociContainerImageTags.GcpImage)
             .WithImageTag(FlociContainerImageTags.GcpTag)
@@ -104,6 +44,34 @@ public static partial class FlociHostingExtension
 
         return flociBuilder;
     }
+
+    /// <summary>
+    /// Adds a reference to a Floci GCP emulator resource, injecting the standard
+    /// <c>ConnectionStrings__{name}</c> entry plus the <c>*_EMULATOR_HOST</c> environment variables
+    /// the Google Cloud SDKs already honor, along with <c>GOOGLE_CLOUD_PROJECT</c> and
+    /// <c>CLOUDSDK_CORE_PROJECT</c>.
+    /// </summary>
+    /// <ats-summary>Adds a reference to a Floci GCP emulator resource</ats-summary>
+    /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
+    /// <param name="builder">The resource builder for the resource receiving the reference.</param>
+    /// <param name="floci">The Floci GCP resource to reference.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TDestination}"/> for further configuration.</returns>
+    [AspireExport("withFlociGcpReference")]
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<FlociGcpContainerResource> floci)
+        where TDestination : IResourceWithEnvironment
+        => WithFlociReferenceCore(builder, floci, static (context, resource, endpoint) =>
+        {
+            // The Google SDKs expect host:port for these, but STORAGE_EMULATOR_HOST is a full URL.
+            context.EnvironmentVariables["PUBSUB_EMULATOR_HOST"] = endpoint.HostAndPort;
+            context.EnvironmentVariables["FIRESTORE_EMULATOR_HOST"] = endpoint.HostAndPort;
+            context.EnvironmentVariables["DATASTORE_EMULATOR_HOST"] = endpoint.HostAndPort;
+            context.EnvironmentVariables["STORAGE_EMULATOR_HOST"] = endpoint.Url;
+            context.EnvironmentVariables["SECRET_MANAGER_EMULATOR_HOST"] = endpoint.HostAndPort;
+            context.EnvironmentVariables["GOOGLE_CLOUD_PROJECT"] = resource.DefaultProjectId;
+            context.EnvironmentVariables["CLOUDSDK_CORE_PROJECT"] = resource.DefaultProjectId;
+        });
 
     /// <summary>
     /// Mounts the Docker socket into the Floci GCP container so that Cloud Run, Cloud SQL, and other
@@ -172,4 +140,3 @@ public static partial class FlociHostingExtension
     }
 }
 
-#pragma warning restore ASPIREATS001

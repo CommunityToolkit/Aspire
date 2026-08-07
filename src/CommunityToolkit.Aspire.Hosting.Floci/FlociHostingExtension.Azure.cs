@@ -1,8 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Floci;
-using Microsoft.Extensions.DependencyInjection;
-
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -27,53 +24,6 @@ public static partial class FlociHostingExtension
 
         FlociAzureContainerResource resource = new(name);
 
-        // BeforeStartEvent: inject an Azure Storage connection string into every resource that
-        // called WithReference(floci). Deferred so resources can be wired up in any order in
-        // Program.cs without worrying about whether Floci is fully configured yet.
-        builder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
-        {
-            var appModel = evt.Services.GetRequiredService<DistributedApplicationModel>();
-
-            foreach (var dependent in appModel.Resources)
-            {
-                bool referencesFloci = dependent.Annotations
-                    .OfType<ResourceRelationshipAnnotation>()
-                    .Any(a => ReferenceEquals(a.Resource, resource));
-
-                if (!referencesFloci)
-                    continue;
-
-                if (dependent is ContainerResource)
-                {
-                    // Containers cannot reach the host via localhost — use host.docker.internal
-                    // so they can reach the host-exposed Floci port (4577).
-                    var flociPort = resource.Port;
-                    dependent.Annotations.Add(
-                        new ContainerRuntimeArgsCallbackAnnotation(
-                            args => args.Add("--add-host=host.docker.internal:host-gateway")));
-                    dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
-                    {
-                        var blobEndpoint = ReferenceExpression.Create($"http://host.docker.internal:{flociPort}/{FlociAzureContainerResource.DefaultAccountName}");
-                        ctx.EnvironmentVariables["AZURE_STORAGE_CONNECTION_STRING"] = ReferenceExpression.Create(
-                            $"DefaultEndpointsProtocol=http;AccountName={FlociAzureContainerResource.DefaultAccountName};AccountKey={FlociAzureContainerResource.DefaultAccountKey};BlobEndpoint={blobEndpoint};");
-                    }));
-                }
-                else
-                {
-                    // Host processes (projects, executables) use the standard connection string
-                    // which resolves to http://localhost:{port}.
-                    dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
-                    {
-                        var blobEndpoint = ReferenceExpression.Create($"{resource.ConnectionStringExpression}/{FlociAzureContainerResource.DefaultAccountName}");
-                        ctx.EnvironmentVariables["AZURE_STORAGE_CONNECTION_STRING"] = ReferenceExpression.Create(
-                            $"DefaultEndpointsProtocol=http;AccountName={FlociAzureContainerResource.DefaultAccountName};AccountKey={FlociAzureContainerResource.DefaultAccountKey};BlobEndpoint={blobEndpoint};");
-                    }));
-                }
-            }
-
-            return Task.CompletedTask;
-        });
-
         var flociBuilder = builder.AddResource(resource)
             .WithImage(FlociContainerImageTags.AzureImage)
             .WithImageTag(FlociContainerImageTags.AzureTag)
@@ -91,6 +41,34 @@ public static partial class FlociHostingExtension
 
         return flociBuilder;
     }
+
+    /// <summary>
+    /// Adds a reference to a Floci Azure emulator resource, injecting the standard
+    /// <c>ConnectionStrings__{name}</c> entry plus <c>AZURE_STORAGE_CONNECTION_STRING</c> — a
+    /// development storage connection string carrying the <c>Blob</c>, <c>Queue</c> and <c>Table</c>
+    /// endpoints so all three Azure Storage SDK clients resolve to the emulator.
+    /// </summary>
+    /// <ats-summary>Adds a reference to a Floci Azure emulator resource</ats-summary>
+    /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
+    /// <param name="builder">The resource builder for the resource receiving the reference.</param>
+    /// <param name="floci">The Floci Azure resource to reference.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TDestination}"/> for further configuration.</returns>
+    [AspireExport("withFlociAzureReference")]
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<FlociAzureContainerResource> floci)
+        where TDestination : IResourceWithEnvironment
+        => WithFlociReferenceCore(builder, floci, static (context, resource, endpoint) =>
+        {
+            // floci-az serves Blob, Queue and Table from the same port, so all three endpoints
+            // share one URL. Omitting Queue/Table would leave those SDK clients falling back to
+            // the public core.windows.net endpoints.
+            var account = FlociAzureContainerResource.DefaultAccountName;
+            var serviceEndpoint = ReferenceExpression.Create($"{endpoint.Url}/{account}");
+
+            context.EnvironmentVariables["AZURE_STORAGE_CONNECTION_STRING"] = ReferenceExpression.Create(
+                $"DefaultEndpointsProtocol=http;AccountName={account};AccountKey={FlociAzureContainerResource.DefaultAccountKey};BlobEndpoint={serviceEndpoint};QueueEndpoint={serviceEndpoint};TableEndpoint={serviceEndpoint};");
+        });
 
     /// <summary>
     /// Mounts the Docker socket into the Floci Azure container so that Azure Functions and other
@@ -159,4 +137,3 @@ public static partial class FlociHostingExtension
     }
 }
 
-#pragma warning restore ASPIREATS001

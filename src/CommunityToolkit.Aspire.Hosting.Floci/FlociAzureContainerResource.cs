@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -27,4 +25,3 @@ public class FlociAzureContainerResource(string name) : FlociContainerResource(n
     internal override string StorageModeEnvVar => "FLOCI_AZ_STORAGE_MODE";
 }
 
-#pragma warning restore ASPIREATS001

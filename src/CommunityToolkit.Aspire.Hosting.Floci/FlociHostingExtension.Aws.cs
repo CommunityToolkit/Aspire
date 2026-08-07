@@ -1,8 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
 using CommunityToolkit.Aspire.Hosting.Floci;
-using Microsoft.Extensions.DependencyInjection;
-
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
 
 namespace Aspire.Hosting;
 
@@ -34,63 +31,6 @@ public static partial class FlociHostingExtension
 
         FlociAwsContainerResource resource = new(name) { DefaultRegion = defaultRegion, DefaultAccountId = defaultAccountId };
 
-        // BeforeStartEvent: inject standard AWS env vars into every resource that called
-        // WithReference(floci). Standard WithReference already injects ConnectionStrings__<name>;
-        // this subscriber additionally sets AWS_ENDPOINT_URL (and companions) so the AWS SDK
-        // needs no extra configuration in dependent services.
-        //
-        // Processing is deferred to BeforeStartEvent so resources can be wired up in any order
-        // in Program.cs without worrying about whether Floci is fully configured yet.
-        builder.Eventing.Subscribe<BeforeStartEvent>((evt, ct) =>
-        {
-            var appModel = evt.Services.GetRequiredService<DistributedApplicationModel>();
-
-            foreach (var dependent in appModel.Resources)
-            {
-                // Standard WithReference(floci) adds a ResourceRelationshipAnnotation pointing to
-                // our resource. Detect dependents without needing a separate tracking collection.
-                bool referencesFloci = dependent.Annotations
-                    .OfType<ResourceRelationshipAnnotation>()
-                    .Any(a => ReferenceEquals(a.Resource, resource));
-
-                if (!referencesFloci)
-                    continue;
-
-                if (dependent is ContainerResource)
-                {
-                    // Containers cannot reach the host via localhost — use host.docker.internal
-                    // so they can reach the host-exposed Floci port (4566).
-                    var flociPort = resource.Port;
-                    // Ensure host.docker.internal resolves inside containers.
-                    dependent.Annotations.Add(
-                        new ContainerRuntimeArgsCallbackAnnotation(
-                            args => args.Add("--add-host=host.docker.internal:host-gateway")));
-                    dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
-                    {
-                        ctx.EnvironmentVariables["AWS_ENDPOINT_URL"] =
-                            ReferenceExpression.Create($"http://host.docker.internal:{flociPort}");
-                        ctx.EnvironmentVariables["AWS_DEFAULT_REGION"] = resource.DefaultRegion;
-                        ctx.EnvironmentVariables["AWS_ACCESS_KEY_ID"] = "test";
-                        ctx.EnvironmentVariables["AWS_SECRET_ACCESS_KEY"] = "test";
-                    }));
-                }
-                else
-                {
-                    // Host processes (projects, executables) use the standard connection string
-                    // which resolves to http://localhost:{port}.
-                    dependent.Annotations.Add(new EnvironmentCallbackAnnotation(ctx =>
-                    {
-                        ctx.EnvironmentVariables["AWS_ENDPOINT_URL"] = resource.ConnectionStringExpression;
-                        ctx.EnvironmentVariables["AWS_DEFAULT_REGION"] = resource.DefaultRegion;
-                        ctx.EnvironmentVariables["AWS_ACCESS_KEY_ID"] = "test";
-                        ctx.EnvironmentVariables["AWS_SECRET_ACCESS_KEY"] = "test";
-                    }));
-                }
-            }
-
-            return Task.CompletedTask;
-        });
-
         var flociBuilder = builder.AddResource(resource)
             .WithImage(FlociContainerImageTags.AwsImage)
             .WithImageTag(FlociContainerImageTags.AwsTag)
@@ -110,6 +50,30 @@ public static partial class FlociHostingExtension
 
         return flociBuilder;
     }
+
+    /// <summary>
+    /// Adds a reference to a Floci AWS emulator resource, injecting the standard
+    /// <c>ConnectionStrings__{name}</c> entry plus the AWS SDK environment variables
+    /// (<c>AWS_ENDPOINT_URL</c>, <c>AWS_DEFAULT_REGION</c>, <c>AWS_ACCESS_KEY_ID</c>,
+    /// <c>AWS_SECRET_ACCESS_KEY</c>) so dependent services need no further configuration.
+    /// </summary>
+    /// <ats-summary>Adds a reference to a Floci AWS emulator resource</ats-summary>
+    /// <typeparam name="TDestination">The type of the resource receiving the reference.</typeparam>
+    /// <param name="builder">The resource builder for the resource receiving the reference.</param>
+    /// <param name="floci">The Floci AWS resource to reference.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{TDestination}"/> for further configuration.</returns>
+    [AspireExport("withFlociAwsReference")]
+    public static IResourceBuilder<TDestination> WithReference<TDestination>(
+        this IResourceBuilder<TDestination> builder,
+        IResourceBuilder<FlociAwsContainerResource> floci)
+        where TDestination : IResourceWithEnvironment
+        => WithFlociReferenceCore(builder, floci, static (context, resource, endpoint) =>
+        {
+            context.EnvironmentVariables["AWS_ENDPOINT_URL"] = endpoint.Url;
+            context.EnvironmentVariables["AWS_DEFAULT_REGION"] = resource.DefaultRegion;
+            context.EnvironmentVariables["AWS_ACCESS_KEY_ID"] = FlociAwsContainerResource.DefaultAccessKeyId;
+            context.EnvironmentVariables["AWS_SECRET_ACCESS_KEY"] = FlociAwsContainerResource.DefaultSecretAccessKey;
+        });
 
     /// <summary>
     /// Mounts the Docker socket into the Floci container so that Lambda and other
@@ -177,4 +141,3 @@ public static partial class FlociHostingExtension
 
 }
 
-#pragma warning restore ASPIREATS001

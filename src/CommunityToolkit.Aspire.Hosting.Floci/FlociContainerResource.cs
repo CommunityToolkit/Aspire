@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREATS001 // AspireExport is experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
@@ -31,7 +29,9 @@ public abstract class FlociContainerResource(string name, string endpointName) :
     public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
 
     /// <summary>
-    /// Gets the emulator endpoint URL.
+    /// Gets the emulator endpoint URL. Always <c>http</c>: none of the Floci images
+    /// (<c>floci/floci</c>, <c>floci/floci-az</c>, <c>floci/floci-gcp</c>) expose certificate
+    /// configuration, so there is no TLS listener to point an <c>https</c> scheme at.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create($"http://{Host}:{Port}");
@@ -45,7 +45,7 @@ public abstract class FlociContainerResource(string name, string endpointName) :
 
     /// <summary>
     /// Sets the Floci UI environment variables needed for this cloud's adapter to connect.
-    /// Implemented by each concrete cloud resource so <c>WithFlociUI</c> and <c>WithPluggedCloud</c>
+    /// Implemented by each concrete cloud resource so <c>WithFlociUI</c> and the UI's <c>WithReference</c> overloads
     /// can attach any combination of clouds to a single shared UI container.
     /// </summary>
     internal abstract void ApplyUIEnvironment(EnvironmentCallbackContext context);
@@ -64,4 +64,3 @@ public abstract class FlociContainerResource(string name, string endpointName) :
     internal abstract string StorageModeEnvVar { get; }
 }
 
-#pragma warning restore ASPIREATS001

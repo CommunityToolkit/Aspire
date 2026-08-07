@@ -1,11 +1,9 @@
-#pragma warning disable ASPIREATS001 // AspireExport is still experimental
-
 namespace Aspire.Hosting.ApplicationModel;
 
 /// <summary>
 /// Resource for the Floci UI web console container. A single UI instance can attach to any
 /// combination of Floci cloud resources (AWS, Azure, GCP) — one created it via <c>WithFlociUI</c>
-/// (its <see cref="Parent"/>), and any others are attached via <c>WithPluggedCloud</c>.
+/// (its <see cref="Parent"/>), and any others are attached via <c>WithReference</c>.
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="floci">The Floci cloud resource that created this UI instance.</param>
@@ -46,4 +44,3 @@ public class FlociUIContainerResource(string name, FlociContainerResource floci)
     public EndpointReference PrimaryEndpoint => _primaryEndpoint ??= new(this, PrimaryEndpointName);
 }
 
-#pragma warning restore ASPIREATS001

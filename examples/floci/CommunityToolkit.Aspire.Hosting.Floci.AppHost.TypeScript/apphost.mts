@@ -10,11 +10,11 @@ const flociAzure = await builder.addFlociAzure('floci-az');
 const flociGcp = await builder.addFlociGcp('floci-gcp');
 
 // A single Floci UI console browses all three clouds — flociAws.withFlociUI() creates the
-// console wired to AWS, then withPluggedCloud attaches the Azure and GCP resources to it.
+// console wired to AWS, then withCloudReference* attaches the Azure and GCP resources to it.
 await flociAws.withFlociUI({
     configureContainer: async (ui) => {
-        await ui.withPluggedCloudAzure(flociAzure);
-        await ui.withPluggedCloudGcp(flociGcp);
+        await ui.withCloudReferenceAzure(flociAzure);
+        await ui.withCloudReferenceGcp(flociGcp);
     },
 });
 
@@ -25,9 +25,9 @@ const apiServiceProjectPath = path.join(appHostDirectory, "..", apiServiceProjec
 const apiService = await builder.addProject("floci-api", apiServiceProjectPath)
     .withExternalHttpEndpoints()
     .withHttpHealthCheck({ path: "/health" })
-    .withReference(flociAws)
-    .withReference(flociAzure)
-    .withReference(flociGcp)
+    .withFlociAwsReference(flociAws)
+    .withFlociAzureReference(flociAzure)
+    .withFlociGcpReference(flociGcp)
     .waitFor(flociAws)
     .waitFor(flociAzure)
     .waitFor(flociGcp);
@@ -108,8 +108,8 @@ if (includeCompileOnlyScenarios) {
     await _configured.withConfigFile('./floci.yml');
 
     // ── Connection string / endpoint properties — all three clouds ────────────
-    //   connectionStringExpression → http://localhost:{port}  (host processes)
-    //                               http://host.docker.internal:{port}  (containers)
+    //   connectionStringExpression → an Aspire endpoint expression; resolved to localhost:{hostPort}
+    //                               for host processes and {name}:{targetPort} for sibling containers.
     const _awsEndpoint = await flociAws.primaryEndpoint();
     const _awsHost = await flociAws.host();
     const _awsPort = await flociAws.port();
@@ -126,9 +126,9 @@ if (includeCompileOnlyScenarios) {
     const _gcpConnectionString = await flociGcp.connectionStringExpression();
 
     // ── WithReference — env var injection per cloud ────────────────────────────
-    //   Standard WithReference injects:
+    //   withFlociAwsReference / withFlociAzureReference / withFlociGcpReference inject:
     //     ConnectionStrings__floci        = http://localhost:{port}
-    //     AWS_ENDPOINT_URL                = http://localhost:{port}  (or host.docker.internal for containers)
+    //     AWS_ENDPOINT_URL                = the emulator endpoint, resolved per dependent by Aspire
     //     AWS_DEFAULT_REGION              = us-east-1
     //     AWS_ACCESS_KEY_ID               = test
     //     AWS_SECRET_ACCESS_KEY           = test
@@ -137,15 +137,15 @@ if (includeCompileOnlyScenarios) {
     //            STORAGE_EMULATOR_HOST, SECRET_MANAGER_EMULATOR_HOST, GOOGLE_CLOUD_PROJECT
     const _project = await builder
         .addProject('api', '../FlociApi/FlociApi.csproj')
-        .withReference(flociAws)
-        .withReference(flociAzure)
-        .withReference(flociGcp);
+        .withFlociAwsReference(flociAws)
+        .withFlociAzureReference(flociAzure)
+        .withFlociGcpReference(flociGcp);
 
     const _container = await builder
         .addContainer('worker', 'myorg/worker')
-        .withReference(flociAws)
-        .withReference(flociAzure)
-        .withReference(flociGcp);
+        .withFlociAwsReference(flociAws)
+        .withFlociAzureReference(flociAzure)
+        .withFlociGcpReference(flociGcp);
 }
 
 await builder.build().run();

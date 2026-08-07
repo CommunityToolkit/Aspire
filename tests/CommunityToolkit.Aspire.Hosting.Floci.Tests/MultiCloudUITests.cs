@@ -5,7 +5,7 @@ namespace CommunityToolkit.Aspire.Hosting.Floci.Tests;
 public class MultiCloudUITests
 {
     [Fact]
-    public void WithPluggedCloudAttachesAdditionalCloudsToSingleUIContainer()
+    public void WithReferenceAttachesAdditionalCloudsToSingleUIContainer()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
@@ -15,8 +15,8 @@ public class MultiCloudUITests
         builder.AddFlociAws("floci")
             .WithFlociUI(configureContainer: ui =>
             {
-                ui.WithPluggedCloud(azure);
-                ui.WithPluggedCloud(gcp);
+                ui.WithReference(azure);
+                ui.WithReference(gcp);
             });
 
         using var app = builder.Build();
@@ -27,7 +27,7 @@ public class MultiCloudUITests
     }
 
     [Fact]
-    public async Task WithPluggedCloudSetsEachCloudsEnvironmentVariablesOnTheSharedUIContainer()
+    public async Task WithReferenceSetsEachCloudsEnvironmentVariablesOnTheSharedUIContainer()
     {
         IDistributedApplicationBuilder builder = DistributedApplication.CreateBuilder();
 
@@ -37,8 +37,8 @@ public class MultiCloudUITests
         builder.AddFlociAws("floci")
             .WithFlociUI(configureContainer: ui =>
             {
-                ui.WithPluggedCloud(azure);
-                ui.WithPluggedCloud(gcp);
+                ui.WithReference(azure);
+                ui.WithReference(gcp);
             });
 
         using var app = builder.Build();
@@ -59,7 +59,7 @@ public class MultiCloudUITests
         Assert.True(envVars.ContainsKey(FlociUIContainerResource.EndpointEnvVar));
         Assert.Equal("test", envVars[FlociUIContainerResource.AccessKeyIdEnvVar].ToString());
 
-        // Azure and GCP vars — set via WithPluggedCloud on the same container.
+        // Azure and GCP vars — set via WithReference on the same container.
         var azureEndpoint = Assert.IsType<ReferenceExpression>(envVars[FlociUIContainerResource.AzureEndpointEnvVar]);
         Assert.Contains("floci-az.bindings.azure.url", azureEndpoint.ValueExpression);
         Assert.Equal("devstoreaccount1", envVars[FlociUIContainerResource.AzureAccountNameEnvVar].ToString());
@@ -70,10 +70,10 @@ public class MultiCloudUITests
     }
 
     [Fact]
-    public void WithPluggedCloudBuilderShouldNotBeNull()
+    public void WithReferenceBuilderShouldNotBeNull()
     {
         IResourceBuilder<FlociUIContainerResource> builder = null!;
         IResourceBuilder<FlociAzureContainerResource> azure = null!;
-        Assert.Throws<ArgumentNullException>(() => builder.WithPluggedCloud(azure));
+        Assert.Throws<ArgumentNullException>(() => builder.WithReference(azure));
     }
 }
