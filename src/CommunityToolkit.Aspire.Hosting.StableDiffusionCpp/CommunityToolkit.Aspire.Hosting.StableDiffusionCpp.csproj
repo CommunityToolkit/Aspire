@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>An Aspire hosting integration for the stable-diffusion.cpp image generation server.</Description>
+    <AdditionalPackageTags>hosting stable-diffusion ai image-generation huggingface</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CommunityToolkit.Aspire.Hosting.StableDiffusionCpp.Tests" />
+  </ItemGroup>
+
+</Project>
