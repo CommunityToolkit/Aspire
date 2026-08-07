@@ -165,7 +165,7 @@ public class GcpContainerResourceCreationTests
         }
 
         var endpointExpression = Assert.IsType<ReferenceExpression>(envVars[FlociUIContainerResource.GcpEndpointEnvVar]);
-        Assert.Contains("floci-gcp.bindings.gcp.url", endpointExpression.ValueExpression);
+        Assert.Equal("http://{floci-gcp.bindings.gcp.host}:{floci-gcp.bindings.gcp.port}", endpointExpression.ValueExpression);
         Assert.Equal("my-project", envVars[FlociUIContainerResource.GcpProjectEnvVar].ToString());
     }
 

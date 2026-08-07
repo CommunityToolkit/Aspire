@@ -260,15 +260,15 @@ const gcp = await builder.addFlociGcp('floci-gcp');
 
 await aws.withFlociUI({
     configureContainer: async (ui) => {
-        await ui.withCloudReferenceAzure(azure);
-        await ui.withCloudReferenceGcp(gcp);
+        await ui.withFlociAzureReference(azure);
+        await ui.withFlociGcpReference(gcp);
     },
 });
 ```
 
 The UI container (`floci/floci-ui`) is added as a child resource of whichever cloud resource created it, wired to each attached cloud's endpoint over the container network (`FLOCI_ENDPOINT`/`FLOCI_AZURE_ENDPOINT`/`FLOCI_GCP_ENDPOINT`), and is excluded from the deployment manifest (it is a local development tool only).
 
-> Note: In C# these are `WithReference` overloads on the UI resource builder — the compiler picks the right one from the argument type. In TypeScript there is no overload resolution on the generated bindings, so each cloud gets its own method: `withCloudReferenceAws`, `withCloudReferenceAzure`, `withCloudReferenceGcp`.
+> Note: In C# these are `WithReference` overloads on the UI resource builder — the compiler picks the right one from the argument type. In TypeScript there is no overload resolution on the generated bindings, so each cloud gets its own method: `withFlociAwsReference`, `withFlociAzureReference`, `withFlociGcpReference`.
 
 ### Example 7: Custom Quarkus configuration file (AWS only)
 
@@ -296,6 +296,48 @@ quarkus:
 ```
 
 All Floci settings can also be set via `FLOCI_`-prefixed environment variables — `WithConfigFile`/`withConfigFile` is only needed for settings that do not have a dedicated extension method. This is currently only available for the AWS emulator.
+
+### Example 8: TLS / HTTPS (AWS and Azure)
+
+Both images serve HTTP **and** HTTPS on the *same* port, so enabling TLS never changes the port — only the scheme handed to dependents.
+
+The integration hooks Aspire's own certificate plumbing, so the idiomatic Aspire APIs just work: configure a certificate and the emulator picks it up. Nothing Floci-specific to call.
+
+```csharp
+var aws = builder.AddFlociAws("floci-aws")
+    .WithHttpsDeveloperCertificate();     // Aspire API — provisions and mounts the key pair
+
+var azure = builder.AddFlociAzure("floci-az")
+    .WithHttpsDeveloperCertificate();
+
+builder.AddProject<MyApi>("api")
+    .WithReference(aws)     // AWS_ENDPOINT_URL                = https://...
+    .WithReference(azure);  // AZURE_STORAGE_CONNECTION_STRING = DefaultEndpointsProtocol=https;...
+```
+
+```typescript
+const aws = await builder.addFlociAws('floci-aws');
+await aws.withHttpsDeveloperCertificate();
+```
+
+Under the hood the integration registers a `WithHttpsCertificateConfiguration` callback that maps Aspire's provisioned paths onto the image's own settings, and switches the primary endpoint to `https` before start:
+
+| Aspire-provided value | AWS | Azure |
+|---|---|---|
+| — | `FLOCI_TLS_ENABLED=true` | `FLOCI_AZ_TLS_ENABLED=true` |
+| — | `FLOCI_TLS_SELF_SIGNED=false` | `FLOCI_AZ_TLS_SELF_SIGNED=false` |
+| `context.CertificatePath` | `FLOCI_TLS_CERT_PATH` | `FLOCI_AZ_TLS_CERT_PATH` |
+| `context.KeyPath` | `FLOCI_TLS_KEY_PATH` | `FLOCI_AZ_TLS_KEY_PATH` |
+
+Because the ASP.NET Core development certificate is already in your machine's trust store, host-process dependents validate it with no extra client configuration. For container dependents, add Aspire's `WithDeveloperCertificateTrust(true)` to install the trust bundle. Any other Aspire certificate source (`WithHttpsCertificate(...)`, `WithCertificatesFromFile`, `WithCertificatesFromStore`) is honoured the same way.
+
+Reach for this when a client refuses plain HTTP — the Cosmos DB Java SDK, or the `azurerm` Terraform/OpenTofu provider, which discovers the cloud over `https://<host>/metadata/endpoints`.
+
+> Plain HTTP stays the default. Unlike HTTPS-first resources, merely having a trusted development certificate on the machine does **not** flip an existing AppHost to `https` — a certificate has to be asked for explicitly.
+>
+> The [Floci UI](#example-5-floci-ui-web-console--single-cloud) console keeps using the emulator's plain-HTTP listener even when TLS is on. It reaches the emulator by container-network name, which neither the development certificate (SAN `localhost` only) nor a host-issued certificate covers, so HTTPS there would fail hostname validation regardless of trust. Since both protocols share the port, the console connects normally.
+>
+> The GCP emulator (`floci/floci-gcp`) has no HTTPS listener, so no certificate callback is registered for it and a configured certificate has no effect there.
 
 ### Connection string / endpoint properties
 
@@ -327,3 +369,5 @@ Every environment variable this integration injects carries an Aspire endpoint e
 | Sibling container | `{flociResourceName}:{targetPort}` on the container network |
 
 Nothing is hard-coded to `host.docker.internal`, so this works on Docker Desktop, plain Linux Docker, Podman and Rancher Desktop alike.
+
+The scheme is `http` unless [a certificate has been configured](#example-8-tls--https-aws-and-azure), in which case it becomes `https` on the same port.

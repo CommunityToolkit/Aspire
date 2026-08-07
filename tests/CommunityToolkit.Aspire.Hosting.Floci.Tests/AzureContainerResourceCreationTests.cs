@@ -164,7 +164,7 @@ public class AzureContainerResourceCreationTests
         }
 
         var endpointExpression = Assert.IsType<ReferenceExpression>(envVars[FlociUIContainerResource.AzureEndpointEnvVar]);
-        Assert.Contains("floci-az.bindings.azure.url", endpointExpression.ValueExpression);
+        Assert.Equal("http://{floci-az.bindings.azure.host}:{floci-az.bindings.azure.port}", endpointExpression.ValueExpression);
         Assert.Equal("devstoreaccount1", envVars[FlociUIContainerResource.AzureAccountNameEnvVar].ToString());
     }
 

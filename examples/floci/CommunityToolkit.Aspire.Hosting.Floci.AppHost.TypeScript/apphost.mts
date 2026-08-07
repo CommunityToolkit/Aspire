@@ -13,8 +13,8 @@ const flociGcp = await builder.addFlociGcp('floci-gcp');
 // console wired to AWS, then withCloudReference* attaches the Azure and GCP resources to it.
 await flociAws.withFlociUI({
     configureContainer: async (ui) => {
-        await ui.withCloudReferenceAzure(flociAzure);
-        await ui.withCloudReferenceGcp(flociGcp);
+        await ui.withAzureReference(flociAzure);
+        await ui.withGcpReference(flociGcp);
     },
 });
 
@@ -100,6 +100,19 @@ if (includeCompileOnlyScenarios) {
 
     const _gcpMount = await builder.addFlociGcp('floci-gcp-mount');
     await _gcpMount.withDataBindMount('/tmp/floci-gcp-data');
+
+    // ── TLS / HTTPS (AWS and Azure) ────────────────────────────────────────────
+    // Both images serve HTTP and HTTPS on the same port, so enabling TLS never changes
+    // the port — only the scheme handed to dependents. No TLS on GCP: that image has
+    // no HTTPS listener.
+    //
+    // Aspire provisions and mounts the key pair; the integration maps its paths onto the
+    // image's own FLOCI_TLS_* settings and switches the endpoint to https.
+    const _tlsDevCert = await builder.addFlociAws('floci-tls');
+    await _tlsDevCert.withHttpsDeveloperCertificate();
+
+    const _tlsAzureDevCert = await builder.addFlociAzure('floci-az-tls');
+    await _tlsAzureDevCert.withHttpsDeveloperCertificate();
 
     // ── Custom Quarkus config file (AWS only) ──────────────────────────────────
     // Mounts application.yml read-only at /deployments/config/application.yml

@@ -1,7 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var flociAws = builder.AddFlociAws("floci-aws");
-var flociAzure = builder.AddFlociAzure("floci-az");
+var flociAws = builder.AddFlociAws("floci-aws")
+    .WithHttpsDeveloperCertificate();
+var flociAzure = builder.AddFlociAzure("floci-az")
+    .WithHttpsDeveloperCertificate();
 var flociGcp = builder.AddFlociGcp("floci-gcp");
 
 // A single Floci UI console browses all three clouds — flociAws.WithFlociUI() creates the

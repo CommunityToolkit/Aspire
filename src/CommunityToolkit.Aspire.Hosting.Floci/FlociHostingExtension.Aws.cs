@@ -48,6 +48,8 @@ public static partial class FlociHostingExtension
                 statusCode: 200,
                 endpointName: FlociAwsContainerResource.AwsEndpointName);
 
+        ConfigureTlsCore(builder, flociBuilder);
+
         return flociBuilder;
     }
 

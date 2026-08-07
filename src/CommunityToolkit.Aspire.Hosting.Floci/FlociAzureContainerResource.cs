@@ -16,12 +16,17 @@ public class FlociAzureContainerResource(string name) : FlociContainerResource(n
 
     internal override void ApplyUIEnvironment(EnvironmentCallbackContext context)
     {
-        context.EnvironmentVariables[FlociUIContainerResource.AzureEndpointEnvVar] =
-            ReferenceExpression.Create($"{PrimaryEndpoint}");
+        context.EnvironmentVariables[FlociUIContainerResource.AzureEndpointEnvVar] = UIEndpointExpression;
         context.EnvironmentVariables[FlociUIContainerResource.AzureAccountNameEnvVar] = DefaultAccountName;
     }
 
     internal override string DockerHostEnvVar => "FLOCI_AZ_DOCKER_DOCKER_HOST";
     internal override string StorageModeEnvVar => "FLOCI_AZ_STORAGE_MODE";
+
+    internal override CommunityToolkit.Aspire.Hosting.Floci.FlociTlsEnvVars TlsEnvVars => new(
+        Enabled: "FLOCI_AZ_TLS_ENABLED",
+        CertPath: "FLOCI_AZ_TLS_CERT_PATH",
+        KeyPath: "FLOCI_AZ_TLS_KEY_PATH",
+        SelfSigned: "FLOCI_AZ_TLS_SELF_SIGNED");
 }
 

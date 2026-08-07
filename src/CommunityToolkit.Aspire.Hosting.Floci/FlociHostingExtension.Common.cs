@@ -38,11 +38,16 @@ public static partial class FlociHostingExtension
         IResourceBuilder<IResourceWithConnectionString> connectionStringSource = floci;
         builder.WithReference(connectionStringSource);
 
-        FlociEndpoint endpoint = new(
-            HostAndPort: ReferenceExpression.Create($"{resource.Host}:{resource.Port}"),
-            Url: resource.ConnectionStringExpression);
+        // Built inside the callback, not captured here, so the scheme is read after the whole
+        // AppHost has been configured, so a certificate configured after WithReference still applies.
+        return builder.WithEnvironment(context =>
+        {
+            FlociEndpoint endpoint = new(
+                HostAndPort: ReferenceExpression.Create($"{resource.Host}:{resource.Port}"),
+                Url: resource.ConnectionStringExpression);
 
-        return builder.WithEnvironment(context => configureEnvironment(context, resource, endpoint));
+            configureEnvironment(context, resource, endpoint);
+        });
     }
 
     /// <summary>

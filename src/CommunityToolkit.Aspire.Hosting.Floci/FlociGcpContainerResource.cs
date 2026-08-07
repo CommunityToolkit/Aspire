@@ -19,8 +19,7 @@ public class FlociGcpContainerResource(string name) : FlociContainerResource(nam
 
     internal override void ApplyUIEnvironment(EnvironmentCallbackContext context)
     {
-        context.EnvironmentVariables[FlociUIContainerResource.GcpEndpointEnvVar] =
-            ReferenceExpression.Create($"{PrimaryEndpoint}");
+        context.EnvironmentVariables[FlociUIContainerResource.GcpEndpointEnvVar] = UIEndpointExpression;
         context.EnvironmentVariables[FlociUIContainerResource.GcpProjectEnvVar] = DefaultProjectId;
     }
 

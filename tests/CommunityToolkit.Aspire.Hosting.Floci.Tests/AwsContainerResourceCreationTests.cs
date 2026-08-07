@@ -146,7 +146,7 @@ public class AwsContainerResourceCreationTests
         }
 
         var endpointExpression = Assert.IsType<ReferenceExpression>(envVars[FlociUIContainerResource.EndpointEnvVar]);
-        Assert.Contains("floci.bindings.aws.url", endpointExpression.ValueExpression);
+        Assert.Equal("http://{floci.bindings.aws.host}:{floci.bindings.aws.port}", endpointExpression.ValueExpression);
         Assert.Equal("eu-west-1", envVars[FlociUIContainerResource.RegionEnvVar].ToString());
         Assert.Equal("test", envVars[FlociUIContainerResource.AccessKeyIdEnvVar].ToString());
         Assert.Equal("test", envVars[FlociUIContainerResource.SecretAccessKeyEnvVar].ToString());

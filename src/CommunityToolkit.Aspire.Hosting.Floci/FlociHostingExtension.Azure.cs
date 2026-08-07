@@ -39,6 +39,8 @@ public static partial class FlociHostingExtension
                 statusCode: 200,
                 endpointName: resource.EndpointName);
 
+        ConfigureTlsCore(builder, flociBuilder);
+
         return flociBuilder;
     }
 
@@ -67,7 +69,8 @@ public static partial class FlociHostingExtension
             var serviceEndpoint = ReferenceExpression.Create($"{endpoint.Url}/{account}");
 
             context.EnvironmentVariables["AZURE_STORAGE_CONNECTION_STRING"] = ReferenceExpression.Create(
-                $"DefaultEndpointsProtocol=http;AccountName={account};AccountKey={FlociAzureContainerResource.DefaultAccountKey};BlobEndpoint={serviceEndpoint};QueueEndpoint={serviceEndpoint};TableEndpoint={serviceEndpoint};");
+                $"DefaultEndpointsProtocol={resource.Scheme};AccountName={account};AccountKey={FlociAzureContainerResource.DefaultAccountKey};BlobEndpoint={serviceEndpoint};QueueEndpoint={serviceEndpoint};TableEndpoint={serviceEndpoint};");
+
         });
 
     /// <summary>

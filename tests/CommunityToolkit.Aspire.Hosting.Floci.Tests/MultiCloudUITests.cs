@@ -61,11 +61,11 @@ public class MultiCloudUITests
 
         // Azure and GCP vars — set via WithReference on the same container.
         var azureEndpoint = Assert.IsType<ReferenceExpression>(envVars[FlociUIContainerResource.AzureEndpointEnvVar]);
-        Assert.Contains("floci-az.bindings.azure.url", azureEndpoint.ValueExpression);
+        Assert.Equal("http://{floci-az.bindings.azure.host}:{floci-az.bindings.azure.port}", azureEndpoint.ValueExpression);
         Assert.Equal("devstoreaccount1", envVars[FlociUIContainerResource.AzureAccountNameEnvVar].ToString());
 
         var gcpEndpoint = Assert.IsType<ReferenceExpression>(envVars[FlociUIContainerResource.GcpEndpointEnvVar]);
-        Assert.Contains("floci-gcp.bindings.gcp.url", gcpEndpoint.ValueExpression);
+        Assert.Equal("http://{floci-gcp.bindings.gcp.host}:{floci-gcp.bindings.gcp.port}", gcpEndpoint.ValueExpression);
         Assert.Equal("my-project", envVars[FlociUIContainerResource.GcpProjectEnvVar].ToString());
     }
 

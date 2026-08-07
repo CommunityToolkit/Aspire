@@ -29,11 +29,30 @@ public abstract class FlociContainerResource(string name, string endpointName) :
     public EndpointReferenceExpression Port => PrimaryEndpoint.Property(EndpointProperty.Port);
 
     /// <summary>
-    /// Gets the emulator endpoint URL. Always <c>http</c>: none of the Floci images
-    /// (<c>floci/floci</c>, <c>floci/floci-az</c>, <c>floci/floci-gcp</c>) expose certificate
-    /// configuration, so there is no TLS listener to point an <c>https</c> scheme at.
+    /// Gets the scheme endpoint reference for the primary endpoint. <c>http</c> unless a TLS
+    /// certificate has been configured, in which case the endpoint is switched to <c>https</c>
+    /// before the application starts. Floci serves both on the same port, so the port never changes.
+    /// </summary>
+    public EndpointReferenceExpression Scheme => PrimaryEndpoint.Property(EndpointProperty.Scheme);
+
+    /// <summary>
+    /// Gets the emulator endpoint URL, following the primary endpoint's <see cref="Scheme"/>.
     /// </summary>
     public ReferenceExpression ConnectionStringExpression =>
+        ReferenceExpression.Create($"{Scheme}://{Host}:{Port}");
+
+    /// <summary>
+    /// Gets the emulator endpoint URL pinned to <c>http</c>, for the Floci UI sidecar.
+    /// </summary>
+    /// <remarks>
+    /// Every Floci image serves HTTP and HTTPS simultaneously on the same port, so this stays valid
+    /// with TLS enabled. The UI must not follow <see cref="Scheme"/>: it reaches the emulator by its
+    /// container-network name, and neither the ASP.NET Core development certificate (SAN
+    /// <c>localhost</c> only) nor a certificate issued for the host covers that name — so HTTPS would
+    /// fail hostname validation even after the trust bundle is installed. The hop is container-to-
+    /// container on Aspire's internal network, where TLS buys nothing.
+    /// </remarks>
+    internal ReferenceExpression UIEndpointExpression =>
         ReferenceExpression.Create($"http://{Host}:{Port}");
 
     IEnumerable<KeyValuePair<string, ReferenceExpression>> IResourceWithConnectionString.GetConnectionProperties()
@@ -62,5 +81,12 @@ public abstract class FlociContainerResource(string name, string endpointName) :
     /// implementation used by all three providers.
     /// </summary>
     internal abstract string StorageModeEnvVar { get; }
+
+    /// <summary>
+    /// Gets the names of the env vars this cloud's image reads to configure its TLS listener, or
+    /// <see langword="null"/> when the image has no TLS support. Backs <c>ConfigureTlsCore</c>, which
+    /// is only wired up for the resource types that return a value here.
+    /// </summary>
+    internal virtual CommunityToolkit.Aspire.Hosting.Floci.FlociTlsEnvVars? TlsEnvVars => null;
 }
 

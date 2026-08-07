@@ -65,7 +65,7 @@ public static partial class FlociHostingExtension
     /// <param name="builder">The Floci UI resource builder (from the <c>configureContainer</c> callback of <c>WithFlociUI</c>).</param>
     /// <param name="cloud">The additional Floci AWS resource to attach.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociUIContainerResource}"/> for further configuration.</returns>
-    [AspireExport("withCloudReferenceAws")]
+    [AspireExport("withAwsReference")]
     public static IResourceBuilder<FlociUIContainerResource> WithReference(
         this IResourceBuilder<FlociUIContainerResource> builder,
         IResourceBuilder<FlociAwsContainerResource> cloud)
@@ -79,7 +79,7 @@ public static partial class FlociHostingExtension
     /// <param name="builder">The Floci UI resource builder (from the <c>configureContainer</c> callback of <c>WithFlociUI</c>).</param>
     /// <param name="cloud">The additional Floci Azure resource to attach.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociUIContainerResource}"/> for further configuration.</returns>
-    [AspireExport("withCloudReferenceAzure")]
+    [AspireExport("withAzureReference")]
     public static IResourceBuilder<FlociUIContainerResource> WithReference(
         this IResourceBuilder<FlociUIContainerResource> builder,
         IResourceBuilder<FlociAzureContainerResource> cloud)
@@ -93,7 +93,7 @@ public static partial class FlociHostingExtension
     /// <param name="builder">The Floci UI resource builder (from the <c>configureContainer</c> callback of <c>WithFlociUI</c>).</param>
     /// <param name="cloud">The additional Floci GCP resource to attach.</param>
     /// <returns>A reference to the <see cref="IResourceBuilder{FlociUIContainerResource}"/> for further configuration.</returns>
-    [AspireExport("withCloudReferenceGcp")]
+    [AspireExport("withGcpReference")]
     public static IResourceBuilder<FlociUIContainerResource> WithReference(
         this IResourceBuilder<FlociUIContainerResource> builder,
         IResourceBuilder<FlociGcpContainerResource> cloud)

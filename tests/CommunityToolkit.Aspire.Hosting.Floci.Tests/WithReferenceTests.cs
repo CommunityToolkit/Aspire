@@ -97,9 +97,10 @@ public class WithReferenceTests
             Assert.DoesNotContain("http://", hostAndPort);
         }
 
-        // The Storage SDK expects a full URL here, unlike the other emulator host variables.
+        // The Storage SDK expects a full URL here, unlike the other emulator host variables. The
+        // scheme is an endpoint expression so that configuring a certificate flips it to https.
         var storageHost = Assert.IsType<ReferenceExpression>(envVars["STORAGE_EMULATOR_HOST"]).ValueExpression;
-        Assert.StartsWith("http://", storageHost);
+        Assert.StartsWith("{floci-gcp.bindings.gcp.scheme}://", storageHost);
     }
 
     private static async Task<Dictionary<string, object>> ResolveEnvironmentAsync<T>(

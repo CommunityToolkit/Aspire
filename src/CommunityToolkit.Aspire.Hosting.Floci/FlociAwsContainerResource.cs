@@ -37,9 +37,7 @@ public class FlociAwsContainerResource(string name) : FlociContainerResource(nam
 
     internal override void ApplyUIEnvironment(EnvironmentCallbackContext context)
     {
-        // Floci serves HTTP on the same port (4566), so the http:// endpoint URL stays valid.
-        context.EnvironmentVariables[FlociUIContainerResource.EndpointEnvVar] =
-            ReferenceExpression.Create($"{PrimaryEndpoint}");
+        context.EnvironmentVariables[FlociUIContainerResource.EndpointEnvVar] = UIEndpointExpression;
         context.EnvironmentVariables[FlociUIContainerResource.RegionEnvVar] = DefaultRegion;
         context.EnvironmentVariables[FlociUIContainerResource.AccessKeyIdEnvVar] = DefaultAccessKeyId;
         context.EnvironmentVariables[FlociUIContainerResource.SecretAccessKeyEnvVar] = DefaultSecretAccessKey;
@@ -48,5 +46,11 @@ public class FlociAwsContainerResource(string name) : FlociContainerResource(nam
 
     internal override string DockerHostEnvVar => "FLOCI_DOCKER_DOCKER_HOST";
     internal override string StorageModeEnvVar => "FLOCI_STORAGE_MODE";
+
+    internal override CommunityToolkit.Aspire.Hosting.Floci.FlociTlsEnvVars TlsEnvVars => new(
+        Enabled: "FLOCI_TLS_ENABLED",
+        CertPath: "FLOCI_TLS_CERT_PATH",
+        KeyPath: "FLOCI_TLS_KEY_PATH",
+        SelfSigned: "FLOCI_TLS_SELF_SIGNED");
 }
 
