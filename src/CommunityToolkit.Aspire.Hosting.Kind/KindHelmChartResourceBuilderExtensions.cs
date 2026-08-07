@@ -81,7 +81,7 @@ public static class KindHelmChartResourceBuilderExtensions
             await notifications.WaitForResourceAsync(resource.Parent.Name, KnownResourceStates.Running, ct);
 
             await e.Eventing.PublishAsync(new BeforeResourceStartedEvent(resource, e.Services), ct);
-            
+
             await notifications.PublishUpdateAsync(resource,
                 state => state with { State = KnownResourceStates.Starting });
 
@@ -149,7 +149,72 @@ public static class KindHelmChartResourceBuilderExtensions
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(value);
 
+        builder.Resource.StringValues.Remove(key);
         builder.Resource.Values[key] = value;
+        return builder;
+    }
+
+    /// <summary>
+    /// Sets a Helm value while preserving it as a string (maps to <c>helm install --set-string key=value</c>).
+    /// </summary>
+    /// <param name="builder">The Helm chart resource builder.</param>
+    /// <param name="key">The Helm value key.</param>
+    /// <param name="value">The Helm value.</param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    /// <remarks>
+    /// Use this overload when Helm would otherwise coerce the value into a numeric, boolean,
+    /// or other non-string type. If the same key was previously configured with
+    /// <see cref="WithHelmValue(IResourceBuilder{KindHelmChartResource}, string, string)"/>,
+    /// the string-preserving value replaces it.
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<KindHelmChartResource> WithHelmStringValue(
+        this IResourceBuilder<KindHelmChartResource> builder,
+        string key,
+        string value)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(value);
+
+        builder.Resource.Values.Remove(key);
+        builder.Resource.StringValues[key] = value;
+        return builder;
+    }
+
+    /// <summary>
+    /// Retries Helm installs that race newly-created CRDs which have not reached the
+    /// <c>Established</c> condition yet.
+    /// </summary>
+    /// <param name="builder">The Helm chart resource builder.</param>
+    /// <param name="maxAttempts">The total number of install attempts. Must be 2 or greater.</param>
+    /// <param name="backoff">
+    /// The initial delay before retrying. Later retries back off exponentially.
+    /// When <see langword="null"/>, Kind uses a 5 second initial backoff.
+    /// </param>
+    /// <param name="crdWaitTimeout">
+    /// The timeout used while waiting for newly discovered CRDs to become <c>Established</c>
+    /// between retry attempts. When <see langword="null"/>, Kind uses a 5 minute timeout.
+    /// </param>
+    /// <returns>A reference to the <see cref="IResourceBuilder{KindHelmChartResource}"/>.</returns>
+    /// <remarks>
+    /// This is useful for charts that create CRDs and immediately render custom resources
+    /// that depend on those CRDs. Between attempts, Kind waits for newly observed CRDs
+    /// to report <c>Established</c>.
+    /// </remarks>
+    [AspireExport]
+    public static IResourceBuilder<KindHelmChartResource> WithCrdWaitRetry(
+        this IResourceBuilder<KindHelmChartResource> builder,
+        int maxAttempts = 3,
+        TimeSpan? backoff = null,
+        TimeSpan? crdWaitTimeout = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxAttempts, 2);
+
+        builder.Resource.CrdWaitRetryMaxAttempts = maxAttempts;
+        builder.Resource.CrdWaitRetryBackoff = KubectlTimeouts.Normalize(backoff ?? KubectlTimeouts.DefaultCrdWaitRetryBackoff, nameof(backoff));
+        builder.Resource.CrdWaitRetryTimeout = KubectlTimeouts.Normalize(crdWaitTimeout ?? KubectlTimeouts.DefaultCrdWaitTimeout, nameof(crdWaitTimeout));
         return builder;
     }
 
@@ -174,6 +239,10 @@ public static class KindHelmChartResourceBuilderExtensions
     /// <summary>
     /// Sets the Kubernetes namespace for the deployment.
     /// </summary>
+    /// <remarks>
+    /// Helm chart resources pass <c>--create-namespace</c>. Manifest resources only pass
+    /// <c>--namespace</c> to <c>kubectl apply</c>; they do not create the namespace.
+    /// </remarks>
     /// <typeparam name="T">The deployed resource type.</typeparam>
     /// <param name="builder">The resource builder.</param>
     /// <param name="namespace">The Kubernetes namespace.</param>
