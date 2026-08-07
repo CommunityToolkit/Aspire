@@ -49,10 +49,7 @@ public static class TestDistributedApplicationBuilder
     {
         var builder = DistributedApplicationTestingBuilder.Create(args, (applicationOptions, hostBuilderOptions) => configureOptions?.Invoke(applicationOptions));
 
-        // TODO: consider centralizing this to DistributedApplicationFactory by default once consumers have a way to opt-out
-        // E.g., once https://github.com/dotnet/extensions/pull/5801 is released.
-        // Discussion: https://github.com/dotnet/aspire/pull/7335/files#r1936799460
-        builder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler());
+        builder.Configuration["ASPIRE_TESTING_DISABLE_HTTP_CLIENT"] = "true";
 
         builder.Services.AddLogging(builder =>
             {
