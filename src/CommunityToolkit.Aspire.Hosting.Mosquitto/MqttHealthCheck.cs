@@ -24,6 +24,7 @@ internal sealed class MqttHealthCheck : IHealthCheck
             .Build();
     }
 
+    /// <inheritdoc />
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
