@@ -79,6 +79,8 @@
     <!-- External packages -->
     <PackageVersion Include="AWSSDK.S3" Version="4.0.101.7" />
     <PackageVersion Include="Azure.Provisioning.AppContainers" Version="1.2.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.1" />
+    <PackageVersion Include="Google.Cloud.Storage.V1" Version="4.15.0" />
     <PackageVersion Include="Bitwarden.Secrets.Sdk" Version="1.0.0" />
     <!-- Keep an explicit GitHub.Copilot.SDK pin for the Squad sample so the split
          CopilotClient assembly and native CLI payload always resolve from the
